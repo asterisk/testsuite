@@ -22,10 +22,6 @@ echo "*** Installing Asterisk and Sample Configuration ***"
 make install
 make samples
 
-echo "*** Killing off existing Asterisk processes ***"
-killall -9 asterisk
-sleep 1
-
 echo "*** Starting Asterisk ***"
 asterisk
 sleep 5
