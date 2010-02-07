@@ -2,6 +2,7 @@
 
 PLAN=$1
 BUILD_DIR=/srv/bamboo/xml-data/build-dir/${PLAN}
+TEST_RESULTS_DIR=${BUILD_DIR}/test-reports
 
 export PATH=/usr/lib/ccache:${PATH}
 
@@ -28,11 +29,19 @@ sleep 5
 
 echo "*** Executing Unit Tests ***"
 asterisk -rx "test execute all"
+sleep 5
+
+if [ ! -d ${TEST_RESULTS_DIR} ] ; then
+	mkdir ${TEST_RESULTS_DIR}
+fi
 
 echo "*** Generating Unit Test Results Output ***"
-mkdir ${BUILD_DIR}/test-reports
-asterisk -rx "test generate results xml ${BUILD_DIR}/test-reports/unit-test-results.xml"
-sleep 3
+asterisk -rx "test generate results xml ${TEST_RESULTS_DIR}/unit-test-results.xml"
+sleep 5
+echo "TEST_RESULTS_DIR: ${TEST_RESULTS_DIR}"
+ls -l ${TEST_RESULTS_DIR}
+echo "Test Results:"
+cat ${TEST_RESULTS_DIR}/unit-test-results.xml
 
 echo "*** Stopping Asterisk ***"
 asterisk -rx "core stop now"
