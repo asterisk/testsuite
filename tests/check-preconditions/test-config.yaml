@@ -1,0 +1,5 @@
+testinfo:
+    summary:     'Check if the specified preconditions for tests is actually true.'
+    description: |
+        'This test verifies that the preconditions that have been specified for tests
+        in the test suite are currently true.'

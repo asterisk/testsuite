@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "Checking to see if Asterisk is installed ..."
+
+if [ ! -f /usr/sbin/asterisk ] ; then
+	echo "Asterisk not found!"
+	exit 1
+fi
+
+echo "Asterisk found."
