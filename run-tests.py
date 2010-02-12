@@ -59,7 +59,7 @@ def main(argv=None):
         print tests_config
         sys.exit(0)
 
-    print "Executing the tests is not yet implemented.  Try --list-tests !"
+    print "Executing the tests is not yet implemented.  Try --list-tests"
 
 
 if __name__ == "__main__":

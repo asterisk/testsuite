@@ -106,7 +106,9 @@ testinfo:
 # dependencies for this test.
 properties:
     minversion : '1.4' # minimum Asterisk version compatible with this test
-
+    dependencies : |   # List dependencies that must be met for this test to run
+        - depend : 'bash'
+        - depend : 'sipp'
 
 
 --------------------------------------------------------------------------------

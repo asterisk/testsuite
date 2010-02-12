@@ -6,3 +6,5 @@ testinfo:
 
 properties:
     minversion: '1.4'
+    dependencies:
+        - depend : bash
