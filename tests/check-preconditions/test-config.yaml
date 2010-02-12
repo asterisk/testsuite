@@ -3,3 +3,6 @@ testinfo:
     description: |
         'This test verifies that the preconditions that have been specified for tests
         in the test suite are currently true.'
+
+properties:
+    minversion: '1.4'

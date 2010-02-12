@@ -91,12 +91,22 @@ format for the configuration file is YAML.  More information on YAML can be
 found at http://www.yaml.org/.
 
 
+
 # Example test configuration file - test-config.yaml
+
+# The testinfo section contains information that describes the purpose of the
+# test.
 testinfo:
     summary     : 'Put a short one liner summary of the test here'
     description : |
         'Put a more verbose description of the test here.  This may span
         multiple lines.'
+
+# The properties section contains information about requirements and
+# dependencies for this test.
+properties:
+    minversion : '1.4' # minimum Asterisk version compatible with this test
+
 
 
 --------------------------------------------------------------------------------
