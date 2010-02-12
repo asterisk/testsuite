@@ -10,17 +10,35 @@ import yaml
 
 TESTS_CONFIG = "tests/tests.yaml"
 
+class TestConfig:
+    def __init__(self, test_name):
+        f = open("tests/%s/test-config.yaml" % test_name, "r")
+        self.config = yaml.load(f)
+        f.close()
+        self.test_name = test_name
+
+    def name(self):
+        return self.test_name
+
+    def summary(self):
+        return self.config["testinfo"]["summary"]
+
+
 class TestsConfig:
     def __init__(self):
         f = open(TESTS_CONFIG, "r")
         self.config = yaml.load(f)
         f.close()
 
+        self.tests = []
+        for t in self.config["tests"]:
+            self.tests.append(TestConfig(t["test"]))
+
     def __str__(self):
         s = "Configured tests:\n"
         i = 1
-        for t in self.config["tests"]:
-            s += "%.3d) %s\n" % (i, t["test"])
+        for t in self.tests:
+            s += "%.3d) %s (%s)\n" % (i, t.name(), t.summary())
             i += 1
         return s
 
