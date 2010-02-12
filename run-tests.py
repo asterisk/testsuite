@@ -12,13 +12,21 @@ TESTS_CONFIG = "tests/tests.yaml"
 
 class TestConfig:
     def __init__(self, test_name):
-        f = open("tests/%s/test-config.yaml" % test_name, "r")
-        self.config = yaml.load(f)
-        f.close()
+        test_config = "tests/%s/test-config.yaml" % test_name
+        try:
+            f = open(test_config, "r")
+            self.config = yaml.load(f)
+            f.close()
+        except:
+            print "Failed to open %s, does it exist?" % test_config
+
         self.test_name = test_name
 
     def summary(self):
-        return self.config["testinfo"]["summary"]
+        try:
+            return self.config["testinfo"]["summary"]
+        except:
+            return ""
 
 
 class TestsConfig:
