@@ -67,6 +67,7 @@ the "tests.yaml" file that lives in the tests directory.  This configuration
 file determines the order that the tests are considered for execution by the top
 level test suite application.
 
+
 b) Preconditions
 
         When the "run-test" application is executed, it can assume that the
@@ -75,11 +76,21 @@ locations.  This includes a fresh set of sample configuration files in the
 /etc/asterisk directory.
 
 
-c) Logging, Pass/Fail Reporting
+c) Test Execution
+
+        The "run-test" executable will be run by a top level application in the
+test suite called "run-tests.py".  When "run-test" is executed, it will be
+provided a standard set of arguments which are defined here:
+
+        run-test <Asterisk version>
+
+
+d) Logging, Pass/Fail Reporting
 
         All test output, including failure details, should be send to STDOUT.
 If the test has failed, the "run-test" executable should exit with a non-zero
 return code.  A return code of zero is considered a success.
+
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -94,7 +105,11 @@ found at http://www.yaml.org/.
 
 
 
+#
 # Example test configuration file - test-config.yaml
+#
+# All elements are required unless explicitly noted as OPTIONAL
+#
 
 # The testinfo section contains information that describes the purpose of the
 # test.
@@ -108,9 +123,12 @@ testinfo:
 # dependencies for this test.
 properties:
     minversion : '1.4' # minimum Asterisk version compatible with this test
-    dependencies : |   # List dependencies that must be met for this test to run
+    maxversion : '1.8' # OPTIONAL
+    dependencies : |   # OPTIONAL
+        # List dependencies that must be met for this test to run
         - depend : 'bash'
         - depend : 'sipp'
+
 
 
 --------------------------------------------------------------------------------
