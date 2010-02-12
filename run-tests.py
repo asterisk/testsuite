@@ -17,9 +17,6 @@ class TestConfig:
         f.close()
         self.test_name = test_name
 
-    def name(self):
-        return self.test_name
-
     def summary(self):
         return self.config["testinfo"]["summary"]
 
@@ -38,7 +35,7 @@ class TestsConfig:
         s = "Configured tests:\n"
         i = 1
         for t in self.tests:
-            s += "%.3d) %s (%s)\n" % (i, t.name(), t.summary())
+            s += "%.3d) %s (%s)\n" % (i, t.test_name, t.summary())
             i += 1
         return s
 
