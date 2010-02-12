@@ -82,7 +82,7 @@ c) Test Execution
 test suite called "run-tests.py".  When "run-test" is executed, it will be
 provided a standard set of arguments which are defined here:
 
-        run-test <Asterisk version>
+        -v <Asterisk version>       # Will always be provided
 
 
 d) Logging, Pass/Fail Reporting
