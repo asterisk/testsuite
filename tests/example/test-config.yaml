@@ -1,0 +1,10 @@
+testinfo:
+    summary:     'Check to see if the Asterisk binary has been installed'
+    description: |
+        'This test verifies that the Asterisk binary is in the location
+        that it is expected to be installed in to.'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - depend : 'bash'
