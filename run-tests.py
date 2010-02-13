@@ -132,12 +132,6 @@ def main(argv=None):
         p.wait()
         t.passed = p.returncode == 0
 
-    try:
-        f = open(TEST_RESULTS, "w")
-    except:
-        print "Failed to open test results output file."
-        sys.exit(1)
-
     print "\n=== TEST RESULTS ==="
     for t in tests_config.tests:
         sys.stdout.write("--> %s --- " % t.test_name)
@@ -147,6 +141,12 @@ def main(argv=None):
             print "FAILED"
 
     print "\n"
+
+    try:
+        f = open(TEST_RESULTS, "w")
+    except:
+        print "Failed to open test results output file."
+        sys.exit(1)
 
     f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
     f.write('<testsuite errors="0" time="0.0" tests="%d" '
