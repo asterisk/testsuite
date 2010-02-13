@@ -62,6 +62,11 @@ class TestConfig:
                 Dependency(d["depend"])
                     for d in self.config["properties"]["dependencies"]
         ]
+        self.can_run = True
+        for d in self.deps:
+            if d.found is False:
+                self.can_run = False
+                break
 
 
 class TestsConfig:
@@ -97,7 +102,15 @@ def main(argv=None):
         print tests_config
         sys.exit(0)
 
-    print "Executing the tests is not yet implemented.  Try --list-tests"
+    print "Printout what tests would run and in what order ..."
+
+    for t in tests_config.tests:
+        if t.can_run is False:
+            print "--> Can not run test '%s'" % t.test_name
+            for d in t.deps:
+                print "--- --> Dependency: %s - %s" % (d.name, str(d.found))
+            continue
+        print "--> Can run test '%s'" % t.test_name
 
 
 if __name__ == "__main__":
