@@ -15,6 +15,7 @@ import yaml
 
 
 TESTS_CONFIG = "tests/tests.yaml"
+TEST_RESULTS = "asterisk-test-suite-report.xml"
 
 
 class Dependency:
@@ -117,7 +118,7 @@ def main(argv=None):
             print
             continue
 
-        print "--> Can run test '%s'\n" % t.test_name
+        print "--> Running test '%s' ...\n" % t.test_name
 
         p = subprocess.Popen(
             ["tests/%s/run-test" % t.test_name, "-v", "ASTVERSIONGOESHERE"],
@@ -131,13 +132,37 @@ def main(argv=None):
         p.wait()
         t.passed = p.returncode == 0
 
-    print "=== TEST RESULTS ==="
+    try:
+        f = open(TEST_RESULTS, "w")
+    except:
+        print "Failed to open test results output file."
+        sys.exit(1)
+
+    print "\n=== TEST RESULTS ==="
     for t in tests_config.tests:
         sys.stdout.write("--> %s --- " % t.test_name)
         if t.passed is True:
             print "PASSED"
         else:
             print "FAILED"
+
+    print "\n"
+
+    f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+    f.write('<testsuite errors="0" time="0.0" tests="%d" '
+            'name="AsteriskTestSuite">\n' % len(tests_config.tests))
+    for t in tests_config.tests:
+        f.write('\t<testcase time="0.0" name="%s"' % t.test_name)
+        if t.passed is True:
+            f.write('/>\n')
+            continue
+        f.write('>\t\t<failure>%s</failure>\n\t</testcase>' % t.stdout)
+    f.write('</testsuite>\n')
+    f.close()
+
+    f = open(TEST_RESULTS, "r")
+    print f.read()
+    f.close()
 
 
 if __name__ == "__main__":
