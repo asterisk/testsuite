@@ -6,6 +6,7 @@ Russell Bryant <russell@digium.com>
 
 import sys
 import os
+import subprocess
 import optparse
 import yaml
 
@@ -59,9 +60,10 @@ class TestConfig:
             self.description = ""
 
         self.deps = [
-                Dependency(d["depend"])
-                    for d in self.config["properties"]["dependencies"]
+            Dependency(d["depend"])
+                for d in self.config["properties"]["dependencies"]
         ]
+
         self.can_run = True
         for d in self.deps:
             if d.found is False:
@@ -102,15 +104,37 @@ def main(argv=None):
         print tests_config
         sys.exit(0)
 
-    print "Printout what tests would run and in what order ..."
+    print "Running tests ...\n"
 
     for t in tests_config.tests:
         if t.can_run is False:
             print "--> Can not run test '%s'" % t.test_name
             for d in t.deps:
                 print "--- --> Dependency: %s - %s" % (d.name, str(d.found))
+            print
             continue
-        print "--> Can run test '%s'" % t.test_name
+
+        print "--> Can run test '%s'\n" % t.test_name
+
+        p = subprocess.Popen(
+            ["tests/%s/run-test" % t.test_name, "-v", "ASTVERSIONGOESHERE"],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
+
+        t.stdout = ""
+        for line in p.stdout:
+            print line
+            t.stdout += line
+        p.wait()
+        t.passed = p.returncode == 0
+
+    print "=== TEST RESULTS ==="
+    for t in tests_config.tests:
+        sys.stdout.write("--> %s --- " % t.test_name)
+        if t.passed is True:
+            print "PASSED"
+        else:
+            print "FAILED"
 
 
 if __name__ == "__main__":
