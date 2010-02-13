@@ -120,6 +120,14 @@ def main(argv=None):
 
         print "--> Running test '%s' ...\n" % t.test_name
 
+        # TODO: The preconditions need to be re-established before running each
+        # test.  That means a fresh install of Asterisk needs to be provided.
+
+        # TODO: Pass the actual Asterisk version string here.
+
+        # TODO: Measure how long it takes to run each test and include it in
+        # the test results output.
+
         p = subprocess.Popen(
             ["tests/%s/run-test" % t.test_name, "-v", "ASTVERSIONGOESHERE"],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT
