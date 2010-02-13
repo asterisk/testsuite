@@ -2,6 +2,9 @@
 '''
 Copyright (C) 2010, Digium, Inc.
 Russell Bryant <russell@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
 '''
 
 import sys
