@@ -5,10 +5,38 @@ Russell Bryant <russell@digium.com>
 '''
 
 import sys
+import os
 import optparse
 import yaml
 
+
 TESTS_CONFIG = "tests/tests.yaml"
+
+
+class Dependency:
+    def __init__(self, name):
+        self.name = name
+        self.found = self.__which(name) is not None
+
+    def __which(self, program):
+        '''
+        http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
+        '''
+        def is_exe(fpath):
+            return os.path.exists(fpath) and os.access(fpath, os.X_OK)
+
+        fpath, fname = os.path.split(program)
+        if fpath:
+            if is_exe(program):
+                return program
+        else:
+            for path in os.environ["PATH"].split(os.pathsep):
+                exe_file = os.path.join(path, program)
+                if is_exe(exe_file):
+                    return exe_file
+
+        return None
+
 
 class TestConfig:
     def __init__(self, test_name):
@@ -21,12 +49,19 @@ class TestConfig:
             print "Failed to open %s, does it exist?" % test_config
 
         self.test_name = test_name
-
-    def summary(self):
         try:
-            return self.config["testinfo"]["summary"]
+            self.summary = self.config["testinfo"]["summary"]
         except:
-            return ""
+            self.summary = ""
+        try:
+            self.description = self.config["testinfo"]["description"]
+        except:
+            self.description = ""
+
+        self.deps = [
+                Dependency(d["depend"])
+                    for d in self.config["properties"]["dependencies"]
+        ]
 
 
 class TestsConfig:
@@ -35,15 +70,13 @@ class TestsConfig:
         self.config = yaml.load(f)
         f.close()
 
-        self.tests = []
-        for t in self.config["tests"]:
-            self.tests.append(TestConfig(t["test"]))
+        self.tests = [ TestConfig(t["test"]) for t in self.config["tests"] ]
 
     def __str__(self):
         s = "Configured tests:\n"
         i = 1
         for t in self.tests:
-            s += "%.3d) %s (%s)\n" % (i, t.test_name, t.summary())
+            s += "%.3d) %s (%s)\n" % (i, t.test_name, t.summary)
             i += 1
         return s
 
