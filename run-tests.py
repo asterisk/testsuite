@@ -77,7 +77,7 @@ class TestConfig:
                 break
 
 
-class TestsConfig:
+class TestSuite:
     def __init__(self):
         f = open(TESTS_CONFIG, "r")
         self.config = yaml.load(f)
@@ -92,6 +92,60 @@ class TestsConfig:
             s += "%.3d) %s (%s)\n" % (i, t.test_name, t.summary)
             i += 1
         return s
+
+    def run(self, ast_version):
+        for t in self.tests:
+            if t.can_run is False:
+                print "--> Can not run test '%s'" % t.test_name
+                for d in t.deps:
+                    print "--- --> Dependency: %s - %s" % (d.name, str(d.found))
+                print
+                continue
+
+            print "--> Running test '%s' ...\n" % t.test_name
+
+            # TODO: The preconditions need to be re-established before running each
+            # test.  That means a fresh install of Asterisk needs to be provided.
+
+            # TODO: Measure how long it takes to run each test and include it in
+            # the test results output.
+
+            cmd = ["tests/%s/run-test" % t.test_name]
+            cmd.extend(ast_version)
+
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT)
+
+            t.stdout = ""
+            for line in p.stdout:
+                print line
+                t.stdout += line
+            p.wait()
+            t.passed = p.returncode == 0
+
+    def write_results_xml(self, fn, stdout=False):
+        try:
+            f = open(TEST_RESULTS, "w")
+        except:
+            print "Failed to open test results output file."
+            sys.exit(1)
+
+        f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+        f.write('<testsuite errors="0" time="0.0" tests="%d" '
+                'name="AsteriskTestSuite">\n' % len(self.tests))
+        for t in self.tests:
+            f.write('\t<testcase time="0.0" name="%s"' % t.test_name)
+            if t.passed is True:
+                f.write('/>\n')
+                continue
+            f.write('>\t\t<failure>%s</failure>\n\t</testcase>' % t.stdout)
+        f.write('</testsuite>\n')
+        f.close()
+
+        if stdout is True:
+            f = open(TEST_RESULTS, "r")
+            print f.read()
+            f.close()
 
 
 def get_ast_version():
@@ -124,50 +178,21 @@ def main(argv=None):
             help="List tests instead of running them.")
     (options, args) = parser.parse_args(argv)
 
-    tests_config = TestsConfig()
+    test_suite = TestSuite()
 
     ast_version = get_ast_version()
 
     if options.list_tests is True:
         print "Asterisk Version: %s\n" % str(ast_version)
-        print tests_config
+        print test_suite
         sys.exit(0)
 
     print "Running tests for Asterisk %s ...\n" % str(ast_version)
 
-    for t in tests_config.tests:
-        if t.can_run is False:
-            print "--> Can not run test '%s'" % t.test_name
-            for d in t.deps:
-                print "--- --> Dependency: %s - %s" % (d.name, str(d.found))
-            print
-            continue
-
-        print "--> Running test '%s' ...\n" % t.test_name
-
-        # TODO: The preconditions need to be re-established before running each
-        # test.  That means a fresh install of Asterisk needs to be provided.
-
-        # TODO: Pass the actual Asterisk version string here.
-
-        # TODO: Measure how long it takes to run each test and include it in
-        # the test results output.
-
-        cmd = ["tests/%s/run-test" % t.test_name]
-        cmd.extend(ast_version)
-
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT)
-
-        t.stdout = ""
-        for line in p.stdout:
-            print line
-            t.stdout += line
-        p.wait()
-        t.passed = p.returncode == 0
+    test_suite.run(ast_version)
 
     print "\n=== TEST RESULTS ==="
-    for t in tests_config.tests:
+    for t in test_suite.tests:
         sys.stdout.write("--> %s --- " % t.test_name)
         if t.passed is True:
             print "PASSED"
@@ -176,27 +201,7 @@ def main(argv=None):
 
     print "\n"
 
-    try:
-        f = open(TEST_RESULTS, "w")
-    except:
-        print "Failed to open test results output file."
-        sys.exit(1)
-
-    f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-    f.write('<testsuite errors="0" time="0.0" tests="%d" '
-            'name="AsteriskTestSuite">\n' % len(tests_config.tests))
-    for t in tests_config.tests:
-        f.write('\t<testcase time="0.0" name="%s"' % t.test_name)
-        if t.passed is True:
-            f.write('/>\n')
-            continue
-        f.write('>\t\t<failure>%s</failure>\n\t</testcase>' % t.stdout)
-    f.write('</testsuite>\n')
-    f.close()
-
-    f = open(TEST_RESULTS, "r")
-    print f.read()
-    f.close()
+    test_suite.write_results_xml(TEST_RESULTS, stdout=True)
 
 
 if __name__ == "__main__":
