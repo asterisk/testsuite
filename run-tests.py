@@ -19,6 +19,15 @@ TESTS_CONFIG = "tests/tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
 VERSION_HDR = "/usr/include/asterisk/version.h"
 
+BIG_WARNING = "\n" \
+              "      *** PLEASE NOTE ***\n" \
+              "Running this script will completely wipe out any remnants of\n" \
+              "an existing Asterisk installation.  Please ensure you only run\n"\
+              "this in a test environment.\n" \
+              "\n" \
+              "EXISTING CONFIGURATION WILL BE LOST!\n" \
+              "      *******************\n" \
+
 
 class Dependency:
     def __init__(self, name):
@@ -186,7 +195,11 @@ def main(argv=None):
     if argv is None:
         args = sys.argv
 
-    parser = optparse.OptionParser()
+    usage = "Usage: ./run-tests.py [options]\n" \
+            "\n" \
+            "%s" % BIG_WARNING
+
+    parser = optparse.OptionParser(usage=usage)
     parser.add_option("-l", "--list-tests", action="store_true",
             dest="list_tests", default=False,
             help="List tests instead of running them.")
@@ -203,15 +216,7 @@ def main(argv=None):
 
     if os.geteuid() != 0:
         print "You must run this script as root."
-        print
-        print "      *** PLEASE NOTE ***"
-        print "Running this script will completely wipe out any remnants of"
-        print "an existing Asterisk installation.  Please ensure you only run"
-        print "this in a test environment."
-        print
-        print "EXISTING CONFIGURATION WILL BE LOST!"
-        print "      *******************"
-        print
+        print BIG_WARNING
         sys.exit(1)
 
     print "Running tests for Asterisk %s ...\n" % str(ast_version)
