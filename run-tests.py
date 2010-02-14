@@ -128,7 +128,7 @@ class TestSuite:
             f = open(TEST_RESULTS, "w")
         except:
             print "Failed to open test results output file."
-            sys.exit(1)
+            return
 
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
         f.write('<testsuite errors="0" time="0.0" tests="%d" '
