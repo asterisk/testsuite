@@ -83,6 +83,19 @@ class TestSuite:
         self.config = yaml.load(f)
         f.close()
 
+        # Check to see if this has been executed within a sub directory of an
+        # Asterisk source tree.  This is required so that we can execute
+        # install and uninstall targets of the Asterisk Makefile in between
+        # tests.
+        self.within_ast_tree = os.path.exists("../main/asterisk.c")
+        if self.within_ast_tree is False:
+            print "*** WARNING ***\n" \
+                  "run-tests has not been executed from within a\n" \
+                  "subdirectory of an Asterisk source tree.  This\n" \
+                  "is required for being able to uninstall and install\n" \
+                  "Asterisk in between tests.\n" \
+                  "***************\n"
+
         self.tests = [ TestConfig(t["test"]) for t in self.config["tests"] ]
 
     def __str__(self):
@@ -104,11 +117,12 @@ class TestSuite:
 
             print "--> Running test '%s' ...\n" % t.test_name
 
-            # TODO: The preconditions need to be re-established before running each
-            # test.  That means a fresh install of Asterisk needs to be provided.
+            # TODO: The preconditions need to be re-established before running
+            # each test.  That means a fresh install of Asterisk needs to be
+            # provided.
 
-            # TODO: Measure how long it takes to run each test and include it in
-            # the test results output.
+            # TODO: Measure how long it takes to run each test and include it
+            # in the test results output.
 
             cmd = ["tests/%s/run-test" % t.test_name]
             cmd.extend(ast_version)
