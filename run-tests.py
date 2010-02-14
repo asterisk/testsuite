@@ -9,6 +9,7 @@ the GNU General Public License Version 2.
 
 import sys
 import os
+import re
 import subprocess
 import optparse
 import yaml
@@ -16,6 +17,7 @@ import yaml
 
 TESTS_CONFIG = "tests/tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
+VERSION_HDR = "/usr/include/asterisk/version.h"
 
 
 class Dependency:
@@ -92,6 +94,26 @@ class TestsConfig:
         return s
 
 
+def get_ast_version():
+    '''
+    Determine the version of Asterisk installed from the installed version.h.
+    '''
+    v = []
+    try:
+        f = open(VERSION_HDR, "r")
+    except:
+        print "Failed to open %s to get Asterisk version." % VERSION_HDR
+        return v
+
+    match = re.search("ASTERISK_VERSION\s+\"(.*)\"", f.read())
+    if match is not None:
+        v = [ "-v", match.group(1) ]
+
+    f.close()
+
+    return v
+
+
 def main(argv=None):
     if argv is None:
         args = sys.argv
@@ -104,11 +126,14 @@ def main(argv=None):
 
     tests_config = TestsConfig()
 
+    ast_version = get_ast_version()
+
     if options.list_tests is True:
+        print "Asterisk Version: %s\n" % str(ast_version)
         print tests_config
         sys.exit(0)
 
-    print "Running tests ...\n"
+    print "Running tests for Asterisk %s ...\n" % str(ast_version)
 
     for t in tests_config.tests:
         if t.can_run is False:
@@ -128,10 +153,11 @@ def main(argv=None):
         # TODO: Measure how long it takes to run each test and include it in
         # the test results output.
 
-        p = subprocess.Popen(
-            ["tests/%s/run-test" % t.test_name, "-v", "ASTVERSIONGOESHERE"],
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        )
+        cmd = ["tests/%s/run-test" % t.test_name]
+        cmd.extend(ast_version)
+
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
 
         t.stdout = ""
         for line in p.stdout:
