@@ -201,6 +201,10 @@ def main(argv=None):
         print test_suite
         sys.exit(0)
 
+    if os.geteuid() != 0:
+        print "You must run this script as root."
+        sys.exit(1)
+
     print "Running tests for Asterisk %s ...\n" % str(ast_version)
 
     test_suite.run(ast_version)
