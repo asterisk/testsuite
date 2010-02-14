@@ -203,6 +203,15 @@ def main(argv=None):
 
     if os.geteuid() != 0:
         print "You must run this script as root."
+        print
+        print "      *** PLEASE NOTE ***"
+        print "Running this script will completely wipe out any remnants of"
+        print "an existing Asterisk installation.  Please ensure you only run"
+        print "this in a test environment."
+        print
+        print "EXISTING CONFIGURATION WILL BE LOST!"
+        print "      *******************"
+        print
         sys.exit(1)
 
     print "Running tests for Asterisk %s ...\n" % str(ast_version)
