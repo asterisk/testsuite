@@ -20,7 +20,7 @@ if [ "${PLAN}" != "AST-TRUNK" ] ; then
 fi
 
 echo "*** Installing Asterisk and Sample Configuration ***"
-make install
+WGET_EXTRA_ARGS=--quiet make install
 make samples
 
 echo "*** Starting Asterisk ***"
