@@ -1,0 +1,22 @@
+testinfo:
+    summary:     'Test account code propagation for SIP blind transfers.'
+    description: |
+        "This test ensures that when a channel with an account code, dials a
+        channel without and account code, then transfers the dialed channel to
+        another channel, the calling (and transferring) channel's account code
+        is copied to the called channel and stored in the CDR record for the
+        transfer.
+
+        This test also ensures that if the called channel has an account code,
+        the calling channel's account code is not copied and instead the called
+        channel's account code is used."
+    issues: 
+        - '16331'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - depend : 'bash'
+        - depend : 'sipp'
+        - depend : 'asttest'
+
