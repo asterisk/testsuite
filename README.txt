@@ -115,6 +115,11 @@ found at http://www.yaml.org/.
 # test.
 testinfo:
     summary     : 'Put a short one liner summary of the test here'
+    issues      : |
+        # List of issue numbers associated with this test
+        # OPTIONAL
+        - mantis : '12345'
+        - mantis : '10101'
     description : |
         'Put a more verbose description of the test here.  This may span
         multiple lines.'
