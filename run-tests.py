@@ -157,6 +157,8 @@ class TestSuite:
         f.write('<testsuite errors="0" time="0.0" tests="%d" '
                 'name="AsteriskTestSuite">\n' % len(self.tests))
         for t in self.tests:
+            if t.can_run is False:
+                continue
             f.write('\t<testcase time="0.0" name="%s"' % t.test_name)
             if t.passed is True:
                 f.write('/>\n')
@@ -225,6 +227,8 @@ def main(argv=None):
 
     print "\n=== TEST RESULTS ==="
     for t in test_suite.tests:
+        if t.can_run is False:
+            continue
         sys.stdout.write("--> %s --- " % t.test_name)
         if t.passed is True:
             print "PASSED"
