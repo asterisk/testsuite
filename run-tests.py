@@ -75,7 +75,7 @@ class TestConfig:
             self.description = ""
 
         self.deps = [
-            Dependency(d["depend"])
+            Dependency(d["app"])
                 for d in self.config["properties"]["dependencies"]
         ]
 

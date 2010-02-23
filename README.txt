@@ -131,8 +131,8 @@ properties:
     maxversion : '1.8' # OPTIONAL
     dependencies : |   # OPTIONAL
         # List dependencies that must be met for this test to run
-        - depend : 'bash'
-        - depend : 'sipp'
+        - app : 'bash'
+        - app : 'sipp'
 
 
 

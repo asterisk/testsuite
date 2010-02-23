@@ -16,7 +16,7 @@ testinfo:
 properties:
     minversion: '1.4'
     dependencies:
-        - depend : 'bash'
-        - depend : 'sipp'
-        - depend : 'asttest'
+        - app : 'bash'
+        - app : 'sipp'
+        - app : 'asttest'
 
