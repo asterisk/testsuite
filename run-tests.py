@@ -12,6 +12,7 @@ import os
 import re
 import subprocess
 import optparse
+import time
 import yaml
 
 
@@ -79,6 +80,8 @@ class TestConfig:
                 for d in self.config["properties"]["dependencies"]
         ]
 
+        self.time = 0.0
+
         self.can_run = True
         for d in self.deps:
             if d.found is False:
@@ -91,6 +94,8 @@ class TestSuite:
         f = open(TESTS_CONFIG, "r")
         self.config = yaml.load(f)
         f.close()
+
+        self.total_time = 0.0
 
         # Check to see if this has been executed within a sub directory of an
         # Asterisk source tree.  This is required so that we can execute
@@ -130,14 +135,14 @@ class TestSuite:
             # each test.  That means a fresh install of Asterisk needs to be
             # provided.
 
-            # TODO: Measure how long it takes to run each test and include it
-            # in the test results output.
-
             cmd = ["tests/%s/run-test" % t.test_name]
             cmd.extend(ast_version)
 
+            start_time = time.time()
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
+            t.time = time.time() - start_time
+            self.total_time += t.time
 
             t.stdout = ""
             for line in p.stdout:
@@ -154,12 +159,13 @@ class TestSuite:
             return
 
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        f.write('<testsuite errors="0" time="0.0" tests="%d" '
-                'name="AsteriskTestSuite">\n' % len(self.tests))
+        f.write('<testsuite errors="0" time="%.2f" tests="%d" '
+                'name="AsteriskTestSuite">\n' %
+                (self.total_time, len(self.tests)))
         for t in self.tests:
             if t.can_run is False:
                 continue
-            f.write('\t<testcase time="0.0" name="%s"' % t.test_name)
+            f.write('\t<testcase time="%.2f" name="%s"' % (t.time, t.test_name))
             if t.passed is True:
                 f.write('/>\n')
                 continue
