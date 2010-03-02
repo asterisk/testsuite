@@ -15,6 +15,10 @@ if [ "${PLAN}" = "AST-TRUNK" ] ; then
 fi
 make
 
+if [ -f doc/core-en_US.xml ] ; then
+	make validate-docs
+fi
+
 if [ "${PLAN}" != "AST-TRUNK" ] ; then
 	exit 0
 fi
