@@ -16,6 +16,7 @@ fi
 make
 
 if [ -f doc/core-en_US.xml ] ; then
+	echo "*** Validating XML documentation ***"
 	make validate-docs
 fi
 
