@@ -121,6 +121,8 @@ class TestSuite:
         return s
 
     def run(self, ast_version):
+        test_suite_dir = os.getcwd()
+
         for t in self.tests:
             if t.can_run is False:
                 print "--> Can not run test '%s'" % t.test_name
@@ -131,9 +133,15 @@ class TestSuite:
 
             print "--> Running test '%s' ...\n" % t.test_name
 
-            # TODO: The preconditions need to be re-established before running
-            # each test.  That means a fresh install of Asterisk needs to be
-            # provided.
+            # Establish Preconditions
+
+            if self.within_ast_tree is True:
+                os.chdir("..")
+                os.system("make uninstall-all")
+                os.system("make install")
+                os.chdir(test_suite_dir)
+
+            # Run Test
 
             cmd = ["tests/%s/run-test" % t.test_name]
             cmd.extend(ast_version)
