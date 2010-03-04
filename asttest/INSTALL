@@ -1,0 +1,36 @@
+Building and installing asttest
+===============================
+
+Asttest can be built and installed by running 'make install'.
+
+Dependencies
+============
+
+Asttest depends on the following libraries and tools.
+
+pkg-config
+lua 5.1 (liblua5.1 and luac)
+
+
+Building asterisk for use with asttest
+======================================
+
+Asterisk can be built for use with asttest using the following command.
+
+ASTSRCDIR=/usr/src/asterisk ASTDSTDIR=/tmp/asterisk make asterisk
+
+Where ASTSRCDIR is the path to your asterisk source and ASTDSTDIR is the path 
+to the directory where asterisk should be installed.  Asterisk will be built 
+then installed in the directory specified.  The asterisk installation will be 
+entirely self contained in ASTDSTDIR.  This directory can be passed to asttest 
+using the -a flag to tell it to use the new install for testing.
+
+asttest -a /tmp/asterisk my-test-dir
+
+To simply use a pre-existing installation of asterisk on a system, asttest can 
+be run as follows.
+
+asttest -a / my-test-dir
+
+
+vim: set fo=tqwal:

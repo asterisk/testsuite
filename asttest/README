@@ -1,0 +1,71 @@
+Asttest Readme
+==============
+
+Asttest is a framework for doing automated testing of asterisk.  It can be used 
+to spawn asterisk and other processes, interact with the manager interface, and 
+other related testing tasks.
+
+Writing Tests
+=============
+
+The structure of a test will be different depending on what is being tested.  
+All tests require a test.lua file in the given test directory.  The directory 
+layout for tests is as follows:
+
+main_test_dir/
+   test1/
+      test.lua
+   test2/
+      test.lua
+   test3/
+      test.lua
+
+The test.lua file will be executed by asttest when the test is run.  The 
+test.lua file is responsible for coordinating execution of the test.  This file 
+may generate config files, start asterisk, interact with asterisk via the 
+manager interface, parse log files, etc.  Test.lua is also responsible for 
+notifiying asttest of the test result.
+
+When running in single test mode (the -s flag, see below) the directory 
+structure is as follows:
+
+test1/
+   test.lua
+
+When a test is run, the working directory will be changed to the test directory 
+and all paths in the test will be intrepreted relative to that directory.
+
+Running Tests
+=============
+
+Asttest can be run in two modes. It can be used to execute a directory full of 
+tests, or it can execute a single test.  Documentation for the various options 
+asttest accepts can be found by passing the -h flag to asttest.
+
+To execute a directory full of tests, pass asttest the path to the directory.
+
+asttest my-test-dir/
+
+To execute a single test (useful for interfacing with run-tests.py), pass 
+asstest the -s flag specifiying the directory the desired test is in.
+
+asttest -s my-test-dir/my-test
+
+When executing in single test mode, asttest will send all output to stdout and 
+will return non-zero on error.
+
+Using asttest with run-tests.py
+===============================
+
+To use asttest with run-tests.py, a script similar to the following can be 
+used.
+
+#!/bin/bash -e
+asttest -a / -s tests/my-test
+
+The -a option indicates the location of the asterisk installation to use for 
+the test and the -s option turns on single test mode and indicates the 
+directory the test is located in.
+
+
+vim: set fo=tqwal:

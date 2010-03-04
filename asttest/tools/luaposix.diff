@@ -1,0 +1,22 @@
+diff -ruN a/lposix.h b/lposix.h
+--- a/lposix.h	1969-12-31 18:00:00.000000000 -0600
++++ b/lposix.h	2009-05-08 15:32:27.000000000 -0500
+@@ -0,0 +1,6 @@
++#ifndef LPOSIX_H
++#define LPOSIX_H
++
++LUALIB_API int luaopen_posix (lua_State *L);
++
++#endif
+diff -ruN a/Makefile b/Makefile
+--- a/Makefile	2008-07-18 09:31:56.000000000 -0500
++++ b/Makefile	2009-05-08 15:15:04.000000000 -0500
+@@ -25,7 +25,7 @@
+ 
+ CPPFLAGS=	-fPIC $(INCS) $(WARN)
+ WARN=		-pedantic -Wall
+-INCS=		-I$(LUAINC)
++INCS=		`pkg-config --cflags lua5.1`
+ 
+ MYNAME=		posix
+ MYLIB= 		$(MYNAME)

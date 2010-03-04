@@ -1,0 +1,64 @@
+diff -ru a/config b/config
+--- a/config	2007-10-14 23:21:05.000000000 -0500
++++ b/config	2009-05-08 11:43:37.000000000 -0500
+@@ -11,13 +11,12 @@
+ SOCKET_SO=socket.$(EXT).$(SOCKET_V) 
+ MIME_SO=mime.$(EXT).$(MIME_V)
+ UNIX_SO=unix.$(EXT)
++SOCKET_A=luasocket.a
+ 
+ #------
+ # Lua includes and libraries
+ #
+-#LUAINC=-I/usr/local/include/lua50
+-#LUAINC=-I/usr/local/include/lua5.1
+-#LUAINC=-Ilua-5.1.1/src
++LUAINC=`pkg-config --cflags lua5.1`
+ 
+ #------
+ # Compat-5.1 directory
+@@ -54,6 +53,10 @@
+ CFLAGS= $(LUAINC) $(DEF) -pedantic -Wall -O2 -fpic
+ LDFLAGS=-O -shared -fpic
+ LD=gcc 
++AR=ar
++ARFLAGS=rc
++RANLIB=ranlib
++RANLIBFLAGS=
+ 
+ #------
+ # End of makefile configuration
+diff -ru a/src/makefile b/src/makefile
+--- a/src/makefile	2007-10-14 23:21:05.000000000 -0500
++++ b/src/makefile	2009-05-08 11:41:32.000000000 -0500
+@@ -47,7 +47,7 @@
+ 	usocket.o \
+ 	unix.o
+ 
+-all: $(SOCKET_SO) $(MIME_SO) 
++all: $(SOCKET_SO) $(MIME_SO) $(SOCKET_A)
+ 
+ $(SOCKET_SO): $(SOCKET_OBJS)
+ 	$(LD) $(LDFLAGS) -o $@ $(SOCKET_OBJS)
+@@ -58,6 +58,11 @@
+ $(UNIX_SO): $(UNIX_OBJS)
+ 	$(LD) $(LDFLAGS) -o $@ $(UNIX_OBJS)
+ 
++$(SOCKET_A): $(SOCKET_OBJS)
++	$(AR) $(ARFLAGS) $@ $(SOCKET_OBJS)
++	$(RANLIB) $(RANLIBFLAGS) $@
++	
++
+ #------
+ # List of dependencies
+ #
+@@ -82,7 +87,7 @@
+ usocket.o: usocket.c socket.h io.h timeout.h usocket.h
+ 
+ clean:
+-	rm -f $(SOCKET_SO) $(SOCKET_OBJS) 
++	rm -f $(SOCKET_SO) $(SOCKET_A) $(SOCKET_OBJS) 
+ 	rm -f $(MIME_SO) $(UNIX_SO) $(MIME_OBJS) $(UNIX_OBJS)
+ 
+ #------
+Only in b: tags
