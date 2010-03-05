@@ -6,6 +6,8 @@ TEST_RESULTS_DIR=${BUILD_DIR}/test-reports
 
 export PATH=/usr/lib/ccache:${PATH}
 
+set -e
+
 ./configure --enable-dev-mode
 make uninstall-all
 make menuselect.makeopts
