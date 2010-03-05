@@ -521,7 +521,7 @@ function manager:process_events()
 		end
 
 		-- now do the catch all handlers
-		for event, handler in pairs(self.event_handlers) do
+		for event, handlers in pairs(self.event_handlers) do
 			if event == "" then
 				for i, handler in ipairs(handlers) do
 					handler(e)
