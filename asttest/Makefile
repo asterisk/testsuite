@@ -83,8 +83,8 @@ all: asttest
 #endif
 
 lua/%_lua.h : lua/%.lua tools/mkstring
-	luac -o $(*F).luac $<
-	./tools/mkstring -n $(*F)_lua -o $@ $(*F).luac 
+	luac -o $(basename $<).luac $<
+	./tools/mkstring -n $(notdir $(basename $<))_lua -o $@ $(basename $<).luac 
 
 lib/%.o: lib/%.c include/asttest/%.h
 
