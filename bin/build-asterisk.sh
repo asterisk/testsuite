@@ -45,10 +45,16 @@ fi
 echo "*** Generating Unit Test Results Output ***"
 asterisk -rx "test generate results xml ${TEST_RESULTS_DIR}/unit-test-results.xml"
 sleep 5
-echo "TEST_RESULTS_DIR: ${TEST_RESULTS_DIR}"
-ls -l ${TEST_RESULTS_DIR}
-echo "Test Results:"
-cat ${TEST_RESULTS_DIR}/unit-test-results.xml
 
 echo "*** Stopping Asterisk ***"
 asterisk -rx "core stop now"
+
+echo "*** Running external test suite ***"
+svn co http://svn.digium.com/svn/testsuite/asterisk/trunk testsuite
+cd testsuite
+./run-tests.py
+cp *.xml ../test-reports
+
+echo "*** Test Results: ***"
+ls -l ${TEST_RESULTS_DIR}
+cat ${TEST_RESULTS_DIR}/*.xml
