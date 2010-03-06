@@ -139,6 +139,7 @@ class TestSuite:
                 os.chdir("..")
                 os.system("make uninstall-all")
                 os.system("make install")
+                os.system("make samples")
                 os.chdir(test_suite_dir)
 
             # Run Test
