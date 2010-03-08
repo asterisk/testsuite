@@ -54,7 +54,7 @@ a) File layout
 within its own directory within the tests directory.  Within that directory,
 there must be an executable called "run-test".  The test directory may contain
 anything else that the test needs to do its job.  A test configuration file may
-also exist that includes parameters that will be read by the top level test test
+also exist that includes parameters that will be read by the top level test
 script.
 
         /tests
