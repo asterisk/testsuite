@@ -15,7 +15,7 @@ account code is used.
 
 function sipp_exec(scenario, name, local_port)
 	local inf = "data.csv"
-	return proc.exec("sipp",
+	return proc.exec_io("sipp",
 	"127.0.0.1",
 	"-m", "1",
 	"-sf", scenario,
@@ -39,7 +39,9 @@ function sipp_check_error(p, scenario)
 	local res, err = p:wait()	
 
 	if not res then error(err) end
-	if res ~= 0 then error("error while executing " .. scenario .. " sipp scenario (sipp exited with status " .. res .. ")") end
+	if res ~= 0 then 
+		error("error while executing " .. scenario .. " sipp scenario (sipp exited with status " .. res .. ")\n" .. p.stderr:read("*a"))
+	end
 	
 	return res, err
 end
