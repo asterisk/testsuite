@@ -8,6 +8,8 @@ export PATH=/usr/lib/ccache:${PATH}
 
 set -e
 
+gmake distclean
+
 ./configure --enable-dev-mode
 gmake uninstall-all
 gmake menuselect.makeopts
