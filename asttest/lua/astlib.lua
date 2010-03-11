@@ -441,7 +441,7 @@ function manager:_read_message()
 
 		-- don't attempt to match headers when in data mode
 		if not data_mode then
-			header, value = line:match("(.+): (.*)")
+			header, value = line:match("(.+): ?(.*)")
 		else
 			header, value = nil, nil
 		end
