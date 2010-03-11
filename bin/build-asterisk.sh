@@ -8,6 +8,8 @@ export PATH=/usr/lib/ccache:${PATH}
 
 set -e
 
+make distclean
+
 ./configure --enable-dev-mode
 make uninstall-all
 make menuselect.makeopts
