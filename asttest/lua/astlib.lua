@@ -425,6 +425,7 @@ function manager:_read_message()
 	end
 
 	local follows = (value == "Follows")
+	local data_mode = false
 	
 	while true do
 		line, err = self.sock:receive("*l")
@@ -434,14 +435,24 @@ function manager:_read_message()
 
 		if line == "" and not follows then
 			break
+		elseif line == "" and follows then
+			data_mode = true
 		end
 
-		header, value = line:match("(.+): (.*)")
+		-- don't attempt to match headers when in data mode
+		if not data_mode then
+			header, value = line:match("(.+): (.*)")
+		else
+			header, value = nil, nil
+		end
+
 		if not header and not follows then
 			return nil, "error parsing message: " .. line
 		elseif not header and follows then
+			data_mode = true
 			if line == "--END COMMAND--" then
 				follows = false
+				data_mode = false
 			else
 				m:_append_data(line .. "\n")
 			end
