@@ -432,7 +432,7 @@ function manager:_read_message()
 			return nil, err
 		end
 
-		if line == "" then
+		if line == "" and not follows then
 			break
 		end
 
@@ -440,7 +440,9 @@ function manager:_read_message()
 		if not header and not follows then
 			return nil, "error parsing message: " .. line
 		elseif not header and follows then
-			if line ~= "--END COMMAND--" then
+			if line == "--END COMMAND--" then
+				follows = false
+			else
 				m:_append_data(line .. "\n")
 			end
 		else
@@ -650,7 +652,7 @@ end
 
 function manager.message:_append_data(data)
 	if not self.data then
-		self.data = data
+		rawset(self, "data", data)
 	else
 		self.data = self.data .. data
 	end
