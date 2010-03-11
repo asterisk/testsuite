@@ -436,12 +436,12 @@ function manager:_read_message()
 			break
 		end
 
-		header, value = line:match("(.+): (.+)")
+		header, value = line:match("(.+): (.*)")
 		if not header and not follows then
 			return nil, "error parsing message: " .. line
 		elseif not header and follows then
 			if line ~= "--END COMMAND--" then
-				m._append_data(line .. "\n")
+				m:_append_data(line .. "\n")
 			end
 		else
 			m[header] = value
