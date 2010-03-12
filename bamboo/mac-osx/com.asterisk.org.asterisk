@@ -1,0 +1,24 @@
+<?xmlversion="1.0"encoding="UTF-8"?>
+<!DOCTYPEplistPUBLIC"-//AppleComputer//DTDPLIST1.0//EN""http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plistversion="1.0">
+	<dict>
+		<key>Disabled</key>
+		<false/>
+		<key>Label</key>
+		<string>com.asterisk.org.asterisk</string>
+		<key>ProgramArguments</key>
+		<array>
+			<string>/usr/local/sbin/asterisk</string>
+			<string>-f</string>
+		</array>
+		<key>ServiceDescription</key>
+		<string>AsteriskPBX</string>
+		<key>UserName</key>
+		<string>root</string>
+		<key>GroupName</key>
+		<string>admin</string>
+		<key>OnDemand</key>
+		<false/>
+	</dict>
+</plist>
+

@@ -12,3 +12,4 @@ all:
 install:
 	mkdir -p $(BINDIR)
 	for n in bamboo/bin/* ; do $(INSTALL) -m 755 $$n $(BINDIR) ; done
+	if [ -d /Library/LaunchDaemons ] ; then $(INSTALL) -m 644 bamboo/mac-osx/com.asterisk.org.asterisk /Library/LaunchDaemons ; fi

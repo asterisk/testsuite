@@ -4,6 +4,19 @@ PLAN=$1
 BUILD_DIR=/srv/bamboo/xml-data/build-dir/${PLAN}
 TEST_RESULTS_DIR=${BUILD_DIR}/test-reports
 
+start_asterisk() {
+	echo "*** Starting Asterisk ***"
+
+	if [ -d /Library/LaunchDaemons ] ; then
+		# Mac OSX
+		launchctl load -w /Library/LaunchDaemons/com.asterisk.org.asterisk
+	else
+		asterisk
+	fi
+
+	sleep 5
+}
+
 export PATH=/usr/lib/ccache:${PATH}
 
 if [ -f "main/test.c" ] ; then
@@ -34,9 +47,7 @@ if [ "${UNIT_TESTS}" = "yes" ] ; then
 	WGET_EXTRA_ARGS=--quiet make install
 	make samples
 
-	echo "*** Starting Asterisk ***"
-	asterisk
-	sleep 5
+	start_asterisk
 
 	echo "*** Executing Unit Tests ***"
 	asterisk -rx "test execute all"
