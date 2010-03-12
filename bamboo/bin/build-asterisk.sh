@@ -26,6 +26,8 @@ stop_asterisk() {
 		# Mac OSX
 		launchctl unload -w /Library/LaunchDaemons/com.asterisk.org.asterisk
 	fi
+
+	(killall -9 asterisk || :) > /dev/null 2>&1
 }
 
 export PATH=/usr/lib/ccache:/usr/local/sbin:${PATH}
