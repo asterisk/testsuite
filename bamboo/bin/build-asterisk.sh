@@ -17,7 +17,7 @@ start_asterisk() {
 	sleep 5
 }
 
-export PATH=/usr/lib/ccache:/usr/local/bin:${PATH}
+export PATH=/usr/lib/ccache:/usr/local/sbin:${PATH}
 
 if [ -f "main/test.c" ] ; then
 	UNIT_TESTS=yes
