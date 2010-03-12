@@ -1,6 +1,6 @@
 #!/bin/sh
 
-BINDIR=/usr/local/bin/bamboo/build-asterisk.sh
+BINDIR=/usr/local/bin/bamboo/
 
 svn co http://svn.digium.com/svn/testsuite/asterisk/trunk testsuite
 cd testsuite
