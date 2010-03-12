@@ -17,6 +17,17 @@ start_asterisk() {
 	sleep 5
 }
 
+stop_asterisk() {
+	echo "*** Stopping Asterisk ***"
+	asterisk -rx "core stop now"
+	sleep 5
+
+	if [ -d /Library/LaunchDaemons ] ; then
+		# Mac OSX
+		launchctl unload -w /Library/LaunchDaemons/com.asterisk.org.asterisk
+	fi
+}
+
 export PATH=/usr/lib/ccache:/usr/local/sbin:${PATH}
 
 if [ -f "main/test.c" ] ; then
@@ -28,6 +39,9 @@ fi
 set -e
 
 make distclean
+if [ -d "test-reports" ] ; then
+	rm -rf test-reports
+fi
 ./configure --enable-dev-mode
 make uninstall-all
 make menuselect.makeopts
@@ -61,8 +75,7 @@ if [ "${UNIT_TESTS}" = "yes" ] ; then
 	asterisk -rx "test generate results xml ${TEST_RESULTS_DIR}/unit-test-results.xml"
 	sleep 5
 
-	echo "*** Stopping Asterisk ***"
-	asterisk -rx "core stop now"
+	stop_asterisk
 fi
 
 if [ "${PLAN}" = "AST-TRUNK" ] ; then
