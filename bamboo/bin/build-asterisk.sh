@@ -75,6 +75,8 @@ if [ "${PLAN}" = "AST-TRUNK" ] ; then
 	cp *.xml ../test-reports
 fi
 
-echo "*** Test Results: ***"
-ls -l ${TEST_RESULTS_DIR}
-cat ${TEST_RESULTS_DIR}/*.xml
+if [ -d "test-reports" ] ; then
+	echo "*** Test Results: ***"
+	ls -l ${TEST_RESULTS_DIR}
+	cat ${TEST_RESULTS_DIR}/*.xml
+fi
