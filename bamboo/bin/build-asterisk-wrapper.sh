@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 BINDIR=/usr/local/bin/bamboo/
 
@@ -10,4 +10,4 @@ rm -rf testsuite
 
 set -e
 
-${BINDIR}/build-asterisk.sh
+${BINDIR}/build-asterisk.sh $@
