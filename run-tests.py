@@ -27,7 +27,7 @@ BIG_WARNING = "\n" \
               "this in a test environment.\n" \
               "\n" \
               "EXISTING CONFIGURATION WILL BE LOST!\n" \
-              "      *******************\n" \
+              "      *******************\n"
 
 
 class Dependency:
