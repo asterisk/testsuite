@@ -39,7 +39,7 @@ pass/fail result via a predefined method of doing so.
         In addition to the implementation of this test suite, this repository
 also contains scripts and other information needed for setting up test slaves
 that will be a part of the bamboo build and test infrastructure.  Test slave
-configuration is discussed in section 4.
+configuration is discussed in section 5.
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

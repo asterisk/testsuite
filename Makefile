@@ -10,5 +10,5 @@ all:
 	@echo "************************************************************"
 
 install:
-	mkdir -p /usr/local/bin/bamboo
-	for n in bin/* ; do $(INSTALL) -m 755 $$n $(BINDIR) ; done
+	mkdir -p $(BINDIR)
+	for n in bamboo/bin/* ; do $(INSTALL) -m 755 $$n $(BINDIR) ; done
