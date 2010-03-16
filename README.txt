@@ -15,7 +15,6 @@
         2) Test Anatomy
         3) Test Configuration
         4) Test Suite System Requirements
-        5) Test Slave Configuration
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -35,11 +34,6 @@ Asterisk.  This test suite is the collection of top-down functionality tests.
 The test suite is made up as a collection of scripts that test some portion of
 Asterisk functionality given a set of preconditions, and then provide a
 pass/fail result via a predefined method of doing so.
-
-        In addition to the implementation of this test suite, this repository
-also contains scripts and other information needed for setting up test slaves
-that will be a part of the bamboo build and test infrastructure.  Test slave
-configuration is discussed in section 5.
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -152,25 +146,6 @@ Optional (needed by specific tests):
         - bash
         - SIPp
         - asttest
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------
---- 5) Test Slave Configuration
---------------------------------------------------------------------------------
-
-        This section discusses what is necessary to configure a system to be a
-test slave for the bamboo build and test infrastructure.  A test slave in bamboo
-is referred to as an agent.
-
-        First, all packages required to build Asterisk and Asterisk modules
-should be installed.  The "install_prereq" script in Asterisk is very helpful
-for getting this done.
-
-        The bin directory in this repository contains some scripts that bamboo
-will assume are installed on an agent.  They will be installed into
-/usr/local/bin/bamboo/.  To install them, run "make install" as root.
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
