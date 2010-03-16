@@ -2,13 +2,13 @@
 
 BINDIR=/usr/local/bin/bamboo/
 
-mkdir testsuite
-cd testsuite
-svn co http://svn.digium.com/svn/testsuite/asterisk/trunk
+mkdir bamboo
+cd bamboo
+svn co http://svn.digium.com/svn/testsuite/bamboo/trunk
 cd trunk
 make install
 cd ../..
-rm -rf testsuite
+rm -rf bamboo
 
 set -e
 
