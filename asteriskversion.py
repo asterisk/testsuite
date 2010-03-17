@@ -111,6 +111,12 @@ class AsteriskVersionTests(unittest.TestCase):
         self.assertEqual(v5.revision, "249059M")
         self.assertEqual(v5.parent, "/trunk")
 
+        v6 = AsteriskVersion("SVN-russell-rest-r12345")
+        self.assertTrue(v6.svn)
+        self.assertEqual(str(v6), "SVN-russell-rest-r12345")
+        self.assertEqual(v6.branch, "russell-rest")
+        self.assertEqual(v6.revision, "12345")
+
 
 def main():
     unittest.main()
