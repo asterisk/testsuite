@@ -19,7 +19,6 @@ from asteriskversion import AsteriskVersion
 
 TESTS_CONFIG = "tests/tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
-VERSION_HDR = "/usr/include/asterisk/version.h"
 
 BIG_WARNING = "\n" \
               "      *** PLEASE NOTE ***\n" \

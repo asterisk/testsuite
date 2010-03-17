@@ -11,6 +11,10 @@ import sys
 import re
 import unittest
 
+
+VERSION_HDR = "/usr/include/asterisk/version.h"
+
+
 class AsteriskVersion:
     def __init__(self, version=None):
         if version is not None:
