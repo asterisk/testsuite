@@ -93,16 +93,12 @@ class AsteriskVersion:
         v = ""
         try:
             f = open(VERSION_HDR, "r")
+            match = re.search("ASTERISK_VERSION\s+\"(.*)\"", f.read())
+            if match is not None:
+                v = match.group(1)
+            f.close()
         except:
             print "Failed to open %s to get Asterisk version." % VERSION_HDR
-            return v
-
-        match = re.search("ASTERISK_VERSION\s+\"(.*)\"", f.read())
-        if match is not None:
-            v = match.group(1)
-
-        f.close()
-
         return v
 
 
