@@ -9,11 +9,12 @@ the GNU General Public License Version 2.
 
 import sys
 import os
-import re
 import subprocess
 import optparse
 import time
 import yaml
+
+from asteriskversion import AsteriskVersion
 
 
 TESTS_CONFIG = "tests/tests.yaml"
@@ -145,7 +146,7 @@ class TestSuite:
             # Run Test
 
             cmd = ["tests/%s/run-test" % t.test_name]
-            cmd.extend(ast_version)
+            cmd.extend(["-v", str(ast_version)])
 
             start_time = time.time()
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
@@ -188,26 +189,6 @@ class TestSuite:
             f.close()
 
 
-def get_ast_version():
-    '''
-    Determine the version of Asterisk installed from the installed version.h.
-    '''
-    v = []
-    try:
-        f = open(VERSION_HDR, "r")
-    except:
-        print "Failed to open %s to get Asterisk version." % VERSION_HDR
-        return v
-
-    match = re.search("ASTERISK_VERSION\s+\"(.*)\"", f.read())
-    if match is not None:
-        v = [ "-v", match.group(1) ]
-
-    f.close()
-
-    return v
-
-
 def main(argv=None):
     if argv is None:
         args = sys.argv
@@ -224,7 +205,7 @@ def main(argv=None):
 
     test_suite = TestSuite()
 
-    ast_version = get_ast_version()
+    ast_version = AsteriskVersion()
 
     if options.list_tests is True:
         print "Asterisk Version: %s\n" % str(ast_version)
