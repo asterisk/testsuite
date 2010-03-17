@@ -35,9 +35,11 @@ class AsteriskVersion:
         parts = self.version_str.split(".")
         self.concept = parts[0]
         self.major = parts[1]
-        self.minor = parts[2]
-        if len(parts) > 3:
+        try:
+            self.minor = parts[2]
             self.patch = parts[3]
+        except:
+            pass
 
     def __parse_svn_version(self):
         self.svn = True
@@ -87,6 +89,13 @@ class AsteriskVersionTests(unittest.TestCase):
         self.assertEqual(v.major, "4")
         self.assertEqual(v.minor, "30")
         self.assertEqual(v.patch, "1")
+
+    def test_version3(self):
+        v = AsteriskVersion("1.4")
+        self.assertFalse(v.svn)
+        self.assertEqual(str(v), "1.4")
+        self.assertEqual(v.concept, "1")
+        self.assertEqual(v.major, "4")
 
     def test_svn_version(self):
         v = AsteriskVersion("SVN-trunk-r252849")
