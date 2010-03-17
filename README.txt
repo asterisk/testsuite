@@ -139,7 +139,7 @@ properties:
 --------------------------------------------------------------------------------
 
 Required:
-        - python 2.X
+        - python >= 2.4
         - python-yaml
 
 Optional (needed by specific tests):

@@ -56,8 +56,16 @@ class Dependency:
 
 
 class TestConfig:
-    def __init__(self, test_name):
-        test_config = "tests/%s/test-config.yaml" % test_name
+    def __init__(self, test_name, ast_version):
+        self.can_run = True
+        self.time = 0.0
+        self.test_name = test_name
+
+        self.__parse_config()
+        self.__check_deps(ast_version)
+
+    def __parse_config(self):
+        test_config = "tests/%s/test-config.yaml" % self.test_name
         try:
             f = open(test_config, "r")
             self.config = yaml.load(f)
@@ -65,7 +73,6 @@ class TestConfig:
         except:
             print "Failed to open %s, does it exist?" % test_config
 
-        self.test_name = test_name
         try:
             self.summary = self.config["testinfo"]["summary"]
         except:
@@ -75,14 +82,25 @@ class TestConfig:
         except:
             self.description = ""
 
+        try:
+            self.minversion = \
+                AsteriskVersion(self.config["properties"]["minversion"])
+        except:
+            self.minversion = AsteriskVersion("1.4")
+            print "ERROR: No 'minversion' has been specified for %s" % \
+                    self.test_name
+
+        try:
+            self.maxversion = \
+                AsteriskVersion(self.config["properties"]["maxversion"])
+        except:
+            self.maxversion = None
+
+    def __check_deps(self, ast_version):
         self.deps = [
             Dependency(d["app"])
                 for d in self.config["properties"]["dependencies"]
         ]
-
-        self.time = 0.0
-
-        self.can_run = True
         for d in self.deps:
             if d.found is False:
                 self.can_run = False
@@ -90,7 +108,7 @@ class TestConfig:
 
 
 class TestSuite:
-    def __init__(self):
+    def __init__(self, ast_version):
         f = open(TESTS_CONFIG, "r")
         self.config = yaml.load(f)
         f.close()
@@ -110,13 +128,19 @@ class TestSuite:
                   "Asterisk in between tests.\n" \
                   "***************\n"
 
-        self.tests = [ TestConfig(t["test"]) for t in self.config["tests"] ]
+        self.tests = [
+            TestConfig(t["test"], ast_version) for t in self.config["tests"]
+        ]
 
     def __str__(self):
         s = "Configured tests:\n"
         i = 1
         for t in self.tests:
-            s += "%.3d) %s (%s)\n" % (i, t.test_name, t.summary)
+            s += "%.3d) %s\n" % (i, t.test_name)
+            s += "      --> Summary: %s\n" % t.summary
+            s += "      --> Minimum Version: %s\n" % str(t.minversion)
+            if t.maxversion is not None:
+                s += "      --> Maximum Version: %s\n" % str(t.maxversion)
             i += 1
         return s
 
@@ -202,9 +226,9 @@ def main(argv=None):
             help="List tests instead of running them.")
     (options, args) = parser.parse_args(argv)
 
-    test_suite = TestSuite()
-
     ast_version = AsteriskVersion()
+
+    test_suite = TestSuite(ast_version)
 
     if options.list_tests is True:
         print "Asterisk Version: %s\n" % str(ast_version)
