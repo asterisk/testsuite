@@ -38,7 +38,7 @@ class AsteriskVersion:
     def __parse_svn_version(self):
         self.svn = True
         match = re.search(
-                "SVN-(?P<branch>.*)-r(?P<revision>\d+M?)(?:\-(?P<parent>.*))?",
+                "SVN-(?P<branch>.*)-r(?P<revision>\d+M?)(?:-(?P<parent>.*))?",
                 self.version_str
         )
         if match is not None:
