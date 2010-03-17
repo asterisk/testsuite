@@ -30,6 +30,35 @@ class AsteriskVersion:
     def __str__(self):
         return self.version_str
 
+    def __cmp__(self, other):
+        if self.svn or other.svn:
+            print "ERROR: SVN version comparisons not yet implemented."
+            return 0
+        else:
+            res = self.__cmp_version_part(self.concept, other.concept)
+            if res != 0:
+                return res
+
+            res = self.__cmp_version_part(self.major, other.major)
+            if res != 0:
+                return res
+
+            res = self.__cmp_version_part(self.minor, other.minor)
+            if res != 0:
+                return res
+
+            return self.__cmp_version_part(self.patch, other.patch)
+
+    @staticmethod
+    def __cmp_version_part(selfpart, otherpart):
+        if selfpart is None and otherpart is None:
+            return 0
+        if selfpart is None:
+            return -1
+        if otherpart is None:
+            return 1
+        return cmp(selfpart, otherpart)
+
     def __parse_version(self):
         self.svn = False
         parts = self.version_str.split(".")
@@ -37,9 +66,14 @@ class AsteriskVersion:
         self.major = parts[1]
         try:
             self.minor = parts[2]
-            self.patch = parts[3]
         except:
-            pass
+            self.minor = None
+            self.patch = None
+        if self.minor is not None:
+            try:
+                self.patch = parts[3]
+            except:
+                self.patch = None
 
     def __parse_svn_version(self):
         self.svn = True
@@ -125,6 +159,41 @@ class AsteriskVersionTests(unittest.TestCase):
         self.assertEqual(str(v), "SVN-russell-rest-r12345")
         self.assertEqual(v.branch, "russell-rest")
         self.assertEqual(v.revision, "12345")
+
+    def test_cmp(self):
+        v1 = AsteriskVersion("1.4")
+        v2 = AsteriskVersion("1.6.0")
+        self.assertTrue(v1 < v2)
+
+    def test_cmp2(self):
+        v1 = AsteriskVersion("1.4")
+        v2 = AsteriskVersion("1.4.15")
+        self.assertTrue(v1 < v2)
+
+    def test_cmp3(self):
+        v1 = AsteriskVersion("1.4.30")
+        v2 = AsteriskVersion("1.4.30.1")
+        self.assertTrue(v1 < v2)
+
+    def test_cmp4(self):
+        v1 = AsteriskVersion("1.4")
+        v2 = AsteriskVersion("1.4")
+        self.assertTrue(v1 == v2)
+
+    def test_cmp5(self):
+        v1 = AsteriskVersion("1.6.0")
+        v2 = AsteriskVersion("1.6.0")
+        self.assertTrue(v1 == v2)
+
+    def test_cmp6(self):
+        v1 = AsteriskVersion("1.6.0.10")
+        v2 = AsteriskVersion("1.6.0.10")
+        self.assertTrue(v1 == v2)
+
+    def test_cmp7(self):
+        v1 = AsteriskVersion("1.8")
+        v2 = AsteriskVersion("2.0")
+        self.assertTrue(v1 < v2)
 
 
 def main():
