@@ -37,16 +37,14 @@ class AsteriskVersion:
 
     def __parse_svn_version(self):
         self.svn = True
-        match = re.search("SVN-(.*)-r(.*)", self.version_str)
+        match = re.search(
+                "SVN-(?P<branch>.*)-r(?P<revision>\d+M?)(:?\-(?P<parent>.*))?",
+                self.version_str
+        )
         if match is not None:
-            self.branch = match.group(1)
-            self.revision = match.group(2)
-            # I know you could do this with one regex.  If someone wants
-            # to help me figure out why I couldn't do it, that would rock.
-            match = re.search("(.*)-(.*)", self.revision)
-            if match is not None:
-                self.revision = match.group(1)
-                self.parent = match.group(2)
+            self.branch = match.group("branch")
+            self.revision = match.group("revision")
+            self.parent = match.group("parent")
 
     def __get_ast_version(self):
         '''
