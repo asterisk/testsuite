@@ -70,52 +70,50 @@ class AsteriskVersion:
 
 class AsteriskVersionTests(unittest.TestCase):
     def test_version(self):
-        '''
-        Test normal version strings.
-        '''
-        v1 = AsteriskVersion("1.4.30")
-        self.assertFalse(v1.svn)
-        self.assertEqual(str(v1), "1.4.30")
-        self.assertEqual(v1.concept, "1")
-        self.assertEqual(v1.major, "4")
-        self.assertEqual(v1.minor, "30")
+        v = AsteriskVersion("1.4.30")
+        self.assertFalse(v.svn)
+        self.assertEqual(str(v), "1.4.30")
+        self.assertEqual(v.concept, "1")
+        self.assertEqual(v.major, "4")
+        self.assertEqual(v.minor, "30")
 
-        v2 = AsteriskVersion("1.4.30.1")
-        self.assertFalse(v2.svn)
-        self.assertEqual(str(v2), "1.4.30.1")
-        self.assertEqual(v2.concept, "1")
-        self.assertEqual(v2.major, "4")
-        self.assertEqual(v2.minor, "30")
-        self.assertEqual(v2.patch, "1")
+    def test_version2(self):
+        v = AsteriskVersion("1.4.30.1")
+        self.assertFalse(v.svn)
+        self.assertEqual(str(v), "1.4.30.1")
+        self.assertEqual(v.concept, "1")
+        self.assertEqual(v.major, "4")
+        self.assertEqual(v.minor, "30")
+        self.assertEqual(v.patch, "1")
 
     def test_svn_version(self):
-        '''
-        Test SVN version strings.
-        '''
-        v3 = AsteriskVersion("SVN-trunk-r252849")
-        self.assertTrue(v3.svn)
-        self.assertEqual(str(v3), "SVN-trunk-r252849")
-        self.assertEqual(v3.branch, "trunk")
-        self.assertEqual(v3.revision, "252849")
+        v = AsteriskVersion("SVN-trunk-r252849")
+        self.assertTrue(v.svn)
+        self.assertEqual(str(v), "SVN-trunk-r252849")
+        self.assertEqual(v.branch, "trunk")
+        self.assertEqual(v.revision, "252849")
 
-        v4 = AsteriskVersion("SVN-branch-1.6.2-r245581M")
-        self.assertTrue(v4.svn)
-        self.assertEqual(str(v4), "SVN-branch-1.6.2-r245581M")
-        self.assertEqual(v4.branch, "branch-1.6.2")
-        self.assertEqual(v4.revision, "245581M")
+    def test_svn_version2(self):
+        v = AsteriskVersion("SVN-branch-1.6.2-r245581M")
+        self.assertTrue(v.svn)
+        self.assertEqual(str(v), "SVN-branch-1.6.2-r245581M")
+        self.assertEqual(v.branch, "branch-1.6.2")
+        self.assertEqual(v.revision, "245581M")
 
-        v5 = AsteriskVersion("SVN-russell-cdr-q-r249059M-/trunk")
-        self.assertTrue(v5.svn)
-        self.assertEqual(str(v5), "SVN-russell-cdr-q-r249059M-/trunk")
-        self.assertEqual(v5.branch, "russell-cdr-q")
-        self.assertEqual(v5.revision, "249059M")
-        self.assertEqual(v5.parent, "/trunk")
+    def test_svn_version3(self):
+        v = AsteriskVersion("SVN-russell-cdr-q-r249059M-/trunk")
+        self.assertTrue(v.svn)
+        self.assertEqual(str(v), "SVN-russell-cdr-q-r249059M-/trunk")
+        self.assertEqual(v.branch, "russell-cdr-q")
+        self.assertEqual(v.revision, "249059M")
+        self.assertEqual(v.parent, "/trunk")
 
-        v6 = AsteriskVersion("SVN-russell-rest-r12345")
-        self.assertTrue(v6.svn)
-        self.assertEqual(str(v6), "SVN-russell-rest-r12345")
-        self.assertEqual(v6.branch, "russell-rest")
-        self.assertEqual(v6.revision, "12345")
+    def test_svn_version4(self):
+        v = AsteriskVersion("SVN-russell-rest-r12345")
+        self.assertTrue(v.svn)
+        self.assertEqual(str(v), "SVN-russell-rest-r12345")
+        self.assertEqual(v.branch, "russell-rest")
+        self.assertEqual(v.revision, "12345")
 
 
 def main():
