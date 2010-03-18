@@ -59,16 +59,12 @@ class AsteriskVersion:
         parts = self.version_str.split(".")
         self.concept = parts[0]
         self.major = parts[1]
-        try:
+        self.minor = None
+        self.patch = None
+        if len(parts) >= 3:
             self.minor = parts[2]
-        except:
-            self.minor = None
-            self.patch = None
-        if self.minor is not None:
-            try:
-                self.patch = parts[3]
-            except:
-                self.patch = None
+        if len(parts) >= 4:
+            self.patch = parts[3]
 
     def __parse_svn_version(self):
         self.svn = True

@@ -64,6 +64,28 @@ class TestConfig:
         self.__parse_config()
         self.__check_deps(ast_version)
 
+    def __process_testinfo(self):
+        self.summary = "(none)"
+        self.description = "(none)"
+        if self.config.has_key("testinfo") is False:
+            return
+        testinfo = self.config["testinfo"]
+        if testinfo.has_key("summary"):
+            self.summary = testinfo["summary"]
+        if testinfo.has_key("description"):
+            self.description = testinfo["description"]
+
+    def __process_properties(self):
+        self.minversion = AsteriskVersion("1.4")
+        self.maxversion = None
+        if self.config.has_key("properties") is False:
+            return
+        properties = self.config["properties"]
+        if properties.has_key("minversion"):
+            self.minversion = AsteriskVersion(properties["minversion"])
+        if properties.has_key("maxversion"):
+            self.maxversion = AsteriskVersion(properties["maxversion"])
+
     def __parse_config(self):
         test_config = "tests/%s/test-config.yaml" % self.test_name
         try:
@@ -73,28 +95,8 @@ class TestConfig:
         except:
             print "Failed to open %s, does it exist?" % test_config
 
-        try:
-            self.summary = self.config["testinfo"]["summary"]
-        except:
-            self.summary = ""
-        try:
-            self.description = self.config["testinfo"]["description"]
-        except:
-            self.description = ""
-
-        try:
-            self.minversion = \
-                AsteriskVersion(self.config["properties"]["minversion"])
-        except:
-            self.minversion = AsteriskVersion("1.4")
-            print "ERROR: No 'minversion' has been specified for %s" % \
-                    self.test_name
-
-        try:
-            self.maxversion = \
-                AsteriskVersion(self.config["properties"]["maxversion"])
-        except:
-            self.maxversion = None
+        self.__process_testinfo()
+        self.__process_properties()
 
     def __check_deps(self, ast_version):
         self.deps = [
