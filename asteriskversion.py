@@ -30,34 +30,29 @@ class AsteriskVersion:
     def __str__(self):
         return self.version_str
 
-    def __cmp__(self, other):
-        if self.svn or other.svn:
-            print "ERROR: SVN version comparisons not yet implemented."
-            return 0
+    def __int__(self):
+        if self.svn is True:
+            if self.branch == "trunk":
+                return 99999999
+            elif self.branch[:6] == "branch":
+                return int(AsteriskVersion(self.branch[7:])) + 99
+            else:
+                # team branch XXX (may not be off of trunk)
+                return 99999999
         else:
-            res = self.__cmp_version_part(self.concept, other.concept)
-            if res != 0:
-                return res
+            res = int(self.concept) * 10000000 + int(self.major) * 100000
+            if self.minor is not None:
+                res += int(self.minor) * 1000
+                if self.patch is not None:
+                    res += int(self.patch) * 10
+            return res
 
-            res = self.__cmp_version_part(self.major, other.major)
-            if res != 0:
-                return res
-
-            res = self.__cmp_version_part(self.minor, other.minor)
-            if res != 0:
-                return res
-
-            return self.__cmp_version_part(self.patch, other.patch)
-
-    @staticmethod
-    def __cmp_version_part(selfpart, otherpart):
-        if selfpart is None and otherpart is None:
-            return 0
-        if selfpart is None:
-            return -1
-        if otherpart is None:
-            return 1
-        return cmp(selfpart, otherpart)
+    def __cmp__(self, other):
+        res = cmp(int(self), int(other))
+        if res == 0 and self.svn and other.svn:
+            res = cmp(int(self.revision.split("M")[0]),
+                      int(other.revision.split("M")[0]))
+        return res
 
     def __parse_version(self):
         self.svn = False
@@ -190,6 +185,26 @@ class AsteriskVersionTests(unittest.TestCase):
         v1 = AsteriskVersion("1.8")
         v2 = AsteriskVersion("2.0")
         self.assertTrue(v1 < v2)
+
+    def test_cmp8(self):
+        v1 = AsteriskVersion("SVN-trunk-r252849")
+        v2 = AsteriskVersion("SVN-branch-1.6.2-r245581M")
+        self.assertTrue(v1 > v2)
+
+    def test_cmp9(self):
+        v1 = AsteriskVersion("SVN-trunk-r252849")
+        v2 = AsteriskVersion("SVN-trunk-r252850M")
+        self.assertTrue(v1 < v2)
+
+    def test_cmp10(self):
+        v1 = AsteriskVersion("SVN-trunk-r252849")
+        v2 = AsteriskVersion("SVN-russell-cdr-q-r249059M-/trunk")
+        self.assertTrue(v1 > v2)
+
+    def test_cmp11(self):
+        v1 = AsteriskVersion("SVN-branch-1.6.2-r245581M")
+        v2 = AsteriskVersion("SVN-branch-1.6.1-r245581M")
+        self.assertTrue(v1 > v2)
 
 
 def main():
