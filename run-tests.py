@@ -14,7 +14,7 @@ import optparse
 import time
 import yaml
 
-from asteriskversion import AsteriskVersion
+from asterisktestsuite.asteriskversion import AsteriskVersion
 
 
 TESTS_CONFIG = "tests/tests.yaml"
