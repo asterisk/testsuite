@@ -101,6 +101,19 @@ class TestConfig:
             Dependency(d["app"])
                 for d in self.config["properties"]["dependencies"]
         ]
+
+        self.minversion_check = True
+        if ast_version < self.minversion:
+            self.can_run = False
+            self.minversion_check = False
+            return
+
+        self.maxversion_check = True
+        if self.maxversion is not None and ast_version > self.maxversion:
+            self.can_run = False
+            self.maxversion_check = False
+            return
+
         for d in self.deps:
             if d.found is False:
                 self.can_run = False
@@ -138,9 +151,11 @@ class TestSuite:
         for t in self.tests:
             s += "%.3d) %s\n" % (i, t.test_name)
             s += "      --> Summary: %s\n" % t.summary
-            s += "      --> Minimum Version: %s\n" % str(t.minversion)
+            s += "      --> Minimum Version: %s (%s)\n" % \
+                            (str(t.minversion), str(t.minversion_check))
             if t.maxversion is not None:
-                s += "      --> Maximum Version: %s\n" % str(t.maxversion)
+                s += "      --> Maximum Version: %s (%s) \n" % \
+                            (str(t.maxversion), str(t.maxversion_check))
             i += 1
         return s
 
