@@ -30,6 +30,8 @@ This scenario will execute a sip register with the given parameters.
 
 		]]>
 	</send>
+	
+	<recv response="100" optional="true"/>
 
 	<recv response="200"/>
 
