@@ -74,7 +74,7 @@ locations.  This includes a fresh set of sample configuration files in the
 c) Test Execution
 
         The "run-test" executable will be run by a top level application in the
-test suite called "run-tests.py".  When "run-test" is executed, it will be
+test suite called "runtests.py".  When "run-test" is executed, it will be
 provided a standard set of arguments which are defined here:
 
         -v <Asterisk version>       # Will always be provided

@@ -137,7 +137,7 @@ class TestSuite:
         self.within_ast_tree = os.path.exists("../main/asterisk.c")
         if self.within_ast_tree is False:
             print "*** WARNING ***\n" \
-                  "run-tests has not been executed from within a\n" \
+                  "runtests has not been executed from within a\n" \
                   "subdirectory of an Asterisk source tree.  This\n" \
                   "is required for being able to uninstall and install\n" \
                   "Asterisk in between tests.\n" \
@@ -233,7 +233,7 @@ def main(argv=None):
     if argv is None:
         args = sys.argv
 
-    usage = "Usage: ./run-tests.py [options]\n" \
+    usage = "Usage: ./runtests.py [options]\n" \
             "\n" \
             "%s" % BIG_WARNING
 
