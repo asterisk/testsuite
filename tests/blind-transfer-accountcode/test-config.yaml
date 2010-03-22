@@ -14,9 +14,7 @@ testinfo:
         - mantis : '16331'
 
 properties:
-    # XXX minversion should be 1.4, but the test currently fails on all branches
-    # but trunk.
-    minversion: '1.8'
+    minversion: '1.4'
     dependencies:
         - app : 'bash'
         - app : 'sipp'
