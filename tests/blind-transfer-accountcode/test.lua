@@ -97,9 +97,11 @@ end
 
 -- test dialing a peer without an account code set.  The resulting account code
 -- should be that of the dialing peer
+print("Calling test2 from test3 and transferring to test1")
 do_transfer_and_check_results("account3", {"test1", "test2", "test3"})
 
 -- now test dialing a peer with an account code set.  The resulting account
--- code should be that of the dialed peer
-do_transfer_and_check_results("account3", {"test3", "test2", "test1"})
+-- code should be that of the dialing peer
+print("Calling test3 from test1 and transferring to test2")
+do_transfer_and_check_results("account1", {"test3", "test2", "test1"})
 
