@@ -243,7 +243,11 @@ def main(argv=None):
             help="List tests instead of running them.")
     (options, args) = parser.parse_args(argv)
 
-    ast_version = AsteriskVersion()
+    try:
+        ast_version = AsteriskVersion()
+    except:
+        print "Failed to get Asterisk version.  Is Asterisk installed?"
+        return 1
 
     test_suite = TestSuite(ast_version)
 
