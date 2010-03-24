@@ -410,7 +410,7 @@ static int create_work_area(lua_State *L) {
 }
 
 /*!
- * \brief [lua_CFunction ast:unlink] Unlink the given file.
+ * \brief [lua_CFunction ast.unlink] Unlink the given file.
  * \param L the lua state to use
  *
  * \retval -1 error
