@@ -1,5 +1,7 @@
 -- test spawning asterisk
 
+skip_if(not ast.exists(), "asterisk not found")
+
 a = ast.new()
 a:spawn()
 posix.sleep(1)

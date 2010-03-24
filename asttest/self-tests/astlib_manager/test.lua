@@ -1,5 +1,7 @@
 -- test spawning and connecting to asterisk
 
+skip_if(not ast.exists(), "asterisk not found")
+
 a = ast.new()
 a:generate_manager_conf()
 

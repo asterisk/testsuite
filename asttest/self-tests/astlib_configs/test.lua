@@ -1,5 +1,7 @@
 -- test astlib
 
+skip_if(not ast.exists(), "asterisk not found")
+
 -- generate what we expect to see
 expected_test_conf = [[
 [test]
