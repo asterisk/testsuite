@@ -174,8 +174,14 @@ properties:
     maxversion : '1.8' # OPTIONAL
     dependencies : |   # OPTIONAL
         # List dependencies that must be met for this test to run
+        #
+        # Checking for an 'app' dependency behaves like the 'which' command
         - app : 'bash'
         - app : 'sipp'
+        # A 'python' dependency is a python module.  An attempt will be made to
+        # import a module by this name to determine whether the dependency is
+        # met.
+        - python : 'yaml'
 
 
 

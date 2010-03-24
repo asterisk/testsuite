@@ -33,9 +33,21 @@ BIG_WARNING = "\n" \
 
 
 class Dependency:
-    def __init__(self, name):
-        self.name = name
-        self.found = self.__which(name) is not None
+    def __init__(self, dep):
+        self.name = ""
+        self.met = False
+        if dep.has_key("app"):
+            self.name = dep["app"]
+            self.met = self.__which(self.name) is not None
+        elif dep.has_key("python"):
+            self.name = dep["python"]
+            try:
+                __import__(self.name)
+                self.met = True
+            except ImportError:
+                pass
+        else:
+            print "Unknown dependency type specified."
 
     def __which(self, program):
         '''
@@ -107,7 +119,7 @@ class TestConfig:
 
     def __check_deps(self, ast_version):
         self.deps = [
-            Dependency(d["app"])
+            Dependency(d)
                 for d in self.config["properties"]["dependencies"]
         ]
 
@@ -124,7 +136,7 @@ class TestConfig:
             return
 
         for d in self.deps:
-            if d.found is False:
+            if d.met is False:
                 self.can_run = False
                 break
 
@@ -149,19 +161,21 @@ class TestSuite:
             TestConfig(t["test"], ast_version) for t in self.config["tests"]
         ]
 
-    def __str__(self):
-        s = "Configured tests:\n"
+    def list_tests(self):
+        print "Configured tests:"
         i = 1
         for t in self.tests:
-            s += "%.3d) %s\n" % (i, t.test_name)
-            s += "      --> Summary: %s\n" % t.summary
-            s += "      --> Minimum Version: %s (%s)\n" % \
-                            (str(t.minversion), str(t.minversion_check))
+            print "%.3d) %s" % (i, t.test_name)
+            print "      --> Summary: %s" % t.summary
+            print "      --> Minimum Version: %s (%s)" % \
+                         (str(t.minversion), str(t.minversion_check))
             if t.maxversion is not None:
-                s += "      --> Maximum Version: %s (%s) \n" % \
-                            (str(t.maxversion), str(t.maxversion_check))
+                print "      --> Maximum Version: %s (%s)" % \
+                             (str(t.maxversion), str(t.maxversion_check))
+            for d in t.deps:
+                print "      --> Dependency: %s -- Met: %s" % (d.name,
+                             str(d.met))
             i += 1
-        return s
 
     def run(self, ast_version):
         test_suite_dir = os.getcwd()
@@ -170,7 +184,7 @@ class TestSuite:
             if t.can_run is False:
                 print "--> Can not run test '%s'" % t.test_name
                 for d in t.deps:
-                    print "--- --> Dependency: %s - %s" % (d.name, str(d.found))
+                    print "--- --> Dependency: %s - %s" % (d.name, str(d.met))
                 print
                 continue
 
@@ -275,7 +289,7 @@ def main(argv=None):
 
     if options.list_tests is True:
         print "Asterisk Version: %s\n" % str(ast_version)
-        print test_suite
+        test_suite.list_tests()
         return 0
 
     if os.geteuid() != 0:
