@@ -7,8 +7,6 @@ a:generate_manager_conf()
 
 a:spawn()
 
-posix.sleep(1)
-
 m, err = a:manager_connect()
 if not m then
 	fail("error connecting to asterisk: " .. err)

@@ -58,6 +58,7 @@ function asterisk:spawn()
 	self:generate_essential_configs()
 	self:write_configs()
 	self:_spawn()
+	posix.sleep(3)
 end
 
 function asterisk:spawn_and_wait()

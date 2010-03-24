@@ -4,7 +4,6 @@ skip_if(not ast.exists(), "asterisk not found")
 
 a = ast.new()
 a:spawn()
-posix.sleep(1)
 res, err = a:term_or_kill()
 
 if res == nil then
