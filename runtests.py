@@ -254,12 +254,12 @@ def main(argv=None):
     if options.list_tests is True:
         print "Asterisk Version: %s\n" % str(ast_version)
         print test_suite
-        sys.exit(0)
+        return 0
 
     if os.geteuid() != 0:
         print "You must run this script as root."
         print BIG_WARNING
-        sys.exit(1)
+        return 1
 
     print "Running tests for Asterisk %s ...\n" % str(ast_version)
 
@@ -281,4 +281,4 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main() or 0)
