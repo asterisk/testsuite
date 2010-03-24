@@ -90,8 +90,8 @@ class TestConfig:
         test_config = "tests/%s/test-config.yaml" % self.test_name
         try:
             f = open(test_config, "r")
-        except IOError as (errno, strerror):
-            print "Failed to open %s: %s" % (test_config, strerror)
+        except IOError:
+            print "Failed to open %s" % test_config
             return
         except:
             print "Unexpected error: %s" % sys.exc_info()[0]
@@ -131,8 +131,8 @@ class TestSuite:
     def __init__(self, ast_version):
         try:
             f = open(TESTS_CONFIG, "r")
-        except IOError as (errno, strerror):
-            print "Failed to open %s: %s" % (TESTS_CONFIG, strerror)
+        except IOError:
+            print "Failed to open %s" % TESTS_CONFIG
             return
         except:
             print "Unexpected error: %s" % sys.exc_info()[0]
@@ -217,8 +217,8 @@ class TestSuite:
     def write_results_xml(self, fn, stdout=False):
         try:
             f = open(TEST_RESULTS, "w")
-        except IOError as (errno, strerror):
-            print "Failed to open test results output file: %s" % strerror
+        except IOError:
+            print "Failed to open test results output file: %s" % TEST_RESULTS
             return
         except:
             print "Unexpected error: %s" % sys.exc_info()[0]
@@ -242,8 +242,9 @@ class TestSuite:
         if stdout is True:
             try:
                 f = open(TEST_RESULTS, "r")
-            except IOError as (errno, strerror):
-                print "Failed to open test results output file: %s" % strerror
+            except IOError:
+                print "Failed to open test results output file: %s" % \
+                        TEST_RESULTS
             except:
                 print "Unexpected error: %s" % sys.exc_info()[0]
             else:
