@@ -60,9 +60,6 @@ function do_transfer_and_check_results(accountcode, index)
 	a:load_config("configs/extensions.conf")
 	a:spawn()
 
-	-- wait for asterisk to load
-	posix.sleep(3)
-
 	-- register our three peers
 	sipp_exec_and_wait("sipp/register.xml", index[1], "5061")
 	sipp_exec_and_wait("sipp/register.xml", index[2], "5062")
