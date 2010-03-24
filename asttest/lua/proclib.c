@@ -34,6 +34,120 @@
 #include <sys/time.h>
 #include <time.h>
 
+
+/*!
+ * \brief Check if we can execute the given file.
+ * \warn This function only does a very basic check of executability.  It is
+ * possible for this function to say a file is executable, but the file not
+ * actually be executable by the user under the current circumstances.
+ */
+static int is_executable(lua_State *L) {
+	struct stat st;
+	const char *path = luaL_checkstring(L, 1);
+
+	if (stat(path, &st)) {
+		lua_pushboolean(L, 0);
+		lua_pushstring(L, strerror(errno));
+		return 2;
+	}
+
+	if (!S_ISREG(st.st_mode)) {
+		lua_pushboolean(L, 0);
+		lua_pushliteral(L, "path is not a regular file");
+		return 2;
+	}
+
+	if (!((S_IXUSR | S_IXGRP | S_IXOTH) & st.st_mode)) {
+		lua_pushboolean(L, 0);
+		lua_pushliteral(L, "path is not executable");
+		return 2;
+	}
+
+	/* the file might be executable */
+	lua_pushboolean(L, 1);
+	return 1;
+}
+
+/*!
+ * \brief [lua_CFunction proc.exists] Check if the given file exists and is
+ * executable.
+ * \param L the lua state to use
+ */
+static int proc_exists(lua_State *L) {
+	char *env_path;
+	const char *path = luaL_checkstring(L, 1);
+	char *p;
+	char *c;
+
+	if (strlen(path) == 0) {
+		lua_pushboolean(L, 0);
+		lua_pushliteral(L, "invalid path provided (path was an empty string)");
+		return 2;
+	}
+
+	/* if path starts with '/' then directly stat the given path */
+	if (path[0] == '/') {
+		lua_pushcfunction(L, is_executable);
+		lua_pushvalue(L, 1);
+		lua_call(L, 1, 2);
+		return 2;
+	}
+
+	if (!(env_path = getenv("PATH"))) {
+		/* default env_path to the following as indicated in the
+		 * exec(3) man page */
+		env_path = ":/bin:/usr/bin";
+	}
+
+	p = env_path;
+	for (p = env_path; (c = strchr(p, ':')); p = ++c) {
+		if (c - p <= 1) {
+			/* empty path component */
+			continue;
+		}
+
+		lua_pushcfunction(L, is_executable);
+
+		lua_pushlstring(L, p, c - p);
+		lua_pushliteral(L, "/");
+		lua_pushvalue(L, 1);
+		lua_concat(L, 3);
+
+		lua_call(L, 1, 2);
+
+		if (lua_toboolean(L, -2)) {
+			lua_pop(L, 1);
+			return 1;
+		}
+
+		lua_pop(L, 2);
+	}
+
+	/* check the last path component */
+	if (strlen(p) != 0) {
+		lua_pushcfunction(L, is_executable);
+
+		lua_pushstring(L, p);
+		lua_pushliteral(L, "/");
+		lua_pushvalue(L, 1);
+		lua_concat(L, 3);
+
+		lua_call(L, 1, 2);
+
+		if (lua_toboolean(L, -2)) {
+			lua_pop(L, 1);
+			return 1;
+		}
+
+		lua_pop(L, 2);
+	}
+
+	/* no executable paths were found */
+	lua_pushboolean(L, 0);
+	lua_pushliteral(L, "no executable found");
+	return 2;
+}
+
 static FILE *create_iolib_file(lua_State *L, const char *name, int fd, const char *mode) {
 	FILE **file;
 
@@ -87,6 +201,15 @@ static int exec_proc_with_stdio(lua_State *L) {
 	const char **argv = build_argv(L, name);
 	int stdin_pipe[2], stdout_pipe[2], stderr_pipe[2];
 
+	/* make sure the given path exists and is executable */
+	lua_pushcfunction(L, proc_exists);
+	lua_pushvalue(L, 1);
+	lua_call(L, 1, 2);
+
+	if (!lua_toboolean(L, -2)) {
+		goto e_return;
+	}
+
 	if (pipe(stdin_pipe)) {
 		lua_pushliteral(L, "error creating stdin pipe: ");
 		lua_pushstring(L, strerror(errno));
@@ -122,6 +245,7 @@ static int exec_proc_with_stdio(lua_State *L) {
 		close(stderr_pipe[0]);
 
 		execvp(name, (char * const *) argv);
+		fprintf(stderr, "error spawning process: %s\n", strerror(errno));
 		exit(1);
 	} else if (pid == -1) {
 		lua_pushliteral(L, "error spawning process (fork error): ");
@@ -172,6 +296,7 @@ e_close_stdin_pipe:
 e_free_argv:
 	free(argv);
 
+e_return:
 	/* error string should already be on the stack */
 	return lua_error(L);
 }
@@ -188,6 +313,15 @@ static int exec_proc(lua_State *L) {
 	const char *name = luaL_checkstring(L, 1);
 	const char **argv = build_argv(L, name);
 	int fd;
+
+	/* make sure the given path exists and is executable */
+	lua_pushcfunction(L, proc_exists);
+	lua_pushvalue(L, 1);
+	lua_call(L, 1, 2);
+
+	if (!lua_toboolean(L, -2)) {
+		goto e_return;
+	}
 
 	/* start the process */
 	pid = fork();
@@ -227,6 +361,7 @@ static int exec_proc(lua_State *L) {
 e_free_argv:
 	free(argv);
 
+e_return:
 	/* error string should already be on the stack */
 	return lua_error(L);
 }
@@ -449,6 +584,7 @@ static int terminate_proc(lua_State *L) {
 }
 
 static luaL_Reg proclib[] = {
+	{"exists", proc_exists},
 	{"exec", exec_proc},
 	{"exec_io", exec_proc_with_stdio},
 	{NULL, NULL},
