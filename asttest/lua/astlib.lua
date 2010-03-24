@@ -18,6 +18,10 @@
 
 module(..., package.seeall)
 
+function exists()
+	return select(1, proc.exists(path .. "/usr/sbin/asterisk"))
+end
+
 function new()
 	return asterisk:new()
 end
