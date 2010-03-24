@@ -409,8 +409,8 @@ static long tv2ms(struct timeval *tv) {
  * This function calls waitpid on the running process.
  *
  * \return a tuple containg the exit code, nil and the signal that caused the
- * process to exit, or nil and a string describing the error ("error" or "core"
- * currently).
+ * process to exit, or nil and a string describing the error ("error",
+ * "timeout", or "core" currently).
  */
 static int wait_proc(lua_State *L) {
 	pid_t pid;
