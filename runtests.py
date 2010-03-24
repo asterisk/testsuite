@@ -14,7 +14,9 @@ import optparse
 import time
 import yaml
 
-from asterisktestsuite.asteriskversion import AsteriskVersion
+sys.path.append("lib/python")
+
+from asterisk.version import AsteriskVersion
 
 
 TESTS_CONFIG = "tests/tests.yaml"
@@ -143,19 +145,6 @@ class TestSuite:
 
         self.total_time = 0.0
 
-        # Check to see if this has been executed within a sub directory of an
-        # Asterisk source tree.  This is required so that we can execute
-        # install and uninstall targets of the Asterisk Makefile in between
-        # tests.
-        self.within_ast_tree = os.path.exists("../main/asterisk.c")
-        if self.within_ast_tree is False:
-            print "*** WARNING ***\n" \
-                  "runtests has not been executed from within a\n" \
-                  "subdirectory of an Asterisk source tree.  This\n" \
-                  "is required for being able to uninstall and install\n" \
-                  "Asterisk in between tests.\n" \
-                  "***************\n"
-
         self.tests = [
             TestConfig(t["test"], ast_version) for t in self.config["tests"]
         ]
@@ -188,13 +177,14 @@ class TestSuite:
             print "--> Running test '%s' ...\n" % t.test_name
 
             # Establish Preconditions
-
-            if self.within_ast_tree is True:
-                os.chdir("..")
-                os.system("make uninstall-all")
-                os.system("make install")
-                os.system("make samples")
-                os.chdir(test_suite_dir)
+            os.chdir("..")
+            print "Uninstalling Asterisk ... "
+            os.system("make uninstall-all > /dev/null 2>&1")
+            print "Installing Asterisk ... "
+            os.system("make install > /dev/null 2>&1")
+            print "Installing sample configuration ... "
+            os.system("make samples > /dev/null 2>&1")
+            os.chdir(test_suite_dir)
 
             # Run Test
 
@@ -266,11 +256,20 @@ def main(argv=None):
             help="List tests instead of running them.")
     (options, args) = parser.parse_args(argv)
 
-    try:
-        ast_version = AsteriskVersion()
-    except:
-        print "Failed to get Asterisk version.  Is Asterisk installed?"
+    # Check to see if this has been executed within a sub directory of an
+    # Asterisk source tree.  This is required so that we can execute
+    # install and uninstall targets of the Asterisk Makefile in between
+    # tests.
+    if os.path.exists("../main/asterisk.c") is False:
+        print "***  ERROR  ***\n" \
+              "runtests has not been executed from within a\n" \
+              "subdirectory of an Asterisk source tree.  This\n" \
+              "is required for being able to uninstall and install\n" \
+              "Asterisk in between tests.\n" \
+              "***************\n"
         return 1
+
+    ast_version = AsteriskVersion()
 
     test_suite = TestSuite(ast_version)
 

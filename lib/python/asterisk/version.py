@@ -12,15 +12,15 @@ import re
 import unittest
 
 
-VERSION_HDR = "/usr/include/asterisk/version.h"
+VERSION_HDR = "../include/asterisk/version.h"
 
 
 class AsteriskVersion:
-    def __init__(self, version=None):
+    def __init__(self, version=None, path=VERSION_HDR):
         if version is not None:
             self.version_str = version
         else:
-            self.version_str = self.__get_ast_version()
+            self.version_str = self.__get_ast_version(path)
 
         if self.version_str[:3] == "SVN":
             self.__parse_svn_version()
@@ -77,19 +77,22 @@ class AsteriskVersion:
             self.revision = match.group("revision")
             self.parent = match.group("parent")
 
-    def __get_ast_version(self):
+    def __get_ast_version(self, path):
         '''
         Determine the version of Asterisk installed from the installed version.h.
         '''
         v = ""
         try:
-            f = open(VERSION_HDR, "r")
+            f = open(path, "r")
             match = re.search("ASTERISK_VERSION\s+\"(.*)\"", f.read())
             if match is not None:
                 v = match.group(1)
             f.close()
+        except IOError:
+            print "I/O Error getting Asterisk version from %s" % path
         except:
-            print "Failed to open %s to get Asterisk version." % VERSION_HDR
+            print "Unexpected error getting version from %s: %s" % (path,
+                    sys.exc_info()[0])
         return v
 
 

@@ -11,10 +11,14 @@
 --- 0) Table of Contents
 --------------------------------------------------------------------------------
 
+    Using the Test Suite:
         1) Introduction
-        2) Test Anatomy
-        3) Test Configuration
-        4) Test Suite System Requirements
+        2) Test Suite System Requirements
+        3) Running the Test Suite
+
+    Writing Tests:
+        4) Test Anatomy
+        5) Test Configuration
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -38,8 +42,52 @@ pass/fail result via a predefined method of doing so.
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+---------------------------------------------------------------------------------
+--- 2) Test Suite System Requirements
 --------------------------------------------------------------------------------
---- 2) Test Anatomy
+
+Required:
+        - python >= 2.4
+        - python-yaml
+
+Optional (needed by specific tests):
+        - bash
+        - SIPp
+        - asttest
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+---------------------------------------------------------------------------------
+--- 3) Running the Test Suite
+--------------------------------------------------------------------------------
+
+Get the Asterisk source tree you want to test:
+    $ svn co http://svn.digium.com/svn/asterisk/trunk asterisk-trunk
+    $ cd asterisk-trunk
+
+Build it.
+    $ ./configure && make
+
+Check out the test suite inside of the Asterisk source tree.  In this case, we
+will have the testsuite directory inside of the asterisk-trunk directory.
+    $ svn co http://svn.digium.com/svn/testsuite/asterisk/trunk testsuite
+    $ cd testsuite
+
+List the tests:
+    $ ./runtests.py -l
+
+Run the tests:
+    # ./runtests.py
+
+For more syntax informatino:
+    $ ./runtests.py --hep
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+--- 4) Test Anatomy
 --------------------------------------------------------------------------------
 
 a) File layout
@@ -91,7 +139,7 @@ return code.  A return code of zero is considered a success.
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
---- 3) Test Configuration
+--- 5) Test Configuration
 --------------------------------------------------------------------------------
 
         Test configuration lives in a file called "test-config.yaml".  The
@@ -130,22 +178,6 @@ properties:
         - app : 'sipp'
 
 
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------
---- 4) Test Suite System Requirements
---------------------------------------------------------------------------------
-
-Required:
-        - python >= 2.4
-        - python-yaml
-
-Optional (needed by specific tests):
-        - bash
-        - SIPp
-        - asttest
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
