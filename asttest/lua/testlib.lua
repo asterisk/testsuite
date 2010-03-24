@@ -25,11 +25,11 @@ module(..., package.seeall)
 -- print to the test log instead of stdout
 function _G.print(...)
 	local msg = ""
-	for i, v in ipairs(arg) do
+	for i=1,select('#', ...) do
 		if i == 1 then
-			msg = msg .. tostring(v)
+			msg = msg .. tostring(select(i, ...))
 		else
-			msg = msg .. "\t" .. tostring(v)
+			msg = msg .. "\t" .. tostring(select(i, ...))
 		end
 	end
 	msg = msg .. "\n"
