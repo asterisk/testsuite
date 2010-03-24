@@ -68,6 +68,14 @@ _G.error = error
 -- utility functions
 --
 
+-- skip if the given condition is met
+function skip_if(condition, message)
+	if condition then
+		return skip(message)
+	end
+end
+_G.skip_if = skip_if
+
 -- fail if the given condition is met
 function fail_if(condition, message)
 	if condition then
