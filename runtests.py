@@ -90,10 +90,15 @@ class TestConfig:
         test_config = "tests/%s/test-config.yaml" % self.test_name
         try:
             f = open(test_config, "r")
-            self.config = yaml.load(f)
-            f.close()
+        except IOError as (errno, strerror):
+            print "Failed to open %s: %s" % (test_config, strerror)
+            return
         except:
-            print "Failed to open %s, does it exist?" % test_config
+            print "Unexpected error: %s" % sys.exc_info()[0]
+            return
+
+        self.config = yaml.load(f)
+        f.close()
 
         self.__process_testinfo()
         self.__process_properties()
@@ -124,7 +129,15 @@ class TestConfig:
 
 class TestSuite:
     def __init__(self, ast_version):
-        f = open(TESTS_CONFIG, "r")
+        try:
+            f = open(TESTS_CONFIG, "r")
+        except IOError as (errno, strerror):
+            print "Failed to open %s: %s" % (TESTS_CONFIG, strerror)
+            return
+        except:
+            print "Unexpected error: %s" % sys.exc_info()[0]
+            return
+
         self.config = yaml.load(f)
         f.close()
 
@@ -204,8 +217,11 @@ class TestSuite:
     def write_results_xml(self, fn, stdout=False):
         try:
             f = open(TEST_RESULTS, "w")
+        except IOError as (errno, strerror):
+            print "Failed to open test results output file: %s" % strerror
+            return
         except:
-            print "Failed to open test results output file."
+            print "Unexpected error: %s" % sys.exc_info()[0]
             return
 
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
@@ -224,9 +240,15 @@ class TestSuite:
         f.close()
 
         if stdout is True:
-            f = open(TEST_RESULTS, "r")
-            print f.read()
-            f.close()
+            try:
+                f = open(TEST_RESULTS, "r")
+            except IOError as (errno, strerror):
+                print "Failed to open test results output file: %s" % strerror
+            except:
+                print "Unexpected error: %s" % sys.exc_info()[0]
+            else:
+                print f.read()
+                f.close()
 
 
 def main(argv=None):
