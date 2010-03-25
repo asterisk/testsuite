@@ -32,13 +32,13 @@ LUAFILESYSTEM=luafilesystem-1.4.2
 LUASOCKET=luasocket-2.0.2
 LUAPOSIX=luaposix-5.1.4
 
-LUAFILESYSTEM_OBJS=lua/$(LUAFILESYSTEM)/src/lfs.o 
-LUASOCKET_OBJS=lua/$(LUASOCKET)/src/luasocket.a
-LUAPOSIX_OBJS=lua/$(LUAPOSIX)/lposix.o
+LUAFILESYSTEM_OBJS=lib/lua/$(LUAFILESYSTEM)/src/lfs.o 
+LUASOCKET_OBJS=lib/lua/$(LUASOCKET)/src/luasocket.a
+LUAPOSIX_OBJS=lib/lua/$(LUAPOSIX)/lposix.o
 
-LUAFILESYSTEM_HEADER=lua/$(LUAFILESYSTEM)/src/lfs.h
-LUASOCKET_HEADER=lua/$(LUASOCKET)/src/luasocket.h
-LUAPOSIX_HEADER=lua/$(LUAPOSIX)/lposix.h
+LUAFILESYSTEM_HEADER=lib/lua/$(LUAFILESYSTEM)/src/lfs.h
+LUASOCKET_HEADER=lib/lua/$(LUASOCKET)/src/luasocket.h
+LUAPOSIX_HEADER=lib/lua/$(LUAPOSIX)/lposix.h
 
 LUAPOSIX_LIBS=-lcrypt
 
@@ -47,7 +47,7 @@ OBJS:=asttest.o lib/lua.o lib/testsuite.o lib/testutils.o
 CFLAGS:=-g -c -D_GNU_SOURCE -Wall -I/usr/include/lua5.1 -Iinclude -Ilua
 L_MODULES:=$(LUAFILESYSTEM_OBJS) $(LUASOCKET_OBJS) $(LUAPOSIX_OBJS) 
 L_LIBS:=$(LUAPOSIX_LIBS)
-L_OBJS:=lua/testlib.o lua/astlib.o lua/proclib.o
+L_OBJS:=lib/lua/testlib.o lib/lua/astlib.o lib/lua/proclib.o
 T_LIBS:=-llua5.1
 
 
@@ -82,14 +82,14 @@ all: asttest
 #nmenuselect:
 #endif
 
-lua/%_lua.h : lua/%.lua tools/mkstring
+lib/lua/%_lua.h : lib/lua/%.lua tools/mkstring
 	luac -o $(basename $<).luac $<
 	./tools/mkstring -n $(notdir $(basename $<))_lua -o $@ $(basename $<).luac 
 
 lib/%.o: lib/%.c include/asttest/%.h
 
 # this line does not seem to work
-#lua/%.o: lua/%.c lua/%_lua.h include/asttest/lua/%.h
+#lib/lua/%.o: lib/lua/%.c lib/lua/%_lua.h include/asttest/lua/%.h
 
 asterisk:
 	cd $(ASTSRCDIR) && ./configure --enable-dev-mode \
@@ -109,33 +109,33 @@ lib/lua.o: lib/lua.c $(L_MODULES) include/asttest/lua.h include/asttest/testsuit
 	-DLUAPOSIX_HEADER=\"../$(LUAPOSIX_HEADER)\" \
        	$<
 
-lua/testlib.o: lua/testlib.c lua/testlib_lua.h include/asttest/lua/testlib.h
-lua/astlib.o: lua/astlib.c lua/astlib_lua.h include/asttest/lua/astlib.h
-lua/proclib.o: lua/proclib.c lua/proclib_lua.h include/asttest/lua/proclib.h
+lib/lua/testlib.o: lib/lua/testlib.c lib/lua/testlib_lua.h include/asttest/lua/testlib.h
+lib/lua/astlib.o: lib/lua/astlib.c lib/lua/astlib_lua.h include/asttest/lua/astlib.h
+lib/lua/proclib.o: lib/lua/proclib.c lib/lua/proclib_lua.h include/asttest/lua/proclib.h
 
-$(LUAFILESYSTEM_OBJS): lua/$(LUAFILESYSTEM) lua/lfs-patched.stamp
-	$(MAKE) -C lua/$(LUAFILESYSTEM)
+$(LUAFILESYSTEM_OBJS): lib/lua/$(LUAFILESYSTEM) lib/lua/lfs-patched.stamp
+	$(MAKE) -C lib/lua/$(LUAFILESYSTEM)
 
-lua/lfs-patched.stamp lua/$(LUAFILESYSTEM): lua/$(LUAFILESYSTEM).tar.gz
-	tar -C lua -zxf lua/$(LUAFILESYSTEM).tar.gz 
-	patch -p1 -d lua/$(LUAFILESYSTEM) < tools/lfs.diff
-	touch lua/lfs-patched.stamp
+lib/lua/lfs-patched.stamp lib/lua/$(LUAFILESYSTEM): lib/lua/$(LUAFILESYSTEM).tar.gz
+	tar -C lua -zxf lib/lua/$(LUAFILESYSTEM).tar.gz 
+	patch -p1 -d lib/lua/$(LUAFILESYSTEM) < tools/lfs.diff
+	touch lib/lua/lfs-patched.stamp
 
-$(LUASOCKET_OBJS): lua/$(LUASOCKET) lua/luasocket-patched.stamp
-	$(MAKE) -C lua/$(LUASOCKET)
+$(LUASOCKET_OBJS): lib/lua/$(LUASOCKET) lib/lua/luasocket-patched.stamp
+	$(MAKE) -C lib/lua/$(LUASOCKET)
 
-lua/luasocket-patched.stamp lua/$(LUASOCKET): lua/$(LUASOCKET).tar.gz
-	tar -C lua -zxf lua/$(LUASOCKET).tar.gz 
-	patch -p1 -d lua/$(LUASOCKET) < tools/luasocket.diff
-	touch lua/luasocket-patched.stamp
+lib/lua/luasocket-patched.stamp lib/lua/$(LUASOCKET): lib/lua/$(LUASOCKET).tar.gz
+	tar -C lua -zxf lib/lua/$(LUASOCKET).tar.gz 
+	patch -p1 -d lib/lua/$(LUASOCKET) < tools/luasocket.diff
+	touch lib/lua/luasocket-patched.stamp
 
-$(LUAPOSIX_OBJS): lua/$(LUAPOSIX) lua/luaposix-patched.stamp
-	$(MAKE) -C lua/$(LUAPOSIX)
+$(LUAPOSIX_OBJS): lib/lua/$(LUAPOSIX) lib/lua/luaposix-patched.stamp
+	$(MAKE) -C lib/lua/$(LUAPOSIX)
 
-lua/luaposix-patched.stamp lua/$(LUAPOSIX): lua/$(LUAPOSIX).tar.gz
-	tar -C lua -zxf lua/$(LUAPOSIX).tar.gz 
-	patch -p1 -d lua/$(LUAPOSIX) < tools/luaposix.diff
-	touch lua/luaposix-patched.stamp
+lib/lua/luaposix-patched.stamp lib/lua/$(LUAPOSIX): lib/lua/$(LUAPOSIX).tar.gz
+	tar -C lua -zxf lib/lua/$(LUAPOSIX).tar.gz 
+	patch -p1 -d lib/lua/$(LUAPOSIX) < tools/luaposix.diff
+	touch lib/lua/luaposix-patched.stamp
 
 asttest: asttest.c $(OBJS) $(T_OBJS) $(L_OBJS) include/asttest/asttest.h
 	$(CC) -o $@ $(OBJS) $(L_OBJS) $(T_LIBS) $(L_MODULES) $(L_LIBS)
@@ -157,23 +157,23 @@ test: asttest asterisk
 
 clean:
 	rm -f asttest $(OBJS) $(M_OBJS) $(C_OBJS) $(G_OBJS) $(N_OBJS) $(L_OBJS)
-	rm -f lua/*_lua.h
-	rm -f lua/*.luac
+	rm -f lib/lua/*_lua.h
+	rm -f lib/lua/*.luac
 	rm -f tools/mkstring
 	rm -rf $(ASTDSTDIR)
-	-$(MAKE) -C lua/$(LUAFILESYSTEM) clean
-	-$(MAKE) -C lua/$(LUASOCKET) clean
-	-$(MAKE) -C lua/$(LUAPOSIX) clean
+	-$(MAKE) -C lib/lua/$(LUAFILESYSTEM) clean
+	-$(MAKE) -C lib/lua/$(LUASOCKET) clean
+	-$(MAKE) -C lib/lua/$(LUAPOSIX) clean
 
 dist-clean: distclean
 
 distclean: clean
 	rm -f autoconfig.h config.status config.log makeopts
 	rm -rf autom4te.cache
-	rm -rf lua/$(LUAFILESYSTEM)
-	rm -rf lua/$(LUASOCKET)
-	rm -rf lua/$(LUAPOSIX)
-	rm -f lua/lfs-patched.stamp
-	rm -f lua/luasocket-patched.stamp
-	rm -f lua/luaposix-patched.stamp
+	rm -rf lib/lua/$(LUAFILESYSTEM)
+	rm -rf lib/lua/$(LUASOCKET)
+	rm -rf lib/lua/$(LUAPOSIX)
+	rm -f lib/lua/lfs-patched.stamp
+	rm -f lib/lua/luasocket-patched.stamp
+	rm -f lib/lua/luaposix-patched.stamp
 
