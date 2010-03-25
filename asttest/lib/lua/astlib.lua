@@ -676,6 +676,13 @@ end
 
 function manager.action:new(action)
 	local a = manager.message:new()
+
+	-- support ast.manager.action.new() syntax
+	-- XXX eventually this should be the only syntax allowed
+	if action == nil and type(self) == "string" then
+		action = self
+	end
+
 	a["Action"] = action
 	return a
 end
