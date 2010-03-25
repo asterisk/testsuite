@@ -34,3 +34,30 @@ function proc:term_or_kill()
 	return res, err
 end
 
+--- Print an appropriate error message for the given error.
+-- @usage <code>res, err = proc.perror(p:wait())</code>
+-- @usage <code>res, err = proc.perror(p:term())</code>
+-- @usage <code>res, err = proc.perror(p:kill())</code>
+-- @return This function returns its parameters.
+function perror(res, err, strerror, errno)
+	if res == nil then
+		if err == "core" then
+			print("process crashed (core dumped)")
+		elseif err == "timeout" then
+			return res, err
+		elseif err == "error" then
+			if strerror and errno then
+				print("error running process (" .. strerror .. ")")
+			else
+				print("error running process")
+			end
+		elseif type(err) == "number" then
+			print("process terminated by signal " .. err)
+		else
+			print("error running process (" .. err .. ")")
+		end
+	end
+
+	return res, err, strerror, errno
+end
+
