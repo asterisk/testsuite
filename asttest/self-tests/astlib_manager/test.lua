@@ -14,9 +14,9 @@ end
 
 action = ast.manager.action
 
-r = m(action.login())
+r, err = m(action.login())
 if not r then
-	fail("error logging in to the manager: " .. err)
+	error("error logging in to the manager: " .. err)
 end
 
 if r["Response"] ~= "Success" then
@@ -25,9 +25,8 @@ end
 
 r = m(action.logoff())
 
-status, err = a:term_or_kill()
+status = proc.perror(a:term_or_kill())
 if not status then
-	fail("error terminating asterisk: " .. err)
+	fail("error terminating asterisk")
 end
-print("asterisk exited with status: " .. status)
 
