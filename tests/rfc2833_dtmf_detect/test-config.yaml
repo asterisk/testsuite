@@ -1,0 +1,29 @@
+testinfo:
+    summary:     'Test RFC2833 DTMF detection'
+    description: |
+        "This test places several calls to Asterisk using SIPp. SIPp,
+        upon receiving an answer, will use its capability to play pcap
+        files to play a set of DTMF tones toward Asterisk. The Read()
+        dialplan application is used to detect the tones. Afterward, a
+        comparison is made to determine if the detected DTMF is what we
+        expected. The test consists of three calls and three sets of DTMF
+        to be detected.
+
+        Test 1: The RFC2833 DTMF has no oddities to it. This is a basic detection
+        test.
+
+        Test 2: The RFC2833 DTMF has out-of-order packets, thus possibly
+        triggering the false detection of duplicate tones.
+
+        Test 3: The first three DTMF digits contain no end frames. Asterisk
+        should be able to properly handle the situation and still log the
+        DTMF presses.
+    issues:
+        - mantis : '15811'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'bash'
+        - app : 'sipp'
+        - app : 'asttest'

@@ -1,0 +1,4 @@
+#!/bin/bash -e
+
+asttest -a / -s tests/rfc2833_dtmf_detect
+
