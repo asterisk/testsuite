@@ -1,7 +1,6 @@
 -- test the test library
 -- note: ts_log() and print() are not tested
 
-package.path = package.path .. ";../?.lua"
 require "asttest"
 
 a = asttest.run("tests")

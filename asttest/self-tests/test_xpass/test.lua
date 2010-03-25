@@ -1,6 +1,5 @@
 -- spawn the test driver to test unexpected successes
 
-package.path = package.path .. ";../?.lua"
 require "asttest"
 
 a = asttest.run("tests")

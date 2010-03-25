@@ -1,6 +1,5 @@
 -- spawn the test driver to test skip functionality
 
-package.path = package.path .. ";../?.lua"
 require "asttest"
 
 a = asttest.run("tests")
