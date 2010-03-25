@@ -23,7 +23,8 @@ function exec_and_wait(name, ...)
 	return p:wait()
 end
 
--- sent the term signal and give the process 10 seconds to exit then kill it
+--- Send the term signal and give the process 10 seconds to exit then kill it.
+-- @return whatever term() or kill() returned
 function proc:term_or_kill()
 	local res, err = self:term(10000)
 	if not res and err == 'timeout' then
