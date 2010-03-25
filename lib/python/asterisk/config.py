@@ -9,7 +9,6 @@ the GNU General Public License Version 2.
 
 #
 # TODO
-# - Implement multi-line comment handling
 # - Implement config section template handling
 #
 
@@ -44,7 +43,7 @@ class Category:
 
 
 class ConfigFile:
-    def __init__(self, fn, test_str=None):
+    def __init__(self, fn, config_str=None):
         self.categories = []
         self.category_re = re.compile("""
             \s*                       # Leading Whitespace
@@ -52,21 +51,25 @@ class ConfigFile:
             \s*(?:;.*)?$              # trailing whitespace or a comment
             """, re.VERBOSE)
 
-        if test_str is not None:
-            for line in test_str.split("\n"):
-                self.parse_line(line)
-            return
+        if config_str is None:
+            try:
+                f = open(fn, "r")
+                config_str = f.read()
+                f.close()
+            except IOError:
+                print "Failed to open config file '%s'" % fn
+                return
+            except:
+                print "Unexpected error: %s" % sys.exc_info()[0]
+                return
 
-        try:
-            f = open(fn, "r")
-        except IOError:
-            print "Failed to open config file '%s'" % fn
-            return
+        config_str = self.strip_mline_comments(config_str)
 
-        for line in f:
+        for line in config_str.split("\n"):
             self.parse_line(line)
 
-        f.close()
+    def strip_mline_comments(self, text):
+        return re.compile(";--.*?--;", re.DOTALL).sub("", text)
 
     def parse_line(self, line):
         match = self.category_re.match(line)
@@ -85,6 +88,10 @@ class ConfigFileTests(unittest.TestCase):
             "; stuff\n" \
             "this line is invalid on purpose\n" \
             "[this is] also invalid]\n" \
+            ";-- comment --;\n" \
+            ";--   \n" \
+            "[this is commented out]\n" \
+            "         --;\n" \
             "[foo]\n" \
             "a = b\n" \
             "  b =   a  \n" \
@@ -96,7 +103,7 @@ class ConfigFileTests(unittest.TestCase):
             "xyz=x|y|z\n" \
             "1234 => 4242,Example Mailbox,root@localhost,,var=val\n"
 
-        conf = ConfigFile(fn=None, test_str=test)
+        conf = ConfigFile(fn=None, config_str=test)
 
         self.assertEqual(len(conf.categories), 2)
 
