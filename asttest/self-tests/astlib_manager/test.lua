@@ -12,13 +12,9 @@ if not m then
 	fail("error connecting to asterisk: " .. err)
 end
 
-login = ast.manager.action:new("login")
-login["Username"] = "asttest"
-login["Secret"] = "asttest"
+action = ast.manager.action
 
-logoff = ast.manager.action:new("logoff")
-
-r = m(login)
+r = m(action.login())
 if not r then
 	fail("error logging in to the manager: " .. err)
 end
@@ -27,7 +23,7 @@ if r["Response"] ~= "Success" then
 	fail("error authenticating: " .. r["Message"])
 end
 
-r = m(logoff)
+r = m(action.logoff())
 
 status, err = a:term_or_kill()
 if not status then

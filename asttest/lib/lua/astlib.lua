@@ -687,4 +687,28 @@ function manager.action:new(action)
 	return a
 end
 
+-- some utility functions to access common manager functions are defined below
+
+--- Create a login action.
+-- This function creates a login action.  When called with no arguments, the
+-- default 'asttest', 'asttest' username secret is used.
+--
+-- @param username the username to send (defaults to 'asttest')
+-- @param secret the secret to send (defaults to 'asttest')
+function manager.action.login(username, secret)
+	local a = manager.action.new("Login")
+
+	username = username or "asttest"
+	secret = secret or "asttest"
+
+	a["Username"] = username
+	a["Secret"] = secret
+
+	return a
+end
+
+--- Create a logoff action.
+function manager.action.logoff()
+	return manager.action.new("Logoff")
+end
 
