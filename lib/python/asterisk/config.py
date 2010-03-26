@@ -30,7 +30,7 @@ class Category:
             \s*                             # Leading whitespace
             (?P<name>[\w|,\.-]+)            # Option name
             \s*=>?\s*                       # Separator, = or =>
-            (?P<value>[\w\s=_()@|,\.-]+)    # Option value
+            (?P<value>[\w\s=_()/@|,\.-]+)   # Option value
             (?:;.*)?$                       # Optional comment before end of line
             """, re.VERBOSE)
 
@@ -110,7 +110,8 @@ class ConfigFileTests(unittest.TestCase):
             "\n" \
             "[template](!)\n" \
             "foo=bar\n" \
-            "exten => _NXX.,n,Wait(1)\n"
+            "exten => _NXX.,n,Wait(1)\n" \
+            "astetcdir => /etc/asterisk\n"
 
         conf = ConfigFile(fn=None, config_str=test)
 
@@ -139,12 +140,14 @@ class ConfigFileTests(unittest.TestCase):
 
         self.assertEqual(conf.categories[2].name, "template")
         self.assertTrue(conf.categories[2].template)
-        self.assertEqual(len(conf.categories[2].options), 2)
+        self.assertEqual(len(conf.categories[2].options), 3)
         self.assertEqual(conf.categories[2].options[0][0], "foo")
         self.assertEqual(conf.categories[2].options[0][1], "bar")
         self.assertEqual(conf.categories[2].options[1][0], "exten")
         self.assertEqual(conf.categories[2].options[1][1],
                 "_NXX.,n,Wait(1)")
+        self.assertEqual(conf.categories[2].options[2][0], "astetcdir")
+        self.assertEqual(conf.categories[2].options[2][1], "/etc/asterisk")
 
 def main(argv=None):
     if argv is None:
