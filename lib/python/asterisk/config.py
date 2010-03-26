@@ -22,15 +22,16 @@ def is_blank_line(line):
 
 
 class Category:
-    def __init__(self, name):
+    def __init__(self, name, template=False):
         self.options = []
         self.name = name
+        self.template = template
         self.varval_re = re.compile("""
-            \s*                        # Leading whitespace
-            (?P<name>[\w|,\.-]+)       # Option name
-            \s*=>?\s*                  # Separator, = or =>
-            (?P<value>[\w\s=@|,\.-]+)  # Option value
-            (?:;.*)?$                  # Optional comment before end of line
+            \s*                             # Leading whitespace
+            (?P<name>[\w|,\.-]+)            # Option name
+            \s*=>?\s*                       # Separator, = or =>
+            (?P<value>[\w\s=_()@|,\.-]+)    # Option value
+            (?:;.*)?$                       # Optional comment before end of line
             """, re.VERBOSE)
 
     def parse_line(self, line):
@@ -46,9 +47,10 @@ class ConfigFile:
     def __init__(self, fn, config_str=None):
         self.categories = []
         self.category_re = re.compile("""
-            \s*                       # Leading Whitespace
-            \[(?P<name>[\w,\.-]+)\]   # Category name in square brackets
-            \s*(?:;.*)?$              # trailing whitespace or a comment
+            \s*                        # Leading Whitespace
+            \[(?P<name>[\w,\.-]+)\]    # Category name in square brackets
+            (?:\((?P<template>[!])\))? # Optionally marked as a template
+            \s*(?:;.*)?$               # trailing whitespace or a comment
             """, re.VERBOSE)
 
         if config_str is None:
@@ -74,7 +76,10 @@ class ConfigFile:
     def parse_line(self, line):
         match = self.category_re.match(line)
         if match is not None:
-            self.categories.append(Category(match.group("name")))
+            self.categories.append(
+                Category(match.group("name"), 
+                    template=match.group("template") == "!")
+            )
         elif len(self.categories) == 0:
             if not is_blank_line(line):
                 print "Invalid line: '%s'" % line.strip()
@@ -101,13 +106,18 @@ class ConfigFileTests(unittest.TestCase):
             "  [bar]   ;asdfasdf\n" \
             "a-b=c-d\n" \
             "xyz=x|y|z\n" \
-            "1234 => 4242,Example Mailbox,root@localhost,,var=val\n"
+            "1234 => 4242,Example Mailbox,root@localhost,,var=val\n" \
+            "\n" \
+            "[template](!)\n" \
+            "foo=bar\n" \
+            "exten => _NXX.,n,Wait(1)\n"
 
         conf = ConfigFile(fn=None, config_str=test)
 
-        self.assertEqual(len(conf.categories), 2)
+        self.assertEqual(len(conf.categories), 3)
 
         self.assertEqual(conf.categories[0].name, "foo")
+        self.assertFalse(conf.categories[0].template)
         self.assertEqual(len(conf.categories[0].options), 3)
         self.assertEqual(conf.categories[0].options[0][0], "a")
         self.assertEqual(conf.categories[0].options[0][1], "b")
@@ -117,6 +127,7 @@ class ConfigFileTests(unittest.TestCase):
         self.assertEqual(conf.categories[0].options[2][1], "d")
 
         self.assertEqual(conf.categories[1].name, "bar")
+        self.assertFalse(conf.categories[1].template)
         self.assertEqual(len(conf.categories[1].options), 3)
         self.assertEqual(conf.categories[1].options[0][0], "a-b")
         self.assertEqual(conf.categories[1].options[0][1], "c-d")
@@ -126,6 +137,14 @@ class ConfigFileTests(unittest.TestCase):
         self.assertEqual(conf.categories[1].options[2][1],
                 "4242,Example Mailbox,root@localhost,,var=val")
 
+        self.assertEqual(conf.categories[2].name, "template")
+        self.assertTrue(conf.categories[2].template)
+        self.assertEqual(len(conf.categories[2].options), 2)
+        self.assertEqual(conf.categories[2].options[0][0], "foo")
+        self.assertEqual(conf.categories[2].options[0][1], "bar")
+        self.assertEqual(conf.categories[2].options[1][0], "exten")
+        self.assertEqual(conf.categories[2].options[1][1],
+                "_NXX.,n,Wait(1)")
 
 def main(argv=None):
     if argv is None:
