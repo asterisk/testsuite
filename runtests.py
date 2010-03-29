@@ -238,7 +238,7 @@ class TestSuite:
             if t.passed is True:
                 f.write('/>\n')
                 continue
-            f.write('>\n\t\t<failure><![CDATA[\n%s\n\t\t]]></failure>\n\t</testcase>' % t.stdout)
+            f.write('>\n\t\t<failure><![CDATA[\n%s\n\t\t]]></failure>\n\t</testcase>\n' % t.stdout)
         f.write('</testsuite>\n')
         f.close()
 
