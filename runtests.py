@@ -208,15 +208,14 @@ class TestSuite:
             start_time = time.time()
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
-            t.time = time.time() - start_time
-            self.total_time += t.time
-
             t.stdout = ""
             for line in p.stdout:
                 print line
                 t.stdout += line
             p.wait()
             t.passed = p.returncode == 0
+            t.time = time.time() - start_time
+            self.total_time += t.time
 
     def write_results_xml(self, fn, stdout=False):
         try:
