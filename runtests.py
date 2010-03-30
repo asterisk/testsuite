@@ -74,9 +74,25 @@ class TestConfig:
         self.can_run = True
         self.time = 0.0
         self.test_name = test_name
+        self.ast_version = ast_version
 
         self.__parse_config()
         self.__check_deps(ast_version)
+
+    def run(self):
+        self.passed = False
+        start_time = time.time()
+        cmd = ["tests/%s/run-test" % self.test_name]
+        cmd.extend(["-v", str(self.ast_version)])
+        if os.path.exists(cmd[0]):
+            # XXX TODO Figure out a way to have the output of the test process
+            # sent to stdout while the test runs, but also be able to save off
+            # the output for inclusion in the test results later on.
+            print "Running %s ..." % cmd
+            p = subprocess.Popen(cmd, shell=True)
+            p.wait()
+            self.passed = p.returncode == 0
+        self.time = time.time() - start_time
 
     def __process_testinfo(self):
         self.summary = "(none)"
@@ -202,19 +218,7 @@ class TestSuite:
 
             # Run Test
 
-            cmd = ["tests/%s/run-test" % t.test_name]
-            cmd.extend(["-v", str(ast_version)])
-
-            start_time = time.time()
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT)
-            t.stdout = ""
-            for line in p.stdout:
-                print line
-                t.stdout += line
-            p.wait()
-            t.passed = p.returncode == 0
-            t.time = time.time() - start_time
+            t.run()
             self.total_time += t.time
 
     def write_results_xml(self, fn, stdout=False):
