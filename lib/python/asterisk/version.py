@@ -1,11 +1,15 @@
 #!/usr/bin/env python
-'''
+"""Asterisk Version String Handling
+
+This module implements an Asterisk version string parser.  It can also compare
+version strings to determine which version is considered newer.
+
 Copyright (C) 2010, Digium, Inc.
 Russell Bryant <russell@digium.com>
 
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
-'''
+"""
 
 import sys
 import re
@@ -16,7 +20,20 @@ VERSION_HDR = "../include/asterisk/version.h"
 
 
 class AsteriskVersion:
+    """An Asterisk Version.
+
+    This class handles Asterisk version strings.
+    """
+
     def __init__(self, version=None, path=VERSION_HDR):
+        """Construct an Asterisk Version parser.
+
+        Keyword Arguments:
+        version -- The Asterisk version string to parse.
+        path -- If an Asterisk version string is not directly provided, look
+        for a version.h file in this location that will contain the Asterisk
+        version string to pull out and Parse.
+        """
         if version is not None:
             self.version_str = version
         else:

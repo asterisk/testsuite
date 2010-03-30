@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-"""
+"""Asterisk Configuration File Handling.
+
+This module implements interfaces for dealing with Asterisk configuration
+files.
+
 Copyright (C) 2010, Digium, Inc.
 Russell Bryant <russell@digium.com>
 
@@ -22,6 +26,13 @@ def is_blank_line(line):
 
 
 class Category:
+    """A category in an Asterisk configuration file.
+
+    This is a helper class used along with ConfigFile.  A category is section
+    of an Asterisk configuration that will contain zero or more key/value pairs
+    of options.
+    """
+
     def __init__(self, name, template=False):
         self.options = []
         self.name = name
@@ -44,7 +55,17 @@ class Category:
 
 
 class ConfigFile:
+    """An Asterisk Configuration File.
+
+    Parse an Asterisk configuration file.
+    """
+
     def __init__(self, fn, config_str=None):
+        """Construct an Asterisk configuration file object
+
+        The ConfigFile object will parse an Asterisk configuration file into a
+        python data structure.
+        """
         self.categories = []
         self.category_re = re.compile("""
             \s*                        # Leading Whitespace
@@ -148,6 +169,7 @@ class ConfigFileTests(unittest.TestCase):
                 "_NXX.,n,Wait(1)")
         self.assertEqual(conf.categories[2].options[2][0], "astetcdir")
         self.assertEqual(conf.categories[2].options[2][1], "/etc/asterisk")
+
 
 def main(argv=None):
     if argv is None:
