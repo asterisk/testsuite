@@ -19,6 +19,8 @@
     Writing Tests:
         4) Test Anatomy
         5) Test Configuration
+        6) Tests in Python
+        7) Tests in Lua
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -53,7 +55,11 @@ Required:
 Optional (needed by specific tests):
         - bash
         - SIPp
+            - Download the latest unstable release
         - asttest
+            - included with the test suite
+        - starpy
+            - http://www.vrplumber.com/programming/starpy/
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -184,6 +190,28 @@ properties:
         - python : 'yaml'
 
 
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+--- 6) Tests in Python
+--------------------------------------------------------------------------------
+
+        There are some python modules included in lib/python/ which are intended
+to help with writing tests in python.
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+--- 7) Tests in Lua
+--------------------------------------------------------------------------------
+
+        The asttest framework included in the asttest directory provides a lot
+of functionality to make it easy to write Asterisk tests in Lua.  Take a look at
+the asttest README as well as some of the existing Lua tests for more
+information.
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
