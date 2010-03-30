@@ -72,6 +72,7 @@ class Dependency:
 class TestConfig:
     def __init__(self, test_name, ast_version):
         self.can_run = True
+        self.stdout = ""
         self.time = 0.0
         self.test_name = test_name
         self.ast_version = ast_version
