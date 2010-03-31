@@ -1,0 +1,3 @@
+#!/bin/bash -e
+
+asttest -a / -s tests/sip_channel_params
