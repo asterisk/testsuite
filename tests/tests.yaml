@@ -1,5 +1,7 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 'example'
+    - test: 'ami-login'
     - test: 'blind-transfer-accountcode'
     - test: 'rfc2833_dtmf_detect'
+    - test: 'iax-call-basic'

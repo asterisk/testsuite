@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+Russell Bryant <russell@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import shutil
+import time
+from twisted.application import service, internet
+from twisted.internet import reactor, defer
+from starpy import manager
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+
+
+class AMILoginTest:
+    def __init__(self):
+        self.passed = False
+
+        reactor.callWhenRunning(self.run)
+
+        print "Creating Asterisk instance ..."
+        self.asterisk = Asterisk(base=os.path.join(os.getcwd(),
+                                                   "tests/ami-login/tmp"))
+        self.asterisk.install_config("tests/ami-login/configs/manager.conf")
+        self.asterisk.install_config("tests/ami-login/configs/logger.conf")
+
+    def start_asterisk(self):
+        print "Starting Asterisk ..."
+        self.asterisk.start()
+
+    def stop_asterisk(self):
+        print "Stopping Asterisk ..."
+        self.asterisk.stop()
+
+    def on_logoff(self, ami):
+        print "Logoff successful."
+        self.passed = True
+        reactor.stop()
+
+    def on_logoff_error(self):
+        print "Logoff failed."
+        reactor.stop()
+        self.stop_asterisk()
+
+    def on_connect(self, ami):
+        print "Connected.  Now logging off ..."
+        ami.logoff().addCallbacks(self.on_logoff, self.on_logoff_error)
+
+    def on_connect_error(self, ami):
+        print "FAILED TO CONNECT AND LOGIN TO AMI"
+        reactor.stop()
+        self.stop_asterisk()
+
+    def run(self):
+        self.start_asterisk()
+
+        print "Logging in to the AMI ..."
+        self.ami_factory = manager.AMIFactory("user", "mysecret")
+        self.ami_factory.login('127.0.0.1', 5038).addCallbacks(self.on_connect,
+                                                       self.on_connect_error)
+
+def main():
+    test = AMILoginTest()
+    reactor.run()
+    test.stop_asterisk()
+    if test.passed:
+        return 0
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
