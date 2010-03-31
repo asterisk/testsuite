@@ -115,6 +115,7 @@ class Asterisk:
         """
         try:
             self.cli_exec("core stop now")
+            self.cli_exec("stop now")
         except OSError:
             pass
         self.process.wait()
