@@ -72,7 +72,6 @@ class Dependency:
 class TestConfig:
     def __init__(self, test_name, ast_version):
         self.can_run = True
-        self.stdout = ""
         self.time = 0.0
         self.test_name = test_name
         self.ast_version = ast_version
@@ -83,15 +82,17 @@ class TestConfig:
     def run(self):
         self.passed = False
         start_time = time.time()
-        cmd = ["tests/%s/run-test" % self.test_name]
-        cmd.extend(["-v", str(self.ast_version)])
+        cmd = [
+            "tests/%s/run-test" % self.test_name,
+            "-v", str(self.ast_version)
+        ]
         if os.path.exists(cmd[0]):
-            # XXX TODO Figure out a way to have the output of the test process
-            # sent to stdout while the test runs, but also be able to save off
-            # the output for inclusion in the test results later on.
             print "Running %s ..." % cmd
-            p = subprocess.Popen(cmd, shell=True)
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+            p2 = subprocess.Popen(["tee", "tests/%s/test-output.txt" %
+                                   self.test_name], stdin=p.stdout)
             p.wait()
+            p2.wait()
             self.passed = p.returncode == 0
         self.time = time.time() - start_time
 
@@ -243,7 +244,14 @@ class TestSuite:
             if t.passed is True:
                 f.write('/>\n')
                 continue
-            f.write('>\n\t\t<failure><![CDATA[\n%s\n\t\t]]></failure>\n\t</testcase>\n' % t.stdout)
+            f.write(">\n\t\t<failure><![CDATA[\n")
+            try:
+                test_output = open("tests/%s/test-output.txt" % t.test_name, "r")
+                f.write("%s" % test_output.read())
+                test_output.close()
+            except IOError:
+                print "Failed to open test output for %s" % t.test_name
+            f.write("\n\t\t]]></failure>\n\t</testcase>\n")
         f.write('</testsuite>\n')
         f.close()
 
