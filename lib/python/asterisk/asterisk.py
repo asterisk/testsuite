@@ -113,14 +113,22 @@ class Asterisk:
         Example Usage:
         asterisk.stop()
         """
-        self.process.terminate()
-        time.sleep(5.0)
         try:
-            if not self.process.poll():
-                self.process.kill()
+            self.cli_exec("core stop now")
         except OSError:
             pass
-        (self.stdout, self.stderr) = self.process.communicate()
+        self.process.wait()
+        #
+        # Requires Python 2.6 :-(
+        #
+        # self.process.terminate()
+        # time.sleep(5.0)
+        # try:
+        #     if not self.process.poll():
+        #         self.process.kill()
+        # except OSError:
+        #     pass
+        # (self.stdout, self.stderr) = self.process.communicate()
         return self.process.returncode
 
     def install_config(self, cfg_path):
