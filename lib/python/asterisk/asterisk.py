@@ -13,6 +13,7 @@ the GNU General Public License Version 2.
 
 import sys
 import os
+import signal
 import time
 import shutil
 import subprocess
@@ -113,23 +114,14 @@ class Asterisk:
         Example Usage:
         asterisk.stop()
         """
+        os.kill(self.process.pid, signal.SIGTERM)
+        time.sleep(5.0)
         try:
-            self.cli_exec("core stop now")
-            self.cli_exec("stop now")
+            if not self.process.poll():
+                os.kill(self.process.pid, signal.SIGKILL)
         except OSError:
             pass
         self.process.wait()
-        #
-        # Requires Python 2.6 :-(
-        #
-        # self.process.terminate()
-        # time.sleep(5.0)
-        # try:
-        #     if not self.process.poll():
-        #         self.process.kill()
-        # except OSError:
-        #     pass
-        # (self.stdout, self.stderr) = self.process.communicate()
         return self.process.returncode
 
     def install_config(self, cfg_path):
