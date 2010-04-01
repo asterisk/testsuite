@@ -36,10 +36,10 @@ class Dependency:
     def __init__(self, dep):
         self.name = ""
         self.met = False
-        if dep.has_key("app"):
+        if "app" in dep:
             self.name = dep["app"]
             self.met = self.__which(self.name) is not None
-        elif dep.has_key("python"):
+        elif "python" in dep:
             self.name = dep["python"]
             try:
                 __import__(self.name)
@@ -99,24 +99,34 @@ class TestConfig:
     def __process_testinfo(self):
         self.summary = "(none)"
         self.description = "(none)"
-        if self.config.has_key("testinfo") is False:
+        if "testinfo" not in self.config:
             return
         testinfo = self.config["testinfo"]
-        if testinfo.has_key("summary"):
+        if "summary" in testinfo:
             self.summary = testinfo["summary"]
-        if testinfo.has_key("description"):
+        if "description" in testinfo:
             self.description = testinfo["description"]
 
     def __process_properties(self):
         self.minversion = AsteriskVersion("1.4")
         self.maxversion = None
-        if self.config.has_key("properties") is False:
+        if "properties" not in self.config:
             return
         properties = self.config["properties"]
-        if properties.has_key("minversion"):
-            self.minversion = AsteriskVersion(properties["minversion"])
-        if properties.has_key("maxversion"):
-            self.maxversion = AsteriskVersion(properties["maxversion"])
+        if "minversion" in properties:
+            try:
+                self.minversion = AsteriskVersion(properties["minversion"])
+            except:
+                self.can_run = False
+                print "ERROR: '%s' is not a valid minversion" % \
+                        properties["minversion"]
+        if "maxversion" in properties:
+            try:
+                self.maxversion = AsteriskVersion(properties["maxversion"])
+            except:
+                self.can_run = False
+                print "ERROR: '%s' is not a valid maxversion" % \
+                        properties["maxversion"]
 
     def __parse_config(self):
         test_config = "tests/%s/test-config.yaml" % self.test_name

@@ -13,7 +13,6 @@ testinfo:
     issues:
         -jira : SWP-1016
         -jira : ABE-2103
-    
 
 properties:
     minversion: '1.8'
