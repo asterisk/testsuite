@@ -10,22 +10,30 @@ the GNU General Public License Version 2.
 import sys
 import os
 import time
+from optparse import OptionParser
 from twisted.application import service, internet
 from twisted.internet import reactor, defer
 from starpy import fastagi
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
+from asterisk.version import AsteriskVersion
 
 
 class IAXCallTest:
-    def __init__(self):
-        reactor.callWhenRunning(self.run)
-
+    def __init__(self, argv):
         self.chan1_connected = False
         self.chan2_connected = False
         self.f = fastagi.FastAGIFactory(self.fastagi_func)
         reactor.listenTCP(4573, self.f, 50, '127.0.0.1')
+        reactor.callWhenRunning(self.run)
+        reactor.callLater(20, self.stop_reactor)
+
+        parser = OptionParser()
+        parser.add_option("-v", "--version", dest="ast_version",
+                          help="Asterisk version string")
+        (options, args) = parser.parse_args(argv)
+        self.ast_version = AsteriskVersion(options.ast_version)
 
         print "Creating Asterisk instances ..."
 
@@ -56,6 +64,11 @@ class IAXCallTest:
         sequence.append(agi.hangup)
         sequence.append(agi.finish)
 
+    def stop_reactor(self):
+        print "Stopping Reactor ..."
+        if reactor.running:
+            reactor.stop()
+
     def start_asterisk(self):
         print "Starting Asterisk instances ..."
         self.asterisk.start()
@@ -69,27 +82,24 @@ class IAXCallTest:
     def run(self):
         self.start_asterisk()
 
-        cmds = [
-            "core set verbose 10",
-            "iax2 set debug on"
-        ]
-        for c in cmds:
-            self.asterisk.cli_exec(c)
-            self.asterisk2.cli_exec(c)
+        self.asterisk.cli_exec("core set verbose 10")
+        self.asterisk2.cli_exec("core set verbose 10")
+
+        if self.ast_version < AsteriskVersion("1.6.0"):
+            self.asterisk.cli_exec("iax2 set debug")
+            self.asterisk2.cli_exec("iax2 set debug")
+        else:
+            self.asterisk.cli_exec("iax2 set debug on")
+            self.asterisk2.cli_exec("iax2 set debug on")
 
         self.asterisk.cli_exec(
                 "originate IAX2/guest@127.0.0.1:4569/1000 extension 1000@iaxtest")
 
 
-def stop_reactor():
-    print "Stopping Reactor ..."
-    if reactor.running:
-        reactor.stop()
-
-
-def main():
-    test = IAXCallTest()
-    reactor.callLater(20, stop_reactor)
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    test = IAXCallTest(argv)
     reactor.run()
     test.stop_asterisk()
     if test.chan1_connected and test.chan2_connected:
