@@ -22,6 +22,8 @@ from asterisk.asterisk import Asterisk
 class AMILoginTest:
     def __init__(self):
         self.passed = False
+        self.last_step = ""
+        self.ami = None
 
         reactor.callWhenRunning(self.run)
 
@@ -32,39 +34,44 @@ class AMILoginTest:
         self.asterisk.install_config("tests/ami-login/configs/logger.conf")
 
     def start_asterisk(self):
-        print "Starting Asterisk ..."
+        self.log_last_step("Starting Asterisk")
         self.asterisk.start()
 
     def stop_asterisk(self):
-        print "Stopping Asterisk ..."
+        self.log_last_step("Stopping Asterisk")
         self.asterisk.stop()
 
+    def log_last_step(self, step):
+        print step
+        self.last_step = step
+
+    def on_error(self, ami):
+        print "ERROR, Last Step: %s" % self.last_step
+        reactor.stop()
+        self.stop_asterisk()
+
     def on_logoff(self, ami):
-        print "Logoff successful."
+        self.log_last_step("Logoff Successful")
         self.passed = True
         reactor.stop()
 
-    def on_logoff_error(self):
-        print "Logoff failed."
-        reactor.stop()
-        self.stop_asterisk()
+    def on_pong(self, ami):
+        self.log_last_step("Got Pong")
+        self.ami.logoff().addCallbacks(self.on_logoff, self.on_error)
 
     def on_connect(self, ami):
-        print "Connected.  Now logging off ..."
-        ami.logoff().addCallbacks(self.on_logoff, self.on_logoff_error)
-
-    def on_connect_error(self, ami):
-        print "FAILED TO CONNECT AND LOGIN TO AMI"
-        reactor.stop()
-        self.stop_asterisk()
+        self.log_last_step("Connected to the AMI")
+        self.ami = ami
+        self.ami.ping().addCallbacks(self.on_pong, self.on_error)
 
     def run(self):
         self.start_asterisk()
 
-        print "Logging in to the AMI ..."
+        self.log_last_step("Logging in to the AMI")
         self.ami_factory = manager.AMIFactory("user", "mysecret")
         self.ami_factory.login('127.0.0.1', 5038).addCallbacks(self.on_connect,
-                                                       self.on_connect_error)
+                                                               self.on_error)
+
 
 def main():
     test = AMILoginTest()
