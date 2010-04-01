@@ -60,6 +60,10 @@ Optional (needed by specific tests):
             - included with the test suite
         - starpy
             - http://www.vrplumber.com/programming/starpy/
+            - Install starpy from svn trunk:
+              $ svn co https://starpy.svn.sourceforge.net/svnroot/starpy
+              $ cd starpy/trunk
+              # python setup.py install
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
