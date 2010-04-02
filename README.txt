@@ -49,7 +49,7 @@ pass/fail result via a predefined method of doing so.
 --------------------------------------------------------------------------------
 
 Required:
-        - python >= 2.6
+        - python >= 2.4
         - python-yaml
 
 Optional (needed by specific tests):
