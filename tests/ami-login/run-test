@@ -53,7 +53,7 @@ class AMILoginTest:
         self.last_step = step
 
     def on_error(self, ami):
-        print "ERROR, Last Step: {0}".format(self.last_step)
+        print "ERROR, Last Step: %s" % self.last_step
         self.stop_asterisk()
 
     def on_logoff(self, ami):

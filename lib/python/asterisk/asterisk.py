@@ -66,12 +66,11 @@ class Asterisk:
         # Choose an install base
         self.base = base
         if self.base is None:
-            self.base = "{0}/tmp".format(os.getcwd())
+            self.base = "%s/tmp" % os.getcwd()
         i = 1
         while True:
-            d = "{0}/ast{1}".format(self.base, i)
-            if not os.path.isdir(d):
-                self.base = d
+            if not os.path.isdir("%s/ast%d" % (self.base, i)):
+                self.base = "%s/ast%d" % (self.base, i)
                 break
             i += 1
         os.makedirs(self.base)
@@ -99,7 +98,7 @@ class Asterisk:
         cmd = [
             "asterisk",
             "-f", "-g", "-q", "-m",
-            "-C", os.path.join(self.astetcdir, "asterisk.conf")
+            "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
         ]
         self.process = subprocess.Popen(cmd)
         time.sleep(5.0)
@@ -140,7 +139,7 @@ class Asterisk:
         asterisk.install_config("tests/my-cool-test/configs/manager.conf")
         """
         if not os.path.exists(cfg_path):
-            print "Config file '{0}' does not exist".format(cfg_path)
+            print "Config file '%s' does not exist" % cfg_path
             return
         if not self.astetcdir:
             print "Don't know where to put local config!"
@@ -151,9 +150,9 @@ class Asterisk:
         try:
             shutil.copyfile(cfg_path, target_path)
         except shutil.Error:
-            print "'{0}' and '{1}' are the same file".format(cfg_path, target_path)
+            print "'%s' and '%s' are the same file" % (cfg_path, target_path)
         except IOError:
-            print "The destination is not writable '{0}'".format(target_path)
+            print "The destination is not writable '%s'" % target_path
 
     def cli_exec(self, cli_cmd):
         """Execute a CLI command on this instance of Asterisk.
@@ -166,10 +165,10 @@ class Asterisk:
         """
         cmd = [
             "asterisk",
-            "-C", os.path.join(self.astetcdir, "asterisk.conf"),
-            "-rx", cli_cmd
+            "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
+            "-rx", "%s" % cli_cmd
         ]
-        print "Executing {0} ...".format(cmd)
+        print "Executing %s ..." % cmd
         process = subprocess.Popen(cmd)
         process.wait()
 
@@ -177,7 +176,7 @@ class Asterisk:
         self.astetcdir = None
         for (var, val) in dir_cat.options:
             if var == "astetcdir":
-                self.astetcdir = "{0}{1}".format(self.base, val)
+                self.astetcdir = "%s%s" % (self.base, val)
                 os.makedirs(self.astetcdir)
 
         if self.astetcdir is None:
@@ -189,20 +188,20 @@ class Asterisk:
         try:
             f = open(local_ast_conf_path, "w")
         except IOError:
-            print "Failed to open {0}".format(local_ast_conf_path)
+            print "Failed to open %s" % local_ast_conf_path
             return
         except:
-            print "Unexpected error: {0}".format(sys.exc_info()[0])
+            print "Unexpected error: %s" % sys.exc_info()[0]
             return
 
         for c in ast_conf.categories:
-            f.write("[{0}]\n\n".format(c.name))
+            f.write("[%s]\n\n" % c.name)
             if c.name == "directories":
                 for (var, val) in c.options:
-                    f.write("{0} = {1}{2}\n".format(var, self.base, val))
+                    f.write("%s = %s%s\n" % (var, self.base, val))
             else:
                 for (var, val) in c.options:
-                    f.write("{0} = {1}\n".format(var, val))
+                    f.write("%s = %s\n" % (var, val))
             f.write("\n")
 
         f.close()
@@ -215,15 +214,15 @@ class Asterisk:
         blacklist = [ "astdb" ]
         for dirname, dirnames, filenames in os.walk(ast_dir_path):
             for filename in filenames:
-                target = "{0}/{1}".format(self.base, os.path.join(ast_dir_path,
-                                                     dirname, filename))
+                target = "%s/%s" % (self.base, os.path.join(ast_dir_path,
+                                    dirname, filename))
                 if os.path.exists(target) or filename in blacklist:
                     continue
                 os.symlink(os.path.join(ast_dir_path, dirname, filename),
                            target)
 
     def __makedirs(self, ast_dir_path):
-        target_dir = "{0}{1}".format(self.base, ast_dir_path)
+        target_dir = "%s%s" % (self.base, ast_dir_path)
         if not os.path.exists(target_dir):
             os.makedirs(target_dir)
         for dirname, dirnames, filenames in os.walk(ast_dir_path):

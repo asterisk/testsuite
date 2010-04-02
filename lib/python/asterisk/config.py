@@ -49,7 +49,7 @@ class Category:
         match = self.varval_re.match(line)
         if match is None:
             if not is_blank_line(line):
-                print "Invalid line: '{0}'".format(line.strip())
+                print "Invalid line: '%s'" % line.strip()
             return
         self.options.append((match.group("name"), match.group("value").strip()))
 
@@ -80,10 +80,10 @@ class ConfigFile:
                 config_str = f.read()
                 f.close()
             except IOError:
-                print "Failed to open config file '{0}'".format(fn)
+                print "Failed to open config file '%s'" % fn
                 return
             except:
-                print "Unexpected error: {0}".format(sys.exc_info()[0])
+                print "Unexpected error: %s" % sys.exc_info()[0]
                 return
 
         config_str = self.strip_mline_comments(config_str)
@@ -103,7 +103,7 @@ class ConfigFile:
             )
         elif len(self.categories) == 0:
             if not is_blank_line(line):
-                print "Invalid line: '{0}'".format(line.strip())
+                print "Invalid line: '%s'" % line.strip()
         else:
             self.categories[-1].parse_line(line)
 
@@ -178,12 +178,9 @@ def main(argv=None):
     if len(argv) == 2:
         conf = ConfigFile(argv[1])
         for c in conf.categories:
-            t = ""
-            if c.template:
-                t = "(!)"
-            print "[{0}]{1}".format(c.name, t)
+            print "[%s]" % c.name
             for (var, val) in c.options:
-                print "{0} = {1}".format(var, val)
+                print "%s = %s" % (var, val)
     else:
         return unittest.main()
 
