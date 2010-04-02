@@ -54,7 +54,7 @@ class IAXCallTest:
     def fastagi_func(self, agi):
         sequence = fastagi.InSequence()
         def get_channel(c):
-            print "Connection received for %s ..." % c
+            print "Connection received for {0} ...".format(c)
             if c.split("-")[0] == "IAX2/127.0.0.1:4569":
                 self.chan1_connected = True
             elif c.split("-")[0] == "IAX2/127.0.0.1:4570":
