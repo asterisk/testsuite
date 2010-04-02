@@ -1,1 +1,1 @@
-__all__ = [ "asterisk", "config", "version" ]
+__all__ = [ "asterisk", "config", "version", "cdr" ]

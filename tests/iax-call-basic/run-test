@@ -18,12 +18,14 @@ from starpy import fastagi
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
+from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
 
 
 class IAXCallTest:
     def __init__(self, argv):
         self.chan1_connected = False
         self.chan2_connected = False
+        self.cdr_match = False
         self.f = fastagi.FastAGIFactory(self.fastagi_func)
         reactor.listenTCP(4573, self.f, 50, '127.0.0.1')
         reactor.callWhenRunning(self.run)
@@ -78,6 +80,15 @@ class IAXCallTest:
         print "Stopping Asterisk instances ..."
         self.asterisk.stop()
         self.asterisk2.stop()
+        cdr = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" %
+                self.asterisk2.base)
+        cdr_test = AsteriskCSVCDR(
+                records=[AsteriskCSVCDRLine(disposition="ANSWERED", dchannel="",
+                dcontext="iaxtest", amaflags="DOCUMENTATION", accountcode="",
+                callerid="", userfield="", source="", destination="1000",
+                lastapp="AGI", lastarg="GET")])
+        if cdr_test.match(cdr):
+            self.cdr_match = True
 
     def run(self):
         self.start_asterisk()
@@ -102,7 +113,7 @@ def main(argv=None):
     test = IAXCallTest(argv)
     reactor.run()
     test.stop_asterisk()
-    if test.chan1_connected and test.chan2_connected:
+    if test.chan1_connected and test.chan2_connected and test.cdr_match:
         return 0
     return 1
 
