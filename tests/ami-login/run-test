@@ -33,12 +33,19 @@ class AMILoginTest:
         self.asterisk.install_config("tests/ami-login/configs/manager.conf")
         self.asterisk.install_config("tests/ami-login/configs/logger.conf")
 
+    def stop_reactor(self):
+        self.stop_asterisk()
+        print "Stopping Reactor ..."
+        if reactor.running:
+            reactor.stop()
+
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
         self.asterisk.start()
+        self.asterisk.cli_exec("core set verbose 10")
+        self.asterisk.cli_exec("core set debug 3")
 
     def stop_asterisk(self):
-        self.log_last_step("Stopping Asterisk")
         self.asterisk.stop()
 
     def log_last_step(self, step):
@@ -47,25 +54,23 @@ class AMILoginTest:
 
     def on_error(self, ami):
         print "ERROR, Last Step: {0}".format(self.last_step)
-        reactor.stop()
         self.stop_asterisk()
 
     def on_logoff(self, ami):
         self.log_last_step("Logoff Successful")
         self.passed = True
-        reactor.stop()
-
-    def on_pong(self, ami):
-        self.log_last_step("Got Pong")
-        self.ami.logoff().addCallbacks(self.on_logoff, self.on_error)
 
     def on_connect(self, ami):
         self.log_last_step("Connected to the AMI")
         self.ami = ami
-        self.ami.ping().addCallbacks(self.on_pong, self.on_error)
+        self.ami.logoff().addCallbacks(self.on_logoff, self.on_error)
+        self.log_last_step("Logging off")
 
     def run(self):
         self.start_asterisk()
+
+        # A timeout in case things hang and fail
+        reactor.callLater(20, self.stop_reactor)
 
         self.log_last_step("Logging in to the AMI")
         self.ami_factory = manager.AMIFactory("user", "mysecret")
