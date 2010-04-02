@@ -106,9 +106,9 @@ class AsteriskVersion:
                 v = match.group(1)
             f.close()
         except IOError:
-            print "I/O Error getting Asterisk version from %s" % path
+            print "I/O Error getting Asterisk version from {0}".format(path)
         except:
-            print "Unexpected error getting version from %s: %s" % (path,
+            print "Unexpected error getting version from {0}: {1}".format(math,
                     sys.exc_info()[0])
         return v
 
