@@ -115,9 +115,9 @@ class Asterisk:
         Example Usage:
         asterisk.stop()
         """
-        os.kill(self.process.pid, signal.SIGTERM)
-        time.sleep(5.0)
         try:
+            os.kill(self.process.pid, signal.SIGTERM)
+            time.sleep(5.0)
             if not self.process.poll():
                 os.kill(self.process.pid, signal.SIGKILL)
         except OSError:
