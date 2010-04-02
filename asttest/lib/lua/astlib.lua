@@ -96,12 +96,20 @@ function asterisk:__newindex(conffile_name, conffile)
 	end
 end
 
+--- Index an asterisk object
+-- This function will return either the config with the given name, the actual
+-- table member with the given name, or if neither of those exist, it will
+-- create a config with the given name.
 function asterisk:__index(key)
 	if self.configs[key] then
 		return self.configs[key]
 	end
 
-	return asterisk[key]
+	if asterisk[key] ~= nil then
+		return asterisk[key]
+	end
+
+	return self:new_config(key)
 end
 
 function asterisk:manager_connect()
@@ -254,11 +262,20 @@ function config:new_section(section_name)
 	return s
 end
 
+--- Index the config object
+-- This function will return the section of the config indicated if it exists,
+-- if it does not exist it will return the table data member with the given
+-- name if it exists, otherwise it will create a section with the given name
+-- and return that.
 function config:__index(key)
 	local s = self.sections[self.section_index[key]]
 	if s then return s end
 
-	return config[key]
+	if config[key] ~= nil then
+		return config[key]
+	end
+
+	return self:new_section(key)
 end
 
 function config:_write(filename)
