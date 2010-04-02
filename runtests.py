@@ -283,9 +283,7 @@ def main(argv=None):
     if argv is None:
         args = sys.argv
 
-    usage = "Usage: ./runtests.py [options]\n" \
-            "\n" \
-            "{0}".format(BIG_WARNING)
+    usage = "Usage: ./runtests.py [options]\n\n" + BIG_WARNING
 
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-l", "--list-tests", action="store_true",
