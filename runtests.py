@@ -83,14 +83,14 @@ class TestConfig:
         self.passed = False
         start_time = time.time()
         cmd = [
-            "tests/%s/run-test" % self.test_name,
+            "tests/{0}/run-test".format(self.test_name),
             "-v", str(self.ast_version)
         ]
         if os.path.exists(cmd[0]):
-            print "Running %s ..." % cmd
+            print "Running {0} ...".format(cmd)
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-            p2 = subprocess.Popen(["tee", "tests/%s/test-output.txt" %
-                                   self.test_name], stdin=p.stdout)
+            p2 = subprocess.Popen(["tee", "tests/{0}/test-output.txt".format(
+                                   self.test_name)], stdin=p.stdout)
             p.wait()
             p2.wait()
             self.passed = p.returncode == 0
@@ -118,25 +118,25 @@ class TestConfig:
                 self.minversion = AsteriskVersion(properties["minversion"])
             except:
                 self.can_run = False
-                print "ERROR: '%s' is not a valid minversion" % \
-                        properties["minversion"]
+                print "ERROR: '{0}' is not a valid minversion".format(
+                        properties["minversion"])
         if "maxversion" in properties:
             try:
                 self.maxversion = AsteriskVersion(properties["maxversion"])
             except:
                 self.can_run = False
-                print "ERROR: '%s' is not a valid maxversion" % \
-                        properties["maxversion"]
+                print "ERROR: '{0}' is not a valid maxversion".format(
+                        properties["maxversion"])
 
     def __parse_config(self):
-        test_config = "tests/%s/test-config.yaml" % self.test_name
+        test_config = "tests/{0}/test-config.yaml".format(self.test_name)
         try:
             f = open(test_config, "r")
         except IOError:
-            print "Failed to open %s" % test_config
+            print "Failed to open {0}".format(test_config)
             return
         except:
-            print "Unexpected error: %s" % sys.exc_info()[0]
+            print "Unexpected error: {0}".format(sys.exc_info()[0])
             return
 
         self.config = yaml.load(f)
@@ -174,10 +174,10 @@ class TestSuite:
         try:
             f = open(TESTS_CONFIG, "r")
         except IOError:
-            print "Failed to open %s" % TESTS_CONFIG
+            print "Failed to open {0}".format(TESTS_CONFIG)
             return
         except:
-            print "Unexpected error: %s" % sys.exc_info()[0]
+            print "Unexpected error: {0}".format(sys.exc_info()[0])
             return
 
         self.config = yaml.load(f)
@@ -193,16 +193,16 @@ class TestSuite:
         print "Configured tests:"
         i = 1
         for t in self.tests:
-            print "%.3d) %s" % (i, t.test_name)
-            print "      --> Summary: %s" % t.summary
-            print "      --> Minimum Version: %s (%s)" % \
-                         (str(t.minversion), str(t.minversion_check))
+            print "{0:3d}) {1}".format(i, t.test_name)
+            print "      --> Summary: {0}".format(t.summary)
+            print "      --> Minimum Version: {0} ({1})".format(
+                         t.minversion, t.minversion_check)
             if t.maxversion is not None:
-                print "      --> Maximum Version: %s (%s)" % \
-                             (str(t.maxversion), str(t.maxversion_check))
+                print "      --> Maximum Version: {0} ({1})".format(
+                             t.maxversion, t.maxversion_check)
             for d in t.deps:
-                print "      --> Dependency: %s -- Met: %s" % (d.name,
-                             str(d.met))
+                print "      --> Dependency: {0} -- Met: {1}".format(d.name,
+                             d.met)
             i += 1
 
     def run(self, ast_version):
@@ -210,13 +210,13 @@ class TestSuite:
 
         for t in self.tests:
             if t.can_run is False:
-                print "--> Can not run test '%s'" % t.test_name
+                print "--> Can not run test '{0}'".format(t.test_name)
                 for d in t.deps:
-                    print "--- --> Dependency: %s - %s" % (d.name, str(d.met))
+                    print "--- --> Dependency: {0} - {1}".format(d.name, d.met)
                 print
                 continue
 
-            print "--> Running test '%s' ...\n" % t.test_name
+            print "--> Running test '{0}' ...\n".format(t.test_name)
 
             # Establish Preconditions
             os.chdir("..")
@@ -237,30 +237,31 @@ class TestSuite:
         try:
             f = open(TEST_RESULTS, "w")
         except IOError:
-            print "Failed to open test results output file: %s" % TEST_RESULTS
+            print "Failed to open file: {0}".format(TEST_RESULTS)
             return
         except:
-            print "Unexpected error: %s" % sys.exc_info()[0]
+            print "Unexpected error: {0}".format(sys.exc_info()[0])
             return
 
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        f.write('<testsuite errors="0" time="%.2f" tests="%d" '
-                'name="AsteriskTestSuite">\n' %
-                (self.total_time, len(self.tests)))
+        f.write('<testsuite errors="0" time="{0:.2f}" tests="{1}" '
+                'name="AsteriskTestSuite">\n'.format(
+                self.total_time, len(self.tests)))
         for t in self.tests:
             if t.can_run is False:
                 continue
-            f.write('\t<testcase time="%.2f" name="%s"' % (t.time, t.test_name))
+            f.write('\t<testcase time="{0:.2f}" name="{1}"'.format(t.time, t.test_name))
             if t.passed is True:
                 f.write('/>\n')
                 continue
             f.write(">\n\t\t<failure><![CDATA[\n")
             try:
-                test_output = open("tests/%s/test-output.txt" % t.test_name, "r")
-                f.write("%s" % test_output.read())
+                test_output = open("tests/{0}/test-output.txt".format(
+                                                            t.test_name), "r")
+                f.write(test_output.read())
                 test_output.close()
             except IOError:
-                print "Failed to open test output for %s" % t.test_name
+                print "Failed to open test output for {0}".format(t.test_name)
             f.write("\n\t\t]]></failure>\n\t</testcase>\n")
         f.write('</testsuite>\n')
         f.close()
@@ -269,10 +270,10 @@ class TestSuite:
             try:
                 f = open(TEST_RESULTS, "r")
             except IOError:
-                print "Failed to open test results output file: %s" % \
-                        TEST_RESULTS
+                print "Failed to open test results output file: {0}".format(
+                        TEST_RESULTS)
             except:
-                print "Unexpected error: %s" % sys.exc_info()[0]
+                print "Unexpected error: {0}".format(sys.exc_info()[0])
             else:
                 print f.read()
                 f.close()
@@ -284,7 +285,7 @@ def main(argv=None):
 
     usage = "Usage: ./runtests.py [options]\n" \
             "\n" \
-            "%s" % BIG_WARNING
+            "{0}".format(BIG_WARNING)
 
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-l", "--list-tests", action="store_true",
@@ -310,7 +311,7 @@ def main(argv=None):
     test_suite = TestSuite(ast_version)
 
     if options.list_tests is True:
-        print "Asterisk Version: %s\n" % str(ast_version)
+        print "Asterisk Version: {0}\n".format(ast_version)
         test_suite.list_tests()
         return 0
 
@@ -319,7 +320,7 @@ def main(argv=None):
         print BIG_WARNING
         return 1
 
-    print "Running tests for Asterisk %s ...\n" % str(ast_version)
+    print "Running tests for Asterisk {0} ...\n".format(ast_version)
 
     test_suite.run(ast_version)
 
@@ -327,7 +328,7 @@ def main(argv=None):
     for t in test_suite.tests:
         if t.can_run is False:
             continue
-        sys.stdout.write("--> %s --- " % t.test_name)
+        sys.stdout.write("--> {0} --- ".format(t.test_name))
         if t.passed is True:
             print "PASSED"
         else:
