@@ -56,6 +56,7 @@ Optional (needed by specific tests):
         - bash
         - SIPp
             - Download the latest unstable release
+            - http://sipp.sourceforge.net/snapshots/
         - asttest
             - included with the test suite
         - starpy
