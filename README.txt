@@ -57,6 +57,7 @@ Optional (needed by specific tests):
         - SIPp
             - Download the latest unstable release
             - http://sipp.sourceforge.net/snapshots/
+            - Compile the version with pcap support using "make pcapplay"
         - asttest
             - included with the test suite
         - Python modules
