@@ -49,6 +49,7 @@ class Asterisk:
         self.asterisk = Asterisk(base=os.path.join(os.getcwd(),
                                                    "tests/ami-login/tmp"))
         """
+        self.astetcdir = None
         # Find the system installed asterisk.conf
         ast_confs = [
                 "/etc/asterisk/asterisk.conf",

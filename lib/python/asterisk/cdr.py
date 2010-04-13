@@ -12,6 +12,7 @@ the GNU General Public License Version 2.
 
 import unittest
 import sys
+import csv
 
 class AsteriskCSVCDRLine:
     "A single Asterisk call detail record"
@@ -30,9 +31,8 @@ class AsteriskCSVCDRLine:
         """
 
         # make all arguments passed available as instance variables
-        tmp = locals()
-        del tmp['self']
-        self.__dict__.update(tmp)
+        self.__dict__.update(locals())
+        del self.__dict__['self']
 
     def match(self, other):
         """Matches if the subset of fields that exist in both records match.
@@ -65,6 +65,9 @@ class AsteriskCSVCDRLine:
     def get_field(self, i):
         return self.__fields[i]
 
+    def __str__(self):
+        return ",".join(["\"%s\"" % (self.__dict__[x]) for x in AsteriskCSVCDRLine.get_fields()])
+
 
 class AsteriskCSVCDR:
     """A representation of an Asterisk CSV CDR file"""
@@ -72,24 +75,22 @@ class AsteriskCSVCDR:
     def __init__(self, fn=None, records=None):
         """Initialize CDR records from an Asterisk cdr-csv file"""
 
+        self.filename = fn
         if records:
             self.__records = records
             return
 
         self.__records = []
         try:
-            f = open(fn, "r")
-            lines = f.read().splitlines()
-            f.close()
+            cdr = csv.DictReader(open(fn, "r"), AsteriskCSVCDRLine.get_fields(), ",")
         except IOError:
-            print "Failed to open CDR file '%s'" %s (fn)
+            print "Failed to open CDR file '%s'" % (fn)
             return
         except:
             print "Unexpected error: %s" % (sys.exc_info()[0])
             return
 
-        for line in lines:
-            r = dict([(AsteriskCSVCDRLine.get_field(i), x.strip('"')) for i,x in enumerate(line.split(','))])
+        for r in cdr:
             record = AsteriskCSVCDRLine(**r)
             self.__records.append(record)
 
@@ -113,6 +114,15 @@ class AsteriskCSVCDR:
             if not x.match(other[i]):
                 return False
         return True
+
+    def __str__(self):
+        return "\n".join([str(x) for x in self.__records])
+
+    def empty(self):
+        try:
+            open(self.filename, "w").close()
+        except:
+            print "Unable to empty CDR file %s" % (self.filename)
 
 
 class AsteriskCSVCDRTests(unittest.TestCase):
