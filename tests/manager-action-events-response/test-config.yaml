@@ -1,0 +1,15 @@
+testinfo:
+    summary:     'Test the presence and absence of a response from the Events manager action'
+    description: |
+        "This test ensure asterisk either responds or does not respond to
+        various values of the EventMaks parameter of the Events manager
+        action."
+    issues:
+        - mantis : '17023'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'bash'
+        - app : 'asttest'
+
