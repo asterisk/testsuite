@@ -13,6 +13,7 @@ the GNU General Public License Version 2.
 import unittest
 import sys
 import csv
+import re
 
 class AsteriskCSVCDRLine:
     "A single Asterisk call detail record"
@@ -43,7 +44,8 @@ class AsteriskCSVCDRLine:
         """
 
         for k,v in self.iteritems():
-            if None not in (v, other.get(k)) and str(v).lower() != str(other.get(k)).lower():
+            if None not in (v, other.get(k)) and not re.search(
+                    str(v).lower(), str(other.get(k)).lower()):
                 print "CDR MATCH FAILED, Expected: %s:%s Got: %s:%s" % (k, v,
                         k, other.get(k))
                 return False
