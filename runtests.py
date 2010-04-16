@@ -148,7 +148,7 @@ class TestConfig:
     def __check_deps(self, ast_version):
         self.deps = [
             Dependency(d)
-                for d in self.config["properties"]["dependencies"]
+                for d in self.config["properties"].get("dependencies") or []
         ]
 
         self.minversion_check = True
