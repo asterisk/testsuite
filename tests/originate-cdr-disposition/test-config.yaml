@@ -1,0 +1,18 @@
+testinfo:
+    summary: 'Test for proper CDR dispositions when originating calls.'
+    description: |
+        "This test verifies that the CDRs generated during originates have the
+        right dispositions and also that the proper number of CDR records are
+        generated."
+    issues:
+        - mantis : '14167'
+        - mantis : '16222'
+        - mantis : '16797'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'bash'
+        - app : 'sipp'
+        - app : 'asttest'
+

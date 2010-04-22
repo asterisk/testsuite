@@ -7,3 +7,4 @@ tests:
     - test: 'sip_channel_params'
     - test: 'iax-call-basic'
     - test: 'manager-action-events-response'
+    - test: 'originate-cdr-disposition'
