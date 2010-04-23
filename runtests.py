@@ -86,7 +86,7 @@ class TestConfig:
             "tests/%s/run-test" % self.test_name,
             "-v", str(self.ast_version)
         ]
-        if os.path.exists(cmd[0]):
+        if os.path.exists(cmd[0]) and os.access(cmd[0], os.X_OK):
             print "Running %s ..." % cmd
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
             p2 = subprocess.Popen(["tee", "tests/%s/test-output.txt" %
@@ -94,6 +94,8 @@ class TestConfig:
             p.wait()
             p2.wait()
             self.passed = p.returncode == 0
+        else:
+            print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
         self.time = time.time() - start_time
 
     def __process_testinfo(self):
