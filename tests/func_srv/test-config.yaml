@@ -1,0 +1,10 @@
+testinfo:
+    summary:     'Test func_srv for correctness'
+    description: |
+        'This test exercises the SRVQUERY and SRVRESULT dialplan functions
+        to be certain that the results obtained are what are expected.'
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - app: 'asttest'

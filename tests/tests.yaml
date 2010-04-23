@@ -8,3 +8,5 @@ tests:
     - test: 'iax-call-basic'
     - test: 'manager-action-events-response'
     - test: 'originate-cdr-disposition'
+    - test: 'func_srv'
+    - test: 'sip_outbound_address'
