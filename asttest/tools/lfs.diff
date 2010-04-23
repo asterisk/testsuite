@@ -1,6 +1,6 @@
 diff -ru a/config b/config
 --- a/config	2007-10-27 17:42:32.000000000 -0500
-+++ b/config	2009-04-01 20:18:09.000000000 -0500
++++ b/config	2010-03-25 10:35:55.000000000 -0500
 @@ -18,7 +18,8 @@
  # Compilation directives
  WARN= -O2 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -pedantic
@@ -11,3 +11,16 @@ diff -ru a/config b/config
  CC= gcc
  
  # $Id$
+diff -ru a/src/lfs.c b/src/lfs.c
+--- a/src/lfs.c	2009-02-03 16:05:48.000000000 -0600
++++ b/src/lfs.c	2010-04-23 09:37:58.000000000 -0500
+@@ -232,7 +232,8 @@
+   }
+ }
+ #else
+-static int lfs_g_setmode (lua_State *L, FILE *f, int arg) {
++#define lfs_g_setmode(L, f, arg) __lfs_g_setmode(L)
++static int __lfs_g_setmode (lua_State *L) {
+   lua_pushboolean(L, 0);
+   lua_pushliteral(L, "setmode not supported on this platform");
+   return 2;
