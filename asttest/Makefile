@@ -116,7 +116,7 @@ lib/lua/proclib.o: lib/lua/proclib.c lib/lua/proclib_lua.h include/asttest/lua/p
 $(LUAFILESYSTEM_OBJS): lib/lua/$(LUAFILESYSTEM) lib/lua/lfs-patched.stamp
 	$(MAKE) -C lib/lua/$(LUAFILESYSTEM)
 
-lib/lua/lfs-patched.stamp lib/lua/$(LUAFILESYSTEM): lib/lua/$(LUAFILESYSTEM).tar.gz
+lib/lua/lfs-patched.stamp lib/lua/$(LUAFILESYSTEM): lib/lua/$(LUAFILESYSTEM).tar.gz tools/lfs.diff
 	tar -C lib/lua -zxf lib/lua/$(LUAFILESYSTEM).tar.gz 
 	patch -p1 -d lib/lua/$(LUAFILESYSTEM) < tools/lfs.diff
 	touch lib/lua/lfs-patched.stamp
@@ -124,7 +124,7 @@ lib/lua/lfs-patched.stamp lib/lua/$(LUAFILESYSTEM): lib/lua/$(LUAFILESYSTEM).tar
 $(LUASOCKET_OBJS): lib/lua/$(LUASOCKET) lib/lua/luasocket-patched.stamp
 	$(MAKE) -C lib/lua/$(LUASOCKET)
 
-lib/lua/luasocket-patched.stamp lib/lua/$(LUASOCKET): lib/lua/$(LUASOCKET).tar.gz
+lib/lua/luasocket-patched.stamp lib/lua/$(LUASOCKET): lib/lua/$(LUASOCKET).tar.gz tools/luasocket.diff
 	tar -C lib/lua -zxf lib/lua/$(LUASOCKET).tar.gz 
 	patch -p1 -d lib/lua/$(LUASOCKET) < tools/luasocket.diff
 	touch lib/lua/luasocket-patched.stamp
@@ -132,7 +132,7 @@ lib/lua/luasocket-patched.stamp lib/lua/$(LUASOCKET): lib/lua/$(LUASOCKET).tar.g
 $(LUAPOSIX_OBJS): lib/lua/$(LUAPOSIX) lib/lua/luaposix-patched.stamp
 	$(MAKE) -C lib/lua/$(LUAPOSIX)
 
-lib/lua/luaposix-patched.stamp lib/lua/$(LUAPOSIX): lib/lua/$(LUAPOSIX).tar.gz
+lib/lua/luaposix-patched.stamp lib/lua/$(LUAPOSIX): lib/lua/$(LUAPOSIX).tar.gz tools/luaposix.diff
 	tar -C lib/lua -zxf lib/lua/$(LUAPOSIX).tar.gz 
 	patch -p1 -d lib/lua/$(LUAPOSIX) < tools/luaposix.diff
 	touch lib/lua/luaposix-patched.stamp
