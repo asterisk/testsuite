@@ -18,7 +18,7 @@ function sipp_exec(scenario, name, host, port)
 	host = host or "127.0.0.1" 
 	port = port or "5060"
 	local inf = "data.csv"
-	return proc.exec_io("sipp",
+	local p = proc.exec_io("sipp",
 	"127.0.0.1",
 	"-m", "1",
 	"-sf", scenario,
@@ -31,6 +31,9 @@ function sipp_exec(scenario, name, host, port)
 	"-set", "user", name,
 	"-set", "file", inf
 	)
+
+	posix.sleep(1)
+	return p
 end
 
 function sipp_exec_and_wait(scenario, name, host, port)
