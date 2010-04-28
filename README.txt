@@ -29,17 +29,65 @@
 --- 1) Introduction
 --------------------------------------------------------------------------------
 
-        Automated testing for Asterisk is approached from two directions.  The
-first is bottom-up unit testing.  Those tests are implemented within Asterisk in
-the C programming language, using the Asterisk C APIs.  These tests are enabled
-by turning on the TEST_FRAMEWORK compile time option in menuselect.  The CLI
+Over the years as the Asterisk code base has expanded, the need for more tools
+to control the quality of the code has increased. Luckily some of these tools
+have been implemented and the return on that investment has paid dividends
+immediately.
+
+There are four parts to code testing:
+
+  1) Testing with our eyes
+
+  2) Bottom-Up testing using unit tests within Asterisk
+
+  3) Top-Down testing using an external test suite
+
+  4) Tests running constantly using a continuous integration framework
+
+
+With the introduction of ReviewBoard (http://reviewboard.asterisk.org) code is
+now peer reviewed to a greater extent prior to being merged and the number of
+pre-commit bugs being found is tremendous. ReviewBoard satisfies the first
+part: Testing with our eyes.
+
+But where peer reviewing fails is in the ability to verify that regressions are
+not being introduced into the code. Whenever you solve a complex issue, the
+chances that a regression is introduced somewhere else is elevated. A way of
+minimizing those regressions is through automated testing.
+
+Automated testing improves the quality of code at any part of the development
+cycle and reduces the number of regressions being introduced. Whenever a part
+of the system is being worked on and bugs are being resolved, developers are
+encouraged to write tests in order to verify that the same issue does not creep
+back into the code, and that changes in other locations do not disrupt the
+expected results in that area.
+
+The next two directions satisfy the bottom-up testing and top-down testing
+methods:
+
+Automated testing for Asterisk is approached from two directions.  The first is
+bottom-up unit testing.  Those tests are implemented within Asterisk in the C
+programming language, using the Asterisk C APIs.  These tests are enabled by 
+turning on the TEST_FRAMEWORK compile time option in menuselect.  The CLI
 commands related to the test framework all begin with "test".
 
-        The second approach is top down using tests developed outside of
-Asterisk.  This test suite is the collection of top-down functionality tests.
-The test suite is made up as a collection of scripts that test some portion of
-Asterisk functionality given a set of preconditions, and then provide a
-pass/fail result via a predefined method of doing so.
+The second approach is top down using tests developed outside of Asterisk.
+This test suite is the collection of top-down functionality tests. The test 
+suite is made up as a collection of scripts that test some portion of Asterisk
+functionality given a set of preconditions, and then provide a pass/fail result
+via a predefined method of doing so.
+
+The fourth part ties parts two and three together by making sure that whenever
+something is introduced that breaks one of the tests, that it gets resolved
+immediately and not at some point in the future through bug reporting. This is
+done with Bamboo. You can see the history and current status of the tests
+being run by visiting http://bamboo.asterisk.org.
+
+This document will focus on how you can setup the Asterisk Test Suite in order
+to run the same automated external tests on your own development system. You
+are also encouraged to write your own automated tests to verify parts of your
+own system remain in working order, and to contribute those tests back to the
+Asterisk project so they may be run in the automated testing framework.
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -90,6 +138,11 @@ will have the testsuite directory inside of the asterisk-trunk directory.
 
 List the tests:
     $ ./runtests.py -l
+
+       ******************************************
+       *** Listing the tests will also tell   ***
+       *** you which dependencies are missing ***
+       ******************************************
 
 Run the tests:
     # ./runtests.py
