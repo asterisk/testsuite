@@ -15,7 +15,7 @@ testinfo:
         - jira : 'ABE-2153'
 
 properties:
-    minversion: 'trunk'
+    minversion: '1.8'
     dependencies:
         - app : 'bash'
         - app : 'sipp'
