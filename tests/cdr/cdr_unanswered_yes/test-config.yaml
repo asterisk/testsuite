@@ -1,0 +1,11 @@
+testinfo:
+    summary: 'Test the unanswered=yes cdr.conf option'
+    description: |
+        'Do a simple unanswered call and check for a CDR'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+

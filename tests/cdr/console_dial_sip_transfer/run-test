@@ -1,0 +1,99 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+Terry Wilson <twilson@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+from time import sleep
+import os
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
+from asterisk.ami import AMI
+from twisted.internet import reactor
+import logging
+
+workingdir = "/tmp/asterisk-testsuite/console_dial_sip_transfer"
+testdir = "tests/cdr/console_dial_sip_transfer"
+
+class Test:
+    def __init__(self):
+        self.passed = False
+        asterisk1 = Asterisk(base=workingdir)
+        asterisk1.install_config("%s/configs1/sip.conf" % (testdir))
+        asterisk1.install_config("%s/configs1/extensions.conf" % (testdir))
+        asterisk1.install_config("%s/configs1/manager.conf" % (testdir))
+        asterisk1.install_config("%s/configs_common/logger.conf" % (testdir))
+
+        asterisk2 = Asterisk(base=workingdir)
+        asterisk2.install_config("%s/configs2/sip.conf" % (testdir))
+        asterisk2.install_config("%s/configs2/extensions.conf" % (testdir))
+
+        asterisk2.install_config("%s/configs_common/logger.conf" % (testdir))
+
+        asterisk1.start()
+        asterisk2.start()
+
+        self.asterisk1 = asterisk1
+        self.asterisk2 = asterisk2
+        self.ami = AMI(self.start, self.abort, timeout=20)
+        self.ami.login()
+
+    def start(self, ami):
+        ami.registerEvent('Hangup', self.end)
+        self.asterisk1.cli_exec("console dial 1@default")
+
+    def stop_asterisk(self):
+        self.asterisk1.stop()
+        self.asterisk2.stop()
+
+    def abort(self):
+        self.stop_asterisk()
+        reactor.stop()
+
+    def end(self, ami, event):
+        if event.get('channel').lower() != "console/dsp":
+            return
+
+        self.stop_asterisk()
+
+        cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.asterisk1.base))
+        cdr2 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.asterisk2.base))
+
+        cdr1_records=[]
+        cdr1_records.append(AsteriskCSVCDRLine(
+            disposition="ANSWERED", dchannel="SIP/test-.*", dcontext="default",
+            amaflags="DOCUMENTATION", callerid="", userfield="", source="",
+            destination="2", lastapp="Dial", lastarg="SIP/2@test"))
+        cdr1_records.append(AsteriskCSVCDRLine(
+            disposition="ANSWERED", dcontext="default", amaflags="DOCUMENTATION",
+            accountcode="", callerid="", userfield="", destination="1", lastapp="Dial",
+            lastarg="SIP/1@test", channel="Console/dsp"))
+
+        cdr1_expect = AsteriskCSVCDR(records=cdr1_records)
+
+        cdr2_expect=AsteriskCSVCDR(records=[AsteriskCSVCDRLine(
+            disposition="ANSWERED", dchannel="", dcontext="default", amaflags="DOCUMENTATION",
+            accountcode="", callerid='"asterisk" <asterisk>', userfield="", source="asterisk",
+            destination="2", lastapp="Hangup", lastarg="", channel="SIP/.*5065-.*")])
+        if cdr1_expect.match(cdr1) and cdr2_expect.match(cdr2):
+            print "Success"
+            self.passed = True
+        else:
+            print "Failure"
+
+        reactor.stop()
+
+
+def main():
+    logging.basicConfig()
+    test = Test()
+    reactor.run()
+    return not test.passed
+
+if __name__ == '__main__':
+    sys.exit(main())

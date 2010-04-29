@@ -1,0 +1,73 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+Terry Wilson <twilson@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+from time import sleep
+import os
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
+from asterisk.ami import AMI
+from twisted.internet import reactor
+import logging
+
+workingdir = "/tmp/asterisk-testsuite/cdr_unanswered_yes"
+testdir = "tests/cdr/cdr_unanswered_yes"
+
+class Test:
+    def __init__(self):
+        self.passed = False
+        asterisk1 = Asterisk(base=workingdir)
+        asterisk1.install_config("%s/configs/manager.conf" % (testdir))
+        asterisk1.install_config("%s/configs/extensions.conf" % (testdir))
+        asterisk1.install_config("%s/configs/logger.conf" % (testdir))
+        asterisk1.install_config("%s/configs/cdr.conf" % (testdir))
+
+        asterisk1.start()
+        self.asterisk1 = asterisk1
+        self.ami = AMI(self.start, self.abort, timeout=20)
+        self.ami.login()
+
+    def start(self, ami):
+        ami.registerEvent('Hangup', self.end)
+        self.asterisk1.cli_exec("console dial 1@default")
+
+    def stop_asterisk(self):
+        self.asterisk1.stop()
+
+    def abort(self):
+        self.stop_asterisk()
+        reactor.stop()
+
+    def end(self, ami, event):
+        self.stop_asterisk()
+        cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.asterisk1.base))
+
+        cdr1_expect = AsteriskCSVCDR(records=[AsteriskCSVCDRLine(accountcode="",
+            source="", destination="1", dcontext="default", callerid="",
+            channel="Console/dsp", dchannel="", lastapp="Hangup", lastarg="",
+            disposition="NO ANSWER", amaflags="DOCUMENTATION")])
+
+        if cdr1_expect.match(cdr1):
+            print "Success"
+            self.passed = True
+        else:
+            print "Failure"
+
+        reactor.stop()
+
+
+def main():
+    logging.basicConfig()
+    test = Test()
+    reactor.run()
+    return not test.passed
+
+if __name__ == '__main__':
+    sys.exit(main())

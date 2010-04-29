@@ -1,0 +1,10 @@
+testinfo:
+    summary: 'Test that Set(CDR(userfield)=...) works'
+    description: |
+        'Test that the setting the userfield field in the CDR works'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'

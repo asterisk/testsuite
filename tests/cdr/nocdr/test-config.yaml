@@ -1,0 +1,10 @@
+testinfo:
+    summary: 'Test the NoCDR application'
+    description: |
+        'Answer a call and run NoCDR and unsure no CDR is produced'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'

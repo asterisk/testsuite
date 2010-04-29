@@ -1,0 +1,12 @@
+testinfo:
+    summary: CLI exec console dial which dials via SIP which transfers the call
+    description: |
+        'One Asterisk instance with console dial calls another instance via SIP.
+        the other instance transfers to another exetnsion  and the CDRs are
+        tested for expected behavior.'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'

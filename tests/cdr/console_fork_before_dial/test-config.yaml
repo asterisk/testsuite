@@ -1,0 +1,12 @@
+testinfo:
+    summary: CLI exec console dial which calls ForkCDR before dialing via SIP which answers
+    description: |
+        'One Asterisk instance with console dial excutes ForkCDR and calls another
+        instance via SIP. The other instance answers and the CDRs are tested for
+        expected behavior.'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
