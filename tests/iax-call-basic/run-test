@@ -39,15 +39,13 @@ class IAXCallTest:
 
         print "Creating Asterisk instances ..."
 
-        self.asterisk = Asterisk(base=os.path.join(os.getcwd(),
-                                      "tests/iax-call-basic/tmp/"))
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/iax-call-basic")
         self.asterisk.install_config("tests/iax-call-basic/configs/manager.conf")
         self.asterisk.install_config("tests/iax-call-basic/configs/logger.conf")
         self.asterisk.install_config("tests/iax-call-basic/configs/extensions.conf")
         self.asterisk.install_config("tests/iax-call-basic/configs/iax.conf")
 
-        self.asterisk2 = Asterisk(base=os.path.join(os.getcwd(),
-                                      "tests/iax-call-basic/tmp/"))
+        self.asterisk2 = Asterisk(base="/tmp/asterisk-testsuite/iax-call-basic")
         self.asterisk2.install_config("tests/iax-call-basic/configs2/manager.conf")
         self.asterisk2.install_config("tests/iax-call-basic/configs2/logger.conf")
         self.asterisk2.install_config("tests/iax-call-basic/configs2/extensions.conf")
