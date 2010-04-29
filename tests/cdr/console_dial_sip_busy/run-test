@@ -43,7 +43,6 @@ class Test:
         self.ami.login()
 
     def start(self, ami):
-        print "Doing test"
         ami.registerEvent('Hangup', self.end)
         self.asterisk1.cli_exec("console dial 1@default")
 
@@ -56,10 +55,11 @@ class Test:
         reactor.stop()
 
     def end(self, ami, event):
-        print "Ending test"
         self.stop_asterisk()
 
         cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.asterisk1.base))
+
+        print "The failure to open the next CDR is expected"
         cdr2 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.asterisk2.base))
 
         cdr1_expect = AsteriskCSVCDR(records=[AsteriskCSVCDRLine(accountcode="",

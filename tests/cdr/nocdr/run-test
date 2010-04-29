@@ -49,6 +49,8 @@ class Test:
 
     def end(self, ami, event):
         self.stop_asterisk()
+
+        print "The failure to open the next CDR is expected"
         cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.asterisk1.base))
 
         if len(cdr1) == 0:
