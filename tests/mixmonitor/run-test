@@ -1,0 +1,133 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+David Vossel <dvossel@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import math
+from optparse import OptionParser
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.version import AsteriskVersion
+
+class MixMonitorTest:
+    def __init__(self, argv):
+        self.passed = False
+        self.last_step = ""
+        self.expectedfilesize = 50000
+        self.filesizetolerance = 7000
+        self.audiofile1size = -1
+        self.audiofile2size = -1
+        self.audiofile3size = -1
+
+        # get version info
+        parser = OptionParser()
+        parser.add_option("-v", "--version", dest="ast_version",
+                          help="Asterisk version string")
+        (options, args) = parser.parse_args(argv)
+        self.ast_version = AsteriskVersion(options.ast_version)
+
+        reactor.callWhenRunning(self.run)
+
+        print self.ast_version
+        self.asterisk = Asterisk(base=os.path.join(os.getcwd(), "tests/mixmonitor/tmp"))
+        self.audiofile1 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio1")
+        self.audiofile2 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio2")
+        self.audiofile3 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio3")
+        self.asterisk.install_config("tests/mixmonitor/configs/extensions.conf")
+
+    def read_result(self):
+        self.log_last_step("Reading result file from MixMonitor")
+        if os.path.exists(self.audiofile1 + ".raw"):
+            self.audiofile1size = os.path.getsize(self.audiofile1 + ".raw")
+        if os.path.exists(self.audiofile2 + ".raw"):
+            self.audiofile2size = os.path.getsize(self.audiofile2 + ".raw")
+        if os.path.exists(self.audiofile3 + ".raw"):
+            self.audiofile3size = os.path.getsize(self.audiofile3 + ".raw")
+
+        self.stop_asterisk()
+        print "Stopping Reactor ..."
+        if reactor.running:
+            reactor.stop()
+
+        self.passed = True
+
+        self.log_last_step("audiofile1 size is %d, a negative size indicates the file was not present." % (self.audiofile1size, ))
+        if math.fabs(self.audiofile1size - self.expectedfilesize) > self.filesizetolerance:
+            # if this failed mixmonitor is not creating the correct file size for the time we expect.
+            self.log_last_step("audiofile1 size is not within the size tolerance.")
+            self.passed = False
+
+        self.log_last_step("audiofile2 size is %d, a negative size indicates the file was not present." % (self.audiofile2size, ))
+        if math.fabs(self.audiofile2size - self.expectedfilesize) > self.filesizetolerance:
+            # if this failed it is likely because StopMixMonitor never let go of audiofile1
+            self.log_last_step("audiofile2 size is not within the size tolerance.")
+            self.passed = False
+
+        self.log_last_step("audiofile3 size is %d, a negative size indicates the file was not present." % (self.audiofile3size, ))
+        if self.audiofile3size == -1:
+            # if this failed it is likely because MixMonitor never let go of audiofile2 on hangup
+            self.log_last_step("audiofile3 file does not exist.")
+            self.passed = False
+
+        if self.passed == True:
+            self.log_last_step("Test Passed... All audio files are the correct.")
+
+    def launch_test1(self):
+        self.log_last_step("Placing call to test1 exten")
+        self.asterisk.cli_exec("console dial test1@mixmonitortest")
+
+    def launch_test2(self):
+        self.log_last_step("Placing call to test2 exten")
+        self.asterisk.cli_exec("console dial test2@mixmonitortest")
+
+    def start_asterisk(self):
+        self.log_last_step("Starting Asterisk")
+        self.asterisk.start()
+
+        self.asterisk.cli_exec("core set verbose 10")
+        self.asterisk.cli_exec("core set debug 3")
+        self.asterisk.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
+        self.asterisk.cli_exec("core set global TESTAUDIO2 " + self.audiofile2)
+        self.asterisk.cli_exec("core set global TESTAUDIO3 " + self.audiofile3)
+
+    def stop_asterisk(self):
+        self.asterisk.stop()
+
+    def log_last_step(self, step):
+        print step
+        self.last_step = step
+
+    def run(self):
+        self.start_asterisk()
+
+        # call test1 extension now
+        self.launch_test1()
+
+        # call test2 extension in 15 seconds
+        reactor.callLater(15, self.launch_test2)
+
+        # read test results in 25 seconds
+        reactor.callLater(25, self.read_result)
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    test = MixMonitorTest(argv)
+    reactor.run()
+    test.stop_asterisk()
+    if test.passed:
+        return 0
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
