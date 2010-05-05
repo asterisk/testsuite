@@ -49,7 +49,7 @@ class Asterisk:
         self.asterisk = Asterisk(base=os.path.join(os.getcwd(),
                                                    "tests/ami-login/tmp"))
         """
-        self.astetcdir = None
+        self.astetcdir = "/etc/asterisk"
         # Find the system installed asterisk.conf
         ast_confs = [
                 "/etc/asterisk/asterisk.conf",
@@ -142,9 +142,6 @@ class Asterisk:
         if not os.path.exists(cfg_path):
             print "Config file '%s' does not exist" % cfg_path
             return
-        if not self.astetcdir:
-            print "Don't know where to put local config!"
-            return
         target_path = os.path.join(self.astetcdir, os.path.basename(cfg_path))
         if os.path.exists(target_path):
             os.remove(target_path)
@@ -174,15 +171,10 @@ class Asterisk:
         process.wait()
 
     def __gen_ast_conf(self, ast_conf, dir_cat):
-        self.astetcdir = None
         for (var, val) in dir_cat.options:
             if var == "astetcdir":
                 self.astetcdir = "%s%s" % (self.base, val)
                 os.makedirs(self.astetcdir)
-
-        if self.astetcdir is None:
-            print "Could not determine astetcdir"
-            return
 
         local_ast_conf_path = os.path.join(self.astetcdir, "asterisk.conf")
 
