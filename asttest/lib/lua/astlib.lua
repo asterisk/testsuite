@@ -375,6 +375,7 @@ function manager:new()
 		responses = {},
 		event_handlers = {},
 		response_handlers = {},
+		buf = {""},
 	}
 
 	setmetatable(m, self)
@@ -411,8 +412,38 @@ function manager:disconnect()
 	self.sock = nil
 end
 
+--- Read data from a socket until a \r\n is encountered.
+--
+-- Data is read from the socket one character at a time and placed in a table.
+-- Once a \r\n is found, the characters are concatinated into a line (minus the
+-- \r\n at the end).  Hopefully this prevents the unnecessary garbage
+-- collection that would result from appending the characters to a string one
+-- at a time as they are read.
+local function read_until_crlf(sock)
+	local line = {}
+	local cr = false
+	while true do
+		-- reading 1 char at a time is ok as lua socket reads data from
+		-- an internal buffer
+		local c, err = sock:receive(1)
+		if not c then
+			return nil, err
+		end
+
+		table.insert(line, c)
+
+		if c == '\r' then
+			cr = true
+		elseif cr and c == '\n' then
+			return table.concat(line, nil, 1, #line - 2)
+		else
+			cr = false
+		end
+	end
+end
+
 function manager:_parse_greeting()
-	local line, err = self.sock:receive("*l")
+	local line, err = read_until_crlf(self.sock, self.buf)
 	if not line then
 		return nil, err
 	end
@@ -426,7 +457,7 @@ function manager:_parse_greeting()
 end
 
 function manager:_read_message()
-	local line, err = self.sock:receive("*l")
+	local line, err = read_until_crlf(self.sock, self.buf)
 	if not line then
 		return nil, err
 	end
@@ -450,7 +481,7 @@ function manager:_read_message()
 	local data_mode = false
 	
 	while true do
-		line, err = self.sock:receive("*l")
+		line, err = read_until_crlf(self.sock, self.buf)
 		if not line then
 			return nil, err
 		end
