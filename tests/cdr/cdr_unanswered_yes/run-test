@@ -23,6 +23,9 @@ testdir = "tests/cdr/cdr_unanswered_yes"
 class Test:
     def __init__(self):
         self.passed = False
+
+        reactor.callLater(60, self.abort)
+
         asterisk1 = Asterisk(base=workingdir)
         asterisk1.install_config("%s/configs/manager.conf" % (testdir))
         asterisk1.install_config("%s/configs/extensions.conf" % (testdir))
@@ -42,8 +45,12 @@ class Test:
         self.asterisk1.stop()
 
     def abort(self):
+        print "Aborting ..."
         self.stop_asterisk()
-        reactor.stop()
+        if reactor.running:
+            for call in reactor.getDelayedCalls():
+                call.cancel()
+            reactor.stop()
 
     def end(self, ami, event):
         self.stop_asterisk()
