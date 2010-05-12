@@ -62,6 +62,9 @@ class Test:
             reactor.stop()
 
     def end(self, ami, event):
+        if event.get('channel').lower() != 'console/dsp':
+            return
+
         self.stop_asterisk()
 
         cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.asterisk1.base))
