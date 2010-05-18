@@ -212,7 +212,12 @@ class TestSuite:
 
         for t in self.tests:
             if t.can_run is False:
-                print "--> Can not run test '%s'" % t.test_name
+                print "--> Cannot run test '%s'" % t.test_name
+                print "--- --> Minimum Version: %s (%s)" % \
+                    (str(t.minversion), str(t.minversion_check))
+                if t.maxversion is not None:
+                    print "--- --> Maximum Version: %s (%s)" % \
+                        (str(t.maxversion), str(t.maxversion_check))
                 for d in t.deps:
                     print "--- --> Dependency: %s - %s" % (d.name, str(d.met))
                 print
@@ -325,9 +330,10 @@ def main(argv=None):
 
     print "\n=== TEST RESULTS ==="
     for t in test_suite.tests:
-        if t.can_run is False:
-            continue
         sys.stdout.write("--> %s --- " % t.test_name)
+        if t.can_run is False:
+            print "SKIPPED"
+            continue
         if t.passed is True:
             print "PASSED"
         else:
