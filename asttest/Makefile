@@ -48,7 +48,7 @@ CFLAGS:=-g -c -D_GNU_SOURCE -Wall -I/usr/include/lua5.1 -Iinclude -Ilua
 L_MODULES:=$(LUAFILESYSTEM_OBJS) $(LUASOCKET_OBJS) $(LUAPOSIX_OBJS) 
 L_LIBS:=$(LUAPOSIX_LIBS)
 L_OBJS:=lib/lua/testlib.o lib/lua/astlib.o lib/lua/proclib.o
-T_LIBS:=-llua5.1
+T_LIBS:=-llua5.1 -lm -ldl
 
 
 all: asttest
