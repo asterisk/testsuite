@@ -1,0 +1,178 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+David Vossel <dvossel@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import time
+from optparse import OptionParser
+from twisted.application import service, internet
+from twisted.internet import reactor
+from starpy import fastagi
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.version import AsteriskVersion
+
+NOT_RUN = 0
+PASS = 1
+FAIL = 2
+SKIP = 4
+class PickupTest:
+    def __init__(self, argv):
+
+        # Test timeout in seconds
+        self.test_to = 15
+        self.last_step = ""
+        self.test1_res = NOT_RUN
+        self.test2_res = NOT_RUN
+        self.passed = FAIL
+
+        # get version info
+        parser = OptionParser()
+        parser.add_option("-v", "--version", dest="ast_version",
+                          help="Asterisk version string")
+        (options, args) = parser.parse_args(argv)
+        self.ast_version = AsteriskVersion(options.ast_version)
+
+        # FastAGI, listen for results from dialplan
+        # PASS on port 4573
+        # FAIL on port 4574
+        self.agi_pass = fastagi.FastAGIFactory(self.report_test_passed)
+        self.agi_fail = fastagi.FastAGIFactory(self.report_test_failed)
+        reactor.listenTCP(4573, self.agi_pass, self.test_to, '127.0.0.1')
+        reactor.listenTCP(4574, self.agi_fail, self.test_to, '127.0.0.1')
+
+        reactor.callWhenRunning(self.run)
+
+        print self.ast_version
+        self.asterisk1 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/directed_pickup"))
+        self.asterisk1.install_config("tests/directed_pickup/configs/extensions.conf")
+        self.asterisk1.install_config("tests/directed_pickup/configs/iax.conf")
+
+    def shut_down(self):
+        self.log_last_step("Reading results")
+        self.asterisk1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+
+        self.stop_asterisk()
+
+        if reactor.running:
+            print "Stopping Reactor ..."
+            reactor.stop()
+
+        if self.test1_res != FAIL and self.test2_res != FAIL:
+            self.passed = True
+            print "Tests Passed"
+        else:
+            if self.test1_res != PASS:
+                print "Test 1 failed, Test 2 did not run"
+            else:
+                print "Test 1 Passed, Test 2 failed"
+            print "Tests Failed"
+
+    # Close out the agi
+    def handle_agi_result(self, agi):
+        sequence = fastagi.InSequence()
+        sequence.append(agi.finish)
+        return sequence()
+
+    # set the result, schedule next step
+    def handle_result(self, result):
+        self.asterisk1.cli_exec("console hangup")
+
+        if self.test1_res == NOT_RUN:
+            self.log_last_step("Pickup Test 1 results came in.")
+            self.test1_res = result
+        elif self.test2_res == NOT_RUN:
+            self.log_last_step("Pickup Test 2 results came in.")
+            self.test2_res = result
+
+        if self.test1_res == FAIL or self.test2_res == FAIL:
+            # schedule early shutdown, a test failed
+            reactor.callLater(2, self.shut_down)
+        elif self.test1_res != NOT_RUN and self.test2_res != NOT_RUN:
+            # schedule early shutdown, all tests ran
+            reactor.callLater(2, self.shut_down)
+        elif self.test2_res == NOT_RUN:
+            # schedule test2 if test1 passed
+            reactor.callLater(2, self.launch_test2)
+
+    # This gets invoked by the dialplan when pickup test passes
+    def report_test_passed(self, agi):
+        self.handle_result(PASS)
+        return self.handle_agi_result(agi)
+
+    # This gets invoked by the dialplan when pickup test fails
+    def report_test_failed(self, agi):
+        self.handle_result(FAIL)
+        return self.handle_agi_result(agi)
+
+    def test1_pickup(self):
+        self.asterisk1.cli_exec("core show channels")
+        self.log_last_step("Issuing the pickup")
+        self.asterisk1.cli_exec("console dial 1002@pickuptest")
+
+    def launch_test1(self):
+        self.log_last_step("Starting Test 1")
+        self.asterisk1.cli_exec("core set verbose 10")
+        if self.ast_version < AsteriskVersion("1.6.2"):
+            self.asterisk1.cli_exec("originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
+        else:
+            self.asterisk1.cli_exec("channel originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
+        reactor.callLater(2, self.test1_pickup)
+
+    def test2_pickup(self):
+        self.asterisk1.cli_exec("core show channels")
+        self.log_last_step("Issuing the pickup")
+        self.asterisk1.cli_exec("console dial 1003@pickuptest")
+
+    def launch_test2(self):
+        self.log_last_step("Starting Test 2")
+        if self.ast_version < AsteriskVersion("1.8"):
+            # this part requires version 1.8 or greater.
+            self.test2 = SKIP
+            reactor.callLater(2, self.shut_down)
+        else:
+            self.asterisk1.cli_exec("core set verbose 10")
+            self.asterisk1.cli_exec("channel originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
+            reactor.callLater(2, self.test2_pickup)
+
+    def start_asterisk(self):
+        self.log_last_step("Starting Asterisk")
+        self.asterisk1.start()
+
+    def stop_asterisk(self):
+        self.asterisk1.stop()
+
+    def log_last_step(self, step):
+        print step
+        self.last_step = step
+
+    def run(self):
+        self.start_asterisk()
+
+        # call test1 extension now
+        reactor.callLater(1, self.launch_test1)
+
+        # stop and read results after timeout
+        reactor.callLater(self.test_to, self.shut_down)
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    pickup_test = PickupTest(argv)
+    reactor.run()
+    pickup_test.stop_asterisk()
+    if pickup_test.passed != PASS:
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+

@@ -1,0 +1,10 @@
+testinfo:
+    summary:     'Test PickupChan'
+    description: |
+        'This test verifies functionality of the PickupChan app and its options'
+
+properties:
+    minversion: '1.6.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
