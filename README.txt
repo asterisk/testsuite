@@ -116,6 +116,14 @@ Optional (needed by specific tests):
                   $ cd starpy/trunk
                   # python setup.py install
             - python-twisted
+        - pjsua
+            - http://www.pjsip.org/download.htm
+            - Download and build pjsip from source
+              $ ./configure && make dep && make
+            - Rename 'pjsua-x86-unknown-linux-gnu' executable found in the
+              pjsip-apps/bin/ directory to 'pjsua', and place the 'pjsua'
+              executable into a directory located in the execution path.
+              $ cp pjsip-apps/bin/pjsua-x86-unknown-linux-gnu /usr/sbin/pjsua 
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
