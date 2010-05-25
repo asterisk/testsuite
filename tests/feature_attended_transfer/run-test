@@ -1,0 +1,203 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+David Vossel <dvossel@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import math
+from optparse import OptionParser
+from twisted.application import service, internet
+from twisted.internet import reactor
+from starpy import fastagi
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.version import AsteriskVersion
+
+class AttTransferTest:
+    def __init__(self, argv):
+        self.a_res = 0
+        self.b_res = 0
+        self.c_res = 0
+        self.passed = False
+        self.done = 0;
+
+        # Test timeout in seconds
+        self.test_to = 45
+        self.last_step = ""
+
+        # get version info
+        parser = OptionParser()
+        parser.add_option("-v", "--version", dest="ast_version",
+                          help="Asterisk version string")
+        (options, args) = parser.parse_args(argv)
+        self.ast_version = AsteriskVersion(options.ast_version)
+
+        # FastAGI, listen for results from dialplan
+        self.agi_a = fastagi.FastAGIFactory(self.get_result_a)
+        self.agi_b = fastagi.FastAGIFactory(self.get_result_b)
+        self.agi_c = fastagi.FastAGIFactory(self.get_result_c)
+        reactor.listenTCP(4573, self.agi_a, self.test_to, '127.0.0.1')
+        reactor.listenTCP(4574, self.agi_b, self.test_to, '127.0.0.1')
+        reactor.listenTCP(4575, self.agi_c, self.test_to, '127.0.0.1')
+
+        reactor.callWhenRunning(self.run)
+
+        print self.ast_version
+        self.asterisk1 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/feature_attended_transfer"))
+        self.asterisk1.install_config("tests/feature_attended_transfer/configs/extensions.conf")
+        self.asterisk1.install_config("tests/feature_attended_transfer/configs/iax.conf")
+        self.asterisk1.install_config("tests/feature_attended_transfer/configs/manager.conf")
+
+        self.asterisk2 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/feature_attended_transfer"))
+        self.asterisk2.install_config("tests/feature_attended_transfer/configs2/extensions.conf")
+        self.asterisk2.install_config("tests/feature_attended_transfer/configs2/features.conf")
+        self.asterisk2.install_config("tests/feature_attended_transfer/configs2/iax.conf")
+        self.asterisk2.install_config("tests/feature_attended_transfer/configs2/manager.conf")
+
+        self.talkingaudio = os.path.join(os.getcwd(), "tests/feature_attended_transfer/sounds/talking")
+
+    # Close out the agi
+    def handle_agi_result(self, agi, do_hangup):
+        sequence = fastagi.InSequence()
+        if do_hangup == 1:
+            sequence.append(agi.execute, "HangUp")
+        sequence.append(agi.finish)
+        self.result_changed()
+        return sequence()
+
+    # This gets invoked by the dialplan when call leg A passes
+    def get_result_a(self, agi):
+        self.log_last_step("Attended Xfer Call Leg A PASSED")
+        self.a_res = 1
+        return self.handle_agi_result(agi, 0)
+
+    # This gets invoked by the dialplan when call leg B passes.
+    def get_result_b(self, agi):
+        self.log_last_step("Attended Xfer Call Leg B PASSED")
+        self.b_res = 1
+        return self.handle_agi_result(agi, 1)
+
+    # This gets invoked by the dialplan when call leg C passes
+    def get_result_c(self, agi):
+        self.log_last_step("Attended Xfer Call Leg C PASSED")
+        self.c_res = 1
+        return self.handle_agi_result(agi, 0)
+
+    def read_result(self):
+        if self.done == True:
+		    return # this means results were read earlier than the Time Out period
+        self.done = True
+        self.log_last_step("Reading results")
+        self.asterisk1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+        self.asterisk2.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+
+        self.asterisk1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+        self.asterisk2.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+
+        if self.ast_version < AsteriskVersion("1.6.1"):
+            self.asterisk1.cli_exec("core show globals") # The global variables here hold failure conditions
+            self.asterisk2.cli_exec("core show globals") # The global variables here hold failure conditions
+        else:
+            self.asterisk1.cli_exec("dialplan show globals") # The global variables here hold failure conditions
+            self.asterisk2.cli_exec("dialplan show globals") # The global variables here hold failure conditions
+
+
+        self.stop_asterisk()
+
+        if (self.a_res and self.b_res and self.c_res):
+            self.passed = True
+            self.log_last_step("Attended Transfer Test Passed...")
+        else:
+            if self.a_res == 0:
+                self.log_last_step("Attended Xfer Call Leg A failed.")
+            if self.b_res == 0:
+                self.log_last_step("Attended Xfer Call Leg B failed.")
+            if self.c_res == 0:
+                self.log_last_step("Attended Xfer Call Leg C failed.")
+            self.log_last_step("Attended Transfer Test Failed... view result of 'core show globals' in log for more detailed failure results.")
+
+        if reactor.running:
+            print "Stopping Reactor ..."
+            reactor.stop()
+
+
+    # This is an attended transfer test.  There are 3 call legs tested here, A, B, and C.
+    # 1.  B calls A
+    # 2.  B dials *2 to transfer A to C.
+    # 3.  B dials C
+    # 4.  C picks up and talks to B.
+    # 5.  B reports results to FastAGI
+    # 6.  B hangs up which connects A to C.
+    # 7.  Audio and DTMF is passed and detected on each side of the call verifying the connection.
+    # 8.  A and C report results to FastAGI and hangup.
+    def launch_test(self):
+        self.asterisk2.cli_exec("core set verbose 10")
+        self.asterisk1.cli_exec("core set verbose 10")
+
+        if self.ast_version < AsteriskVersion("1.6.1"):
+            self.asterisk1.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
+            self.asterisk2.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
+        else:
+            self.asterisk1.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
+            self.asterisk2.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
+
+
+        self.log_last_step("Originating call to begin test 1")
+        if self.ast_version < AsteriskVersion("1.6.2"):
+            self.asterisk2.cli_exec("originate IAX2/iax_b@127.0.0.1:4571/b_exten extension a_dial@transfertest")
+        else:
+            self.asterisk2.cli_exec("channel originate IAX2/iax_b@127.0.0.1:4571/b_exten extension a_dial@transfertest")
+
+    def start_asterisk(self):
+        self.log_last_step("Starting Asterisk")
+        self.asterisk1.start()
+        self.asterisk2.start()
+
+    def stop_asterisk(self):
+        self.asterisk1.stop()
+        self.asterisk2.stop()
+
+    def log_last_step(self, step):
+        print step
+        self.last_step = step
+
+    # This is called every time a result comes in, once all results are in
+    # we can quit early instead of waiting for the time out.
+    def result_changed(self):
+        if (self.a_res and self.b_res and self.c_res):
+            self.log_last_step("All the results are in, now read them.")
+            # This attempts to schedule a read result earlier than our default timeout.
+            # If the default timeout one gets called first, that is fine.  Either way
+            # this function shuts down the reactor so no other callbacks are processed.
+            reactor.callLater(2, self.read_result)
+
+    def run(self):
+        self.start_asterisk()
+
+        # call test1 extension now
+        reactor.callLater(5, self.launch_test)
+
+        # stop and read results after timeout
+        reactor.callLater(self.test_to, self.read_result)
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    # Run Attended Transfer Test
+    att_transfer_test = AttTransferTest(argv)
+    reactor.run()
+    att_transfer_test.stop_asterisk()
+    if att_transfer_test.passed != True:
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+

@@ -1,0 +1,10 @@
+testinfo:
+    summary:     'Test Attended Transfer'
+    description: |
+        'This test verifies the Attended Transfer routine used in the feature code.'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
