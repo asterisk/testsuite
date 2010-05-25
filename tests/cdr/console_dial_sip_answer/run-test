@@ -17,7 +17,7 @@ from asterisk.ami import AMI
 from twisted.internet import reactor
 import logging
 
-workingdir = "/tmp/testsuite/console_dial_sip_answer"
+workingdir = "/tmp/asterisk-testsuite/console_dial_sip_answer"
 testdir = "tests/cdr/console_dial_sip_answer"
 
 class Test:
