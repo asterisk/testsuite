@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <libgen.h>
 
 /*!
  * \brief Make the parent directories of a given path.
@@ -260,6 +261,7 @@ static int recursive_unlink(lua_State *L, const char *path) {
 static int new_asterisk(lua_State *L) {
 	int asterisk_count;
 	char path[PATH_MAX];
+	char *bname;
 
 	/* get the index for this instance */
 	lua_getfield(L, LUA_REGISTRYINDEX, "astlib_count");
@@ -280,11 +282,23 @@ static int new_asterisk(lua_State *L) {
 		return lua_error(L);
 	}
 
-	lua_pushstring(L, path);
-	lua_pushliteral(L, "/tmp/ast");
-	lua_pushinteger(L, asterisk_count);
-	lua_concat(L, 3);
-	lua_setfield(L, -2, "work_area");
+	bname = basename(path);
+	/* handle some special basename paths by putting the tmp dir in the
+	 * current directory, otherwise put it in /tmp */
+	if (!strcmp(bname, ".") || !strcmp(bname, "..") || !strcmp(bname, "/")) {
+		lua_pushstring(L, getcwd(path, sizeof(path)));
+		lua_pushliteral(L, "/tmp/ast");
+		lua_pushinteger(L, asterisk_count);
+		lua_concat(L, 3);
+		lua_setfield(L, -2, "work_area");
+	} else {
+		lua_pushliteral(L, "/tmp/asterisk-testsuite/");
+		lua_pushstring(L, bname);
+		lua_pushliteral(L, "/ast");
+		lua_pushinteger(L, asterisk_count);
+		lua_concat(L, 4);
+		lua_setfield(L, -2, "work_area");
+	}
 
 	lua_pushinteger(L, asterisk_count);
 	lua_setfield(L, -2, "index");
