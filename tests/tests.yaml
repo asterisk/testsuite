@@ -19,3 +19,8 @@ tests:
     - test: 'originate-cdr-disposition'
     - test: 'func_srv'
     - test: 'sip_outbound_address'
+    - test: 'sip_attended_transfer'
+    - test: 'sip_one_legged_transfer'
+    - test: 'feature_attended_transfer'
+    - test: 'feature_blonde_transfer'
+    - test: 'mixmonitor'
