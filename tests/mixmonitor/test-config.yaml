@@ -2,7 +2,7 @@ testinfo:
     summary:     'Test MixMonitor and StopMixMonitor applications'
     description: |
         'This test verifies basic functionality of both the MixMonitor
-		 and StopMixMonitor applications.'
+         and StopMixMonitor applications.'
 
 properties:
     minversion: '1.4'
