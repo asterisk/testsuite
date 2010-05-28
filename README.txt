@@ -268,7 +268,8 @@ properties:
 --------------------------------------------------------------------------------
 
         There are some python modules included in lib/python/ which are intended
-to help with writing tests in python.
+to help with writing tests in python.  Python code in the testsuite should be
+formatted according to PEP8: http://www.python.org/dev/peps/pep-0008/.
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
