@@ -9,6 +9,7 @@ the GNU General Public License Version 2.
 
 import sys
 import os
+import signal
 import subprocess
 from optparse import OptionParser
 from twisted.application import service, internet
@@ -121,9 +122,9 @@ class AttTransferTest:
     def stopProcesses(self):
         self.logLastStep("Stopping Processes")
         self.asterisk.stop()
-        self.pja.kill()
-        self.pjb.kill()
-        self.pjc.kill()
+        os.kill(self.pja.pid, signal.SIGKILL)
+        os.kill(self.pjb.pid, signal.SIGKILL)
+        os.kill(self.pjc.pid, signal.SIGKILL)
 
     def logLastStep(self, step):
         print step
