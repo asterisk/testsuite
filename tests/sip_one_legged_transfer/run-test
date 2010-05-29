@@ -35,7 +35,7 @@ class AttTransferTest:
         reactor.callWhenRunning(self.run)
 
         print self.ast_version
-        self.asterisk = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/sip_one_legged_transfer"))
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/sip_one_legged_transfer")
         self.asterisk.install_config("tests/sip_one_legged_transfer/configs/extensions.conf")
         self.asterisk.install_config("tests/sip_one_legged_transfer/configs/sip.conf")
         self.asterisk.install_config("tests/sip_one_legged_transfer/configs/manager.conf")

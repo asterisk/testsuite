@@ -37,7 +37,7 @@ class MixMonitorTest:
         reactor.callWhenRunning(self.run)
 
         print self.ast_version
-        self.asterisk = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/mixmonitor"))
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/mixmonitor")
         self.audiofile1 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio1")
         self.audiofile2 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio2")
         self.audiofile3 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio3")
