@@ -94,9 +94,15 @@ class MixMonitorTest:
 
         self.asterisk.cli_exec("core set verbose 10")
         self.asterisk.cli_exec("core set debug 3")
-        self.asterisk.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
-        self.asterisk.cli_exec("core set global TESTAUDIO2 " + self.audiofile2)
-        self.asterisk.cli_exec("core set global TESTAUDIO3 " + self.audiofile3)
+
+        if self.ast_version < AsteriskVersion("1.6.1"):
+            self.asterisk.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
+            self.asterisk.cli_exec("core set global TESTAUDIO2 " + self.audiofile2)
+            self.asterisk.cli_exec("core set global TESTAUDIO3 " + self.audiofile3)
+        else:
+            self.asterisk.cli_exec("dialplan set global TESTAUDIO1 " + self.audiofile1)
+            self.asterisk.cli_exec("dialplan set global TESTAUDIO2 " + self.audiofile2)
+            self.asterisk.cli_exec("dialplan set global TESTAUDIO3 " + self.audiofile3)
 
     def stop_asterisk(self):
         self.asterisk.stop()
