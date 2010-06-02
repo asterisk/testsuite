@@ -102,10 +102,9 @@ class Asterisk:
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
         ]
         self.process = subprocess.Popen(cmd)
+        # Be _really_ sure that Asterisk has started up before returning.
         time.sleep(5.0)
-        # XXX
-        # We need a _much_ better way to determine if Asterisk
-        # is actually up and running and fully initialized
+        self.cli_exec("core waitfullybooted")
 
     def stop(self):
         """Stop this instance of Asterisk.
