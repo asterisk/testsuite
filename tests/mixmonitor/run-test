@@ -21,8 +21,8 @@ class MixMonitorTest:
     def __init__(self, argv):
         self.passed = False
         self.last_step = ""
-        self.expectedfilesize = 50000
-        self.filesizetolerance = 7000
+        self.expectedfilesize = 52000
+        self.filesizetolerance = 9000
         self.audiofile1size = -1
         self.audiofile2size = -1
         self.audiofile3size = -1
