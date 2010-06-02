@@ -1,0 +1,7 @@
+USER
+# from/contact;to
+abandon;abandon
+answered;completeagent
+completeagent;compelteagent
+exitempty;exitempty
+timeout;timeout

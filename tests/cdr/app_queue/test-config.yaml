@@ -1,0 +1,15 @@
+testinfo:
+    summary: 'Test for proper CDR dispositions for queue calls.'
+    description: |
+        "This test verifies that the CDRs generated for calls involving
+        app_queue have the proper dispositions."
+    issues:
+        - mantis : '17334'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'bash'
+        - app : 'sipp'
+        - app : 'asttest'
+

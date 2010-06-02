@@ -16,6 +16,7 @@ tests:
     - test: 'cdr/cdr_unanswered_yes'
     - test: 'cdr/cdr_userfield'
     - test: 'cdr/nocdr'
+    - test: 'cdr/app_queue'
     - test: 'originate-cdr-disposition'
     - test: 'func_srv'
     - test: 'sip_outbound_address'
