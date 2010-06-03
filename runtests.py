@@ -226,6 +226,8 @@ class TestSuite:
             print "--> Running test '%s' ...\n" % t.test_name
 
             # Establish Preconditions
+            print "Making sure Asterisk isn't running ..."
+            os.system("killall -9 asterisk")
             os.chdir("..")
             print "Uninstalling Asterisk ... "
             os.system("make uninstall-all > /dev/null 2>&1")
