@@ -20,6 +20,8 @@ import subprocess
 
 from config import ConfigFile
 
+from version import AsteriskVersion
+
 
 class Asterisk:
     """An instance of Asterisk.
@@ -49,6 +51,8 @@ class Asterisk:
         self.asterisk = Asterisk(base=os.path.join(os.getcwd(),
                                                    "tests/ami-login/tmp"))
         """
+        self.ast_version = AsteriskVersion()
+
         self.astetcdir = "/etc/asterisk"
         # Find the system installed asterisk.conf
         ast_confs = [
@@ -114,6 +118,10 @@ class Asterisk:
         Example Usage:
         asterisk.stop()
         """
+        if self.ast_version < AsteriskVersion("1.6.0"):
+            self.cli_exec("stop gracefully")
+        else:
+            self.cli_exec("core stop gracefully")
         try:
             os.kill(self.process.pid, signal.SIGTERM)
             time.sleep(5.0)
@@ -160,13 +168,10 @@ class Asterisk:
         Example Usage:
         asterisk.cli_exec("core set verbose 10")
         """
-        cmd = [
-            "asterisk",
-            "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
-            "-rx", "%s" % cli_cmd
-        ]
+        cmd = 'asterisk -C %s -rx "%s"' % \
+                (os.path.join(self.astetcdir, "asterisk.conf"), cli_cmd)
         print "Executing %s ..." % cmd
-        process = subprocess.Popen(cmd)
+        process = subprocess.Popen(cmd, shell=True)
         process.wait()
 
     def __gen_ast_conf(self, ast_conf, dir_cat):
