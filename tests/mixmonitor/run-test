@@ -21,8 +21,9 @@ class MixMonitorTest:
     def __init__(self, argv):
         self.passed = False
         self.last_step = ""
-        self.expectedfilesize = 52000
-        self.filesizetolerance = 9000
+        # playback file is 2559 bytes of ulaw, that will come out to be ~41118 of wav
+        self.expectedfilesize = 41118
+        self.filesizetolerance = 5000
         self.audiofile1size = -1
         self.audiofile2size = -1
         self.audiofile3size = -1
@@ -42,6 +43,7 @@ class MixMonitorTest:
         self.audiofile2 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio2")
         self.audiofile3 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio3")
         self.asterisk.install_config("tests/mixmonitor/configs/extensions.conf")
+        self.talkingaudio = os.path.join(os.getcwd(), "tests/mixmonitor/sounds/talking")
 
     def read_result(self):
         self.log_last_step("Reading result file from MixMonitor")
@@ -99,10 +101,12 @@ class MixMonitorTest:
             self.asterisk.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
             self.asterisk.cli_exec("core set global TESTAUDIO2 " + self.audiofile2)
             self.asterisk.cli_exec("core set global TESTAUDIO3 " + self.audiofile3)
+            self.asterisk.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
         else:
             self.asterisk.cli_exec("dialplan set global TESTAUDIO1 " + self.audiofile1)
             self.asterisk.cli_exec("dialplan set global TESTAUDIO2 " + self.audiofile2)
             self.asterisk.cli_exec("dialplan set global TESTAUDIO3 " + self.audiofile3)
+            self.asterisk.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
 
     def stop_asterisk(self):
         self.asterisk.stop()
