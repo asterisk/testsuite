@@ -72,6 +72,7 @@ class Dependency:
 class TestConfig:
     def __init__(self, test_name, ast_version):
         self.can_run = True
+        self.did_run = False
         self.time = 0.0
         self.test_name = test_name
         self.ast_version = ast_version
@@ -81,6 +82,7 @@ class TestConfig:
 
     def run(self):
         self.passed = False
+        self.did_run = True
         start_time = time.time()
         cmd = [
             "tests/%s/run-test" % self.test_name,
@@ -172,7 +174,7 @@ class TestConfig:
 
 
 class TestSuite:
-    def __init__(self, ast_version):
+    def __init__(self, ast_version, options):
         try:
             f = open(TESTS_CONFIG, "r")
         except IOError:
@@ -181,6 +183,8 @@ class TestSuite:
         except:
             print "Unexpected error: %s" % sys.exc_info()[0]
             return
+
+        self.options = options
 
         self.config = yaml.load(f)
         f.close()
@@ -207,10 +211,12 @@ class TestSuite:
                              str(d.met))
             i += 1
 
-    def run(self, ast_version):
+    def run(self):
         test_suite_dir = os.getcwd()
 
         for t in self.tests:
+            if self.options.test and t.test_name != self.options.test:
+                continue
             if t.can_run is False:
                 print "--> Cannot run test '%s'" % t.test_name
                 print "--- --> Minimum Version: %s (%s)" % \
@@ -257,7 +263,7 @@ class TestSuite:
                 'name="AsteriskTestSuite">\n' %
                 (self.total_time, len(self.tests)))
         for t in self.tests:
-            if t.can_run is False:
+            if t.did_run is False:
                 continue
             f.write('\t<testcase time="%.2f" name="%s"' % (t.time, t.test_name))
             if t.passed is True:
@@ -297,6 +303,9 @@ def main(argv=None):
     parser.add_option("-l", "--list-tests", action="store_true",
             dest="list_tests", default=False,
             help="List tests instead of running them.")
+    parser.add_option("-t", "--test",
+            dest="test",
+            help="Run a single specified test instead of all tests.")
     (options, args) = parser.parse_args(argv)
 
     # Check to see if this has been executed within a sub directory of an
@@ -314,7 +323,7 @@ def main(argv=None):
 
     ast_version = AsteriskVersion()
 
-    test_suite = TestSuite(ast_version)
+    test_suite = TestSuite(ast_version, options)
 
     if options.list_tests is True:
         print "Asterisk Version: %s\n" % str(ast_version)
@@ -328,12 +337,12 @@ def main(argv=None):
 
     print "Running tests for Asterisk %s ...\n" % str(ast_version)
 
-    test_suite.run(ast_version)
+    test_suite.run()
 
     print "\n=== TEST RESULTS ==="
     for t in test_suite.tests:
         sys.stdout.write("--> %s --- " % t.test_name)
-        if t.can_run is False:
+        if t.did_run is False:
             print "SKIPPED"
             continue
         if t.passed is True:
