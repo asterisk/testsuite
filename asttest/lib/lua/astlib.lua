@@ -170,6 +170,7 @@ function asterisk:generate_asterisk_conf()
 
 	s = c:new_section("options")
 	s["documentation_language"] = "en_US"
+	s["sendfullybooted"]="yes"
 
 	s = c:new_section("compat")
 	s["pbx_realtime"] = "1.6"
