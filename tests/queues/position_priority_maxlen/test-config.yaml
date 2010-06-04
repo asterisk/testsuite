@@ -1,0 +1,14 @@
+testinfo:
+    summary:     'Ensure queue callers are entered into the proper position in the queue.'
+    description: |
+        "This test enters several callers into a queue, assigning various priorities and
+        positions to the callers. As each caller enters, we inspect the 'Join' manager event
+        to ensure that the caller has entered the queue in the position we expect."
+
+properties:
+    minversion: 'trunk'
+    dependencies:
+        - app : 'bash'
+        - app : 'sipp'
+        - app : 'asttest'
+

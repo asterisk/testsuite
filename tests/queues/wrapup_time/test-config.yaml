@@ -1,0 +1,12 @@
+testinfo:
+    summary:     'Test wrapuptime for queues'
+    description: |
+        'This test runs two instances of Asterisk. One has shared_lastcall set in queues.conf
+        and the other does not. Each instance of Asterisk contains two queues with the same two
+        members in each queue. We place calls to the queues in a way such that we can properly
+        see if wrapuptime is honored.'
+
+properties:
+    minversion: '1.6.0'
+    dependencies:
+        - app: 'asttest'

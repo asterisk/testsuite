@@ -25,3 +25,8 @@ tests:
     - test: 'feature_attended_transfer'
     - test: 'feature_blonde_transfer'
     - test: 'mixmonitor'
+    - test: 'queues/queue_baseline'
+    - test: 'queues/position_priority_maxlen'
+    - test: 'queues/macro_gosub_test'
+    - test: 'queues/ringinuse_and_pause'
+    - test: 'queues/wrapup_time'

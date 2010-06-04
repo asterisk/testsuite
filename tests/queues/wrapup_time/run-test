@@ -1,0 +1,3 @@
+#!/bin/bash -e
+
+asttest -a / -s tests/queues/wrapup_time

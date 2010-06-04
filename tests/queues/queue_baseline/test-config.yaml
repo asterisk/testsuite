@@ -1,0 +1,11 @@
+testinfo:
+    summary:     'Get a baseline for Queue operations'
+    description: |
+        'This test runs a single call to a single queue that has a single
+        member in it. We monitor the manager events for five specific events
+        that let us know that the call went through the queue as expected.'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app: 'asttest'

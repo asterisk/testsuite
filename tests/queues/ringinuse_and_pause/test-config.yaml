@@ -1,0 +1,21 @@
+testinfo:
+    summary:     'Test ringinuse and autopause'
+    description: |
+        "This test accomplishes several tasks. First, it ensures that queue
+        members in queues with ringinuse=no are not called. Second, it ensures
+        that autopause takes effect properly after a called member does not answer.
+        Third, it makes sure that a paused member is not called, even if ringinuse
+        is not set to 'no.'
+        
+        The test also tests some subtle behavior aspects. For instance, we do not
+        autopause a member UNLESS he gets called. So in the first test call run, we
+        call a busy member who has ringinuse=no. This means that since we didn't even
+        attempt to call the member, we will not autopause him."
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'bash'
+        - app : 'sipp'
+        - app : 'asttest'
+
