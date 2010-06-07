@@ -75,7 +75,31 @@ function asterisk:spawn()
 	self:generate_essential_configs()
 	self:write_configs()
 	self:_spawn()
-	posix.sleep(3)
+
+	-- wait for asterisk to be fully booted.  We do this by reading the
+	-- output of the 'core waitfullybooted' command and looking for the
+	-- string 'fully booted'.  We will try 5 times before completely giving
+	-- up with a one second delay in between each try.  We need to loop
+	-- like this in order to give asterisk time to start the CLI socket.
+	local booted
+	for _=1,5 do
+		local err
+		booted, err = self:cli("core waitfullybooted")
+		if not booted then
+			if err then
+				error("error waiting for asterisk to fully boot: " .. err)
+			else
+				error("error waiting for asterisk to fully boot")
+			end
+		end
+		if booted:find("fully booted") then
+			break
+		end
+		posix.sleep(1)
+	end
+	if not booted:find("fully booted") then
+		error("error waiting for asterisk to fully boot: " .. booted)
+	end
 end
 
 function asterisk:spawn_and_wait()
