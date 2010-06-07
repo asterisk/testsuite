@@ -52,11 +52,19 @@ function asterisk:_spawn()
 	rawset(self, "proc", p)
 end
 
+-- note this timesout after five minutes
 function asterisk:cli(command)
 	local p = proc.exec_io(self.asterisk_binary,
 		"-r", "-x", command,
 		"-C", self.asterisk_conf
 	)
+
+	-- wait up to 5 minutes for the process to exit.  If the process does
+	-- not exit within 5 minutes, return a error.
+	local res, err = p:wait(300000)
+	if not res then
+		return res, err
+	end
 
 	return p.stdout:read("*a")
 end
