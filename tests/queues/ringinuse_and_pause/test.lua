@@ -58,23 +58,6 @@ function setup_ast_instance()
 	return instance
 end
 
-booted = nil
-function boot_event(event)
-	booted = true
-end
-
-function wait_until_booted(man)
-	man:register_event("FullyBooted", boot_event)
-	while not booted do
-		local res, err = man:wait_event()
-		if not res then
-			fail("Failure while waiting for FullyBooted event: " .. err)
-		end
-		man:process_events()
-	end
-	man:unregister_event("FullyBooted", boot_event)
-end
-
 function get_chan_name(event)
 	chan_name = event["Channel"]
 end
@@ -155,7 +138,6 @@ end
 sipp_proc = sipp_exec("sipp/uas.xml", "5061")
 a = setup_ast_instance()
 man = manager_setup(a)
-wait_until_booted(man)
 chan_name = nil
 
 busy_the_member(man)

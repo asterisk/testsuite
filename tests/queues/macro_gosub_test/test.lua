@@ -20,23 +20,6 @@ function manager_setup(a)
 	return m
 end
 
-booted = nil
-function boot_event(event)
-	booted = true
-end
-
-function wait_until_booted(man)
-	man:register_event("FullyBooted", boot_event)
-	while not booted do
-		local res, err = man:wait_event()
-		if not res then
-			fail("Failure while waiting for FullyBooted event: " .. err)
-		end
-		man:process_events()
-	end
-	man:unregister_event("FullyBooted", boot_event)
-end
-
 function primary(event)
 	if event["Variable"] == "MACROVAR" then
 		if event["Value"] == "primarymacro" then
@@ -110,8 +93,6 @@ instance:generate_manager_conf()
 instance:spawn()
 
 man = manager_setup(instance)
-
-wait_until_booted(man)
 
 test_call("test1", man, primary)
 test_call("test2", man, secondary)

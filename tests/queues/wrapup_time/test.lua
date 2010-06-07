@@ -20,23 +20,6 @@ function manager_setup(a)
 	return m
 end
 
-booted = nil
-function boot_event(event)
-	booted = true
-end
-
-function wait_until_booted(man)
-	man:register_event("FullyBooted", boot_event)
-	while not booted do
-		local res, err = man:wait_event()
-		if not res then
-			fail("Failure while waiting for FullyBooted event: " .. err)
-		end
-		man:process_events()
-	end
-	man:unregister_event("FullyBooted", boot_event)
-end
-
 function member1(event)
 	--Userful for debugging
 	--print("Got member1")
@@ -134,9 +117,6 @@ posix.sleep(1)
 
 man1 = manager_setup(instance1)
 man2 = manager_setup(instance2)
-
-wait_until_booted(man1)
-wait_until_booted(man2)
 
 test_call(instance1, man1, member1, "test1")
 test_call(instance1, man1, member1, "test2")

@@ -29,23 +29,6 @@ function setup_ast_instance()
 	return instance
 end
 
-booted = nil
-function boot_event(event)
-	booted = true
-end
-
-function wait_until_booted(man)
-	man:register_event("FullyBooted", boot_event)
-	while not booted do
-		local res, err = man:wait_event()
-		if not res then
-			fail("Failure while waiting for FullyBooted event: " .. err)
-		end
-		man:process_events()
-	end
-	man:unregister_event("FullyBooted", boot_event)
-end
-
 function join_event(event)
 	actual_position = tonumber(event["Position"])
 end
@@ -92,7 +75,6 @@ end
 
 instance = setup_ast_instance()
 man = manager_setup(instance)
-wait_until_booted(man)
 test_call(nil, nil, 1) --1
 test_call(nil, nil, 2) --1,2
 test_call(1, nil, 1)   --3,1,2
