@@ -63,7 +63,7 @@ function do_call(man)
 	if res["Response"] ~= "Success" then
 		fail("Response failure for Originate: " .. res["Message"])
 	end
-	posix.sleep(2)
+	posix.sleep(3)
 	res, err = man:pump_messages()
 	if not res then
 		fail("Error pumping messages: " .. err)
@@ -89,6 +89,22 @@ logoff = ast.manager.action.logoff()
 man(logoff)
 instance:term_or_kill()
 
+if not join then
+	print "Failed to capture Join event"
+end
+if not called then
+	print "Failed to capture AgentCalled event"
+end
+if not connect then
+	print "Failed to capture AgentConnect event"
+end
+if not leave then
+	print "Failed to capture Leave event"
+end
+if not complete then
+	print "Failed to capture AgentComplete event"
+end
+
 if not join or not called or not connect or not leave or not complete then
-	fail ("Failed to capture one of our expected events")
+	fail("Failed to capture one of our expected events")
 end
