@@ -52,6 +52,15 @@ function asterisk:_spawn()
 	rawset(self, "proc", p)
 end
 
+function asterisk:cli(command)
+	local p = proc.exec_io(self.asterisk_binary,
+		"-r", "-x", command,
+		"-C", self.asterisk_conf
+	)
+
+	return p.stdout:read("*a")
+end
+
 function asterisk:spawn()
 	self:clean_work_area()
 	self:create_work_area()
