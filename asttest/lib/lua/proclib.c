@@ -144,7 +144,10 @@ static int proc_exists(lua_State *L) {
 
 	/* no executable paths were found */
 	lua_pushboolean(L, 0);
-	lua_pushliteral(L, "no executable found");
+	lua_pushliteral(L, "no executable found for path '");
+	lua_pushvalue(L, 1);
+	lua_pushliteral(L, "'");
+	lua_concat(L, 3);
 	return 2;
 }
 
