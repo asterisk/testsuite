@@ -79,6 +79,7 @@ end
 instance = ast.new()
 instance:load_config("configs/extensions.conf")
 instance:load_config("configs/queues.conf")
+instance:load_config("configs/modules.conf")
 instance:generate_manager_conf()
 instance:spawn()
 
