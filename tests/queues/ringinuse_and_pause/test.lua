@@ -155,6 +155,8 @@ test_call("queue2", "Error", true, true)
 unbusy_the_member(man)
 sipp_check_error(sipp_proc, "sipp/uas.xml")
 sipp_proc = sipp_exec("sipp/uas.xml", "5061")
+--Sleep for a bit to ensure scenario is up and running
+posix.sleep(1)
 --Now the member is available. A call from
 --the first queue will work perfectly.
 test_call("queue1", "Success", true, false)
@@ -162,6 +164,8 @@ test_call("queue1", "Success", true, false)
 --it ends after a hangup
 sipp_check_error(sipp_proc, "sipp/uas.xml")
 sipp_proc = sipp_exec("sipp/uas.xml", "5061")
+--Sleep for a bit to ensure scenario is up and running
+posix.sleep(1)
 --However, the member is paused in this queue,
 --so we should see no call attempt get made
 --at all.
