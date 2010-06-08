@@ -123,7 +123,6 @@ a:load_config("configs/sip.conf")
 a:load_config("configs/extensions.conf")
 a:load_config("configs/cdr.conf")
 a:load_config("configs/queues.conf")
-a:load_config("configs/modules.conf")
 
 a:generate_asterisk_conf()
 a["asterisk.conf"]["options"]["verbose"] = 10
