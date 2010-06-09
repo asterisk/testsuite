@@ -98,7 +98,10 @@ function asterisk:spawn()
 		posix.sleep(1)
 	end
 	if not booted:find("fully booted") then
-		error("error waiting for asterisk to fully boot: " .. booted)
+		print("error waiting for asterisk to fully boot: " .. booted)
+		print("\nfull log follows:\n")
+		self:dump_full_log()
+		error("error starting asterisk")
 	end
 end
 
@@ -212,6 +215,8 @@ function asterisk:generate_asterisk_conf()
 	s = c:new_section("options")
 	s["documentation_language"] = "en_US"
 	s["sendfullybooted"]="yes"
+	s["verbose"] = 10
+	s["debug"] = 10
 
 	s = c:new_section("compat")
 	s["pbx_realtime"] = "1.6"
@@ -256,6 +261,16 @@ function asterisk:generate_essential_configs()
 			func(self)
 		end
 	end
+end
+
+function asterisk:dump_full_log()
+	local log, err = io.open(self:path("/var/log/asterisk/full"), "r")
+	if not log then
+		print("error opening '" .. self:path("/var/log/asterisk/full") .. "': " .. err)
+	end
+
+	print(log:read("*a"))
+	log:close()
 end
 
 config = {}
