@@ -160,12 +160,18 @@ static int symlink_copy_dir(lua_State *L, const char *src, const char *dst) {
 				goto e_closedir;
 			}
 		} else {
+			/* XXX we don't know what kind of file this is so we
+			 * will ignore it silently, at some point in the future
+			 * we should log this event somewhere */
+			continue;
+#if 0
 			/* unsupported file type */
 			lua_pushstring(L, "don't know how to symlink '");
 			lua_pushstring(L, src_path);
 			lua_pushstring(L, "' (unsupported file type)");
 			lua_concat(L, 3);
 			goto e_closedir;
+#endif
 		}
 	}
 
