@@ -350,14 +350,19 @@ static int create_work_area(lua_State *L) {
 	int i;
 
 	/* directories must end in '/' */
-	const char *asterisk_dirs[] = {
+	const char *copy_dirs[] = {
 		"/etc/asterisk/",
 		"/usr/lib/asterisk/modules/",
 		"/usr/include/asterisk/",
 		"/var/lib/asterisk/",
-		"/var/run/asterisk/",
 		"/var/log/asterisk/",
 		"/var/spool/asterisk/",
+		NULL,
+	};
+
+	/* directories must end in '/' */
+	const char *create_dirs[] = {
+		"/var/run/asterisk/",
 		NULL,
 	};
 
@@ -382,9 +387,9 @@ static int create_work_area(lua_State *L) {
 	asterisk_path = lua_tostring(L, -1);
 
 	/* copy directories */
-	for (i = 0; asterisk_dirs[i]; i++) {
-		snprintf(src_buf, sizeof(src_buf), "%s%s", asterisk_path, asterisk_dirs[i]);
-		snprintf(dst_buf, sizeof(dst_buf), "%s%s", work_area, asterisk_dirs[i]);
+	for (i = 0; copy_dirs[i]; i++) {
+		snprintf(src_buf, sizeof(src_buf), "%s%s", asterisk_path, copy_dirs[i]);
+		snprintf(dst_buf, sizeof(dst_buf), "%s%s", work_area, copy_dirs[i]);
 		if (mkdir_p(dst_buf, dir_mode)) {
 			lua_pushstring(L, "unable to create directory in work area (");
 			lua_pushstring(L, dst_buf);
@@ -397,6 +402,20 @@ static int create_work_area(lua_State *L) {
 		if (symlink_copy_dir(L, src_buf, dst_buf)) {
 			lua_pushstring(L, "\nerror initilizing work area");
 			lua_concat(L, 2);
+			return lua_error(L);
+		}
+	}
+
+	/* create directories */
+	for (i = 0; create_dirs[i]; i++) {
+		snprintf(src_buf, sizeof(src_buf), "%s%s", asterisk_path, create_dirs[i]);
+		snprintf(dst_buf, sizeof(dst_buf), "%s%s", work_area, create_dirs[i]);
+		if (mkdir_p(dst_buf, dir_mode)) {
+			lua_pushstring(L, "unable to create directory in work area (");
+			lua_pushstring(L, dst_buf);
+			lua_pushstring(L, "): ");
+			lua_pushstring(L, strerror(errno));
+			lua_concat(L, 4);
 			return lua_error(L);
 		}
 	}
