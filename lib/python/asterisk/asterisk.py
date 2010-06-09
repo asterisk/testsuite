@@ -199,6 +199,8 @@ class Asterisk:
             else:
                 for (var, val) in c.options:
                     f.write("%s = %s\n" % (var, val))
+                if c.name == "options":
+                    f.write("nocolor = yes")
             f.write("\n")
 
         f.close()

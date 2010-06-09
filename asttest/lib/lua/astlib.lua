@@ -217,6 +217,7 @@ function asterisk:generate_asterisk_conf()
 	s["sendfullybooted"]="yes"
 	s["verbose"] = 10
 	s["debug"] = 10
+	s["nocolor"] = "yes"
 
 	s = c:new_section("compat")
 	s["pbx_realtime"] = "1.6"
