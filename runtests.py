@@ -234,6 +234,9 @@ class TestSuite:
             # Establish Preconditions
             print "Making sure Asterisk isn't running ..."
             os.system("killall -9 asterisk > /dev/null 2>&1")
+            # XXX TODO Hard coded path, gross.
+            os.system("rm -f /var/run/asterisk/asterisk.ctl")
+            os.system("rm -f /var/run/asterisk/asterisk.pid")
             os.chdir("..")
             print "Uninstalling Asterisk ... "
             os.system("make uninstall-all > /dev/null 2>&1")
