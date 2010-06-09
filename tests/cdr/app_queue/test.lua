@@ -124,9 +124,9 @@ a:load_config("configs/extensions.conf")
 a:load_config("configs/cdr.conf")
 a:load_config("configs/queues.conf")
 
-a:generate_asterisk_conf()
-a["asterisk.conf"]["options"]["verbose"] = 10
-a["asterisk.conf"]["options"]["debug"] = 10
+if ast.has_major_version("1.4") then
+	a:load_config("configs/modules.conf")
+end
 
 a:spawn()
 
