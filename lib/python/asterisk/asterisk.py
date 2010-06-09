@@ -102,7 +102,7 @@ class Asterisk:
         """
         cmd = [
             "asterisk",
-            "-f", "-g", "-q", "-m",
+            "-f", "-g", "-q", "-m", "-n",
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
         ]
         self.process = subprocess.Popen(cmd)
