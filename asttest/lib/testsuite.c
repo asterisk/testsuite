@@ -32,6 +32,8 @@ int ts_init(struct testsuite *ts, const char *path, struct asttest_opts *opts) {
 	
 	memset(ts, 0, sizeof(struct testsuite));
 	
+	ts->asterisk_version = opts->asterisk_version;
+
 	snprintf(log_path, sizeof(log_path), "%s/%s", path, opts->log_filename);
 
 	ts->log = fopen(log_path, "w");
@@ -68,6 +70,7 @@ int ts_init_single(struct testsuite *ts, struct asttest_opts *opts) {
 
 	ts->log = stdout;
 	ts->single_test_mode = 1;
+	ts->asterisk_version = opts->asterisk_version;
 
 	/* make asterisk_path absolute */
 	if (opts->asterisk_path[0] == '/') {

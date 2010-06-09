@@ -74,7 +74,11 @@ lua_State *get_lua_state(struct testsuite *ts, const char *test_name) {
 	/* load the asterisk lib */
 	lua_pushcfunction(L, luaopen_astlib);
 	lua_pushstring(L, ts->asterisk_path);
-	if (lua_pcall(L, 1, 0, 0)) {
+	if (ts->asterisk_version)
+		lua_pushstring(L, ts->asterisk_version);
+	else
+		lua_pushnil(L);
+	if (lua_pcall(L, 2, 0, 0)) {
 		goto e_print_error;
 	}
 

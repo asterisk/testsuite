@@ -317,6 +317,15 @@ static int new_asterisk(lua_State *L) {
 }
 
 /*!
+ * \brief [lua_CFunction asterisk:_version] get the version of this asterisk instance
+ * \return the version string for this version of asterisk
+ */
+static int get_asterisk_version(lua_State *L) {
+	lua_getfield(L, LUA_REGISTRYINDEX, "astlib_version");
+	return 1;
+}
+
+/*!
  * \brief [lua_CFunction asterisk:clean_work_area] Clean up the work area for
  * this instance.
  * \param L the lua state to use
@@ -463,6 +472,7 @@ static int unlink_file(lua_State *L) {
 
 static luaL_Reg astlib[] = {
 	{"unlink", unlink_file},
+	{"_version", get_asterisk_version},
 	{NULL, NULL},
 };
 
@@ -475,10 +485,14 @@ static luaL_Reg asterisk_table[] = {
 
 int luaopen_astlib(lua_State *L) {
 	const char *asterisk_path = luaL_checkstring(L, 1);
+	const char *asterisk_version = luaL_optstring(L, 2, "unknown");
 
 	/* set up some registry values */
 	lua_pushstring(L, asterisk_path);
 	lua_setfield(L, LUA_REGISTRYINDEX, "astlib_path");
+
+	lua_pushstring(L, asterisk_version);
+	lua_setfield(L, LUA_REGISTRYINDEX, "astlib_version");
 
 	lua_pushinteger(L, 1);
 	lua_setfield(L, LUA_REGISTRYINDEX, "astlib_count");

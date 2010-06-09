@@ -26,6 +26,51 @@ function new()
 	return asterisk:new()
 end
 
+function version(ver)
+	local version = ver or _version()
+	if version == "unknown" then
+		-- read version from path .. /usr/include/asterisk/version.h
+		local f, err = io.open(path .. "/usr/include/asterisk/version.h")
+		if not f then
+			error("error determining asterisk verison; unable to open version.h: " .. err)
+		end
+
+		for line in f:lines() do
+			version = line:match('ASTERISK_VERSION%s"([^"]+)"')
+			if version then
+				break
+			end
+		end
+		f:close()
+
+		if not version then
+			error("error determining asterisk version; version not found in version.h")
+		end
+	end
+	return asterisk_version:new(version)
+end
+
+function has_major_version(v)
+	if v == "trunk" then
+		v = "SVN-trunk-r00000"
+	end
+
+	local v1 = version(v)
+	local v2 = version()
+
+	if v1.svn and v2.svn and v1.branch == v2.branch then return true end
+	if v2.svn then
+		v1 = version("SVN-branch-" .. v .. "-r00000")
+		if v1.branch == v2.branch then return true end
+	end
+	if not v2.svn and not v1.svn and v1.concept == v2.concept and v1.major == v2.major then
+		if not v1.minor then return true end
+		if v1.minor == v2.minor then return true end
+	end
+
+	return false
+end
+
 -- asterisk table is created in astlib.c
 function asterisk:new()
 	local a = self:_new()
@@ -272,6 +317,79 @@ function asterisk:dump_full_log()
 
 	print(log:read("*a"))
 	log:close()
+end
+
+asterisk_version = {}
+function asterisk_version:new(version)
+	local v = {
+		version = version,
+	}
+	setmetatable(v, self)
+	self.__index = self
+
+	v:_parse()
+	return v
+end
+
+function asterisk_version:_parse()
+	if self.version:sub(1,3) == "SVN" then
+		self.svn = true
+		self.branch, self.revision, self.parent = self.version:match("SVN%-(.*)%-r(%d+M?)%-(.*)")
+		if not self.branch then
+			self.branch, self.revision = self.version:match("SVN%-(.*)%-r(%d+M?)")
+		end
+	else
+		self.concept, self.major, self.minor, self.patch = self.version:match("(%d+).(%d+).(%d+).(%d+)")
+		if not self.concept then
+			self.concept, self.major, self.minor = self.version:match("(%d+).(%d+).(%d+)")
+		end
+		if not self.concept then
+			self.concept, self.major, self.minor = self.version:match("(%d+).(%d+)")
+		end
+	end
+end
+
+function asterisk_version:__tostring()
+	return self.version
+end
+
+function asterisk_version:__lt(other)
+	if self.svn and other.svn then
+		-- for svn versions, just compare revisions
+		local v1 = tonumber(self.revision:match("(%d)M?"))
+		local v2 = tonumber(other.revision:match("(%d)M?"))
+		return v1 < v2
+	elseif not self.svn and not other.svn then
+		if tonumber(self.concept) < tonumber(other.concept) then
+			return true
+		elseif self.concept == other.concept then
+			if tonumber(self.major) < tonumber(other.major) then
+				return true
+			elseif self.major == other.major then
+				if (self.minor or other.minor) and tonumber(self.minor or 0) < tonumber(other.minor or 0) then
+					return true
+				elseif (self.minor or other.minor) and (self.minor or "0") == (other.minor or "0") then
+					if (self.patch or other.patch) and tonumber(self.patch or 0) < tonumber(other.patch or 0) then
+						return true
+					else
+						return false
+					end
+				else
+					return false
+				end
+
+			else
+				return false
+			end
+		else
+			return false
+		end
+	end
+	error("cannot compare svn version number with non svn version number")
+end
+
+function asterisk_version:__eq(other)
+	return self.version == other.version
 end
 
 config = {}

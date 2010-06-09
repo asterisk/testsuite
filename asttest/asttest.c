@@ -29,7 +29,8 @@ const char *default_log_filename = "asttest.log";
 void usage(const char *prog_name) {
 	fprintf(stderr,
 		"Usage:\n"
-		"  %s [-whs] [-l <filename>] [-a <directory>] <test_dir> [test_dir...]\n"
+		"  %s [-wh] [-v <version>] [-l <filename>] [-a <directory>] <test_dir> [test_dir...]\n"
+		"  %s [-wh] [-v <version>] [-l <filename>] [-a <directory>] -s <test_dir>\n"
 		"\n"
 		"Options:\n"
 		"  -l <filename>  Specify the name of the log file.  One log file will be\n"
@@ -51,8 +52,11 @@ void usage(const char *prog_name) {
 		"                 output to be sent to stdout instead of a log file and will\n"
 		"                 cause the program to exit with a non zero return code in if\n"
 		"                 the test fails.\n"
+		"  -v <version>   Specify the version of asterisk we are testing against.  If\n"
+		"                 not specified, the version.h file from the specified asterisk\n"
+		"                 path will be usedi to determine the version number.\n"
 		"\n"
-		, prog_name);
+		, prog_name, prog_name);
 }
 
 /*
@@ -78,7 +82,7 @@ int parse_cmdline(int argc, char *argv[], struct asttest_opts *opts) {
 	opts->asterisk_path = "asterisk";
 
 	/* parse options */	
-	while ((c = getopt(argc, argv, "l:a:s:wh")) != -1) {
+	while ((c = getopt(argc, argv, "l:a:s:v:wh")) != -1) {
 		switch (c) {
 		case 'l':
 			opts->log_filename = optarg;
@@ -91,6 +95,9 @@ int parse_cmdline(int argc, char *argv[], struct asttest_opts *opts) {
 			break;
 		case 's':
 			opts->single_test_mode = optarg;
+			break;
+		case 'v':
+			opts->asterisk_version = optarg;
 			break;
 		case 'h':
 			return 1;

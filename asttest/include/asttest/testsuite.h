@@ -31,6 +31,7 @@ struct testsuite {
 	unsigned int total;
 	FILE *log;
 	char asterisk_path[PATH_MAX];
+	const char *asterisk_version;
 	unsigned int single_test_mode:1;
 };
 

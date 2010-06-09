@@ -25,6 +25,7 @@ struct asttest_opts {
 	unsigned int warn_on_error:1;
 	const char *log_filename;
 	const char *asterisk_path;
+	const char *asterisk_version;
 	const char *single_test_mode;
 };
 

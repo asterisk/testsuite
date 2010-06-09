@@ -63,7 +63,7 @@ used.
 #!/bin/bash -e
 export LUA_PATH=../../lib/lua/?.lua\;\;
 export LUA_CPATH=../../lib/lua/?.so\;\;
-asttest -a / -s tests/my-test
+asttest -a / -s tests/my-test $@
 
 The -a option indicates the location of the asterisk installation to use for 
 the test and the -s option turns on single test mode and indicates the 
