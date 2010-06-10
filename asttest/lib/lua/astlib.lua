@@ -146,6 +146,13 @@ function asterisk:spawn()
 		print("error waiting for asterisk to fully boot: " .. booted)
 		print("\nfull log follows:\n")
 		self:dump_full_log()
+		
+		print("checking to see if asterisk is still running")
+		local res, err = proc.perror(self:wait(1000))
+		if not res and err == "timeout" then
+			print("seems like asterisk is still running, but we cannot wait for it to be fully booted.  That is odd.")
+		end
+
 		error("error starting asterisk")
 	end
 end
