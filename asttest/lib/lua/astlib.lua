@@ -281,7 +281,7 @@ function asterisk:generate_logger_conf()
 	s = c:new_section("logfiles")
 	s["debug"] = "debug"
 	s["messages"] = "notice,warning,error"
-	s["full"] = "notice,warning,error,debug,verbose"
+	s["full"] = "notice,warning,error,debug,verbose,*"
 end
 
 --- Generate manager.conf with a unique port.
