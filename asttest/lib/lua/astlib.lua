@@ -360,30 +360,23 @@ function asterisk_version:__lt(other)
 		local v2 = tonumber(other.revision:match("(%d)M?"))
 		return v1 < v2
 	elseif not self.svn and not other.svn then
-		if tonumber(self.concept) < tonumber(other.concept) then
-			return true
-		elseif self.concept == other.concept then
-			if tonumber(self.major) < tonumber(other.major) then
-				return true
-			elseif self.major == other.major then
-				if (self.minor or other.minor) and tonumber(self.minor or 0) < tonumber(other.minor or 0) then
-					return true
-				elseif (self.minor or other.minor) and (self.minor or "0") == (other.minor or "0") then
-					if (self.patch or other.patch) and tonumber(self.patch or 0) < tonumber(other.patch or 0) then
-						return true
-					else
-						return false
-					end
-				else
-					return false
-				end
+		-- compare each component of othe version number starting with
+		-- the most significant
+		local v = {
+			{tonumber(self.concept), tonumber(other.concept)},
+			{tonumber(self.major), tonumber(other.major)},
+			{tonumber(self.minor or 0), tonumber(other.minor or 0)},
+			{tonumber(self.patch or 0), tonumber(other.patch or 0)},
+		}
 
-			else
+		for _, i in ipairs(v) do
+			if i[1] < i[2] then
+				return true
+			elseif i[1] ~= i[2] then
 				return false
 			end
-		else
-			return false
 		end
+		return false
 	end
 	error("cannot compare svn version number with non svn version number")
 end
