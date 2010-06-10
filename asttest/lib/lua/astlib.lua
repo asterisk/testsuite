@@ -151,6 +151,8 @@ function asterisk:spawn()
 		local res, err = proc.perror(self:wait(1000))
 		if not res and err == "timeout" then
 			print("seems like asterisk is still running, but we cannot wait for it to be fully booted.  That is odd.")
+		elseif res then
+			print("asterisk exited with " .. res)
 		end
 
 		error("error starting asterisk")
