@@ -76,10 +76,19 @@ function busy_the_member(man)
 	if res["Response"] ~= "Success" then
 		fail("Originate response failure when trying to busy the member")
 	end
-	man:pump_messages()
-	man:process_events()
+
+	local i = 0
+	while not chan_name and i < 30 do
+		res, err = man:pump_messages()
+		if not res then
+			fail("Failure while waiting to get channel name")
+		end
+		man:process_events()
+		i = i + 1;
+		posix.sleep(1)
+	end
 	if not chan_name then
-		fail("Failed to get channel name")
+		fail("Failed to get channel name after waiting 30 seconds")
 	end
 	man:unregister_event("Newchannel", get_chan_name)
 end
@@ -123,11 +132,22 @@ function test_call(queue, originate_result, expected_call_result, pause_expectat
 	if res["Response"] ~= originate_result then
 		fail("Unexpected originate result. Expected " .. originate_result .. " but got " .. res["Response"])
 	end
-	man:pump_messages()
-	man:process_events()
+
+	local i = 0
+	while actual_call_result ~= expected_call_result or actual_pause_result ~= pause_expectation and i < 30 do
+		res, err = man:pump_messages()
+		if not res then
+			fail("Failure to pump messages")
+		end
+		man:process_events()
+		i = i + 1
+		posix.sleep(1)
+	end
+
 	if actual_call_result ~= expected_call_result then
 		fail("Unexpected AgentCalled result. Got " .. tostring(actual_call_result) .." but expected " .. tostring(expected_call_result))
 	end
+
 	if actual_pause_result ~= pause_expectation then
 		fail("Unexpected QueueMemberPaused result")
 	end
