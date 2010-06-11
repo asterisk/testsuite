@@ -117,6 +117,7 @@ $(LUAFILESYSTEM_OBJS): lib/lua/$(LUAFILESYSTEM) lib/lua/lfs-patched.stamp
 	$(MAKE) -C lib/lua/$(LUAFILESYSTEM)
 
 lib/lua/lfs-patched.stamp lib/lua/$(LUAFILESYSTEM): lib/lua/$(LUAFILESYSTEM).tar.gz tools/lfs.diff
+	rm -rf lib/lua/$(LUAFILESYSTEM)
 	tar -C lib/lua -zxf lib/lua/$(LUAFILESYSTEM).tar.gz 
 	patch -p1 -d lib/lua/$(LUAFILESYSTEM) < tools/lfs.diff
 	touch lib/lua/lfs-patched.stamp
@@ -125,6 +126,7 @@ $(LUASOCKET_OBJS): lib/lua/$(LUASOCKET) lib/lua/luasocket-patched.stamp
 	$(MAKE) -C lib/lua/$(LUASOCKET)
 
 lib/lua/luasocket-patched.stamp lib/lua/$(LUASOCKET): lib/lua/$(LUASOCKET).tar.gz tools/luasocket.diff
+	rm -rf lib/lua/$(LUASOCKET)
 	tar -C lib/lua -zxf lib/lua/$(LUASOCKET).tar.gz 
 	patch -p1 -d lib/lua/$(LUASOCKET) < tools/luasocket.diff
 	touch lib/lua/luasocket-patched.stamp
@@ -133,6 +135,7 @@ $(LUAPOSIX_OBJS): lib/lua/$(LUAPOSIX) lib/lua/luaposix-patched.stamp
 	$(MAKE) -C lib/lua/$(LUAPOSIX)
 
 lib/lua/luaposix-patched.stamp lib/lua/$(LUAPOSIX): lib/lua/$(LUAPOSIX).tar.gz tools/luaposix.diff
+	rm -rf lib/lua/$(LUAPOSIX)
 	tar -C lib/lua -zxf lib/lua/$(LUAPOSIX).tar.gz 
 	patch -p1 -d lib/lua/$(LUAPOSIX) < tools/luaposix.diff
 	touch lib/lua/luaposix-patched.stamp
