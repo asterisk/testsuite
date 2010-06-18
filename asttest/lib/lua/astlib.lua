@@ -90,7 +90,7 @@ function asterisk:path(path)
 end
 
 function asterisk:_spawn()
-	local p = proc.exec(self.asterisk_binary,
+	local p = proc.exec_io(self.asterisk_binary,
 		"-f", "-g", "-q", "-m",
 		"-C", self.asterisk_conf
 	)
