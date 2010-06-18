@@ -127,6 +127,7 @@ function asterisk:spawn()
 	-- up with a one second delay in between each try.  We need to loop
 	-- like this in order to give asterisk time to start the CLI socket.
 	local booted
+	local output = ""
 	for _=1,5 do
 		local err
 		booted, err = self:cli("core waitfullybooted")
@@ -137,6 +138,9 @@ function asterisk:spawn()
 				error("error waiting for asterisk to fully boot")
 			end
 		end
+
+		output = output .. booted
+
 		if booted:find("fully booted") then
 			break
 		end
@@ -154,6 +158,9 @@ function asterisk:spawn()
 		elseif res then
 			print("asterisk exited with " .. res)
 		end
+
+		print("\noutput from all of our 'core waitfullybooted' attempts:")
+		print(output)
 
 		error("error starting asterisk")
 	end
