@@ -322,6 +322,7 @@ function asterisk:dump_full_log()
 	local log, err = io.open(self:path("/var/log/asterisk/full"), "r")
 	if not log then
 		print("error opening '" .. self:path("/var/log/asterisk/full") .. "': " .. err)
+		return
 	end
 
 	print(log:read("*a"))
