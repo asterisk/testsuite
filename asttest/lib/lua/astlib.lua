@@ -104,12 +104,6 @@ function asterisk:cli(command)
 		"-C", self.asterisk_conf
 	)
 
-	-- note, at one point this read was done after the call to p:wait();
-	-- this may have caused the asterisk process servicing the CLI command
-	-- to receive a SIGPIPE.  Now it is done before waiting for the process
-	-- to exit.
-	local output = p.stdout:read("*a")
-
 	-- wait up to 5 minutes for the process to exit.  If the process does
 	-- not exit within 5 minutes, return a error.
 	local res, err = p:wait(300000)
@@ -117,7 +111,7 @@ function asterisk:cli(command)
 		return res, err
 	end
 
-	return output
+	return p.stdout:read("*a")
 end
 
 function asterisk:spawn()
