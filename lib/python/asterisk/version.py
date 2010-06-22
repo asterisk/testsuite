@@ -16,16 +16,13 @@ import re
 import unittest
 
 
-VERSION_HDR = "../include/asterisk/version.h"
-
-
 class AsteriskVersion:
     """An Asterisk Version.
 
     This class handles Asterisk version strings.
     """
 
-    def __init__(self, version=None, path=VERSION_HDR):
+    def __init__(self, version=None, path=None):
         """Construct an Asterisk Version parser.
 
         Keyword Arguments:
@@ -37,7 +34,20 @@ class AsteriskVersion:
         if version is not None:
             self.version_str = version
         else:
-            self.version_str = self.__get_ast_version(path)
+            version_hdr_paths = [
+                "../include/asterisk/version.h",
+                "/usr/include/asterisk/version.h",
+                "/usr/local/include/asterisk/version.h"
+            ]
+            if path:
+                version_hdr_paths.insert(0, path)
+            for p in version_hdr_paths:
+                self.version_str = self.__get_ast_version(p)
+                if self.version_str:
+                    break
+
+        if not self.version_str:
+            return
 
         if self.version_str[:3] == "SVN":
             self.__parse_svn_version()
@@ -98,7 +108,7 @@ class AsteriskVersion:
         '''
         Determine the version of Asterisk installed from the installed version.h.
         '''
-        v = ""
+        v = None
         try:
             f = open(path, "r")
             match = re.search("ASTERISK_VERSION\s+\"(.*)\"", f.read())
