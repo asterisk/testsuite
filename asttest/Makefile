@@ -44,11 +44,11 @@ LUAPOSIX_LIBS=-lcrypt
 
 # Basic set of sources and flags/libraries/includes
 OBJS:=asttest.o lib/lua.o lib/testsuite.o lib/testutils.o
-CFLAGS:=-g -c -D_GNU_SOURCE -Wall -I/usr/include/lua5.1 -Iinclude -Ilua
+CFLAGS:=-g -c -D_GNU_SOURCE -Wall `pkg-config --cflags lua5.1 2> /dev/null || pkg-config --cflags lua 2> /dev/null` -Iinclude
 L_MODULES:=$(LUAFILESYSTEM_OBJS) $(LUASOCKET_OBJS) $(LUAPOSIX_OBJS) 
 L_LIBS:=$(LUAPOSIX_LIBS)
 L_OBJS:=lib/lua/testlib.o lib/lua/astlib.o lib/lua/proclib.o
-T_LIBS:=-llua5.1 -lm -ldl
+T_LIBS:=`pkg-config --libs lua5.1 2> /dev/null || pkg-config --libs lua 2> /dev/null || echo -llua -lm -ldl`
 
 
 all: asttest
