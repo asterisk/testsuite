@@ -122,10 +122,10 @@ static enum ts_result process_test_result(struct testsuite *ts, const char *test
 			}
 		}
 
-		if (reason_string)
-			lua_remove(L, reason_string);
 		if (test_result)
 			lua_remove(L, test_result);
+		if (reason_string)
+			lua_remove(L, reason_string);
 
 		lua_pop(L, 1);
 	} else {
