@@ -56,6 +56,9 @@ test_events_response(standard, "none", true)
 test_events_response(standard, "yeah whatever", true)
 test_events_response(standard, "1", true)
 
+-- make sure asterisk exited properly
+fail_if(not proc.perror(standard:term_or_kill()), "asterisk encountered an error")
+
 print("testing with brokeneventsaction on")
 quirks = ast.new()
 quirks:generate_manager_conf()
@@ -72,4 +75,7 @@ test_events_response(quirks, "off", true)
 test_events_response(quirks, "none", true)
 test_events_response(quirks, "yeah whatever", true)
 test_events_response(quirks, "1", true)
+
+-- make sure asterisk exited properly
+fail_if(not proc.perror(quirks:term_or_kill()), "asterisk encountered an error")
 
