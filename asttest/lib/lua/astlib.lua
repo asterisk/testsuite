@@ -123,12 +123,12 @@ function asterisk:spawn()
 
 	-- wait for asterisk to be fully booted.  We do this by reading the
 	-- output of the 'core waitfullybooted' command and looking for the
-	-- string 'fully booted'.  We will try 5 times before completely giving
-	-- up with a one second delay in between each try.  We need to loop
-	-- like this in order to give asterisk time to start the CLI socket.
+	-- string 'fully booted'.  We will try 10 times before completely
+	-- giving up with a 500 ms delay in between each try.  This is
+	-- necessary to give asterisk time to start the CLI socket.
 	local booted
 	local output = ""
-	for _=1,5 do
+	for _=1,10 do
 		local err
 		booted, err = self:cli("core waitfullybooted")
 		if not booted then
@@ -139,18 +139,19 @@ function asterisk:spawn()
 			end
 		end
 
+		if #output ~= 0 then
+			output = output .. "=====\n"
+		end
+
 		output = output .. booted
 
 		if booted:find("fully booted") then
 			break
 		end
-		posix.sleep(1)
+		posix.usleep(500000)
 	end
 	if not booted:find("fully booted") then
 		print("error waiting for asterisk to fully boot: " .. booted)
-		print("\nfull log follows:\n")
-		self:dump_full_log()
-		
 		print("checking to see if asterisk is still running")
 		local res, err = proc.perror(self:wait(1000))
 		if not res and err == "timeout" then
@@ -162,6 +163,9 @@ function asterisk:spawn()
 		print("\noutput from all of our 'core waitfullybooted' attempts:")
 		print(output)
 
+		print("\nfull log follows:\n")
+		self:dump_full_log()
+		
 		error("error starting asterisk")
 	end
 end
