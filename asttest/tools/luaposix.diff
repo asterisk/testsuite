@@ -1,13 +1,13 @@
 diff -ruN a/lposix.c b/lposix.c
 --- a/lposix.c	2008-07-18 09:30:36.000000000 -0500
-+++ b/lposix.c	2010-06-22 15:05:04.000000000 -0500
++++ b/lposix.c	2010-06-24 12:29:36.000000000 -0500
 @@ -575,6 +575,13 @@
  	return 1;
  }
  
 +static int Pusleep(lua_State *L)			/** usleep(usec) */
 +{
-+	useconds_t usec = luaL_checkint(L, 1);
++	useconds_t usec = luaL_checklong(L, 1);
 +	lua_pushinteger(L, usleep(usec));
 +	return 1;
 +}
@@ -25,7 +25,7 @@ diff -ruN a/lposix.c b/lposix.c
  	{"times",		Ptimes},
 diff -ruN a/lposix.h b/lposix.h
 --- a/lposix.h	1969-12-31 18:00:00.000000000 -0600
-+++ b/lposix.h	2010-06-22 15:05:04.000000000 -0500
++++ b/lposix.h	2010-06-22 15:29:02.000000000 -0500
 @@ -0,0 +1,6 @@
 +#ifndef LPOSIX_H
 +#define LPOSIX_H
@@ -35,7 +35,7 @@ diff -ruN a/lposix.h b/lposix.h
 +#endif
 diff -ruN a/Makefile b/Makefile
 --- a/Makefile	2008-07-18 09:31:56.000000000 -0500
-+++ b/Makefile	2010-06-22 15:05:04.000000000 -0500
++++ b/Makefile	2010-06-22 15:29:02.000000000 -0500
 @@ -25,7 +25,7 @@
  
  CPPFLAGS=	-fPIC $(INCS) $(WARN)
