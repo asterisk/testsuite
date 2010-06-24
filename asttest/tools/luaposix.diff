@@ -1,21 +1,20 @@
 diff -ruN a/lposix.c b/lposix.c
 --- a/lposix.c	2008-07-18 09:30:36.000000000 -0500
-+++ b/lposix.c	2010-06-24 12:29:36.000000000 -0500
-@@ -575,6 +575,13 @@
++++ b/lposix.c	2010-06-24 12:49:23.000000000 -0500
+@@ -575,6 +575,12 @@
  	return 1;
  }
  
 +static int Pusleep(lua_State *L)			/** usleep(usec) */
 +{
 +	useconds_t usec = luaL_checklong(L, 1);
-+	lua_pushinteger(L, usleep(usec));
-+	return 1;
++	return pushresult(L, usleep(usec), NULL);
 +}
 +
  
  static int Psetenv(lua_State *L)		/** setenv(name,value,[over]) */
  {
-@@ -1069,6 +1076,7 @@
+@@ -1069,6 +1075,7 @@
  	{"setenv",		Psetenv},
  	{"setpid",		Psetpid},
  	{"sleep",		Psleep},
