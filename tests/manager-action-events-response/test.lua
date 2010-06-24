@@ -26,13 +26,25 @@ function test_events_response(asterisk, event_mask, expected_response)
 		got_response = r
 	end
 
+	-- send an Events action
 	r = check_err("error sending 'Events' action", m(ma, handle_response))
-	posix.sleep(3)
+	
+	-- wait for a response
+	local time_string
+	if expected_response then
+		time_string = "half a second (500 milliseconds)"
+		posix.usleep(500000)
+	else
+		time_string = "one second"
+		posix.sleep(1)
+	end
+
+	-- check for a response
 	check_err("manager error", m:pump_messages())
 	m:process_responses()
 
 	if not got_response and expected_response then
-		fail("did not get a response to the 'Events' manager action in 3 seconds")
+		fail("did not get a response to the 'Events' manager action in " .. time_string)
 	elseif got_response and not expected_response then
 		fail("got a response to the 'Events' manager action when we did not expect one:\n" .. got_response:_format())
 	end
