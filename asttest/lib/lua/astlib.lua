@@ -597,6 +597,7 @@ function manager:disconnect()
 	self.sock:close()
 	self.sock = nil
 end
+manager.close = manager.disconnect
 
 --- Read data from a socket until a \r\n is encountered.
 --
