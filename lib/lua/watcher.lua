@@ -177,7 +177,9 @@ end
 -- @returns True on success and nil and an error message on failure.  Currently
 -- the only error message is "timeout".
 function watch(m, tree, timeout)
-	local rough_seconds = 0
+	function tv2ms(tv)
+		return tv.tv_sec * 1000 + tv.tv_usec / 1000
+	end
 
 	if getmetatable(tree) == watcher.etree then
 		tree = {tree}
@@ -200,9 +202,20 @@ function watch(m, tree, timeout)
 		end
 	end
 
+	local start, err = posix.gettimeofday()
+	if not start then return nil, err end
+	start = tv2ms(start)
+
 	m:register_event("", handle_events)
 	while not matched() do
-		if timeout ~= 0 and rough_seconds >= timeout then
+		local now, err = posix.gettimeofday()
+		if not now then
+			m:unregister_event("", handle_events)
+			return nil, err
+		end
+		now = tv2ms(now)
+
+		if timeout ~= 0 and timeout < now - start then
 			m:unregister_event("", handle_events)
 			return nil, "timeout"
 		end
@@ -216,12 +229,11 @@ function watch(m, tree, timeout)
 		m:process_events()
 
 		if timeout == 0 then
+			m:unregister_event("", handle_events)
 			return nil, "timeout"
 		end
 
-		posix.sleep(1)
-
-		rough_seconds = rough_seconds + 1
+		posix.usleep(1)
 	end
 
 	m:unregister_event("", handle_events)

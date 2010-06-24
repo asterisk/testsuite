@@ -1,7 +1,15 @@
 diff -ruN a/lposix.c b/lposix.c
 --- a/lposix.c	2008-07-18 09:30:36.000000000 -0500
-+++ b/lposix.c	2010-06-24 12:49:23.000000000 -0500
-@@ -575,6 +575,12 @@
++++ b/lposix.c	2010-06-24 14:49:07.000000000 -0500
+@@ -9,6 +9,7 @@
+ */
+ 
+ #include <sys/stat.h>
++#include <sys/time.h>
+ #include <sys/times.h>
+ #include <sys/types.h>
+ #include <sys/utsname.h>
+@@ -575,6 +576,12 @@
  	return 1;
  }
  
@@ -14,7 +22,40 @@ diff -ruN a/lposix.c b/lposix.c
  
  static int Psetenv(lua_State *L)		/** setenv(name,value,[over]) */
  {
-@@ -1069,6 +1075,7 @@
+@@ -701,6 +708,24 @@
+ 	return doselection(L, 1, SgetID, FgetID, NULL);
+ }
+ 
++static int Pgettimeofday(lua_State *L)		/** gettimeofday() */
++{
++	/* NOTE: the tz argument is not supported as the man page says it is
++	 * obsolete */
++	struct timeval tv;
++
++	if (gettimeofday(&tv, NULL)) {
++		return pusherror(L, NULL);
++	}
++
++	lua_createtable(L, 0, 2);
++	lua_pushnumber(L, tv.tv_sec);
++	lua_setfield(L, -2, "tv_sec");
++
++	lua_pushnumber(L, tv.tv_usec);
++	lua_setfield(L, -2, "tv_usec");
++	return 1;
++}
+ 
+ static int Phostid(lua_State *L)		/** hostid() */
+ {
+@@ -1055,6 +1080,7 @@
+ 	{"getlogin",		Pgetlogin},
+ 	{"getpasswd",		Pgetpasswd},
+ 	{"getpid",		Pgetpid},
++	{"gettimeofday",	Pgettimeofday},
+ 	{"glob",		Pglob},
+ 	{"hostid",		Phostid},
+ 	{"kill",		Pkill},
+@@ -1069,6 +1095,7 @@
  	{"setenv",		Psetenv},
  	{"setpid",		Psetpid},
  	{"sleep",		Psleep},
@@ -22,6 +63,7 @@ diff -ruN a/lposix.c b/lposix.c
  	{"stat",		Pstat},
  	{"sysconf",		Psysconf},
  	{"times",		Ptimes},
+Binary files a/.lposix.c.swp and b/.lposix.c.swp differ
 diff -ruN a/lposix.h b/lposix.h
 --- a/lposix.h	1969-12-31 18:00:00.000000000 -0600
 +++ b/lposix.h	2010-06-22 15:29:02.000000000 -0500

@@ -91,7 +91,7 @@ function match_single_tree()
 		etree = etree:add(watcher.event.new("Event" .. i))
 	end
 
-	expect_success(watcher.watch(standard_dm(), tree, 2))
+	expect_success(watcher.watch(standard_dm(), tree, 100))
 end
 
 function match_multiple_trees()
@@ -107,7 +107,7 @@ function match_multiple_trees()
 		end
 	end
 
-	expect_success(watcher.watch(standard_dm(), {build_tree(5, 10), build_tree(1, 3)}, 2))
+	expect_success(watcher.watch(standard_dm(), {build_tree(5, 10), build_tree(1, 3)}, 100))
 end
 
 function match_branching_tree_1()
@@ -139,7 +139,7 @@ function match_branching_tree_1()
 	   :add(e("Event12"))
 	tree:add(e("Event23"))
 
-	expect_success(watcher.watch(standard_dm(), tree, 2))
+	expect_success(watcher.watch(standard_dm(), tree, 100))
 
 	local tree = watcher.etree:new(watcher.event.new("Event1"))
 	local etree = tree
@@ -147,7 +147,7 @@ function match_branching_tree_1()
 		etree = etree:add(watcher.event.new("Event" .. i))
 	end
 
-	expect_success(watcher.watch(standard_dm(), tree, 2))
+	expect_success(watcher.watch(standard_dm(), tree, 100))
 end
 
 function match_out_of_order()
@@ -164,7 +164,7 @@ function match_out_of_order()
 	local tree = watcher.etree:new(events)
 	tree:add(watcher.event.new("Event10"))
 
-	expect_success(watcher.watch(standard_dm(), tree, 2))
+	expect_success(watcher.watch(standard_dm(), tree, 100))
 
 	-- check and make sure every event was actually matched
 	for i=1,9 do
@@ -196,7 +196,7 @@ function match_branching_out_of_order_tree_1()
 	   :add(e("Event12"))
 	tree:add(e("Event23"))
 
-	expect_success(watcher.watch(standard_dm(), tree, 2))
+	expect_success(watcher.watch(standard_dm(), tree, 100))
 end
 
 function match_headers_1()
@@ -228,7 +228,7 @@ function match_headers_1()
 	   :add(e("Event12"))
 	tree:add(e("Event23"))
 
-	expect_success(watcher.watch(standard_dm(), tree, 2))
+	expect_success(watcher.watch(standard_dm(), tree, 100))
 end
 
 function match_headers_2()
@@ -260,7 +260,7 @@ function match_headers_2()
 	   :add(e("Event12"))
 	tree:add(e("Event23"))
 
-	expect_timeout(watcher.watch(standard_dm(), tree, 2))
+	expect_timeout(watcher.watch(standard_dm(), tree, 100))
 end
 
 function test_timeout_1()
@@ -275,7 +275,7 @@ function test_timeout_1()
 		etree = etree:add(watcher.event.new("Event" .. i))
 	end
 
-	expect_timeout(watcher.watch(standard_dm(), tree, 2))
+	expect_timeout(watcher.watch(standard_dm(), tree, 100))
 end
 
 function test_timeout_2()
@@ -289,7 +289,7 @@ function test_timeout_2()
 		etree = etree:add(watcher.event.new("Event" .. i))
 	end
 
-	expect_timeout(watcher.watch(empty_dm(), tree, 2))
+	expect_timeout(watcher.watch(empty_dm(), tree, 100))
 end
 
 function match_with_function_1()
@@ -299,7 +299,7 @@ function match_with_function_1()
 		return true
 	end)
 
-	expect_success(watcher.watch(standard_dm(), tree, 2))
+	expect_success(watcher.watch(standard_dm(), tree, 100))
 end
 
 function match_with_function_2()
@@ -312,7 +312,7 @@ function match_with_function_2()
 
 	local tree = watcher.etree:new(event)
 
-	expect_success(watcher.watch(standard_dm(), tree, 2))
+	expect_success(watcher.watch(standard_dm(), tree, 100))
 end
 
 match_single_tree()

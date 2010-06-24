@@ -138,7 +138,7 @@ etree:add(e3)
 
 print(tostring(etree))
 
-res, err = watcher.watch(m, etree, 120)
+res, err = watcher.watch(m, etree, 12000)
 
 r = m(logoff)
 
