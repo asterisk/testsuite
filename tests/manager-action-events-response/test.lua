@@ -48,6 +48,9 @@ function test_events_response(asterisk, event_mask, expected_response)
 	elseif got_response and not expected_response then
 		fail("got a response to the 'Events' manager action when we did not expect one:\n" .. got_response:_format())
 	end
+	
+	m(action.logoff())
+	m:close()
 end
 
 action = ast.manager.action
