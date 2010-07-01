@@ -114,13 +114,7 @@ function asterisk:cli(command)
 	return p.stdout:read("*a")
 end
 
-function asterisk:spawn()
-	self:clean_work_area()
-	self:create_work_area()
-	self:generate_essential_configs()
-	self:write_configs()
-	self:_spawn()
-
+function asterisk:_waitfullybooted()
 	-- wait for asterisk to be fully booted.  We do this by reading the
 	-- output of the 'core waitfullybooted' command and looking for the
 	-- string 'fully booted'.  We will try 10 times before completely
@@ -168,6 +162,15 @@ function asterisk:spawn()
 		
 		error("error starting asterisk")
 	end
+end
+
+function asterisk:spawn()
+	self:clean_work_area()
+	self:create_work_area()
+	self:generate_essential_configs()
+	self:write_configs()
+	self:_spawn()
+	self:_waitfullybooted()
 end
 
 function asterisk:spawn_and_wait()
