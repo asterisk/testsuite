@@ -22,7 +22,6 @@ tests:
     - test: 'sip_outbound_address'
     - test: 'sip_attended_transfer'
     - test: 'sip_one_legged_transfer'
-    - test: 'feature_attended_transfer'
     - test: 'feature_blonde_transfer'
     - test: 'mixmonitor'
     - test: 'queues/queue_baseline'
