@@ -954,3 +954,8 @@ function manager.action.logoff()
 	return manager.action.new("Logoff")
 end
 
+--- Ping action.
+function manager.action.ping()
+	return manager.action.new("Ping")
+end
+
