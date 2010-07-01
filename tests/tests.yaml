@@ -30,3 +30,4 @@ tests:
     - test: 'queues/macro_gosub_test'
     - test: 'queues/ringinuse_and_pause'
     - test: 'queues/wrapup_time'
+    - test: 'manager/response-time'

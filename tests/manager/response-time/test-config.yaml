@@ -1,0 +1,14 @@
+testinfo:
+    summary:     'Test the expected response time for manager actions.'
+    description: |
+        "This test ensures that the manager responds within a reasonable
+        ammount of time for actions."
+    issues:
+        -jira: AST-359
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'bash'
+        - app : 'asttest'
+
