@@ -1,2 +1,0 @@
--- test check
-check(true)

@@ -5,12 +5,10 @@ require "asttest"
 
 a = asttest.run("tests")
 
-fail_if(a.results["fail_if_true"] ~= "fail")
-fail_if(a.results["fail_if_false"] ~= "pass")
-fail_if(a.results["check_true"] ~= "pass")
-fail_if(a.results["check_false"] ~= "fail")
-fail_if(a.results["fail"] ~= "fail")
-fail_if(a.results["pass"] ~= "pass")
-fail_if(a.results["skip"] ~= "skip")
-fail_if(a.results["error"] ~= "error")
+fail_if(a.results["fail_if_true"] ~= "fail", "fail_if(true) did nto cause a failure")
+fail_if(a.results["fail_if_false"] ~= "pass", "fail_if(false) test failed, it should have passed")
+fail_if(a.results["fail"] ~= "fail", "fail() did not cause a failure")
+fail_if(a.results["pass"] ~= "pass", "pass() did not pass")
+fail_if(a.results["skip"] ~= "skip", "skip() did not skip")
+fail_if(a.results["error"] ~= "error", "error() did not result in an error")
 

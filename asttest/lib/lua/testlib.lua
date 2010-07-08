@@ -84,9 +84,13 @@ function fail_if(condition, message)
 end
 _G.fail_if = fail_if
 
--- fail if condition is false using message as the reason
-function check(condition, message)
-	fail_if(not condition, message)
+-- check the return value of a function printing the given message in the event
+-- of an error
+function check(message, r, err)
+	if not r then
+		error(message .. ": " .. tostring(err))
+	end
+	return r, err
 end
 _G.check = check
 
