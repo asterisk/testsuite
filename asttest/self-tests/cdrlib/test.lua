@@ -1,7 +1,7 @@
 
 require "cdr"
 
--- imatate an asterisk object and the asterisk:path() funciton
+-- imitate an asterisk object and the asterisk:path() function
 function a(file)
 	local a = {}
 	function a:path()
@@ -26,9 +26,9 @@ print("parsing a csv file with errors")
 c, err = cdr.new(a("buggy.csv"))
 fail_if(c, "successfully parsed known buggy csv file, buggy.csv.  This should have failed.")
 
-print("attempting to parse a non existant file")
+print("attempting to parse a non existent file")
 c, err = cdr.new(a("does not exits.csv"))
-fail_if(c, "successfully parsed non existant file???")
+fail_if(c, "successfully parsed non existent file???")
 
 fail_if(ast.cdr ~= cdr, "ast.cdr ~= cdr, the cdr lib is not properly being inserted into the ast lib")
 
