@@ -124,7 +124,6 @@ function cdr_record:_parse(line)
 			if not i then return nil, 'unmatched "' end
 			local f = line:sub(start+1, i-2)
 			table.insert(self.data, (f:gsub('""', '"')))
-			print(self.data[#self.data])
 			start = i+1
 		else                -- unquoted; find next comma
 			local nexti = line:find(',', start)
