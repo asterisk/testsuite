@@ -22,7 +22,9 @@ endif
 
 INSTALL?=install
 DESTDIR?=
-BINDIR?=/usr/bin
+PREFIX?=/usr
+EXEC_PREFIX?=$(PREFIX)
+BINDIR?=$(EXEC_PREFIX)/bin
 
 ASTSRCDIR ?= ../
 ASTDSTDIR ?= $(PWD)/asterisk
