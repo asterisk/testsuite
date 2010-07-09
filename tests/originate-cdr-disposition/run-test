@@ -1,4 +1,0 @@
-#!/bin/bash -e
-
-asttest -a / -s tests/originate-cdr-disposition
-
