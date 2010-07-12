@@ -1,0 +1,19 @@
+================================================================================
+===                                                                          ===
+===                           Asterisk Test Suite                            ===
+===                                                                          ===
+===                         http://www.asterisk.org/                         ===
+===                      Copyright (C) 2010, Digium, Inc.                    ===
+===                                                                          ===
+================================================================================
+
+TODO List:
+
+ * Make it so the test suite can be executed as non-root.
+
+ * Make the test suite independent of a system installation of Asterisk.  Make
+   it so running the test suite does not disturb the system installation of
+   Asterisk (if there is one), and still work just fine if one is not there.
+
+================================================================================
+================================================================================
