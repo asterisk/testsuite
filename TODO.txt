@@ -15,5 +15,7 @@ TODO List:
    it so running the test suite does not disturb the system installation of
    Asterisk (if there is one), and still work just fine if one is not there.
 
+ * Add knowledge of ABE versions to the lib/python/asterisk/version.py module.
+
 ================================================================================
 ================================================================================
