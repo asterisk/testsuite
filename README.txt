@@ -253,10 +253,17 @@ properties:
         # Checking for an 'app' dependency behaves like the 'which' command
         - app : 'bash'
         - app : 'sipp'
+
         # A 'python' dependency is a python module.  An attempt will be made to
         # import a module by this name to determine whether the dependency is
         # met.
         - python : 'yaml'
+
+        # 'custom' dependency can be anything.  Checking for this dependency is
+        # done by calling a corresponding method in the Dependency class in
+        # runtests.py.  For example, if the dependency is 'ipv6', then the
+        # depend_ipv6() method is called to determine if the dependency is met.
+        - custom : 'ipv6'
 
 
 

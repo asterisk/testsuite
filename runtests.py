@@ -13,6 +13,7 @@ import subprocess
 import optparse
 import time
 import yaml
+import socket
 
 sys.path.append("lib/python")
 
@@ -46,6 +47,16 @@ class Dependency:
                 self.met = True
             except ImportError:
                 pass
+        elif "custom" in dep:
+            self.name = dep["custom"]
+            method = "depend_%s" % self.name
+            found = False
+            for m in dir(self):
+                if m == method:
+                    self.met = getattr(self, m)()
+                    found = True
+            if not found:
+                print "Unknown custom dependency - '%s'" % self.name
         else:
             print "Unknown dependency type specified."
 
@@ -67,6 +78,14 @@ class Dependency:
                     return exe_file
 
         return None
+
+    def depend_ipv6(self):
+        try:
+            s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            s.close()
+            return True
+        except:
+            return False
 
 
 class TestConfig:
