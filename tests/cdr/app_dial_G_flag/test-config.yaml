@@ -1,0 +1,15 @@
+testinfo:
+    summary: 'Test for missing CDR records when using the G flag with app_dial.'
+    description: |
+        "This test verifies that the proper number of CDRs are generated when
+        the G flag is used with app_dial."
+    issues:
+        - mantis : '17592'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'bash'
+        - app : 'sipp'
+        - app : 'asttest'
+
