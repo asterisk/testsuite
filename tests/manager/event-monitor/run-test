@@ -43,9 +43,9 @@ def main(argv = None):
         (options, args) = parser.parse_args(argv)
         working_dir = os.path.dirname(argv[0])
 
-        asterisk = Asterisk(base="/tmp/asterisk-testsuite/ami-monitor")
-        asterisk.install_config("tests/ami-monitor/configs/manager.conf")
-        asterisk.install_config("tests/ami-monitor/configs/logger.conf")
+        asterisk = Asterisk(base="/tmp/asterisk-testsuite/manager/event-monitor")
+        asterisk.install_config("tests/manager/event-monitor/configs/manager.conf")
+        asterisk.install_config("tests/manager/event-monitor/configs/logger.conf")
 
     logging.basicConfig()
     import client
