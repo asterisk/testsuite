@@ -1,7 +1,9 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 'example'
-    - test: 'ami-login'
+    - test: 'manager/login'
+    - test: 'manager/action-events-response'
+    - test: 'manager/response-time'
     - test: 'rfc2833_dtmf_detect'
     - test: 'sip_channel_params'
     - test: 'iax-call-basic'
@@ -28,5 +30,3 @@ tests:
     - test: 'queues/macro_gosub_test'
     - test: 'queues/ringinuse_and_pause'
     - test: 'queues/wrapup_time'
-    - test: 'manager/action-events-response'
-    - test: 'manager/response-time'
