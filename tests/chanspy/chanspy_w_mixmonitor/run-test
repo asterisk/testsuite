@@ -1,0 +1,192 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+David Vossel <dvossel@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import signal
+import subprocess
+from optparse import OptionParser
+from twisted.application import service, internet
+from twisted.internet import reactor, defer
+from starpy import manager
+from starpy import fastagi
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.version import AsteriskVersion
+
+class ChanSpyMixMonitorTest:
+    def __init__(self, argv):
+        self.last_step = ""
+        self.passed = False
+        self.numSpyEvents = 0
+        self.expectedSpyEvents = 3
+        self.talkDetected = 0
+        self.test_to = 25
+
+        # get version info
+        parser = OptionParser()
+        parser.add_option("-v", "--version", dest="ast_version",
+                          help="Asterisk version string")
+        (options, args) = parser.parse_args(argv)
+        self.ast_version = AsteriskVersion(options.ast_version)
+
+        reactor.callWhenRunning(self.run)
+        self.agi = fastagi.FastAGIFactory(self.reportPassed)
+        reactor.listenTCP(4573, self.agi, self.test_to, '127.0.0.1')
+
+        print self.ast_version
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/chanspy/chanspy_w_mixmonitor")
+        self.asterisk.install_config("tests/chanspy/chanspy_w_mixmonitor/configs/extensions.conf")
+        self.asterisk.install_config("tests/chanspy/chanspy_w_mixmonitor/configs/sip.conf")
+        self.asterisk.install_config("tests/chanspy/chanspy_w_mixmonitor/configs/manager.conf")
+        self.talkingaudio = os.path.join(os.getcwd(), "tests/chanspy/chanspy_w_mixmonitor/sounds/talking")
+        self.audiofile1 = os.path.join(os.getcwd(), "tests/chanspy/chanspy_w_mixmonitor/testaudio1")
+
+    def reportPassed(self, agi):
+        print "GOT PASS RESULTS!!!\n"
+        sequence = fastagi.InSequence()
+        sequence.append(agi.execute, "HangUp")
+        sequence.append(agi.finish)
+        self.passed = True
+        reactor.callLater(1, self.readResult)
+        return sequence()
+
+    def readResult(self):
+        self.logLastStep("Reading results")
+        self.asterisk.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+        self.asterisk.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+
+        if self.ast_version < AsteriskVersion("1.6.1"):
+            self.asterisk.cli_exec("core show globals") # The global variables here hold failure conditions
+        else:
+            self.asterisk.cli_exec("dialplan show globals") # The global variables here hold failure conditions
+
+        if self.passed == True:
+            print 'SIP ChanSpy test PASSED!'
+        else:
+            print 'SIP ChanSpy Test FAILED'
+
+
+        self.stopProcesses()
+
+        if reactor.running:
+            print "Stopping Reactor ..."
+            reactor.stop()
+
+    def chanspyEvent(self, ami, event):
+        self.numSpyEvents += 1
+        if event['spyeechannel'].count('end_a') > 0:
+            reactor.callLater(1, self.aHangup)
+            reactor.callLater(2, self.bCall)
+        if event['spyeechannel'].count('end_b') > 0:
+            reactor.callLater(1, self.bHangup)
+            reactor.callLater(2, self.cCall)
+        if event['spyeechannel'].count('end_c') > 0:
+            reactor.callLater(2, self.cHangup)
+            reactor.callLater(3, self.hangupChanSpy)
+        print event
+    def amiOnConnect(self, ami):
+        self.logLastStep("Connected to the AMI")
+        self.ami = ami
+        self.ami.registerEvent('ChanSpyStart', self.chanspyEvent)
+    def amiLoginError(self, ami):
+        self.logLastStep("AMI login failed")
+        reactor.callLater(1, self.readResult)
+    def amiLogin(self):
+        self.logLastStep("Logging in to the AMI")
+        self.ami_factory = manager.AMIFactory("user", "mysecret")
+        self.ami_factory.login('127.0.0.1', 5038).addCallbacks(self.amiOnConnect, self.amiLoginError)
+    def aCall(self):
+        self.logLastStep("A Calling into Playback")
+        self.pja.stdin.write("m\n")
+        self.pja.stdin.write("sip:play_exten@127.0.0.1:5060\n")
+    def bCall(self):
+        self.logLastStep("B Calling into Playback")
+        self.pjb.stdin.write("m\n")
+        self.pjb.stdin.write("sip:play_exten@127.0.0.1:5060\n")
+    def cCall(self):
+        self.logLastStep("C Calling into Playback")
+        self.pjc.stdin.write("m\n")
+        self.pjc.stdin.write("sip:play_exten@127.0.0.1:5060\n")
+    def aHangup(self):
+        self.pja.stdin.write("h\n")
+    def bHangup(self):
+        self.pjb.stdin.write("h\n")
+    def cHangup(self):
+        self.pjc.stdin.write("h\n")
+
+    def startProcesses(self):
+        self.logLastStep("Starting Processes")
+        self.asterisk.start()
+        self.pja = subprocess.Popen(['pjsua', '--local-port=5065', '--auto-answer=200', '--null-audio'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        self.pjb = subprocess.Popen(['pjsua', '--local-port=5066', '--auto-answer=200', '--null-audio'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        self.pjc = subprocess.Popen(['pjsua', '--local-port=5067', '--auto-answer=200', '--null-audio'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+
+        if self.ast_version < AsteriskVersion("1.6.1"):
+            self.asterisk.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
+            self.asterisk.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
+        else:
+            self.asterisk.cli_exec("dialplan set global TESTAUDIO1 " + self.audiofile1)
+            self.asterisk.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
+
+    def stopProcesses(self):
+        self.logLastStep("Stopping Processes")
+        self.asterisk.stop()
+        os.kill(self.pja.pid, signal.SIGKILL)
+        os.kill(self.pjb.pid, signal.SIGKILL)
+        os.kill(self.pjc.pid, signal.SIGKILL)
+
+    def logLastStep(self, step):
+        print step
+        self.lastStep = step
+
+    def callChanSpy(self):
+        self.logLastStep("Placing call to ChanSpy extension.")
+        self.asterisk.cli_exec("console dial chanspytest@test")
+
+    def hangupChanSpy(self):
+        self.logLastStep("Hangup ChanSpy.")
+        self.asterisk.cli_exec("console hangup")
+        reactor.callLater(2, self.verifyAudio)
+
+    def verifyAudio(self):
+        if self.ast_version < AsteriskVersion("1.6.2"):
+            self.asterisk.cli_exec("originate Local/play_recording@test extension detect_audio@test")
+        else:
+            self.asterisk.cli_exec("channel originate Local/play_recording@test extension detect_audio@test")
+
+    def run(self):
+
+        # start up the processes
+        self.startProcesses()
+
+        # call extensions
+        self.amiLogin()
+        reactor.callLater(1, self.callChanSpy)
+        reactor.callLater(2, self.aCall)
+
+        # stop and read results after timeout
+        reactor.callLater(self.test_to, self.readResult)
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    # Run Test
+    test = ChanSpyMixMonitorTest(argv)
+    reactor.run()
+    test.stopProcesses()
+    if test.passed != True:
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+

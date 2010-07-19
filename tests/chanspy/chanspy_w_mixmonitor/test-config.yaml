@@ -1,0 +1,17 @@
+testinfo:
+    summary:     'Test Chanspy with MixMonitor'
+    description: |
+        'This test verifies basic functionality of using both ChanSpy
+         and MixMonitor on the same channel.  Three pjsua end points call
+		 into Asterisk playing back an audio file.  As each end point
+		 calls and hangs up the ChanSpy channel attaches to a different
+		 channel.  After all three end points have been spied on the 
+		 MixMonitor audio file is analyzed to verify there was audio
+		 recorded.'
+
+properties:
+    minversion: '1.6.2'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - app : 'pjsua'

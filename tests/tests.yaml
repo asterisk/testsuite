@@ -25,6 +25,7 @@ tests:
     - test: 'sip_one_legged_transfer'
     - test: 'feature_blonde_transfer'
     - test: 'mixmonitor'
+    - test: 'chanspy/chanspy_w_mixmonitor'
     - test: 'queues/queue_baseline'
     - test: 'queues/position_priority_maxlen'
     - test: 'queues/macro_gosub_test'
