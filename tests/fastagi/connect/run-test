@@ -109,8 +109,6 @@ class FastAGIConnectTest:
 
     def run(self):
         self.start_asterisk()
-
-        # Make a call 
         reactor.callLater(2, self.launch_test)
         reactor.callLater(self.timeout, self.read_result)
 
