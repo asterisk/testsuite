@@ -159,11 +159,13 @@ class Asterisk:
         except IOError:
             print "The destination is not writable '%s'" % target_path
 
-    def cli_exec(self, cli_cmd):
+    def cli_exec(self, cli_cmd, blocking=True):
         """Execute a CLI command on this instance of Asterisk.
 
         Keyword Arguments:
         cli_cmd -- The command to execute.
+        blocking -- When True, do not return from this function until the CLI
+                    command finishes running.  The default is True.
 
         Example Usage:
         asterisk.cli_exec("core set verbose 10")
@@ -172,7 +174,8 @@ class Asterisk:
                 (os.path.join(self.astetcdir, "asterisk.conf"), cli_cmd)
         print "Executing %s ..." % cmd
         process = subprocess.Popen(cmd, shell=True)
-        process.wait()
+        if blocking:
+            process.wait()
 
     def __gen_ast_conf(self, ast_conf, dir_cat):
         for (var, val) in dir_cat.options:
