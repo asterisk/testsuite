@@ -1,7 +1,9 @@
 testinfo:
     summary:     'Test FastAGI channelStatus() function.'
     description: |
-        "Test FastAGI channelStatus() function.  Note: This test also relies on FastAGI's answer() function, so this test can be considered a test for both functions."
+        "Test FastAGI channelStatus() function.  Note: This test also 
+        relies on FastAGI's answer() function, so this test can be considered 
+        a test for both functions."
 
 
 properties:

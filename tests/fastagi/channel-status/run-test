@@ -64,7 +64,7 @@ class FastAGIChannelStatusTest:
         elif self.test == 6:
             self.result_changed()
 
-    # This gets invoked by the dialplan when A answers call 
+    # This gets invoked by the dialplan when the call is answered
     # Disconnect agi and set test result values
 
     def do_test(self, agi):
@@ -130,8 +130,6 @@ class FastAGIChannelStatusTest:
 
     def run(self):
         self.start_asterisk()
-
-        # Make a call 
         reactor.callLater(2, self.launch_test)
         reactor.callLater(self.timeout, self.read_result)
 
