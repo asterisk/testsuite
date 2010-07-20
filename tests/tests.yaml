@@ -24,6 +24,7 @@ tests:
     - test: 'sip_attended_transfer'
     - test: 'sip_one_legged_transfer'
     - test: 'feature_blonde_transfer'
+    - test: 'feature_attended_transfer'
     - test: 'mixmonitor'
     - test: 'chanspy/chanspy_w_mixmonitor'
     - test: 'queues/queue_baseline'
