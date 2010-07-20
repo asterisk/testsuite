@@ -1,0 +1,12 @@
+testinfo:
+    summary:     'Test FastAGI connection.'
+    description: |
+        'Test FastAGI connection.'
+
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'python'
+        - app : 'twisted'
+        - app : 'starpy'
