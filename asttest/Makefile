@@ -167,7 +167,6 @@ clean:
 	rm -f lib/lua/*_lua.h
 	rm -f lib/lua/*.luac
 	rm -f tools/mkstring
-	rm -rf $(ASTDSTDIR)
 	-$(MAKE) -C lib/lua/$(LUAFILESYSTEM) clean
 	-$(MAKE) -C lib/lua/$(LUASOCKET) clean
 	-$(MAKE) -C lib/lua/$(LUAPOSIX) clean
@@ -175,6 +174,7 @@ clean:
 dist-clean: distclean
 
 distclean: clean
+	rm -rf $(ASTDSTDIR)
 	rm -f autoconfig.h config.status config.log makeopts
 	rm -rf autom4te.cache
 	rm -rf lib/lua/$(LUAFILESYSTEM)
