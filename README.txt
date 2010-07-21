@@ -264,6 +264,7 @@ properties:
         # runtests.py.  For example, if the dependency is 'ipv6', then the
         # depend_ipv6() method is called to determine if the dependency is met.
         - custom : 'ipv6'
+        - custom : 'fax'
 
 
 

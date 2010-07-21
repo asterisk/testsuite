@@ -19,6 +19,7 @@ import socket
 sys.path.append("lib/python")
 
 from asterisk.version import AsteriskVersion
+from asterisk.asterisk import Asterisk
 
 
 TESTS_CONFIG = "tests/tests.yaml"
@@ -88,6 +89,21 @@ class Dependency:
         except:
             return False
 
+    def depend_fax(self):
+        fax_providers = [
+            "app_fax.so",
+            "res_fax_spandsp.so",
+            "res_fax_digium.so",
+        ]
+        ast = Asterisk(base="/tmp/asterisk-testsuite/runtests")
+
+        if "astmoddir" not in ast.directories:
+            return False
+        for f in fax_providers:
+            if os.path.exists("%s/%s" % (ast.directories["astmoddir"], f)):
+                return True
+
+        return False
 
 class TestConfig:
     def __init__(self, test_name, ast_version):

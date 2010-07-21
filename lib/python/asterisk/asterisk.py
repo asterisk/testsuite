@@ -51,6 +51,7 @@ class Asterisk:
         self.asterisk = Asterisk(base=os.path.join(os.getcwd(),
                                                    "tests/ami-login/tmp"))
         """
+        self.directories = {}
         self.ast_version = AsteriskVersion()
 
         self.astetcdir = "/etc/asterisk"
@@ -198,6 +199,7 @@ class Asterisk:
             f.write("[%s]\n\n" % c.name)
             if c.name == "directories":
                 for (var, val) in c.options:
+                    self.directories[var] = val
                     f.write("%s = %s%s\n" % (var, self.base, val))
             else:
                 for (var, val) in c.options:
