@@ -46,7 +46,7 @@ LUAPOSIX_LIBS=-lcrypt
 
 # Basic set of sources and flags/libraries/includes
 OBJS:=asttest.o lib/lua.o lib/testsuite.o lib/testutils.o
-CFLAGS:=-g -c -D_GNU_SOURCE -Wall `pkg-config --cflags lua5.1 2> /dev/null || pkg-config --cflags lua 2> /dev/null` -Iinclude
+CFLAGS:=-g -D_GNU_SOURCE -Wall `pkg-config --cflags lua5.1 2> /dev/null || pkg-config --cflags lua 2> /dev/null` -Iinclude
 L_MODULES:=$(LUAFILESYSTEM_OBJS) $(LUASOCKET_OBJS) $(LUAPOSIX_OBJS) 
 L_LIBS:=$(LUAPOSIX_LIBS)
 L_OBJS:=lib/lua/testlib.o lib/lua/astlib.o lib/lua/proclib.o
@@ -105,7 +105,7 @@ lib/testsuite.o: lib/testsuite.c include/asttest/testsuite.h include/asttest/ast
 lib/testutils.o: lib/testutils.c include/asttest/testutils.h include/asttest/asttest.h include/asttest/testsuite.h include/asttest/lua.h
 
 lib/lua.o: lib/lua.c $(L_MODULES) include/asttest/lua.h include/asttest/testsuite.h include/asttest/lua/*.h
-	$(CC) $(CFLAGS) -o $@ \
+	$(CC) $(CFLAGS) -c -o $@ \
 	-DLUAFILESYSTEM_HEADER=\"../$(LUAFILESYSTEM_HEADER)\" \
 	-DLUASOCKET_HEADER=\"../$(LUASOCKET_HEADER)\" \
 	-DLUAPOSIX_HEADER=\"../$(LUAPOSIX_HEADER)\" \
