@@ -1,0 +1,17 @@
+testinfo:
+    summary:     'Test Chanspy with the \"B\" option for barging in on both channels.'
+    description: |
+        'This test verifies basic functionality of using ChanSpy with the 
+         barge option set. MixMonitor is used to record the audio on the
+         spied on channel to verify the barging spy channel audio is received.  
+         Also, since the Wait() application is used during barge, this verifies 
+         that the default behavior of transmitting silence during ast_safe_sleep remains. 
+         Without transmitting silence during wait, the barge audio will not be mixed and
+         this test will fail.'
+
+properties:
+    minversion: '1.6.2'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - app : 'pjsua'
