@@ -1,0 +1,14 @@
+testinfo:
+    summary:     'Test FastAGI hangup() function.'
+    description: |
+        'Test FastAGI hangup() function. Note: this test requires that
+        channelStatus() throw an error when it is asked to check the status
+        of a dead channel.'
+
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'python'
+        - app : 'twisted'
+        - app : 'starpy'
