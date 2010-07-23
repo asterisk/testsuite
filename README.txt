@@ -124,6 +124,14 @@ Optional (needed by specific tests):
               pjsip-apps/bin/ directory to 'pjsua', and place the 'pjsua'
               executable into a directory located in the execution path.
               $ cp pjsip-apps/bin/pjsua-x86-unknown-linux-gnu /usr/sbin/pjsua 
+	    - pjsuav6
+            - If you require IPv6 support in pjsua, then after running
+              the configure script, open the pjlib/include/pj/config_site.h
+              file in the pjsip source and add the line
+
+              #define PJ_HAS_IPV6 1
+
+              before running the `make dep && make` command.
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

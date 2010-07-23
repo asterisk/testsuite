@@ -89,6 +89,20 @@ class Dependency:
         except:
             return False
 
+    def depend_pjsuav6(self):
+        '''
+        This tests if pjsua was compiled with IPv6 support. To do this,
+        we run pjsua --help and parse the output to determine if --ipv6
+        is a valid option
+        '''
+        if self.__which('pjsua') is None:
+            return False
+
+        help_output = subprocess.check_output(['pjsua', '--help'])
+        if help_output.find('--ipv6') == -1:
+            return False
+        return True
+
     def depend_fax(self):
         fax_providers = [
             "app_fax.so",

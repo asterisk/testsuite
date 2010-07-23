@@ -2,6 +2,7 @@
 '''
 Copyright (C) 2010, Digium, Inc.
 David Vossel <dvossel@digium.com>
+Mark Michelson <mmichelson@digium.com>
 
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
@@ -35,10 +36,10 @@ class AttTransferTest:
         reactor.callWhenRunning(self.run)
 
         print self.ast_version
-        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/sip_attended_transfer")
-        self.asterisk.install_config("tests/sip_attended_transfer/configs/extensions.conf")
-        self.asterisk.install_config("tests/sip_attended_transfer/configs/sip.conf")
-        self.asterisk.install_config("tests/sip_attended_transfer/configs/manager.conf")
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/sip_one_legged_transfer_v6")
+        self.asterisk.install_config("tests/sip_one_legged_transfer_v6/configs/extensions.conf")
+        self.asterisk.install_config("tests/sip_one_legged_transfer_v6/configs/sip.conf")
+        self.asterisk.install_config("tests/sip_one_legged_transfer_v6/configs/manager.conf")
 
 
     def readResult(self):
@@ -80,11 +81,12 @@ class AttTransferTest:
             print "'link' was not a valid key."
         elif result[0]['link'] == 'SIP/end_b-00000001': # check link for older versions of asterisk
             self.passed = True
-
+        
         if self.passed == True:
             self.logLastStep("Found Bridge!!!")
         else:
             self.logLastStep("Detecting Bridge failed")
+
 
     def checkBridgeError(self, reason):
         print reason.getTraceback()
@@ -93,34 +95,35 @@ class AttTransferTest:
 
     def amiCheckBridge(self):
         self.logLastStep("Get AMI results")
-        self.ami.status('SIP/end_c-00000003').addCallbacks(self.checkBridgeResult, self.checkBridgeError)
+        self.ami.status('SIP/end_c-00000002').addCallbacks(self.checkBridgeResult, self.checkBridgeError)
 
-    def aCallB(self):
-        self.logLastStep("A Calling B")
-        self.pja.stdin.write("m\n")
-        self.pja.stdin.write("sip:call_b@127.0.0.1:5060\n")
+    def cCallB(self):
+        self.logLastStep("C Calling B")
+        self.pjc.stdin.write("m\n")
+        self.pjc.stdin.write("sip:[::1]:5066\n")
 
-    def aCallC(self):
-        self.logLastStep("A Calling C")
-        self.pja.stdin.write("m\n")
-        self.pja.stdin.write("sip:call_c@127.0.0.1:5060\n")
+    def bCallA(self):
+        self.logLastStep("B Calling A")
+        self.pjb.stdin.write("m\n")
+        self.pjb.stdin.write("sip:call_a@[::1]:5060\n")
 
-    def aTransferBToC(self):
-        self.logLastStep("A Transfering B to C")
-        self.pja.stdin.write("X\n")
-        self.pja.stdin.write("1\n")
+    def bTransferAToC(self):
+        self.logLastStep("B Transfering A to C")
+        self.pjb.stdin.write("X\n")
+        self.pjb.stdin.write("1\n")
 
     def startProcesses(self):
         self.logLastStep("Starting Processes")
         self.asterisk.start()
-        self.pja = subprocess.Popen(['pjsua', '--local-port=5065',
-                                     '--auto-answer=200', '--null-audio'],
-                                     stdin=subprocess.PIPE)
-        self.pjb = subprocess.Popen(['pjsua', '--local-port=5066',
+        self.pja = subprocess.Popen(['pjsua', '--ipv6', '--local-port=5065',
                                      '--auto-answer=200', '--null-audio'],
                                      stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE)
-        self.pjc = subprocess.Popen(['pjsua', '--local-port=5067',
+        self.pjb = subprocess.Popen(['pjsua', '--ipv6', '--local-port=5066',
+                                     '--auto-answer=200', '--null-audio'],
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE)
+        self.pjc = subprocess.Popen(['pjsua', '--ipv6', '--local-port=5067',
                                      '--auto-answer=200', '--null-audio'],
                                      stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE)
@@ -131,6 +134,7 @@ class AttTransferTest:
         os.kill(self.pja.pid, signal.SIGKILL)
         os.kill(self.pjb.pid, signal.SIGKILL)
         os.kill(self.pjc.pid, signal.SIGKILL)
+
 
     def logLastStep(self, step):
         print step
@@ -143,9 +147,9 @@ class AttTransferTest:
 
         # call extensions
         self.amiLogin()
-        reactor.callLater(5, self.aCallB)
-        reactor.callLater(10, self.aCallC)
-        reactor.callLater(15, self.aTransferBToC)
+        reactor.callLater(5, self.cCallB)
+        reactor.callLater(10, self.bCallA)
+        reactor.callLater(15, self.bTransferAToC)
         reactor.callLater(20, self.amiCheckBridge)
 
         # stop and read results after timeout

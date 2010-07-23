@@ -1,0 +1,13 @@
+testinfo:
+    summary:     'Test reception of SIP REGISTER requests'
+    description: |
+        'Two UACs register with Asterisk. One uses IPv6 addresses and the other
+         uses IPv4 addresses.'
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - app : 'sipp'
+        - custom : 'ipv6'

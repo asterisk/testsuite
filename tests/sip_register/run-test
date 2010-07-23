@@ -1,0 +1,131 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+Mark Michelson <mmichelson@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import signal
+import subprocess
+from optparse import OptionParser
+from twisted.application import service, internet
+from twisted.internet import reactor, defer
+from starpy import manager
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.version import AsteriskVersion
+
+class RegisterTest:
+    def __init__(self, argv):
+        self.last_step = ""
+        self.sipps = {}
+
+        #get version info
+        parser = OptionParser()
+        parser.add_option("-v", "--version", dest="ast_version",
+                          help="Asterisk version string")
+        (options, args) = parser.parse_args(argv)
+        self.ast_version = AsteriskVersion(options.ast_version)
+
+        reactor.callWhenRunning(self.run)
+
+        print self.ast_version
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/sip_register")
+        self.asterisk.install_config("tests/sip_register/configs/sip.conf")
+        self.asterisk.install_config("tests/sip_register/configs/manager.conf")
+
+    def start_asterisk(self):
+        self.log_last_step("Starting Asterisk")
+        self.asterisk.start()
+
+    def ami_on_connect(self, ami):
+        self.log_last_step("Connected to the AMI")
+        self.ami = ami
+        self.ami.registerEvent("PeerStatus", self.check_register_result)
+        self.start_sipp("SIP/v4-in", "127.0.0.1", "registerv4.xml", "5061")
+        self.start_sipp("SIP/v6-in", "[::1]", "registerv6.xml", "5062")
+
+    def ami_login_error(self, ami):
+        self.log_last_step("AMI login failed")
+        reactor.callLater(1, self.shutDown)
+
+    def ami_login(self):
+        self.log_last_step("Logging in to the AMI")
+        self.ami_factory = manager.AMIFactory("user", "mysecret")
+        self.ami_factory.login('127.0.0.1', 5038).addCallbacks(self.ami_on_connect, self.ami_login_error)
+
+    def check_register_result(self, ami, event):
+        peer = event.get("peer")
+        status = event.get("peerstatus")
+
+        self.log_last_step("Checking registration result")
+        record = self.sipps[peer]
+        if not record:
+            return
+
+        if status == "Registered":
+            record['pass'] = True
+            print ("Successful registration for peer %s" % (peer))
+        else:
+            print ("Registration for peer %s in state %s" % (peer, status))
+
+    def start_sipp(self, peer, host, scenario, port):
+        self.log_last_step("Starting SIPp scenario %s" % (scenario))
+        self.sipps[peer] = {'process': subprocess.Popen(['sipp', host, '-sf', 'tests/sip_register/sipp/%s' % (scenario), '-p', '%s' % (port), '-m', '1', '-i', '%s' % (host)]),
+                           'pass': False}
+
+    def log_last_step(self, step):
+        print step
+        self.lastStep = step
+
+    def shut_down(self):
+        if not self.sipps:
+            self.asterisk.stop()
+            return
+
+        passing = True
+
+        for peer, i in self.sipps.iteritems():
+            if i['pass'] == True:
+                continue;
+            else:
+                passing = False
+                print ("Registration failure for peer %s" % (peer))
+            i['process'].terminate()
+
+        self.asterisk.stop()
+
+        self.passed = passing
+
+        if self.passed == True:
+            print "SIP registration test passed!"
+        else:
+            print "SIP registration test failed"
+
+        if reactor.running:
+            print "Stopping reactor"
+            reactor.stop()
+
+    def run(self):
+        self.start_asterisk()
+        self.ami_login()
+        reactor.callLater(5, self.shut_down)
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    # Run Register Test
+    register_test = RegisterTest(argv)
+    reactor.run()
+    if not register_test.passed:
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)

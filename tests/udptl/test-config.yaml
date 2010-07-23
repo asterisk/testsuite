@@ -1,0 +1,11 @@
+testinfo:
+    summary:     'Test T.38 FAX transmission over SIP'
+    description: |
+        'One Asterisk instance sends a FAX to another Asterisk instance'
+
+properties:
+    minversion: '1.6.2'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - custom : 'fax'

@@ -1,0 +1,13 @@
+testinfo:
+    summary:     'Test T.38 FAX transmission over SIP'
+    description: |
+        'One Asterisk instance sends a FAX to another Asterisk instance.
+		 This test uses IPv6 addressing.'
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - custom : 'fax'
+        - custom : 'ipv6'

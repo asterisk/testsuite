@@ -2,6 +2,7 @@
 '''
 Copyright (C) 2010, Digium, Inc.
 David Vossel <dvossel@digium.com>
+Mark Michelson <mmichelson@digium.com>
 
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
@@ -35,10 +36,10 @@ class AttTransferTest:
         reactor.callWhenRunning(self.run)
 
         print self.ast_version
-        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/sip_attended_transfer")
-        self.asterisk.install_config("tests/sip_attended_transfer/configs/extensions.conf")
-        self.asterisk.install_config("tests/sip_attended_transfer/configs/sip.conf")
-        self.asterisk.install_config("tests/sip_attended_transfer/configs/manager.conf")
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/sip_attended_transfer_v6")
+        self.asterisk.install_config("tests/sip_attended_transfer_v6/configs/extensions.conf")
+        self.asterisk.install_config("tests/sip_attended_transfer_v6/configs/sip.conf")
+        self.asterisk.install_config("tests/sip_attended_transfer_v6/configs/manager.conf")
 
 
     def readResult(self):
@@ -98,12 +99,12 @@ class AttTransferTest:
     def aCallB(self):
         self.logLastStep("A Calling B")
         self.pja.stdin.write("m\n")
-        self.pja.stdin.write("sip:call_b@127.0.0.1:5060\n")
+        self.pja.stdin.write("sip:call_b@[::1]:5060\n")
 
     def aCallC(self):
         self.logLastStep("A Calling C")
         self.pja.stdin.write("m\n")
-        self.pja.stdin.write("sip:call_c@127.0.0.1:5060\n")
+        self.pja.stdin.write("sip:call_c@[::1]:5060\n")
 
     def aTransferBToC(self):
         self.logLastStep("A Transfering B to C")
@@ -113,14 +114,14 @@ class AttTransferTest:
     def startProcesses(self):
         self.logLastStep("Starting Processes")
         self.asterisk.start()
-        self.pja = subprocess.Popen(['pjsua', '--local-port=5065',
+        self.pja = subprocess.Popen(['pjsua', '--ipv6', '--local-port=5065',
                                      '--auto-answer=200', '--null-audio'],
                                      stdin=subprocess.PIPE)
-        self.pjb = subprocess.Popen(['pjsua', '--local-port=5066',
+        self.pjb = subprocess.Popen(['pjsua', '--ipv6', '--local-port=5066',
                                      '--auto-answer=200', '--null-audio'],
                                      stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE)
-        self.pjc = subprocess.Popen(['pjsua', '--local-port=5067',
+        self.pjc = subprocess.Popen(['pjsua', '--ipv6', '--local-port=5067',
                                      '--auto-answer=200', '--null-audio'],
                                      stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE)
