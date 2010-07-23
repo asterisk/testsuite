@@ -1,0 +1,132 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+Matthias Nick <mnick86@gmail.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import math
+from optparse import OptionParser
+from twisted.application import service, internet
+from twisted.internet import reactor
+from starpy import fastagi
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.version import AsteriskVersion
+
+class BlindTransferTest:
+    def __init__(self, argv):
+        self.passed = False
+
+        # Test timeout in seconds
+        self.timeout = 60
+        self.last_step = ""
+
+        # get version info
+        parser = OptionParser()
+        parser.add_option("-v", "--version", dest="ast_version", help="Asterisk version string")
+        (options, args) = parser.parse_args(argv)
+        self.ast_version = AsteriskVersion(options.ast_version)
+
+        # FastAGI, listen for results from dialplan
+        self.agi_b = fastagi.FastAGIFactory(self.get_result_b)
+        reactor.listenTCP(4574, self.agi_b, self.timeout, '127.0.0.1')
+
+        reactor.callWhenRunning(self.run)
+
+        print self.ast_version
+        self.asterisk1 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/blind-transfer-parkingtimeout/asterisk1"))
+        self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/extensions.conf")
+        self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/iax.conf")
+        self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/features.conf")
+        self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/logger.conf")
+
+        self.asterisk2 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/blind-transfer-parkingtimeout/asterisk2"))
+        self.asterisk2.install_config("tests/blind-transfer-parkingtimeout/configs2/extensions.conf")
+        self.asterisk2.install_config("tests/blind-transfer-parkingtimeout/configs2/iax.conf")
+        self.asterisk2.install_config("tests/blind-transfer-parkingtimeout/configs2/logger.conf")
+
+
+   # This gets invoked by the dialplan when test succeeds.
+    def get_result_b(self, agi):
+        self.log_last_step("got AGI connection from userB -> test successful")
+        self.passed = True
+        self.read_result();
+
+    def read_result(self):
+        self.log_last_step("Reading results")
+        self.asterisk1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+        self.asterisk2.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+
+        self.asterisk1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+        self.asterisk2.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+
+        self.stop_asterisk()
+
+        if (self.passed):
+            self.log_last_step("Test Passed...")
+        else:
+            self.log_last_step("Test Failed... view result of 'core show globals' in log for more detailed failure results.")
+
+        if reactor.running:
+            print "Stopping Reactor ..."
+            reactor.stop()
+
+
+    # This is a blind transfer test with parkingtimeout.
+    # 1.  A calls B
+    # 2.  B dials # -> 700, to park A.
+    # 3.  A gets parkingtimeout and returns to B
+    # 4.  B reports results to FastAGI and hangup
+    def launch_test(self):
+        self.asterisk2.cli_exec("core set verbose 10")
+        self.asterisk1.cli_exec("core set verbose 10")
+
+        self.log_last_step("Originating call to begin test")
+        if self.ast_version < AsteriskVersion("1.6.2"):
+            self.asterisk1.cli_exec("originate IAX2/userA@127.0.0.1:4571/b_exten extension a_dials@parking")
+        else:
+            self.asterisk1.cli_exec("channel originate IAX2/userA@127.0.0.1:4571/b_exten extension a_dials@parking")
+
+    def start_asterisk(self):
+        self.log_last_step("Starting Asterisk")
+        self.asterisk1.start()
+        self.asterisk2.start()
+
+    def stop_asterisk(self):
+        self.asterisk1.stop()
+        self.asterisk2.stop()
+
+    def log_last_step(self, step):
+        print step
+        self.last_step = step
+
+    def run(self):
+        self.start_asterisk()
+
+        # start test in 5 seconds
+        reactor.callLater(5, self.launch_test)
+
+        # stop and read results after timeout
+        reactor.callLater(self.timeout, self.read_result)
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    # Run Blind Transfer Test
+    blind_transfer_test = BlindTransferTest(argv)
+    reactor.run()
+    blind_transfer_test.stop_asterisk()
+    if blind_transfer_test.passed != True:
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+

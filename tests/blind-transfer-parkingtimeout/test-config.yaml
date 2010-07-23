@@ -1,0 +1,10 @@
+testinfo:
+    summary:     'Test Blind Transfer with parkingtimeout'
+    description: |
+        'This test verifies the Blind Transfer routine with parkingtimeout used in the feature code.'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
