@@ -98,7 +98,7 @@ class Dependency:
         if self.__which('pjsua') is None:
             return False
 
-        help_output = subprocess.check_output(['pjsua', '--help'])
+        help_output = subprocess.POPEN(['pjsua', '--help'],stdout=PIPE).communicate()
         if help_output.find('--ipv6') == -1:
             return False
         return True
