@@ -33,7 +33,6 @@ class AMILoginTest:
         self.asterisk.install_config("tests/manager/login/configs/logger.conf")
 
     def stop_reactor(self):
-        self.stop_asterisk()
         print "Stopping Reactor ..."
         if reactor.running:
             reactor.stop()
@@ -53,7 +52,7 @@ class AMILoginTest:
 
     def on_error(self, ami):
         print "ERROR, Last Step: %s" % self.last_step
-        self.stop_asterisk()
+        self.stop_reactor()
 
     def on_logoff(self, ami):
         self.log_last_step("Logoff Successful")
