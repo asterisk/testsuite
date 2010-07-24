@@ -40,13 +40,13 @@ class BlindTransferTest:
         reactor.callWhenRunning(self.run)
 
         print self.ast_version
-        self.asterisk1 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/blind-transfer-parkingtimeout/asterisk1"))
+        self.asterisk1 = Asterisk(base="/tmp/asterisk-testsuite/blind-transfer-parkingtimeout/asterisk1")
         self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/extensions.conf")
         self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/iax.conf")
         self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/features.conf")
         self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/logger.conf")
 
-        self.asterisk2 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/blind-transfer-parkingtimeout/asterisk2"))
+        self.asterisk2 = Asterisk(base="/tmp/asterisk-testsuite/blind-transfer-parkingtimeout/asterisk2")
         self.asterisk2.install_config("tests/blind-transfer-parkingtimeout/configs2/extensions.conf")
         self.asterisk2.install_config("tests/blind-transfer-parkingtimeout/configs2/iax.conf")
         self.asterisk2.install_config("tests/blind-transfer-parkingtimeout/configs2/logger.conf")
