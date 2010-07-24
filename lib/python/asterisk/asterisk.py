@@ -171,12 +171,24 @@ class Asterisk:
         Example Usage:
         asterisk.cli_exec("core set verbose 10")
         """
-        cmd = 'asterisk -C %s -rx "%s"' % \
-                (os.path.join(self.astetcdir, "asterisk.conf"), cli_cmd)
+        cmd = [
+            "asterisk",
+            "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
+            "-rx", "%s" % cli_cmd
+        ]
         print "Executing %s ..." % cmd
-        process = subprocess.Popen(cmd, shell=True)
-        if blocking:
-            process.wait()
+
+        if not blocking:
+            process = subprocess.Popen(cmd)
+            return ""
+
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        output = ""
+        for l in process.stdout.readlines():
+            print l,
+            output += l
+        process.wait()
+        return output
 
     def __gen_ast_conf(self, ast_conf, dir_cat):
         for (var, val) in dir_cat.options:

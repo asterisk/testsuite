@@ -141,11 +141,16 @@ class TestConfig:
         ]
         if os.path.exists(cmd[0]) and os.access(cmd[0], os.X_OK):
             print "Running %s ..." % cmd
+            try:
+                f = open("tests/%s/test-output.txt" % self.test_name, "w")
+            except IOError:
+                print "FAILURE: Failed to open file for test output"
+                return
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-            p2 = subprocess.Popen(["tee", "tests/%s/test-output.txt" %
-                                   self.test_name], stdin=p.stdout)
+            for l in p.stdout.readlines():
+                f.write(l)
+                print l,
             p.wait()
-            p2.wait()
             self.passed = p.returncode == 0
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
