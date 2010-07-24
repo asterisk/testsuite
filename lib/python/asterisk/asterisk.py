@@ -184,9 +184,12 @@ class Asterisk:
 
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         output = ""
-        for l in process.stdout.readlines():
-            print l,
-            output += l
+        try:
+            for l in process.stdout.readlines():
+                print l,
+                output += l
+        except IOError:
+            pass
         process.wait()
         return output
 

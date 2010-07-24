@@ -147,9 +147,12 @@ class TestConfig:
                 print "FAILURE: Failed to open file for test output"
                 return
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-            for l in p.stdout.readlines():
-                f.write(l)
-                print l,
+            try:
+                for l in p.stdout.readlines():
+                    f.write(l)
+                    print l,
+            except IOError:
+                pass
             p.wait()
             self.passed = p.returncode == 0
         else:
