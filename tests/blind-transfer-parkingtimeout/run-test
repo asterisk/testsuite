@@ -22,6 +22,7 @@ from asterisk.version import AsteriskVersion
 class BlindTransferTest:
     def __init__(self, argv):
         self.passed = False
+        self.done = False
 
         # Test timeout in seconds
         self.timeout = 60
@@ -59,14 +60,15 @@ class BlindTransferTest:
         self.read_result();
 
     def read_result(self):
+        if self.done:
+            return
+        self.done = True
         self.log_last_step("Reading results")
         self.asterisk1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
         self.asterisk2.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
 
         self.asterisk1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
         self.asterisk2.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
-
-        self.stop_asterisk()
 
         if (self.passed):
             self.log_last_step("Test Passed...")
@@ -130,3 +132,4 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main() or 0)
 
+# vim:sw=4:ts=4:expandtab:textwidth=79
