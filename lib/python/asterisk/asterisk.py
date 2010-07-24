@@ -182,7 +182,8 @@ class Asterisk:
             process = subprocess.Popen(cmd)
             return ""
 
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT)
         output = ""
         try:
             for l in process.stdout.readlines():
