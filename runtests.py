@@ -99,7 +99,7 @@ class Dependency:
             return False
 
         help_output = subprocess.Popen(['pjsua', '--help'],
-                                       stdout=PIPE).communicate()[0]
+                                       stdout=subprocess.PIPE).communicate()[0]
         if help_output.find('--ipv6') == -1:
             return False
         return True
