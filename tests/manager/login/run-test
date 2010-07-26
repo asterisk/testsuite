@@ -28,7 +28,12 @@ class AMILoginTest:
         reactor.callWhenRunning(self.run)
 
         print "Creating Asterisk instance ..."
-        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/manager/login")
+        ast_conf_options = {
+            "verbose" : "10",
+            "debug" : "3"
+        }
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/manager/login",
+                                 ast_conf_options=ast_conf_options)
         self.asterisk.install_config("tests/manager/login/configs/manager.conf")
         self.asterisk.install_config("tests/manager/login/configs/logger.conf")
 
@@ -40,8 +45,6 @@ class AMILoginTest:
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
         self.asterisk.start()
-        self.asterisk.cli_exec("core set verbose 10")
-        self.asterisk.cli_exec("core set debug 3")
 
     def stop_asterisk(self):
         self.asterisk.stop()

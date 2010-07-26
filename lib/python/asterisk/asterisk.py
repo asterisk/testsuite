@@ -36,9 +36,14 @@ class Asterisk:
     conflicting with each other.  For example, modules that listen for network
     connections will need to be configured to use different ports on each
     instance of Asterisk.
+
+    To set values for the [options] section in asterisk.conf, provide a
+    dictionary to the ast_conf_options parameter.  The key should be the option
+    name and the value is the option's value to be written out into
+    asterisk.conf.
     """
 
-    def __init__(self, base=None):
+    def __init__(self, base=None, ast_conf_options=None):
         """Construct an Asterisk instance.
 
         Keyword Arguments:
@@ -89,7 +94,7 @@ class Asterisk:
         if dir_cat is None:
             print "Unable to discover dir layout from asterisk.conf"
             return
-        self.__gen_ast_conf(ast_conf, dir_cat)
+        self.__gen_ast_conf(ast_conf, dir_cat, ast_conf_options)
         for (var, val) in dir_cat.options:
             self.__mirror_dir(var, val)
 
@@ -194,7 +199,7 @@ class Asterisk:
         process.wait()
         return output
 
-    def __gen_ast_conf(self, ast_conf, dir_cat):
+    def __gen_ast_conf(self, ast_conf, dir_cat, ast_conf_options):
         for (var, val) in dir_cat.options:
             if var == "astetcdir":
                 self.astetcdir = "%s%s" % (self.base, val)
@@ -217,11 +222,18 @@ class Asterisk:
                 for (var, val) in c.options:
                     self.directories[var] = val
                     f.write("%s = %s%s\n" % (var, self.base, val))
+            elif c.name == "options":
+                if ast_conf_options:
+                    for (var, val) in ast_conf_options.iteritems():
+                        f.write("%s = %s\n" % (var, val))
+                if not ast_conf_options or "nocolor" not in ast_conf_options:
+                    f.write("nocolor = yes")
+                for (var, val) in c.options:
+                    if not ast_conf_options or var not in ast_conf_options:
+                        f.write("%s = %s\n" % (var, val))
             else:
                 for (var, val) in c.options:
                     f.write("%s = %s\n" % (var, val))
-                if c.name == "options":
-                    f.write("nocolor = yes")
             f.write("\n")
 
         f.close()
