@@ -227,7 +227,7 @@ class Asterisk:
                     for (var, val) in ast_conf_options.iteritems():
                         f.write("%s = %s\n" % (var, val))
                 if not ast_conf_options or "nocolor" not in ast_conf_options:
-                    f.write("nocolor = yes")
+                    f.write("nocolor = yes\n")
                 for (var, val) in c.options:
                     if not ast_conf_options or var not in ast_conf_options:
                         f.write("%s = %s\n" % (var, val))
