@@ -57,7 +57,14 @@ class BlindTransferTest:
     def get_result_b(self, agi):
         self.log_last_step("got AGI connection from userB -> test successful")
         self.passed = True
-        self.read_result();
+        reactor.callLater(2, self.read_result)
+        return self.finish_agi(agi)
+
+   # Finish the AGI connection
+    def finish_agi(self, agi):
+        sequence = fastagi.InSequence()
+        sequence.append(agi.finish)
+        return sequence()
 
     def read_result(self):
         if self.done:
