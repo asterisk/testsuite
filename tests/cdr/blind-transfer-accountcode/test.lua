@@ -1,3 +1,15 @@
+have_error = false
+
+function check_error()
+	if have_error then
+		error()
+	end
+end
+
+function print_error(err)
+	print(err)
+	have_error = true
+end
 
 function sipp_exec(scenario, name, local_port)
 	local inf = "data.csv"
@@ -24,9 +36,12 @@ end
 function sipp_check_error(p, scenario)
 	local res, err = p:wait()	
 
-	if not res then error(err) end
+	if not res then
+		print_error(err)
+		return res, err
+	end
 	if res ~= 0 then 
-		error("error while executing " .. scenario .. " sipp scenario (sipp exited with status " .. res .. ")\n" .. p.stderr:read("*a"))
+		print_error("error while executing " .. scenario .. " sipp scenario (sipp exited with status " .. res .. ")\n" .. p.stderr:read("*a"))
 	end
 	
 	return res, err
@@ -75,7 +90,8 @@ function do_transfer_and_check_results(accountcode, index)
 	sipp_check_error(t2, "sipp/wait-for-call-do-hangup.xml")
 	sipp_check_error(t1, "sipp/wait-for-call.xml")
 
-	a:term_or_kill()
+	proc.perror(a:term_or_kill())
+	check_error()
 
 	-- examine the CDR records generated to make sure account code is present
 	check_cdr(a, 2, accountcode)
