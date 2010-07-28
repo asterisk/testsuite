@@ -165,6 +165,48 @@ class Asterisk:
         except IOError:
             print "The destination is not writable '%s'" % target_path
 
+    def cli_originate(self, argstr, blocking=True):
+        """Starts a call from the CLI and links it to an application or
+        context.
+
+        Must pass a valid argument string in the following form:
+
+        <tech/data> application <appname> appdata
+        <tech/data> extension <exten>@<context>
+
+        If no context is specified, the 'default' context will be
+        used. If no extension is given, the 's' extension will be used.
+
+        Keyword Arguments:
+        blocking -- When True, do not return from this function until the CLI
+                    command finishes running.  The default is True.
+
+        Example Usage:
+        asterisk.originate("Local/a_exten@context extension b_exten@context")
+        """
+
+        args = argstr.split()
+        raise_error = False
+        if len(args) != 3 and len(args) != 4:
+            raise_error = True
+            print "Wrong number of arguments."
+        if args[1] != "extension" and args[1] != "application":
+            raise_error = True
+            print '2nd argument must be "extension" or "application"'
+        if args[0].find("/") == -1:
+            raise_error = True
+            print 'Channel dial string must be in the form "tech/data".'
+        if raise_error is True:
+            raise Exception, "Cannot originate call!\n\
+            Argument string must be in one of these forms:\n\
+            <tech/data> application <appname> appdata\n\
+            <tech/data> extension <exten>@<context>"
+
+        if self.ast_version < AsteriskVersion("1.6.2"):
+            self.cli_exec("originate %s" % argstr, blocking=blocking)
+        else:
+            self.cli_exec("channel originate %s" % argstr, blocking=blocking)
+
     def cli_exec(self, cli_cmd, blocking=True):
         """Execute a CLI command on this instance of Asterisk.
 
