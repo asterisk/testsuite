@@ -1,0 +1,123 @@
+#!/usr/bin/python
+'''
+Copyright (C) 2010, Digium, Inc.
+Erin Spiceland <espiceland@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+from optparse import OptionParser
+from twisted.internet import reactor
+from starpy import fastagi
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.version import AsteriskVersion
+
+class FastAGIStreamFileTest:
+    def __init__(self, argv):
+        self.passed = False
+        self.timeout = 45
+
+        parser = OptionParser()
+        parser.add_option("-v", "--version", dest="ast_version",
+                          help="Asterisk version string")
+        (options, args) = parser.parse_args(argv)
+        self.ast_version = AsteriskVersion(options.ast_version)
+
+        # Listen for results from dialplan
+        self.agi_factory = fastagi.FastAGIFactory(self.do_test)
+        reactor.listenTCP(4573, self.agi_factory, self.timeout, '127.0.0.1')
+        reactor.callWhenRunning(self.run)
+
+        print self.ast_version
+        self.asterisk = Asterisk(base=os.path.join(os.getcwd(),
+            "/tmp/asterisk-testsuite/fastagi/stream-file"))
+        self.asterisk.install_config("tests/fastagi/configs/extensions.conf")
+        self.asterisk.install_config("tests/fastagi/configs/manager.conf")
+        self.asterisk.install_config("tests/fastagi/configs/logger.conf")
+
+    def on_failure(self, reason):
+        print 'Could not run streamFile: ', reason.getTraceback()
+        self.agi.finish()
+
+    # result of 0 indicates success
+    def finish_test(self, result):
+        if result[0] == 0 and result[1] > 100:
+            self.passed = True
+
+        self.result_changed()
+
+    # This gets invoked by the dialplan when the call is answered
+    # send STREAM FILE command and wait for results
+    def do_test(self, agi):
+        self.agi = agi
+        print "Connection established."
+        return agi.streamFile("beep", "").addCallback(
+            self.finish_test
+            ).addErrback(self.on_failure)
+
+	# Read test results and dialplan globals
+    def read_result(self):
+
+        if self.passed is True:
+            print "PASS - FastAGI streamFile() works as expected."
+        else:
+            self.asterisk.cli_exec("core show channels")
+
+            if self.ast_version < AsteriskVersion("1.6.1"):
+                self.asterisk.cli_exec("core show globals")
+            else:
+                self.asterisk.cli_exec("dialplan show globals")
+                print "FAIL - FastAGI Connection test failed. View result of\
+                'core show globals' in log for more detailed failure results."
+
+        self.stop_asterisk()
+
+        if reactor.running:
+            print "Stopping Reactor ..."
+            reactor.stop()
+
+    def launch_test(self):
+        self.asterisk.cli_exec("core set verbose 10")
+        self.asterisk.cli_exec("agi set debug on")
+
+        print "Originating call to begin test."
+        self.asterisk.cli_originate(
+            "Local/b_exten@agitest extension echo@agitest"
+        )
+
+    def start_asterisk(self):
+        print "Starting Asterisk"
+        self.asterisk.start()
+
+    def stop_asterisk(self):
+        print "Stopping Asterisk"
+        self.asterisk.stop()
+
+    # Read result before timeout
+    def result_changed(self):
+        if self.passed is True:
+            reactor.callLater(2, self.read_result)
+
+    def run(self):
+        self.start_asterisk()
+        reactor.callLater(2, self.launch_test)
+        reactor.callLater(self.timeout, self.read_result)
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    agi_test = FastAGIStreamFileTest(argv)
+    reactor.run()
+    if agi_test.passed is not True:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)

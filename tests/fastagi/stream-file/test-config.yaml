@@ -1,0 +1,11 @@
+testinfo:
+    summary:     'Test FastAGI streamFile().'
+    description: |
+        "Test FastAGI streamFile()."
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'python'
+        - python : 'twisted'
+        - python : 'starpy'
