@@ -9,6 +9,7 @@ the GNU General Public License Version 2.
 
 import sys
 import os
+import time
 from optparse import OptionParser
 from twisted.internet import reactor
 from starpy import fastagi
@@ -53,6 +54,16 @@ class FastAGIHangupTest:
         self.do_test(self.agi)
 
     def finish_test(self, status):
+        print "Channel is still up! Status is", status, "Maybe the channel is still attempting to hangup..."
+        print "Testing for closed channel again."
+        time.sleep(5)
+        self.agi.channelStatus(
+                agi.variables['agi_channel']
+            ).addCallback(
+                self.finish_test2
+            ).addErrback(self.on_failure)
+
+    def finish_test2(self, status):
         print "Channel is still up! Status is", status
         self.passed = False
         self.result_changed()
