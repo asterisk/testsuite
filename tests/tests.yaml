@@ -40,3 +40,5 @@ tests:
     - test: 'queues/wrapup_time'
     - test: 'fastagi/connect'
     - test: 'fastagi/channel-status'
+    - test: 'fastagi/hangup'
+    - test: 'fastagi/stream-file'

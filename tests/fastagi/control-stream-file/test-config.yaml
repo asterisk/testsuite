@@ -1,0 +1,13 @@
+testinfo:
+    summary:     'Test FastAGI controlStreamFile().'
+    description: |
+        "Test FastAGI controlStreamFile(). NOTE: If this test fails, you may
+        need to update StarPy.  Due to a bug, StarPy 1.0.0a13 and earlier
+        will always fail this test."
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'python'
+        - python : 'twisted'
+        - python : 'starpy'
