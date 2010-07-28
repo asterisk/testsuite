@@ -1,0 +1,13 @@
+testinfo:
+    summary:     'Test FastAGI database manipulation functions.'
+    description: |
+        'Test FastAGI database manipulation functions. databasePut, databaseGet,
+        databaseSet, databaseDel.'
+
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'python'
+        - python : 'twisted'
+        - python : 'starpy'

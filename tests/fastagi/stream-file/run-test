@@ -34,8 +34,7 @@ class FastAGIStreamFileTest:
         reactor.callWhenRunning(self.run)
 
         print self.ast_version
-        self.asterisk = Asterisk(base=os.path.join(os.getcwd(),
-            "/tmp/asterisk-testsuite/fastagi/stream-file"))
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/fastagi/stream-file")
         self.asterisk.install_config("tests/fastagi/configs/extensions.conf")
         self.asterisk.install_config("tests/fastagi/configs/manager.conf")
         self.asterisk.install_config("tests/fastagi/configs/logger.conf")

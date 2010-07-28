@@ -1,0 +1,231 @@
+#!/usr/bin/python
+'''
+Copyright (C) 2010, Digium, Inc.
+Erin Spiceland <espiceland@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+from optparse import OptionParser
+from twisted.internet import reactor
+from starpy import fastagi
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.version import AsteriskVersion
+
+class FastAGIDatabaseTest:
+    def __init__(self, argv):
+        self.passed = {}
+        self.timeout = 45
+        self.key = "fastagitest"
+        self.overall_result = True
+        self.agi = ""
+
+        parser = OptionParser()
+        parser.add_option("-v", "--version", dest="ast_version",
+                          help="Asterisk version string")
+        (options, args) = parser.parse_args(argv)
+        self.ast_version = AsteriskVersion(options.ast_version)
+
+        # Listen for results from dialplan
+        self.agi_factory = fastagi.FastAGIFactory(self.do_test)
+        reactor.listenTCP(4573, self.agi_factory, self.timeout, '127.0.0.1')
+        reactor.callWhenRunning(self.run)
+
+        print self.ast_version
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/fastagi/database")
+        self.asterisk.install_config("tests/fastagi/configs/extensions.conf")
+        self.asterisk.install_config("tests/fastagi/configs/manager.conf")
+        self.asterisk.install_config("tests/fastagi/configs/logger.conf")
+
+    def on_del_failure(self, reason):
+        print 'Could not delete the data from the database.'
+        print reason.getTraceback()
+        self.passed["Del"] = False
+        self.result_changed()
+
+    def on_set_failure(self, reason):
+        print 'Could not set a new value.'
+        print reason.getTraceback()
+        self.passed["Set"] = False
+
+    def on_get_failure(self, reason):
+        print 'Could not get the data from the database.'
+        print reason.getTraceback()
+        self.passed["Get"] = False
+
+    # We expect this to get called when we try to select
+    # the key we've just deleted from the database.
+    def on_get3_failure(self, reason):
+        print "Success. %s is no longer a valid key." % self.key
+        self.passed["Del"] = True
+        self.result_changed()
+
+    def on_put_failure(self, reason):
+        print 'Could not put the data into the database.'
+        print reason.getTraceback()
+        self.passed["Put"] = False
+        self.result_changed()
+
+    def get_result_from_put(self, result):
+        self.passed["Put"] = True
+
+        # 2. Retrieve that key from the database
+        print "Retrieving key from the database."
+        self.agi.databaseGet("secret",self.key).addCallback(
+            self.get_result_from_get
+        ).addErrback(self.on_get_failure)
+
+    # 2. Retrieve that key from the database
+    def get_result_from_get(self, result):
+        print 'Value of %s is "%s"' % (self.key, result)
+        if result == "juststarted":
+            self.passed["Get"] = True
+        else:
+            # If the call to databaseGet() succeeds but the value is wrong,
+            # the previous call to databasePut() failed.
+            self.passed["Put"] = False
+            print "Call to databaseGet() succeeded, but value is wrong."
+            print 'Expected value of "juststarted" but got "%s"' % result
+
+        # 3. Update the value of the key in the database
+        print "Updating value of key."
+        self.agi.databaseSet("secret",self.key,"halfwaydone").addCallback(
+            self.get_result_from_set
+        ).addErrback(self.on_set_failure)
+
+    # 3. Update the value of the key in the database
+    def get_result_from_set(self, result):
+        if result >= 0:
+            self.passed["Set"] = True
+        # This should never happen.
+        else:
+            self.passed["Set"] = False
+            print "Something went horribly wrong."
+
+        # 4. Test for new value
+        print "Checking new value of key."
+        self.agi.databaseGet("secret",self.key).addCallback(
+            self.get_result_from_get2
+        ).addErrback(self.on_get_failure)
+
+    # 4. Test for new value
+    def get_result_from_get2(self, result):
+        print 'Value of %s is "%s"' % (self.key, result)
+        if result != "halfwaydone":
+            self.passed["Set"] = False
+            print "Call to databaseSet() succeeded,\
+                but value did not get updated."
+            print 'Expected value of "halfwaydone" but got "%s"' % result
+
+        # 5. Delete that key from the database
+        print "Deleting key from database."
+        self.agi.databaseDel("secret",self.key).addCallback(
+            self.get_result_from_del
+        ).addErrback(self.on_del_failure)
+
+    # 5. Delete that key from the database
+    def get_result_from_del(self, result):
+        if result >= 0:
+            self.passed["Del"] = True
+        # This should never happen.
+        else:
+            self.passed["Del"] = False
+            print "Something went horribly wrong."
+
+        # 6. Test that key was deleted.
+        print "Checking that key was deleted."
+        self.agi.databaseGet("secret",self.key).addCallback(
+            self.get_result_from_get3
+        ).addErrback(self.on_get3_failure)
+
+    # 6. Test that key was deleted.
+    # This should never be called if databaseDel() succeeded.
+    def get_result_from_get3(self, result):
+        print "Value of %s is %s" % (self.key, result)
+        if result is not None:
+            self.passed["Del"] = False
+        # This should never happen.
+        else:
+            self.passed["Del"] = True
+
+        result_changed()
+
+    # This gets invoked by the dialplan when the call is answered
+    # 1. Put a new key into the database
+    # 2. Retrieve that key from the database
+    # 3. Update the value of the key in the database
+    # 4. Test for new value
+    # 5. Delete that key from the database
+    # 6. Test that key was deleted.
+    def do_test(self, agi):
+        self.agi = agi
+        print "Inserting key into database."
+        return agi.databaseSet("secret",self.key,"juststarted").addCallback(
+            self.get_result_from_put
+        ).addErrback(self.on_put_failure)
+
+	# Read test results and dialplan globals
+    def read_result(self):
+        self.agi.finish()
+
+        for test in self.passed:
+            if self.passed[test] is True:
+                print "database%s worked as expected." % test
+            else:
+                print "database%s FAILED." % test
+                self.overall_result = False
+
+        self.stop_asterisk()
+
+        if reactor.running:
+            print "Stopping Reactor ..."
+            reactor.stop()
+
+    def launch_test(self):
+        self.asterisk.cli_exec("core set verbose 10")
+        self.asterisk.cli_exec("agi set debug on")
+
+        print "Originating call to begin test."
+        self.asterisk.cli_originate(
+            "Local/b_exten@agitest extension echo@agitest"
+        )
+
+    def start_asterisk(self):
+        print "Starting Asterisk"
+        self.asterisk.start()
+
+    def stop_asterisk(self):
+        print "Stopping Asterisk"
+        self.asterisk.stop()
+
+    # Read result before timeout
+    def result_changed(self):
+        # if self.passed["Put"] is None, not one test has completed yet
+        # and we should wait for the timeout.
+        if self.passed["Put"] is not None:
+            reactor.callLater(2, self.read_result)
+
+    def run(self):
+        self.start_asterisk()
+        reactor.callLater(2, self.launch_test)
+        reactor.callLater(self.timeout, self.read_result)
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    agi_test = FastAGIDatabaseTest(argv)
+    reactor.run()
+
+    if agi_test.overall_result is not True:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
