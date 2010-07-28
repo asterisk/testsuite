@@ -9,9 +9,7 @@ the GNU General Public License Version 2.
 
 import sys
 import os
-import math
 from optparse import OptionParser
-from twisted.application import service, internet
 from twisted.internet import reactor
 from starpy import fastagi
 
@@ -36,31 +34,31 @@ class FastAGIConnectTest:
         reactor.callWhenRunning(self.run)
 
         print self.ast_version
-        self.asterisk = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/fastagi"))
+        self.asterisk = Asterisk(base=os.path.join(os.getcwd(),
+            "/tmp/asterisk-testsuite/fastagi/connect"))
         self.asterisk.install_config("tests/fastagi/configs/extensions.conf")
         self.asterisk.install_config("tests/fastagi/configs/manager.conf")
 
     def on_failure(self, reason):
-        print 'Could not run sequence to close connection: ', reason.getTraceback()
+        print 'Could not run sequence to close connection.'
+        print reason.getTraceback()
 
     def get_deferred(self, agi):
         sequence = fastagi.InSequence()
         sequence.append(agi.finish)
         return sequence()
-        
 
     def finish_test(self, agi):
         self.passed = True
         self.result_changed()
-        
+
     # This gets invoked by the dialplan when the call is answered
     # Disconnect agi and set test result values
     def do_test(self, agi):
         print "Connection established."
-        return self.get_deferred(agi).addCallback(self.finish_test).addErrback(self.on_failure)
-
-
-
+        return self.get_deferred(agi).addCallback(
+            self.finish_test
+        ).addErrback(self.on_failure)
 
 	# Read test results and dialplan globals
     def read_result(self):
@@ -74,7 +72,9 @@ class FastAGIConnectTest:
                 self.asterisk.cli_exec("core show globals")
             else:
                 self.asterisk.cli_exec("dialplan show globals")
-                print "FAIL - FastAGI Connection test failed. View result of 'core show globals' in log for more detailed failure results."
+                print "FAIL - FastAGI Connection test failed. View result of\
+                    'core show globals' in log for more detailed failure\
+                    results."
 
         self.stop_asterisk()
 
@@ -82,16 +82,13 @@ class FastAGIConnectTest:
             print "Stopping Reactor ..."
             reactor.stop()
 
-
     def launch_test(self):
         self.asterisk.cli_exec("core set verbose 10")
 
         print "Originating call to begin test."
-        if self.ast_version < AsteriskVersion("1.6.2"):
-            self.asterisk.cli_exec("originate Local/b_exten@agitest extension echo@agitest")
-        else:
-            self.asterisk.cli_exec("channel originate Local/b_exten@agitest extension echo@agitest")
-
+        self.asterisk.cli_originate(
+            "Local/b_exten@agitest extension echo@agitest"
+        )
 
     def start_asterisk(self):
         print "Starting Asterisk"
@@ -100,7 +97,6 @@ class FastAGIConnectTest:
     def stop_asterisk(self):
         print "Stopping Asterisk"
         self.asterisk.stop()
-
 
     # Read result before timeout 
     def result_changed(self):
@@ -112,7 +108,7 @@ class FastAGIConnectTest:
         reactor.callLater(2, self.launch_test)
         reactor.callLater(self.timeout, self.read_result)
 
-def run(argv=None):
+def main(argv=None):
     if argv is None:
         argv = sys.argv
 
@@ -124,4 +120,4 @@ def run(argv=None):
     return 0
 
 if __name__ == "__main__":
-    sys.exit(run() or 0)
+    sys.exit(main() or 0)

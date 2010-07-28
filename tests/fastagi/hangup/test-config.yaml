@@ -10,5 +10,5 @@ properties:
     minversion: '1.4'
     dependencies:
         - app : 'python'
-        - app : 'twisted'
-        - app : 'starpy'
+        - python : 'twisted'
+        - python : 'starpy'
