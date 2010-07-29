@@ -52,12 +52,9 @@ static struct testsuite *push_ts(lua_State *L) {
  * \brief Push the current test's name on the stack and return a pointer to it.
  * \param L the lua state to use
  */
-static const char *get_test_name(lua_State *L) {
-	const char *c;
+static const char *push_test_name(lua_State *L) {
 	lua_getfield(L, LUA_REGISTRYINDEX, "testlib_name");
-	c = lua_tostring(L, -1);
-	lua_pop(L, 1);
-	return c;
+	return lua_tostring(L, -1);
 }
 
 /*
@@ -67,9 +64,11 @@ static const char *get_test_name(lua_State *L) {
 static int lua_ts_log(lua_State *L) {
 	const char *string = luaL_checkstring(L, 1);
 	struct testsuite *ts = push_ts(L);
-	const char *name = get_test_name(L);
+	const char *name = push_test_name(L);
 
 	ts_log(ts, name, "%s", string);
+
+	lua_pop(L, 2); /* pop the test name and ts */
 
 	return 0;
 }
