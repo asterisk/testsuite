@@ -227,7 +227,7 @@ end
 function asterisk:manager_connect()
 	local m = manager:new()
 
-	local res, err = m:connect("localhost", self.configs["manager.conf"]["general"].port)
+	local res, err = m:connect(self.configs["manager.conf"]["general"].bindaddr, self.configs["manager.conf"]["general"].port)
 	if not res then
 		return nil, err
 	end
@@ -315,8 +315,8 @@ function asterisk:generate_manager_conf()
 	local c = self:new_config("manager.conf")
 	local s = c:new_section("general")
 	s["enabled"] = "yes"
-	s["bindaddr"] = "0.0.0.0"
-	s["port"] = "538" .. self.index
+	s["bindaddr"] = "127.0.0." .. self.index
+	s["port"] = "5038"
 
 	s = c:new_section("asttest")
 	s["secret"] = "asttest"
