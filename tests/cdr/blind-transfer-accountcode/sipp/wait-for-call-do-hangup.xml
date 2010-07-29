@@ -10,7 +10,7 @@
 	</nop>
 	<Reference variables="file,user"/>
 
-	<recv request="INVITE" crlf="true" timeout="5000"/>
+	<recv request="INVITE" crlf="true"/>
 
 	<send>
 		<![CDATA[
