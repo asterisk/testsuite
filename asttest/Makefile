@@ -160,7 +160,7 @@ tests: test
 test: asttest
 	LUA_PATH=$(PWD)/../lib/lua/?.lua\;\; \
 	LUA_CPATH=$(PWD)/../lib/lua/\?.so\;\; \
-	./asttest self-tests
+	$(GDB) ./asttest self-tests
 
 clean:
 	rm -f asttest $(OBJS) $(M_OBJS) $(C_OBJS) $(G_OBJS) $(N_OBJS) $(L_OBJS)
