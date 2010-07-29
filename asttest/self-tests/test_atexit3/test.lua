@@ -1,4 +1,4 @@
-function do_fail()
+function do_fail(result)
 	fail_if(result.result ~= "pass", "result in do_fail() was not 'pass'")
 	fail()
 end
@@ -8,7 +8,7 @@ function do_pass(result)
 	pass()
 end
 
-function do_nothing()
+function do_nothing(result)
 	fail_if(result.result ~= "pass", "result in do_nothing() was not 'pass'")
 end
 
