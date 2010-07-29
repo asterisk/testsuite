@@ -45,13 +45,10 @@ class BlindTransferTest:
         self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/extensions.conf")
         self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/iax.conf")
         self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/features.conf")
-        self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/logger.conf")
 
         self.asterisk2 = Asterisk(base="/tmp/asterisk-testsuite/blind-transfer-parkingtimeout/asterisk2")
         self.asterisk2.install_config("tests/blind-transfer-parkingtimeout/configs2/extensions.conf")
         self.asterisk2.install_config("tests/blind-transfer-parkingtimeout/configs2/iax.conf")
-        self.asterisk2.install_config("tests/blind-transfer-parkingtimeout/configs2/logger.conf")
-
 
    # This gets invoked by the dialplan when test succeeds.
     def get_result_b(self, agi):
@@ -97,10 +94,7 @@ class BlindTransferTest:
         self.asterisk1.cli_exec("core set verbose 10")
 
         self.log_last_step("Originating call to begin test")
-        if self.ast_version < AsteriskVersion("1.6.2"):
-            self.asterisk1.cli_exec("originate IAX2/userA@127.0.0.1:4571/b_exten extension a_dials@parking")
-        else:
-            self.asterisk1.cli_exec("channel originate IAX2/userA@127.0.0.1:4571/b_exten extension a_dials@parking")
+        self.asterisk1.cli_originate("IAX2/userA@127.0.0.1:4571/b_exten extension a_dials@parking")
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
