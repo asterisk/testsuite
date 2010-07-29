@@ -38,6 +38,7 @@ end
 
 _G.lua_error = _G.error
 _G.xfail = xfail
+_G.atexit = atexit
 
 --
 -- basic pass/fail/skip/error functions

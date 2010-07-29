@@ -22,6 +22,10 @@
 #include <lua.h>
 
 int testlib_expected_fail(lua_State *L);
+int testlib_atexit(lua_State *L, int result_index);
+int testlib_preprocess_result(lua_State *L);
+int testlib_default_result(lua_State *L);
+
 int luaopen_testlib(lua_State *L);
 
 #endif

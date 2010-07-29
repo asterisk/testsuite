@@ -66,7 +66,7 @@ static int result_equals(lua_State *L, int result_index, const char *result_stri
  *
  * \code
  * table = {
- *    result = "pass" or "fail" or "xfail" or "skip";
+ *    result = "pass" or "fail" or "skip" or "error";
  *    reason = nil or "reason string";
  * }
  * \endcode
@@ -74,13 +74,9 @@ static int result_equals(lua_State *L, int result_index, const char *result_stri
 static enum ts_result process_test_result(struct testsuite *ts, const char *test_name, lua_State *L) {
 	enum ts_result res = TS_ERROR;
 
-	if (lua_isstring(L, -1)) {
-		/* this is not a test result, log the error */
-		ts_log(ts, test_name, "error: %s\n", lua_tostring(L, -1));
-		lua_pop(L, 1);
+	testlib_preprocess_result(L);
 
-		res = ts_error(ts, test_name);
-	} else if (lua_type(L, -1) == LUA_TTABLE) {
+	if (lua_type(L, -1) == LUA_TTABLE) {
 		int result_table = lua_gettop(L);
 		int reason_string = 0;
 		int test_result = 0;
@@ -129,6 +125,8 @@ static enum ts_result process_test_result(struct testsuite *ts, const char *test
 
 		lua_pop(L, 1);
 	} else {
+		/* this should never happen, testlib_preprocess_result() should
+		 * convert any values to proper result tables for us */
 		lua_pop(L, 1);
 		ts_log(ts, test_name, "missing test result\n");
 		res = ts_error(ts, test_name);
@@ -191,6 +189,7 @@ static enum ts_result run_test(struct testsuite *ts, const char *test_name, cons
 	lua_State *L;
 	char original_path[PATH_MAX];
 	enum ts_result result;
+	int result_index;
 
 	if (!getcwd(original_path, PATH_MAX)) {
 		ts_log(ts, test_name, "internal error storing current path, PATH_MAX is too small\n");
@@ -209,15 +208,20 @@ static enum ts_result run_test(struct testsuite *ts, const char *test_name, cons
 		return ts_error(ts, test_name);
 	}
 
-	if (luaL_dofile(L, "test.lua")) {
-		result = process_test_result(ts, test_name, L);
-	} else {
-		/* we got no explicit result, consider it a pass or xpass*/
-		if (testlib_expected_fail(L))
-			result = ts_xpass(ts, test_name);
-		else
-			result = ts_pass(ts, test_name);
+	if (!luaL_dofile(L, "test.lua")) {
+		/* we got no explicit result, consider it a pass for now */
+		testlib_default_result(L);
 	}
+
+	/* run our atexit functions */
+	testlib_preprocess_result(L);
+	result_index = lua_gettop(L);
+	if (testlib_atexit(L, result_index)) {
+		lua_remove(L, result_index);
+	}
+
+	/* process the test result */
+	result = process_test_result(ts, test_name, L);
 
 	if (chdir(original_path))
 		ts_log(ts, test_name, "error changing directories, this may cause further errors (%s)\n", strerror(errno));
