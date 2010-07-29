@@ -56,7 +56,7 @@
 		]]>
 	</send>
 
-	<recv request="BYE" optional="false" timeout="10000"/>
+	<recv request="BYE" optional="false"/>
 
 	<send>
 		<![CDATA[

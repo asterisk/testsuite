@@ -10,7 +10,7 @@
 	</nop>
 	<Reference variables="file,user"/>
 
-	<recv request="INVITE" crlf="true" timeout="5000"/>
+	<recv request="INVITE" crlf="true"/>
 
 	<send>
 		<![CDATA[
@@ -43,7 +43,7 @@
 	</send>
 	
 	<recv request="ACK" optional="false"/>
-	<recv request="BYE" optional="false" timeout="10000"/>
+	<recv request="BYE" optional="false"/>
 
 	<send>
 		<![CDATA[
