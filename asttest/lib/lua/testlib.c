@@ -95,14 +95,14 @@ int testlib_atexit(lua_State *L, int result_index) {
 			} else if (lua_type(L, -1) == LUA_TTABLE) {
 				/* got a new result */
 				if (new_result) {
-					/* remove the old new result */
-					lua_remove(L, new_result);
-					funcs -= 1;
+					/* replace the new result */
+					lua_replace(L, new_result);
+				} else {
+					/* move the new results under 'funcs' in the stack */
+					lua_insert(L, funcs);
+					new_result = funcs;
+					funcs += 1;
 				}
-				/* move the new results under 'funcs' in the stack */
-				lua_insert(L, funcs);
-				new_result = funcs;
-				funcs += 1;
 			} else {
 				/* got some other error value returned, probably a missing test result */
 				ts = push_ts(L);
