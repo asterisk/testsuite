@@ -147,19 +147,16 @@ class Asterisk:
         used only by this instance can be provided via this API call.
 
         Keyword Arguments:
-        cfg_path -- This argument must be the path to the configuration directory
-        to be installed into this instance of Asterisk.
+        cfg_path -- This argument must be the path to the configuration directory 
+        to be installed into this instance of Asterisk. Only top-level files will
+        be installed, sub directories will be ignored. 
 
         Example Usage:
         asterisk.install_configs("tests/my-cool-test/configs")
         """
-        for dirname, dirnames, filenames in os.walk(cfg_path):
-            blacklist = [ ".svn", "branch-1.4", "branch-1.6.2", "branch-1.8" ]
-            for b in blacklist:
-                if b in dirnames:
-                    dirnames.remove(b)
-            for filename in filenames:
-                target = "%s/%s" % (dirname, filename)
+        for f in os.listdir(cfg_path):
+            target = "%s/%s" % (cfg_path, f)
+            if os.path.isfile(target):
                 self.install_config(target)
 
     def install_config(self, cfg_path):
