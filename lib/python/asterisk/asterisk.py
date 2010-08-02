@@ -138,6 +138,30 @@ class Asterisk:
         self.process.wait()
         return self.process.returncode
 
+    def install_configs(self, cfg_path):
+        """Installs all files located in the configuration directory for this
+        instance of Asterisk.
+
+        By default, the configuration used will be whatever is found in the
+        system install of Asterisk.  However, custom configuration files to be
+        used only by this instance can be provided via this API call.
+
+        Keyword Arguments:
+        cfg_path -- This argument must be the path to the configuration directory
+        to be installed into this instance of Asterisk.
+
+        Example Usage:
+        asterisk.install_configs("tests/my-cool-test/configs")
+        """
+        for dirname, dirnames, filenames in os.walk(cfg_path):
+            blacklist = [ ".svn", "branch-1.4", "branch-1.6.2", "branch-1.8" ]
+            for b in blacklist:
+                if b in dirnames:
+                    dirnames.remove(b)
+            for filename in filenames:
+                target = "%s/%s" % (dirname, filename)
+                self.install_config(target)
+
     def install_config(self, cfg_path):
         """Install a custom configuration file for this instance of Asterisk.
 
@@ -155,6 +179,10 @@ class Asterisk:
         if not os.path.exists(cfg_path):
             print "Config file '%s' does not exist" % cfg_path
             return
+
+        tmp = "%s/%s/%s" % (os.path.dirname(cfg_path), self.ast_version.branch, os.path.basename(cfg_path))
+        if os.path.exists(tmp):
+            cfg_path = tmp
         target_path = os.path.join(self.astetcdir, os.path.basename(cfg_path))
         if os.path.exists(target_path):
             os.remove(target_path)
@@ -302,4 +330,3 @@ class Asterisk:
         for dirname, dirnames, filenames in os.walk(ast_dir_path):
             for d in dirnames:
                 self.__makedirs(os.path.join(target_dir, dirname, d))
-
