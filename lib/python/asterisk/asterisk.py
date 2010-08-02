@@ -147,7 +147,7 @@ class Asterisk:
         used only by this instance can be provided via this API call.
 
         Keyword Arguments:
-        cfg_path -- This argument must be the path to the configuration directory 
+        cfg_path -- This argument must be the path to the configuration directory
         to be installed into this instance of Asterisk. Only top-level files will
         be installed, sub directories will be ignored. 
 
@@ -165,6 +165,21 @@ class Asterisk:
         By default, the configuration used will be whatever is found in the
         system install of Asterisk.  However, custom configuration files to be
         used only by this instance can be provided via this API call.
+
+        Note: If a sub-directory is found to have the same name as the running
+        instance, install_config() will use the sub-directories version in place 
+        of the top-level version.
+
+        For example, testsuite is running a test against 1.4 (branch-1.4):
+
+            configs/manager.conf
+            configs/sip.conf
+            configs/branch-1.4/sip.conf
+
+        Because the sip.conf file exists in the branch-1.4 directory, it will
+        be used in place of the top-level sip.conf.  As for the manager.conf
+        file, because it does not exists in the branch-1.4 direcory, the
+        top-level manager.conf will be used.
 
         Keyword Arguments:
         cfg_path -- This argument must be the path to the configuration file
