@@ -1,0 +1,214 @@
+#!/usr/bin/python
+'''
+Copyright (C) 2010, Digium, Inc.
+Erin Spiceland <espiceland@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+from optparse import OptionParser
+from twisted.internet import reactor
+from starpy import fastagi
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.version import AsteriskVersion
+
+class FastAGIExecuteTest:
+    def __init__(self, argv):
+        self.passed = {
+            'SendDTMF': False,
+            'System': False,
+            'Set [Global]': False,
+            'Set [Channel]': False
+        }
+        self.timeout = 45
+        self.key = "fastagitest"
+        self.overall_result = True
+        self.agi = ""
+
+        parser = OptionParser()
+        parser.add_option("-v", "--version", dest="ast_version",
+                          help="Asterisk version string")
+        (options, args) = parser.parse_args(argv)
+        self.ast_version = AsteriskVersion(options.ast_version)
+
+        # Listen for results from dialplan
+        self.agi_factory = fastagi.FastAGIFactory(self.do_test)
+        reactor.listenTCP(4573, self.agi_factory, self.timeout, '127.0.0.1')
+        reactor.callWhenRunning(self.run)
+
+        print self.ast_version
+        self.asterisk=Asterisk(base="/tmp/asterisk-testsuite/fastagi/execute")
+        self.asterisk.install_config("tests/fastagi/configs/extensions.conf")
+        self.asterisk.install_config("tests/fastagi/configs/manager.conf")
+        self.asterisk.install_config("tests/fastagi/configs/logger.conf")
+
+    def on_get_variable2_failure(self, reason):
+        self.passed['Set [Channel]'] = False
+        print 'Could not test value of channel variable.'
+        print reason.getTraceback()
+        self.result_changed()
+
+    def on_get_variable2(self, result):
+        if result == "sure to go":
+            self.passed['Set [Channel]'] = True
+            print "Yay. LAMB was", result
+        else:
+            self.passed['Set [Channel]'] = False
+            print "Channel variable LAMB is %s",\
+                "but we expected 'sure to go.'" % result
+
+        self.result_changed()
+
+    def on_Set2_failure(self, reason):
+        self.passed['Set [Channel]'] = False
+        print 'Could not set channel variable:', reason.getTraceback()
+
+    def on_Set2_success(self, result):
+        self.agi.getVariable('LAMB').addCallback(
+            self.on_get_variable2
+        ).addErrback(self.on_get_variable2_failure)
+        self.passed['Set [Channel]'] = True
+
+    # 4. Set(DEBUG=${VAR})
+    def do_Set2(self):
+        self.agi.execute("Set", "LAMB=sure to go").addCallback(
+            self.on_Set2_success
+        ).addErrback(self.on_Set2_failure)
+
+    def on_get_variable_failure(self, reason):
+        self.passed['Set [Global]'] = False
+        print 'Could not test value of global variable:', reason.getTraceback()
+        self.do_Set2()
+
+    def on_get_variable(self, result):
+        if result == "white as snow":
+            self.passed['Set [Global]'] = True
+            print "Yay. FLEECE is", result
+        else:
+            self.passed['Set [Global]'] = False
+            print "Global variable FLEECE is %s",\
+                "but we expected 'white as snow.'" % result
+
+        self.do_Set2()
+
+    def on_Set_failure(self, reason):
+        self.passed['Set [Global]'] = False
+        print 'Could not set global variable:', reason.getTraceback()
+
+    def on_Set_success(self, result):
+        self.agi.getVariable('FLEECE').addCallback(
+            self.on_get_variable
+        ).addErrback(self.on_get_variable_failure)
+        self.passed['Set [Global]'] = True
+
+    # 3. Set(GLOBAL(DEBUG)=${VAR})
+    def do_Set(self):
+        self.agi.execute("Set", "GLOBAL(FLEECE)=white as snow").addCallback(
+            self.on_Set_success
+        ).addErrback(self.on_Set_failure)
+
+    def on_System_failure(self, reason):
+        self.passed['System'] = False
+        print 'Could not execute system command:', reason.getTraceback()
+        self.do_Set()
+
+    def on_System_success(self, result):
+        self.passed['System'] = True
+        self.do_Set()
+
+    # 2. System(command arg1 arg2 etc)
+    def do_System(self):
+        self.agi.execute("System", "echo little lamb").addCallback(
+            self.on_System_success
+        ).addErrback(self.on_System_failure)
+
+    def on_SendDTMF_failure(self, reason):
+        self.passed['SendDTMF'] = False
+        print 'Could not send DTMF:', reason.getTraceback()
+        self.do_System()
+
+    def on_SendDTMF_success(self, result):
+        self.passed['SendDTMF'] = True
+        self.do_System()
+
+    # This gets invoked by the dialplan when the call is answered
+    # We're going to use fastagi.execute() to send some commands that
+    # FastAGI doesn't inherently support.
+    # 1. SendDTMF(digits[,timeout_ms])
+    # 2. System(command arg1 arg2 etc)
+    # 3. Set(GLOBAL(DEBUG)=${VAR})
+    # 4. Set(DEBUG=${VAR})
+
+    # 1. SendDTMF(digits[,timeout_ms])
+    # Play "Mary had a Little Lamb."  We don't really need a timeout here,
+    # but let's send one anyway just so one of our tests actually sends
+    # an argument.
+    def do_test(self, agi):
+        self.agi = agi
+        return agi.execute(
+            "SendDTMF", "3212333", 300, comma_delimiter=True
+        ).addCallback(
+            self.on_SendDTMF_success
+        ).addErrback(self.on_SendDTMF_failure)
+
+	# Read test results and dialplan globals
+    def read_result(self):
+        self.agi.finish()
+        for test in self.passed:
+            if self.passed[test] is True:
+                print "execute %s worked as expected." % test
+            else:
+                print "execute %s FAILED." % test
+                self.overall_result = False
+
+        self.stop_asterisk()
+        if reactor.running:
+            print "Stopping Reactor ..."
+            reactor.stop()
+
+    def launch_test(self):
+        self.asterisk.cli_exec("core set verbose 10")
+        self.asterisk.cli_exec("agi set debug on")
+        print "Originating call to begin test."
+        self.asterisk.cli_originate(
+            "Local/b_exten@agitest extension echo@agitest"
+        )
+
+    def start_asterisk(self):
+        print "Starting Asterisk"
+        self.asterisk.start()
+
+    def stop_asterisk(self):
+        print "Stopping Asterisk"
+        self.asterisk.stop()
+
+    # Read result before timeout
+    def result_changed(self):
+        # If self.passed["SendDTMF"] is False, not one test has completed yet
+        # and we should wait for the timeout.
+        if self.passed["SendDTMF"] is not False:
+            reactor.callLater(2, self.read_result)
+
+    def run(self):
+        self.start_asterisk()
+        reactor.callLater(2, self.launch_test)
+        reactor.callLater(self.timeout, self.read_result)
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    agi_test = FastAGIExecuteTest(argv)
+    reactor.run()
+    if agi_test.overall_result is not True:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)

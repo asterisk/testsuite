@@ -42,5 +42,6 @@ tests:
     - test: 'fastagi/channel-status'
     - test: 'fastagi/hangup'
     - test: 'fastagi/stream-file'
-#    - test: 'fastagi/control-stream-file'
+    - test: 'fastagi/control-stream-file'
     - test: 'fastagi/database'
+    - test: 'fastagi/execute'

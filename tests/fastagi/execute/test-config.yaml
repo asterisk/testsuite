@@ -1,0 +1,12 @@
+testinfo:
+    summary:     'Test FastAGI execute function.'
+    description: |
+        'Test FastAGI execute function.'
+
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'python'
+        - python : 'twisted'
+        - python : 'starpy'
