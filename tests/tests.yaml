@@ -33,6 +33,7 @@ tests:
     - test: 'blind-transfer-parkingtimeout'
     - test: 'mixmonitor'
     - test: 'chanspy/chanspy_w_mixmonitor'
+    - test: 'chanspy/chanspy_barge'
     - test: 'queues/queue_baseline'
     - test: 'queues/position_priority_maxlen'
     - test: 'queues/macro_gosub_test'
