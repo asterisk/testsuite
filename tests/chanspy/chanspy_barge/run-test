@@ -42,7 +42,13 @@ class ChanSpyBarge:
         reactor.listenTCP(4573, self.agi, self.test_to, '127.0.0.1')
 
         print self.ast_version
-        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/chanspy/chanspy_barge")
+
+        ast_conf_options = {
+            "transmit_silence" : "yes",
+        }
+
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/chanspy/chanspy_barge",
+            ast_conf_options=ast_conf_options)
         self.asterisk.install_config("tests/chanspy/chanspy_barge/configs/extensions.conf")
         self.asterisk.install_config("tests/chanspy/chanspy_barge/configs/sip.conf")
         self.asterisk.install_config("tests/chanspy/chanspy_barge/configs/manager.conf")
