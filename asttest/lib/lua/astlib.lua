@@ -570,7 +570,6 @@ function manager:new()
 		responses = {},
 		event_handlers = {},
 		response_handlers = {},
-		buf = {""},
 	}
 
 	setmetatable(m, self)
@@ -638,7 +637,7 @@ local function read_until_crlf(sock)
 end
 
 function manager:_parse_greeting()
-	local line, err = read_until_crlf(self.sock, self.buf)
+	local line, err = read_until_crlf(self.sock)
 	if not line then
 		return nil, err
 	end
@@ -652,7 +651,7 @@ function manager:_parse_greeting()
 end
 
 function manager:_read_message()
-	local line, err = read_until_crlf(self.sock, self.buf)
+	local line, err = read_until_crlf(self.sock)
 	if not line then
 		return nil, err
 	end
@@ -676,7 +675,7 @@ function manager:_read_message()
 	local data_mode = false
 	
 	while true do
-		line, err = read_until_crlf(self.sock, self.buf)
+		line, err = read_until_crlf(self.sock)
 		if not line then
 			return nil, err
 		end
