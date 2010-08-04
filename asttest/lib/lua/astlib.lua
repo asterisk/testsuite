@@ -344,12 +344,12 @@ function asterisk:dump_full_log()
 end
 
 asterisk_version = {}
+asterisk_version.__index = asterisk_version
 function asterisk_version:new(version)
 	local v = {
 		version = version,
 	}
 	setmetatable(v, self)
-	self.__index = self
 
 	v:_parse()
 	return v
@@ -562,6 +562,8 @@ end
 manager = {
 	action = {}
 }
+
+manager.__index = manager
 function manager:new()
 	local m = {
 		events = {},
@@ -572,7 +574,6 @@ function manager:new()
 	}
 
 	setmetatable(m, self)
-	self.__index = self
 	return m
 end
 
