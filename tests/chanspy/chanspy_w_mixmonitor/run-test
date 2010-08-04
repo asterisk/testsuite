@@ -28,7 +28,7 @@ class ChanSpyMixMonitorTest:
         self.numSpyEvents = 0
         self.expectedSpyEvents = 3
         self.talkDetected = 0
-        self.test_to = 25
+        self.test_to = 30
 
         # get version info
         parser = OptionParser()
@@ -84,10 +84,10 @@ class ChanSpyMixMonitorTest:
         self.numSpyEvents += 1
         if event['spyeechannel'].count('end_a') > 0:
             reactor.callLater(1, self.aHangup)
-            reactor.callLater(2, self.bCall)
+            reactor.callLater(3, self.bCall)
         if event['spyeechannel'].count('end_b') > 0:
             reactor.callLater(1, self.bHangup)
-            reactor.callLater(2, self.cCall)
+            reactor.callLater(3, self.cCall)
         if event['spyeechannel'].count('end_c') > 0:
             reactor.callLater(2, self.cHangup)
             reactor.callLater(3, self.hangupChanSpy)
