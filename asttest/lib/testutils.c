@@ -239,17 +239,27 @@ static int is_directory(const char *dir) {
 	return S_ISDIR(st.st_mode);
 }
 
-static int ignored_dir(const char *dir) {
-	char *dir_dup = strdup(dir);  /* dup the string as basename may modify it */
-	char *base_dir = basename(dir_dup);
-	int res = 0;
-
-	if (base_dir[0] == '.') {
-		res = 1;
+static int ignored_dir(struct testsuite *ts, const char *test_name, const char *full_path) {
+	if (!test_name || strlen(test_name) < 1) {
+		return 1;
 	}
 
-	free(dir_dup);
-	return res;
+	if (!is_directory(full_path)) {
+		return 1;
+	}
+
+	if (test_name[0] == '.') {
+		/* skip hidden directories */
+		return 1;
+	} else if (test_name[0] == '_') {
+		/* skip directories starting with '_' and log the skippage */
+		ts_log(ts, test_name, "automatically skipping test because test name starts with '_'\n");
+		print_test_name(ts, test_name);
+		print_test_result(ts_skip(ts, test_name));
+		return 1;
+	}
+
+	return 0;
 }
 
 int process_single_test(struct asttest_opts *opts) {
@@ -290,7 +300,7 @@ int process_test_dir(const char *path, struct asttest_opts *opts) {
 
 	while ((ent = readdir(main_dir))) {
 		snprintf(full_path, sizeof(full_path), "%s/%s", path, ent->d_name);
-		if (is_directory(full_path) && !ignored_dir(full_path)) {
+		if (!ignored_dir(&ts, ent->d_name, full_path)) {
 			print_test_name(&ts, ent->d_name);
 			result = run_test(&ts, ent->d_name, full_path);
 			print_test_result(result);
