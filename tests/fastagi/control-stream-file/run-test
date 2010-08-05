@@ -35,12 +35,10 @@ class FastAGIControlStreamFileTest:
 
         print self.ast_version
         self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/fastagi/control-stream-file")
-        self.asterisk.install_config("tests/fastagi/configs/extensions.conf")
-        self.asterisk.install_config("tests/fastagi/configs/manager.conf")
-        self.asterisk.install_config("tests/fastagi/configs/logger.conf")
+        self.asterisk.install_configs("tests/fastagi/configs")
 
     def on_failure(self, reason):
-        print 'Could not run controlStreamFile: ', reason.getTraceback()
+        print 'Could not run CONTROL STREAM FILE: ', reason.getTraceback()
         self.agi.finish()
 
     # result of 0 indicates success
@@ -62,7 +60,7 @@ class FastAGIControlStreamFileTest:
     def read_result(self):
 
         if self.passed is True:
-            print "PASS - FastAGI controlStreamFile() works as expected."
+            print "PASS - FastAGI CONTROL STREAM FILE works as expected."
         else:
             self.asterisk.cli_exec("core show channels")
 
@@ -70,9 +68,9 @@ class FastAGIControlStreamFileTest:
                 self.asterisk.cli_exec("core show globals")
             else:
                 self.asterisk.cli_exec("dialplan show globals")
-                print "FAIL - FastAGI Connection test failed. You may need to\
-                    update StarPy. Starpy 1.0.0a13 and older will always fail\
-                    this test."
+                print "FAIL - FastAGI CONTROL STREAM FILE test failed. You",\
+                    "may need to update StarPy. Starpy 1.0.0a13 and older",\
+                    "will always fail this test."
                 print "View result of 'core show globals' in log for more\
                     detailed failure results."
 

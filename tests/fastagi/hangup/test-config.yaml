@@ -1,8 +1,8 @@
 testinfo:
-    summary:     'Test FastAGI hangup() function.'
+    summary:     'Test AGI HANGUP command using FastAGI.'
     description: |
-        'Test FastAGI hangup() function. Note: this test requires that
-        channelStatus() throw an error when it is asked to check the status
+        'Test AGI HANGUP command using FastAGI. Note: this test requires that
+        CHANNEL STATUS throw an error when it is asked to check the status
         of a dead channel.'
 
 

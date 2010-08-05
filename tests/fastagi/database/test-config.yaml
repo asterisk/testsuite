@@ -1,8 +1,8 @@
 testinfo:
-    summary:     'Test FastAGI database manipulation functions.'
+    summary:     'Test AGI DATABASE commands using FastAGI.'
     description: |
-        'Test FastAGI database manipulation functions. databasePut, databaseGet,
-        databaseSet, databaseDel.'
+        'Test AGI DATABASE commands using FastAGI, including DATABASE PUT,
+        DATABASE GET, and DATABASE DEL.'
 
 
 properties:

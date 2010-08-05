@@ -35,8 +35,7 @@ class FastAGIConnectTest:
 
         print self.ast_version
         self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/fastagi/connect")
-        self.asterisk.install_config("tests/fastagi/configs/extensions.conf")
-        self.asterisk.install_config("tests/fastagi/configs/manager.conf")
+        self.asterisk.install_configs("tests/fastagi/configs")
 
     def on_failure(self, reason):
         print 'Could not run sequence to close connection.'

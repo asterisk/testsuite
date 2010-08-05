@@ -1,7 +1,7 @@
 testinfo:
-    summary:     'Test FastAGI streamFile().'
+    summary:     'Test AGI STREAM FILE command using FastAGI.'
     description: |
-        "Test FastAGI streamFile()."
+        'Test AGI STREAM FILE command using FastAGI.'
 
 properties:
     minversion: '1.4'

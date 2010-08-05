@@ -43,9 +43,7 @@ class FastAGIExecuteTest:
 
         print self.ast_version
         self.asterisk=Asterisk(base="/tmp/asterisk-testsuite/fastagi/execute")
-        self.asterisk.install_config("tests/fastagi/configs/extensions.conf")
-        self.asterisk.install_config("tests/fastagi/configs/manager.conf")
-        self.asterisk.install_config("tests/fastagi/configs/logger.conf")
+        self.asterisk.install_configs("tests/fastagi/configs")
 
     def on_get_variable2_failure(self, reason):
         self.passed['Set [Channel]'] = False
@@ -82,7 +80,7 @@ class FastAGIExecuteTest:
 
     def on_get_variable_failure(self, reason):
         self.passed['Set [Global]'] = False
-        print 'Could not test value of global variable:', reason.getTraceback()
+        print 'Could not test value of global variable:',reason.getTraceback()
         self.do_Set2()
 
     def on_get_variable(self, result):
@@ -161,9 +159,9 @@ class FastAGIExecuteTest:
         self.agi.finish()
         for test in self.passed:
             if self.passed[test] is True:
-                print "execute %s worked as expected." % test
+                print "EXECUTE (%s) worked as expected." % test
             else:
-                print "execute %s FAILED." % test
+                print "EXECUTE (%s) FAILED." % test
                 self.overall_result = False
 
         self.stop_asterisk()

@@ -1,7 +1,7 @@
 testinfo:
-    summary:     'Test FastAGI execute function.'
+    summary:     'Test AGI EXECUTE command using FastAGI.'
     description: |
-        'Test FastAGI execute function.'
+        'Test AGI EXECUTE command using FastAGI.'
 
 
 properties:

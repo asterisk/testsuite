@@ -1,7 +1,7 @@
 testinfo:
-    summary:     'Test FastAGI connection.'
+    summary:     'Test AGI connection using FastAGI.'
     description: |
-        'Test FastAGI connection.'
+        'Test AGI connection using FastAGI.'
 
 
 properties:

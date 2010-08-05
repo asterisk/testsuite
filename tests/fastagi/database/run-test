@@ -38,9 +38,7 @@ class FastAGIDatabaseTest:
 
         print self.ast_version
         self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/fastagi/database")
-        self.asterisk.install_config("tests/fastagi/configs/extensions.conf")
-        self.asterisk.install_config("tests/fastagi/configs/manager.conf")
-        self.asterisk.install_config("tests/fastagi/configs/logger.conf")
+        self.asterisk.install_configs("tests/fastagi/configs")
 
     def on_del_failure(self, reason):
         print 'Could not delete the data from the database.'
@@ -73,7 +71,6 @@ class FastAGIDatabaseTest:
 
     def get_result_from_put(self, result):
         self.passed["Put"] = True
-
         # 2. Retrieve that key from the database
         print "Retrieving key from the database."
         self.agi.databaseGet("secret",self.key).addCallback(
@@ -89,7 +86,7 @@ class FastAGIDatabaseTest:
             # If the call to databaseGet() succeeds but the value is wrong,
             # the previous call to databasePut() failed.
             self.passed["Put"] = False
-            print "Call to databaseGet() succeeded, but value is wrong."
+            print "Call to DATABASE GET succeeded, but value is wrong."
             print 'Expected value of "juststarted" but got "%s"' % result
 
         # 3. Update the value of the key in the database
@@ -118,7 +115,7 @@ class FastAGIDatabaseTest:
         print 'Value of %s is "%s"' % (self.key, result)
         if result != "halfwaydone":
             self.passed["Set"] = False
-            print "Call to databaseSet() succeeded,\
+            print "Call to DATABASE SET succeeded,\
                 but value did not get updated."
             print 'Expected value of "halfwaydone" but got "%s"' % result
 
