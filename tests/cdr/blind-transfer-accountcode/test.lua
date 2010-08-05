@@ -1,7 +1,8 @@
 have_error = false
 
-function check_error()
+function check_error(a)
 	if have_error then
+		a:dump_full_log()
 		error()
 	end
 end
@@ -91,7 +92,7 @@ function do_transfer_and_check_results(accountcode, index)
 	sipp_check_error(t1, "sipp/wait-for-call.xml")
 
 	proc.perror(a:term_or_kill())
-	check_error()
+	check_error(a)
 
 	-- examine the CDR records generated to make sure account code is present
 	check_cdr(a, 2, accountcode)
