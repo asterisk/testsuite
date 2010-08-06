@@ -6,7 +6,7 @@ tests:
     - test: 'manager/response-time'
     - test: 'rfc2833_dtmf_detect'
     - test: 'sip_channel_params'
-    - test: 'iax-call-basic'
+    - test: 'iax2/basic-call'
     - test: 'cdr/console_dial_sip_answer'
     - test: 'cdr/console_dial_sip_busy'
     - test: 'cdr/console_dial_sip_congestion'
