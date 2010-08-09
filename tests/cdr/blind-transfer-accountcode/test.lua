@@ -3,6 +3,8 @@ have_error = false
 function check_error(a)
 	if have_error then
 		a:dump_full_log()
+		print("core show locks output:")
+		print(a:cli("core show locks"))
 		error()
 	end
 end
@@ -91,8 +93,8 @@ function do_transfer_and_check_results(accountcode, index)
 	sipp_check_error(t2, "sipp/wait-for-call-do-hangup.xml")
 	sipp_check_error(t1, "sipp/wait-for-call.xml")
 
-	proc.perror(a:term_or_kill())
 	check_error(a)
+	proc.perror(a:term_or_kill())
 
 	-- examine the CDR records generated to make sure account code is present
 	check_cdr(a, 2, accountcode)
