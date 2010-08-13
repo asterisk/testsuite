@@ -1,0 +1,169 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+David Vossel <dvossel@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import signal
+import subprocess
+from optparse import OptionParser
+from twisted.application import service, internet
+from twisted.internet import reactor, defer
+from starpy import manager
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.version import AsteriskVersion
+
+class AttTransferTest:
+    def __init__(self, argv):
+        self.last_step = ""
+        self.passed = False
+
+        # get version info
+        parser = OptionParser()
+        parser.add_option("-v", "--version", dest="ast_version",
+                          help="Asterisk version string")
+        (options, args) = parser.parse_args(argv)
+        self.ast_version = AsteriskVersion(options.ast_version)
+
+        reactor.callWhenRunning(self.run)
+
+        print self.ast_version
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/sip_attended_transfer_tcp")
+        self.asterisk.install_config("tests/sip_attended_transfer_tcp/configs/extensions.conf")
+        self.asterisk.install_config("tests/sip_attended_transfer_tcp/configs/sip.conf")
+        self.asterisk.install_config("tests/sip_attended_transfer_tcp/configs/manager.conf")
+
+
+    def readResult(self):
+        self.logLastStep("Reading results")
+        self.asterisk.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+        self.asterisk.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+        self.stopProcesses()
+
+        if self.passed == True:
+            print 'SIP Attended Transfer Test Passed!'
+        else:
+            print 'SIP Attended Transfer Test Failed'
+
+        if reactor.running:
+            print "Stopping Reactor ..."
+            reactor.stop()
+
+    def amiOnConnect(self, ami):
+        self.logLastStep("Connected to the AMI")
+        self.ami = ami
+
+    def amiLoginError(self, ami):
+        self.logLastStep("AMI login failed")
+        reactor.callLater(1, self.readResult)
+
+    def amiLogin(self):
+        self.logLastStep("Logging in to the AMI")
+        self.ami_factory = manager.AMIFactory("user", "mysecret")
+        self.ami_factory.login('127.0.0.1', 5038).addCallbacks(self.amiOnConnect, self.amiLoginError)
+
+    def checkBridgeResult(self, result):
+        print 'Result', result
+        if "bridgedchannel" not in result[0]:
+            print "bridgedchannel was not a valid key."
+        elif result[0]['bridgedchannel'] == 'SIP/end_b-00000001':
+            self.passed = True
+
+        if "link" not in result[0]:
+            print "'link' was not a valid key."
+        elif result[0]['link'] == 'SIP/end_b-00000001': # check link for older versions of asterisk
+            self.passed = True
+
+        if self.passed == True:
+            self.logLastStep("Found Bridge!!!")
+        else:
+            self.logLastStep("Detecting Bridge failed")
+
+    def checkBridgeError(self, reason):
+        print reason.getTraceback()
+        self.logLastStep("Checking Bridge failed.  Channel did not exist.")
+        reactor.callLater(1, self.readResult)
+
+    def amiCheckBridge(self):
+        self.logLastStep("Get AMI results")
+        self.ami.status('SIP/end_c-00000003').addCallbacks(self.checkBridgeResult, self.checkBridgeError)
+
+    def aCallB(self):
+        self.logLastStep("A Calling B")
+        self.pja.stdin.write("m\n")
+        self.pja.stdin.write("sip:call_b@127.0.0.1:5060;transport=TCP\n")
+
+    def aCallC(self):
+        self.logLastStep("A Calling C")
+        self.pja.stdin.write("m\n")
+        self.pja.stdin.write("sip:call_c@127.0.0.1:5060;transport=TCP\n")
+
+    def aTransferBToC(self):
+        self.logLastStep("A Transfering B to C")
+        self.pja.stdin.write("X\n")
+        self.pja.stdin.write("1\n")
+
+    def startProcesses(self):
+        self.logLastStep("Starting Processes")
+        self.asterisk.start()
+        self.pja = subprocess.Popen(['pjsua', '--local-port=5065',
+                                     '--auto-answer=200', '--null-audio', '--no-udp'],
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE)
+        self.pjb = subprocess.Popen(['pjsua', '--local-port=5066',
+                                     '--auto-answer=200', '--null-audio', '--no-udp'],
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE)
+        self.pjc = subprocess.Popen(['pjsua', '--local-port=5067',
+                                     '--auto-answer=200', '--null-audio', '--no-udp'],
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE)
+
+    def stopProcesses(self):
+        self.logLastStep("Stopping Processes")
+        self.asterisk.stop()
+        os.kill(self.pja.pid, signal.SIGKILL)
+        os.kill(self.pjb.pid, signal.SIGKILL)
+        os.kill(self.pjc.pid, signal.SIGKILL)
+
+    def logLastStep(self, step):
+        print step
+        self.lastStep = step
+
+    def run(self):
+
+        # start up the processes
+        self.startProcesses()
+
+        # call extensions
+        self.amiLogin()
+        reactor.callLater(5, self.aCallB)
+        reactor.callLater(10, self.aCallC)
+        reactor.callLater(15, self.aTransferBToC)
+        reactor.callLater(20, self.amiCheckBridge)
+
+        # stop and read results after timeout
+        reactor.callLater(25, self.readResult)
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    # Run Attended Transfer Test
+    att_transfer_test = AttTransferTest(argv)
+    reactor.run()
+    att_transfer_test.stopProcesses()
+    if att_transfer_test.passed != True:
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
