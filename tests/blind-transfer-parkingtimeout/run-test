@@ -19,6 +19,7 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
+
 class BlindTransferTest:
     def __init__(self, argv):
         self.passed = False
@@ -30,7 +31,8 @@ class BlindTransferTest:
 
         # get version info
         parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version", help="Asterisk version string")
+        parser.add_option("-v", "--version", dest="ast_version", \
+         help="Asterisk version string")
         (options, args) = parser.parse_args(argv)
         self.ast_version = AsteriskVersion(options.ast_version)
 
@@ -41,14 +43,15 @@ class BlindTransferTest:
         reactor.callWhenRunning(self.run)
 
         print self.ast_version
-        self.asterisk1 = Asterisk(base="/tmp/asterisk-testsuite/blind-transfer-parkingtimeout/asterisk1")
-        self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/extensions.conf")
-        self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/iax.conf")
-        self.asterisk1.install_config("tests/blind-transfer-parkingtimeout/configs/features.conf")
+        self.asterisk1 = Asterisk( \
+         base="/tmp/asterisk-testsuite/blind-transfer-parkingtimeout")
+        self.asterisk1.install_configs( \
+         "tests/blind-transfer-parkingtimeout/configs")
 
-        self.asterisk2 = Asterisk(base="/tmp/asterisk-testsuite/blind-transfer-parkingtimeout/asterisk2")
-        self.asterisk2.install_config("tests/blind-transfer-parkingtimeout/configs2/extensions.conf")
-        self.asterisk2.install_config("tests/blind-transfer-parkingtimeout/configs2/iax.conf")
+        self.asterisk2 = Asterisk( \
+         base="/tmp/asterisk-testsuite/blind-transfer-parkingtimeout")
+        self.asterisk2.install_configs( \
+         "tests/blind-transfer-parkingtimeout/configs2")
 
    # This gets invoked by the dialplan when test succeeds.
     def get_result_b(self, agi):
@@ -68,21 +71,24 @@ class BlindTransferTest:
             return
         self.done = True
         self.log_last_step("Reading results")
-        self.asterisk1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
-        self.asterisk2.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
 
-        self.asterisk1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
-        self.asterisk2.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+        # get lock output in case of deadlock before tearing down.
+        self.asterisk1.cli_exec("core show locks")
+        self.asterisk2.cli_exec("core show locks")
+
+        # if channels are still up for some reason, we want to know that
+        self.asterisk1.cli_exec("core show channels")
+        self.asterisk2.cli_exec("core show channels")
 
         if (self.passed):
             self.log_last_step("Test Passed...")
         else:
-            self.log_last_step("Test Failed... view result of 'core show globals' in log for more detailed failure results.")
+            self.log_last_step("Test Failed... view result of \
+             'core show globals' in log for more detailed failure results.")
 
         if reactor.running:
             print "Stopping Reactor ..."
             reactor.stop()
-
 
     # This is a blind transfer test with parkingtimeout.
     # 1.  A calls B
@@ -94,7 +100,8 @@ class BlindTransferTest:
         self.asterisk1.cli_exec("core set verbose 10")
 
         self.log_last_step("Originating call to begin test")
-        self.asterisk1.cli_originate("IAX2/userA@127.0.0.1:4571/b_exten extension a_dials@parking")
+        self.asterisk1.cli_originate("IAX2/userA@127.0.0.1:4571/b_exten \
+         extension a_dials@parking")
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
@@ -117,6 +124,7 @@ class BlindTransferTest:
 
         # stop and read results after timeout
         reactor.callLater(self.timeout, self.read_result)
+
 
 def main(argv=None):
     if argv is None:
