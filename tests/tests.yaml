@@ -32,6 +32,7 @@ tests:
     - test: 'feature_blonde_transfer'
     - test: 'feature_attended_transfer'
     - test: 'blind-transfer-parkingtimeout'
+    - test: 'callparking'
     - test: 'mixmonitor'
     - test: 'chanspy/chanspy_w_mixmonitor'
     - test: 'chanspy/chanspy_barge'
