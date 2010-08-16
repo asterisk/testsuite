@@ -48,3 +48,6 @@ tests:
     - test: 'fastagi/control-stream-file'
     - test: 'fastagi/database'
     - test: 'fastagi/execute'
+    - test: 'fastagi/get-data'
+    - test: 'fastagi/record-file'
+
