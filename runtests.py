@@ -127,6 +127,13 @@ class TestConfig:
         self.time = 0.0
         self.test_name = test_name
         self.ast_version = ast_version
+        self.config = None
+        self.summary = None
+        self.maxversion = None
+        self.maxversion_check = False
+        self.minversion = None
+        self.minversion_check = False
+        self.deps = []
 
         self.__parse_config()
         self.__check_deps(ast_version)
@@ -173,7 +180,6 @@ class TestConfig:
 
     def __process_properties(self):
         self.minversion = AsteriskVersion("1.4")
-        self.maxversion = None
         if "properties" not in self.config:
             return
         properties = self.config["properties"]
@@ -206,10 +212,18 @@ class TestConfig:
         self.config = yaml.load(f)
         f.close()
 
+        if not self.config:
+            print "ERROR: Failed to load configuration for test '%s'" % \
+                    self.test_name
+            return
+
         self.__process_testinfo()
         self.__process_properties()
 
     def __check_deps(self, ast_version):
+        if not self.config:
+            return
+
         self.deps = [
             Dependency(d)
                 for d in self.config["properties"].get("dependencies") or []
