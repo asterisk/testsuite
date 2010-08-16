@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 '''
 Copyright (C) 2010, Digium, Inc.
 Erin Spiceland <espiceland@digium.com>
@@ -77,7 +77,7 @@ class FastAGIGetDataTest:
                 self.asterisk.cli_exec("core show globals")
             else:
                 self.asterisk.cli_exec("dialplan show globals")
-                print "FAIL - FastAGI Connection test failed. View result",\
+                print "FAIL - FastAGI GET DATA test failed. View result",\
                     "of 'core show globals' in log for more detailed",\
                     "failure results."
 
