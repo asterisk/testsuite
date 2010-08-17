@@ -31,7 +31,7 @@ class BlindTransferTest:
 
         # get version info
         parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version", \
+        parser.add_option("-v", "--version", dest="ast_version",
          help="Asterisk version string")
         (options, args) = parser.parse_args(argv)
         self.ast_version = AsteriskVersion(options.ast_version)
@@ -43,14 +43,14 @@ class BlindTransferTest:
         reactor.callWhenRunning(self.run)
 
         print self.ast_version
-        self.asterisk1 = Asterisk( \
+        self.asterisk1 = Asterisk(
          base="/tmp/asterisk-testsuite/blind-transfer-parkingtimeout")
-        self.asterisk1.install_configs( \
+        self.asterisk1.install_configs(
          "tests/blind-transfer-parkingtimeout/configs")
 
-        self.asterisk2 = Asterisk( \
+        self.asterisk2 = Asterisk(
          base="/tmp/asterisk-testsuite/blind-transfer-parkingtimeout")
-        self.asterisk2.install_configs( \
+        self.asterisk2.install_configs(
          "tests/blind-transfer-parkingtimeout/configs2")
 
    # This gets invoked by the dialplan when test succeeds.
@@ -83,8 +83,8 @@ class BlindTransferTest:
         if (self.passed):
             self.log_last_step("Test Passed...")
         else:
-            self.log_last_step("Test Failed... view result of \
-             'core show globals' in log for more detailed failure results.")
+            self.log_last_step("Test Failed... view result of "
+             "'core show globals' in log for more detailed failure results.")
 
         if reactor.running:
             print "Stopping Reactor ..."
@@ -100,8 +100,8 @@ class BlindTransferTest:
         self.asterisk1.cli_exec("core set verbose 10")
 
         self.log_last_step("Originating call to begin test")
-        self.asterisk1.cli_originate("IAX2/userA@127.0.0.1:4571/b_exten \
-         extension a_dials@parking")
+        self.asterisk1.cli_originate(
+         "IAX2/userA@127.0.0.1:4571/b_exten extension a_dials@parking")
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
