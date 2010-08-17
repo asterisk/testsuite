@@ -1,0 +1,10 @@
+testinfo:
+    summary:     'Test One Step Parking'
+    description: |
+        'This test verifies the One Step Parking routine used in the feature code.'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
