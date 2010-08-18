@@ -95,7 +95,7 @@ class FastAGISayDateTimeTest:
 
         print "Originating call to begin test."
         self.asterisk.cli_originate(
-            "Local/basic_agi@agitest extension talkdetect_and_agi_notify@agitest"
+            "Local/basic_agi@agitest extension td_and_agi_notify@agitest"
         )
 
     def start_asterisk(self):
