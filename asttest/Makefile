@@ -22,7 +22,7 @@ endif
 
 INSTALL?=install
 DESTDIR?=
-PREFIX?=/usr
+PREFIX?=/usr/local
 EXEC_PREFIX?=$(PREFIX)
 BINDIR?=$(EXEC_PREFIX)/bin
 
