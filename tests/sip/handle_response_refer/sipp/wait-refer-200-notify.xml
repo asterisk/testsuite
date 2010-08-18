@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<scenario name="wait for a call followed by a refer">
+
+	<Global variables="file,user"/>
+	<nop>
+		<action>
+			<lookup assign_to="line" file="[$file]" key="[$user]"/>
+		</action>
+	</nop>
+	<Reference variables="file,user"/>
+
+	<recv request="INVITE" crlf="true"/>
+
+	<send>
+		<![CDATA[
+
+		SIP/2.0 180 Ringing
+		[last_Via:]
+		[last_From:]
+		[last_To:];tag=[call_number]
+		[last_Call-ID:]
+		[last_CSeq:]
+		Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
+		Content-Length: 0
+
+		]]>
+	</send>
+
+	<send>
+		<![CDATA[
+
+		SIP/2.0 200 OK
+		[last_Via:]
+		[last_From:]
+		[last_To:];tag=[call_number]
+		[last_Call-ID:]
+		[last_CSeq:]
+		Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
+		Content-Length: 0
+
+		]]>
+	</send>
+	
+	<recv request="ACK" optional="false"/>
+
+	<recv request="REFER" optional="false"/>
+	
+	<send>
+		<![CDATA[
+
+		SIP/2.0 200 Ok
+		[last_Via:]
+		[last_From:]
+		[last_To:];tag=[call_number]
+		[last_Call-ID:]
+		[last_CSeq:]
+		Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
+		Content-Length: 0
+
+		]]>
+	</send>
+
+	<send>
+		<![CDATA[
+		
+		NOTIFY sip:[field0 line="[$line]"]@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		[last_From:]
+		[last_To:];tag=[call_number]
+		[last_Call-ID:]
+		CSeq: 1 NOTIFY
+		Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
+		Max-Forwards: 70
+		Subscription-state: terminated;reason=noresource
+		Content-Type: message/sipfrag;version=2.0
+		Content-Length: [len]
+		Event: refer;id=103
+
+		SIP/2.0 [field1 line="[$line]"]
+
+		]]>
+	</send>
+	
+	<recv response="200" optional="false"/>
+
+
+	<recv request="BYE" optional="false"/>
+
+	<send>
+		<![CDATA[
+
+		SIP/2.0 200 OK
+		[last_Via:]
+		[last_From:]
+		[last_To:];tag=[call_number]
+		[last_Call-ID:]
+		[last_CSeq:]
+		Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
+		Content-Length: 0
+
+		]]>
+	</send>
+
+
+</scenario>
+
