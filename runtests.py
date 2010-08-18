@@ -421,6 +421,9 @@ def main(argv=None):
         sys.stdout.write("--> %s --- " % t.test_name)
         if t.did_run is False:
             print "SKIPPED"
+            for d in t.deps:
+                print "      --> Dependency: %s -- Met: %s" % (d.name,
+                             str(d.met))
             continue
         if t.passed is True:
             print "PASSED"
