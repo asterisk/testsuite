@@ -19,6 +19,7 @@ tests:
     - test: 'cdr/app_queue'
     - test: 'cdr/blind-transfer-accountcode'
     - test: 'cdr/originate-cdr-disposition'
+    - test: 'directed_pickup'
     - test: 'func_srv'
     - test: 'sip_outbound_address'
     - test: 'sip_attended_transfer'
