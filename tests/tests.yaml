@@ -37,6 +37,7 @@ tests:
     - test: 'one-step-parking'
     - test: 'callparking'
     - test: 'mixmonitor'
+    - test: 'mixmonitor_audiohook_inherit'
     - test: 'chanspy/chanspy_w_mixmonitor'
     - test: 'chanspy/chanspy_barge'
     - test: 'queues/queue_baseline'
