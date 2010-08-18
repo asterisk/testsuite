@@ -1,0 +1,16 @@
+testinfo:
+    summary: 'Test that asterisk properly handles responses to REFER requests'
+    description: |
+        "This test verifies that asterisk behaves properly in the presence of
+        various responses to REFER requests."
+    issues:
+        - mantis : '17486'
+        - mantis : '12713'
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - app : 'bash'
+        - app : 'sipp'
+        - app : 'asttest'
+
