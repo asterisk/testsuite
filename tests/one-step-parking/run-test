@@ -61,20 +61,14 @@ class OneStepParkingTest:
         self.log_last_step("Dial userA (701)")
         self.asterisk2.cli_originate(
          "IAX2/userA@127.0.0.1:4570/701 extension retrieve_A@parking")
-        return self.finish_agi(agi)
+        return agi.finish()
 
    # This gets invoked by the dialplan when test succeeds.
     def get_result_b(self, agi):
         self.log_last_step("got AGI connection from userB -> test successful")
         self.passed = True
         reactor.callLater(2, self.read_result)
-        return self.finish_agi(agi)
-
-   # Finish the AGI connection
-    def finish_agi(self, agi):
-        sequence = fastagi.InSequence()
-        sequence.append(agi.finish)
-        return sequence()
+        return agi.finish()
 
     def read_result(self):
         if self.done:
