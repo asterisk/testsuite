@@ -34,7 +34,7 @@ tests:
     - test: 'feature_attended_transfer'
     - test: 'blind-transfer-parkingtimeout'
     - test: 'one-step-parking'
-    #- test: 'callparking'
+    - test: 'callparking'
     - test: 'mixmonitor'
     - test: 'chanspy/chanspy_w_mixmonitor'
     - test: 'chanspy/chanspy_barge'

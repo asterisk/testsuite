@@ -1,0 +1,10 @@
+testinfo:
+    summary:     'Test Call Parking'
+    description: |
+        'This test verifies the Call Parking routine used in the feature code.'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
