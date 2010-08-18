@@ -1,0 +1,11 @@
+testinfo:
+    summary:     'Test AGI SAY ALPHA command using FastAGI.'
+    description: |
+        'Test AGI SAY ALPHA command using FastAGI.'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'python'
+        - python : 'twisted'
+        - python : 'starpy'

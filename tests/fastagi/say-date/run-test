@@ -17,11 +17,12 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
-class FastAGIChannelStatusTest:
+class FastAGISayDateTest:
     def __init__(self, argv):
-        self.passed = {'4': False, '6':False}
+        self.passed = False
+        self.notified = False
+        self.test = "COMPLETE"
         self.timeout = 45
-        self.test = 4
 
         parser = OptionParser()
         parser.add_option("-v", "--version", dest="ast_version",
@@ -32,57 +33,44 @@ class FastAGIChannelStatusTest:
         # Listen for results from dialplan
         self.agi_factory = fastagi.FastAGIFactory(self.do_test)
         reactor.listenTCP(4573, self.agi_factory, self.timeout, '127.0.0.1')
+
+        # Listen for success or failure of talkdetect
+        self.agi_factory2 = fastagi.FastAGIFactory(self.listen_result)
+        reactor.listenTCP(4574, self.agi_factory2, self.timeout, '127.0.0.1')
         reactor.callWhenRunning(self.run)
 
         print self.ast_version
-        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/fastagi/channel-status")
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/fastagi/say-date")
         self.asterisk.install_configs("tests/fastagi/configs")
 
-    def on_answer_failure(self, reason):
-        print 'Could not answer the call:', reason.getTraceback()
+    def listen_result(self, agi):
+        print "Got test success confirmation from dialplan."
+        self.notified = True
+        agi.finish()
+        self.result_changed()
 
     def on_failure(self, reason):
-        print 'Could not run deferred for', self.test
-        print reason.getTraceback()
+        print 'SAY DATE failed: ', reason.getTraceback()
+        self.passed = False
 
-    def on_answer(self, status):
-        self.do_test(self.agi)
-
-    def get_deferred(self, agi):
-        return agi.channelStatus(agi.variables['agi_channel'])
-
-    def finish_test(self, status):
-        print "status is", status
-        self.passed[status] = (self.test == status)
-        if self.test == 4:
-            print "Answering call"
-            self.test = 6
-            self.agi.answer().addCallback(self.on_answer).addErrback(
-                self.on_answer_failure
-            )
-        elif self.test == 6:
-            self.result_changed()
+    def finish_test(self, result):
+        print "AGI command reports success."
+        self.passed = True
 
     # This gets invoked by the dialplan when the call is answered
-    # Disconnect agi and set test result values
+    # send SAY DATE command and wait for results
     def do_test(self, agi):
         self.agi = agi
-        if self.test == 4:
-            print "Connection established. Testing for channel status code 4."
-        elif self.test == 6:
-            print "Testing for channel status code 6."
-
-        return self.get_deferred(agi).addCallback(
+        print "Connection established."
+        return agi.sayDate("1210498014").addCallback(
             self.finish_test
-        ).addErrback(
-            self.on_failure
-        )
+        ).addErrback(self.on_failure)
 
 	# Read test results and dialplan globals
     def read_result(self):
         self.agi.finish()
-        if self.passed[4] is True and self.passed[6] is True:
-            print "PASS - FastAGI CHANNEL STATUS works as expected."
+        if self.passed is True and self.notified is True:
+            print "PASS - FastAGI SAY DATE works as expected."
         else:
             self.asterisk.cli_exec("core show channels")
 
@@ -90,11 +78,11 @@ class FastAGIChannelStatusTest:
                 self.asterisk.cli_exec("core show globals")
             else:
                 self.asterisk.cli_exec("dialplan show globals")
-
-            print "FAIL - View result of 'core show globals' in log for",\
-                "more detailed failure results."
-            if self.passed[4] is not True: print "Test 4 failed (ringing)."
-            if self.passed[6] is not True: print "Test 6 failed (up)."
+                print "AGI reports success: ", self.passed
+                print "Diaplan reports success: ", self.notified
+                print "FAIL - FastAGI SAY DATE test failed. View result",\
+                    "of 'core show globals' in log for more detailed",\
+                    "failure results."
 
         self.stop_asterisk()
 
@@ -106,13 +94,10 @@ class FastAGIChannelStatusTest:
         self.asterisk.cli_exec("core set verbose 10")
         self.asterisk.cli_exec("agi set debug on")
 
-        # Set blocking=False so that we can test channel
-        # status before call is answered.
         print "Originating call to begin test."
         self.asterisk.cli_originate(
-            "Local/no_answer@agitest extension echo@agitest", blocking=False
+            "Local/basic_agi@agitest extension talkdetect_and_agi_notify@agitest"
         )
-
 
     def start_asterisk(self):
         print "Starting Asterisk"
@@ -122,9 +107,9 @@ class FastAGIChannelStatusTest:
         print "Stopping Asterisk"
         self.asterisk.stop()
 
-    # Read result before timeout 
+    # Read result before timeout
     def result_changed(self):
-        if self.passed[6] is not None:
+        if self.passed is True:
             reactor.callLater(2, self.read_result)
 
     def run(self):
@@ -136,9 +121,9 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    agi_test = FastAGIChannelStatusTest(argv)
+    agi_test = FastAGISayDateTest(argv)
     reactor.run()
-    if agi_test.passed[4] is not True or agi_test.passed[6] is not True:
+    if agi_test.passed is not True:
         return 1
 
     return 0

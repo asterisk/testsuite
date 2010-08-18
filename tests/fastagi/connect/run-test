@@ -37,26 +37,13 @@ class FastAGIConnectTest:
         self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/fastagi/connect")
         self.asterisk.install_configs("tests/fastagi/configs")
 
-    def on_failure(self, reason):
-        print 'Could not run sequence to close connection.'
-        print reason.getTraceback()
-
-    def get_deferred(self, agi):
-        sequence = fastagi.InSequence()
-        sequence.append(agi.finish)
-        return sequence()
-
-    def finish_test(self, agi):
-        self.passed = True
-        self.result_changed()
-
     # This gets invoked by the dialplan when the call is answered
     # Disconnect agi and set test result values
     def do_test(self, agi):
         print "Connection established."
-        return self.get_deferred(agi).addCallback(
-            self.finish_test
-        ).addErrback(self.on_failure)
+        self.passed = True
+        self.result_changed()
+        return agi.finish()
 
 	# Read test results and dialplan globals
     def read_result(self):
@@ -70,7 +57,8 @@ class FastAGIConnectTest:
                 self.asterisk.cli_exec("core show globals")
             else:
                 self.asterisk.cli_exec("dialplan show globals")
-                print "FAIL - FastAGI Connection test failed. View result of\
+
+            print "FAIL - FastAGI Connection test failed. View result of\
                     'core show globals' in log for more detailed failure\
                     results."
 
@@ -85,7 +73,7 @@ class FastAGIConnectTest:
 
         print "Originating call to begin test."
         self.asterisk.cli_originate(
-            "Local/b_exten@agitest extension echo@agitest"
+            "Local/basic_agi@agitest extension echo@agitest"
         )
 
     def start_asterisk(self):

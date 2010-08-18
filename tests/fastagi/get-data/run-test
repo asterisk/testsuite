@@ -77,7 +77,8 @@ class FastAGIGetDataTest:
                 self.asterisk.cli_exec("core show globals")
             else:
                 self.asterisk.cli_exec("dialplan show globals")
-                print "FAIL - FastAGI GET DATA test failed. View result",\
+
+            print "FAIL - FastAGI GET DATA test failed. View result",\
                     "of 'core show globals' in log for more detailed",\
                     "failure results."
 
@@ -93,7 +94,7 @@ class FastAGIGetDataTest:
 
         print "Originating call to begin test."
         self.asterisk.cli_originate(
-            "Local/b_exten@agitest extension d_exten@agitest"
+            "Local/basic_agi@agitest extension play_dtmf@agitest"
         )
 
     def start_asterisk(self):

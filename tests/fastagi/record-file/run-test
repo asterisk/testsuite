@@ -110,6 +110,18 @@ class FastAGIRecordFileTest:
                     "terminated with", t
                 self.overall_result = False
 
+        if self.overall_result is False:
+            self.asterisk.cli_exec("core show channels")
+
+            if self.ast_version < AsteriskVersion("1.6.1"):
+                self.asterisk.cli_exec("core show globals")
+            else:
+                self.asterisk.cli_exec("dialplan show globals")
+
+            print "FAIL - FastAGI RECORD FILE test failed. View result",\
+                    "of 'core show globals' in log for more detailed",\
+                    "failure results."
+
         self.stop_asterisk()
         if reactor.running:
             print "Stopping Reactor ..."
@@ -122,11 +134,11 @@ class FastAGIRecordFileTest:
             "with", self.test
         if self.test is "DTMF":
             self.asterisk.cli_originate(
-                "Local/b_exten@agitest extension e_exten@agitest"
+                "Local/basic_agi@agitest extension play_snd_and_term@agitest"
             )
         elif self.test is "HANGUP":
             self.asterisk.cli_originate(
-                "Local/b_exten@agitest extension f_exten@agitest"
+                "Local/basic_agi@agitest extension play_snd_and_hangup@agitest"
             )
         else:
             self.result_changed()
