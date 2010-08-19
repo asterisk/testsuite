@@ -11,6 +11,6 @@ testinfo:
          the transfer.'
 
 properties:
-    minversion: '1.4'
+    minversion: '1.6.2'
     dependencies:
         - python : 'twisted'
