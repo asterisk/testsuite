@@ -80,9 +80,10 @@ class FastAGISayDateTest:
                 self.asterisk.cli_exec("dialplan show globals")
                 print "AGI reports success: ", self.passed
                 print "Diaplan reports success: ", self.notified
-                print "FAIL - FastAGI SAY DATE test failed. View result",\
-                    "of 'core show globals' in log for more detailed",\
-                    "failure results."
+
+            print "FAIL - FastAGI SAY DATE test failed. View result",\
+                "of 'core show globals' in log for more detailed",\
+                "failure results."
 
         self.stop_asterisk()
 
@@ -123,7 +124,7 @@ def main(argv=None):
 
     agi_test = FastAGISayDateTest(argv)
     reactor.run()
-    if agi_test.passed is not True:
+    if agi_test.passed is not True or agi_test.notified is not True:
         return 1
 
     return 0
