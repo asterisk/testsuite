@@ -61,7 +61,7 @@ class FastAGISayPhoneticTest:
     def do_test(self, agi):
         self.agi = agi
         print "Connection established."
-        return agi.sayPhonetic("Archaeopteryx.").addCallback(
+        return agi.sayPhonetic("cat").addCallback(
             self.finish_test
         ).addErrback(self.on_failure)
 
