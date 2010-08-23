@@ -417,7 +417,7 @@ def main(argv=None):
     test_suite.run()
 
     print "\n=== TEST RESULTS ===\n"
-    print "PATH: %s\n" os.getenv("PATH")
+    print "PATH: %s\n" % os.getenv("PATH")
     for t in test_suite.tests:
         sys.stdout.write("--> %s --- " % t.test_name)
         if t.did_run is False:
