@@ -124,18 +124,54 @@ class Asterisk:
         Example Usage:
         asterisk.stop()
         """
+        #
+        # Start by asking to stop gracefully.
+        #
         if self.ast_version < AsteriskVersion("1.6.0"):
             self.cli_exec("stop gracefully")
         else:
             self.cli_exec("core stop gracefully")
+        for i in xrange(5):
+            time.sleep(1.0)
+            if self.process.poll() is not None:
+                return self.process.returncode
+
+        #
+        # If the graceful shutdown did not complete within 5 seconds, ask
+        # Asterisk to stop right now.
+        #
+        if self.ast_version < AsteriskVersion("1.6.0"):
+            self.cli_exec("stop now")
+        else:
+            self.cli_exec("core stop now")
+        for i in xrange(5):
+            time.sleep(1.0)
+            if self.process.poll() is not None:
+                return self.process.returncode
+
+        #
+        # If even a "stop now" didn't do the trick, fall back to sending
+        # signals to the process.  First, send a SIGTERM.  If it _STILL_ hasn't
+        # gone away after another 5 seconds, send SIGKILL.
+        #
         try:
             os.kill(self.process.pid, signal.SIGTERM)
-            time.sleep(5.0)
-            if not self.process.poll():
-                os.kill(self.process.pid, signal.SIGKILL)
+            for i in xrange(5):
+                time.sleep(1.0)
+                if self.process.poll() is not None:
+                    return self.process.returncode
+            os.kill(self.process.pid, signal.SIGKILL)
         except OSError:
+            # Probably that we sent a signal to a process that was already
+            # dead.  Just ignore it.
             pass
+
+        #
+        # We have done everything we can do at this point.  Wait for the
+        # process to exit.
+        #
         self.process.wait()
+
         return self.process.returncode
 
     def install_configs(self, cfg_path):
