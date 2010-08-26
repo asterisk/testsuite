@@ -58,17 +58,7 @@ function has_major_version(v)
 	local v1 = version(v)
 	local v2 = version()
 
-	if v1.svn and v2.svn and v1.branch == v2.branch then return true end
-	if v2.svn then
-		v1 = version("SVN-branch-" .. v .. "-r00000")
-		if v1.branch == v2.branch then return true end
-	end
-	if not v2.svn and not v1.svn and v1.concept == v2.concept and v1.major == v2.major then
-		if not v1.minor then return true end
-		if v1.minor == v2.minor then return true end
-	end
-
-	return false
+	return v1.branch == v2.branch
 end
 
 -- asterisk table is created in astlib.c
@@ -362,6 +352,31 @@ function asterisk_version:_parse()
 		if not self.branch then
 			self.branch, self.revision = self.version:match("SVN%-(.*)%-r(%d+M?)")
 		end
+
+		if not self.branch then
+			error("error parsing SVN version number: " .. self.version)
+		end
+
+		-- generate a synthetic version number for svn branch versions
+		self.patch = self.revision:match("(%d+)M?")
+		self.concept, self.major, self.minor = self.branch:match("branch%-(%d+).(%d+).(%d+)")
+		if not self.concept then
+			self.minor = "999" -- assume the SVN branch is newer than all released versions
+			self.concept, self.major = self.branch:match("branch%-(%d+).(%d+)")
+		end
+		if not self.concept then
+			if self.branch == "trunk" then
+				self.concept = "999"
+				self.major = "0"
+				self.minor = "0"
+			else
+				-- branch names that don't match are greater
+				-- than everything except trunk
+				self.concept = "998"
+				self.major = "0"
+				self.minor = "0"
+			end
+		end
 	else
 		self.concept, self.major, self.minor, self.patch = self.version:match("(%d+).(%d+).(%d+).(%d+)")
 		if not self.concept then
@@ -370,6 +385,19 @@ function asterisk_version:_parse()
 		if not self.concept then
 			self.concept, self.major, self.minor = self.version:match("(%d+).(%d+)")
 		end
+
+		if not self.concept then
+			error("error parsing version number: " .. self.version)
+		end
+
+		-- generate synthetic svn information
+		self.branch = "branch-" .. self.concept .. "." .. self.major
+
+		-- special handling for 1.6 branches
+		if self.concept == "1" and self.major == "6"  and self.minor ~= nil then
+			self.branch = self.branch .. "." .. self.minor
+		end
+		self.revision = "00000"
 	end
 end
 
@@ -378,31 +406,25 @@ function asterisk_version:__tostring()
 end
 
 function asterisk_version:__lt(other)
-	if self.svn and other.svn then
-		-- for svn versions, just compare revisions
-		local v1 = tonumber(self.revision:match("(%d)M?"))
-		local v2 = tonumber(other.revision:match("(%d)M?"))
-		return v1 < v2
-	elseif not self.svn and not other.svn then
-		-- compare each component of othe version number starting with
-		-- the most significant
-		local v = {
-			{tonumber(self.concept), tonumber(other.concept)},
-			{tonumber(self.major), tonumber(other.major)},
-			{tonumber(self.minor or 0), tonumber(other.minor or 0)},
-			{tonumber(self.patch or 0), tonumber(other.patch or 0)},
-		}
+	-- compare each component of othe version number starting with the most
+	-- significant.  Synthetic version numbers are generated for SVN
+	-- versions.
+	
+	local v = {
+		{tonumber(self.concept), tonumber(other.concept)},
+		{tonumber(self.major), tonumber(other.major)},
+		{tonumber(self.minor or 0), tonumber(other.minor or 0)},
+		{tonumber(self.patch or 0), tonumber(other.patch or 0)},
+	}
 
-		for _, i in ipairs(v) do
-			if i[1] < i[2] then
-				return true
-			elseif i[1] ~= i[2] then
-				return false
-			end
+	for _, i in ipairs(v) do
+		if i[1] < i[2] then
+			return true
+		elseif i[1] ~= i[2] then
+			return false
 		end
-		return false
 	end
-	error("cannot compare svn version number with non svn version number")
+	return false
 end
 
 function asterisk_version:__eq(other)
