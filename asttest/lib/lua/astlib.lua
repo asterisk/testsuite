@@ -169,22 +169,22 @@ function asterisk:spawn_and_wait()
 end
 
 function asterisk:wait(timeout)
-	if not proc then return nil, "error" end
+	if not self.proc then return nil, "error" end
 	return self.proc:wait(timeout)
 end
 
 function asterisk:term(timeout)
-	if not proc then return nil, "error" end
+	if not self.proc then return nil, "error" end
 	return self.proc:term(timeout)
 end
 
 function asterisk:kill()
-	if not proc then return nil, "error" end
+	if not self.proc then return nil, "error" end
 	return self.proc:kill()
 end
 
 function asterisk:term_or_kill()
-	if not proc then return nil, "error" end
+	if not self.proc then return nil, "error" end
 	return self.proc:term_or_kill()
 end
 
