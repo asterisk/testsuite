@@ -470,9 +470,49 @@ static int unlink_file(lua_State *L) {
 	return 1;
 }
 
+static int set_gc_func(lua_State *L) {
+	lua_pushvalue(L, 1);
+	lua_setfield(L, LUA_REGISTRYINDEX, "astlib_asterisk_gc");
+	return 0;
+}
+
+static int setup_gc(lua_State *L) {
+	/* since we know this function is only called by internal methods, we
+	 * don't do any error checking
+	 *
+	 * We expect two arguments, an asterisk table and a proc table */
+
+	/* create a special userdata so that we can have a __gc method called
+	 * on our proc table */
+	lua_pushvalue(L, 2);
+	lua_replace(L, LUA_ENVIRONINDEX);
+
+	lua_pushliteral(L, "__gc");
+
+	lua_newuserdata(L, sizeof(char));
+
+	/* create the metatable for our special userdata */
+	lua_createtable(L, 0, 1);
+
+	/* call our __gc closure generator and store the result */
+	lua_getfield(L, LUA_REGISTRYINDEX, "astlib_asterisk_gc");
+	lua_pushvalue(L, 1);
+	lua_pushvalue(L, 2);
+	lua_call(L, 2, 1);
+	lua_setfield(L, -2, "__gc");
+
+	lua_setmetatable(L, -2);
+
+	/* store the new userdata in the proc table */
+	lua_settable(L, 2);
+	return 0;
+}
+
 static luaL_Reg astlib[] = {
 	{"unlink", unlink_file},
 	{"_version", get_asterisk_version},
+	{"_set_asterisk_gc_generator", set_gc_func},
+	{"_setup_gc", setup_gc},
 	{NULL, NULL},
 };
 

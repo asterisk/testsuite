@@ -61,6 +61,15 @@ function has_major_version(v)
 	return v1.branch == v2.branch
 end
 
+function asterisk_gc(a, p)
+	return function()
+		_stop(a, p)
+	end
+end
+
+_set_asterisk_gc_generator(asterisk_gc)
+_set_asterisk_gc_generator = nil
+
 -- asterisk table is created in astlib.c
 function asterisk:new()
 	local a = self:_new()
@@ -84,6 +93,7 @@ function asterisk:_spawn()
 		"-f", "-g", "-q", "-m",
 		"-C", self.asterisk_conf
 	)
+	_setup_gc(self, p)
 	rawset(self, "proc", p)
 end
 
@@ -173,20 +183,40 @@ function asterisk:wait(timeout)
 	return self.proc:wait(timeout)
 end
 
-function asterisk:term(timeout)
-	if not self.proc then return nil, "error" end
-	return self.proc:term(timeout)
+function _stop(a, p)
+	local res, err
+
+	-- 1.6+ stop commands
+	local stop_gracefully = "core stop gracefully"
+	local stop_now = "core stop now"
+
+	-- if this is 1.4 or less use 1.4 stop commands
+	if version() < version("1.6") then
+		stop_gracefully = "stop gracefully"
+		stop_now = "stop now"
+	end
+
+	a:cli(stop_gracefully)
+	res, err = p:wait(5000)
+	if res or (not res and err ~= "timeout") then
+		return res, err
+	end
+
+	a:cli(stop_now)
+	res, err = p:wait(5000)
+	if res or (not res and err ~= "timeout") then
+		return res, err
+	end
+
+	return p:term_or_kill()
 end
 
-function asterisk:kill()
+function asterisk:stop()
 	if not self.proc then return nil, "error" end
-	return self.proc:kill()
+	return _stop(self, self.proc)
 end
 
-function asterisk:term_or_kill()
-	if not self.proc then return nil, "error" end
-	return self.proc:term_or_kill()
-end
+asterisk.term_or_kill = asterisk.stop
 
 function asterisk:__newindex(conffile_name, conffile)
 	if (getmetatable(conffile) ~= config) then
