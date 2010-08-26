@@ -406,7 +406,7 @@ function asterisk_version:__tostring()
 end
 
 function asterisk_version:__lt(other)
-	-- compare each component of othe version number starting with the most
+	-- compare each component of the version number starting with the most
 	-- significant.  Synthetic version numbers are generated for SVN
 	-- versions.
 	
