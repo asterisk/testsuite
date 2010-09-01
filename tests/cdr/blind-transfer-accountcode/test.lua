@@ -14,7 +14,7 @@ function print_error(err)
 	have_error = true
 end
 
-function sipp_exec(scenario, name, local_port)
+function sipp_exec(scenario, name, host)
 	local inf = "data.csv"
 	return proc.exec_io("sipp",
 	"127.0.0.1",
@@ -22,9 +22,9 @@ function sipp_exec(scenario, name, local_port)
 	"-sf", scenario,
 	"-inf", "sipp/" .. inf,
 	"-infindex", inf, "0",
-	"-i", "127.0.0.1",
-	"-p", local_port,
-	"-timeout", "30",
+	"-i", host,
+	"-p", 5060,
+	"-timeout", "60",
 	"-timeout_error",
 	"-set", "user", name,
 	"-set", "file", inf,
@@ -79,14 +79,14 @@ function do_transfer_and_check_results(accountcode, index)
 	a:spawn()
 
 	-- register our three peers
-	sipp_exec_and_wait("sipp/register.xml", index[1], "5061")
-	sipp_exec_and_wait("sipp/register.xml", index[2], "5062")
-	sipp_exec_and_wait("sipp/register.xml", index[3], "5063")
+	sipp_exec_and_wait("sipp/register.xml", index[1], "127.0.0.2")
+	sipp_exec_and_wait("sipp/register.xml", index[2], "127.0.0.3")
+	sipp_exec_and_wait("sipp/register.xml", index[3], "127.0.0.4")
 
 	-- make the calls and transfers
-	local t1 = sipp_exec("sipp/wait-for-call.xml", index[1], "5061")
-	local t2 = sipp_exec("sipp/wait-for-call-do-hangup.xml", index[2], "5062")
-	local t3 = sipp_exec("sipp/call-then-blind-transfer.xml", index[3], "5063")
+	local t1 = sipp_exec("sipp/wait-for-call.xml", index[1], "127.0.0.2")
+	local t2 = sipp_exec("sipp/wait-for-call-do-hangup.xml", index[2], "127.0.0.3")
+	local t3 = sipp_exec("sipp/call-then-blind-transfer.xml", index[3], "127.0.0.4")
 
 	-- wait for everything to finish
 	sipp_check_error(t3, "sipp/call-then-blind-transfer.xml")
