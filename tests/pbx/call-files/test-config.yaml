@@ -1,0 +1,9 @@
+testinfo:
+    summary:     'Tests that call files do not fail to load.'
+    description: 'Runs two call file tests to ensure that pbx_spool is working.'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'

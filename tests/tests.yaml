@@ -60,5 +60,6 @@ tests:
     - test: 'fastagi/say-digits'
     - test: 'fastagi/say-number'
     - test: 'fastagi/say-phonetic'
+    - test: 'pbx/call-files'
 
 
