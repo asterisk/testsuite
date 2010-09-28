@@ -305,8 +305,13 @@ class Asterisk:
             process = subprocess.Popen(cmd)
             return ""
 
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT)
+        try:
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                       stderr=subprocess.STDOUT)
+        except OSError:
+            print "Failed to execute command: %s" % str(cmd)
+            return ""
+
         output = ""
         try:
             for l in process.stdout.readlines():
