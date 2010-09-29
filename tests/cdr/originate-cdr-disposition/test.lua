@@ -1,10 +1,5 @@
 
-function check(msg, r, err)
-	if not r then
-		error(msg .. ": " .. err)
-	end
-	return r
-end
+require "cdr"
 
 function mcheck(msg, r, err)
 	check(msg, r, err)
@@ -53,38 +48,17 @@ end
 
 function check_cdr(a, record, disposition)
 	local cdr_path = a:path("/var/log/asterisk/cdr-csv/Master.csv")
-	local f, err = io.open(cdr_path, "r")
-	if not f then
-		error("error opening cdr file (" .. cdr_path .. "): " .. err)
-	end
+	local c = check("error parsing cdr file", cdr.new(a))
 
-	local found = false
-	local lineno = 0
-	for line in f:lines() do
-		lineno = lineno + 1
-
-		if lineno == record then
-			fail_if(not line:find(string.format('"%s"', disposition)), string.format("did not find disposition '%s' on line %s of cdr:\n%s", disposition, lineno, line))
-			found = true
-			break
-		end
-	end
-	fail_if(not found, string.format("expected disposition '%s' on line %s of cdr, but line %s does not exist in the file", disposition, record, record))
+	fail_if(not c[record], string.format("expected disposition '%s' in record %s, but file only has %s record(s)", disposition, record, c:len()))
+	fail_if(c[record]["disposition"] ~= disposition, string.format("expected disposition '%s' in record %s, but found '%s'", disposition, record, tostring(c[record]["disposition"])))
 end
 
 function check_for_n_cdrs(a, records)
-	local cdr_path = a:path("/var/log/asterisk/cdr-csv/Master.csv")
-	local f, err = io.open(cdr_path, "r")
-	if not f then
-		error("error opening cdr file (" .. cdr_path .. "): " .. err)
-	end
+	local c, err = cdr.new(a)
+	local c = check("error parsing cdr file", cdr.new(a))
 
-	local found = false
-	local lineno = 0
-	for line in f:lines() do
-		lineno = lineno + 1
-	end
-	fail_if(lineno ~= records, string.format("expected %s CDR(s) but found %s", records, lineno))
+	fail_if(c:len() ~= records, string.format("expected %s CDR(s) but found %s", records, c:len()))
 end
 
 function do_originate(a, scenario, record, disposition, timeout, exten)

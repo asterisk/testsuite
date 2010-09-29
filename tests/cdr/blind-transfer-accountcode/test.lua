@@ -1,3 +1,5 @@
+require "cdr"
+
 have_error = false
 
 function check_error(a)
@@ -50,21 +52,11 @@ function sipp_check_error(p, scenario)
 	return res, err
 end
 
-function check_cdr(a, end_line, value)
-	local cdr_path = a:path("/var/log/asterisk/cdr-csv/Master.csv")
-	local f, err = io.open(cdr_path, "r")
-	if not f then
-		error("error opening cdr file (" .. cdr_path .. "): " .. err)
-	end
+function check_cdr_accountcode(a, record, accountcode)
+	local c = check("error parsing cdr file", cdr.new(a))
 
-	local line
-	for i = 1, end_line do
-		line = f:read("*l")
-		if not line then
-			error("error reading lines from cdr file (" .. cdr_path .. ")")
-		end
-	end
-	fail_if(not line:find(value), "'" .. value .. "' not found in line " .. end_line .. " of cdr file (" .. cdr_path .. "):\n" .. line)
+	fail_if(not c[record], string.format("expected accountcode '%s' in record %s, but file only has %s record(s)", accountcode, record, c:len()))
+	fail_if(c[record]["accountcode"] ~= accountcode, string.format("expected accountcode '%s' in record %s, but found '%s'", accountcode, record, tostring(c[record]["accountcode"])))
 end
 
 -- This function will execute the three sipp scenarios using the inf file
@@ -97,7 +89,7 @@ function do_transfer_and_check_results(accountcode, index)
 	proc.perror(a:term_or_kill())
 
 	-- examine the CDR records generated to make sure account code is present
-	check_cdr(a, 2, accountcode)
+	check_cdr_accountcode(a, 2, accountcode)
 end
 
 -- test dialing a peer without an account code set.  The resulting account code
