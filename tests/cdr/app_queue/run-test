@@ -1,5 +1,3 @@
 #!/bin/bash -e
-export LUA_PATH=../../lib/lua/?.lua\;\;
-export LUA_CPATH=../../lib/lua/?.so\;\;
+. lib/sh/lua.sh
 asttest -a / -s `dirname $0` $@
-
