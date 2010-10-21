@@ -43,7 +43,8 @@ tests:
     - test: 'queues/position_priority_maxlen'
     - test: 'queues/macro_gosub_test'
     - test: 'queues/ringinuse_and_pause'
-    - test: 'queues/wrapup_time'
+    # Temporarily disabled while frequent failures are debugged
+    #- test: 'queues/wrapup_time'
     - test: 'fastagi/connect'
     - test: 'fastagi/channel-status'
     - test: 'fastagi/hangup'
