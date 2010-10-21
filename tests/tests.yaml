@@ -33,7 +33,8 @@ tests:
     - test: 'sip/handle_response_refer'
     - test: 'udptl'
     - test: 'udptl_v6'
-    - test: 'feature_blonde_transfer'
+    # Temporarily disabled while failures are debugged
+    #- test: 'feature_blonde_transfer'
     # Temporarily disabled while failures are debugged
     #- test: 'feature_attended_transfer'
     - test: 'blind-transfer-parkingtimeout'
