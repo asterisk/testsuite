@@ -111,6 +111,14 @@ function asterisk:cli(command)
 		return res, err
 	end
 
+	if res ~= 0 then
+		local output = p.stdout:read("*a")
+		if not output then
+			return nil, "error connecting to asterisk cli"
+		end
+		return nil, output
+	end
+
 	return p.stdout:read("*a")
 end
 
@@ -125,26 +133,24 @@ function asterisk:_waitfullybooted()
 	for _=1,10 do
 		local err
 		booted, err = self:cli("core waitfullybooted")
-		if not booted then
-			if err then
-				error("error waiting for asterisk to fully boot: " .. err)
-			else
-				error("error waiting for asterisk to fully boot")
-			end
-		end
-
+		
 		if #output ~= 0 then
 			output = output .. "=====\n"
 		end
 
-		output = output .. booted
+		if booted then
+			output = output .. booted
 
-		if booted:find("fully booted") then
-			break
+			if booted:find("fully booted") then
+				break
+			end
+		else
+			output = output .. err
 		end
+
 		posix.usleep(500000)
 	end
-	if not booted:find("fully booted") then
+	if booted and not booted:find("fully booted") then
 		print("error waiting for asterisk to fully boot: " .. booted)
 		print("checking to see if asterisk is still running")
 		local res, err = proc.perror(self:wait(1000))
