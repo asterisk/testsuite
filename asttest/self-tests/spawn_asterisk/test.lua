@@ -2,15 +2,16 @@
 
 skip_if(not ast.exists(), "asterisk not found")
 
+count = 5
 instances = {}
-for i=1,10 do
+for i=1,count do
 	print("starting asterisk instance " .. i)
 	local a = ast.new()
 	a:spawn()
 	table.insert(instances, a)
 end
 
-for i=1,10 do
+for i=1,count do
 	print("killing asterisk instance " .. i)
 	local a = instances[i]
 	local res, err = proc.perror(a:term_or_kill())
