@@ -1,0 +1,42 @@
+#!/bin/bash
+
+. lib/sh/library.sh
+
+#debug=1
+
+echo " >>> Starting callparking_retrieval test"
+
+initialize userA userB userC
+
+echo " >>> User A is calling user B, who will park the call."
+$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/wait@parking extension callb@parking" &
+sleep 2
+
+# Verify that the call is up
+verify_call userA 3
+
+sleep 5
+
+# Verify that the call is up on our bridge server
+verify_call userC 1
+
+echo " >>> User B is retrieving user A from parking, then will attempt to repark it."
+$ASTERISK -C $userB_tmpdir/asterisk.conf -rx "$ORIGINATE IAX2/userc/701@parking extension parka@parking" &
+sleep 2
+
+# Verify that the call is up
+verify_call userC 2
+
+# Have to wait for the announcement to complete
+sleep 5
+
+verify_call userC 1
+
+echo " *** Success!"
+
+$ASTERISK -C $userB_tmpdir/asterisk.conf -rx "$ORIGINATE IAX2/userc/701@parking extension hangup@parking" &
+
+cleanup
+
+exit 0
+

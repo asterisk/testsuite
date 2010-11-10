@@ -40,6 +40,7 @@ tests:
     - test: 'blind-transfer-parkingtimeout'
     - test: 'one-step-parking'
     - test: 'callparking'
+    - test: 'callparking_retrieval'
     - test: 'mixmonitor'
     - test: 'mixmonitor_audiohook_inherit'
     - test: 'chanspy/chanspy_barge'
@@ -67,5 +68,5 @@ tests:
     - test: 'fastagi/say-number'
     - test: 'fastagi/say-phonetic'
     - test: 'pbx/call-files'
-
+    - test: 'pbx/call-files2'
 

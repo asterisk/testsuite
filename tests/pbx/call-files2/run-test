@@ -1,0 +1,77 @@
+#!/bin/bash
+
+. lib/sh/library.sh
+
+echo " >>> Starting spoolfile test"
+
+create_spool() {
+	( echo "Channel: $1"
+	  echo "Context: spoolfile"
+	  echo "Extension: $2"
+	  echo "Priority: 1"
+	  echo "MaxRetries: 3"
+	  echo "WaitTime: 3"
+	  echo "RetryTime: 5"
+	  echo "Archive: yes"
+	)
+}
+
+initialize userA userB
+
+for user in userA userB; do
+	# Clean logger output file, when we're testing
+	if test "$debug" = "1"; then
+		rm -f $testdir/$user/messages
+	fi
+
+	# Shortcut for referral within this loop only
+	eval "conf=\${${user}_tmpdir}"
+	mkdir -p $conf/spool/outgoing
+
+	if test $debug -gt 1; then
+		$ASTERISK -C $conf/asterisk.conf -rx 'core set debug 1 pbx_spool'
+		$ASTERISK -C $conf/asterisk.conf -rx 'dialplan show'
+	fi
+done
+
+echo " >>> Spooling first file"
+create_spool "Local/noanswer@spoolfile" "donothing" > $userA_tmpdir/spoolfile
+mv -f $userA_tmpdir/spoolfile $userA_tmpdir/spool/outgoing/
+sleep 1
+if test "$debug" = "1"; then
+	for user in userA userB; do
+		echo ">>>>> $user >>>>>"
+		eval "$ASTERISK -C \${${user}_tmpdir}/asterisk.conf -rx \"core show channels\""
+		echo "<<<<< $user <<<<<"
+	done
+fi
+verify_call $userA_tmpdir 3
+
+# Enough time for 3 retries
+sleep 18
+
+echo " >>> Spool files should be expired by now"
+verify_call $userA_tmpdir 0
+
+echo " >>> Spooling second file"
+create_spool "Local/answer@spoolfile" "donothing" > $userA_tmpdir/spoolfile
+mv -f $userA_tmpdir/spoolfile $userA_tmpdir/spool/outgoing/
+sleep 1
+verify_call $userA_tmpdir 3
+
+sleep 5
+
+# If grep finds nothing, it exits abnormally.  We therefore need to do this
+# before cleanup, or our actual success will be detected as failure.
+count=`grep -c 'No such file or directory, deleting' $testdir/userA/messages`
+
+cleanup
+
+if test "$count" = "0"; then
+	echo " *** Success!"
+	exit 0
+else
+	echo " *** Failed:  found the error message $count times"
+	exit 1
+fi
+
