@@ -374,6 +374,7 @@ asterisk_version.__index = asterisk_version
 function asterisk_version:new(version)
 	local v = {
 		version = version,
+		order = {},
 	}
 	setmetatable(v, self)
 
@@ -395,10 +396,10 @@ function asterisk_version:_parse()
 
 		-- generate a synthetic version number for svn branch versions
 		self.patch = self.revision:match("(%d+)M?")
-		self.concept, self.major, self.minor = self.branch:match("branch%-(%d+).(%d+).(%d+)")
+		self.concept, self.major, self.minor = self.branch:match("branch%-([^.]+).(%d+).(%d+)")
 		if not self.concept then
 			self.minor = "999" -- assume the SVN branch is newer than all released versions
-			self.concept, self.major = self.branch:match("branch%-(%d+).(%d+)")
+			self.concept, self.major = self.branch:match("branch%-([^.]+).(%d+)")
 		end
 		if not self.concept then
 			if self.branch == "trunk" then
@@ -413,13 +414,34 @@ function asterisk_version:_parse()
 				self.minor = "0"
 			end
 		end
+
+		-- branch C.3 is minor version 998, other C.3 branches are 999
+		if self.branch == "branch-C.3" then
+			self.minor = "998"
+		end
+
+		-- store ordering information
+		-- if self.concept is not a number, assume a BE branch.  Treat
+		-- BE like asterisk 1.5.
+		if not self.concept:match("^%d+$") then
+			self.order.concept = 1
+			self.order.major = 5
+			self.order.minor = tonumber(self.minor)
+			self.order.patch = tonumber(self.patch)
+		else
+			self.order.concept = tonumber(self.concept)
+			self.order.major = tonumber(self.major)
+			self.order.minor = tonumber(self.minor)
+			self.order.patch = tonumber(self.patch)
+		end
+
 	else
-		self.concept, self.major, self.minor, self.patch = self.version:match("(%d+).(%d+).(%d+).(%d+)")
+		self.concept, self.major, self.minor, self.patch = self.version:match("([^.]+).(%d+).(%d+).(%d+)")
 		if not self.concept then
-			self.concept, self.major, self.minor = self.version:match("(%d+).(%d+).(%d+)")
+			self.concept, self.major, self.minor = self.version:match("([^.]+).(%d+).(%d+)")
 		end
 		if not self.concept then
-			self.concept, self.major, self.minor = self.version:match("(%d+).(%d+)")
+			self.concept, self.major, self.minor = self.version:match("([^.]+).(%d+)")
 		end
 
 		if not self.concept then
@@ -434,6 +456,21 @@ function asterisk_version:_parse()
 			self.branch = self.branch .. "." .. self.minor
 		end
 		self.revision = "00000"
+		
+		-- store ordering information
+		-- if self.concept is not a number, assume a BE branch.  Treat
+		-- BE like asterisk 1.5.
+		if not self.concept:match("^%d+$") then
+			self.order.concept = 1
+			self.order.major = 5
+			self.order.minor = tonumber(self.major:match("%d"))
+			self.order.patch = tonumber(self.patch or 0)
+		else
+			self.order.concept = tonumber(self.concept)
+			self.order.major = tonumber(self.major)
+			self.order.minor = tonumber(self.minor or 0)
+			self.order.patch = tonumber(self.patch or 0)
+		end
 	end
 end
 
@@ -447,10 +484,10 @@ function asterisk_version:__lt(other)
 	-- versions.
 	
 	local v = {
-		{tonumber(self.concept), tonumber(other.concept)},
-		{tonumber(self.major), tonumber(other.major)},
-		{tonumber(self.minor or 0), tonumber(other.minor or 0)},
-		{tonumber(self.patch or 0), tonumber(other.patch or 0)},
+		{self.order.concept, other.order.concept},
+		{self.order.major, other.order.major},
+		{self.order.minor, other.order.minor},
+		{self.order.patch, other.order.patch},
 	}
 
 	for _, i in ipairs(v) do
