@@ -69,4 +69,5 @@ tests:
     - test: 'fastagi/say-phonetic'
     - test: 'pbx/call-files'
     - test: 'pbx/call-files2'
+    - test: 'fax/local_channel_t38_queryoption'
 
