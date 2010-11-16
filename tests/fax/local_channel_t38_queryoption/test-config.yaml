@@ -11,7 +11,7 @@ testinfo:
         - jira : 'FAX-187'
 
 properties:
-    minversion: '1.6.2'
+    minversion: 'trunk'
     dependencies:
         - app : 'bash'
         - app : 'asttest'
