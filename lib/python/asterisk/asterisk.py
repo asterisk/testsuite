@@ -17,9 +17,9 @@ import signal
 import time
 import shutil
 import subprocess
+import utils
 
 from config import ConfigFile
-
 from version import AsteriskVersion
 
 
@@ -60,6 +60,8 @@ class Asterisk:
         self.ast_version = AsteriskVersion()
 
         self.astetcdir = "/etc/asterisk"
+	self.ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
+
         # Find the system installed asterisk.conf
         ast_confs = [
                 "/etc/asterisk/asterisk.conf",
@@ -107,11 +109,16 @@ class Asterisk:
         asterisk.start()
         """
         cmd = [
-            "asterisk",
+            self.ast_binary,
             "-f", "-g", "-q", "-m", "-n",
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
         ]
-        self.process = subprocess.Popen(cmd)
+	try:
+            self.process = subprocess.Popen(cmd)
+        except OSError:
+            print "Failed to execute command: %s" % str(cmd)
+            return False
+
         # Be _really_ sure that Asterisk has started up before returning.
         time.sleep(5.0)
         self.cli_exec("core waitfullybooted")
@@ -295,7 +302,7 @@ class Asterisk:
         asterisk.cli_exec("core set verbose 10")
         """
         cmd = [
-            "asterisk",
+            self.ast_binary,
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
             "-rx", "%s" % cli_cmd
         ]

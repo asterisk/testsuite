@@ -20,6 +20,7 @@ sys.path.append("lib/python")
 
 from asterisk.version import AsteriskVersion
 from asterisk.asterisk import Asterisk
+from asterisk import utils
 
 
 TESTS_CONFIG = "tests/tests.yaml"
@@ -41,7 +42,7 @@ class Dependency:
         self.met = False
         if "app" in dep:
             self.name = dep["app"]
-            self.met = self.__which(self.name) is not None
+            self.met = utils.which(self.name) is not None
         elif "python" in dep:
             self.name = dep["python"]
             try:
@@ -62,25 +63,6 @@ class Dependency:
         else:
             print "Unknown dependency type specified."
 
-    def __which(self, program):
-        '''
-        http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
-        '''
-        def is_exe(fpath):
-            return os.path.exists(fpath) and os.access(fpath, os.X_OK)
-
-        fpath, fname = os.path.split(program)
-        if fpath:
-            if is_exe(program):
-                return program
-        else:
-            for path in os.environ["PATH"].split(os.pathsep):
-                exe_file = os.path.join(path, program)
-                if is_exe(exe_file):
-                    return exe_file
-
-        return None
-
     def depend_ipv6(self):
         try:
             s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
@@ -95,7 +77,7 @@ class Dependency:
         we run pjsua --help and parse the output to determine if --ipv6
         is a valid option
         '''
-        if self.__which('pjsua') is None:
+        if utils.which('pjsua') is None:
             return False
 
         help_output = subprocess.Popen(['pjsua', '--help'],
