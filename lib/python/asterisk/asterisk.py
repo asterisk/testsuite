@@ -113,7 +113,7 @@ class Asterisk:
             "-f", "-g", "-q", "-m", "-n",
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
         ]
-    try:
+        try:
             self.process = subprocess.Popen(cmd)
         except OSError:
             print "Failed to execute command: %s" % str(cmd)
