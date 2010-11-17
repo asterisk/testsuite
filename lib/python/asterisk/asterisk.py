@@ -60,7 +60,7 @@ class Asterisk:
         self.ast_version = AsteriskVersion()
 
         self.astetcdir = "/etc/asterisk"
-	self.ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
+        self.ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
 
         # Find the system installed asterisk.conf
         ast_confs = [
@@ -113,7 +113,7 @@ class Asterisk:
             "-f", "-g", "-q", "-m", "-n",
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
         ]
-	try:
+    try:
             self.process = subprocess.Popen(cmd)
         except OSError:
             print "Failed to execute command: %s" % str(cmd)
@@ -192,7 +192,7 @@ class Asterisk:
         Keyword Arguments:
         cfg_path -- This argument must be the path to the configuration directory
         to be installed into this instance of Asterisk. Only top-level files will
-        be installed, sub directories will be ignored. 
+        be installed, sub directories will be ignored.
 
         Example Usage:
         asterisk.install_configs("tests/my-cool-test/configs")
@@ -210,7 +210,7 @@ class Asterisk:
         used only by this instance can be provided via this API call.
 
         Note: If a sub-directory is found to have the same name as the running
-        instance, install_config() will use the sub-directories version in place 
+        instance, install_config() will use the sub-directories version in place
         of the top-level version.
 
         For example, testsuite is running a test against 1.4 (branch-1.4):
