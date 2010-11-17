@@ -103,10 +103,16 @@ class CallFilesTest:
         self.stop_asterisk()
 
         print "Test 1 (Call File w/ Application) ... ",
-        print "Passed" if self.results[0] else "Failed"
-        print "Test 2 (Call File w/ Extension)   ... ",
-        print "Passed" if self.results[1] else "Failed"
+        if self.results[0]:
+            print "Passed"
+        else:
+            print "Failed"
 
+        print "Test 2 (Call File w/ Extension)   ... ",
+        if self.results[1]:
+            print "Passed"
+        else:
+            print "Failed"
 
 def main(argv=None):
     if argv is None:
