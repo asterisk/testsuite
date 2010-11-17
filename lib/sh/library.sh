@@ -52,7 +52,7 @@ initialize() {
 
 	for user in $@; do
 		echo " >>> Creating configuration directory for $user"
-		eval "${user}_tmpdir=`mktemp --tmpdir=/var/tmp -t -d testsuite_$user.XXXXXX`"
+		eval "${user}_tmpdir=`mktemp -d /var/tmp/testsuite_$user.XXXXXX`"
 		# Shortcut for referral within this loop only
 		eval "conf=\${${user}_tmpdir}"
 
