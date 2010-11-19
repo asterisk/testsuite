@@ -76,7 +76,7 @@ class RegisterTest:
 
     def start_sipp(self, peer, host, scenario, port):
         self.log_last_step("Starting SIPp scenario %s" % (scenario))
-        self.sipps[peer] = {'process': subprocess.Popen(['sipp', host, '-sf', 'tests/sip_register/sipp/%s' % (scenario), '-p', '%s' % (port), '-m', '1', '-i', '%s' % (host)]),
+        self.sipps[peer] = {'process': subprocess.Popen(['sipp', host, '-sf', 'tests/sip_register/sipp/%s' % (scenario), '-p', '%s' % (port), '-m', '1', '-i', '%s' % (host), '-bg']),
                            'pass': False}
 
     def log_last_step(self, step):
