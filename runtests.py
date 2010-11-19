@@ -246,6 +246,7 @@ class TestSuite:
         f.close()
 
         self.total_time = 0.0
+        self.total_failures = 0
 
         self.tests = [
             TestConfig(t["test"], ast_version) for t in self.config["tests"]
@@ -306,6 +307,8 @@ class TestSuite:
 
             t.run()
             self.total_time += t.time
+            if t.passed is False:
+                self.total_failures += 1
 
     def write_results_xml(self, fn, stdout=False):
         try:
@@ -318,9 +321,9 @@ class TestSuite:
             return
 
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        f.write('<testsuite errors="0" time="%.2f" tests="%d" '
+        f.write('<testsuite errors="0" failures="%d" time="%.2f" tests="%d" '
                 'name="AsteriskTestSuite">\n' %
-                (self.total_time, len(self.tests)))
+                (self.total_failures, self.total_time, len(self.tests)))
         for t in self.tests:
             if t.did_run is False:
                 continue
