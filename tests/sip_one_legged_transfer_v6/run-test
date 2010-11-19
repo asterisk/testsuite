@@ -37,10 +37,7 @@ class AttTransferTest:
 
         print self.ast_version
         self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/sip_one_legged_transfer_v6")
-        self.asterisk.install_config("tests/sip_one_legged_transfer_v6/configs/extensions.conf")
-        self.asterisk.install_config("tests/sip_one_legged_transfer_v6/configs/sip.conf")
-        self.asterisk.install_config("tests/sip_one_legged_transfer_v6/configs/manager.conf")
-
+        self.asterisk.install_configs("tests/sip_one_legged_transfer_v6/configs")
 
     def readResult(self):
         self.logLastStep("Reading results")
@@ -81,7 +78,7 @@ class AttTransferTest:
             print "'link' was not a valid key."
         elif result[0]['link'] == 'SIP/end_b-00000001': # check link for older versions of asterisk
             self.passed = True
-        
+
         if self.passed == True:
             self.logLastStep("Found Bridge!!!")
         else:

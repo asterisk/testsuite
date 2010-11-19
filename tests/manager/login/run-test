@@ -34,8 +34,7 @@ class AMILoginTest:
         }
         self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/manager/login",
                                  ast_conf_options=ast_conf_options)
-        self.asterisk.install_config("tests/manager/login/configs/manager.conf")
-        self.asterisk.install_config("tests/manager/login/configs/logger.conf")
+        self.asterisk.install_configs("tests/manager/login/configs")
 
     def stop_reactor(self):
         print "Stopping Reactor ..."

@@ -100,6 +100,8 @@ class Asterisk:
         for (var, val) in dir_cat.options:
             self.__mirror_dir(var, val)
 
+        self.install_configs(os.getcwd() + "/tests/configs")
+
     def start(self):
         """Start this instance of Asterisk.
 

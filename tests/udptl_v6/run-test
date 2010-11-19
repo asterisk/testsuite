@@ -34,14 +34,9 @@ class UdptlTest:
 
         print self.ast_version
         self.asterisk1 = Asterisk(base="/tmp/asterisk-testsuite/udptl_v6")
-        self.asterisk1.install_config("tests/udptl_v6/configs1/sip.conf")
-        self.asterisk1.install_config("tests/udptl_v6/configs1/manager.conf")
-        self.asterisk1.install_config("tests/udptl_v6/configs1/logger.conf")
+        self.asterisk1.install_configs("tests/udptl_v6/configs1")
         self.asterisk2 = Asterisk(base="/tmp/asterisk-testsuite/udptl_v6")
-        self.asterisk2.install_config("tests/udptl_v6/configs2/sip.conf")
-        self.asterisk2.install_config("tests/udptl_v6/configs2/manager.conf")
-        self.asterisk2.install_config("tests/udptl_v6/configs2/extensions.conf")
-        self.asterisk2.install_config("tests/udptl_v6/configs2/logger.conf")
+        self.asterisk2.install_configs("tests/udptl_v6/configs2")
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")

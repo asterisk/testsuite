@@ -37,8 +37,7 @@ class MixMonitorTest:
         print self.ast_version
         self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/mixmonitor_audiohook_inherit")
         self.audiofile1 = os.path.join(os.getcwd(), "tests/mixmonitor_audiohook_inherit/testaudio1")
-        self.asterisk.install_config("tests/mixmonitor_audiohook_inherit/configs/extensions.conf")
-        self.asterisk.install_config("tests/mixmonitor_audiohook_inherit/configs/features.conf")
+        self.asterisk.install_configs("tests/mixmonitor_audiohook_inherit/configs")
         self.talkingaudio = os.path.join(os.getcwd(), "tests/mixmonitor_audiohook_inherit/sounds/talking")
 
     def read_result(self):

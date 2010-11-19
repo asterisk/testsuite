@@ -52,8 +52,7 @@ class PickupTest:
 
         print self.ast_version
         self.asterisk1 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/directed_pickup"))
-        self.asterisk1.install_config("tests/directed_pickup/configs/extensions.conf")
-        self.asterisk1.install_config("tests/directed_pickup/configs/iax.conf")
+        self.asterisk1.install_configs("tests/directed_pickup/configs")
 
     def shut_down(self):
         self.log_last_step("Reading results")

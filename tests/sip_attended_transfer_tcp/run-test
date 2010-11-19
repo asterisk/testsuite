@@ -36,10 +36,7 @@ class AttTransferTest:
 
         print self.ast_version
         self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/sip_attended_transfer_tcp")
-        self.asterisk.install_config("tests/sip_attended_transfer_tcp/configs/extensions.conf")
-        self.asterisk.install_config("tests/sip_attended_transfer_tcp/configs/sip.conf")
-        self.asterisk.install_config("tests/sip_attended_transfer_tcp/configs/manager.conf")
-
+        self.asterisk.install_configs("tests/sip_attended_transfer_tcp/configs")
 
     def readResult(self):
         self.logLastStep("Reading results")

@@ -27,10 +27,7 @@ class Test:
         reactor.callLater(60, self.abort)
 
         asterisk1 = Asterisk(base=workingdir)
-        asterisk1.install_config("%s/configs/manager.conf" % (testdir))
-        asterisk1.install_config("%s/configs/extensions.conf" % (testdir))
-        asterisk1.install_config("%s/configs/logger.conf" % (testdir))
-        asterisk1.install_config("%s/configs/cdr.conf" % (testdir))
+        asterisk1.install_configs("%s/configs" % (testdir))
 
         asterisk1.start()
 

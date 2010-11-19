@@ -39,8 +39,7 @@ class CallFilesTest:
         self.ast_version = AsteriskVersion(options.ast_version)
 
         self.asterisk1 = Asterisk(base=WORKINGDIR)
-        self.asterisk1.install_config("%s/configs/extensions.conf" %
-			              (TESTDIR))
+        self.asterisk1.install_configs("%s/configs" % (TESTDIR))
 
         self.agi_factory1 = fastagi.FastAGIFactory(self.get_result1)
         self.agi_factory2 = fastagi.FastAGIFactory(self.get_result2)

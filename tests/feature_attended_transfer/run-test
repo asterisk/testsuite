@@ -50,17 +50,10 @@ class AttTransferTest:
 
         print self.ast_version
         self.asterisk1 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/feature_attended_transfer"))
-        self.asterisk1.install_config("tests/feature_attended_transfer/configs/extensions.conf")
-        self.asterisk1.install_config("tests/feature_attended_transfer/configs/iax.conf")
-        self.asterisk1.install_config("tests/feature_attended_transfer/configs/manager.conf")
-        self.asterisk1.install_config("tests/feature_attended_transfer/configs/logger.conf")
+        self.asterisk1.install_configs("tests/feature_attended_transfer/configs")
 
         self.asterisk2 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/feature_attended_transfer"))
-        self.asterisk2.install_config("tests/feature_attended_transfer/configs2/extensions.conf")
-        self.asterisk2.install_config("tests/feature_attended_transfer/configs2/features.conf")
-        self.asterisk2.install_config("tests/feature_attended_transfer/configs2/iax.conf")
-        self.asterisk2.install_config("tests/feature_attended_transfer/configs2/manager.conf")
-        self.asterisk2.install_config("tests/feature_attended_transfer/configs2/logger.conf")
+        self.asterisk2.install_configs("tests/feature_attended_transfer/configs2")
 
         self.talkingaudio = os.path.join(os.getcwd(), "tests/feature_attended_transfer/sounds/talking")
 

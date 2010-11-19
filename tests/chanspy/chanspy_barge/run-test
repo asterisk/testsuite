@@ -49,9 +49,7 @@ class ChanSpyBarge:
 
         self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/chanspy/chanspy_barge",
             ast_conf_options=ast_conf_options)
-        self.asterisk.install_config("tests/chanspy/chanspy_barge/configs/extensions.conf")
-        self.asterisk.install_config("tests/chanspy/chanspy_barge/configs/sip.conf")
-        self.asterisk.install_config("tests/chanspy/chanspy_barge/configs/manager.conf")
+        self.asterisk.install_configs("tests/chanspy/chanspy_barge/configs")
         self.talkingaudio = os.path.join(os.getcwd(), "tests/chanspy/chanspy_barge/sounds/talking")
         self.audiofile1 = os.path.join(os.getcwd(), "tests/chanspy/chanspy_barge/testaudio1")
 

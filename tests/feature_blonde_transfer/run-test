@@ -46,15 +46,10 @@ class BlondeTransferTest:
 
         print self.ast_version
         self.asterisk1 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/feature_blonde_transfer"))
-        self.asterisk1.install_config("tests/feature_blonde_transfer/blonde_configs/extensions.conf")
-        self.asterisk1.install_config("tests/feature_blonde_transfer/blonde_configs/iax.conf")
-        self.asterisk1.install_config("tests/feature_blonde_transfer/blonde_configs/manager.conf")
+        self.asterisk1.install_configs("tests/feature_blonde_transfer/blonde_configs")
 
         self.asterisk2 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/feature_blonde_transfer"))
-        self.asterisk2.install_config("tests/feature_blonde_transfer/blonde_configs2/extensions.conf")
-        self.asterisk2.install_config("tests/feature_blonde_transfer/blonde_configs2/features.conf")
-        self.asterisk2.install_config("tests/feature_blonde_transfer/blonde_configs2/iax.conf")
-        self.asterisk2.install_config("tests/feature_blonde_transfer/blonde_configs2/manager.conf")
+        self.asterisk2.install_configs("tests/feature_blonde_transfer/blonde_configs2")
 
         self.talkingaudio = os.path.join(os.getcwd(), "tests/feature_blonde_transfer/sounds/talking")
 

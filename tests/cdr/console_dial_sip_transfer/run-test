@@ -27,16 +27,10 @@ class Test:
         reactor.callLater(60, self.abort)
 
         asterisk1 = Asterisk(base=workingdir)
-        asterisk1.install_config("%s/configs1/sip.conf" % (testdir))
-        asterisk1.install_config("%s/configs1/extensions.conf" % (testdir))
-        asterisk1.install_config("%s/configs1/manager.conf" % (testdir))
-        asterisk1.install_config("%s/configs_common/logger.conf" % (testdir))
+        asterisk1.install_configs("%s/configs1" % (testdir))
 
         asterisk2 = Asterisk(base=workingdir)
-        asterisk2.install_config("%s/configs2/sip.conf" % (testdir))
-        asterisk2.install_config("%s/configs2/extensions.conf" % (testdir))
-
-        asterisk2.install_config("%s/configs_common/logger.conf" % (testdir))
+        asterisk2.install_configs("%s/configs2" % (testdir))
 
         asterisk1.start()
         asterisk2.start()

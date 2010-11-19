@@ -44,8 +44,7 @@ def main(argv = None):
         working_dir = os.path.dirname(argv[0])
 
         asterisk = Asterisk(base="/tmp/asterisk-testsuite/manager/event-monitor")
-        asterisk.install_config("tests/manager/event-monitor/configs/manager.conf")
-        asterisk.install_config("tests/manager/event-monitor/configs/logger.conf")
+        asterisk.install_configs("tests/manager/event-monitor/configs")
 
     logging.basicConfig()
     import client

@@ -42,7 +42,7 @@ class MixMonitorTest:
         self.audiofile1 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio1")
         self.audiofile2 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio2")
         self.audiofile3 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio3")
-        self.asterisk.install_config("tests/mixmonitor/configs/extensions.conf")
+        self.asterisk.install_configs("tests/mixmonitor/configs")
         self.talkingaudio = os.path.join(os.getcwd(), "tests/mixmonitor/sounds/talking")
 
     def read_result(self):
