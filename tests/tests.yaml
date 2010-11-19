@@ -67,6 +67,8 @@ tests:
     - test: 'fastagi/say-digits'
     - test: 'fastagi/say-number'
     - test: 'fastagi/say-phonetic'
+    # Requires patch to StarPy.
+    #- test: 'fastagi/wait-for-digit'
     - test: 'pbx/call-files'
     - test: 'pbx/call-files2'
     - test: 'fax/local_channel_t38_queryoption'
