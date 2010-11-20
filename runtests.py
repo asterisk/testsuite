@@ -246,6 +246,7 @@ class TestSuite:
         f.close()
 
         self.total_time = 0.0
+        self.total_count = 0
         self.total_failures = 0
 
         self.tests = [
@@ -306,6 +307,7 @@ class TestSuite:
             # Run Test
 
             t.run()
+            self.total_count += 1
             self.total_time += t.time
             if t.passed is False:
                 self.total_failures += 1
@@ -321,9 +323,9 @@ class TestSuite:
             return
 
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        f.write('<testsuite errors="0" failures="%d" time="%.2f" tests="%d" '
+        f.write('<testsuite errors="0" tests="%d" time="%.2f" failures="%d" '
                 'name="AsteriskTestSuite">\n' %
-                (self.total_failures, self.total_time, len(self.tests)))
+                (self.total_count, self.total_time, self.total_failures))
         for t in self.tests:
             if t.did_run is False:
                 continue
@@ -331,14 +333,14 @@ class TestSuite:
             if t.passed is True:
                 f.write('/>\n')
                 continue
-            f.write(">\n\t\t<failure><![CDATA[\n")
+            f.write(">\n\t\t<failure>\n")
             try:
                 test_output = open("tests/%s/test-output.txt" % t.test_name, "r")
                 f.write("%s" % test_output.read())
                 test_output.close()
             except IOError:
                 print "Failed to open test output for %s" % t.test_name
-            f.write("\n\t\t]]></failure>\n\t</testcase>\n")
+            f.write("\t\t></failure>\n\t</testcase>\n")
         f.write('</testsuite>\n')
         f.close()
 
