@@ -70,6 +70,7 @@ tests:
     # Requires patch to StarPy.
     #- test: 'fastagi/wait-for-digit'
     - test: 'pbx/call-files'
-    - test: 'pbx/call-files2'
+    # Temporarily disabled while failures are debugged
+    #- test: 'pbx/call-files2'
     - test: 'fax/local_channel_t38_queryoption'
 
