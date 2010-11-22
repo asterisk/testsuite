@@ -1,4 +1,5 @@
-#!/usr/bin/env bash -e
+#!/usr/bin/env bash
+set -e
 
 asttest -a / -s tests/rfc2833_dtmf_detect
 
