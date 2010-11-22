@@ -138,10 +138,6 @@ class CallParkingTest:
     # 6.  userC dials 702 and retrieves userB
 
     def launch_test(self):
-        self.asterisk1.cli_exec("core set verbose 10")
-        self.asterisk2.cli_exec("core set verbose 10")
-        self.asterisk3.cli_exec("core set verbose 10")
-
         self.log_last_step("Originating call to begin test")
         self.asterisk1.cli_originate(
          "IAX2/userA@127.0.0.1:4571/b_exten extension bridge_to_A@parking")

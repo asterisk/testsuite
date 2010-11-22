@@ -113,9 +113,6 @@ class BlondeTransferTest:
     # 6.  A and C report results to FastAGI and hangup.
     def launch_test(self):
 
-        self.asterisk2.cli_exec("core set verbose 10")
-        self.asterisk1.cli_exec("core set verbose 10")
-
         if self.ast_version < AsteriskVersion("1.6.1"):
             self.asterisk1.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
             self.asterisk2.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)

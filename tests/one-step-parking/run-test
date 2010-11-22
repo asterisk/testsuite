@@ -103,9 +103,6 @@ class OneStepParkingTest:
     # 3.  A gets parked
     # 4.  B calls 701 and retrieves A
     def launch_test(self):
-        self.asterisk2.cli_exec("core set verbose 10")
-        self.asterisk1.cli_exec("core set verbose 10")
-
         self.log_last_step("Originating call to begin test")
         self.asterisk1.cli_originate(
          "IAX2/userA@127.0.0.1:4571/b_exten extension a_dials@parking")

@@ -69,8 +69,6 @@ class FastAGIConnectTest:
             reactor.stop()
 
     def launch_test(self):
-        self.asterisk.cli_exec("core set verbose 10")
-
         print "Originating call to begin test."
         self.asterisk.cli_originate(
             "Local/basic_agi@agitest extension echo@agitest"

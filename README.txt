@@ -187,12 +187,26 @@ script.
              -> run-test
              -> test-config.yaml
              ...
+        /configs
+          -> asterisk.options.conf.inc
+          -> logger.conf
+          -> logger.general.conf.inc
+          ...
 
-        Finally, to have a test included in the test suite, it must be added to
-the "tests.yaml" file that lives in the tests directory.  This configuration
-file determines the order that the tests are considered for execution by the top
+        To have a test included in the test suite, it must be added to the
+"tests.yaml" file that lives in the tests directory.  This configuration file
+determines the order that the tests are considered for execution by the top
 level test suite application.
 
+        The purpose of the 'configs' directory is to define global settings for
+Asterisk.  Tests will inherit these settings every time the testsuite creates
+sandbox instances of Asterisk.  Additionally, tests have the ability to override
+these setting, however it is NOT recommended they do so.  If you wanted to add a
+setting to logger.conf [logfiles], you could create a 'logger.logfiles.conf.inc'
+file for your test and the global Asterisk logger.conf will automatically
+include it. The filename convention is <asterisk module>.<category>.conf.inc.
+Again, settings in 'asterisk.options.conf.inc' would be included in
+asterisk.conf [options] category.
 
 b) Preconditions
 

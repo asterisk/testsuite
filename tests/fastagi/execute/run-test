@@ -170,7 +170,6 @@ class FastAGIExecuteTest:
             reactor.stop()
 
     def launch_test(self):
-        self.asterisk.cli_exec("core set verbose 10")
         self.asterisk.cli_exec("agi set debug on")
         print "Originating call to begin test."
         self.asterisk.cli_originate(

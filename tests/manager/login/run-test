@@ -28,12 +28,7 @@ class AMILoginTest:
         reactor.callWhenRunning(self.run)
 
         print "Creating Asterisk instance ..."
-        ast_conf_options = {
-            "verbose" : "10",
-            "debug" : "3"
-        }
-        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/manager/login",
-                                 ast_conf_options=ast_conf_options)
+        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/manager/login")
         self.asterisk.install_configs("tests/manager/login/configs")
 
     def stop_reactor(self):

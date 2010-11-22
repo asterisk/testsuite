@@ -100,7 +100,7 @@ class Asterisk:
         for (var, val) in dir_cat.options:
             self.__mirror_dir(var, val)
 
-        self.install_configs(os.getcwd() + "/tests/configs")
+        self.install_configs(os.getcwd() + "/configs")
 
     def start(self):
         """Start this instance of Asterisk.
@@ -349,17 +349,17 @@ class Asterisk:
             return
 
         for c in ast_conf.categories:
-            f.write("[%s]\n\n" % c.name)
+            f.write("[%s]\n" % c.name)
             if c.name == "directories":
                 for (var, val) in c.options:
                     self.directories[var] = val
                     f.write("%s = %s%s\n" % (var, self.base, val))
             elif c.name == "options":
+                f.write("#include \"%s/asterisk.options.conf.inc\"\n" %
+                        (self.astetcdir))
                 if ast_conf_options:
                     for (var, val) in ast_conf_options.iteritems():
                         f.write("%s = %s\n" % (var, val))
-                if not ast_conf_options or "nocolor" not in ast_conf_options:
-                    f.write("nocolor = yes\n")
                 for (var, val) in c.options:
                     if not ast_conf_options or var not in ast_conf_options:
                         f.write("%s = %s\n" % (var, val))

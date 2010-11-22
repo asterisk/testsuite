@@ -94,9 +94,6 @@ class MixMonitorTest:
         self.log_last_step("Starting Asterisk")
         self.asterisk.start()
 
-        self.asterisk.cli_exec("core set verbose 10")
-        self.asterisk.cli_exec("core set debug 3")
-
         if self.ast_version < AsteriskVersion("1.6.1"):
             self.asterisk.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
             self.asterisk.cli_exec("core set global TESTAUDIO2 " + self.audiofile2)

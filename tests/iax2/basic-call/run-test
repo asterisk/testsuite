@@ -85,9 +85,6 @@ class IAXCallTest:
     def run(self):
         self.start_asterisk()
 
-        self.asterisk.cli_exec("core set verbose 10")
-        self.asterisk2.cli_exec("core set verbose 10")
-
         if self.ast_version < AsteriskVersion("1.6.0"):
             self.asterisk.cli_exec("iax2 set debug")
             self.asterisk2.cli_exec("iax2 set debug")
