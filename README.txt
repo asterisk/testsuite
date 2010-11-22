@@ -201,6 +201,10 @@ system has a fresh install of Asterisk with files installed into their default
 locations.  This includes a fresh set of sample configuration files in the
 /etc/asterisk directory.
 
+        For increased portability the shebang (#!) for "run-test" MUST begin
+with "#!/usr/bin/env".  For exmaple: a test written in Python would have
+"#!/usr/bin/env python" for the shebang.
+
 
 c) Test Execution
 
