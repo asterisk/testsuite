@@ -3,6 +3,8 @@ testinfo:
     description: |
         'One Asterisk instance sends a FAX to another Asterisk instance.
          This test uses IPv6 addressing.'
+    issues:
+        - mantis : '18299'
 
 properties:
     minversion: '1.8'

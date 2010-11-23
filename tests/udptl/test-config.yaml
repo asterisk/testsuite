@@ -2,6 +2,8 @@ testinfo:
     summary:     'Test T.38 FAX transmission over SIP'
     description: |
         'One Asterisk instance sends a FAX to another Asterisk instance'
+    issues:
+        mantis : '18299'
 
 properties:
     minversion: '1.6.2'
