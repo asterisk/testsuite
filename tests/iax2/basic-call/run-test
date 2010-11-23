@@ -29,7 +29,6 @@ class IAXCallTest:
         self.f = fastagi.FastAGIFactory(self.fastagi_func)
         reactor.listenTCP(4573, self.f, 50, '127.0.0.1')
         reactor.callWhenRunning(self.run)
-        reactor.callLater(20, self.stop_reactor)
 
         parser = OptionParser()
         parser.add_option("-v", "--version", dest="ast_version",
@@ -84,6 +83,8 @@ class IAXCallTest:
 
     def run(self):
         self.start_asterisk()
+
+        reactor.callLater(20, self.stop_reactor)
 
         if self.ast_version < AsteriskVersion("1.6.0"):
             self.asterisk.cli_exec("iax2 set debug")
