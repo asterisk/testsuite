@@ -1,0 +1,20 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'connect'
+    - test: 'channel-status'
+    - test: 'hangup'
+    - test: 'stream-file'
+    - test: 'control-stream-file'
+    - test: 'database'
+    - test: 'execute'
+    - test: 'get-data'
+    - test: 'record-file'
+    - test: 'say-alpha'
+    - test: 'say-date'
+    - test: 'say-datetime'
+    - test: 'say-time'
+    - test: 'say-digits'
+    - test: 'say-number'
+    - test: 'say-phonetic'
+    # Requires patch to StarPy.
+    #- test: 'wait-for-digit'

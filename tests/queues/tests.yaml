@@ -1,0 +1,9 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'queue_baseline'
+    - test: 'position_priority_maxlen'
+    - test: 'macro_gosub_test'
+    # Temporarily disabled while failures are debugged
+    #- test: 'ringinuse_and_pause'
+    # Temporarily disabled while failures are debugged
+    #- test: 'wrapup_time'

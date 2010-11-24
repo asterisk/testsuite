@@ -23,7 +23,7 @@ from asterisk.asterisk import Asterisk
 from asterisk import utils
 
 
-TESTS_CONFIG = "tests/tests.yaml"
+TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
 
 BIG_WARNING = "\n" \
@@ -125,13 +125,13 @@ class TestConfig:
         self.did_run = True
         start_time = time.time()
         cmd = [
-            "tests/%s/run-test" % self.test_name,
+            "%s/run-test" % self.test_name,
             "-v", str(self.ast_version)
         ]
         if os.path.exists(cmd[0]) and os.access(cmd[0], os.X_OK):
             print "Running %s ..." % cmd
             try:
-                f = open("tests/%s/test-output.txt" % self.test_name, "w")
+                f = open("%s/test-output.txt" % self.test_name, "w")
             except IOError:
                 print "FAILURE: Failed to open file for test output"
                 return
@@ -181,7 +181,7 @@ class TestConfig:
                         properties["maxversion"]
 
     def __parse_config(self):
-        test_config = "tests/%s/test-config.yaml" % self.test_name
+        test_config = "%s/test-config.yaml" % self.test_name
         try:
             f = open(test_config, "r")
         except IOError:
@@ -231,8 +231,19 @@ class TestConfig:
 
 class TestSuite:
     def __init__(self, ast_version, options):
+        self.options = options
+
+        self.tests = []
+        self.tests = self._parse_test_yaml("tests", ast_version)
+
+        self.total_time = 0.0
+        self.total_count = 0
+        self.total_failures = 0
+
+    def _parse_test_yaml(self, test_dir, ast_version):
+        tests = []
         try:
-            f = open(TESTS_CONFIG, "r")
+            f = open("%s/%s" % (test_dir, TESTS_CONFIG), "r")
         except IOError:
             print "Failed to open %s" % TESTS_CONFIG
             return
@@ -240,18 +251,18 @@ class TestSuite:
             print "Unexpected error: %s" % sys.exc_info()[0]
             return
 
-        self.options = options
-
-        self.config = yaml.load(f)
+        config = yaml.load(f)
         f.close()
 
-        self.total_time = 0.0
-        self.total_count = 0
-        self.total_failures = 0
+        for t in config["tests"]:
+            for val in t:
+                path = "%s/%s" % (test_dir, t[val])
+                if val == "test":
+                    tests.append(TestConfig(path, ast_version))
+                elif val == "dir":
+                    tests += self._parse_test_yaml(path, ast_version)
 
-        self.tests = [
-            TestConfig(t["test"], ast_version) for t in self.config["tests"]
-        ]
+        return tests
 
     def list_tests(self):
         print "Configured tests:"
@@ -328,7 +339,7 @@ class TestSuite:
                 continue
             f.write(">\n\t\t<failure><![CDATA[\n")
             try:
-                test_output = open("tests/%s/test-output.txt" % t.test_name, "r")
+                test_output = open("%s/test-output.txt" % t.test_name, "r")
                 f.write("%s" % test_output.read())
                 test_output.close()
             except IOError:

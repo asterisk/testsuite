@@ -1,0 +1,14 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'console_dial_sip_answer'
+    - test: 'console_dial_sip_busy'
+    - test: 'console_dial_sip_congestion'
+    - test: 'console_dial_sip_transfer'
+    - test: 'console_fork_after_busy_forward'
+    - test: 'console_fork_before_dial'
+    - test: 'cdr_unanswered_yes'
+    - test: 'cdr_userfield'
+    - test: 'nocdr'
+    - test: 'app_queue'
+    - test: 'blind-transfer-accountcode'
+    - test: 'originate-cdr-disposition'
