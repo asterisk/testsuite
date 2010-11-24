@@ -295,13 +295,6 @@ class TestSuite:
             # XXX TODO Hard coded path, gross.
             os.system("rm -f /var/run/asterisk/asterisk.ctl")
             os.system("rm -f /var/run/asterisk/asterisk.pid")
-            os.chdir("..")
-            print "Uninstalling Asterisk ... "
-            os.system("make uninstall-all > /dev/null 2>&1")
-            print "Installing Asterisk ... "
-            os.system("make install > /dev/null 2>&1")
-            print "Installing sample configuration ... "
-            os.system("make samples > /dev/null 2>&1")
             os.chdir(test_suite_dir)
 
             # Run Test
