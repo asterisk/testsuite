@@ -60,6 +60,7 @@ class Test:
     def end(self, ami, event):
         if event.get('channel').lower() != "console/dsp":
             return
+
         self.stop_asterisk()
         cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.asterisk1.base))
         cdr2 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.asterisk2.base))
@@ -84,6 +85,11 @@ class Test:
             dchannel="", lastapp="Hangup", lastarg="", disposition="ANSWERED",
             amaflags="DOCUMENTATION")])
 
+        if len(cdr1) < 2:
+            print "Fewer cdr records than expected! (%d)" % len(cdr1)
+            reactor.stop()
+            return
+
         if int(cdr1[0].duration) < int(cdr1[1].duration):
             print "Fail: Original CDR duration shorter than forked"
             sys.exit(-1)
@@ -105,3 +111,5 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
