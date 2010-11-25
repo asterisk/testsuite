@@ -133,9 +133,7 @@ class Asterisk:
         Example Usage:
         asterisk.stop()
         """
-        #
         # Start by asking to stop gracefully.
-        #
         if self.ast_version < AsteriskVersion("1.6.0"):
             self.cli_exec("stop gracefully")
         else:
@@ -145,10 +143,11 @@ class Asterisk:
             if self.process.poll() is not None:
                 return self.process.returncode
 
-        #
+        # Check for locks
+        self.cli_exec("core show locks")
+
         # If the graceful shutdown did not complete within 5 seconds, ask
         # Asterisk to stop right now.
-        #
         if self.ast_version < AsteriskVersion("1.6.0"):
             self.cli_exec("stop now")
         else:
@@ -158,11 +157,9 @@ class Asterisk:
             if self.process.poll() is not None:
                 return self.process.returncode
 
-        #
         # If even a "stop now" didn't do the trick, fall back to sending
         # signals to the process.  First, send a SIGTERM.  If it _STILL_ hasn't
         # gone away after another 5 seconds, send SIGKILL.
-        #
         try:
             os.kill(self.process.pid, signal.SIGTERM)
             for i in xrange(5):
@@ -175,10 +172,8 @@ class Asterisk:
             # dead.  Just ignore it.
             pass
 
-        #
         # We have done everything we can do at this point.  Wait for the
         # process to exit.
-        #
         self.process.wait()
 
         return self.process.returncode

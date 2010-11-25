@@ -144,6 +144,7 @@ class TestConfig:
             except IOError:
                 pass
             p.wait()
+            f.close()
             self.passed = p.returncode == 0
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
