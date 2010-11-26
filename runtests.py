@@ -338,14 +338,9 @@ class TestSuite:
             if t.passed is True:
                 f.write('/>\n')
                 continue
-            f.write(">\n\t\t<failure><![CDATA[\n")
-            try:
-                test_output = open("%s/test-output.txt" % t.test_name, "r")
-                f.write("%s" % test_output.read())
-                test_output.close()
-            except IOError:
-                print "Failed to open test output for %s" % t.test_name
-            f.write("\n\t\t]]></failure>\n\t</testcase>\n")
+            f.write(">\n\t\t<failure />")
+            f.write("\n\t</testcase>\n")
+
         f.write('</testsuite>\n')
         f.close()
 
