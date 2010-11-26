@@ -54,6 +54,7 @@ class AMILoginTest:
     def on_logoff(self, ami):
         self.log_last_step("Logoff Successful")
         self.passed = True
+        self.stop_reactor()
 
     def on_connect(self, ami):
         self.log_last_step("Connected to the AMI")
