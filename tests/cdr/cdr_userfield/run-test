@@ -24,15 +24,15 @@ class Test:
     def __init__(self):
         self.passed = False
 
-        reactor.callLater(60, self.abort)
-
         asterisk1 = Asterisk(base=workingdir)
         asterisk1.install_configs("%s/configs" % (testdir))
 
         asterisk1.start()
 
+        reactor.callLater(30, self.stop_reactor)
+
         self.asterisk1 = asterisk1
-        self.ami = AMI(self.start, self.abort, timeout=20)
+        self.ami = AMI(self.start, self.stop_reactor, timeout=20)
         self.ami.login()
 
     def start(self, ami):
@@ -42,16 +42,15 @@ class Test:
     def stop_asterisk(self):
         self.asterisk1.stop()
 
-    def abort(self):
-        print "Aborting ..."
-        self.stop_asterisk()
+    def stop_reactor(self):
+        print "Stopping Reactor ..."
         if reactor.running:
-            for call in reactor.getDelayedCalls():
-                call.cancel()
             reactor.stop()
+        self.stop_asterisk()
 
     def end(self, ami, event):
-        self.stop_asterisk()
+        self.stop_reactor()
+
         cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.asterisk1.base))
 
         cdr1_expect = AsteriskCSVCDR(records=[AsteriskCSVCDRLine(accountcode="",
@@ -64,9 +63,6 @@ class Test:
             self.passed = True
         else:
             print "Failure"
-
-        reactor.stop()
-
 
 def main():
     logging.basicConfig()

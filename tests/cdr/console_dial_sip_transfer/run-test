@@ -24,8 +24,6 @@ class Test:
     def __init__(self):
         self.passed = False
 
-        reactor.callLater(60, self.abort)
-
         asterisk1 = Asterisk(base=workingdir)
         asterisk1.install_configs("%s/configs1" % (testdir))
 
@@ -35,9 +33,11 @@ class Test:
         asterisk1.start()
         asterisk2.start()
 
+        reactor.callLater(30, self.stop_reactor)
+
         self.asterisk1 = asterisk1
         self.asterisk2 = asterisk2
-        self.ami = AMI(self.start, self.abort, timeout=20)
+        self.ami = AMI(self.start, self.stop_reactor, timeout=20)
         self.ami.login()
 
     def start(self, ami):
@@ -48,19 +48,17 @@ class Test:
         self.asterisk1.stop()
         self.asterisk2.stop()
 
-    def abort(self):
-        print "Aborting ..."
-        self.stop_asterisk()
+    def stop_reactor(self):
+        print "Stopping Reactor ..."
         if reactor.running:
-            for call in reactor.getDelayedCalls():
-                call.cancel()
             reactor.stop()
+        self.stop_asterisk()
 
     def end(self, ami, event):
         if event.get('channel').lower() != "console/dsp":
             return
 
-        self.stop_asterisk()
+        self.stop_reactor()
 
         cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.asterisk1.base))
         cdr2 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.asterisk2.base))
@@ -86,9 +84,6 @@ class Test:
             self.passed = True
         else:
             print "Failure"
-
-        reactor.stop()
-
 
 def main():
     logging.basicConfig()
