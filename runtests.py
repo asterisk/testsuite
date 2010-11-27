@@ -22,19 +22,8 @@ from asterisk.version import AsteriskVersion
 from asterisk.asterisk import Asterisk
 from asterisk import utils
 
-
 TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
-
-BIG_WARNING = "\n" \
-              "      *** PLEASE NOTE ***\n" \
-              "Running this script will completely wipe out any remnants of\n" \
-              "an existing Asterisk installation.  Please ensure you only run\n"\
-              "this in a test environment.\n" \
-              "\n" \
-              "EXISTING CONFIGURATION WILL BE LOST!\n" \
-              "      *******************\n"
-
 
 class Dependency:
     def __init__(self, dep):
@@ -361,7 +350,7 @@ def main(argv=None):
     if argv is None:
         args = sys.argv
 
-    usage = "Usage: ./runtests.py [options]\n\n" + BIG_WARNING
+    usage = "Usage: ./runtests.py [options]"
 
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-l", "--list-tests", action="store_true",
@@ -393,11 +382,6 @@ def main(argv=None):
         print "Asterisk Version: %s\n" % str(ast_version)
         test_suite.list_tests()
         return 0
-
-    if os.geteuid() != 0:
-        print "You must run this script as root."
-        print BIG_WARNING
-        return 1
 
     print "Running tests for Asterisk %s ...\n" % str(ast_version)
 
