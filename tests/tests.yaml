@@ -32,7 +32,7 @@ tests:
     #- test: 'mixmonitor'
     # Temporarily disabled while failures are debugged
     #- test: 'mixmonitor_audiohook_inherit'
-    - dir: 'chanspy'
+    #- dir: 'chanspy'
     - dir: 'queues'
     - dir: 'fastagi'
     - dir: 'pbx'
