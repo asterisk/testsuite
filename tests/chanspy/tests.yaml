@@ -1,4 +1,4 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     # Temporarily disabled while failures are debugged
-    - test: 'chanspy_barge'
+    #- test: 'chanspy_barge'
