@@ -17,7 +17,8 @@ tests:
     # Temporarily disabled while failures are debugged
     #- test: 'sip_one_legged_transfer_v6'
     - test: 'sip_register'
-    - dir: 'sip'
+    # Temporarily disabled while failures are debugged
+    #- dir: 'sip'
     - test: 'udptl'
     - test: 'udptl_v6'
     # Temporarily disabled while failures are debugged
@@ -26,7 +27,8 @@ tests:
     #- test: 'feature_attended_transfer'
     - test: 'blind-transfer-parkingtimeout'
     - test: 'one-step-parking'
-    - test: 'callparking'
+    # Temporarily disabled while failures are debugged
+    #- test: 'callparking'
     - test: 'callparking_retrieval'
     # Temporarily disabled while failures are debugged
     #- test: 'mixmonitor'

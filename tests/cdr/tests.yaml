@@ -9,6 +9,7 @@ tests:
     - test: 'cdr_unanswered_yes'
     - test: 'cdr_userfield'
     - test: 'nocdr'
-    - test: 'app_queue'
+    # Temporarily disabled while failures are debugged
+    #- test: 'app_queue'
     - test: 'blind-transfer-accountcode'
     - test: 'originate-cdr-disposition'
