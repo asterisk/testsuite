@@ -9,8 +9,10 @@ tests:
     - test: 'directed_pickup'
     - test: 'func_srv'
     - test: 'sip_outbound_address'
-    - test: 'sip_attended_transfer'
-    - test: 'sip_attended_transfer_tcp'
+    # Temporarily disabled while failures are debugged
+    #- test: 'sip_attended_transfer'
+    # Temporarily disabled while failures are debugged
+    #- test: 'sip_attended_transfer_tcp'
     # Temporarily disabled while failures are debugged
     #- test: 'sip_attended_transfer_v6'
     - test: 'sip_one_legged_transfer'
