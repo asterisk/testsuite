@@ -345,7 +345,6 @@ class TestSuite:
                 print f.read()
                 f.close()
 
-
 def main(argv=None):
     if argv is None:
         args = sys.argv
