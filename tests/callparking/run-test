@@ -19,6 +19,9 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
+workingdir = "/tmp/asterisk-testsuite/callparking"
+testdir = "tests/callparking"
+
 
 class CallParkingTest:
     def __init__(self, argv):
@@ -35,7 +38,6 @@ class CallParkingTest:
          help="Asterisk version string")
         (options, args) = parser.parse_args(argv)
         self.ast_version = AsteriskVersion(options.ast_version)
-        print self.ast_version
 
         # FastAGI, listen for results from dialplan
         self.agi_b = fastagi.FastAGIFactory(self.get_result_b)
@@ -45,33 +47,30 @@ class CallParkingTest:
         reactor.listenTCP(4575, self.agi_c, self.timeout, '127.0.0.1')
 
         self.agi_retrieve_A = fastagi.FastAGIFactory(
-          self.get_result_retrieve_A)
+            self.get_result_retrieve_A)
         reactor.listenTCP(4576, self.agi_retrieve_A, self.timeout, '127.0.0.1')
 
         self.agi_retrieve_B = fastagi.FastAGIFactory(
-         self.get_result_retrieve_B)
+            self.get_result_retrieve_B)
         reactor.listenTCP(4577, self.agi_retrieve_B, self.timeout, '127.0.0.1')
 
         reactor.callWhenRunning(self.run)
 
-        self.asterisk1 = Asterisk(
-         base="/tmp/asterisk-testsuite/callparking/asterisk1")
-        self.asterisk1.install_configs("tests/callparking/configs")
+        self.ast1 = Asterisk(base=workingdir)
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
 
-        self.asterisk2 = Asterisk(
-         base="/tmp/asterisk-testsuite/callparking/asterisk2")
-        self.asterisk2.install_configs("tests/callparking/configs2")
+        self.ast2 = Asterisk(base=workingdir)
+        self.ast2.install_configs("%s/configs/ast2" % (testdir))
 
-        self.asterisk3 = Asterisk(
-         base="/tmp/asterisk-testsuite/callparking/asterisk3")
-        self.asterisk3.install_configs("tests/callparking/configs3")
+        self.ast3 = Asterisk(base=workingdir)
+        self.ast3.install_configs("%s/configs/ast3" % (testdir))
 
     # This gets invoked by the dialplan when userB has parked userA to 701.
     # Initiate new call userB <--> userC now.
     def get_result_b(self, agi):
         self.log_last_step("got AGI connection from userB. "
          "Initiate new call between userB and userC now")
-        self.asterisk1.cli_originate(
+        self.ast1.cli_originate(
          "IAX2/userB@127.0.0.1:4572/c_exten extension bridge_to_B@parking")
         return agi.finish()
 
@@ -80,7 +79,7 @@ class CallParkingTest:
     def get_result_c(self, agi):
         self.log_last_step("got AGI connection from userC. "
          "Now retrieve userA -> call 701")
-        self.asterisk3.cli_originate(
+        self.ast3.cli_originate(
          "IAX2/userA@127.0.0.1:4570/701 extension retrieve_A@parking")
         return agi.finish()
 
@@ -89,7 +88,7 @@ class CallParkingTest:
     def get_result_retrieve_A(self, agi):
         self.log_last_step("got AGI connection from userC. "
          "userA retrieved successfully, now retrieve userB")
-        self.asterisk3.cli_originate(
+        self.ast3.cli_originate(
          "IAX2/userA@127.0.0.1:4570/702 extension retrieve_B@parking")
         return agi.finish()
 
@@ -110,14 +109,14 @@ class CallParkingTest:
         self.log_last_step("Reading results")
 
         # get lock output in case of deadlock before tearing down.
-        self.asterisk1.cli_exec("core show locks")
-        self.asterisk2.cli_exec("core show locks")
-        self.asterisk3.cli_exec("core show locks")
+        self.ast1.cli_exec("core show locks")
+        self.ast2.cli_exec("core show locks")
+        self.ast3.cli_exec("core show locks")
 
         # if channels are still up for some reason, we want to know that
-        self.asterisk1.cli_exec("core show channels")
-        self.asterisk2.cli_exec("core show channels")
-        self.asterisk3.cli_exec("core show channels")
+        self.ast1.cli_exec("core show channels")
+        self.ast2.cli_exec("core show channels")
+        self.ast3.cli_exec("core show channels")
 
         if (self.passed):
             self.log_last_step("Test Passed...")
@@ -139,19 +138,19 @@ class CallParkingTest:
 
     def launch_test(self):
         self.log_last_step("Originating call to begin test")
-        self.asterisk1.cli_originate(
+        self.ast1.cli_originate(
          "IAX2/userA@127.0.0.1:4571/b_exten extension bridge_to_A@parking")
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
-        self.asterisk1.start()
-        self.asterisk2.start()
-        self.asterisk3.start()
+        self.ast1.start()
+        self.ast2.start()
+        self.ast3.start()
 
     def stop_asterisk(self):
-        self.asterisk1.stop()
-        self.asterisk2.stop()
-        self.asterisk3.stop()
+        self.ast1.stop()
+        self.ast2.stop()
+        self.ast3.stop()
 
     def log_last_step(self, step):
         print step

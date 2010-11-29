@@ -19,6 +19,9 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
+workingdir = "/tmp/asterisk-testsuite/directed_pickup"
+testdir = "tests/directed_pickup"
+
 NOT_RUN = 0
 PASS = 1
 FAIL = 2
@@ -51,12 +54,12 @@ class PickupTest:
         reactor.callWhenRunning(self.run)
 
         print self.ast_version
-        self.asterisk1 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/directed_pickup"))
-        self.asterisk1.install_configs("tests/directed_pickup/configs")
+        self.ast1 = Asterisk(base=workingdir)
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
 
     def shut_down(self):
         self.log_last_step("Reading results")
-        self.asterisk1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+        self.ast1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
 
         self.stop_asterisk()
 
@@ -82,7 +85,7 @@ class PickupTest:
 
     # set the result, schedule next step
     def handle_result(self, result):
-        self.asterisk1.cli_exec("console hangup")
+        self.ast1.cli_exec("console hangup")
 
         if self.test1_res == NOT_RUN:
             self.log_last_step("Pickup Test 1 results came in.")
@@ -112,22 +115,22 @@ class PickupTest:
         return self.handle_agi_result(agi)
 
     def test1_pickup(self):
-        self.asterisk1.cli_exec("core show channels")
+        self.ast1.cli_exec("core show channels")
         self.log_last_step("Issuing the pickup")
-        self.asterisk1.cli_exec("console dial 1002@pickuptest")
+        self.ast1.cli_exec("console dial 1002@pickuptest")
 
     def launch_test1(self):
         self.log_last_step("Starting Test 1")
         if self.ast_version < AsteriskVersion("1.6.2"):
-            self.asterisk1.cli_exec("originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
+            self.ast1.cli_exec("originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
         else:
-            self.asterisk1.cli_exec("channel originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
+            self.ast1.cli_exec("channel originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
         reactor.callLater(2, self.test1_pickup)
 
     def test2_pickup(self):
-        self.asterisk1.cli_exec("core show channels")
+        self.ast1.cli_exec("core show channels")
         self.log_last_step("Issuing the pickup")
-        self.asterisk1.cli_exec("console dial 1003@pickuptest")
+        self.ast1.cli_exec("console dial 1003@pickuptest")
 
     def launch_test2(self):
         self.log_last_step("Starting Test 2")
@@ -136,15 +139,15 @@ class PickupTest:
             self.test2 = SKIP
             reactor.callLater(2, self.shut_down)
         else:
-            self.asterisk1.cli_exec("channel originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
+            self.ast1.cli_exec("channel originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
             reactor.callLater(2, self.test2_pickup)
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
-        self.asterisk1.start()
+        self.ast1.start()
 
     def stop_asterisk(self):
-        self.asterisk1.stop()
+        self.ast1.stop()
 
     def log_last_step(self, step):
         print step

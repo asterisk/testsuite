@@ -24,24 +24,22 @@ class Test:
     def __init__(self):
         self.passed = False
 
-        asterisk1 = Asterisk(base=workingdir)
-        asterisk1.install_configs("%s/configs" % (testdir))
+        self.ast1 = Asterisk(base=workingdir)
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
 
-        asterisk1.start()
+        self.ast1.start()
 
         reactor.callLater(30, self.stop_reactor)
-
-        self.asterisk1 = asterisk1
 
         self.ami = AMI(self.start, self.stop_reactor, timeout=20)
         self.ami.login()
 
     def start(self, ami):
         ami.registerEvent('Hangup', self.end)
-        self.asterisk1.cli_exec("console dial 1@default")
+        self.ast1.cli_exec("console dial 1@default")
 
     def stop_asterisk(self):
-        self.asterisk1.stop()
+        self.ast1.stop()
 
     def stop_reactor(self):
         print "Stopping Reactor ..."
@@ -53,7 +51,7 @@ class Test:
         self.stop_reactor()
 
         print "The failure to open the next CDR is expected"
-        cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.asterisk1.base))
+        cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.ast1.base))
 
         if len(cdr1) == 0:
             print "Success"

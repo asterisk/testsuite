@@ -19,6 +19,9 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
+workingdir = "/tmp/asterisk-testsuite/udptl"
+testdir = "tests/udptl"
+
 class UdptlTest:
     def __init__(self, argv):
         self.last_step = ""
@@ -32,18 +35,18 @@ class UdptlTest:
 
         reactor.callWhenRunning(self.run)
 
-        print self.ast_version
-        self.asterisk1 = Asterisk(base="/tmp/asterisk-testsuite/udptl")
-        self.asterisk1.install_configs("tests/udptl/configs1")
-        self.asterisk2 = Asterisk(base="/tmp/asterisk-testsuite/udptl")
-        self.asterisk2.install_configs("tests/udptl/configs2")
+        self.ast1 = Asterisk(base=workingdir)
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
+
+        self.ast2 = Asterisk(base=workingdir)
+        self.ast2.install_configs("%s/configs/ast2" % (testdir))
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
-        self.asterisk1.start()
-        self.asterisk1.cli_exec("fax set debug on")
-        self.asterisk2.start()
-        self.asterisk2.cli_exec("fax set debug on")
+        self.ast1.start()
+        self.ast1.cli_exec("fax set debug on")
+        self.ast2.start()
+        self.ast2.cli_exec("fax set debug on")
 
     def ami_on_connect1(self, ami):
         self.log_last_step("Connected to AMI 1")
@@ -88,8 +91,8 @@ class UdptlTest:
         self.lastStep = step
 
     def shut_down(self):
-        self.asterisk1.stop()
-        self.asterisk2.stop()
+        self.ast1.stop()
+        self.ast2.stop()
 
         if self.passed:
             print "UDPTL test passed!"

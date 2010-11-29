@@ -20,6 +20,9 @@ from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
 
+workingdir = "/tmp/asterisk-testsuite/iax2/basic-call"
+testdir = "tests/iax2/basic-call"
+
 
 class IAXCallTest:
     def __init__(self, argv):
@@ -38,11 +41,11 @@ class IAXCallTest:
 
         print "Creating Asterisk instances ..."
 
-        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/iax2/basic-call")
-        self.asterisk.install_configs("tests/iax2/basic-call/configs")
+        self.ast1 = Asterisk(base=workingdir)
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
 
-        self.asterisk2 = Asterisk(base="/tmp/asterisk-testsuite/iax2/basic-call")
-        self.asterisk2.install_configs("tests/iax2/basic-call/configs2")
+        self.ast2 = Asterisk(base=workingdir)
+        self.ast2.install_configs("%s/configs/ast2" % (testdir))
 
     def fastagi_func(self, agi):
         sequence = fastagi.InSequence()
@@ -64,15 +67,15 @@ class IAXCallTest:
 
     def start_asterisk(self):
         print "Starting Asterisk instances ..."
-        self.asterisk.start()
-        self.asterisk2.start()
+        self.ast1.start()
+        self.ast2.start()
 
     def stop_asterisk(self):
         print "Stopping Asterisk instances ..."
-        self.asterisk.stop()
-        self.asterisk2.stop()
+        self.ast1.stop()
+        self.ast2.stop()
         cdr = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" %
-                self.asterisk2.base)
+                self.ast2.base)
         cdr_test = AsteriskCSVCDR(
                 records=[AsteriskCSVCDRLine(disposition="ANSWERED", dchannel="",
                 dcontext="iaxtest", amaflags="DOCUMENTATION", accountcode="",
@@ -87,13 +90,13 @@ class IAXCallTest:
         reactor.callLater(20, self.stop_reactor)
 
         if self.ast_version < AsteriskVersion("1.6.0"):
-            self.asterisk.cli_exec("iax2 set debug")
-            self.asterisk2.cli_exec("iax2 set debug")
+            self.ast1.cli_exec("iax2 set debug")
+            self.ast2.cli_exec("iax2 set debug")
         else:
-            self.asterisk.cli_exec("iax2 set debug on")
-            self.asterisk2.cli_exec("iax2 set debug on")
+            self.ast1.cli_exec("iax2 set debug on")
+            self.ast2.cli_exec("iax2 set debug on")
 
-        self.asterisk.cli_exec(
+        self.ast1.cli_exec(
                 "originate IAX2/guest@127.0.0.1:4569/1000 extension 1000@iaxtest")
 
 

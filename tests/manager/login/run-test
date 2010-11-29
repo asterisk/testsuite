@@ -18,6 +18,9 @@ from starpy import manager
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 
+workingdir = "/tmp/asterisk-testsuite/manager/login"
+testdir = "tests/manager/login"
+
 
 class AMILoginTest:
     def __init__(self):
@@ -28,8 +31,8 @@ class AMILoginTest:
         reactor.callWhenRunning(self.run)
 
         print "Creating Asterisk instance ..."
-        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/manager/login")
-        self.asterisk.install_configs("tests/manager/login/configs")
+        self.ast1 = Asterisk(base=workingdir)
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
 
     def stop_reactor(self):
         print "Stopping Reactor ..."
@@ -38,10 +41,10 @@ class AMILoginTest:
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
-        self.asterisk.start()
+        self.ast1.start()
 
     def stop_asterisk(self):
-        self.asterisk.stop()
+        self.ast1.stop()
 
     def log_last_step(self, step):
         print step

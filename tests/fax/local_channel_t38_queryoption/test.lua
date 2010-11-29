@@ -29,7 +29,7 @@ function a(host1, host2)
    s["t38pt_udptl"] = "yes,none"
    s["disallow"] = "all"
    s["allow"] = "gsm"
-   
+
    s = c:new_section("fax")
    s["type"] = "peer"
    s["context"] = "local-receivefax"
@@ -45,10 +45,10 @@ function a(host1, host2)
    s = c:new_section("receivefax")
    s["exten"] = "1234,1,noop"
    s["exten"] = "1234,n,ReceiveFax(receive.tiff)"
-   
+
    s["exten"] = "h,1,noop"
    s["exten"] = "h,n,UserEvent(FaxStatus,application: ReceiveFax,status: ${FAXOPT(status)},statusstr: ${FAXOPT(statusstr)},error: ${FAXOPT(error)})"
-   
+
    s = c:new_section("local-receivefax")
    s["exten"] = "1234,1,noop"
    s["exten"] = "1234,n,Dial(local/1234@receivefax)"
@@ -59,7 +59,7 @@ function a(host1, host2)
 
    s["exten"] = "h,1,noop"
    s["exten"] = "h,n,UserEvent(FaxStatus,application: SendFax,status: ${FAXOPT(status)},statusstr: ${FAXOPT(statusstr)},error: ${FAXOPT(error)})"
-   
+
    s = c:new_section("local-sendfax")
    s["exten"] = "1234,1,noop"
    s["exten"] = "1234,n,Dial(local/1234@sendfax)"

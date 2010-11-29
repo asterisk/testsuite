@@ -20,6 +20,9 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
+workingdir = "/tmp/asterisk-testsuite/sip_attended_transfer_tcp"
+testdir = "tests/sip_attended_transfer_tcp"
+
 class AttTransferTest:
     def __init__(self, argv):
         self.last_step = ""
@@ -34,14 +37,13 @@ class AttTransferTest:
 
         reactor.callWhenRunning(self.run)
 
-        print self.ast_version
-        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/sip_attended_transfer_tcp")
-        self.asterisk.install_configs("tests/sip_attended_transfer_tcp/configs")
+        self.ast1 = Asterisk(base="workingdir")
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
 
     def readResult(self):
         self.logLastStep("Reading results")
-        self.asterisk.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
-        self.asterisk.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+        self.ast1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+        self.ast1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
         self.stopProcesses()
 
         if self.passed == True:
@@ -109,7 +111,7 @@ class AttTransferTest:
 
     def startProcesses(self):
         self.logLastStep("Starting Processes")
-        self.asterisk.start()
+        self.ast1.start()
         self.pja = subprocess.Popen(['pjsua', '--local-port=5065',
                                      '--auto-answer=200', '--null-audio', '--no-udp'],
                                      stdin=subprocess.PIPE,
@@ -125,7 +127,7 @@ class AttTransferTest:
 
     def stopProcesses(self):
         self.logLastStep("Stopping Processes")
-        self.asterisk.stop()
+        self.ast1.stop()
         os.kill(self.pja.pid, signal.SIGKILL)
         os.kill(self.pjb.pid, signal.SIGKILL)
         os.kill(self.pjc.pid, signal.SIGKILL)

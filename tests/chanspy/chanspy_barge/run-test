@@ -21,6 +21,9 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
+workingdir = "/tmp/asterisk-testsuite/chanspy/chanspy_barge"
+testdir = "tests/chanspy/chanspy_barge"
+
 class ChanSpyBarge:
     def __init__(self, argv):
         self.last_step = ""
@@ -47,11 +50,10 @@ class ChanSpyBarge:
             "transmit_silence" : "yes",
         }
 
-        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/chanspy/chanspy_barge",
-            ast_conf_options=ast_conf_options)
-        self.asterisk.install_configs("tests/chanspy/chanspy_barge/configs")
-        self.talkingaudio = os.path.join(os.getcwd(), "tests/chanspy/chanspy_barge/sounds/talking")
-        self.audiofile1 = os.path.join(os.getcwd(), "tests/chanspy/chanspy_barge/testaudio1")
+        self.ast1 = Asterisk(base=workingdir, ast_conf_options=ast_conf_options)
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
+        self.talkingaudio = os.path.join(os.getcwd(), "%s/sounds/talking" % (testdir))
+        self.audiofile1 = os.path.join(os.getcwd(), "%s/testaudio1" % (testdir))
 
     def reportPassed(self, agi):
         print "GOT PASS RESULTS!!!\n"
@@ -64,13 +66,13 @@ class ChanSpyBarge:
 
     def readResult(self):
         self.logLastStep("Reading results")
-        self.asterisk.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
-        self.asterisk.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+        self.ast1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+        self.ast1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
 
         if self.ast_version < AsteriskVersion("1.6.1"):
-            self.asterisk.cli_exec("core show globals") # The global variables here hold failure conditions
+            self.ast1.cli_exec("core show globals") # The global variables here hold failure conditions
         else:
-            self.asterisk.cli_exec("dialplan show globals") # The global variables here hold failure conditions
+            self.ast1.cli_exec("dialplan show globals") # The global variables here hold failure conditions
 
         if self.passed == True:
             print 'SIP ChanSpy test PASSED!'
@@ -116,21 +118,21 @@ class ChanSpyBarge:
 
     def startProcesses(self):
         self.logLastStep("Starting Processes")
-        self.asterisk.start()
+        self.ast1.start()
         playfilearg = "--play-file=%s.wav" % (self.talkingaudio)
         self.pja = subprocess.Popen(['pjsua', '--local-port=5065', '--auto-answer=200', '--null-audio', '--auto-loop'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         self.pjb = subprocess.Popen(['pjsua', '--local-port=5066', '--auto-answer=200', playfilearg, '--auto-play'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
         if self.ast_version < AsteriskVersion("1.6.1"):
-            self.asterisk.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
-            self.asterisk.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
+            self.ast1.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
+            self.ast1.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
         else:
-            self.asterisk.cli_exec("dialplan set global TESTAUDIO1 " + self.audiofile1)
-            self.asterisk.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
+            self.ast1.cli_exec("dialplan set global TESTAUDIO1 " + self.audiofile1)
+            self.ast1.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
 
     def stopProcesses(self):
         self.logLastStep("Stopping Processes")
-        self.asterisk.stop()
+        self.ast1.stop()
         os.kill(self.pja.pid, signal.SIGKILL)
         os.kill(self.pjb.pid, signal.SIGKILL)
 
@@ -141,15 +143,15 @@ class ChanSpyBarge:
     def callChanSpy(self):
         self.logLastStep("Placing call to ChanSpy extension.")
         if self.ast_version < AsteriskVersion("1.6.2"):
-            self.asterisk.cli_exec("originate SIP/end_b extension chanspytest@test")
+            self.ast1.cli_exec("originate SIP/end_b extension chanspytest@test")
         else:
-            self.asterisk.cli_exec("channel originate SIP/end_b extension chanspytest@test")
+            self.ast1.cli_exec("channel originate SIP/end_b extension chanspytest@test")
 
     def verifyAudio(self):
         if self.ast_version < AsteriskVersion("1.6.2"):
-            self.asterisk.cli_exec("originate Local/play_recording@test extension detect_audio@test")
+            self.ast1.cli_exec("originate Local/play_recording@test extension detect_audio@test")
         else:
-            self.asterisk.cli_exec("channel originate Local/play_recording@test extension detect_audio@test")
+            self.ast1.cli_exec("channel originate Local/play_recording@test extension detect_audio@test")
 
     def run(self):
 

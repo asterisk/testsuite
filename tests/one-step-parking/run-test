@@ -19,6 +19,8 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
+workingdir = "/tmp/asterisk-testsuite/one-step-parking"
+testdir = "tests/one-step-parking"
 
 class OneStepParkingTest:
     def __init__(self, argv):
@@ -32,7 +34,7 @@ class OneStepParkingTest:
         # get version info
         parser = OptionParser()
         parser.add_option("-v", "--version", dest="ast_version",
-         help="Asterisk version string")
+            help="Asterisk version string")
         (options, args) = parser.parse_args(argv)
         self.ast_version = AsteriskVersion(options.ast_version)
 
@@ -40,26 +42,23 @@ class OneStepParkingTest:
         self.agi_dial_a = fastagi.FastAGIFactory(self.get_result_dial_a)
         self.agi_b = fastagi.FastAGIFactory(self.get_result_b)
         reactor.listenTCP(4600, self.agi_dial_a,
-         self.timeout, '127.0.0.1')  # retrieve userA (Dial 701)
+            self.timeout, '127.0.0.1')  # retrieve userA (Dial 701)
         reactor.listenTCP(4574, self.agi_b,
-         self.timeout, '127.0.0.1')  # success
+            self.timeout, '127.0.0.1')  # success
 
         reactor.callWhenRunning(self.run)
 
-        print self.ast_version
-        self.asterisk1 = Asterisk(
-         base="/tmp/asterisk-testsuite/one-step-parking")
-        self.asterisk1.install_configs("tests/one-step-parking/configs")
+        self.ast1 = Asterisk(base=workingdir)
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
 
-        self.asterisk2 = Asterisk(
-         base="/tmp/asterisk-testsuite/one-step-parking")
-        self.asterisk2.install_configs("tests/one-step-parking/configs2")
+        self.ast2 = Asterisk(base=workingdir)
+        self.ast2.install_configs("%s/configs/ast2" % (testdir))
 
     # This gets invoked by the dialplan when userA gets parked (701)
     # and userB is trying to retrieve userA by dialing 701
     def get_result_dial_a(self, agi):
         self.log_last_step("Dial userA (701)")
-        self.asterisk2.cli_originate(
+        self.ast2.cli_originate(
          "IAX2/userA@127.0.0.1:4570/701 extension retrieve_A@parking")
         return agi.finish()
 
@@ -78,12 +77,12 @@ class OneStepParkingTest:
         self.log_last_step("Reading results")
 
         # get lock output in case of deadlock before tearing down.
-        self.asterisk1.cli_exec("core show locks")
-        self.asterisk2.cli_exec("core show locks")
+        self.ast1.cli_exec("core show locks")
+        self.ast2.cli_exec("core show locks")
 
         # if channels are still up for some reason, we want to know that
-        self.asterisk1.cli_exec("core show channels")
-        self.asterisk2.cli_exec("core show channels")
+        self.ast1.cli_exec("core show channels")
+        self.ast2.cli_exec("core show channels")
 
         self.stop_asterisk()
 
@@ -104,17 +103,17 @@ class OneStepParkingTest:
     # 4.  B calls 701 and retrieves A
     def launch_test(self):
         self.log_last_step("Originating call to begin test")
-        self.asterisk1.cli_originate(
+        self.ast1.cli_originate(
          "IAX2/userA@127.0.0.1:4571/b_exten extension a_dials@parking")
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
-        self.asterisk1.start()
-        self.asterisk2.start()
+        self.ast1.start()
+        self.ast2.start()
 
     def stop_asterisk(self):
-        self.asterisk1.stop()
-        self.asterisk2.stop()
+        self.ast1.stop()
+        self.ast2.stop()
 
     def log_last_step(self, step):
         print step

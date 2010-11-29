@@ -1,7 +1,7 @@
 require "cdr"
 
 function sipp_exec(scenario, name, host, port)
-	host = host or "127.0.0.1" 
+	host = host or "127.0.0.1"
 	port = port or "5060"
 	local inf = "data.csv"
 	local p = proc.exec_io("sipp",
@@ -26,21 +26,21 @@ function sipp_check_error(p, scenario)
 	local res, err = proc.perror(p:wait())
 
 	if not res then error(err) end
-	if res ~= 0 then 
+	if res ~= 0 then
 		error("error while executing " .. scenario .. " sipp scenario (sipp exited with status " .. res .. ")\n" .. p.stderr:read("*a"))
 	end
-	
+
 	return res, err
 end
 
 -- start asterisk
 print("starting asterisk")
 a = ast.new()
-a:load_config("configs/extensions.conf")
-a:load_config("configs/sip.conf")
+a:load_config("configs/ast1/extensions.conf")
+a:load_config("configs/ast1/sip.conf")
 a:generate_manager_conf()
 a:spawn()
-	
+
 s1 = check("error starting sipp", sipp_exec("sipp/wait-for-call.xml", "test1", "127.0.0.2"))
 s2 = check("error starting sipp", sipp_exec("sipp/call.xml", "test2", "127.0.0.3"))
 

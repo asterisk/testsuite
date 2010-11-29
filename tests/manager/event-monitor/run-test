@@ -18,6 +18,9 @@ as well as optionally events to send which also need events monitored.
 Please see the documentation in the client module for more information.
 """
 
+workingdir ="/tmp/asterisk-testsuite/manager/event-monitor"
+testdir = "tests/manager/event-monitor"
+
 class Test():
 
     def test0(self, watcher):
@@ -43,14 +46,14 @@ def main(argv = None):
         (options, args) = parser.parse_args(argv)
         working_dir = os.path.dirname(argv[0])
 
-        asterisk = Asterisk(base="/tmp/asterisk-testsuite/manager/event-monitor")
-        asterisk.install_configs("tests/manager/event-monitor/configs")
+        ast1 = Asterisk(base=workingdir)
+        ast1.install_configs("%s/configs/ast1")
 
     logging.basicConfig()
     import client
 
     tester = Test()
-    watcher = client.EventWatcher(argv, asterisk, tester, 5)
+    watcher = client.EventWatcher(argv, ast1, tester, 5)
 
     #watcher.log.setLevel(logging.DEBUG)
     #manager.log.setLevel(logging.DEBUG)

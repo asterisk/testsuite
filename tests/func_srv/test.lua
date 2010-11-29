@@ -73,7 +73,7 @@ function do_call(man, exten)
 end
 
 instance = ast.new()
-instance:load_config("configs/extensions.conf")
+instance:load_config("configs/ast1/extensions.conf")
 instance:generate_manager_conf()
 instance:spawn()
 

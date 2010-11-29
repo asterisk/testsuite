@@ -19,8 +19,8 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
-WORKINGDIR = "/tmp/asterisk-testsuite/call-files"
-TESTDIR = "tests/pbx/call-files"
+workingdir = "/tmp/asterisk-testsuite/call-files"
+testdir = "tests/pbx/call-files"
 
 class CallFilesTest:
     def __init__(self, argv):
@@ -38,8 +38,8 @@ class CallFilesTest:
         (options, args) = parser.parse_args(argv)
         self.ast_version = AsteriskVersion(options.ast_version)
 
-        self.asterisk1 = Asterisk(base=WORKINGDIR)
-        self.asterisk1.install_configs("%s/configs" % (TESTDIR))
+        self.ast1 = Asterisk(base=workingdir)
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
 
         self.agi_factory1 = fastagi.FastAGIFactory(self.get_result1)
         self.agi_factory2 = fastagi.FastAGIFactory(self.get_result2)
@@ -65,22 +65,22 @@ class CallFilesTest:
 
     def start_asterisk(self):
         print "Starting Asterisk"
-        self.asterisk1.start()
+        self.ast1.start()
 
     def stop_asterisk(self):
-        self.asterisk1.stop()
+        self.ast1.stop()
 
     def launch_test(self):
         for i in [ "", "2" ]:
             print "Moving the sample%s.call file to the spool dir..." % (i)
 
-            copy("%s/sample%s.call" % (TESTDIR, i),
-                 "%s/etc/sample%s.call" % (self.asterisk1.base, i))
+            copy("%s/sample%s.call" % (testdir, i),
+                 "%s/etc/sample%s.call" % (self.ast1.base, i))
 
-            move("%s/etc/sample%s.call" % (self.asterisk1.base, i),
+            move("%s/etc/sample%s.call" % (self.ast1.base, i),
                  "%s%s/outgoing/" %
-                 (self.asterisk1.base,
-                  self.asterisk1.directories["astspooldir"]))
+                 (self.ast1.base,
+                  self.ast1.directories["astspooldir"]))
 
     def run(self):
         self.start_asterisk()

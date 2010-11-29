@@ -22,8 +22,8 @@ end
 
 function setup_ast_instance()
 	local instance = ast.new()
-	instance:load_config("configs/extensions.conf")
-	instance:load_config("configs/queues.conf")
+	instance:load_config("configs/ast1/extensions.conf")
+	instance:load_config("configs/ast1/queues.conf")
 	instance:generate_manager_conf()
 	instance:spawn()
 	return instance

@@ -127,10 +127,10 @@ function call_and_check_sip_params(name)
 		["rtpsource,video"] = "127.0.0.1:1000[02]",
 		["rtpsource,text"] = ""
 	}
-	
-	a:load_config("configs/sip.conf")
-	a:load_config("configs/extensions.conf")
-	a:load_config("configs/rtp.conf")
+
+	a:load_config("configs/ast1/sip.conf")
+	a:load_config("configs/ast1/extensions.conf")
+	a:load_config("configs/ast1/rtp.conf")
 	a:generate_manager_conf()
 	a:spawn()
 

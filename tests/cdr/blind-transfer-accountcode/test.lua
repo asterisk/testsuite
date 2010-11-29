@@ -39,16 +39,16 @@ function sipp_exec_and_wait(scenario, name, local_port)
 end
 
 function sipp_check_error(p, scenario)
-	local res, err = p:wait()	
+	local res, err = p:wait()
 
 	if not res then
 		print_error(err)
 		return res, err
 	end
-	if res ~= 0 then 
+	if res ~= 0 then
 		print_error("error while executing " .. scenario .. " sipp scenario (sipp exited with status " .. res .. ")\n" .. p.stderr:read("*a"))
 	end
-	
+
 	return res, err
 end
 
@@ -66,8 +66,8 @@ end
 -- see the sipp/data.csv file to determine who is called in which situations.
 function do_transfer_and_check_results(accountcode, index)
 	local a = ast.new()
-	a:load_config("configs/sip.conf")
-	a:load_config("configs/extensions.conf")
+	a:load_config("configs/ast1/sip.conf")
+	a:load_config("configs/ast1/extensions.conf")
 	a:spawn()
 
 	-- register our three peers

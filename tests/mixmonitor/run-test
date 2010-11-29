@@ -17,6 +17,9 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
+workingdir = "/tmp/asterisk-testsuite/mixmonitor"
+testdir = "tests/mixmonitor"
+
 class MixMonitorTest:
     def __init__(self, argv):
         self.passed = False
@@ -38,12 +41,13 @@ class MixMonitorTest:
         reactor.callWhenRunning(self.run)
 
         print self.ast_version
-        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/mixmonitor")
-        self.audiofile1 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio1")
-        self.audiofile2 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio2")
-        self.audiofile3 = os.path.join(os.getcwd(), "tests/mixmonitor/testaudio3")
-        self.asterisk.install_configs("tests/mixmonitor/configs")
-        self.talkingaudio = os.path.join(os.getcwd(), "tests/mixmonitor/sounds/talking")
+        self.ast1 = Asterisk(base=workingdir)
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
+        self.audiofile1 = os.path.join(os.getcwd(), "%s/testaudio1" % (testdir))
+        self.audiofile2 = os.path.join(os.getcwd(), "%s/testaudio2" % (testdir))
+        self.audiofile3 = os.path.join(os.getcwd(), "%s/testaudio3" % (testdir))
+
+        self.talkingaudio = os.path.join(os.getcwd(), "%s/sounds/talking" % (testdir))
 
     def read_result(self):
         self.log_last_step("Reading result file from MixMonitor")
@@ -84,29 +88,29 @@ class MixMonitorTest:
 
     def launch_test1(self):
         self.log_last_step("Placing call to test1 exten")
-        self.asterisk.cli_exec("console dial test1@mixmonitortest")
+        self.ast1.cli_exec("console dial test1@mixmonitortest")
 
     def launch_test2(self):
         self.log_last_step("Placing call to test2 exten")
-        self.asterisk.cli_exec("console dial test2@mixmonitortest")
+        self.ast1.cli_exec("console dial test2@mixmonitortest")
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
-        self.asterisk.start()
+        self.ast1.start()
 
         if self.ast_version < AsteriskVersion("1.6.1"):
-            self.asterisk.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
-            self.asterisk.cli_exec("core set global TESTAUDIO2 " + self.audiofile2)
-            self.asterisk.cli_exec("core set global TESTAUDIO3 " + self.audiofile3)
-            self.asterisk.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
+            self.ast1.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
+            self.ast1.cli_exec("core set global TESTAUDIO2 " + self.audiofile2)
+            self.ast1.cli_exec("core set global TESTAUDIO3 " + self.audiofile3)
+            self.ast1.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
         else:
-            self.asterisk.cli_exec("dialplan set global TESTAUDIO1 " + self.audiofile1)
-            self.asterisk.cli_exec("dialplan set global TESTAUDIO2 " + self.audiofile2)
-            self.asterisk.cli_exec("dialplan set global TESTAUDIO3 " + self.audiofile3)
-            self.asterisk.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
+            self.ast1.cli_exec("dialplan set global TESTAUDIO1 " + self.audiofile1)
+            self.ast1.cli_exec("dialplan set global TESTAUDIO2 " + self.audiofile2)
+            self.ast1.cli_exec("dialplan set global TESTAUDIO3 " + self.audiofile3)
+            self.ast1.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
 
     def stop_asterisk(self):
-        self.asterisk.stop()
+        self.ast1.stop()
 
     def log_last_step(self, step):
         print step

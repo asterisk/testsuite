@@ -10,7 +10,7 @@ function mcheck(msg, r, err)
 end
 
 function sipp_exec(scenario, name, host, port)
-	host = host or "127.0.0.1" 
+	host = host or "127.0.0.1"
 	port = port or "5060"
 	local inf = "data.csv"
 	local p = proc.exec_io("sipp",
@@ -36,13 +36,13 @@ function sipp_exec_and_wait(scenario, name, host, port)
 end
 
 function sipp_check_error(p, scenario)
-	local res, err = p:wait()	
+	local res, err = p:wait()
 
 	if not res then error(err) end
-	if res ~= 0 then 
+	if res ~= 0 then
 		error("error while executing " .. scenario .. " sipp scenario (sipp exited with status " .. res .. ")\n" .. p.stderr:read("*a"))
 	end
-	
+
 	return res, err
 end
 
@@ -92,13 +92,13 @@ end
 -- start asterisk
 print("starting asterisk")
 a = ast.new()
-a:load_config("configs/sip.conf")
-a:load_config("configs/extensions.conf")
-a:load_config("configs/cdr.conf")
-a:load_config("configs/queues.conf")
+a:load_config("configs/ast1/sip.conf")
+a:load_config("configs/ast1/extensions.conf")
+a:load_config("configs/ast1/cdr.conf")
+a:load_config("configs/ast1/queues.conf")
 
 if ast.has_major_version("1.4") then
-	a:load_config("configs/modules.conf")
+	a:load_config("configs/ast1/modules.conf")
 end
 
 a:spawn()

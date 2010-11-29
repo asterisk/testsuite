@@ -106,8 +106,8 @@ function test_call(exten, handler)
 end
 
 a = ast.new()
-a:load_config("configs/sip.conf")
-a:load_config("configs/extensions.conf")
+a:load_config("configs/ast1/sip.conf")
+a:load_config("configs/ast1/extensions.conf")
 a:generate_manager_conf()
 a:spawn()
 

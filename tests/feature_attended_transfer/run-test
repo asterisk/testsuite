@@ -19,6 +19,10 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
+workingdir = "/tmp/asterisk-testsuite/feature_attended_transfer"
+testdir = "tests/feature_attended_transfer"
+
+
 class AttTransferTest:
     def __init__(self, argv):
         self.a_res = 0
@@ -48,14 +52,13 @@ class AttTransferTest:
 
         reactor.callWhenRunning(self.run)
 
-        print self.ast_version
-        self.asterisk1 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/feature_attended_transfer"))
-        self.asterisk1.install_configs("tests/feature_attended_transfer/configs")
+        self.ast1 = Asterisk(base=workingdir)
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
 
-        self.asterisk2 = Asterisk(base=os.path.join(os.getcwd(), "/tmp/asterisk-testsuite/feature_attended_transfer"))
-        self.asterisk2.install_configs("tests/feature_attended_transfer/configs2")
+        self.ast2 = Asterisk(base=workingdir)
+        self.ast2.install_configs("%s/configs/ast2" % (testdir))
 
-        self.talkingaudio = os.path.join(os.getcwd(), "tests/feature_attended_transfer/sounds/talking")
+        self.talkingaudio = os.path.join(os.getcwd(), "%s/sounds/talking" % (testdir))
 
     # Close out the agi
     def handle_agi_result(self, agi, do_hangup):
@@ -86,21 +89,21 @@ class AttTransferTest:
 
     def read_result(self):
         if self.done == True:
-		    return # this means results were read earlier than the Time Out period
+            return # this means results were read earlier than the Time Out period
         self.done = True
         self.log_last_step("Reading results")
-        self.asterisk1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
-        self.asterisk2.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+        self.ast1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+        self.ast2.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
 
-        self.asterisk1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
-        self.asterisk2.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+        self.ast1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+        self.ast2.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
 
         if self.ast_version < AsteriskVersion("1.6.1"):
-            self.asterisk1.cli_exec("core show globals") # The global variables here hold failure conditions
-            self.asterisk2.cli_exec("core show globals") # The global variables here hold failure conditions
+            self.ast1.cli_exec("core show globals") # The global variables here hold failure conditions
+            self.ast2.cli_exec("core show globals") # The global variables here hold failure conditions
         else:
-            self.asterisk1.cli_exec("dialplan show globals") # The global variables here hold failure conditions
-            self.asterisk2.cli_exec("dialplan show globals") # The global variables here hold failure conditions
+            self.ast1.cli_exec("dialplan show globals") # The global variables here hold failure conditions
+            self.ast2.cli_exec("dialplan show globals") # The global variables here hold failure conditions
 
 
         self.stop_asterisk()
@@ -133,26 +136,26 @@ class AttTransferTest:
     # 8.  A and C report results to FastAGI and hangup.
     def launch_test(self):
         if self.ast_version < AsteriskVersion("1.6.1"):
-            self.asterisk1.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
-            self.asterisk2.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
+            self.ast1.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
+            self.ast2.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
         else:
-            self.asterisk1.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
-            self.asterisk2.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
+            self.ast1.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
+            self.ast2.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
 
         self.log_last_step("Originating call to begin test 1")
         if self.ast_version < AsteriskVersion("1.6.2"):
-            self.asterisk2.cli_exec("originate IAX2/iax_b@127.0.0.1:4571/b_exten extension a_dial@transfertest")
+            self.ast2.cli_exec("originate IAX2/iax_b@127.0.0.1:4571/b_exten extension a_dial@transfertest")
         else:
-            self.asterisk2.cli_exec("channel originate IAX2/iax_b@127.0.0.1:4571/b_exten extension a_dial@transfertest")
+            self.ast2.cli_exec("channel originate IAX2/iax_b@127.0.0.1:4571/b_exten extension a_dial@transfertest")
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
-        self.asterisk1.start()
-        self.asterisk2.start()
+        self.ast1.start()
+        self.ast2.start()
 
     def stop_asterisk(self):
-        self.asterisk1.stop()
-        self.asterisk2.stop()
+        self.ast1.stop()
+        self.ast2.stop()
 
     def log_last_step(self, step):
         print step
