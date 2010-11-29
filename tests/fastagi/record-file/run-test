@@ -133,11 +133,11 @@ class FastAGIRecordFileTest:
             "with", self.test
         if self.test is "DTMF":
             self.asterisk.cli_originate(
-                "Local/basic_agi@agitest extension play_snd_and_term@agitest"
+                "Local/508@agitest extension 1@record-file"
             )
         elif self.test is "HANGUP":
             self.asterisk.cli_originate(
-                "Local/basic_agi@agitest extension play_snd_and_hangup@agitest"
+                "Local/509@agitest extension 2@record-file"
             )
         else:
             self.result_changed()

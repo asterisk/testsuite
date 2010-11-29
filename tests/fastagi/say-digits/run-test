@@ -46,6 +46,7 @@ class FastAGISayDigitsTest:
         print "Got test success confirmation from dialplan."
         self.notified = True
         agi.finish()
+        self.agi.finish()
         self.result_changed()
 
     def on_failure(self, reason):
@@ -95,7 +96,7 @@ class FastAGISayDigitsTest:
 
         print "Originating call to begin test."
         self.asterisk.cli_originate(
-            "Local/basic_agi@agitest extension td_and_agi_notify@agitest"
+            "Local/514@agitest extension 1@td_and_agi_notify"
         )
 
     def start_asterisk(self):

@@ -188,7 +188,7 @@ class FastAGIDatabaseTest:
 
         print "Originating call to begin test."
         self.asterisk.cli_originate(
-            "Local/basic_agi@agitest extension echo@agitest"
+            "Local/506@agitest extension echo@agitest"
         )
 
     def start_asterisk(self):

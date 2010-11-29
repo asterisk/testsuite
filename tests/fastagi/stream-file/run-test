@@ -83,7 +83,7 @@ class FastAGIStreamFileTest:
 
         print "Originating call to begin test."
         self.asterisk.cli_originate(
-            "Local/basic_agi@agitest extension echo@agitest"
+            "Local/505@agitest extension echo@agitest"
         )
 
     def start_asterisk(self):

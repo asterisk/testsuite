@@ -62,8 +62,7 @@ class FastAGIGetDataTest:
         self.agi = agi
         print "Connection established."
         return agi.getData("beep", timeout=10, maxDigits=10).addCallback(
-            self.finish_test
-        ).addErrback(self.on_failure)
+            self.finish_test).addErrback(self.on_failure)
 
 	# Read test results and dialplan globals
     def read_result(self):
@@ -93,7 +92,7 @@ class FastAGIGetDataTest:
 
         print "Originating call to begin test."
         self.asterisk.cli_originate(
-            "Local/basic_agi@agitest extension play_dtmf@agitest"
+            "Local/502@agitest extension 1@get-data"
         )
 
     def start_asterisk(self):

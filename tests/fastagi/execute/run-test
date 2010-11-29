@@ -173,7 +173,7 @@ class FastAGIExecuteTest:
         self.asterisk.cli_exec("agi set debug on")
         print "Originating call to begin test."
         self.asterisk.cli_originate(
-            "Local/basic_agi@agitest extension echo@agitest"
+            "Local/507@agitest extension echo@agitest"
         )
 
     def start_asterisk(self):
