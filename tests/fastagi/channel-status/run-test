@@ -17,6 +17,9 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
+workingdir = "/tmp/asterisk-testsuite/fastagi/channel-status"
+testdir = "tests/fastagi"
+
 class FastAGIChannelStatusTest:
     def __init__(self, argv):
         self.passed = {'4': False, '6':False}
@@ -34,9 +37,8 @@ class FastAGIChannelStatusTest:
         reactor.listenTCP(4573, self.agi_factory, self.timeout, '127.0.0.1')
         reactor.callWhenRunning(self.run)
 
-        print self.ast_version
-        self.asterisk = Asterisk(base="/tmp/asterisk-testsuite/fastagi/channel-status")
-        self.asterisk.install_configs("tests/fastagi/configs")
+        self.ast1 = Asterisk(base=workingdir)
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
 
     def on_answer_failure(self, reason):
         print 'Could not answer the call:', reason.getTraceback()
@@ -84,12 +86,12 @@ class FastAGIChannelStatusTest:
         if self.passed[4] is True and self.passed[6] is True:
             print "PASS - FastAGI CHANNEL STATUS works as expected."
         else:
-            self.asterisk.cli_exec("core show channels")
+            self.ast1.cli_exec("core show channels")
 
             if self.ast_version < AsteriskVersion("1.6.1"):
-                self.asterisk.cli_exec("core show globals")
+                self.ast1.cli_exec("core show globals")
             else:
-                self.asterisk.cli_exec("dialplan show globals")
+                self.ast1.cli_exec("dialplan show globals")
 
             print "FAIL - View result of 'core show globals' in log for",\
                 "more detailed failure results."
@@ -103,23 +105,23 @@ class FastAGIChannelStatusTest:
             reactor.stop()
 
     def launch_test(self):
-        self.asterisk.cli_exec("agi set debug on")
+        self.ast1.cli_exec("agi set debug on")
 
         # Set blocking=False so that we can test channel
         # status before call is answered.
         print "Originating call to begin test."
-        self.asterisk.cli_originate(
+        self.ast1.cli_originate(
             "Local/no_answer@agitest extension echo@agitest", blocking=False
         )
 
 
     def start_asterisk(self):
         print "Starting Asterisk"
-        self.asterisk.start()
+        self.ast1.start()
 
     def stop_asterisk(self):
         print "Stopping Asterisk"
-        self.asterisk.stop()
+        self.ast1.stop()
 
     # Read result before timeout 
     def result_changed(self):
