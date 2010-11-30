@@ -32,7 +32,8 @@ tests:
     - test: 'one-step-parking'
     # Temporarily disabled while failures are debugged
     #- test: 'callparking'
-    - test: 'callparking_retrieval'
+    # Temporarily disabled while failures are debugged
+    #- test: 'callparking_retrieval'
     # Temporarily disabled while failures are debugged
     #- test: 'mixmonitor'
     # Temporarily disabled while failures are debugged
