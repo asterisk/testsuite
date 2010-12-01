@@ -49,7 +49,7 @@ class FastAGISayTimeTest:
         print "Got test success confirmation from dialplan."
         self.notified = True
         agi.finish()
-        agi.self.finish()
+        self.agi.finish()
         self.result_changed()
 
     def on_failure(self, reason):
