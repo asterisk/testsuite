@@ -53,19 +53,13 @@ class PickupTest:
 
         reactor.callWhenRunning(self.run)
 
-        print self.ast_version
         self.ast1 = Asterisk(base=workingdir)
         self.ast1.install_configs("%s/configs/ast1" % (testdir))
 
     def shut_down(self):
         self.log_last_step("Reading results")
-        self.ast1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
 
-        self.stop_asterisk()
-
-        if reactor.running:
-            print "Stopping Reactor ..."
-            reactor.stop()
+        self.stop_reactor()
 
         if self.test1_res != FAIL and self.test2_res != FAIL:
             self.passed = True
@@ -96,10 +90,10 @@ class PickupTest:
 
         if self.test1_res == FAIL or self.test2_res == FAIL:
             # schedule early shutdown, a test failed
-            reactor.callLater(2, self.shut_down)
+            self.shut_down()
         elif self.test1_res != NOT_RUN and self.test2_res != NOT_RUN:
             # schedule early shutdown, all tests ran
-            reactor.callLater(2, self.shut_down)
+            self.shut_down()
         elif self.test2_res == NOT_RUN:
             # schedule test2 if test1 passed
             reactor.callLater(2, self.launch_test2)
@@ -115,7 +109,6 @@ class PickupTest:
         return self.handle_agi_result(agi)
 
     def test1_pickup(self):
-        self.ast1.cli_exec("core show channels")
         self.log_last_step("Issuing the pickup")
         self.ast1.cli_exec("console dial 1002@pickuptest")
 
@@ -125,10 +118,9 @@ class PickupTest:
             self.ast1.cli_exec("originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
         else:
             self.ast1.cli_exec("channel originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
-        reactor.callLater(2, self.test1_pickup)
+        self.test1_pickup()
 
     def test2_pickup(self):
-        self.ast1.cli_exec("core show channels")
         self.log_last_step("Issuing the pickup")
         self.ast1.cli_exec("console dial 1003@pickuptest")
 
@@ -137,10 +129,10 @@ class PickupTest:
         if self.ast_version < AsteriskVersion("1.8"):
             # this part requires version 1.8 or greater.
             self.test2 = SKIP
-            reactor.callLater(2, self.shut_down)
+            self.shut_down()
         else:
             self.ast1.cli_exec("channel originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
-            reactor.callLater(2, self.test2_pickup)
+            self.test2_pickup()
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
@@ -153,23 +145,27 @@ class PickupTest:
         print step
         self.last_step = step
 
+    def stop_reactor(self):
+        print "Stopping Reactor ..."
+        if reactor.running:
+            reactor.stop()
+
     def run(self):
-        self.start_asterisk()
+        self.launch_test1()
 
-        # call test1 extension now
-        reactor.callLater(1, self.launch_test1)
+        # stop reactor after timeout
+        reactor.callLater(self.test_to, self.stop_reactor)
 
-        # stop and read results after timeout
-        reactor.callLater(self.test_to, self.shut_down)
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    pickup_test = PickupTest(argv)
+    test = PickupTest(argv)
+    test.start_asterisk()
     reactor.run()
-    pickup_test.stop_asterisk()
-    if pickup_test.passed != PASS:
+    test.stop_asterisk()
+    if test.passed != PASS:
         return 1
     return 0
 
