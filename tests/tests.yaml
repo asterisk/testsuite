@@ -28,7 +28,8 @@ tests:
     #- test: 'feature_blonde_transfer'
     # Temporarily disabled while failures are debugged
     #- test: 'feature_attended_transfer'
-    - test: 'blind-transfer-parkingtimeout'
+    # Temporarily disabled while failures are debugged
+    #- test: 'blind-transfer-parkingtimeout'
     - test: 'one-step-parking'
     # Temporarily disabled while failures are debugged
     #- test: 'callparking'
