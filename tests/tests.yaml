@@ -21,7 +21,7 @@ tests:
     # Temporarily disabled while failures are debugged
     #- test: 'sip_register'
     # Temporarily disabled while failures are debugged
-    #- dir: 'sip'
+    - dir: 'sip'
     - test: 'udptl'
     - test: 'udptl_v6'
     # Temporarily disabled while failures are debugged

@@ -1,0 +1,10 @@
+testinfo:
+    summary:     'Test SIP OPTIONS handling'
+    description: |
+        'Run two SIPp scnearios that send an OPTIONS request.  In one instance,
+         we expect a 200 response, and in the other we expect a 404 response.'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'sipp'
