@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+echo "STREAM FILE tt-weasels"
+
+exit 1
+

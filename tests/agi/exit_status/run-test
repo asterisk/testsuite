@@ -1,0 +1,166 @@
+#!/usr/bin/env bash
+
+. lib/sh/library.sh
+
+echo " >>> Starting AGI exit status test"
+
+initialize userA
+
+mkdir -p $testdir/userA/cdr-csv
+
+for user in userA; do
+	# Shortcut for referral within this loop only
+	eval "conf=\${${user}_tmpdir}"
+	mkdir -p $conf/spool/outgoing
+
+	if test $debug -gt 1; then
+		$ASTERISK -C $conf/asterisk.conf -rx 'core set debug 1 pbx_spool'
+		$ASTERISK -C $conf/asterisk.conf -rx 'dialplan show'
+	fi
+done
+
+failure() {
+	echo " . . . . . FAIL"
+}
+
+success() {
+	echo " . . . . . OK"
+}
+
+echo -n " >>> Non-existent AGI"
+rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
+
+$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/02@agi_exit_status extension doesnotexist@agi_exit_status"
+
+sleep 3
+
+if test `grep -c $AGI_NOTFOUND $testdir/userA/cdr-csv/Master.csv` = 0; then
+	failure
+	if test $debug -gt 0; then
+		echo " *** Non-existent test failed: did not find $AGI_NOTFOUND in $testdir/userA/cdr-csv/Master.csv"
+	fi
+	cleanup
+	exit 1
+else
+	success
+fi
+
+echo -n " >>> Non-existent AGI interpreter"
+rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
+
+$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/10@agi_exit_status extension badinterpreter@agi_exit_status"
+
+sleep 2
+
+if test `grep -c FAILURE $testdir/userA/cdr-csv/Master.csv` = 0; then
+	failure
+	echo " *** Non-existent test failed: did not find FAILURE in $testdir/userA/cdr-csv/Master.csv"
+	cleanup
+	exit 1
+else
+	success
+fi
+
+echo -n " >>> Non-executable AGI script"
+rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
+
+$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/10@agi_exit_status extension badinterpreter2@agi_exit_status"
+
+sleep 2
+
+if test `grep -c FAILURE $testdir/userA/cdr-csv/Master.csv` = 0; then
+	failure
+	echo " *** Non-existent test failed: did not find FAILURE in $testdir/userA/cdr-csv/Master.csv"
+	cleanup
+	exit 1
+else
+	success
+fi
+
+echo -n " >>> Non-executable AGI interpreter"
+
+# Create a "shell" interpreter which is not executable
+for sh in /bin/true /usr/bin/true /usr/local/bin/true; do
+	if test -f $sh; then
+		cp -f $sh /tmp/bash
+		chmod 600 /tmp/bash
+		break
+	fi
+done
+
+# Did we succeed?
+if test -e /tmp/bash; then :; else
+	failure
+	echo "Unable to create non-executable file for AGI test"
+	cleanup
+	exit 1
+fi
+
+rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
+
+$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/10@agi_exit_status extension badinterpreter3@agi_exit_status"
+
+sleep 2
+
+if test `grep -c FAILURE $testdir/userA/cdr-csv/Master.csv` = 0; then
+	failure
+	echo " *** Non-existent test failed: did not find FAILURE in $testdir/userA/cdr-csv/Master.csv"
+	cleanup
+	rm -f /tmp/bash
+	exit 1
+else
+	success
+fi
+
+echo -n " >>> AGI which will receive hangup while waiting for a command"
+rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
+$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/01@agi_exit_status extension waiting@agi_exit_status"
+
+sleep 2
+
+if test `grep -c HANGUP $testdir/userA/cdr-csv/Master.csv` = 0; then
+	failure
+	echo " *** Command wait test failed: did not find HANGUP in $testdir/userA/cdr-csv/Master.csv"
+	cleanup
+	exit 1
+else
+	success
+fi
+
+echo -n " >>> AGI which will receive hangup while executing a command"
+rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
+$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/01@agi_exit_status extension executing@agi_exit_status"
+
+sleep 2
+
+# This is the result which is disputed in issue 17393
+if test `grep -c FAILURE $testdir/userA/cdr-csv/Master.csv` = 0; then
+	failure
+	echo " *** Command execute test failed: did not find FAILURE in $testdir/userA/cdr-csv/Master.csv"
+	cleanup
+	exit 1
+else
+	success
+fi
+
+echo -n " >>> AGI which should exit normally"
+rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
+$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/01@agi_exit_status extension donothing@agi_exit_status"
+
+sleep 2
+
+if test `grep -c SUCCESS $testdir/userA/cdr-csv/Master.csv` = 0; then
+	failure
+	echo " *** Do nothing test failed"
+	cleanup
+	exit 1
+else
+	success
+fi
+
+echo " *** All tests were successful"
+
+cleanup
+
+exit 0
+

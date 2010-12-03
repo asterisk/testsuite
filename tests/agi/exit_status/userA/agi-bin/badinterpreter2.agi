@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# This script should remain non-executable.
+exit 0
+

@@ -5,6 +5,12 @@ set +e
 testdir=${0%%run-test}
 ASTERISK=/usr/sbin/asterisk
 debug=0
+gotversion=0
+
+usage() {
+	echo "Usage: $0 -v asterisk-<version> [-d]"
+	exit 1
+}
 
 case `uname -s` in
 	solaris*|sunos*)
@@ -17,24 +23,45 @@ case `uname -s` in
 		;;
 esac
 
-case $2 in
-	*-1.4*)
-		ORIGINATE='originate'
-		CSC_HEADERS=3
-		;;
-	*-1.6.2*|*-1.4*)
-		ORIGINATE='originate'
-		CSC_HEADERS=4
-		;;
-	"")
-		echo "Usage: $0 -v asterisk-<version>"
-		exit 1
-		;;
-	*)
-		ORIGINATE='channel originate'
-		CSC_HEADERS=4
-		;;
-esac
+while test "$1" != ""; do
+	case $1 in
+		-v)
+			shift
+			case $1 in
+				*-1.4*)
+					ORIGINATE='originate'
+					CSC_HEADERS=3
+					AGI_NOTFOUND=FAILURE
+					;;
+				*-1.6.2*)
+					ORIGINATE='originate'
+					CSC_HEADERS=4
+					AGI_NOTFOUND=NOTFOUND
+					;;
+				"")
+					usage
+					;;
+				*)
+					ORIGINATE='channel originate'
+					CSC_HEADERS=4
+					AGI_NOTFOUND=NOTFOUND
+					;;
+			esac
+			gotversion=1
+			;;
+		-d)
+			let debug++
+			;;
+		*)
+			usage
+			;;
+	esac
+	shift
+done
+
+if test "$gotversion" = "0"; then
+	usage
+fi
 
 #
 # initialize():
@@ -71,7 +98,7 @@ initialize() {
 			dst=$conf/`basename $i`
 			install -m 644 $i $dst
 		done
-		( echo "[directories]"; echo "astetcdir => $conf"; echo "astrundir => $conf"; echo "astlogdir => $testdir/$user"; echo "astspooldir => $conf/spool" ; echo "[options]"; echo "verbose = 10"; echo "documentation_language = en_US" ) > $conf/asterisk.conf
+		( echo "[directories]"; echo "astetcdir => $conf"; echo "astrundir => $conf"; echo "astlogdir => $testdir/$user"; echo "astspooldir => $conf/spool" ; echo "astagidir => $testdir/$user/agi-bin" ; echo "[options]"; echo "verbose = 10"; echo "documentation_language = en_US" ) > $conf/asterisk.conf
 		( echo "noload => pbx_lua.so" ; echo "noload => pbx_ael.so" ) >> $conf/modules.conf
 		mkdir -p $conf/spool/outgoing
 
@@ -82,10 +109,12 @@ initialize() {
 			exit 1
 		fi
 		echo " >>> Starting Asterisk for $user"
+		if test $debug -gt 0; then
+			debug_flags="-vvvddd"
+		fi
 		$ASTERISK -g -C $conf/asterisk.conf
-		sleep 1
 		# Asterisk is running, right?
-		if $ASTERISK -C $conf/asterisk.conf -rx "core waitfullybooted" >/dev/null 2>&1; then :; else
+		if $ASTERISK $debug_flags -C $conf/asterisk.conf -rx "core waitfullybooted" >/dev/null 2>&1; then :; else
 			echo " *** Unable to start asterisk for $user"
 			cleanup
 			exit 1
@@ -107,10 +136,13 @@ cleanup() {
 	local avals=""
 	local bvals=""
 
+	echo -n "Shutting test instances down"
+
 	for u in $lib_SYSDIRS; do
 		eval "conf=\${${u}_tmpdir}"
 		if test "x$conf" = "x"; then : ; else
 			$ASTERISK -C $conf/asterisk.conf -rx "core stop when convenient" >/dev/null 2>&1 &
+			echo -n " ."
 		fi
 	done
 	sleep 2
@@ -119,6 +151,7 @@ cleanup() {
 		if test "x$conf" = "x"; then : ; else
 			$ASTERISK -C $conf/asterisk.conf -rx "core stop now" >/dev/null 2>&1
 			let $u=$?
+			echo -n " ."
 		fi
 	done
 	avals=""
@@ -128,13 +161,31 @@ cleanup() {
 		eval "bvals=${bvals}\${$u}"
 	done
 	if test "$avals" != "$bvals"; then
-		$KILLALL asterisk >/dev/null 2>&1
+		sleep 2
 		for u in $lib_SYSDIRS; do
 			eval "conf=\${${u}_tmpdir}"
-			# This is a "nonsense" command.  If Asterisk is not running, it will exit non-zero.
-			$ASTERISK -C $conf/asterisk.conf -rx "core set verbose atleast 1" >/dev/null 2>&1
-			let $u=$?
+			if test "x$conf" = "x"; then : ; else
+				$ASTERISK -C $conf/asterisk.conf -rx "core stop now" >/dev/null 2>&1
+				let $u=$?
+				echo -n " ."
+			fi
 		done
+		avals=""
+		bvals=""
+		for u in $lib_SYSDIRS; do
+			avals="1$avals"
+			eval "bvals=${bvals}\${$u}"
+		done
+		if test "$avals" != "$bvals"; then
+			$KILLALL asterisk >/dev/null 2>&1
+			for u in $lib_SYSDIRS; do
+				eval "conf=\${${u}_tmpdir}"
+				# This is a "nonsense" command.  If Asterisk is not running, it will exit non-zero.
+				$ASTERISK -C $conf/asterisk.conf -rx "core set verbose atleast 1" >/dev/null 2>&1
+				let $u=$?
+				echo -n " ."
+			done
+		fi
 	fi
 	avals=""
 	bvals=""
@@ -143,12 +194,22 @@ cleanup() {
 		eval "bvals=${bvals}\${$u}"
 	done
 	if test "$avals" != "$bvals"; then
+		if test $debug -gt 0; then
+			echo -n " A:'$avals' B:'$bvals'"
+		fi
 		$KILLALL -9 asterisk >/dev/null 2>&1
+		echo -n " (forcefully) ."
 	fi
+
+	echo " done!"
+
+	echo -n "Removing temporary directories"
 
 	for u in $lib_SYSDIRS; do
 		eval "rm -rf \${${u}_tmpdir}"
+		echo -n " ."
 	done
+	echo " done!"
 
 	set -e
 }

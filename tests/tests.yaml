@@ -42,5 +42,6 @@ tests:
     #- dir: 'chanspy'
     - dir: 'queues'
     - dir: 'fastagi'
+    - dir: 'agi'
     - dir: 'pbx'
     - dir: 'fax'
