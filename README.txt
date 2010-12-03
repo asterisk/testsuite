@@ -219,8 +219,33 @@ locations.  This includes a fresh set of sample configuration files in the
 with "#!/usr/bin/env".  For exmaple: a test written in Python would have
 "#!/usr/bin/env python" for the shebang.
 
+c) Test configuration files
 
-c) Test Execution
+        All configuration files will now be stored in the 'configs/ast%d'
+directory, depending on how many Asterisk instances your test uses, you create
+additional 'ast%d' sub folders.  If you only use 1 Asterisk instance, all files
+will be copied to 'configs/ast1'.
+
+For example, we can see the 'basic-call' test below will use 2 Asterisk
+instances.  However, assume both instances have the same extensions.conf file,
+instead duplicating data by copying it into 'ast1' and 'ast2', shared
+configuration files SHOULD be copied into the root 'configs' directory.
+
+    basic-call/
+        configs/
+            ast1/
+                sip.conf
+                ...
+            ast2/
+                sip.conf
+                ...
+            extensions.conf
+        run-test
+
+Since each Asterisk instance required difference SIP settings, each 'ast%d'
+folder will have a different sip.conf file.
+
+d) Test Execution
 
         The "run-test" executable will be run by a top level application in the
 test suite called "runtests.py".  When "run-test" is executed, it will be
@@ -228,13 +253,11 @@ provided a standard set of arguments which are defined here:
 
         -v <Asterisk version>       # Will always be provided
 
-
-d) Logging, Pass/Fail Reporting
+e) Logging, Pass/Fail Reporting
 
         All test output, including failure details, should be send to STDOUT.
 If the test has failed, the "run-test" executable should exit with a non-zero
 return code.  A return code of zero is considered a success.
-
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
