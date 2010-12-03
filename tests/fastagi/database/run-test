@@ -20,10 +20,11 @@ from asterisk.version import AsteriskVersion
 workingdir = "/tmp/asterisk-testsuite/fastagi/database"
 testdir = "tests/fastagi"
 
+
 class FastAGIDatabaseTest:
     def __init__(self, argv):
         self.passed = {}
-        self.timeout = 45
+        self.timeout = 30
         self.key = "fastagitest"
         self.overall_result = True
         self.agi = ""
@@ -61,7 +62,7 @@ class FastAGIDatabaseTest:
     # We expect this to get called when we try to select
     # the key we've just deleted from the database.
     def on_get3_failure(self, reason):
-        print "Success. %s is no longer a valid key." % self.key
+        print "%s is no longer a valid key." % self.key
         self.passed["Del"] = True
         self.result_changed()
 
@@ -75,9 +76,8 @@ class FastAGIDatabaseTest:
         self.passed["Put"] = True
         # 2. Retrieve that key from the database
         print "Retrieving key from the database."
-        self.agi.databaseGet("secret",self.key).addCallback(
-            self.get_result_from_get
-        ).addErrback(self.on_get_failure)
+        self.agi.databaseGet("secret", self.key).addCallback(
+            self.get_result_from_get).addErrback(self.on_get_failure)
 
     # 2. Retrieve that key from the database
     def get_result_from_get(self, result):
@@ -93,9 +93,8 @@ class FastAGIDatabaseTest:
 
         # 3. Update the value of the key in the database
         print "Updating value of key."
-        self.agi.databaseSet("secret",self.key,"halfwaydone").addCallback(
-            self.get_result_from_set
-        ).addErrback(self.on_set_failure)
+        self.agi.databaseSet("secret", self.key, "halfwaydone").addCallback(
+            self.get_result_from_set).addErrback(self.on_set_failure)
 
     # 3. Update the value of the key in the database
     def get_result_from_set(self, result):
@@ -117,15 +116,14 @@ class FastAGIDatabaseTest:
         print 'Value of %s is "%s"' % (self.key, result)
         if result != "halfwaydone":
             self.passed["Set"] = False
-            print "Call to DATABASE SET succeeded,\
+            print "Call to DATABASE SET succeeded, \
                 but value did not get updated."
             print 'Expected value of "halfwaydone" but got "%s"' % result
 
         # 5. Delete that key from the database
         print "Deleting key from database."
         self.agi.databaseDel("secret",self.key).addCallback(
-            self.get_result_from_del
-        ).addErrback(self.on_del_failure)
+            self.get_result_from_del).addErrback(self.on_del_failure)
 
     # 5. Delete that key from the database
     def get_result_from_del(self, result):
@@ -139,8 +137,7 @@ class FastAGIDatabaseTest:
         # 6. Test that key was deleted.
         print "Checking that key was deleted."
         self.agi.databaseGet("secret",self.key).addCallback(
-            self.get_result_from_get3
-        ).addErrback(self.on_get3_failure)
+            self.get_result_from_get3).addErrback(self.on_get3_failure)
 
     # 6. Test that key was deleted.
     # This should never be called if databaseDel() succeeded.
@@ -164,34 +161,31 @@ class FastAGIDatabaseTest:
     def do_test(self, agi):
         self.agi = agi
         print "Inserting key into database."
-        return agi.databaseSet("secret",self.key,"juststarted").addCallback(
-            self.get_result_from_put
-        ).addErrback(self.on_put_failure)
+        return agi.databaseSet("secret", self.key, "juststarted").addCallback(
+            self.get_result_from_put).addErrback(self.on_put_failure)
 
 	# Read test results and dialplan globals
     def read_result(self):
         self.agi.finish()
+        self.stop_reactor()
 
         for test in self.passed:
-            if self.passed[test] is True:
-                print "database%s worked as expected." % test
-            else:
-                print "database%s FAILED." % test
+            if self.passed[test] is False:
                 self.overall_result = False
 
-        self.stop_asterisk()
+        if self.overall_result is True:
+            print "Success"
+	else:
+            print "Failed"
 
+    def stop_reactor(self):
+        print "Stopping Reactor ..."
         if reactor.running:
-            print "Stopping Reactor ..."
             reactor.stop()
 
     def launch_test(self):
-        self.ast1.cli_exec("agi set debug on")
-
         print "Originating call to begin test."
-        self.ast1.cli_originate(
-            "Local/506@agitest extension echo@agitest"
-        )
+        self.ast1.cli_originate("Local/506@agitest extension echo@agitest")
 
     def start_asterisk(self):
         print "Starting Asterisk"
@@ -206,21 +200,22 @@ class FastAGIDatabaseTest:
         # if self.passed["Put"] is None, not one test has completed yet
         # and we should wait for the timeout.
         if self.passed["Put"] is not None:
-            reactor.callLater(2, self.read_result)
+            self.read_result()
 
     def run(self):
-        self.start_asterisk()
-        reactor.callLater(2, self.launch_test)
-        reactor.callLater(self.timeout, self.read_result)
+        self.launch_test()
+        reactor.callLater(self.timeout, self.stop_reactor)
+
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    agi_test = FastAGIDatabaseTest(argv)
+    test = FastAGIDatabaseTest(argv)
+    test.start_asterisk()
     reactor.run()
-
-    if agi_test.overall_result is not True:
+    test.stop_asterisk()
+    if test.overall_result is not True:
         return 1
 
     return 0

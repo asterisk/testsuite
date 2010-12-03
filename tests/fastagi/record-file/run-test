@@ -20,6 +20,7 @@ from asterisk.version import AsteriskVersion
 workingdir = "/tmp/asterisk-testsuite/fastagi/execute"
 testdir = "tests/fastagi"
 
+
 class FastAGIRecordFileTest:
     def __init__(self, argv):
         self.passed = {
@@ -27,7 +28,7 @@ class FastAGIRecordFileTest:
             "HANGUP": False
         }
         self.test = "DTMF"
-        self.timeout = 45
+        self.timeout = 30
         self.key = "fastagitest"
         self.overall_result = True
         self.agi = ""
@@ -56,7 +57,7 @@ class FastAGIRecordFileTest:
         print 'Could not record file:', reason.getTraceback()
         if self.test is "DTMF":
             self.test = "HANGUP"
-            reactor.callLater(2, self.launch_test())
+            reactor.callLater(0, self.launch_test())
         else:
             self.result_changed()
 
@@ -66,7 +67,7 @@ class FastAGIRecordFileTest:
         except:
             digit = None
 
-        print "Recording terminated by %s (%s) after %s bytes."\
+        print "Recording terminated by %s (%s) after %s bytes." \
             % (result[1], digit, result[2])
         if os.path.exists(self.audio_file):
             file_size = os.path.getsize(self.audio_file)
@@ -74,11 +75,11 @@ class FastAGIRecordFileTest:
                 print "The file was created, but it is empty."
                 self.passed[self.test] = False
             elif result[2] == file_size:
-                print "Data was recorded, and data length matches what was",\
+                print "Data was recorded, and data length matches what was", \
                     "reported during the %s test." % self.test
                 self.passed[self.test] = True
             else:
-                print "Some data was recorded, but the data length does not",\
+                print "Some data was recorded, but the data length does not", \
                     "match what was reported during the %s test." % self.test
                 self.passed[self.test] = False
         else:
@@ -87,57 +88,40 @@ class FastAGIRecordFileTest:
 
         if self.test is "DTMF":
             self.test = "HANGUP"
-            reactor.callLater(2, self.launch_test)
+            reactor.callLater(0, self.launch_test)
         else:
             self.result_changed()
 
     # This gets invoked by the dialplan when the call is answered
     def do_test(self, agi):
         self.agi = agi
-        return agi.recordFile(
-            "%s/out" % (workingdir), "ulaw", "#", "3"
-        ).addCallback(
-            self.on_record_success
-        ).addErrback(self.on_record_failure)
+        return agi.recordFile("%s/out" % (workingdir), "ulaw", "#", "3"
+            ).addCallback(self.on_record_success).addErrback(self.on_record_failure)
 
-	# Read test results and dialplan globals
     def read_result(self):
         self.agi.finish()
+        self.stop_reactor()
         for t, r in self.passed.iteritems():
             if self.passed[t] is False:
-                print "RECORD FILE did NOT work as expected when",\
-                    "terminated with", t
                 self.overall_result = False
 
-        if self.overall_result is False:
-            self.ast1.cli_exec("core show channels")
+	if self.overall_result is True:
+            print "Success"
+	else:
+            print "Failed"
 
-            if self.ast_version < AsteriskVersion("1.6.1"):
-                self.ast1.cli_exec("core show globals")
-            else:
-                self.ast1.cli_exec("dialplan show globals")
-
-            print "FAIL - FastAGI RECORD FILE test failed. View result",\
-                    "of 'core show globals' in log for more detailed",\
-                    "failure results."
-
-        self.stop_asterisk()
+    def stop_reactor(self):
+        print "Stopping Reactor ..."
         if reactor.running:
-            print "Stopping Reactor ..."
             reactor.stop()
 
     def launch_test(self):
-        self.ast1.cli_exec("agi set debug on")
         print "Originating call to begin test which terminates recording",\
             "with", self.test
         if self.test is "DTMF":
-            self.ast1.cli_originate(
-                "Local/508@agitest extension 1@record-file"
-            )
+            self.ast1.cli_originate("Local/508@agitest extension 1@record-file")
         elif self.test is "HANGUP":
-            self.ast1.cli_originate(
-                "Local/509@agitest extension 2@record-file"
-            )
+            self.ast1.cli_originate("Local/509@agitest extension 2@record-file")
         else:
             self.result_changed()
 
@@ -152,20 +136,21 @@ class FastAGIRecordFileTest:
     # Read result before timeout
     def result_changed(self):
         if self.passed['DTMF'] is True and self.passed['HANGUP'] is True:
-            reactor.callLater(2, self.read_result)
+            self.read_result()
 
     def run(self):
-        self.start_asterisk()
-        reactor.callLater(2, self.launch_test)
-        reactor.callLater(self.timeout, self.read_result)
+        self.launch_test()
+        reactor.callLater(self.timeout, self.stop_reactor)
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    agi_test = FastAGIRecordFileTest(argv)
+    test = FastAGIRecordFileTest(argv)
+    test.start_asterisk()
     reactor.run()
-    if agi_test.overall_result is not True:
+    test.stop_asterisk()
+    if test.overall_result is not True:
         return 1
 
     return 0

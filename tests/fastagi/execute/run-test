@@ -28,7 +28,7 @@ class FastAGIExecuteTest:
             'Set [Global]': False,
             'Set [Channel]': False
         }
-        self.timeout = 45
+        self.timeout = 30
         self.key = "fastagitest"
         self.overall_result = True
         self.agi = ""
@@ -70,15 +70,13 @@ class FastAGIExecuteTest:
 
     def on_Set2_success(self, result):
         self.agi.getVariable('LAMB').addCallback(
-            self.on_get_variable2
-        ).addErrback(self.on_get_variable2_failure)
+            self.on_get_variable2).addErrback(self.on_get_variable2_failure)
         self.passed['Set [Channel]'] = True
 
     # 4. Set(DEBUG=${VAR})
     def do_Set2(self):
         self.agi.execute("Set", "LAMB=sure to go").addCallback(
-            self.on_Set2_success
-        ).addErrback(self.on_Set2_failure)
+            self.on_Set2_success).addErrback(self.on_Set2_failure)
 
     def on_get_variable_failure(self, reason):
         self.passed['Set [Global]'] = False
@@ -102,15 +100,13 @@ class FastAGIExecuteTest:
 
     def on_Set_success(self, result):
         self.agi.getVariable('FLEECE').addCallback(
-            self.on_get_variable
-        ).addErrback(self.on_get_variable_failure)
+            self.on_get_variable).addErrback(self.on_get_variable_failure)
         self.passed['Set [Global]'] = True
 
     # 3. Set(GLOBAL(DEBUG)=${VAR})
     def do_Set(self):
         self.agi.execute("Set", "GLOBAL(FLEECE)=white as snow").addCallback(
-            self.on_Set_success
-        ).addErrback(self.on_Set_failure)
+            self.on_Set_success).addErrback(self.on_Set_failure)
 
     def on_System_failure(self, reason):
         self.passed['System'] = False
@@ -124,8 +120,7 @@ class FastAGIExecuteTest:
     # 2. System(command arg1 arg2 etc)
     def do_System(self):
         self.agi.execute("System", "echo little lamb").addCallback(
-            self.on_System_success
-        ).addErrback(self.on_System_failure)
+            self.on_System_success).addErrback(self.on_System_failure)
 
     def on_SendDTMF_failure(self, reason):
         self.passed['SendDTMF'] = False
@@ -152,31 +147,30 @@ class FastAGIExecuteTest:
         self.agi = agi
         return agi.execute(
             "SendDTMF", "3212333", 300, comma_delimiter=True
-        ).addCallback(
-            self.on_SendDTMF_success
+        ).addCallback(self.on_SendDTMF_success
         ).addErrback(self.on_SendDTMF_failure)
 
 	# Read test results and dialplan globals
     def read_result(self):
         self.agi.finish()
+        self.stop_reactor()
         for test in self.passed:
-            if self.passed[test] is True:
-                print "EXECUTE (%s) worked as expected." % test
-            else:
-                print "EXECUTE (%s) FAILED." % test
+            if self.passed[test] is False:
                 self.overall_result = False
 
-        self.stop_asterisk()
+        if self.overall_result is True:
+            print "Success"
+	else:
+            print "Failed"
+
+    def stop_reactor(self):
+        print "Stopping Reactor ..."
         if reactor.running:
-            print "Stopping Reactor ..."
             reactor.stop()
 
     def launch_test(self):
-        self.ast1.cli_exec("agi set debug on")
         print "Originating call to begin test."
-        self.ast1.cli_originate(
-            "Local/507@agitest extension echo@agitest"
-        )
+        self.ast1.cli_originate("Local/507@agitest extension echo@agitest")
 
     def start_asterisk(self):
         print "Starting Asterisk"
@@ -191,20 +185,21 @@ class FastAGIExecuteTest:
         # If self.passed["SendDTMF"] is False, not one test has completed yet
         # and we should wait for the timeout.
         if self.passed["SendDTMF"] is not False:
-            reactor.callLater(2, self.read_result)
+            self.read_result()
 
     def run(self):
-        self.start_asterisk()
-        reactor.callLater(2, self.launch_test)
-        reactor.callLater(self.timeout, self.read_result)
+        self.launch_test()
+        reactor.callLater(self.timeout, self.stop_reactor)
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    agi_test = FastAGIExecuteTest(argv)
+    test = FastAGIExecuteTest(argv)
+    test.start_asterisk()
     reactor.run()
-    if agi_test.overall_result is not True:
+    test.stop_asterisk()
+    if test.overall_result is not True:
         return 1
 
     return 0
