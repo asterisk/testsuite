@@ -117,7 +117,7 @@ class SIPpTest:
                                                "Passed")
             if self.result[i]:
                 passed = False
-                print self.stdout[i]
+                #print self.stdout[i]
                 print self.stderr[i]
 
         self.ast1.stop()
