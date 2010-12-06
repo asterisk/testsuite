@@ -113,8 +113,10 @@ class SIPpTest:
             self.stdout.append(out)
             self.stderr.append(err)
             self.result.append(self.sipp[i].wait())
-            print "SIPp scenario #%d %s" % (i, "FAILED" if self.result[i] else
-                                               "Passed")
+            if self.result[i]:
+                print "SIPp scenario #%d FAILED"
+            else:
+                print "SIPp scenario #%d PASSED"
             if self.result[i]:
                 passed = False
                 #print self.stdout[i]
@@ -122,5 +124,8 @@ class SIPpTest:
 
         self.ast1.stop()
 
-        return 0 if passed else 1
+        if passed:
+            return 0
+        else:
+            return 1
 
