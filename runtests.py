@@ -387,20 +387,21 @@ def main(argv=None):
 
     test_suite.run()
 
-    print "\n=== TEST RESULTS ===\n"
-    print "PATH: %s\n" % os.getenv("PATH")
-    for t in test_suite.tests:
-        sys.stdout.write("--> %s --- " % t.test_name)
-        if t.did_run is False:
-            print "SKIPPED"
-            for d in t.deps:
-                print "      --> Dependency: %s -- Met: %s" % (d.name,
-                             str(d.met))
-            continue
-        if t.passed is True:
-            print "PASSED"
-        else:
-            print "FAILED"
+    if not options.test:
+        print "\n=== TEST RESULTS ===\n"
+        print "PATH: %s\n" % os.getenv("PATH")
+        for t in test_suite.tests:
+            sys.stdout.write("--> %s --- " % t.test_name)
+            if t.did_run is False:
+                print "SKIPPED"
+                for d in t.deps:
+                    print "      --> Dependency: %s -- Met: %s" % (d.name,
+                                 str(d.met))
+                continue
+            if t.passed is True:
+                print "PASSED"
+            else:
+                print "FAILED"
 
     print "\n"
 
