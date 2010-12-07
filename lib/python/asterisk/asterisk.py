@@ -323,7 +323,10 @@ class Asterisk:
                 output += l
         except IOError:
             pass
-        process.wait()
+        try:
+            process.wait()
+        except OSError:
+            pass
         return output
 
     def __gen_ast_conf(self, ast_conf, dir_cat, ast_conf_options):
