@@ -98,6 +98,7 @@ class TestConfig:
         self.time = 0.0
         self.test_name = test_name
         self.ast_version = ast_version
+        self.skip = None
         self.config = None
         self.summary = None
         self.maxversion = None
@@ -280,7 +281,7 @@ class TestSuite:
             if self.options.test and t.test_name != self.options.test:
                 continue
             if t.can_run is False:
-                if t.skip:
+                if t.skip is not None:
                     print "--> %s ... skipped '%s'" % (t.test_name, t.skip)
                     continue
 
