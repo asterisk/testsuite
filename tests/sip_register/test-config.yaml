@@ -3,6 +3,8 @@ testinfo:
     description: |
         'Two UACs register with Asterisk. One uses IPv6 addresses and the other
          uses IPv4 addresses.'
+    issues:
+        - mantis : '18454'
 
 properties:
     minversion: '1.8'

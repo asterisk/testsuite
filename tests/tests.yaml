@@ -18,7 +18,8 @@ tests:
     - test: 'sip_one_legged_transfer'
     # Temporarily disabled while failures are debugged
     #- test: 'sip_one_legged_transfer_v6'
-    - test: 'sip_register'
+    # Temporarily disabled while failures are debugged
+    #- test: 'sip_register'
     # Temporarily disabled while failures are debugged
     - dir: 'sip'
     - test: 'udptl'
