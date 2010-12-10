@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'Skip while failures are debugged'
     summary:     'Test MixMonitor and StopMixMonitor applications'
     description: |
         'This test verifies basic functionality of both the MixMonitor

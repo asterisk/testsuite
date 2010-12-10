@@ -9,40 +9,26 @@ tests:
     - test: 'directed_pickup'
     - test: 'func_srv'
     - test: 'sip_outbound_address'
-    # Temporarily disabled while failures are debugged
-    #- test: 'sip_attended_transfer'
-    # Temporarily disabled while failures are debugged
-    #- test: 'sip_attended_transfer_tcp'
-    # Temporarily disabled while failures are debugged
-    #- test: 'sip_attended_transfer_v6'
+    - test: 'sip_attended_transfer'
+    - test: 'sip_attended_transfer_tcp'
+    - test: 'sip_attended_transfer_v6'
     - test: 'sip_one_legged_transfer'
-    # Temporarily disabled while failures are debugged
-    #- test: 'sip_one_legged_transfer_v6'
-    # Temporarily disabled while failures are debugged
-    #- test: 'sip_register'
-    # Temporarily disabled while failures are debugged
+    - test: 'sip_one_legged_transfer_v6'
+    - test: 'sip_register'
     - dir: 'sip'
     - test: 'udptl'
     - test: 'udptl_v6'
-    # Temporarily disabled while failures are debugged
-    #- test: 'feature_blonde_transfer'
-    # Temporarily disabled while failures are debugged
-    #- test: 'feature_attended_transfer'
-    # Temporarily disabled while failures are debugged
-    #- test: 'blind-transfer-parkingtimeout'
+    - test: 'feature_blonde_transfer'
+    - test: 'feature_attended_transfer'
+    - test: 'blind-transfer-parkingtimeout'
     - test: 'one-step-parking'
-    # Temporarily disabled while failures are debugged
-    #- test: 'callparking'
-    # Temporarily disabled while failures are debugged
-    #- test: 'callparking_retrieval'
-    # Temporarily disabled while failures are debugged
-    #- test: 'mixmonitor'
-    # Temporarily disabled while failures are debugged
-    #- test: 'mixmonitor_audiohook_inherit'
-    #- dir: 'chanspy'
+    - test: 'callparking'
+    - test: 'callparking_retrieval'
+    - test: 'mixmonitor'
+    - test: 'mixmonitor_audiohook_inherit'
+    - dir: 'chanspy'
     - dir: 'queues'
     - dir: 'fastagi'
-    # Temporarily disabled while failures are debugged
-    #- dir: 'agi'
+    - dir: 'agi'
     - dir: 'pbx'
     - dir: 'fax'

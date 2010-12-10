@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'Fails to pass under FreeBSD'
     summary:     'Test reception of SIP REGISTER requests'
     description: |
         'Two UACs register with Asterisk. One uses IPv6 addresses and the other

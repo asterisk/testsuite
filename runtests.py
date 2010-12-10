@@ -145,6 +145,9 @@ class TestConfig:
         if "testinfo" not in self.config:
             return
         testinfo = self.config["testinfo"]
+        if "skip" in testinfo:
+            self.skip = testinfo['skip']
+            self.can_run = False
         if "summary" in testinfo:
             self.summary = testinfo["summary"]
         if "description" in testinfo:
@@ -277,6 +280,10 @@ class TestSuite:
             if self.options.test and t.test_name != self.options.test:
                 continue
             if t.can_run is False:
+                if t.skip:
+                    print "--> %s ... skipped '%s'" % (t.test_name, t.skip)
+                    continue
+
                 print "--> Cannot run test '%s'" % t.test_name
                 print "--- --> Minimum Version: %s (%s)" % \
                     (str(t.minversion), str(t.minversion_check))

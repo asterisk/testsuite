@@ -281,6 +281,7 @@ found at http://www.yaml.org/.
 # The testinfo section contains information that describes the purpose of the
 # test.
 testinfo:
+    skip : 'Breif reason for skipping test' # OPTIONAL
     summary     : 'Put a short one liner summary of the test here'
     issues      : |
         # List of issue numbers associated with this test
