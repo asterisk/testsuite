@@ -15,3 +15,4 @@ properties:
     minversion: '1.6.2'
     dependencies:
         - python : 'twisted'
+        - custom : 'soundcard'

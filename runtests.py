@@ -52,6 +52,13 @@ class Dependency:
         else:
             print "Unknown dependency type specified."
 
+    def depend_soundcard(self):
+        try:
+            f = open("/dev/dsp", "r")
+            f.close()
+            return True
+        except:
+            return False
     def depend_ipv6(self):
         try:
             s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)

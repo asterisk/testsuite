@@ -12,6 +12,7 @@ import os
 import math
 from optparse import OptionParser
 from twisted.internet import reactor
+from starpy import manager
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
@@ -40,7 +41,6 @@ class MixMonitorTest:
 
         reactor.callWhenRunning(self.run)
 
-        print self.ast_version
         self.ast1 = Asterisk(base=workingdir)
         self.ast1.install_configs("%s/configs/ast1" % (testdir))
         self.audiofile1 = os.path.join(os.getcwd(), "%s/testaudio1" % (testdir))
@@ -50,6 +50,8 @@ class MixMonitorTest:
         self.talkingaudio = os.path.join(os.getcwd(), "%s/sounds/talking" % (testdir))
 
     def read_result(self):
+        self.passed = True
+        self.stop_reactor()
         self.log_last_step("Reading result file from MixMonitor")
         if os.path.exists(self.audiofile1 + ".raw"):
             self.audiofile1size = os.path.getsize(self.audiofile1 + ".raw")
@@ -57,13 +59,6 @@ class MixMonitorTest:
             self.audiofile2size = os.path.getsize(self.audiofile2 + ".raw")
         if os.path.exists(self.audiofile3 + ".raw"):
             self.audiofile3size = os.path.getsize(self.audiofile3 + ".raw")
-
-        self.stop_asterisk()
-        print "Stopping Reactor ..."
-        if reactor.running:
-            reactor.stop()
-
-        self.passed = True
 
         self.log_last_step("audiofile1 size is %d, a negative size indicates the file was not present." % (self.audiofile1size, ))
         if math.fabs(self.audiofile1size - self.expectedfilesize) > self.filesizetolerance:
@@ -86,13 +81,18 @@ class MixMonitorTest:
         if self.passed == True:
             self.log_last_step("Test Passed... All audio files are the correct.")
 
+    def stop_reactor(self):
+        print "Stopping Reactor ..."
+        if reactor.running:
+            reactor.stop()
+
     def launch_test1(self):
         self.log_last_step("Placing call to test1 exten")
-        self.ast1.cli_exec("console dial test1@mixmonitortest")
+        self.ast1.cli_exec("console dial s@test1")
 
     def launch_test2(self):
         self.log_last_step("Placing call to test2 exten")
-        self.ast1.cli_exec("console dial test2@mixmonitortest")
+        self.ast1.cli_exec("console dial s@test2")
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
@@ -116,22 +116,56 @@ class MixMonitorTest:
         print step
         self.last_step = step
 
-    def run(self):
-        self.start_asterisk()
+    def check_test1(self, ami, event):
+        self.log_last_step("Checking Userevent")
+        if event.get("userevent").lower() != "test1":
+            return
+        status = event.get("status")
+        print ("Status of test1 is %s" % (status))
+        if status != "SUCCESS":
+            self.stop_reactor()
+            return
 
-        # call test1 extension now
+        self.ami.registerEvent("UserEvent", self.check_test2)
+        self.launch_test2()
+
+    def check_test2(self, ami, event):
+        self.log_last_step("Checking Userevent")
+        if event.get("userevent").lower() != "test2":
+            return
+        status = event.get("status")
+        print ("Status of test2 is %s" % (status))
+        if status != "SUCCESS":
+            self.stop_reactor()
+            return
+
+        self.read_result()
+
+    def ami_on_connect1(self, ami):
+        self.log_last_step("Connected to AMI 2")
+        self.ami = ami
+        self.ami.registerEvent("UserEvent", self.check_test1)
+
+    def ami_login_error(self, ami):
+        self.log_last_step("AMI login failed")
+        self.stop_reactor()
+
+    def ami_login(self):
+        self.log_last_step("Logging in to the AMI")
+        self.ami_factory1 = manager.AMIFactory("user", "mysecret")
+        self.ami_factory1.login('127.0.0.1', 5038).addCallbacks(self.ami_on_connect1, self.ami_login_error)
+
+    def run(self):
+        self.ami_login()
         self.launch_test1()
 
-        # call test2 extension in 15 seconds
-        reactor.callLater(15, self.launch_test2)
-
-        # read test results in 25 seconds
-        reactor.callLater(25, self.read_result)
+        reactor.callLater(30, self.stop_reactor)
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv
     test = MixMonitorTest(argv)
+    test.start_asterisk()
     reactor.run()
     test.stop_asterisk()
     if test.passed:
@@ -142,3 +176,5 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main() or 0)
 
+
+# vim:sw=4:ts=4:expandtab:textwidth=79

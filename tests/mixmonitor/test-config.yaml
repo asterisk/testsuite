@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Skip while failures are debugged'
     summary:     'Test MixMonitor and StopMixMonitor applications'
     description: |
         'This test verifies basic functionality of both the MixMonitor
@@ -9,3 +8,4 @@ properties:
     minversion: '1.4'
     dependencies:
         - python : 'twisted'
+        - custom : 'soundcard'
