@@ -43,6 +43,7 @@ class MixMonitorTest:
 
         self.ast1 = Asterisk(base=workingdir)
         self.ast1.install_configs("%s/configs/ast1" % (testdir))
+
         self.audiofile1 = os.path.join(os.getcwd(), "%s/testaudio1" % (testdir))
         self.audiofile2 = os.path.join(os.getcwd(), "%s/testaudio2" % (testdir))
         self.audiofile3 = os.path.join(os.getcwd(), "%s/testaudio3" % (testdir))
@@ -88,11 +89,11 @@ class MixMonitorTest:
 
     def launch_test1(self):
         self.log_last_step("Placing call to test1 exten")
-        self.ast1.cli_exec("console dial s@test1")
+        self.ast1.cli_originate("Local/s@listener extension s@test1")
 
     def launch_test2(self):
         self.log_last_step("Placing call to test2 exten")
-        self.ast1.cli_exec("console dial s@test2")
+        self.ast1.cli_originate("Local/s@listener extension s@test2")
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
@@ -142,7 +143,7 @@ class MixMonitorTest:
         self.read_result()
 
     def ami_on_connect1(self, ami):
-        self.log_last_step("Connected to AMI 2")
+        self.log_last_step("Connected to AMI 1")
         self.ami = ami
         self.ami.registerEvent("UserEvent", self.check_test1)
 
