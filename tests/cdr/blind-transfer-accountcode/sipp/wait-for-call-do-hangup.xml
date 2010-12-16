@@ -1,68 +1,64 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 
 <scenario name="wait for a call, then hangup">
+    <Global variables="file,user" />
+    <nop>
+        <action>
+            <lookup assign_to="line" file="[$file]" key="[$user]" />
+        </action>
+    </nop>
+    <Reference variables="file,user" />
 
-	<Global variables="file,user"/>
-	<nop>
-		<action>
-			<lookup assign_to="line" file="[$file]" key="[$user]"/>
-		</action>
-	</nop>
-	<Reference variables="file,user"/>
+    <recv request="INVITE" crlf="true" />
 
-	<recv request="INVITE" crlf="true"/>
+    <send>
+        <![CDATA[
 
-	<send>
-		<![CDATA[
+        SIP/2.0 180 Ringing
+        [last_Via:]
+        [last_From:]
+        [last_To:];tag=[call_number]
+        [last_Call-ID:]
+        [last_CSeq:]
+        Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
+        Content-Length: 0
 
-		SIP/2.0 180 Ringing
-		[last_Via:]
-		[last_From:]
-		[last_To:];tag=[call_number]
-		[last_Call-ID:]
-		[last_CSeq:]
-		Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
-		Content-Length: 0
+        ]]>
+    </send>
+    <send>
+        <![CDATA[
 
-		]]>
-	</send>
+        SIP/2.0 200 OK
+        [last_Via:]
+        [last_From:]
+        [last_To:];tag=[call_number]
+        [last_Call-ID:]
+        [last_CSeq:]
+        Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
+        Content-Length: 0
 
-	<send>
-		<![CDATA[
+        ]]>
+    </send>
 
-		SIP/2.0 200 OK
-		[last_Via:]
-		[last_From:]
-		[last_To:];tag=[call_number]
-		[last_Call-ID:]
-		[last_CSeq:]
-		Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
-		Content-Length: 0
+    <recv request="ACK" optional="false" />
 
-		]]>
-	</send>
+    <pause milliseconds="2000" />
 
-	<recv request="ACK" optional="false"/>
+    <send retrans="500">
+        <![CDATA[
 
-	<pause milliseconds="2000"/>
+        BYE sip:[field2 line="[$line]"]@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        From: [field0 line="[$line]"] <sip:[field0 line="[$line]"]@[local_ip]:[local_port]>;tag=[call_number]
+        To: [field2 line="[$line]"] <sip:[field2 line="[$line]"]@[remote_ip]:[remote_port]>
+        Call-ID: [call_id]
+        CSeq: 2 BYE
+        Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
+        Max-Forwards: 70
+        Content-Length: 0
 
-	<send retrans="500">
-		<![CDATA[
+        ]]>
+    </send>
 
-		BYE sip:[field2 line="[$line]"]@[remote_ip]:[remote_port] SIP/2.0
-		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-		From: [field0 line="[$line]"] <sip:[field0 line="[$line]"]@[local_ip]:[local_port]>;tag=[call_number]
-		To: [field2 line="[$line]"] <sip:[field2 line="[$line]"]@[remote_ip]:[remote_port]>
-		Call-ID: [call_id]
-		CSeq: 2 BYE
-		Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
-		Max-Forwards: 70
-		Content-Length: 0
-
-		]]>
-	</send>
-	
-	<recv response="200" optional="false"/>
-
+    <recv response="200" optional="false" />
 </scenario>
-

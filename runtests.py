@@ -21,14 +21,19 @@ sys.path.append("lib/python")
 from asterisk.version import AsteriskVersion
 from asterisk.asterisk import Asterisk
 from asterisk import utils
+from sipp.version import SIPpVersion
+
 
 TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
 
+
 class Dependency:
     def __init__(self, dep):
         self.name = ""
+        self.version = ""
         self.met = False
+        self.sipp_version = SIPpVersion()
         if "app" in dep:
             self.name = dep["app"]
             self.met = utils.which(self.name) is not None
@@ -39,6 +44,22 @@ class Dependency:
                 self.met = True
             except ImportError:
                 pass
+        elif "sipp" in dep:
+            self.name = "SIPp"
+            version = None
+            feature = None
+            if 'version' in dep['sipp']:
+                version = dep['sipp']['version']
+            if 'feature' in dep['sipp']:
+                feature = dep['sipp']['feature']
+            self.version = SIPpVersion(version, feature)
+            if self.sipp_version >= self.version:
+                self.met = True
+            if self.version.tls and not self.sipp_version.tls:
+                self.met = False
+            if self.version.pcap and not self.sipp_version.pcap:
+                self.met = False
+
         elif "custom" in dep:
             self.name = dep["custom"]
             method = "depend_%s" % self.name
@@ -97,6 +118,7 @@ class Dependency:
                 return True
 
         return False
+
 
 class TestConfig:
     def __init__(self, test_name, ast_version):
@@ -277,7 +299,12 @@ class TestSuite:
                 print "      --> Maximum Version: %s (%s)" % \
                              (str(t.maxversion), str(t.maxversion_check))
             for d in t.deps:
-                print "      --> Dependency: %s -- Met: %s" % (d.name,
+                if d.version:
+                    print "      --> Dependency: %s" % (d.name)
+                    print "        --> Version: %s -- Met: %s" % (d.version,
+                            str(d.met))
+                else:
+                    print "      --> Dependency: %s -- Met: %s" % (d.name,
                              str(d.met))
             i += 1
 

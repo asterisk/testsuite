@@ -17,7 +17,7 @@ testinfo:
 
         Test 3: The first three DTMF digits contain no end frames. Asterisk
         should be able to properly handle the situation and still log the
-        DTMF presses.
+        DTMF presses."
     issues:
         - mantis : '15811'
 
@@ -25,5 +25,7 @@ properties:
     minversion: '1.4'
     dependencies:
         - app : 'bash'
-        - app : 'sipp'
         - app : 'asttest'
+        - sipp :
+            version : 'v3.0'
+            feature : 'PCAP'

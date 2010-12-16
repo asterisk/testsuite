@@ -7,4 +7,5 @@ testinfo:
 properties:
     minversion: '1.4'
     dependencies:
-        - app : 'sipp'
+        - sipp :
+            version : 'v3.0'

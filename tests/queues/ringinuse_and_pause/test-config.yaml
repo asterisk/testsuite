@@ -16,6 +16,6 @@ properties:
     minversion: '1.4'
     dependencies:
         - app : 'bash'
-        - app : 'sipp'
         - app : 'asttest'
-
+        - sipp :
+            version : 'v3.0'

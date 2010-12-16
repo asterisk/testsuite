@@ -2,21 +2,20 @@
 <!DOCTYPE scenario SYSTEM "sipp.dtd">
 
 <scenario name="UAC OPTIONS">
-  <send retrans="500"> <![CDATA[
-      OPTIONS sip:5555@[remote_ip]:[remote_port] SIP/2.0
-      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: sipp <sip:sipp@[local_ip]:[local_port]>;tag=[call_number]
-      To: Asterisk <sip:5555@[remote_ip]:[remote_port]>
-      Call-ID: [call_id]
-      CSeq: 1 OPTIONS
-      Contact: sip:sipp@[local_ip]:[local_port]
-      Max-Forwards: 70
-      Subject: Asterisk Testsuite
-      Content-Length: [len]
+    <send retrans="500"> <![CDATA[
 
-    ]]>
-  </send>
+        OPTIONS sip:5555@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        From: sipp <sip:sipp@[local_ip]:[local_port]>;tag=[call_number]
+        To: Asterisk <sip:5555@[remote_ip]:[remote_port]>
+        Call-ID: [call_id]
+        CSeq: 1 OPTIONS
+        Contact: sip:sipp@[local_ip]:[local_port]
+        Max-Forwards: 70
+        Subject: Asterisk Testsuite
+        Content-Length: [len]
 
-  <recv response="404">
-  </recv>
+        ]]>
+    </send>
+    <recv response="404"/>
 </scenario>

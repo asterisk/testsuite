@@ -1,39 +1,32 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-
 <!--
 This scenario will execute a sip register with the given parameters.
 -->
-
-
 <scenario name="Register">
+    <Global variables="file,user" />
+    <nop>
+        <action>
+            <lookup assign_to="line" file="[$file]" key="[$user]" />
+        </action>
+    </nop>
+    <Reference variables="file,user" />
 
-	<Global variables="file,user"/>
-	<nop>
-		<action>
-			<lookup assign_to="line" file="[$file]" key="[$user]"/>
-		</action>
-	</nop>
-	<Reference variables="file,user"/>
+    <send retrans="500">
+        <![CDATA[
 
-	<send retrans="500">
-		<![CDATA[
+        REGISTER sip:[field0 line="[$line]"]@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        From: [field0 line="[$line]"] <sip:[field0 line="[$line]"]@[local_ip]:[local_port]>;tag=[call_number]
+        To: [field0 line="[$line]"] <sip:[field0 line="[$line]"]@[remote_ip]:[remote_port]>
+        Call-ID: [call_id]
+        CSeq: 1 REGISTER
+        Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
+        Content-Length: 0
+        Expires: [field1 line="[$line]"]
 
-		REGISTER sip:[field0 line="[$line]"]@[remote_ip]:[remote_port] SIP/2.0
-		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-		From: [field0 line="[$line]"] <sip:[field0 line="[$line]"]@[local_ip]:[local_port]>;tag=[call_number]
-		To: [field0 line="[$line]"] <sip:[field0 line="[$line]"]@[remote_ip]:[remote_port]>
-		Call-ID: [call_id]
-		CSeq: 1 REGISTER
-		Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
-		Content-Length: 0
-		Expires: [field1 line="[$line]"]
+        ]]>
+    </send>
 
-		]]>
-	</send>
-	
-	<recv response="100" optional="true"/>
-
-	<recv response="200"/>
-
+    <recv response="100" optional="true" />
+    <recv response="200" />
 </scenario>
-

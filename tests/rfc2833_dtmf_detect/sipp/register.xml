@@ -1,29 +1,24 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-
 <!--
 This scenario will execute a sip register with the given parameters.
 -->
-
-
 <scenario name="Register">
-	<send retrans="500">
-		<![CDATA[
+    <send retrans="500">
+        <![CDATA[
 
-		REGISTER sip:test1@[remote_ip]:[remote_port] SIP/2.0
-		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-		From: test1 <sip:test1@[local_ip]:[local_port]>;tag=[call_number]
-		To: test1 <sip:test1@[remote_ip]:[remote_port]>
-		Call-ID: [call_id]
-		CSeq: 1 REGISTER
-		Contact: sip:test1@[local_ip]:[local_port]
-		Content-Length: 0
-		Expires: 120
+        REGISTER sip:test1@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        From: test1 <sip:test1@[local_ip]:[local_port]>;tag=[call_number]
+        To: test1 <sip:test1@[remote_ip]:[remote_port]>
+        Call-ID: [call_id]
+        CSeq: 1 REGISTER
+        Contact: sip:test1@[local_ip]:[local_port]
+        Content-Length: 0
+        Expires: 120
 
-		]]>
-	</send>
+        ]]>
+    </send>
 
-	<recv response="100" optional="true" />
-	<recv response="200"/>
-
+    <recv response="100" optional="true" />
+    <recv response="200" />
 </scenario>
-
