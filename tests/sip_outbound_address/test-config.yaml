@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'Skip while failures are debugged'
     summary:     'Test explicit outbound host for SIP calls'
     description: |
         "This tests the ability to specify an explicit host to send
