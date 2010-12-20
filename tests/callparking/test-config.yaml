@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Skip while failures are debugged'
     summary:     'Test Call Parking'
     description: |
         'This test verifies the Call Parking routine used in the feature code.'

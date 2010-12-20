@@ -13,7 +13,7 @@ import math
 from optparse import OptionParser
 from twisted.application import service, internet
 from twisted.internet import reactor
-from starpy import fastagi
+from starpy import manager
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
@@ -26,10 +26,11 @@ testdir = "tests/callparking"
 class CallParkingTest:
     def __init__(self, argv):
         self.passed = False
-        self.done = False
+        self.ast1_event = False
+        self.ast2_event = False
 
         # Test timeout in seconds
-        self.timeout = 60
+        self.timeout = 30
         self.last_step = ""
 
         # get version info
@@ -39,21 +40,6 @@ class CallParkingTest:
         (options, args) = parser.parse_args(argv)
         self.ast_version = AsteriskVersion(options.ast_version)
 
-        # FastAGI, listen for results from dialplan
-        self.agi_b = fastagi.FastAGIFactory(self.get_result_b)
-        reactor.listenTCP(4574, self.agi_b, self.timeout, '127.0.0.1')
-
-        self.agi_c = fastagi.FastAGIFactory(self.get_result_c)
-        reactor.listenTCP(4575, self.agi_c, self.timeout, '127.0.0.1')
-
-        self.agi_retrieve_A = fastagi.FastAGIFactory(
-            self.get_result_retrieve_A)
-        reactor.listenTCP(4576, self.agi_retrieve_A, self.timeout, '127.0.0.1')
-
-        self.agi_retrieve_B = fastagi.FastAGIFactory(
-            self.get_result_retrieve_B)
-        reactor.listenTCP(4577, self.agi_retrieve_B, self.timeout, '127.0.0.1')
-
         reactor.callWhenRunning(self.run)
 
         self.ast1 = Asterisk(base=workingdir)
@@ -62,108 +48,100 @@ class CallParkingTest:
         self.ast2 = Asterisk(base=workingdir)
         self.ast2.install_configs("%s/configs/ast2" % (testdir))
 
-        self.ast3 = Asterisk(base=workingdir)
-        self.ast3.install_configs("%s/configs/ast3" % (testdir))
-
-    # This gets invoked by the dialplan when userB has parked userA to 701.
-    # Initiate new call userB <--> userC now.
-    def get_result_b(self, agi):
-        self.log_last_step("got AGI connection from userB. "
-         "Initiate new call between userB and userC now")
-        self.ast1.cli_originate(
-         "IAX2/userB@127.0.0.1:4572/c_exten extension bridge_to_B@parking")
-        return agi.finish()
-
-    # This gets invoked by the dialplan when userC has parked userB to 702.
-    # Initiate new call between userC and parked userA (@701) now.
-    def get_result_c(self, agi):
-        self.log_last_step("got AGI connection from userC. "
-         "Now retrieve userA -> call 701")
-        self.ast3.cli_originate(
-         "IAX2/userA@127.0.0.1:4570/701 extension retrieve_A@parking")
-        return agi.finish()
-
-    # This gets invoked by the dialplan when userC has retrieved userA.
-    # Initiate new call between userC and parked userB (@702) now.
-    def get_result_retrieve_A(self, agi):
-        self.log_last_step("got AGI connection from userC. "
-         "userA retrieved successfully, now retrieve userB")
-        self.ast3.cli_originate(
-         "IAX2/userA@127.0.0.1:4570/702 extension retrieve_B@parking")
-        return agi.finish()
-
-    # This gets invoked by the dialplan when userC has retrieved userB.
-    # Test successful!
-    def get_result_retrieve_B(self, agi):
-        self.log_last_step("got AGI connection from userC. "
-         "userB retrieved successfully -> Test successful")
-        self.passed = True
-        reactor.callLater(2, self.read_result)
-        return agi.finish()
-
-    def read_result(self):
-        if self.done:
-            return
-        self.done = True
-
-        self.log_last_step("Reading results")
-
-        # get lock output in case of deadlock before tearing down.
-        self.ast1.cli_exec("core show locks")
-        self.ast2.cli_exec("core show locks")
-        self.ast3.cli_exec("core show locks")
-
-        # if channels are still up for some reason, we want to know that
-        self.ast1.cli_exec("core show channels")
-        self.ast2.cli_exec("core show channels")
-        self.ast3.cli_exec("core show channels")
-
-        if (self.passed):
-            self.log_last_step("Test Passed...")
-        else:
-            self.log_last_step("Test Failed... view result of "
-             "'core show globals' in log for more detailed failure results.")
-
+    def stop_reactor(self):
+        print "Stopping Reactor ..."
         if reactor.running:
-            print "Stopping Reactor ..."
             reactor.stop()
 
-    # This is a callparking test.
-    # 1.  userA calls userB
-    # 2.  userB dials # -> 700, to park userA (701).
-    # 3.  userB calls userC
-    # 4.  userC dials # -> 700, to park userB (702).
-    # 5.  userC dials 701 and retrieves userA
-    # 6.  userC dials 702 and retrieves userB
+    def check_result(self):
+        self.log_last_step("Checking results...")
+        if self.ast1_event is True and self.ast2_event is True:
+            self.stop_reactor()
+            self.passed = True
+
+    def get_parkedcall(self):
+        self.ast2.cli_originate("IAX2/ast1/701 extension s@ast1")
 
     def launch_test(self):
-        self.log_last_step("Originating call to begin test")
-        self.ast1.cli_originate(
-         "IAX2/userA@127.0.0.1:4571/b_exten extension bridge_to_A@parking")
+        self.ast1.cli_originate("Local/9876@ast2 extension 101@ast2")
+
+    def ast1_unparkedcall(self, ami, event):
+        self.log_last_step("UnParkedCall event on ast1 ...")
+        if event.get("exten").lower() != "701":
+            return
+        self.log_last_step("... Success")
+
+    def ast1_parkedcall(self, ami, event):
+        self.log_last_step("ParkedCall event on ast1 ...")
+        if event.get("exten").lower() != "701":
+            return
+        self.log_last_step("... Success")
+        self.get_parkedcall()
+
+    def ast2_userevent(self, ami, event):
+        self.log_last_step("UserEvent on ast2 ... ")
+        status = event.get("status")
+        print ("... %s" % (status))
+        if status != "SUCCESS":
+            self.stop_reactor()
+            return
+
+        self.ast2_event = True
+        self.check_result()
+
+    def ast1_userevent(self, ami, event):
+        self.log_last_step("UserEvent on ast1 ... ")
+        status = event.get("status")
+        print ("... %s" % (status))
+        if status != "SUCCESS":
+            self.stop_reactor()
+            return
+
+        self.ast1_event = True
+        self.check_result()
+
+    def ami_on_connect2(self, ami):
+        self.log_last_step("Connected to AMI 2")
+        self.ami2 = ami
+        self.ami2.registerEvent("UserEvent", self.ast2_userevent)
+
+    def ami_on_connect1(self, ami):
+        self.log_last_step("Connected to AMI 1")
+        self.ami1 = ami
+        self.ami1.registerEvent("ParkedCall", self.ast1_parkedcall)
+        self.ami1.registerEvent("UnParkedCall", self.ast1_unparkedcall)
+        self.ami1.registerEvent("UserEvent", self.ast1_userevent)
+
+    def ami_login_error(self, ami):
+        self.log_last_step("AMI login failed")
+        self.stop_reactor()
+
+    def ami_login(self):
+        self.log_last_step("Logging in to the AMI")
+        self.ami_factory1 = manager.AMIFactory("user", "mysecret")
+        self.ami_factory2 = manager.AMIFactory("user", "mysecret")
+        self.ami_factory1.login('127.0.0.1', 5038).addCallbacks(self.ami_on_connect1, self.ami_login_error)
+        self.ami_factory2.login('127.0.0.2', 5038).addCallbacks(self.ami_on_connect2, self.ami_login_error)
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
         self.ast1.start()
         self.ast2.start()
-        self.ast3.start()
 
     def stop_asterisk(self):
         self.ast1.stop()
         self.ast2.stop()
-        self.ast3.stop()
 
     def log_last_step(self, step):
         print step
         self.last_step = step
 
     def run(self):
-        self.start_asterisk()
-
-        # start test in 5 seconds
-        reactor.callLater(5, self.launch_test)
+        self.ami_login()
+        self.launch_test()
 
         # stop and read results after timeout
-        reactor.callLater(self.timeout, self.read_result)
+        reactor.callLater(self.timeout, self.stop_reactor)
 
 
 def main(argv=None):
@@ -171,10 +149,11 @@ def main(argv=None):
         argv = sys.argv
 
     # Run CallParking Test
-    call_parking_test = CallParkingTest(argv)
+    test = CallParkingTest(argv)
+    test.start_asterisk()
     reactor.run()
-    call_parking_test.stop_asterisk()
-    if call_parking_test.passed != True:
+    test.stop_asterisk()
+    if test.passed != True:
         return 1
     return 0
 
