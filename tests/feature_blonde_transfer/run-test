@@ -13,7 +13,7 @@ import math
 from optparse import OptionParser
 from twisted.application import service, internet
 from twisted.internet import reactor
-from starpy import fastagi
+from starpy import manager
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
@@ -24,13 +24,13 @@ testdir = "tests/feature_blonde_transfer"
 
 class BlondeTransferTest:
     def __init__(self, argv):
-        self.a_res = 0
-        self.c_res = 0
         self.passed = False
+        self.alpha = False
+        self.bravo = False
+        self.charlie = False
 
         # Test timeout in seconds
         self.test_to = 45
-        self.last_step = ""
 
         # get version info
         parser = OptionParser()
@@ -39,94 +39,28 @@ class BlondeTransferTest:
         (options, args) = parser.parse_args(argv)
         self.ast_version = AsteriskVersion(options.ast_version)
 
-        # FastAGI, listen for results from dialplan
-        self.agi_a = fastagi.FastAGIFactory(self.get_result_a)
-        self.agi_c = fastagi.FastAGIFactory(self.get_result_c)
-        reactor.listenTCP(4573, self.agi_a, self.test_to, '127.0.0.1')
-        reactor.listenTCP(4575, self.agi_c, self.test_to, '127.0.0.1')
-
         reactor.callWhenRunning(self.run)
 
         self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" %s (testdir))
+        self.ast1.install_configs("%s/configs/ast1" % (testdir))
 
         self.ast2 = Asterisk(base=workingdir)
-        self.ast2.install_configs("%s/configs/ast2" %s (testdir))
-
-        self.talkingaudio = os.path.join(os.getcwd(), "%s/sounds/talking" % (testdir))
-
-    # Close out the agi
-    def handle_agi_result(self, agi):
-        sequence = fastagi.InSequence()
-        sequence.append(agi.finish)
-        self.result_changed()
-        return sequence()
-
-    # This gets invoked by the dialplan when call leg A passes
-    def get_result_a(self, agi):
-        self.log_last_step("Blonde Call Leg A PASSED")
-        self.a_res = 1
-        return self.handle_agi_result(agi)
-
-    # This gets invoked by the dialplan when call leg C passes
-    def get_result_c(self, agi):
-        self.log_last_step("Blonde Call Leg C PASSED")
-        self.c_res = 1
-        return self.handle_agi_result(agi)
-
-    def read_result(self):
-        self.log_last_step("Reading results")
-        self.ast1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
-        self.ast2.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
-
-        self.ast1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
-        self.ast2.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
-
-        if self.ast_version < AsteriskVersion("1.6.1"):
-            self.ast1.cli_exec("core show globals") # The global variables here hold failure conditions
-            self.ast2.cli_exec("core show globals") # The global variables here hold failure conditions
-        else:
-            self.ast1.cli_exec("dialplan show globals") # The global variables here hold failure conditions
-            self.ast2.cli_exec("dialplan show globals") # The global variables here hold failure conditions
+        self.ast2.install_configs("%s/configs/ast2" % (testdir))
 
 
-        self.stop_asterisk()
-
-        if (self.a_res and self.c_res):
+    def check_result(self):
+        self.log_last_step("Checking results...")
+        if self.alpha is True and self.bravo is True and self.charlie is True:
+            self.stop_reactor()
             self.passed = True
-            self.log_last_step("Blonde Transfer Test Passed...")
-        else:
-            if self.a_res == 0:
-                self.log_last_step("Blonde Call Leg A failed.")
-            if self.c_res == 0:
-                self.log_last_step("Blonde Call Leg C failed.")
-            self.log_last_step("Blonde Transfer Test Failed... view result of 'core show globals' in log for more detailed failure results.")
 
+    def stop_reactor(self):
+        print "Stopping Reactor ..."
         if reactor.running:
-            print "Stopping Reactor ..."
             reactor.stop()
 
-    # This is an attended transfer test.  There are 3 call legs tested here, A, B, and C.
-    # 1.  B calls A
-    # 2.  B dials *2 to transfer A to C.
-    # 3.  B dials C's extension
-    # 4.  B hangs up before C picks up which connects A to C.
-    # 5.  Audio and DTMF is passed and detected on each side of the call verifying the connection.
-    # 6.  A and C report results to FastAGI and hangup.
     def launch_test(self):
-
-        if self.ast_version < AsteriskVersion("1.6.1"):
-            self.ast1.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
-            self.ast2.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
-        else:
-            self.ast1.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
-            self.ast2.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
-
-        self.log_last_step("Originating call to begin test 1")
-        if self.ast_version < AsteriskVersion("1.6.2"):
-            self.ast2.cli_exec("originate IAX2/iax_b@127.0.0.1:4571/b_exten extension a_dial@transfertest")
-        else:
-            self.ast2.cli_exec("channel originate IAX2/iax_b@127.0.0.1:4571/b_exten extension a_dial@transfertest")
+        self.ast2.cli_originate("Local/1000@transfertest extension a_dial@transfertest")
 
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
@@ -141,37 +75,88 @@ class BlondeTransferTest:
         print step
         self.last_step = step
 
-    # This is called every time a result comes in, once all results are in
-    # we can quit early instead of waiting for the time out.
-    def result_changed(self):
-        if (self.a_res and self.c_res):
-            self.log_last_step("All the results are in, now read them.")
-            # This attempts to schedule a read result earlier than our default timeout.
-            # If the default timeout one gets called first, that is fine.  Either way
-            # this function shuts down the reactor so no other callbacks are processed.
-            reactor.callLater(2, self.read_result)
+    def check_alpha(self, ami, event):
+        self.log_last_step("Checking Userevent")
+        if event.get("userevent").lower() != "alpha":
+            return
+        status = event.get("status")
+        print ("Status of alpha is %s" % (status))
+        if status != "SUCCESS":
+            self.stop_reactor()
+            return
+
+        self.alpha = True
+        self.check_result()
+
+    def check_bravo(self, ami, event):
+        self.log_last_step("Checking Userevent")
+        if event.get("userevent").lower() != "bravo":
+            return
+        status = event.get("status")
+        print ("Status of bravo is %s" % (status))
+        if status != "SUCCESS":
+            self.stop_reactor()
+            return
+
+        self.bravo = True
+        self.check_result()
+
+    def check_charlie(self, ami, event):
+        self.log_last_step("Checking Userevent")
+        if event.get("userevent").lower() != "charlie":
+            return
+        status = event.get("status")
+        print ("Status of charlie is %s" % (status))
+        if status != "SUCCESS":
+            self.stop_reactor()
+            return
+
+        self.charlie = True
+        self.check_result()
+
+    def ami_on_connect2(self, ami):
+        self.log_last_step("Connected to AMI 2")
+        self.ami2 = ami
+        self.ami2.registerEvent("UserEvent", self.check_bravo)
+
+    def ami_on_connect1(self, ami):
+        self.log_last_step("Connected to AMI 1")
+        self.ami1 = ami
+        self.ami1.registerEvent("UserEvent", self.check_alpha)
+        self.ami1.registerEvent("UserEvent", self.check_charlie)
+
+    def ami_login_error(self, ami):
+        self.log_last_step("AMI login failed")
+        self.stop_reactor()
+
+    def ami_login(self):
+        self.log_last_step("Logging in to the AMI")
+        self.ami_factory1 = manager.AMIFactory("user", "mysecret")
+        self.ami_factory1.login('127.0.0.1', 5038).addCallbacks(self.ami_on_connect1, self.ami_login_error)
+        self.ami_factory2 = manager.AMIFactory("user", "mysecret")
+        self.ami_factory2.login('127.0.0.2', 5038).addCallbacks(self.ami_on_connect2, self.ami_login_error)
 
     def run(self):
-        self.start_asterisk()
-
-        # call test1 extension now
-        reactor.callLater(2, self.launch_test)
+        self.ami_login()
+        self.launch_test()
 
         # stop and read results after timeout
-        reactor.callLater(self.test_to, self.read_result)
+        reactor.callLater(self.test_to, self.stop_reactor)
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv
 
      # Run Blonde Transfer Test
-    blonde_transfer_test = BlondeTransferTest(argv)
+    test = BlondeTransferTest(argv)
+    test.start_asterisk()
     reactor.run()
-    blonde_transfer_test.stop_asterisk()
-    if blonde_transfer_test.passed != True:
+    test.stop_asterisk()
+    if test.passed != True:
         return 1
     return 0
 
 if __name__ == "__main__":
     sys.exit(main() or 0)
 
+# vim:sw=4:ts=4:expandtab:textwidth=79
