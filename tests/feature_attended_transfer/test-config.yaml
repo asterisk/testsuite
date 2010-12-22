@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Skip while failures are debugged'
     summary:     'Test Attended Transfer'
     description: |
         'This test verifies the Attended Transfer routine used in the feature code.'
