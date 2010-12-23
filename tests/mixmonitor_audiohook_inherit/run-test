@@ -26,7 +26,7 @@ class MixMonitorTest:
         self.passed = False
         self.last_step = ""
         # if audiohook inherit does not work, file will be much smaller than 150000 bytes
-        self.expectedfilesize = 150000
+        self.expectedfilesize = 120000
         self.audiofile1size = -1
 
         # get version info
@@ -41,7 +41,6 @@ class MixMonitorTest:
         self.ast1 = Asterisk(base=workingdir)
         self.ast1.install_configs("%s/configs/ast1" % (testdir))
         self.audiofile1 = os.path.join(os.getcwd(), "%s/testaudio1" % (testdir))
-        self.talkingaudio = os.path.join(os.getcwd(), "%s/sounds/talking" % (testdir))
 
     def stop_reactor(self):
         print "Stopping Reactor ..."
@@ -101,10 +100,8 @@ class MixMonitorTest:
 
         if self.ast_version < AsteriskVersion("1.6.1"):
             self.ast1.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
-            self.ast1.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
         else:
             self.ast1.cli_exec("dialplan set global TESTAUDIO1 " + self.audiofile1)
-            self.ast1.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
 
     def stop_asterisk(self):
         self.ast1.stop()
