@@ -117,7 +117,7 @@ class MixMonitorTest:
         self.ami_login()
         self.launch_test1()
 
-        reactor.callLater(30, self.stop_reactor)
+        reactor.callLater(60, self.stop_reactor)
 
 def main(argv=None):
     if argv is None:
