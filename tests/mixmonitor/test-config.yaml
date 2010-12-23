@@ -8,3 +8,4 @@ properties:
     minversion: '1.4'
     dependencies:
         - python : 'twisted'
+        - python : 'starpy'
