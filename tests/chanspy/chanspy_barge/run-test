@@ -65,6 +65,7 @@ class ChanSpyBarge:
         return sequence()
 
     def readResult(self):
+        self.stop_reactor()
         self.logLastStep("Reading results")
         self.ast1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
         self.ast1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
@@ -79,10 +80,9 @@ class ChanSpyBarge:
         else:
             print 'SIP ChanSpy Test FAILED'
 
-        self.stopProcesses()
-
+    def stop_reactor(self):
+        print "Stopping Reactor ..."
         if reactor.running:
-            print "Stopping Reactor ..."
             reactor.stop()
 
     def chanspyEvent(self, ami, event):
@@ -91,27 +91,34 @@ class ChanSpyBarge:
             reactor.callLater(3, self.aHangup)
             reactor.callLater(4, self.bHangup)
         print event
+
     def amiOnConnect(self, ami):
         self.logLastStep("Connected to the AMI")
         self.ami = ami
         self.ami.registerEvent('ChanSpyStart', self.chanspyEvent)
+
     def amiLoginError(self, ami):
         self.logLastStep("AMI login failed")
         reactor.callLater(1, self.readResult)
+
     def amiLogin(self):
         self.logLastStep("Logging in to the AMI")
         self.ami_factory = manager.AMIFactory("user", "mysecret")
         self.ami_factory.login('127.0.0.1', 5038).addCallbacks(self.amiOnConnect, self.amiLoginError)
+
     def aCall(self):
         self.logLastStep("A Calling into Wait")
         self.pja.stdin.write("m\n")
         self.pja.stdin.write("sip:play_exten@127.0.0.1:5060\n")
+
     def bCall(self):
         self.logLastStep("B Calling into Playback")
         self.pjb.stdin.write("m\n")
         self.pjb.stdin.write("sip:play_exten@127.0.0.1:5060\n")
+
     def aHangup(self):
         self.pja.stdin.write("h\n")
+
     def bHangup(self): #calls into chanspy extension and plays audio to A using Barge
         self.pjb.stdin.write("h\n")
         reactor.callLater(2, self.verifyAudio)
@@ -154,10 +161,6 @@ class ChanSpyBarge:
             self.ast1.cli_exec("channel originate Local/play_recording@test extension detect_audio@test")
 
     def run(self):
-
-        # start up the processes
-        self.startProcesses()
-
         # call extensions
         self.amiLogin()
         reactor.callLater(1, self.callChanSpy)
@@ -172,6 +175,7 @@ def main(argv=None):
 
     # Run Test
     test = ChanSpyBarge(argv)
+    test.startProcesses()
     reactor.run()
     test.stopProcesses()
     if test.passed != True:
@@ -181,3 +185,5 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main() or 0)
 
+
+# vim:sw=4:ts=4:expandtab:textwidth=79

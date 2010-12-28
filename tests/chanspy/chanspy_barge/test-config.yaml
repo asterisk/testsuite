@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Skip while failures are debugged'
     summary:     'Test Chanspy with the \"B\" option for barging in on both channels.'
     description: |
         'This test verifies basic functionality of using ChanSpy with the 
@@ -17,3 +16,4 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - app : 'pjsua'
+        - custom : 'soundcard'
