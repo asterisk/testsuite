@@ -61,25 +61,15 @@ class ChanSpyMixMonitorTest:
         return sequence()
 
     def readResult(self):
-        self.logLastStep("Reading results")
-        self.ast1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
-        self.ast1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
-
-        if self.ast_version < AsteriskVersion("1.6.1"):
-            self.ast1.cli_exec("core show globals") # The global variables here hold failure conditions
-        else:
-            self.ast1.cli_exec("dialplan show globals") # The global variables here hold failure conditions
-
+        self.stop_reactor()
         if self.passed == True:
             print 'SIP ChanSpy test PASSED!'
         else:
             print 'SIP ChanSpy Test FAILED'
 
-
-        self.stopProcesses()
-
+    def stop_reactor(self):
+        print "Stopping Reactor ..."
         if reactor.running:
-            print "Stopping Reactor ..."
             reactor.stop()
 
     def chanspyEvent(self, ami, event):
@@ -94,33 +84,42 @@ class ChanSpyMixMonitorTest:
             reactor.callLater(2, self.cHangup)
             reactor.callLater(3, self.hangupChanSpy)
         print event
+
     def amiOnConnect(self, ami):
         self.logLastStep("Connected to the AMI")
         self.ami = ami
         self.ami.registerEvent('ChanSpyStart', self.chanspyEvent)
+
     def amiLoginError(self, ami):
         self.logLastStep("AMI login failed")
         reactor.callLater(1, self.readResult)
+
     def amiLogin(self):
         self.logLastStep("Logging in to the AMI")
         self.ami_factory = manager.AMIFactory("user", "mysecret")
         self.ami_factory.login('127.0.0.1', 5038).addCallbacks(self.amiOnConnect, self.amiLoginError)
+
     def aCall(self):
         self.logLastStep("A Calling into Playback")
         self.pja.stdin.write("m\n")
         self.pja.stdin.write("sip:play_exten@127.0.0.1:5060\n")
+
     def bCall(self):
         self.logLastStep("B Calling into Playback")
         self.pjb.stdin.write("m\n")
         self.pjb.stdin.write("sip:play_exten@127.0.0.1:5060\n")
+
     def cCall(self):
         self.logLastStep("C Calling into Playback")
         self.pjc.stdin.write("m\n")
         self.pjc.stdin.write("sip:play_exten@127.0.0.1:5060\n")
+
     def aHangup(self):
         self.pja.stdin.write("h\n")
+
     def bHangup(self):
         self.pjb.stdin.write("h\n")
+
     def cHangup(self):
         self.pjc.stdin.write("h\n")
 
@@ -159,23 +158,16 @@ class ChanSpyMixMonitorTest:
         reactor.callLater(2, self.verifyAudio)
 
     def verifyAudio(self):
-        if self.ast_version < AsteriskVersion("1.6.2"):
-            self.ast1.cli_exec("originate Local/play_recording@test extension detect_audio@test")
-        else:
-            self.ast1.cli_exec("channel originate Local/play_recording@test extension detect_audio@test")
+        self.ast1.cli_originate("Local/play_recording@test extension detect_audio@test")
 
     def run(self):
-
-        # start up the processes
-        self.startProcesses()
-
         # call extensions
         self.amiLogin()
         reactor.callLater(1, self.callChanSpy)
         reactor.callLater(2, self.aCall)
 
         # stop and read results after timeout
-        reactor.callLater(self.test_to, self.readResult)
+        reactor.callLater(self.test_to, self.stop_reactor)
 
 def main(argv=None):
     if argv is None:
@@ -183,6 +175,7 @@ def main(argv=None):
 
     # Run Test
     test = ChanSpyMixMonitorTest(argv)
+    test.startProcesses()
     reactor.run()
     test.stopProcesses()
     if test.passed != True:
@@ -192,3 +185,4 @@ def main(argv=None):
 if __name__ == "__main__":
     sys.exit(main() or 0)
 
+# vim:sw=4:ts=4:expandtab:textwidth=79
