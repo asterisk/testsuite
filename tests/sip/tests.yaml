@@ -3,3 +3,4 @@ tests:
     # Temporarily disabled until random failures are debugged.
     #- test: 'handle_response_refer'
     - test: 'options'
+    - test: 'refer_replaces_to_self'
