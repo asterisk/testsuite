@@ -132,6 +132,9 @@ Optional (needed by specific tests):
               #define PJ_HAS_IPV6 1
 
               before running the `make dep && make` command.
+        - pjsua python bindings
+            - Go to pjsip-apps/src/python directory
+            - Run 'sudo python ./setup.py install' or just 'sudo make'
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
