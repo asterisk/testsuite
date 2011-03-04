@@ -105,7 +105,8 @@ Optional (needed by specific tests):
         - SIPp
             - Download the latest unstable release
             - http://sipp.sourceforge.net/snapshots/
-            - Compile the version with pcap support using "make pcapplay"
+            - Compile the version with pcap and OpenSSL support using:
+                  $ make pcapplay_ossl
         - asttest
             - included with the test suite
         - Python modules
