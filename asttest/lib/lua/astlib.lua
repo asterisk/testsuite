@@ -1062,3 +1062,14 @@ function manager.action.ping()
 	return manager.action.new("Ping")
 end
 
+--- Status action.
+function manager.action.status(channel)
+	local a = manager.action.new("Status")
+
+	if channel then
+		a["Channel"] = channel
+	end
+
+	return a
+end
+
