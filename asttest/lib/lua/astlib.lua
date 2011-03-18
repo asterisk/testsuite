@@ -382,95 +382,103 @@ function asterisk_version:new(version)
 	return v
 end
 
+function asterisk_version:_parse_svn()
+	self.svn = true
+	self.branch, self.revision, self.parent = self.version:match("SVN%-(.*)%-r(%d+M?)%-(.*)")
+	if not self.branch then
+		self.branch, self.revision = self.version:match("SVN%-(.*)%-r(%d+M?)")
+	end
+
+	if not self.branch then
+		error("error parsing SVN version number: " .. self.version)
+	end
+
+	-- generate a synthetic version number for svn branch versions
+	self.patch = self.revision:match("(%d+)M?")
+	self.concept, self.major, self.minor = self.branch:match("branch%-([^.]+).(%d+).(%d+)")
+	if not self.concept then
+		self.minor = "999" -- assume the SVN branch is newer than all released versions
+		self.concept, self.major = self.branch:match("branch%-([^.]+).(%d+)")
+	end
+	if not self.concept then
+		if self.branch == "trunk" then
+			self.concept = "999"
+			self.major = "0"
+			self.minor = "0"
+		else
+			-- branch names that don't match are greater
+			-- than everything except trunk
+			self.concept = "998"
+			self.major = "0"
+			self.minor = "0"
+		end
+	end
+
+	-- branch C.3 is minor version 998, other C.3 branches are 999
+	if self.branch == "branch-C.3" then
+		self.minor = "998"
+	end
+
+	-- store ordering information
+	-- if self.concept is not a number, assume a BE branch.  Treat
+	-- BE like asterisk 1.5.
+	if not self.concept:match("^%d+$") then
+		self.order.concept = 1
+		self.order.major = 5
+		self.order.minor = tonumber(self.minor)
+		self.order.patch = tonumber(self.patch)
+	else
+		self.order.concept = tonumber(self.concept)
+		self.order.major = tonumber(self.major)
+		self.order.minor = tonumber(self.minor)
+		self.order.patch = tonumber(self.patch)
+	end
+
+end
+
+function asterisk_version:_parse_release()
+	self.concept, self.major, self.minor, self.patch = self.version:match("([^.]+).(%d+).(%d+).(%d+)")
+	if not self.concept then
+		self.concept, self.major, self.minor = self.version:match("([^.]+).(%d+).(%d+)")
+	end
+	if not self.concept then
+		self.concept, self.major, self.minor = self.version:match("([^.]+).(%d+)")
+	end
+
+	if not self.concept then
+		error("error parsing version number: " .. self.version)
+	end
+
+	-- generate synthetic svn information
+	self.branch = "branch-" .. self.concept .. "." .. self.major
+
+	-- special handling for 1.6 branches
+	if self.concept == "1" and self.major == "6"  and self.minor ~= nil then
+		self.branch = self.branch .. "." .. self.minor
+	end
+	self.revision = "00000"
+	
+	-- store ordering information
+	-- if self.concept is not a number, assume a BE branch.  Treat
+	-- BE like asterisk 1.5.
+	if not self.concept:match("^%d+$") then
+		self.order.concept = 1
+		self.order.major = 5
+		self.order.minor = tonumber(self.major:match("%d"))
+		self.order.patch = tonumber(self.patch or 0)
+	else
+		self.order.concept = tonumber(self.concept)
+		self.order.major = tonumber(self.major)
+		self.order.minor = tonumber(self.minor or 0)
+		self.order.patch = tonumber(self.patch or 0)
+	end
+end
+
 function asterisk_version:_parse()
 	if self.version:sub(1,3) == "SVN" then
-		self.svn = true
-		self.branch, self.revision, self.parent = self.version:match("SVN%-(.*)%-r(%d+M?)%-(.*)")
-		if not self.branch then
-			self.branch, self.revision = self.version:match("SVN%-(.*)%-r(%d+M?)")
-		end
-
-		if not self.branch then
-			error("error parsing SVN version number: " .. self.version)
-		end
-
-		-- generate a synthetic version number for svn branch versions
-		self.patch = self.revision:match("(%d+)M?")
-		self.concept, self.major, self.minor = self.branch:match("branch%-([^.]+).(%d+).(%d+)")
-		if not self.concept then
-			self.minor = "999" -- assume the SVN branch is newer than all released versions
-			self.concept, self.major = self.branch:match("branch%-([^.]+).(%d+)")
-		end
-		if not self.concept then
-			if self.branch == "trunk" then
-				self.concept = "999"
-				self.major = "0"
-				self.minor = "0"
-			else
-				-- branch names that don't match are greater
-				-- than everything except trunk
-				self.concept = "998"
-				self.major = "0"
-				self.minor = "0"
-			end
-		end
-
-		-- branch C.3 is minor version 998, other C.3 branches are 999
-		if self.branch == "branch-C.3" then
-			self.minor = "998"
-		end
-
-		-- store ordering information
-		-- if self.concept is not a number, assume a BE branch.  Treat
-		-- BE like asterisk 1.5.
-		if not self.concept:match("^%d+$") then
-			self.order.concept = 1
-			self.order.major = 5
-			self.order.minor = tonumber(self.minor)
-			self.order.patch = tonumber(self.patch)
-		else
-			self.order.concept = tonumber(self.concept)
-			self.order.major = tonumber(self.major)
-			self.order.minor = tonumber(self.minor)
-			self.order.patch = tonumber(self.patch)
-		end
-
+		self:_parse_svn()
 	else
-		self.concept, self.major, self.minor, self.patch = self.version:match("([^.]+).(%d+).(%d+).(%d+)")
-		if not self.concept then
-			self.concept, self.major, self.minor = self.version:match("([^.]+).(%d+).(%d+)")
-		end
-		if not self.concept then
-			self.concept, self.major, self.minor = self.version:match("([^.]+).(%d+)")
-		end
-
-		if not self.concept then
-			error("error parsing version number: " .. self.version)
-		end
-
-		-- generate synthetic svn information
-		self.branch = "branch-" .. self.concept .. "." .. self.major
-
-		-- special handling for 1.6 branches
-		if self.concept == "1" and self.major == "6"  and self.minor ~= nil then
-			self.branch = self.branch .. "." .. self.minor
-		end
-		self.revision = "00000"
-		
-		-- store ordering information
-		-- if self.concept is not a number, assume a BE branch.  Treat
-		-- BE like asterisk 1.5.
-		if not self.concept:match("^%d+$") then
-			self.order.concept = 1
-			self.order.major = 5
-			self.order.minor = tonumber(self.major:match("%d"))
-			self.order.patch = tonumber(self.patch or 0)
-		else
-			self.order.concept = tonumber(self.concept)
-			self.order.major = tonumber(self.major)
-			self.order.minor = tonumber(self.minor or 0)
-			self.order.patch = tonumber(self.patch or 0)
-		end
+		self:_parse_release()
 	end
 end
 
