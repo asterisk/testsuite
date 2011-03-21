@@ -63,7 +63,7 @@ class CallParkingTest:
         self.ast2.cli_originate("IAX2/ast1/701 extension s@ast1")
 
     def launch_test(self):
-        self.ast1.cli_originate("Local/9876@ast2 extension 101@ast2")
+        self.ast1.cli_originate("Local/9876@ast2/n extension 101@ast2")
 
     def ast1_unparkedcall(self, ami, event):
         self.log_last_step("UnParkedCall event on ast1 ...")
