@@ -146,9 +146,11 @@ compare_false("1.6 == 1.6.2")
 compare_false("1.6.2 > 1.6.2")
 compare_false("1.6.2 < 1.6.2")
 compare_false("1.6.2 ~= 1.6.2")
+compare_false("1.6.2 >= 1.6.3")
 
 -- these comparisons should evaluate to true
 compare("1.6.2 <= 1.6.2")
+compare("1.6.2 <= 1.6.3")
 compare("1.4 < 1.6.2")
 compare("1.4 < 1.4.2")
 compare("1.4.30 < 1.6")
@@ -159,6 +161,10 @@ compare("SVN-branch-1.6.2-r224352 < SVN-branch-1.6.2-r224353")
 compare("SVN-trunk-r1234 > SVN-branch-1.6.2-r224353")
 compare("C.3 < 1.6.2")
 compare("C.3 > 1.4.34")
+compare("C.3.6 > 1.4.34")
+compare("C.3.6.2 > 1.4.34")
+compare("C.3.6.2 > C.3")
+compare("C.3.6.2 > C.3.6")
 
 if ast.exists() then
 	print("automatically detected version " .. tostring(ast.version()))
