@@ -65,6 +65,36 @@ function not_major_version(v1, v2)
 	ast._version = old_version
 end
 
+function compare_false(str)
+	local left, cmp, right = str:match("^([^%s]+) ([>=<~]+) ([^%s]+)$")
+	if not left then
+		error(string.format("invalid comparison string '%s'", str))
+	end
+
+	local chunk_str = string.format("return ast.version(\"%s\") %s ast.version(\"%s\")", left, cmp, right)
+	local chunk, err = loadstring(chunk_str, "compairson")
+	if not chunk then
+		error(string.format("error building compairson for '%s' (%s): %s", str, chunk_str, err))
+	end
+
+	fail_if(chunk(), string.format("%s was true, should have been false (%s)", str, chunk_str))
+end
+
+function compare(str)
+	local left, cmp, right = str:match("^([^%s]+) ([>=<~]+) ([^%s]+)$")
+	if not left then
+		error(string.format("invalid comparison string '%s'", str))
+	end
+
+	local chunk_str = string.format("return not (ast.version(\"%s\") %s ast.version(\"%s\"))", left, cmp, right)
+	local chunk, err = loadstring(chunk_str, "comparison")
+	if not chunk then
+		error(string.format("error building compairson for '%s' (%s): %s", str, chunk_str, err))
+	end
+
+	fail_if(chunk(), string.format("%s failed (%s)", str, chunk_str))
+end
+
 normal_version("1.4.30", "1", "4", "30")
 normal_version("1.4.30.1", "1", "4", "30", "1")
 normal_version("1.4", "1", "4")
@@ -109,22 +139,26 @@ not_major_version("trunk", "C.3")
 not_major_version("C.3", "1.4.3")
 
 print("testing comparisons")
-fail_if(ast.version("1.6") > ast.version("1.6.2"), "1.6 > 1.6.2 failed")
-fail_if(ast.version("1.6.2") < ast.version("1.6.2"), "1.6.2 < 1.6.2 failed")
-fail_if(ast.version("1.6.2") ~= ast.version("1.6.2"), "1.6.2 ~= 1.6.2 failed")
-fail_if(not (ast.version("1.6.2") <= ast.version("1.6.2")), "1.6.2 <= 1.6.2 failed")
-fail_if(not (ast.version("1.4") < ast.version("1.6.2")), "1.4 < 1.6.2 failed")
-fail_if(not (ast.version("1.4") < ast.version("1.4.2")), "1.4 < 1.4.2 failed")
-fail_if(not (ast.version("1.4.30") < ast.version("1.6")), "1.4.30 < 1.6 failed")
-fail_if(not (ast.version("1.4.30") < ast.version("SVN-branch-1.6.2-r224353")), "1.4.30 < SVN-branch-1.6.2-r224353 failed")
-fail_if(not (ast.version("1.4.30") < ast.version("SVN-branch-1.4-r224353")), "1.4.30 < SVN-branch-1.4-r224353 failed")
-fail_if(not (ast.version("SVN-branch-1.6.2-r224353") == ast.version("SVN-branch-1.6.2-r224353")), "SVN-branch-1.6.2-r224353 == SVN-branch-1.6.2-r224353 failed")
-fail_if(not (ast.version("SVN-branch-1.6.2-r224352") < ast.version("SVN-branch-1.6.2-r224353")), "SVN-branch-1.6.2-r224352 < SVN-branch-1.6.2-r224353 failed")
-fail_if(not (ast.version("SVN-trunk-r1234") > ast.version("SVN-branch-1.6.2-r224353")), "SVN-trunk-r1234 > SVN-branch-1.6.2-r224353 failed")
-fail_if(not (ast.version("1.4.30") < ast.version("SVN-branch-1.6.2-r224353")), "1.4.30 < SVN-branch-1.6.2-r224353 failed")
-fail_if(not (ast.version("1.4.30") < ast.version("SVN-branch-1.6.2-r224353")), "1.4.30 < SVN-branch-1.6.2-r224353 failed")
-fail_if(not (ast.version("C.3") < ast.version("1.6.2")), "C.3 < 1.6.2 failed")
-fail_if(not (ast.version("C.3") > ast.version("1.4.34")), "C.3 > 1.4.34 failed")
+
+-- these comparisons should evaluate to false
+compare_false("1.6 > 1.6.2")
+compare_false("1.6 == 1.6.2")
+compare_false("1.6.2 > 1.6.2")
+compare_false("1.6.2 < 1.6.2")
+compare_false("1.6.2 ~= 1.6.2")
+
+-- these comparisons should evaluate to true
+compare("1.6.2 <= 1.6.2")
+compare("1.4 < 1.6.2")
+compare("1.4 < 1.4.2")
+compare("1.4.30 < 1.6")
+compare("1.4.30 < SVN-branch-1.6.2-r224353")
+compare("1.4.30 < SVN-branch-1.4-r224353")
+compare("SVN-branch-1.6.2-r224353 == SVN-branch-1.6.2-r224353")
+compare("SVN-branch-1.6.2-r224352 < SVN-branch-1.6.2-r224353")
+compare("SVN-trunk-r1234 > SVN-branch-1.6.2-r224353")
+compare("C.3 < 1.6.2")
+compare("C.3 > 1.4.34")
 
 if ast.exists() then
 	print("automatically detected version " .. tostring(ast.version()))
