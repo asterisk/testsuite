@@ -1,0 +1,15 @@
+testinfo:
+    summary:     'Test the authtimeout manager config option.'
+    description: |
+        "This test ensures that the manager respects the authtimeout config
+        option."
+    issues:
+        -mantis: 18996
+        -jira: SWP-3248
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'bash'
+        - app : 'asttest'
+

@@ -2,5 +2,7 @@
 tests:
     - test: 'login'
     - test: 'action-events-response'
+    - test: 'authlimit'
+    - test: 'authtimeout'
     # Temporarily disabled while failures are debugged
     #- test: 'response-time'

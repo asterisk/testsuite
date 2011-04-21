@@ -4,3 +4,5 @@ tests:
     #- test: 'handle_response_refer'
     - test: 'options'
     - test: 'refer_replaces_to_self'
+    - test: 'tcpauthlimit'
+    - test: 'tcpauthtimeout'

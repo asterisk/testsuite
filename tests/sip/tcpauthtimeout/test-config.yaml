@@ -1,0 +1,17 @@
+testinfo:
+    summary:     'Test the tcpauthtimeout sip config option.'
+    description: |
+        "This test ensures that chan_sip respects the tcpauthtimeout config
+        option."
+    issues:
+        -mantis: 18996
+        -jira: SWP-3248
+
+properties:
+    minversion: '1.6.1'
+    dependencies:
+        - app : 'bash'
+        - app : 'asttest'
+        - sipp :
+            version : 'v3.0'
+
