@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-Copyright (C) 2010, Digium, Inc.
+Copyright (C) 2011, Digium, Inc.
 Paul Belanger <pabelanger@digium.com>
 
 This program is free software, distributed under the terms of
