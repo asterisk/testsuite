@@ -43,25 +43,24 @@ class Asterisk:
     asterisk.conf.
     """
 
-    def __init__(self, base=None, ast_conf_options=None, host="127.0.0.1"):
+    def __init__(self, base=None, ast_conf_options=None):
         """Construct an Asterisk instance.
 
         Keyword Arguments:
         base -- This is the root of the files associated with this instance of
-        Asterisk.  By default, the base is "/tmp/asterisk-testsuite" directory.
-        Given a base, it will be appended to the default base directory.
+        Asterisk.  By default, the base is "tmp/" within the current working
+        directory.  Given a base, a unique directory name will be generated to
+        hold all files.
 
         Example Usage:
-        self.asterisk = Asterisk(base="manager/login")
+        self.asterisk = Asterisk(base=os.path.join(os.getcwd(),
+                                                   "tests/ami-login/tmp"))
         """
         self.directories = {}
         self.ast_version = AsteriskVersion()
 
-        self.base = "/tmp/asterisk-testsuite"
         self.astetcdir = "/etc/asterisk"
         self.ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
-        self.host = host
-        self.valgrind = False
 
         # Find the system installed asterisk.conf
         ast_confs = [
@@ -77,8 +76,10 @@ class Asterisk:
             print "No asterisk.conf found on the system!"
             return
 
-        if base is not None:
-            self.base = "%s/%s" % (self.base, base)
+        # Choose an install base
+        self.base = base
+        if self.base is None:
+            self.base = "%s/tmp" % os.getcwd()
         i = 1
         while True:
             if not os.path.isdir("%s/ast%d" % (self.base, i)):
@@ -114,8 +115,6 @@ class Asterisk:
             "-f", "-g", "-q", "-m", "-n",
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
         ]
-        if self.valgrind:
-            cmd.insert(0, "valgrind")
         try:
             self.process = subprocess.Popen(cmd)
         except OSError:
