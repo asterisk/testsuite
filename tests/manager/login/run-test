@@ -8,77 +8,35 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-import os
-import shutil
-import time
-from twisted.application import service, internet
-from twisted.internet import reactor, defer
-from starpy import manager
+from twisted.internet import reactor
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
 
-workingdir = "/tmp/asterisk-testsuite/manager/login"
-testdir = "tests/manager/login"
+class AMILoginTest(TestCase):
+    def __init__(self, argv):
+        TestCase.__init__(self, argv)
+        self.create_asterisk()
 
-
-class AMILoginTest:
-    def __init__(self):
-        self.passed = False
-        self.last_step = ""
-        self.ami = None
-
-        reactor.callWhenRunning(self.run)
-
-        print "Creating Asterisk instance ..."
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
-
-    def stop_reactor(self):
-        print "Stopping Reactor ..."
-        if reactor.running:
-            reactor.stop()
-
-    def start_asterisk(self):
-        self.log_last_step("Starting Asterisk")
-        self.ast1.start()
-
-    def stop_asterisk(self):
-        self.ast1.stop()
-
-    def log_last_step(self, step):
-        print step
-        self.last_step = step
-
-    def on_error(self, ami):
-        print "ERROR, Last Step: %s" % self.last_step
-        self.stop_reactor()
-
-    def on_logoff(self, ami):
-        self.log_last_step("Logoff Successful")
+    def ami_logoff(self, ami):
         self.passed = True
         self.stop_reactor()
 
-    def on_connect(self, ami):
-        self.log_last_step("Connected to the AMI")
-        self.ami = ami
-        self.ami.logoff().addCallbacks(self.on_logoff, self.on_error)
-        self.log_last_step("Logging off")
+    def ami_connect(self, ami):
+        TestCase.ami_connect(self, ami)
+        self.ami[0].logoff().addCallbacks(self.ami_logoff, self.ami_login_error)
 
     def run(self):
-        self.start_asterisk()
+        TestCase.run(self)
+        self.create_ami_factory(1, "user", "mysecret")
 
-        # A timeout in case things hang and fail
-        reactor.callLater(20, self.stop_reactor)
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
 
-        self.log_last_step("Logging in to the AMI")
-        self.ami_factory = manager.AMIFactory("user", "mysecret")
-        self.ami_factory.login('127.0.0.1', 5038).addCallbacks(self.on_connect,
-                                                               self.on_error)
-
-
-def main():
-    test = AMILoginTest()
+    test = AMILoginTest(argv)
+    test.start_asterisk()
     reactor.run()
     test.stop_asterisk()
     if test.passed:

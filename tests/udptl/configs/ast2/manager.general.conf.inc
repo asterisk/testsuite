@@ -1,7 +1,5 @@
-[general]
 enabled = yes
-port = 5039
-bindaddr = 127.0.0.1
+bindaddr = 127.0.0.2
 
 [user]
 secret = mysecret
