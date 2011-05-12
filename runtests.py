@@ -147,7 +147,7 @@ class TestConfig:
         cmd = [
             "%s/run-test" % self.test_name,
             "-v", str(self.ast_version),
-            "--test-name", str(self.test_name)
+            "-n", str(self.test_name)
         ]
         if self.options.valgrind:
             cmd.append("--valgrind")

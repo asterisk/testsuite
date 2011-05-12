@@ -31,7 +31,7 @@ class TestCase(object):
         parser = OptionParser()
         parser.add_option("-v", "--version", dest="ast_version",
                 help="Asterisk version string")
-        parser.add_option("--test-name", dest="test_name",
+        parser.add_option("-n", dest="test_name",
                 help="Test name")
         parser.add_option("--valgrind", action="store_true",
                 dest="valgrind", default=False,
