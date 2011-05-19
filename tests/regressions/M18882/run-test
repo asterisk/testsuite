@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2011, Digium, Inc.
+Paul Belanger <pabelanger@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import logging
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+
+
+class AsteriskTest(TestCase):
+    def __init__(self, argv):
+        TestCase.__init__(self, argv)
+        self.create_asterisk()
+        self.peer = '0004f2040001'
+        self.family = 'SIP'
+        self.key = 'Registry/0004f2040001'
+        self.value = '172.16.0.100:5300:360:0004f2040001:sip:0004f2040001@172.16.0.100:5300'
+        self.reload = False
+
+    def ami_logoff(self, ami):
+        self.stop_reactor()
+
+    def ami_connect(self, ami):
+        TestCase.ami_connect(self, ami)
+        self.ami[0].dbPut(self.family, self.key, self.value).addCallbacks(self.ami_dbGet)
+
+    def ami_dbGet(self, ami):
+        def onResult(result):
+            if result != self.value:
+		self.ami[0].logoff().addCallbacks(self.ami_logoff)
+            if self.reload == False:
+                self.ast[0].cli_exec('module unload chan_sip')
+                self.ast[0].cli_exec('module load chan_sip')
+                self.reload = True
+                self.ami_dbGet(ami)
+            else:
+                self.sipShowPeers()
+
+        self.ami[0].dbGet(self.family, self.key).addCallbacks(onResult)
+
+    def sipShowPeers(self):
+        def onResult(result):
+            if result['reg-contact'] == 'sip:0004f2040001@172.16.0.100:5300':
+                self.passed = True
+            self.ami[0].logoff().addCallbacks(self.ami_logoff)
+
+        self.ami[0].sipShowPeers(self.peer).addCallbacks(onResult)
+
+    def run(self):
+        TestCase.run(self)
+        self.create_ami_factory()
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    test = AsteriskTest(argv)
+    test.start_asterisk()
+    reactor.run()
+    test.stop_asterisk()
+    if test.passed:
+        return 0
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79

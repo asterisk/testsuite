@@ -7,60 +7,31 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 '''
 import sys
-import os
-import signal
-import subprocess
-from optparse import OptionParser
-from twisted.application import service, internet
-from twisted.internet import reactor, defer
+from twisted.internet import reactor
 from starpy import manager
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
+from asterisk.TestCase import TestCase
 
-workingdir = "/tmp/asterisk-testsuite/udptl"
-testdir = "tests/udptl"
-
-class UdptlTest:
+class UdptlTest(TestCase):
     def __init__(self, argv):
-        self.last_step = ""
-        self.passed = False
+        self.reactor_timeout = 60
 
-        parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version",
-                          help="Asterisk version string")
-        (options, args) = parser.parse_args(argv)
-        self.ast_version = AsteriskVersion(options.ast_version)
+        TestCase.__init__(self, argv)
+        self.create_asterisk(2)
 
-        reactor.callWhenRunning(self.run)
-
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
-
-        self.ast2 = Asterisk(base=workingdir)
-        self.ast2.install_configs("%s/configs/ast2" % (testdir))
-
-    def start_asterisk(self):
-        self.log_last_step("Starting Asterisk")
-        self.ast1.start()
-        self.ast1.cli_exec("fax set debug on")
-        self.ast2.start()
-        self.ast2.cli_exec("fax set debug on")
-
-    def stop_asterisk(self):
-        self.ast1.stop()
-        self.ast2.stop()
-
-    def ami_on_connect1(self, ami):
-        self.log_last_step("Connected to AMI 1")
-        self.ami1 = ami
-        self.ami1.originate(channel = "SIP/666@receiver",
-                            application = "SendFax",
-                            data = "tests/udptl/1page.tif")
+    def ami_connect(self, ami):
+        TestCase.ami_connect(self, ami)
+        if ami.id == 0:
+            self.ami[0].originate(channel = "SIP/666@receiver",
+                    application = "SendFax",
+                    data = "tests/udptl/1page.tif")
+        elif ami.id == 1:
+            self.ami[1].registerEvent("UserEvent", self.check_recv_fax_result)
 
     def check_recv_fax_result(self, ami, event):
-        self.log_last_step("Checking Userevent")
         if event.get("userevent").lower() != "recvstatus":
             return
         self.stop_reactor()
@@ -74,34 +45,12 @@ class UdptlTest:
             self.passed = False
             print "UDPTL test failed!"
 
-    def ami_on_connect2(self, ami):
-        self.log_last_step("Connected to AMI 2")
-        self.ami2 = ami
-        self.ami2.registerEvent("UserEvent", self.check_recv_fax_result)
-
-    def ami_login_error(self, ami):
-        self.log_last_step("AMI login failed")
-        reactor.callLater(1, self.stop_reactor)
-
     def ami_login(self):
-        self.log_last_step("Logging in to the AMI")
-        self.ami_factory1 = manager.AMIFactory("user", "mysecret")
-        self.ami_factory2 = manager.AMIFactory("user", "mysecret")
-        self.ami_factory1.login('127.0.0.1', 5038).addCallbacks(self.ami_on_connect1, self.ami_login_error)
-        self.ami_factory2.login('127.0.0.1', 5039).addCallbacks(self.ami_on_connect2, self.ami_login_error)
-
-    def log_last_step(self, step):
-        print step
-        self.lastStep = step
-
-    def stop_reactor(self):
-        print "Stopping reactor"
-        if reactor.running:
-            reactor.stop()
+        self.create_ami_factory(2, "user", "mysecret")
 
     def run(self):
+        TestCase.run(self)
         self.ami_login()
-        self.shutdowncall = reactor.callLater(60, self.stop_reactor)
 
 
 def main(argv=None):
@@ -119,3 +68,5 @@ def main(argv=None):
 
 if __name__ == "__main__":
     sys.exit(main() or 0)
+
+# vim:sw=4:ts=4:expandtab:textwidth=79

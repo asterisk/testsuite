@@ -35,6 +35,9 @@ class CallFilesTest:
         parser = OptionParser()
         parser.add_option("-v", "--version", dest="ast_version",
                           help="Asterisk version string")
+        parser.add_option("-n", dest="test_name",
+                help="Test name")
+
         (options, args) = parser.parse_args(argv)
         self.ast_version = AsteriskVersion(options.ast_version)
 

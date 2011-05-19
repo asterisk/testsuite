@@ -32,3 +32,4 @@ tests:
     - dir: 'agi'
     - dir: 'pbx'
     - dir: 'fax'
+    - dir: 'regressions'

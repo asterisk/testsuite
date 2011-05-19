@@ -8,37 +8,19 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-import os
-from optparse import OptionParser
 from twisted.internet import reactor
-from starpy import fastagi
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
-from asterisk.version import AsteriskVersion
-
-workingdir = "/tmp/asterisk-testsuite/fastagi/control-stream-file"
-testdir = "tests/fastagi"
+from asterisk.TestCase import TestCase
 
 
-class FastAGIControlStreamFileTest:
+class FastAGIControlStreamFileTest(TestCase):
     def __init__(self, argv):
-        self.passed = False
-        self.timeout = 30
+        TestCase.__init__(self, argv)
 
-        parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version",
-                          help="Asterisk version string")
-        (options, args) = parser.parse_args(argv)
-        self.ast_version = AsteriskVersion(options.ast_version)
-
-        # Listen for results from dialplan
-        self.agi_factory = fastagi.FastAGIFactory(self.do_test)
-        reactor.listenTCP(4573, self.agi_factory, self.timeout, '127.0.0.1')
-        reactor.callWhenRunning(self.run)
-
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
+        self.create_asterisk()
+        self.create_fastagi_factory()
 
     def on_failure(self, reason):
         print 'Could not run CONTROL STREAM FILE: ', reason.getTraceback()
@@ -51,46 +33,25 @@ class FastAGIControlStreamFileTest:
 
         self.result_changed()
 
-    # This gets invoked by the dialplan when the call is answered
-    # send CONTROL STREAM FILE command and wait for results
-    def do_test(self, agi):
+    def fastagi_connect(self, agi):
         self.agi = agi
         print "Connection established."
         return agi.controlStreamFile("beep", "").addCallback(
-            self.finish_test).addErrback(self.on_failure)
-
-    def read_result(self):
-        self.stop_reactor()
-        if self.passed is True:
-            print "Success"
-        else:
-            print "Failed"
-
-    def stop_reactor(self):
-        print "Stopping Reactor ..."
-        if reactor.running:
-            reactor.stop()
+            self.finish_test)
 
     def launch_test(self):
         print "Originating call to begin test."
-        self.ast1.cli_originate("Local/504@agitest extension echo@agitest")
-
-    def start_asterisk(self):
-        print "Starting Asterisk"
-        self.ast1.start()
-
-    def stop_asterisk(self):
-        print "Stopping Asterisk"
-        self.ast1.stop()
+        self.ast[0].cli_originate("Local/504@agitest extension echo@agitest")
 
     # Read result before timeout
     def result_changed(self):
         if self.passed is True:
-            self.read_result()
+            self.stop_reactor()
 
     def run(self):
+        TestCase.run(self)
         self.launch_test()
-        reactor.callLater(self.timeout, self.stop_reactor)
+
 
 def main(argv=None):
     if argv is None:

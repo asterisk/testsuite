@@ -109,7 +109,7 @@ class Dependency:
             "res_fax_spandsp.so",
             "res_fax_digium.so",
         ]
-        ast = Asterisk(base="/tmp/asterisk-testsuite/runtests")
+        ast = Asterisk()
 
         if "astmoddir" not in ast.directories:
             return False
@@ -121,12 +121,13 @@ class Dependency:
 
 
 class TestConfig:
-    def __init__(self, test_name, ast_version):
+    def __init__(self, test_name, ast_version, options):
         self.can_run = True
         self.did_run = False
         self.time = 0.0
         self.test_name = test_name
         self.ast_version = ast_version
+        self.options = options
         self.skip = None
         self.config = None
         self.summary = None
@@ -145,8 +146,11 @@ class TestConfig:
         start_time = time.time()
         cmd = [
             "%s/run-test" % self.test_name,
-            "-v", str(self.ast_version)
+            "-v", str(self.ast_version),
+            "-n", str(self.test_name)
         ]
+        if self.options.valgrind:
+            cmd.append("--valgrind")
         if os.path.exists(cmd[0]) and os.access(cmd[0], os.X_OK):
             print "Running %s ..." % cmd
             try:
@@ -281,7 +285,7 @@ class TestSuite:
             for val in t:
                 path = "%s/%s" % (test_dir, t[val])
                 if val == "test":
-                    tests.append(TestConfig(path, ast_version))
+                    tests.append(TestConfig(path, ast_version, self.options))
                 elif val == "dir":
                     tests += self._parse_test_yaml(path, ast_version)
 
@@ -401,6 +405,9 @@ def main(argv=None):
     parser.add_option("-t", "--test",
             dest="test",
             help="Run a single specified test instead of all tests.")
+    parser.add_option("--valgrind", action="store_true",
+            dest="valgrind", default=False,
+            help="Run Asterisk under valgrind.")
     (options, args) = parser.parse_args(argv)
 
     # Check to see if this has been executed within a sub directory of an
