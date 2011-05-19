@@ -22,3 +22,11 @@ install:
 
 uninstall:
 	rm -rf $$(cat starpy/install.record)
+
+update:
+	@if [ -d starpy ]; then \
+		cd starpy; \
+		git pull; \
+	else \
+		git clone git://github.com/asterisk-org/starpy.git; \
+	fi
