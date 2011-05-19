@@ -3,7 +3,7 @@
 ===                           Asterisk Test Suite                            ===
 ===                                                                          ===
 ===                         http://www.asterisk.org/                         ===
-===                      Copyright (C) 2010, Digium, Inc.                    ===
+===                  Copyright (C) 2010 - 2011, Digium, Inc.                 ===
 ===                                                                          ===
 ================================================================================
 
@@ -16,6 +16,8 @@ TODO List:
    Asterisk (if there is one), and still work just fine if one is not there.
 
  * Add knowledge of ABE versions to the lib/python/asterisk/version.py module.
+
+ * Covert existing tests to use new TestCase python library.
 
 ================================================================================
 ================================================================================
