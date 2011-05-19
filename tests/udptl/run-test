@@ -46,7 +46,7 @@ class UdptlTest(TestCase):
             print "UDPTL test failed!"
 
     def ami_login(self):
-        self.create_ami_factory(2, "user", "mysecret")
+        self.create_ami_factory(2)
 
     def run(self):
         TestCase.run(self)
