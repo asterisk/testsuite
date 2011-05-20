@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -e
 
-asttest -a / -s tests/sip_channel_params
+asttest -a / -s `dirname $0` $@
