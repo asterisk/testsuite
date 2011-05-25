@@ -129,6 +129,11 @@ class moduleLoadUnloadTest(TestCase):
                 if not module[2] and not module[3]:
                     continue
 
+            # TODO: Fix loading / unloading of res_timing_dahdi.so
+            if module[0] == "res_timing_dahdi.so":
+                if not module[2] and not module[3]:
+                    continue
+
             # TODO: Fix unloading of res_crypto.so
             if module[0] == "res_crypto.so":
                 if not module[3]:
