@@ -1,6 +1,7 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 'example'
+    - test: 'dynamic-modules'
     - dir: 'manager'
     - test: 'rfc2833_dtmf_detect'
     - dir: 'iax2'

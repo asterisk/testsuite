@@ -1,0 +1,164 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+Paul Belanger <pabelanger@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+
+
+class moduleLoadUnloadTest(TestCase):
+    def __init__(self, argv):
+        TestCase.__init__(self, argv)
+        self.create_asterisk()
+
+    def load_module(self, module):
+        if not self.check_file(module):
+            print module[0] + " does not exist! Skipping test."
+            return False
+
+        text = "Loaded " + module[0]
+        res = self.ast[0].cli_exec("module load " + module[0])
+        if res.count(text) > 0:
+            module[2] = True
+        return module[2]
+
+    def unload_module(self, module):
+        text = "Unloaded " + module[0]
+        res = self.ast[0].cli_exec("module unload " + module[0])
+        if res.count(text) > 0:
+            module[3] = True
+
+    def check_file(self, module):
+        module[1] = (os.path.isfile(self.ast[0].base +
+            "/usr/lib/asterisk/modules/" + module[0]))
+        return module[1]
+
+    def check_failures(self, module):
+        if not module[2]:
+            print "ERROR: Loading " + module[0]
+            self.passed = False
+
+        if not module[3]:
+            print "ERROR: Unloading " + module[0]
+            self.passed = False
+
+    def run(self):
+        TestCase.run(self)
+        self.passed = True
+        preload_res = []
+        res = []
+
+        # TODO: Do not hardcode, read from source code. 
+        preload_resources = ["res_calendar", "res_curl", "res_fax", "res_odbc"]
+
+        for module in preload_resources:
+            preload_res.append([module + ".so", False, False, False])
+
+        # TODO: Do not hardcode, read from source code. 
+        # TODO: Fixed res_http_post crash
+        resources = ["res_adsi", "res_ael_share", "res_agi", "res_ais", "res_calendar_caldav", "res_calendar_exchange", "res_calendar_icalendar", "res_clialiases", "res_clioriginate", "res_config_curl", "res_config_ldap", "res_config_odbc", "res_config_pgsql", "res_config_sqlite", "res_convert", "res_crypto", "res_fax_spandsp", "res_jabber", "res_limit", "res_monitor", "res_musiconhold", "res_mutestream", "res_phoneprov", "res_pktccops", "res_realtime", "res_rtp_asterisk", "res_rtp_multicast", "res_security_log", "res_smdi", "res_snmp", "res_speech", "res_timing_dahdi", "res_timing_kqueue", "res_timing_pthread", "res_timing_timerfd"]
+
+        res = [ [module + ".so", False, False, False] for module in resources ]
+
+        for module in preload_res:
+            self.load_module(module)
+
+        for module in res:
+            result = self.load_module(module)
+
+            if not result:
+                continue
+
+            self.unload_module(module)
+
+        for module in preload_res:
+            self.unload_module(module)
+
+        for module in preload_res:
+            # modules does not exist
+            if not module[1]:
+                print "WARNING: " + module[0] + " does not exist!"
+                continue
+
+            # TODO: Fix unloading of res_calendar.so
+            if module[0] == "res_calendar.so":
+                if not module[3]:
+                    continue
+
+            # TODO: Fix unloading of res_curl.so
+            if module[0] == "res_curl.so":
+                if not module[3]:
+                    continue
+
+            # TODO: Fix unloading of res_odbc.so
+            if module[0] == "res_odbc.so":
+                if not module[3]:
+                    continue
+
+            self.check_failures(module);
+
+        for module in res:
+            # modules does not exist
+            if not module[1]:
+                print "WARNING: " + module[0] + " does not exist!"
+                continue
+
+            # TODO: Fix unloading of res_adsi.so
+            if module[0] == "res_adsi.so":
+                if not module[3]:
+                    continue
+
+            # TODO: Fix loading / unloading of res_ais.so
+            if module[0] == "res_ais.so":
+                if not module[2] and not module[3]:
+                    continue
+
+            # TODO: Fix loading / unloading of res_config_sqlite.so
+            if module[0] == "res_config_sqlite.so":
+                if not module[2] and not module[3]:
+                    continue
+
+            # TODO: Fix unloading of res_crypto.so
+            if module[0] == "res_crypto.so":
+                if not module[3]:
+                    continue
+
+            # TODO: Fix loading / unloading of res_smdi.so
+            if module[0] == "res_smdi.so":
+                if not module[2] and not module[3]:
+                    continue
+
+            # TODO: Fix unloading of res_speech.so
+            if module[0] == "res_speech.so":
+                if not module[3]:
+                    continue
+
+            self.check_failures(module);
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    test = moduleLoadUnloadTest(argv)
+    test.start_asterisk()
+    reactor.run()
+    test.stop_asterisk()
+    if test.passed:
+        return 0
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
