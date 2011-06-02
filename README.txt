@@ -3,7 +3,7 @@
 ===                           Asterisk Test Suite                            ===
 ===                                                                          ===
 ===                         http://www.asterisk.org/                         ===
-===                      Copyright (C) 2010, Digium, Inc.                    ===
+===                  Copyright (C) 2010 - 2011, Digium, Inc.                 ===
 ===                                                                          ===
 ================================================================================
 

@@ -1,0 +1,9 @@
+testinfo:
+    summary: 'Test response to MESSAGE when out-of-call MESSAGE is disabled (or not supported)'
+    description: |
+        'Send Asterisk a MESSAGE and expect that it gets denied'
+
+properties:
+    minversion: '1.10'
+    dependencies:
+        - app : 'sipp'

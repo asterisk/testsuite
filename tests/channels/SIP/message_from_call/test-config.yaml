@@ -1,0 +1,10 @@
+testinfo:
+    summary: 'Test sending a MESSAGE while processing a call.'
+    description: |
+        'Set up a call with Asterisk and send an out-of-call SIP MESSAGE
+         from the dialplan processing that call.'
+
+properties:
+    minversion: '1.10'
+    dependencies:
+        - app : 'sipp'

@@ -91,6 +91,7 @@ class SIPpTest:
             sipp_args.extend([ key, val ])
 
         print "Executing SIPp scenario: %s" % scenario['scenario']
+        print sipp_args
 
         return subprocess.Popen(sipp_args,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)

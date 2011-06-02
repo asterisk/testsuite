@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+Russell Bryant <russell@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+
+sys.path.append("lib/python")
+from asterisk.sipp import SIPpTest
+
+
+WORKING_DIR = "/tmp/asterisk-testsuite/sip/message_from_call"
+TEST_DIR = os.path.dirname(os.path.realpath(__file__))
+
+SIPP_SCENARIOS = [
+    {
+        'scenario' : 'message_recv.xml',
+        '-p' : '5062'
+    },
+    {
+        'scenario' : 'call.xml',
+        '-p' : '5061'
+    }
+]
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
+    return test.run()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
