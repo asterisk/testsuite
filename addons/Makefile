@@ -7,6 +7,11 @@
 #
 
 all:
+	@if [ ! -d starpy ]; then \
+		echo "starpy/ does not exist.  Run \`make update\` to checkout via git."; \
+	else \
+		echo "Run \`make install\`."; \
+	fi
 
 clean: _clean
 
@@ -18,7 +23,7 @@ distclean: _clean
 	rm -rf starpy/install.record
 
 install:
-	cd starpy; python setup.py install --prefix=~/.local --record install.record
+	(cd starpy; python setup.py install --prefix=~/.local --record install.record)
 
 uninstall:
 	rm -rf $$(cat starpy/install.record)
