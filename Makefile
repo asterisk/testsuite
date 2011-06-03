@@ -23,6 +23,7 @@ install:
 	make -C asttest install
 
 uninstall:
+	make -C asttest uninstall
 
 update:
 
