@@ -97,7 +97,7 @@ Asterisk project so they may be run in the automated testing framework.
 --------------------------------------------------------------------------------
 
 Required:
-        - python >= 2.6.6
+        - python >= 2.6.5
         - python-yaml
 
 Optional (needed by specific tests):
