@@ -99,6 +99,7 @@ Asterisk project so they may be run in the automated testing framework.
 Required:
         - python >= 2.6.5
         - python-yaml
+        - git-core
 
 Optional (needed by specific tests):
         - bash
@@ -111,11 +112,10 @@ Optional (needed by specific tests):
             - included with the test suite
         - Python modules
             - starpy
-                - http://www.vrplumber.com/programming/starpy/
-                - Install starpy from svn trunk:
-                  $ svn co https://starpy.svn.sourceforge.net/svnroot/starpy
-                  $ cd starpy/trunk
-                  # python setup.py install
+                - Install starpy from the addons directory
+                  $ cd addons
+                  $ make update
+                  $ make install
             - python-twisted
         - pjsua
             - http://www.pjsip.org/download.htm
