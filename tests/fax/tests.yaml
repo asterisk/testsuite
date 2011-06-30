@@ -5,7 +5,7 @@ tests:
     - test: 'gateway_t38_g711'
     - test: 'gateway_no_t38'
     - test: 'gateway_native_t38'
-    - test: 'gateway_native_t38_ced'
+    #- test: 'gateway_native_t38_ced'
     - test: 'gateway_mix1'
     - test: 'gateway_mix2'
     - test: 'gateway_mix3'
