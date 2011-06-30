@@ -1,0 +1,25 @@
+testinfo:
+    summary: 'Test the fax gateway.'
+    description: |
+        This test verifies proper gateway functionality when a CED triggered
+        t38 negotiation request fails. The gateway should detect a CED tone
+        from the receiving side and send a t38 reinvite to the sending side.
+        The sending side will reject the reinvite. The gateway should detect
+        this and wait for the receiving side to send a T.38 reinvite and then
+        gateway the fax.
+
+        The call flow looks like this:
+         |send        |
+         |g711     t38|
+         |----------->|
+         |     gateway|
+         |t38      t38|
+         |<-----------|
+        \|receive     |/
+
+properties:
+    minversion: '1.10'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - custom : 'fax'
