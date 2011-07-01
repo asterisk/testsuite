@@ -89,7 +89,7 @@ function do_originate(a, scenario, record, disposition, timeout, exten)
 	m:disconnect()
 
 	-- check and make sure the proper CDRs were generated
-	posix.sleep(1) -- give asterisk a second to write CDRs
+	posix.sleep(3) -- give asterisk 3 seconds to write CDRs
 	print("checking CDR")
 	check_cdr(a, record, disposition)
 end
