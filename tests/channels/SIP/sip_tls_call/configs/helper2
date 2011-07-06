@@ -1,0 +1,2 @@
+tlscertfile=<<path>>/keys/serverB.pem
+tlscafile=<<path>>/keys/ca.crt

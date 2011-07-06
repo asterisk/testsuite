@@ -14,6 +14,7 @@ tests:
     - test: 'sip_one_legged_transfer_v6'
     - test: 'sip_register'
     - test: 'sip_channel_params'
+    - test: 'sip_tls_call'
     - test: 'message_disabled'
     - test: 'message_unauth'
     - test: 'message_auth'

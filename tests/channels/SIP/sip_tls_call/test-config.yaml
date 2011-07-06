@@ -1,0 +1,11 @@
+testinfo:
+    summary:     'Test a SIP TLS call'
+    description: |
+        'This test initiates an SIP TLS call between 2 instances of Asterisk.
+        Both ends connect to a FastAGI server implemented in the test script.'
+
+properties:
+    minversion: '1.6'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
