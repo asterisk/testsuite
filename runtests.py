@@ -315,6 +315,10 @@ class TestSuite:
     def run(self):
         test_suite_dir = os.getcwd()
 
+	# remove any trailing '/' from a test specified with the -t option
+	if self.options.test and self.options.test[-1] == '/':
+            self.options.test = self.options.test[0:-1]
+
         for t in self.tests:
             if self.options.test and t.test_name != self.options.test:
                 continue
