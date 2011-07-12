@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+'''
+Copyright (C) 2011, Digium, Inc.
+Matthew Nicholson <mnicholson@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import re
+import shutil
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+
+class DirectoryTest(TestCase):
+   reactor_timeout = 60
+
+   def __init__(self, argv):
+      TestCase.__init__(self, argv)
+      self.create_asterisk(2)
+
+   def ami_connect(self, ami):
+      TestCase.ami_connect(self, ami)
+         
+      ami.registerEvent('UserEvent', self.user_event)
+
+      if ami.id == 0:
+         print "sending a call from ast1 to ast2"
+
+         df = ami.originate("sip/ast2/1234", "senddtmf", "1234", 1)
+
+         def handle_failure(reason):
+            print "error sending originate:"
+            print reason.getTraceback()
+            self.stop_reactor()
+
+            return reason
+
+         df.addErrback(handle_failure)
+
+   def user_event(self, ami, event):
+      if event['userevent'] != 'TestResult':
+         return
+
+      if event['result'] == "pass":
+         self.passed = True
+         print "app_directory successfully exited"
+      else:
+         print "app_directory did not successfully exit:"
+         print "result: %s" % (event['result'],)
+         print "error: %s" % (event['error'],)
+
+      self.stop_reactor()
+
+   def run(self):
+      TestCase.run(self)
+      self.create_ami_factory(2)
+
+
+def main(argv = sys.argv):
+   test = DirectoryTest(argv)
+   test.start_asterisk()
+   reactor.run()
+   test.stop_asterisk()
+
+   if not test.passed:
+      return 1
+
+   return 0
+
+if __name__ == "__main__":
+   sys.exit(main() or 0)
+

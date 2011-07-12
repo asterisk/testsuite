@@ -1,0 +1,11 @@
+testinfo:
+    summary: 'Test operator exit from app_directory.'
+    description: |
+        This test verifies proper functionality of the operator exit feature of
+        app_directory.
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
