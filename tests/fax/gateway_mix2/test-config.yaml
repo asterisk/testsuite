@@ -1,7 +1,7 @@
 testinfo:
     summary: 'Test the fax gateway.'
     description: |
-        This test verifies proper gateway functionality when a CED triggered
+        This test verifies proper gateway functionality when a v21 triggered
         t38 negotiation request fails and the receiving side does not support
         t38. The gateway should detect the failed reinvite and disable itself.
 

@@ -1,7 +1,7 @@
 testinfo:
     summary: 'Test the fax gateway.'
     description: |
-        This test verifies proper gateway functionality when a CED tone is
+        This test verifies proper gateway functionality when a v21 tone is
         used to trigger a t38 negotiation request.
 
         The call flow looks like this:

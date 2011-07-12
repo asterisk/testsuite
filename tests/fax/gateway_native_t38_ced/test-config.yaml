@@ -2,9 +2,9 @@ testinfo:
     summary: 'Test the fax gateway.'
     description: |
         This test verifies that the gateway properly disabled itself when the
-        two channels involved demonstrated that they can natively do t38. In
-        this test, t38 is negotiated with each channel separately (first after
-        a CED tone is detected).
+        two channels involved demonstrated that they can natively do t38. The
+        receiving side will generate a CED tone, the test should verify that
+        the gateway handles this properly.
 
         The call flow looks like this:
          |send        |
