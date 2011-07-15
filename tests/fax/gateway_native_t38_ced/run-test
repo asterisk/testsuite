@@ -29,7 +29,7 @@ class GatewayTest(TestCase):
       self.create_asterisk(2)
 
       # copy the tiff file we are going to send to a good known location
-      shutil.copy("%s/send.tiff" % (os.path.dirname(argv[0]),), "%s/var/lib/asterisk/" % (self.ast[0].base,))
+      shutil.copy("%s/send.tiff" % (os.path.dirname(argv[0]),), "%s%s" % (self.ast[0].base, self.ast[0].directories['astdatadir']))
 
    def ami_connect(self, ami):
       TestCase.ami_connect(self, ami)
