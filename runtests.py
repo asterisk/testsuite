@@ -33,7 +33,6 @@ class Dependency:
         self.name = ""
         self.version = ""
         self.met = False
-        self.sipp_version = SIPpVersion()
         if "app" in dep:
             self.name = dep["app"]
             self.met = utils.which(self.name) is not None
@@ -52,6 +51,7 @@ class Dependency:
                 version = dep['sipp']['version']
             if 'feature' in dep['sipp']:
                 feature = dep['sipp']['feature']
+            self.sipp_version = SIPpVersion()
             self.version = SIPpVersion(version, feature)
             if self.sipp_version >= self.version:
                 self.met = True
