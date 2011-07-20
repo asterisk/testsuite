@@ -285,6 +285,10 @@ class TestSuite:
             for val in t:
                 path = "%s/%s" % (test_dir, t[val])
                 if val == "test":
+                    # If we specified a test, there's no point loading the others.
+                    if self.options.test and path != self.options.test:
+                        continue
+
                     tests.append(TestConfig(path, ast_version, self.options))
                 elif val == "dir":
                     tests += self._parse_test_yaml(path, ast_version)
@@ -295,9 +299,6 @@ class TestSuite:
         print "Configured tests:"
         i = 1
         for t in self.tests:
-            if self.options.test and t.test_name != self.options.test:
-                continue
-
             print "%.3d) %s" % (i, t.test_name)
             print "      --> Summary: %s" % t.summary
             print "      --> Minimum Version: %s (%s)" % \
@@ -319,8 +320,6 @@ class TestSuite:
         test_suite_dir = os.getcwd()
 
         for t in self.tests:
-            if self.options.test and t.test_name != self.options.test:
-                continue
             if t.can_run is False:
                 if t.skip is not None:
                     print "--> %s ... skipped '%s'" % (t.test_name, t.skip)
