@@ -295,6 +295,9 @@ class TestSuite:
         print "Configured tests:"
         i = 1
         for t in self.tests:
+            if self.options.test and t.test_name != self.options.test:
+                continue
+
             print "%.3d) %s" % (i, t.test_name)
             print "      --> Summary: %s" % t.summary
             print "      --> Minimum Version: %s (%s)" % \
@@ -314,10 +317,6 @@ class TestSuite:
 
     def run(self):
         test_suite_dir = os.getcwd()
-
-	# remove any trailing '/' from a test specified with the -t option
-	if self.options.test and self.options.test[-1] == '/':
-            self.options.test = self.options.test[0:-1]
 
         for t in self.tests:
             if self.options.test and t.test_name != self.options.test:
@@ -428,6 +427,10 @@ def main(argv=None):
         return 1
 
     ast_version = AsteriskVersion()
+
+    #remove any trailing '/' from a test specified with the -t option
+    if options.test and options.test[-1] == '/':
+        options.test = options.test[0:-1]
 
     test_suite = TestSuite(ast_version, options)
 
