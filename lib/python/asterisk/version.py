@@ -69,7 +69,7 @@ class AsteriskVersion:
         else:
             res = int(self.concept) * 10000000
             if self.major is not None:
-                res + int(self.major) * 100000
+                res += int(self.major) * 100000
                 if self.minor is not None:
                     res += int(self.minor) * 1000
                     if self.patch is not None:
