@@ -148,6 +148,19 @@ class AsteriskVersionTests(unittest.TestCase):
         self.assertEqual(v.concept, "1")
         self.assertEqual(v.major, "4")
 
+    def test_version4(self):
+        v = AsteriskVersion("10.0")
+        self.assertFalse(v.svn)
+        self.assertEqual(str(v), "10.0")
+        self.assertEqual(v.concept, "10")
+        self.assertEqual(v.major, "0")
+
+    def test_version5(self):
+        v = AsteriskVersion("10")
+        self.assertFalse(v.svn)
+        self.assertEqual(str(v), "10")
+        self.assertEqual(v.concept, "10")
+
     def test_svn_version(self):
         v = AsteriskVersion("SVN-trunk-r252849")
         self.assertTrue(v.svn)
@@ -175,6 +188,13 @@ class AsteriskVersionTests(unittest.TestCase):
         self.assertTrue(v.svn)
         self.assertEqual(str(v), "SVN-russell-rest-r12345")
         self.assertEqual(v.branch, "russell-rest")
+        self.assertEqual(v.revision, "12345")
+
+    def test_svn_version5(self):
+        v = AsteriskVersion("SVN-branch-10-r12345")
+        self.assertTrue(v.svn)
+        self.assertEqual(str(v), "SVN-branch-10-r12345")
+        self.assertEqual(v.branch, "branch-10")
         self.assertEqual(v.revision, "12345")
 
     def test_cmp(self):
@@ -232,6 +252,20 @@ class AsteriskVersionTests(unittest.TestCase):
         v2 = AsteriskVersion("SVN-branch-1.6.1-r245581M")
         self.assertTrue(v1 > v2)
 
+    def test_cmp12(self):
+        v1 = AsteriskVersion("SVN-branch-10-r245581M")
+        v2 = AsteriskVersion("SVN-branch-1.6.1-r245581M")
+        self.assertTrue(v1 > v2)
+
+    def test_cmp13(self):
+        v1 = AsteriskVersion("10.0")
+        v2 = AsteriskVersion("1.8")
+        self.assertTrue(v1 > v2)
+
+    def test_cmp14(self):
+        v1 = AsteriskVersion("10")
+        v2 = AsteriskVersion("1.8")
+        self.assertTrue(v1 > v2)
 
 def main():
     unittest.main()
