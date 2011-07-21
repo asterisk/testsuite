@@ -17,7 +17,7 @@ testinfo:
         \|receive     |/
 
 properties:
-    minversion: '1.10'
+    minversion: '10'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
