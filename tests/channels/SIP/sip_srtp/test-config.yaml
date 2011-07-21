@@ -1,0 +1,12 @@
+testinfo:
+    summary:     'Make sure that we can do a SIP SRTP call'
+    description: |
+        'Establish a SIP call between two asterisk instances and verify
+         that it is connected with SRTP.'
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+

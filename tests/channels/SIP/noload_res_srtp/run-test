@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2011, Digium, Inc.
+Richard Mudgett <rmudgett@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import time
+from twisted.internet import reactor, defer
+
+sys.path.append("lib/python")
+from asterisk.TestCase import TestCase
+
+class SIPCallTest(TestCase):
+    def __init__(self, argv):
+        TestCase.__init__(self, argv)
+
+        self.connected_chan1 = False
+        self.connected_chan2 = False
+        self.connected_no_srtp1 = False
+        self.connected_no_srtp2 = False
+
+        # Safe Reactor timeout values on my own machine could be as low as 1.
+        self.reactor_timeout = 10
+
+        # Create one AGI server
+        # Will call fastagi_connect() once an AGI connection is established.
+        self.create_fastagi_factory()
+
+        # Create two Asterisk instances ...
+        self.create_asterisk(2)
+
+    # This is called when the reactor has started running.
+    def run(self):
+        TestCase.run(self)
+
+        print "Initiating test call"
+        self.ast[0].cli_exec(
+            "originate SIP/2000/2000 extension 1000@siptest1")
+
+    # This is called by each Asterisk instance if the call gets connected.
+    def fastagi_connect(self, agi):
+        def get_test_result(val):
+            print "Connection result '%s'" % val
+            if val.split("-")[0] == "SIP/2000":
+                # Outgoing call on Ast1
+                self.connected_chan1 = True
+                if val.split("=")[1] == "":
+                    self.connected_no_srtp1 = True
+            elif val.split("-")[0] == "SIP/1000":
+                # Incoming call on Ast2
+                self.connected_chan2 = True
+                if val.split("=")[1] == "":
+                    self.connected_no_srtp2 = True
+            else:
+                print "Don't know which side is connected."
+
+            # Hold the AGI connection until the reactor times out
+            # so the other side has a chance to get its test result.
+            ## Drop the AGI connection
+            #agi.finish()
+
+        agi.getVariable("TEST_RESULT").addCallback(get_test_result)
+
+    def stop_asterisk(self):
+        TestCase.stop_asterisk(self)
+
+        # Determine if the test passed
+        print "self.connected_chan1:   %s" % (self.connected_chan1)
+        print "self.connected_no_srtp1:%s" % (self.connected_no_srtp1)
+        print "self.connected_chan2:   %s" % (self.connected_chan2)
+        print "self.connected_no_srtp2:%s" % (self.connected_no_srtp2)
+        if self.connected_chan1 and self.connected_no_srtp1 and self.connected_chan2 and self.connected_no_srtp2:
+            print "Test passed"
+            self.passed = True
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    test = SIPCallTest(argv)
+    test.start_asterisk()
+    reactor.run()
+    test.stop_asterisk()
+    if test.passed:
+        return 0
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
