@@ -67,11 +67,13 @@ class AsteriskVersion:
                 # team branch XXX (may not be off of trunk)
                 return 99999999
         else:
-            res = int(self.concept) * 10000000 + int(self.major) * 100000
-            if self.minor is not None:
-                res += int(self.minor) * 1000
-                if self.patch is not None:
-                    res += int(self.patch) * 10
+            res = int(self.concept) * 10000000
+            if self.major is not None:
+                res + int(self.major) * 100000
+                if self.minor is not None:
+                    res += int(self.minor) * 1000
+                    if self.patch is not None:
+                        res += int(self.patch) * 10
             return res
 
     def __cmp__(self, other):
@@ -85,9 +87,11 @@ class AsteriskVersion:
         self.svn = False
         parts = self.version_str.split(".")
         self.concept = parts[0]
-        self.major = parts[1]
+        self.major = None
         self.minor = None
         self.patch = None
+        if len(parts) >= 2:
+            self.major = parts[1]
         if len(parts) >= 3:
             self.minor = parts[2]
         if len(parts) >= 4:
