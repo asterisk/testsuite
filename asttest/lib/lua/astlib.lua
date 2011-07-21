@@ -398,19 +398,28 @@ function asterisk_version:_parse_svn()
 	self.concept, self.major, self.minor = self.branch:match("branch%-([^.]+).(%d+).(%d+)")
 	if not self.concept then
 		self.minor = "999" -- assume the SVN branch is newer than all released versions
+		self.patch = self.revision:match("(%d+)M?")
 		self.concept, self.major = self.branch:match("branch%-([^.]+).(%d+)")
+	end
+	if not self.concept then
+		self.concept = self.branch:match("branch%-(%d%d+)")
+		self.major = self.revision:match("(%d+)M?") or "999"
+		self.minor = nil
+		self.patch = nil
 	end
 	if not self.concept then
 		if self.branch == "trunk" then
 			self.concept = "999"
 			self.major = "0"
 			self.minor = "0"
+			self.patch = self.revision:match("(%d+)M?")
 		else
 			-- branch names that don't match are greater
 			-- than everything except trunk
 			self.concept = "998"
 			self.major = "0"
 			self.minor = "0"
+			self.patch = self.revision:match("(%d+)M?")
 		end
 	end
 
@@ -442,7 +451,10 @@ function asterisk_version:_parse_release()
 		self.concept, self.major, self.minor = self.version:match("([^.]+).(%d+).(%d+)")
 	end
 	if not self.concept then
-		self.concept, self.major, self.minor = self.version:match("([^.]+).(%d+)")
+		self.concept, self.major = self.version:match("([^.]+).(%d+)")
+	end
+	if not self.concept then
+		self.concept = self.version:match("(%d%d+)")
 	end
 
 	if not self.concept then
@@ -450,7 +462,11 @@ function asterisk_version:_parse_release()
 	end
 
 	-- generate synthetic svn information
-	self.branch = "branch-" .. self.concept .. "." .. self.major
+	if ((tonumber(self.concept) or 0) >= 10) then
+		self.branch = "branch-" .. self.concept
+	else
+		self.branch = "branch-" .. self.concept .. "." .. self.major
+	end
 
 	-- special handling for 1.6 branches
 	if self.concept == "1" and self.major == "6"  and self.minor ~= nil then
@@ -468,7 +484,7 @@ function asterisk_version:_parse_release()
 		self.order.patch = tonumber(self.patch or 0)
 	else
 		self.order.concept = tonumber(self.concept)
-		self.order.major = tonumber(self.major)
+		self.order.major = tonumber(self.major or 0)
 		self.order.minor = tonumber(self.minor or 0)
 		self.order.patch = tonumber(self.patch or 0)
 	end
