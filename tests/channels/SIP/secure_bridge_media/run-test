@@ -24,9 +24,6 @@ class SIPCallTest(TestCase):
         self.connected_srtp1 = False
         self.connected_srtp2 = False
 
-        # Safe Reactor timeout values on my own machine could be as low as 1.
-        self.reactor_timeout = 10
-
         # Create one AGI server
         # Will call fastagi_connect() once an AGI connection is established.
         self.create_fastagi_factory()
