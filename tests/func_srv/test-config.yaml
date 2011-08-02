@@ -7,4 +7,6 @@ testinfo:
 properties:
     minversion: '1.8'
     dependencies:
-        - app: 'asttest'
+        - python : 'twisted'
+        - python : 'starpy'
+

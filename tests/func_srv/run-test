@@ -1,4 +1,101 @@
-#!/usr/bin/env bash
-set -e
+#!/usr/bin/env python
+'''
+Copyright (C) 2011, Digium, Inc.
+Jason Parker <jparker@digium.com>
 
-asttest -a / -s tests/func_srv
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+sys.path.append("lib/python")
+
+from twisted.internet import reactor
+
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+
+class srv_record():
+    def __init__(self, record_num, host, port, priority, weight):
+        self.record_num = record_num
+        self.host = host
+        self.port = port
+        self.priority = priority
+        self.weight = weight
+
+    def match(self, record):
+        print "Matching: %s/%s, %s/%s, %s/%s, %s/%s" % (self.host, record.host, self.port, record.port, self.priority, record.priority, self.weight, record.weight)
+        if self.host != record.host or self.port != record.port or self.priority != record.priority or self.weight != record.weight:
+            return False
+        else:
+            return True
+
+
+class func_srv_test(TestCase):
+    def __init__(self, argv):
+        self.test1_records = []
+        self.test2_records = []
+        self.srv_records = []
+        self.srv_records.append(srv_record(1, "udpserver1.asteriskcheck.com", "5060", "0", "3"))
+        self.srv_records.append(srv_record(2, "udpserver2.asteriskcheck.com", "5061", "1", "0"))
+        self.srv_records.append(srv_record(3, "udpserver3.asteriskcheck.com", "5060", "1", "0"))
+        self.srv_records.append(srv_record(4, "udpserver4.asteriskcheck.com", "5060", "65535", "65535"))
+
+        TestCase.__init__(self, argv)
+        self.create_asterisk()
+
+    def ami_connect(self, ami):
+        TestCase.ami_connect(self, ami)
+
+        self.ami[0].registerEvent("UserEvent", self.analyze_srv)
+
+        self.ami[0].originate(channel = "Local/test@test_context", application = "Echo")
+
+        self.ami[0].originate(channel = "Local/test2@test_context", application = "Echo")
+
+    def analyze_srv(self, ami, event):
+        if event.get("userevent").lower() == "srv":
+            records = self.test1_records
+        elif event.get("userevent").lower() == "srv2":
+            records = self.test2_records
+        else:
+            return
+
+        r = srv_record(event.get("recordnum"), event.get("host"), event.get("port"), event.get("priority"), event.get("weight"))
+        print "Got record (%s): Host - %s, Port - %s, Priority - %s, Weight - %s" % (r.record_num, r.host, r.port, r.priority, r.weight)
+        records.append(r)
+
+        if len(self.srv_records) == len(self.test1_records) and len(self.srv_records) == len(self.test2_records):
+            for r in self.srv_records:
+                for t in (self.test1_records, self.test2_records):
+                    if not r.match(t[r.record_num - 1]):
+                        # Records with the same priority are ordered randomly, so check 2/3 instead.
+                        if not (r.record_num == 2 and r.match(t[2])) and not (r.record_num == 3 and r.match(t[1])):
+                            print "Record #%s did not match." % r.record_num
+                            reactor.stop()
+                            return
+
+            self.passed = True
+            reactor.stop()
+
+    def run(self):
+        TestCase.run(self)
+        self.create_ami_factory()
+
+def main(argv = None):
+    if argv is None:
+        argv = sys.argv
+
+    test = func_srv_test(argv)
+    test.start_asterisk()
+    reactor.run()
+    test.stop_asterisk()
+
+    if not test.passed:
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
