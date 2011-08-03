@@ -60,12 +60,12 @@ class AsteriskVersion:
     def __int__(self):
         if self.svn is True:
             if self.branch == "trunk":
-                return 99999999
+                return 999999999
             elif self.branch[:6] == "branch":
                 return int(AsteriskVersion(self.branch[7:])) + 99
             else:
                 # team branch XXX (may not be off of trunk)
-                return 99999999
+                return 999999999
         else:
             res = int(self.concept) * 10000000
             if self.major is not None:
