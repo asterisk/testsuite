@@ -271,6 +271,12 @@ class AsteriskVersionTests(unittest.TestCase):
         v2 = AsteriskVersion("1.8")
         self.assertTrue(v1 > v2)
 
+    def test_cmp15(self):
+        v1 = AsteriskVersion("SVN-trunk-r245581")
+        v2 = AsteriskVersion("SVN-branch-10-r25123")
+        self.assertTrue(v1 > v2)
+
+
 def main():
     unittest.main()
 
