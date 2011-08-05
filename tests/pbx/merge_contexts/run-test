@@ -19,7 +19,7 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.TestCase import TestCase
 
-class PbxLuaTest(TestCase):
+class PbxMergeContextsTest(TestCase):
    pass_count = 0
    event_count = 0
 
@@ -84,7 +84,7 @@ class PbxLuaTest(TestCase):
 
 
 def main(argv = sys.argv):
-   test = PbxLuaTest(argv)
+   test = PbxMergeContextsTest(argv)
    test.start_asterisk()
    reactor.run()
    test.stop_asterisk()
