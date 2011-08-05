@@ -1,0 +1,10 @@
+testinfo:
+    summary: 'Test background support in pbx_lua.'
+    description: |
+        This test verifies the background app works properly in pbx_lua.
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'

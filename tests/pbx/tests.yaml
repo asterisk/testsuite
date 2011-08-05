@@ -2,5 +2,6 @@
 tests:
     - test: 'call-files'
     - test: 'pbx_lua_goto'
+    - test: 'pbx_lua_background'
     # Temporarily disabled while failures are debugged
     #- test: 'call-files2'
