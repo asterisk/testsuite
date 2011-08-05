@@ -1,0 +1,7 @@
+context test {
+	12 => {
+		Answer();
+		UserEvent(TestResult,result: pass);
+	};
+};
+

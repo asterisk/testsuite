@@ -3,5 +3,7 @@ tests:
     - test: 'call-files'
     - test: 'pbx_lua_goto'
     - test: 'pbx_lua_background'
+    # this test currently doesn't work due to a bug (ASTERISK-18230)
+    #- test: 'merge_contexts'
     # Temporarily disabled while failures are debugged
     #- test: 'call-files2'

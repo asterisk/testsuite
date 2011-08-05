@@ -1,0 +1,13 @@
+testinfo:
+    summary: 'Test mixing pbx_ael, pbx_config, and pbx_lua extensions in the same context.'
+    description: |
+        This test verifies pbx_lua, pbx_ael, and pbx_config can be used in the same context.
+
+    issues:
+        - jira : ASTERISK-18230
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
