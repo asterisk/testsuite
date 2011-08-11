@@ -43,6 +43,10 @@ class Asterisk:
     asterisk.conf.
     """
 
+    """The base working directory of this instance of Asterisk
+    """
+    baseDirectory = ""
+
     def __init__(self, base=None, ast_conf_options=None, host="127.0.0.1"):
         """Construct an Asterisk instance.
 
@@ -86,6 +90,7 @@ class Asterisk:
                 break
             i += 1
         os.makedirs(self.base)
+        self.baseDirectory = self.base
 
         # Mirror system install directory structure
         dir_cat = None

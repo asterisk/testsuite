@@ -1,0 +1,14 @@
+testinfo:
+    summary: 'Test nominal execution of app_voicemails VoiceMail dialplan application'
+    description: |
+        This test verifies proper functionality of an operator leaving a voicemail.  It verifies
+        a bare-bones voicemail, wherein app_voicemail plays back a default greeting, records
+        a voicemail on the filesystem, and hangs up on the caller when the caller presses the pound
+        key or hangs up.
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+

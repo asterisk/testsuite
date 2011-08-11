@@ -136,6 +136,7 @@ class TestConfig:
         self.minversion = None
         self.minversion_check = False
         self.deps = []
+        self.expectPass = True
 
         self.__parse_config()
         self.__check_deps(ast_version)
@@ -168,7 +169,8 @@ class TestConfig:
                 pass
             p.wait()
             f.close()
-            self.passed = p.returncode == 0
+
+            self.passed = (p.returncode == 0 and self.expectPass) or (p.returncode and not self.expectPass)
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
         self.time = time.time() - start_time
@@ -206,6 +208,13 @@ class TestConfig:
                 self.can_run = False
                 print "ERROR: '%s' is not a valid maxversion" % \
                         properties["maxversion"]
+        if "expectedResult" in properties:
+            try:
+                self.expectPass = not (properties["expectedResult"].upper().strip() == "FAIL")
+            except:
+                self.can_run = False
+                print "ERROR: '%s' is not a valid value for expectedResult" %\
+                        properties["expectedResult"]
 
     def __parse_config(self):
         test_config = "%s/test-config.yaml" % self.test_name
