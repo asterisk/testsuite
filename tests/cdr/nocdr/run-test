@@ -36,7 +36,7 @@ class Test:
 
     def start(self, ami):
         ami.registerEvent('Hangup', self.end)
-        self.ast1.cli_exec("console dial 1@default")
+        ami.originate(channel = "Local/1@default", application = "Echo")
 
     def stop_asterisk(self):
         self.ast1.stop()
@@ -53,7 +53,8 @@ class Test:
         print "The failure to open the next CDR is expected"
         cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.ast1.base))
 
-        if len(cdr1) == 0:
+        if len(cdr1) == 1 and cdr1[0].lastapp == "Echo":
+            # There will be 1 CDR record for the second end of the originated channel.
             print "Success"
             self.passed = True
         else:
