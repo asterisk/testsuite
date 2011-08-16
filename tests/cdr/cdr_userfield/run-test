@@ -16,6 +16,7 @@ from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
 from asterisk.ami import AMI
 from twisted.internet import reactor
 import logging
+import re
 
 workingdir = "/tmp/asterisk-testsuite/cdr_userfield"
 testdir = "tests/cdr/cdr_userfield"
@@ -36,7 +37,7 @@ class Test:
 
     def start(self, ami):
         ami.registerEvent('Hangup', self.end)
-        self.ast1.cli_exec("console dial 1@default")
+        ami.originate(channel = "Local/1@default", application = "Echo")
 
     def stop_asterisk(self):
         self.ast1.stop()
@@ -48,16 +49,22 @@ class Test:
         self.stop_asterisk()
 
     def end(self, ami, event):
+        if not re.match(".*;2$", event['channel']):
+                return
         self.stop_reactor()
 
         cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.ast1.base))
 
         cdr1_expect = AsteriskCSVCDR(records=[AsteriskCSVCDRLine(accountcode="",
             source="", destination="1", dcontext="default", callerid="",
-            channel="Console/dsp", dchannel="", lastapp="Hangup", lastarg="",
+            channel="Local/1@default;2", dchannel="", lastapp="Hangup", lastarg="",
             disposition="ANSWERED", amaflags="DOCUMENTATION", userfield="bazinga")])
 
-        if cdr1_expect.match(cdr1):
+        if re.match("Local/1@default-....;2", cdr1[0].channel):
+                # Small hack to force channels to match.  No problem, since we just checked them ourselves.
+                cdr1[0].channel = cdr1_expect[0].channel
+
+        if cdr1_expect[0].match(cdr1[0]):
             print "Success"
             self.passed = True
         else:
