@@ -60,11 +60,17 @@ class Test:
             channel="Local/1@default;2", dchannel="", lastapp="Hangup", lastarg="",
             disposition="NO ANSWER", amaflags="DOCUMENTATION")])
 
-        if re.match("Local/1@default-....;2", cdr1[0].channel):
-                # Small hack to force channels to match.  No problem, since we just checked them ourselves.
-                cdr1[0].channel = cdr1_expect[0].channel
+        cdr1_match = None
 
-        if cdr1_expect[0].match(cdr1[0]):
+        # Find the CDR we want to match, since ordering is random.
+        for c in cdr1:
+                if re.match("Local/1@default-....;2", c.channel):
+                        cdr1_match = c
+                        # Small hack to force channels to match.  No problem, since we just checked them ourselves.
+                        cdr1_match.channel = cdr1_expect[0].channel
+                        break
+
+        if cdr1_expect[0].match(cdr1_match):
             print "Success"
             self.passed = True
         else:
