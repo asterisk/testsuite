@@ -23,7 +23,6 @@ from asterisk.asterisk import Asterisk
 from asterisk import utils
 from sipp.version import SIPpVersion
 
-
 TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
 
@@ -70,6 +69,10 @@ class Dependency:
                     found = True
             if not found:
                 print "Unknown custom dependency - '%s'" % self.name
+        elif "asterisk" in dep:
+            self.name = dep["asterisk"]
+            self.met = self.__find_asterisk_module(self.name)
+
         else:
             print "Unknown dependency type specified."
 
@@ -105,20 +108,27 @@ class Dependency:
 
     def depend_fax(self):
         fax_providers = [
-            "app_fax.so",
-            "res_fax_spandsp.so",
-            "res_fax_digium.so",
+            "app_fax",
+            "res_fax_spandsp",
+            "res_fax_digium",
         ]
-        ast = Asterisk()
 
-        if "astmoddir" not in ast.directories:
-            return False
         for f in fax_providers:
-            if os.path.exists("%s/%s" % (ast.directories["astmoddir"], f)):
+            if self.__find_asterisk_module(f):
                 return True
 
         return False
 
+    def __find_asterisk_module(self, name):
+        ast = Asterisk()
+        if "astmoddir" not in ast.directories:
+            return False
+
+        module = "%s/%s.so" % (ast.directories["astmoddir"], name)
+        if os.path.exists(module):
+            return True
+
+        return False
 
 class TestConfig:
     def __init__(self, test_name, ast_version, options):
