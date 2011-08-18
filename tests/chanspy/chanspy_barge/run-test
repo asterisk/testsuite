@@ -131,7 +131,7 @@ class ChanSpyBarge:
         self.ast1.start()
         playfilearg = "--play-file=%s.wav" % (self.talkingaudio)
         self.pja = subprocess.Popen(['pjsua', '--local-port=5065', '--auto-answer=200', '--null-audio', '--auto-loop'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        self.pjb = subprocess.Popen(['pjsua', '--local-port=5066', '--auto-answer=200', playfilearg, '--auto-play'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        self.pjb = subprocess.Popen(['pjsua', '--local-port=5066', '--auto-answer=200', playfilearg, '--null-audio', '--auto-play'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
         if self.ast_version < AsteriskVersion("1.6.1"):
             self.ast1.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
