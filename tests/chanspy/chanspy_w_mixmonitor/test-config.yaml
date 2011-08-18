@@ -15,4 +15,3 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - app : 'pjsua'
-        - custom : 'soundcard'
