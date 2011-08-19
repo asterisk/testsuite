@@ -82,8 +82,6 @@ class PickupTest:
 
     # set the result, schedule next step
     def handle_result(self, result):
-        self.ast1.cli_exec("console hangup")
-
         if self.test1_res == NOT_RUN:
             self.log_last_step("Pickup Test 1 results came in.")
             self.test1_res = result
@@ -113,7 +111,10 @@ class PickupTest:
 
     def test1_pickup(self):
         self.log_last_step("Issuing the pickup")
-        self.ast1.cli_exec("console dial 1002@pickuptest")
+        if self.ast_version < AsteriskVersion("1.6.2"):
+            self.ast1.cli_exec("originate Local/1002@pickuptest application echo")
+        else:
+            self.ast1.cli_exec("channel originate Local/1002@pickuptest application echo")
 
     def launch_test1(self):
         self.log_last_step("Starting Test 1")
@@ -125,7 +126,10 @@ class PickupTest:
 
     def test2_pickup(self):
         self.log_last_step("Issuing the pickup")
-        self.ast1.cli_exec("console dial 1003@pickuptest")
+        if self.ast_version < AsteriskVersion("1.6.2"):
+            self.ast1.cli_exec("originate Local/1003@pickuptest application echo")
+        else:
+            self.ast1.cli_exec("channel originate Local/1003@pickuptest application echo")
 
     def launch_test2(self):
         self.log_last_step("Starting Test 2")
