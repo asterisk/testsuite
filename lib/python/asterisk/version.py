@@ -15,7 +15,6 @@ import sys
 import re
 import unittest
 
-
 class AsteriskVersion:
     """An Asterisk Version.
 
@@ -60,20 +59,20 @@ class AsteriskVersion:
     def __int__(self):
         if self.svn is True:
             if self.branch == "trunk":
-                return 99999999
+                return 9999999999
             elif self.branch[:6] == "branch":
                 return int(AsteriskVersion(self.branch[7:])) + 99
             else:
                 # team branch XXX (may not be off of trunk)
-                return 99999999
+                return 9999999999
         else:
-            res = int(self.concept) * 1000000
+            res = int(self.concept) * 100000000
             if self.major is not None:
-                res += int(self.major) * 10000
+                res += int(self.major) * 1000000
                 if self.minor is not None:
-                    res += int(self.minor) * 100
+                    res += int(self.minor) * 10000
                     if self.patch is not None:
-                        res += int(self.patch)
+                        res += int(self.__parse_version_patch(self.patch))
             return res
 
     def __cmp__(self, other):
@@ -90,12 +89,18 @@ class AsteriskVersion:
         self.major = None
         self.minor = None
         self.patch = None
+        self.branch = "branch-%s" % self.concept
         if len(parts) >= 2:
             self.major = parts[1]
         if len(parts) >= 3:
             self.minor = parts[2]
         if len(parts) >= 4:
             self.patch = parts[3]
+
+        if int(self.concept) == 1:
+            self.branch += ".%s" % self.major
+            if int(self.major) == 6:
+                self.branch += ".%s" % self.minor
 
     def __parse_svn_version(self):
         self.svn = True
@@ -107,6 +112,27 @@ class AsteriskVersion:
             self.branch = match.group("branch")
             self.revision = match.group("revision")
             self.parent = match.group("parent")
+
+    def __parse_version_patch(self, patch):
+        parts = patch.split("-")
+        ret = int(parts[0])
+        if len(parts) >= 2:
+            versions = [
+                ['rc', 100],
+                ['beta', 10],
+            ]
+            for v, cost in versions:
+                match = re.search(
+                    "%s(?P<%s>.*)" % (v, v),
+                    patch
+                )
+                if match is not None:
+                    ret = int(match.group("%s" % v)) + cost
+                    continue
+        else:
+            ret = ret + 1000
+
+        return ret
 
     def __get_ast_version(self, path):
         '''
@@ -135,6 +161,7 @@ class AsteriskVersionTests(unittest.TestCase):
         self.assertEqual(v.concept, "1")
         self.assertEqual(v.major, "4")
         self.assertEqual(v.minor, "30")
+        self.assertEqual(v.branch, "branch-1.4")
 
     def test_version2(self):
         v = AsteriskVersion("1.4.30.1")
@@ -144,26 +171,41 @@ class AsteriskVersionTests(unittest.TestCase):
         self.assertEqual(v.major, "4")
         self.assertEqual(v.minor, "30")
         self.assertEqual(v.patch, "1")
+        self.assertEqual(v.branch, "branch-1.4")
 
     def test_version3(self):
-        v = AsteriskVersion("1.4")
+        v = AsteriskVersion("1.6.2")
         self.assertFalse(v.svn)
-        self.assertEqual(str(v), "1.4")
+        self.assertEqual(str(v), "1.6.2")
         self.assertEqual(v.concept, "1")
-        self.assertEqual(v.major, "4")
+        self.assertEqual(v.major, "6")
+        self.assertEqual(v.minor, "2")
+        self.assertEqual(v.branch, "branch-1.6.2")
 
     def test_version4(self):
+        v = AsteriskVersion("1.8.6.0")
+        self.assertFalse(v.svn)
+        self.assertEqual(str(v), "1.8.6.0")
+        self.assertEqual(v.concept, "1")
+        self.assertEqual(v.major, "8")
+        self.assertEqual(v.minor, "6")
+        self.assertEqual(v.patch, "0")
+        self.assertEqual(v.branch, "branch-1.8")
+
+    def test_version5(self):
         v = AsteriskVersion("10.0")
         self.assertFalse(v.svn)
         self.assertEqual(str(v), "10.0")
         self.assertEqual(v.concept, "10")
         self.assertEqual(v.major, "0")
+        self.assertEqual(v.branch, "branch-10")
 
-    def test_version5(self):
+    def test_version6(self):
         v = AsteriskVersion("10")
         self.assertFalse(v.svn)
         self.assertEqual(str(v), "10")
         self.assertEqual(v.concept, "10")
+        self.assertEqual(v.branch, "branch-10")
 
     def test_svn_version(self):
         v = AsteriskVersion("SVN-trunk-r252849")
@@ -276,6 +318,30 @@ class AsteriskVersionTests(unittest.TestCase):
         v2 = AsteriskVersion("SVN-branch-10-r251232")
         self.assertTrue(v1 > v2)
 
+    def test_cmp16(self):
+        v1 = AsteriskVersion("1.8.6.0-rc1")
+        v2 = AsteriskVersion("1.8.6.0")
+        self.assertTrue(v1 < v2)
+
+    def test_cmp17(self):
+        v1 = AsteriskVersion("1.8.8.0-beta1")
+        v2 = AsteriskVersion("1.8.8.0-rc1")
+        self.assertTrue(v1 < v2)
+
+    def test_cmp18(self):
+        v1 = AsteriskVersion("1.8.6.0-rc2")
+        v2 = AsteriskVersion("1.8.6.0-rc1")
+        self.assertTrue(v1 > v2)
+
+    def test_cmp19(self):
+        v1 = AsteriskVersion("1.8.6.1")
+        v2 = AsteriskVersion("1.8.6.0-rc11")
+        self.assertTrue(v1 > v2)
+
+    def test_cmp20(self):
+        v1 = AsteriskVersion("1.8.5.0")
+        v2 = AsteriskVersion("1.8.5.1")
+        self.assertTrue(v1 < v2)
 
 def main():
     unittest.main()
