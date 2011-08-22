@@ -12,3 +12,6 @@ tests:
     - test: 'gateway_mix4'
     - test: 'gateway_timeout1'
     - test: 'gateway_timeout2'
+    - test: 'gateway_timeout3'
+    - test: 'gateway_timeout4'
+    - test: 'gateway_timeout5'
