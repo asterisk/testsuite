@@ -18,6 +18,7 @@ dist-clean: distclean
 
 distclean: _clean
 	make -C asttest distclean
+	rm -rf doc/api
 
 install:
 	make -C asttest install
@@ -29,3 +30,5 @@ update:
 
 asttest:
 
+progdocs:
+	(cat contrib/testsuite-doxygen) | doxygen -
