@@ -13,6 +13,9 @@ testinfo:
          |<-----------|
         \|receive     |/
 
+    issues:
+        - jira : 'ASTERISK-18219'
+
 properties:
     minversion: '10'
     dependencies:
