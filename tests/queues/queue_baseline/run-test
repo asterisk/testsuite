@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
-set -e
-
-asttest -a / -s tests/queues/queue_baseline
+. lib/sh/lua.sh
+asttest -a / -s `dirname $0` $@
