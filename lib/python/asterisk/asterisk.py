@@ -82,11 +82,6 @@ class Asterisk:
             return
 
         if base is not None:
-            # If the test is passing the default value of base...
-            if base.startswith(self.base):
-                # ...strip it.
-                base = base[len(self.base):]
-
             self.base = "%s/%s" % (self.base, base)
         i = 1
         while True:
