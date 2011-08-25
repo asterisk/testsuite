@@ -18,8 +18,8 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
-workingdir = "/tmp/asterisk-testsuite/mixmonitor_audiohook_inherit"
-testdir = "tests/mixmonitor_audiohook_inherit"
+workingdir = "mixmonitor_audiohook_inherit"
+testdir = "tests/%s" % workingdir
 
 class MixMonitorTest:
     def __init__(self, argv):

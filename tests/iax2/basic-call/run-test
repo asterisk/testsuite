@@ -20,8 +20,8 @@ from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
 
-workingdir = "/tmp/asterisk-testsuite/iax2/basic-call"
-testdir = "tests/iax2/basic-call"
+workingdir = "iax2/basic-call"
+testdir = "tests/%s" % workingdir
 
 
 class IAXCallTest:

@@ -17,8 +17,8 @@ from asterisk.ami import AMI
 from twisted.internet import reactor
 import logging
 
-workingdir = "/tmp/asterisk-testsuite/console_fork_before_dial"
-testdir = "tests/cdr/console_fork_before_dial"
+workingdir = "cdr/console_fork_before_dial"
+testdir = "tests/%s" % workingdir
 
 class Test:
     def __init__(self):

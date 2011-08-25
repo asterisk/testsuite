@@ -16,8 +16,8 @@ import threading
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 
-workingdir = "/tmp/asterisk-testsuite/sip/refer_replaces_to_self"
-testdir = "tests/sip/refer_replaces_to_self"
+workingdir = "sip/refer_replaces_to_self"
+testdir = "tests/%s" % workingdir
 
 def log_cb(level, str, len=len(str(str))):
     print str,

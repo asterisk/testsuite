@@ -18,8 +18,8 @@ as well as optionally events to send which also need events monitored.
 Please see the documentation in the client module for more information.
 """
 
-workingdir ="/tmp/asterisk-testsuite/manager/event-monitor"
-testdir = "tests/manager/event-monitor"
+workingdir ="manager/event-monitor"
+testdir = "tests/%s" % workingdir
 
 class Test():
 

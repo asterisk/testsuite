@@ -17,8 +17,8 @@ from asterisk.ami import AMI
 from twisted.internet import reactor
 import logging
 
-workingdir = "/tmp/asterisk-testsuite/nocdr"
-testdir = "tests/cdr/nocdr"
+workingdir = "cdr/nocdr"
+testdir = "tests/%s" % workingdir
 
 class Test:
     def __init__(self):

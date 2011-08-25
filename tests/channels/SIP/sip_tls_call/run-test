@@ -35,8 +35,8 @@ class SIPTLSCallTest(TestCase):
         print "Creating Asterisk instances ..."
         self.create_asterisk(2)
 
-        workingdir = "/tmp/asterisk-testsuite/channels/SIP/sip_tls_call"
-        testdir = "tests/channels/SIP/sip_tls_call"
+        workingdir = "channels/SIP/sip_tls_call"
+        testdir = "tests/%s" % workingdir
 
         #initialize test variables
         self.passed = False

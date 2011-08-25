@@ -14,7 +14,7 @@ sys.path.append("lib/python")
 from asterisk.sipp import SIPpTest
 
 
-WORKING_DIR = "/tmp/asterisk-testsuite/sip/message_auth"
+WORKING_DIR = "sip/message_auth"
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 
 SIPP_SCENARIOS = [

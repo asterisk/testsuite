@@ -19,8 +19,8 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
-workingdir = "/tmp/asterisk-testsuite/directed_pickup"
-testdir = "tests/directed_pickup"
+workingdir = "directed_pickup"
+testdir = "tests/%s" % workingdir
 
 NOT_RUN = 0
 PASS = 1

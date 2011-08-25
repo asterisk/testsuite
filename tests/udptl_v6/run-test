@@ -19,8 +19,8 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
-workingdir = "/tmp/asterisk-testsuite/udptl_v6"
-testdir = "tests/udptl_v6"
+workingdir = "udptl_v6"
+testdir = "tests/%s" % workingdir
 
 class UdptlTest:
     def __init__(self, argv):

@@ -21,8 +21,8 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
-workingdir = "/tmp/asterisk-testsuite/sip_one_legged_transfer_v6"
-testdir = "tests/sip_one_legged_transfer_v6"
+workingdir = "sip_one_legged_transfer_v6"
+testdir = "tests/%s" % workingdir
 
 class AttTransferTest:
     def __init__(self, argv):

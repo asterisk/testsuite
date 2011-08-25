@@ -19,8 +19,8 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
-workingdir = "/tmp/asterisk-testsuite/blind-transfer-parkingtimeout"
-testdir = "tests/blind-transfer-parkingtimeout"
+workingdir = "blind-transfer-parkingtimeout"
+testdir = "tests/%s" % workingdir
 
 class BlindTransferTest:
     def __init__(self, argv):

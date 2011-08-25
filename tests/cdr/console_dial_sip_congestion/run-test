@@ -17,8 +17,8 @@ from asterisk.ami import AMI
 from twisted.internet import reactor
 import logging
 
-workingdir = "/tmp/asterisk-testsuite/console_dial_sip_congestion"
-testdir = "tests/cdr/console_dial_sip_congestion"
+workingdir = "cdr/console_dial_sip_congestion"
+testdir = "tests/%s" workingdir
 
 class Test:
     def __init__(self):

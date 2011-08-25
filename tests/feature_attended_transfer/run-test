@@ -19,8 +19,8 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
-workingdir = "/tmp/asterisk-testsuite/feature_attended_transfer"
-testdir = "tests/feature_attended_transfer"
+workingdir = "feature_attended_transfer"
+testdir = "tests/%s" % workingdir
 
 class BlondeTransferTest:
     def __init__(self, argv):

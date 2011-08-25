@@ -19,8 +19,8 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
-workingdir = "/tmp/asterisk-testsuite/call-files"
-testdir = "tests/pbx/call-files"
+workingdir = "pbx/call-files"
+testdir = "tests/%s" % workingdir
 
 class CallFilesTest:
     def __init__(self, argv):

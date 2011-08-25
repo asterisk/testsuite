@@ -18,8 +18,8 @@ from twisted.internet import reactor
 import logging
 import re
 
-workingdir = "/tmp/asterisk-testsuite/cdr_unanswered_yes"
-testdir = "tests/cdr/cdr_unanswered_yes"
+workingdir = "cdr/cdr_unanswered_yes"
+testdir = "tests/%s" % workingdir
 
 class Test:
     def __init__(self):

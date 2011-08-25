@@ -20,8 +20,8 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
-workingdir = "/tmp/asterisk-testsuite/sip_register"
-testdir = "tests/sip_register"
+workingdir = "sip_register"
+testdir = "tests/%s" % workingdir
 
 class RegisterTest:
     def __init__(self, argv):

@@ -19,8 +19,8 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
-workingdir = "/tmp/asterisk-testsuite/one-step-parking"
-testdir = "tests/one-step-parking"
+workingdir = "one-step-parking"
+testdir = "tests/%s" % workingdir
 
 class OneStepParkingTest:
     def __init__(self, argv):

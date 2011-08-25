@@ -18,7 +18,7 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
-workingdir = "/tmp/asterisk-testsuite/fastagi/channel-status"
+workingdir = "fastagi/channel-status"
 testdir = "tests/fastagi"
 
 class FastAGIHangupTest:

@@ -21,8 +21,8 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 
-workingdir = "/tmp/asterisk-testsuite/chanspy/chanspy_w_mixmonitor"
-testdir = "tests/chanspy/chanspy_w_mixmonitor"
+workingdir = "chanspy/chanspy_w_mixmonitor"
+testdir = "tests/%s" % workingdir
 
 
 class ChanSpyMixMonitorTest:
