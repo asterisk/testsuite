@@ -461,6 +461,8 @@ def main(argv=None):
 
     test_suite.run()
 
+    test_suite.write_results_xml(TEST_RESULTS, stdout=True)
+
     if not options.test:
         print "\n=== TEST RESULTS ===\n"
         print "PATH: %s\n" % os.getenv("PATH")
@@ -478,8 +480,6 @@ def main(argv=None):
                 print "FAILED"
 
     print "\n"
-
-    test_suite.write_results_xml(TEST_RESULTS, stdout=True)
 
 
 if __name__ == "__main__":
