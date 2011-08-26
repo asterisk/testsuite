@@ -16,8 +16,8 @@ sys.path.append("lib/python")
 from asterisk.TestCase import TestCase
 
 class SIPCallTest(TestCase):
-    def __init__(self, argv):
-        TestCase.__init__(self, argv)
+    def __init__(self):
+        TestCase.__init__(self)
 
         self.connected_chan1 = False
         self.connected_chan2 = False
@@ -73,10 +73,8 @@ class SIPCallTest(TestCase):
             print "Test passed"
             self.passed = True
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-    test = SIPCallTest(argv)
+def main():
+    test = SIPCallTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

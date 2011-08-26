@@ -23,8 +23,8 @@ class PbxMergeContextsTest(TestCase):
    pass_count = 0
    event_count = 0
 
-   def __init__(self, argv):
-      TestCase.__init__(self, argv)
+   def __init__(self):
+      TestCase.__init__(self)
       self.create_asterisk(2)
 
    def ami_connect(self, ami):
@@ -48,7 +48,7 @@ class PbxMergeContextsTest(TestCase):
          # pbx_config
          df = ami.originate("sip/ast2/123", "test", "1234", 1)
          df.addErrback(handle_failure)
-         
+
          # pbx_lua
          df = ami.originate("sip/ast2/1234", "test", "1234", 1)
          df.addErrback(handle_failure)
@@ -83,8 +83,8 @@ class PbxMergeContextsTest(TestCase):
       self.create_ami_factory(2)
 
 
-def main(argv = sys.argv):
-   test = PbxMergeContextsTest(argv)
+def main():
+   test = PbxMergeContextsTest()
    test.start_asterisk()
    reactor.run()
    test.stop_asterisk()

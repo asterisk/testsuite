@@ -12,14 +12,13 @@ from starpy import manager
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
-from asterisk.version import AsteriskVersion
 from asterisk.TestCase import TestCase
 
 class UdptlTest(TestCase):
-    def __init__(self, argv):
+    def __init__(self):
         self.reactor_timeout = 60
 
-        TestCase.__init__(self, argv)
+        TestCase.__init__(self)
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
@@ -50,12 +49,9 @@ class UdptlTest(TestCase):
         self.create_ami_factory(2)
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
+def main():
     # Run UDPTL test
-    test = UdptlTest(argv)
+    test = UdptlTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

@@ -18,8 +18,8 @@ from asterisk.TestCase import TestCase
 
 
 class moduleLoadUnloadTest(TestCase):
-    def __init__(self, argv):
-        TestCase.__init__(self, argv)
+    def __init__(self):
+        TestCase.__init__(self)
         self.create_asterisk()
 
     def load_module(self, module):
@@ -151,11 +151,8 @@ class moduleLoadUnloadTest(TestCase):
 
             self.check_failures(module);
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
-    test = moduleLoadUnloadTest(argv)
+def main():
+    test = moduleLoadUnloadTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

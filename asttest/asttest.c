@@ -55,7 +55,6 @@ void usage(const char *prog_name) {
 		"  -v <version>   Specify the version of asterisk we are testing against.  If\n"
 		"                 not specified, the version.h file from the specified asterisk\n"
 		"                 path will be usedi to determine the version number.\n"
-		"  -n <name>      Reserved.\n"
 		"\n"
 		, prog_name, prog_name);
 }
@@ -93,9 +92,6 @@ int parse_cmdline(int argc, char *argv[], struct asttest_opts *opts) {
 			break;
 		case 'a':
 			opts->asterisk_path = optarg;
-			break;
-		case 'n':
-			/* Reserved */
 			break;
 		case 's':
 			opts->single_test_mode = optarg;

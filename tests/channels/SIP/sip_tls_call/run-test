@@ -14,7 +14,7 @@ from asterisk.TestCase import TestCase
 from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
 from starpy import manager
 
-#Quick little function for doing search and replace in a file used below.
+# Quick little function for doing search and replace in a file used below.
 def file_replace_string(file, search, replace):
     for line in fileinput.input(file, inplace=1):
         if search in line:
@@ -28,9 +28,9 @@ back. If all goes well, this will create a manager event on ast[0] indicating it
 """
 class SIPTLSCallTest(TestCase):
 
-    #Preps test objects and configuration additions as well as copies TLS keys to test folder.
-    def __init__(self, argv):
-        TestCase.__init__(self, argv)
+    # Preps test objects and configuration additions as well as copies TLS keys to test folder.
+    def __init__(self):
+        TestCase.__init__(self)
 
         print "Creating Asterisk instances ..."
         self.create_asterisk(2)
@@ -38,12 +38,12 @@ class SIPTLSCallTest(TestCase):
         workingdir = "channels/SIP/sip_tls_call"
         testdir = "tests/%s" % workingdir
 
-        #initialize test variables
+        # initialize test variables
         self.passed = False
         self.tone1 = False
         self.tone2 = False
 
-        #Additional setup for config files and keys
+        # Additional setup for config files and keys
         print "Building test resources ..."
         shutil.copy('%s/configs/helper1' % (testdir), '%s/configs/ast1/sip_helper.inc' % (testdir))
         shutil.copy('%s/configs/helper2' % (testdir), '%s/configs/ast2/sip_helper.inc' % (testdir))
@@ -55,25 +55,23 @@ class SIPTLSCallTest(TestCase):
         if os.path.exists('%s/keys' % (workingdir)):
             shutil.rmtree('%s/keys' % (workingdir))
         shutil.copytree('%s/configs/keys' % (testdir), '%s/keys' % (workingdir))
-        #End of additional setup for config files and keys
+        # End of additional setup for config files and keys
 
-
-
-    #Once the AMI Factory connects to the AMI, this function fires.
+    # Once the AMI Factory connects to the AMI, this function fires.
     def ami_connect(self, ami):
         TestCase.ami_connect(self, ami)
 
         print "AMI %d - connected, registering DTMF event..." % (ami.id + 1)
 
-        #This will make the manager listen for DTMF and callback ami_test when it sees some.
+        # This will make the manager listen for DTMF and callback ami_test when it sees some.
         ami.registerEvent('DTMF', self.ami_test)
 
-        if ami.id == 0: #We only want to originate the call on the ast[0]'s manager.
+        # We only want to originate the call on the ast[0]'s manager.
+        if ami.id == 0:
             print "AMI - originating call from SIP/testast1 to extension 1000 using extension 1000 at priority 1"
             ami.originate(channel = "SIP/testast1/1000", context = "default", exten = "1000", priority = "1")
 
-
-    #This test is initiated whenever a DTMF event occurs.
+    # This test is initiated whenever a DTMF event occurs.
     def ami_test(self, ami, event):
 
         print "Received DTMF event from AMI %d..." % (ami.id + 1)
@@ -90,27 +88,23 @@ class SIPTLSCallTest(TestCase):
             self.passed = True
             self.stop_reactor()
 
-
-    #Sets up reactor and AMI connection
+    # Sets up reactor and AMI connection
     def run(self):
         TestCase.run(self)
-        self.create_ami_factory(count = 2) #will link up to ami_connect() once the connection is established
+        # will link up to ami_connect() once the connection is established
+        self.create_ami_factory(count = 2)
 
 
+def main():
+    test = SIPTLSCallTest()
+    test.start_asterisk()
+    reactor.run()
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
+    test.stop_asterisk()
 
-    test = SIPTLSCallTest(argv) #initializes test (using SIPTLSCallTest.__init__(argv))
-    test.start_asterisk() #starts both of the asterisk instances created in SIPTLSCallTest
-    reactor.run() #connects AMI which then registers DTMF event callback.
-
-    test.stop_asterisk() #Once the reactor is stopped, this will end our Asterisk instances.
-
-    if test.passed: #Returns the results of the test
-        return 0 #success
-    return 1 #failure
+    if test.passed:
+        return 0
+    return 1
 
 if __name__ == "__main__":
     sys.exit(main() or 0)

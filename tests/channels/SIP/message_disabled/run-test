@@ -24,10 +24,7 @@ SIPP_SCENARIOS = [
 ]
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
+def main():
     test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
     return test.run()
 

@@ -10,19 +10,17 @@ the GNU General Public License Version 2.
 import sys
 import os
 import math
-from optparse import OptionParser
 from twisted.internet import reactor
 from starpy import manager
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
-from asterisk.version import AsteriskVersion
 
 workingdir = "mixmonitor"
 testdir = "tests/%s" % workingdir
 
 class MixMonitorTest:
-    def __init__(self, argv):
+    def __init__(self):
         self.passed = False
         self.last_step = ""
         # playback file is 2559 bytes of ulaw, that will come out to be ~41118 of wav
@@ -31,16 +29,6 @@ class MixMonitorTest:
         self.audiofile1size = -1
         self.audiofile2size = -1
         self.audiofile3size = -1
-
-        # get version info
-        parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version",
-                          help="Asterisk version string")
-        parser.add_option("-n", dest="test_name",
-                help="Test name")
-
-        (options, args) = parser.parse_args(argv)
-        self.ast_version = AsteriskVersion(options.ast_version)
 
         reactor.callWhenRunning(self.run)
 
@@ -102,16 +90,10 @@ class MixMonitorTest:
         self.log_last_step("Starting Asterisk")
         self.ast1.start()
 
-        if self.ast_version < AsteriskVersion("1.6.1"):
-            self.ast1.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
-            self.ast1.cli_exec("core set global TESTAUDIO2 " + self.audiofile2)
-            self.ast1.cli_exec("core set global TESTAUDIO3 " + self.audiofile3)
-            self.ast1.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
-        else:
-            self.ast1.cli_exec("dialplan set global TESTAUDIO1 " + self.audiofile1)
-            self.ast1.cli_exec("dialplan set global TESTAUDIO2 " + self.audiofile2)
-            self.ast1.cli_exec("dialplan set global TESTAUDIO3 " + self.audiofile3)
-            self.ast1.cli_exec("dialplan set global TALK_AUDIO " + self.talkingaudio)
+        self.ast1.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
+        self.ast1.cli_exec("core set global TESTAUDIO2 " + self.audiofile2)
+        self.ast1.cli_exec("core set global TESTAUDIO3 " + self.audiofile3)
+        self.ast1.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
 
     def stop_asterisk(self):
         self.ast1.stop()
@@ -165,10 +147,8 @@ class MixMonitorTest:
 
         reactor.callLater(30, self.stop_reactor)
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-    test = MixMonitorTest(argv)
+def main():
+    test = MixMonitorTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

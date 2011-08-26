@@ -10,31 +10,22 @@ the GNU General Public License Version 2.
 import sys
 import os
 import math
-from optparse import OptionParser
 from twisted.internet import reactor
 from starpy import manager
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
-from asterisk.version import AsteriskVersion
 
 workingdir = "mixmonitor_audiohook_inherit"
 testdir = "tests/%s" % workingdir
 
 class MixMonitorTest:
-    def __init__(self, argv):
+    def __init__(self):
         self.passed = False
         self.last_step = ""
         # if audiohook inherit does not work, file will be much smaller than 150000 bytes
         self.expectedfilesize = 120000
         self.audiofile1size = -1
-
-        # get version info
-        parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version",
-                          help="Asterisk version string")
-        (options, args) = parser.parse_args(argv)
-        self.ast_version = AsteriskVersion(options.ast_version)
 
         reactor.callWhenRunning(self.run)
 
@@ -98,10 +89,7 @@ class MixMonitorTest:
         self.log_last_step("Starting Asterisk")
         self.ast1.start()
 
-        if self.ast_version < AsteriskVersion("1.6.1"):
-            self.ast1.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
-        else:
-            self.ast1.cli_exec("dialplan set global TESTAUDIO1 " + self.audiofile1)
+        self.ast1.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
 
     def stop_asterisk(self):
         self.ast1.stop()
@@ -116,10 +104,8 @@ class MixMonitorTest:
 
         reactor.callLater(60, self.stop_reactor)
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-    test = MixMonitorTest(argv)
+def main():
+    test = MixMonitorTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

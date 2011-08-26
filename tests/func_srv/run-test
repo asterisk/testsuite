@@ -32,7 +32,7 @@ class srv_record():
 
 
 class func_srv_test(TestCase):
-    def __init__(self, argv):
+    def __init__(self):
         self.test1_records = []
         self.test2_records = []
         self.srv_records = []
@@ -41,7 +41,7 @@ class func_srv_test(TestCase):
         self.srv_records.append(srv_record(3, "udpserver3.asteriskcheck.com", "5060", "1", "0"))
         self.srv_records.append(srv_record(4, "udpserver4.asteriskcheck.com", "5060", "65535", "65535"))
 
-        TestCase.__init__(self, argv)
+        TestCase.__init__(self)
         self.create_asterisk()
 
     def ami_connect(self, ami):
@@ -82,11 +82,8 @@ class func_srv_test(TestCase):
         TestCase.run(self)
         self.create_ami_factory()
 
-def main(argv = None):
-    if argv is None:
-        argv = sys.argv
-
-    test = func_srv_test(argv)
+def main():
+    test = func_srv_test()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

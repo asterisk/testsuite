@@ -22,13 +22,13 @@ from asterisk.TestCase import TestCase
 class DirectoryTest(TestCase):
    reactor_timeout = 60
 
-   def __init__(self, argv):
-      TestCase.__init__(self, argv)
+   def __init__(self):
+      TestCase.__init__(self)
       self.create_asterisk(2)
 
    def ami_connect(self, ami):
       TestCase.ami_connect(self, ami)
-         
+
       ami.registerEvent('UserEvent', self.user_event)
 
       if ami.id == 0:
@@ -64,8 +64,8 @@ class DirectoryTest(TestCase):
       self.create_ami_factory(2)
 
 
-def main(argv = sys.argv):
-   test = DirectoryTest(argv)
+def main():
+   test = DirectoryTest()
    test.start_asterisk()
    reactor.run()
    test.stop_asterisk()

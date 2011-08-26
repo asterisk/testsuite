@@ -15,8 +15,8 @@ from asterisk.asterisk import Asterisk
 from asterisk.TestCase import TestCase
 
 class AMILoginTest(TestCase):
-    def __init__(self, argv):
-        TestCase.__init__(self, argv)
+    def __init__(self):
+        TestCase.__init__(self)
         self.create_asterisk()
 
     def ami_logoff(self, ami):
@@ -31,11 +31,8 @@ class AMILoginTest(TestCase):
         TestCase.run(self)
         self.create_ami_factory(1, "user", "mysecret")
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
-    test = AMILoginTest(argv)
+def main():
+    test = AMILoginTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

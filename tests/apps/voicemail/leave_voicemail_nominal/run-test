@@ -22,17 +22,17 @@ from asterisk.asterisk import Asterisk
 from asterisk.TestCase import TestCase
 from asterisk.voicemail import VoiceMailMailboxManagement
 
+
 class LeaveVoicemailNominal(TestCase):
 
     """The parent directory that this test resides in
     """
     testParentDir = "tests/apps/voicemail"
 
-    def __init__(self, argv):
-        TestCase.__init__(self, argv)
+    def __init__(self):
+        TestCase.__init__(self)
 
         self.create_asterisk(2)
-
 
     def ami_connect(self, ami):
         print str(datetime.now()) + " Got AMI Connect for instance " + str(ami.id)
@@ -51,14 +51,12 @@ class LeaveVoicemailNominal(TestCase):
                 df = ami.originate("sip/ast1/" + str(extension), "sendvoicemail", str(extension), 1, None, "CallId-" + str(extension), None, None, None, {}, True )
                 df.addErrback(self.handleOriginateFailure)
 
-
     def handleOriginateFailure(self, reason):
         print str(datetime.now()) + " error sending originate:"
         print reason.getTraceback()
         self.stop_reactor()
 
         return reason
-
 
     def user_event(self, ami, event):
         if event['userevent'] != 'TestResult':
@@ -80,9 +78,8 @@ class LeaveVoicemailNominal(TestCase):
         self.create_ami_factory(2)
 
 
-def main(argv = sys.argv):
-
-    test = LeaveVoicemailNominal(argv)
+def main():
+    test = LeaveVoicemailNominal()
     voicemailManager = VoiceMailMailboxManagement(test.ast[0])
 
     test.start_asterisk()

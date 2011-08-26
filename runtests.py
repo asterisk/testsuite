@@ -157,11 +157,7 @@ class TestConfig:
         start_time = time.time()
         cmd = [
             "%s/run-test" % self.test_name,
-            "-v", str(self.ast_version),
-            "-n", str(self.test_name)
         ]
-        if self.options.valgrind:
-            cmd.append("--valgrind")
         if os.path.exists(cmd[0]) and os.access(cmd[0], os.X_OK):
             print "Running %s ..." % cmd
             try:
@@ -426,9 +422,6 @@ def main(argv=None):
     parser.add_option("-t", "--test",
             dest="test",
             help="Run a single specified test instead of all tests.")
-    parser.add_option("--valgrind", action="store_true",
-            dest="valgrind", default=False,
-            help="Run Asterisk under valgrind.")
     (options, args) = parser.parse_args(argv)
 
     # Check to see if this has been executed within a sub directory of an

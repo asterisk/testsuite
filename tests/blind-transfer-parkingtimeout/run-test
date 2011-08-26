@@ -10,33 +10,24 @@ the GNU General Public License Version 2.
 import sys
 import os
 import math
-from optparse import OptionParser
 from twisted.application import service, internet
 from twisted.internet import reactor
 from starpy import fastagi
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
-from asterisk.version import AsteriskVersion
 
 workingdir = "blind-transfer-parkingtimeout"
 testdir = "tests/%s" % workingdir
 
 class BlindTransferTest:
-    def __init__(self, argv):
+    def __init__(self):
         self.passed = False
         self.done = False
 
         # Test timeout in seconds
         self.timeout = 60
         self.last_step = ""
-
-        # get version info
-        parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version",
-         help="Asterisk version string")
-        (options, args) = parser.parse_args(argv)
-        self.ast_version = AsteriskVersion(options.ast_version)
 
         # FastAGI, listen for results from dialplan
         self.agi_b = fastagi.FastAGIFactory(self.get_result_b)
@@ -114,12 +105,9 @@ class BlindTransferTest:
         reactor.callLater(self.timeout, self.read_result)
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
+def main():
     # Run Blind Transfer Test
-    blind_transfer_test = BlindTransferTest(argv)
+    blind_transfer_test = BlindTransferTest()
     reactor.run()
     blind_transfer_test.stop_asterisk()
     if blind_transfer_test.passed != True:

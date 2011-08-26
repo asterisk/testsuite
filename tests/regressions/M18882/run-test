@@ -17,8 +17,8 @@ from asterisk.TestCase import TestCase
 
 
 class AsteriskTest(TestCase):
-    def __init__(self, argv):
-        TestCase.__init__(self, argv)
+    def __init__(self):
+        TestCase.__init__(self)
         self.create_asterisk()
         self.peer = '0004f2040001'
         self.family = 'SIP'
@@ -60,11 +60,8 @@ class AsteriskTest(TestCase):
         self.create_ami_factory()
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
-    test = AsteriskTest(argv)
+def main():
+    test = AsteriskTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

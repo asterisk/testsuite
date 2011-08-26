@@ -11,30 +11,21 @@ import sys
 import os
 import signal
 import subprocess
-from optparse import OptionParser
 from twisted.application import service, internet
 from twisted.internet import reactor, defer
 from starpy import manager
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
-from asterisk.version import AsteriskVersion
 
 workingdir = "sip_register"
 testdir = "tests/%s" % workingdir
 
 class RegisterTest:
-    def __init__(self, argv):
+    def __init__(self):
         self.passed = False
         self.last_step = ""
         self.sipps = {}
-
-        #get version info
-        parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version",
-                          help="Asterisk version string")
-        (options, args) = parser.parse_args(argv)
-        self.ast_version = AsteriskVersion(options.ast_version)
 
         reactor.callWhenRunning(self.run)
 
@@ -102,12 +93,9 @@ class RegisterTest:
         self.ami_login()
         reactor.callLater(30, self.stop_reactor)
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
+def main():
     # Run Register Test
-    test = RegisterTest(argv)
+    test = RegisterTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

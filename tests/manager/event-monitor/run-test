@@ -7,8 +7,6 @@ from twisted.internet import reactor
 from starpy import manager, fastagi, utilapplication, menu
 import os, logging, pprint, time, sys
 
-from optparse import OptionParser
-
 """
 This test module should serve as a template for new event monitoring tests. A
 test class is created with sequential test methods named testX, where X starts
@@ -29,31 +27,15 @@ class Test():
         event_send = {'Action' : 'ping'}
         watcher.add_send_event(event_send)
 
-def main(argv = None):
-    if argv is None:
-        argv = sys.argv
-
-    if len(argv) == 1: # options are NOT being passed
-        sys.path.append("../../lib/python")
-        asterisk = None
-    else:
-        sys.path.append("lib/python")
-        from asterisk.asterisk import Asterisk
-
-        parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version",
-                              help="Asterisk version string")
-        (options, args) = parser.parse_args(argv)
-        working_dir = os.path.dirname(argv[0])
-
-        ast1 = Asterisk(base=workingdir)
-        ast1.install_configs("%s/configs/ast1")
+def main():
+    ast1 = Asterisk(base=workingdir)
+    ast1.install_configs("%s/configs/ast1")
 
     logging.basicConfig()
     import client
 
     tester = Test()
-    watcher = client.EventWatcher(argv, ast1, tester, 5)
+    watcher = client.EventWatcher(ast1, tester, 5)
 
     #watcher.log.setLevel(logging.DEBUG)
     #manager.log.setLevel(logging.DEBUG)

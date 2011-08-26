@@ -65,7 +65,6 @@ class Asterisk:
         self.astetcdir = "/etc/asterisk"
         self.ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
         self.host = host
-        self.valgrind = False
 
         # Find the system installed asterisk.conf
         ast_confs = [
@@ -119,8 +118,6 @@ class Asterisk:
             "-f", "-g", "-q", "-m", "-n",
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
         ]
-        if self.valgrind:
-            cmd.insert(0, "valgrind")
         try:
             self.process = subprocess.Popen(cmd)
         except OSError:

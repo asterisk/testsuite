@@ -24,12 +24,12 @@ class GatewayTest(TestCase):
    success_count = 0
    reactor_timeout = 120
 
-   def __init__(self, argv):
-      TestCase.__init__(self, argv)
+   def __init__(self):
+      TestCase.__init__(self)
       self.create_asterisk(2)
 
       # copy the tiff file we are going to send to a good known location
-      shutil.copy("%s/send.tiff" % (os.path.dirname(argv[0]),), "%s%s" % (self.ast[0].base, self.ast[0].directories['astdatadir']))
+      shutil.copy("%s/send.tiff" % (os.path.dirname(os.path.realpath(__file__),), "%s%s" % (self.ast[0].base, self.ast[0].directories['astdatadir']))
 
    def ami_connect(self, ami):
       TestCase.ami_connect(self, ami)
@@ -98,8 +98,8 @@ class GatewayTest(TestCase):
       self.create_ami_factory(2)
 
 
-def main(argv = sys.argv):
-   test = GatewayTest(argv)
+def main():
+   test = GatewayTest()
    test.start_asterisk()
    reactor.run()
    test.stop_asterisk()

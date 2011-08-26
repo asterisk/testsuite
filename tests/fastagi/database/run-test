@@ -16,8 +16,8 @@ from asterisk.TestCase import TestCase
 
 
 class FastAGIDatabaseTest(TestCase):
-    def __init__(self, argv):
-        TestCase.__init__(self, argv)
+    def __init__(self):
+        TestCase.__init__(self)
         self.passed = {}
         self.key = "fastagitest"
         self.overall_result = True
@@ -166,11 +166,8 @@ class FastAGIDatabaseTest(TestCase):
         self.launch_test()
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
-    test = FastAGIDatabaseTest(argv)
+def main():
+    test = FastAGIDatabaseTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

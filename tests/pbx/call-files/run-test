@@ -10,36 +10,24 @@ the GNU General Public License Version 2.
 import sys
 import os
 import time
-from optparse import OptionParser
 from twisted.internet import reactor
 from starpy import fastagi
 from shutil import move, copy
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
-from asterisk.version import AsteriskVersion
 
 workingdir = "pbx/call-files"
 testdir = "tests/%s" % workingdir
 
 class CallFilesTest:
-    def __init__(self, argv):
+    def __init__(self):
         self.passed = False
         self.results = [ False, False ]
         self.stopping = False
 
         # Test timeout in seconds
         self.timeout = 30
-
-        # get version info
-        parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version",
-                          help="Asterisk version string")
-        parser.add_option("-n", dest="test_name",
-                help="Test name")
-
-        (options, args) = parser.parse_args(argv)
-        self.ast_version = AsteriskVersion(options.ast_version)
 
         self.ast1 = Asterisk(base=workingdir)
         self.ast1.install_configs("%s/configs/ast1" % (testdir))
@@ -116,12 +104,9 @@ class CallFilesTest:
         else:
             print "Failed"
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
+def main():
     # Run call-files test
-    call_files_test = CallFilesTest(argv)
+    call_files_test = CallFilesTest()
     reactor.run()
 
     if call_files_test.passed != True:

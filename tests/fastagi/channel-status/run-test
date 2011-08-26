@@ -16,8 +16,8 @@ from asterisk.TestCase import TestCase
 
 
 class FastAGIChannelStatusTest(TestCase):
-    def __init__(self, argv):
-        TestCase.__init__(self, argv)
+    def __init__(self):
+        TestCase.__init__(self)
         self.passed = {'4': False, '6':False}
         self.test = 4
 
@@ -81,11 +81,8 @@ class FastAGIChannelStatusTest(TestCase):
         TestCase.run(self)
         self.launch_test()
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
-    test = FastAGIChannelStatusTest(argv)
+def main():
+    test = FastAGIChannelStatusTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

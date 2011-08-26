@@ -16,8 +16,8 @@ from asterisk.TestCase import TestCase
 
 
 class CallParkingTest(TestCase):
-    def __init__(self, argv):
-        TestCase.__init__(self, argv)
+    def __init__(self):
+        TestCase.__init__(self)
         self.ast1_event = False
         self.ast2_event = False
 
@@ -74,12 +74,9 @@ class CallParkingTest(TestCase):
         self.create_ami_factory(2)
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
+def main():
     # Run CallParking Test
-    test = CallParkingTest(argv)
+    test = CallParkingTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

@@ -16,8 +16,8 @@ from asterisk.TestCase import TestCase
 
 
 class FastAGIConnectTest(TestCase):
-    def __init__(self, argv):
-        TestCase.__init__(self, argv)
+    def __init__(self):
+        TestCase.__init__(self)
 
         self.create_asterisk()
         self.create_fastagi_factory()
@@ -41,11 +41,8 @@ class FastAGIConnectTest(TestCase):
         self.launch_test()
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
-    test = FastAGIConnectTest(argv)
+def main():
+    test = FastAGIConnectTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

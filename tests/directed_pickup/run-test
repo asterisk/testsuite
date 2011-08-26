@@ -10,7 +10,6 @@ the GNU General Public License Version 2.
 import sys
 import os
 import time
-from optparse import OptionParser
 from twisted.application import service, internet
 from twisted.internet import reactor
 from starpy import fastagi
@@ -27,7 +26,7 @@ PASS = 1
 FAIL = 2
 SKIP = 4
 class PickupTest:
-    def __init__(self, argv):
+    def __init__(self):
 
         # Test timeout in seconds
         self.test_to = 15
@@ -35,16 +34,6 @@ class PickupTest:
         self.test1_res = NOT_RUN
         self.test2_res = NOT_RUN
         self.passed = FAIL
-
-        # get version info
-        parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version",
-                          help="Asterisk version string")
-        parser.add_option("-n", dest="test_name",
-                help="Test name")
-
-        (options, args) = parser.parse_args(argv)
-        self.ast_version = AsteriskVersion(options.ast_version)
 
         # FastAGI, listen for results from dialplan
         # PASS on port 4573
@@ -111,34 +100,24 @@ class PickupTest:
 
     def test1_pickup(self):
         self.log_last_step("Issuing the pickup")
-        if self.ast_version < AsteriskVersion("1.6.2"):
-            self.ast1.cli_exec("originate Local/1002@pickuptest application echo")
-        else:
-            self.ast1.cli_exec("channel originate Local/1002@pickuptest application echo")
+        self.ast1.cli_originate("Local/1002@pickuptest application echo")
 
     def launch_test1(self):
         self.log_last_step("Starting Test 1")
-        if self.ast_version < AsteriskVersion("1.6.2"):
-            self.ast1.cli_exec("originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
-        else:
-            self.ast1.cli_exec("channel originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
+        self.ast1.cli_originate("IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
         self.test1_pickup()
 
     def test2_pickup(self):
         self.log_last_step("Issuing the pickup")
-        if self.ast_version < AsteriskVersion("1.6.2"):
-            self.ast1.cli_exec("originate Local/1003@pickuptest application echo")
-        else:
-            self.ast1.cli_exec("channel originate Local/1003@pickuptest application echo")
+        self.ast1.cli_originate("Local/1003@pickuptest application echo")
 
     def launch_test2(self):
         self.log_last_step("Starting Test 2")
-        if self.ast_version < AsteriskVersion("1.8"):
-            # this part requires version 1.8 or greater.
+        if self.ast1.ast_version < AsteriskVersion('1.8'):
             self.test2 = SKIP
             self.shut_down()
         else:
-            self.ast1.cli_exec("channel originate IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
+            self.ast1.cli_originate("IAX2/iax_pickup_b@127.0.0.1/waiting_exten extension 1001@pickuptest")
             self.test2_pickup()
 
     def start_asterisk(self):
@@ -164,11 +143,8 @@ class PickupTest:
         reactor.callLater(self.test_to, self.stop_reactor)
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
-    test = PickupTest(argv)
+def main():
+    test = PickupTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()

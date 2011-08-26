@@ -9,7 +9,7 @@ the GNU General Public License Version 2.
 
 import sys
 import logging
-from optparse import OptionParser
+import os
 from twisted.internet import reactor
 from starpy import manager, fastagi
 
@@ -24,25 +24,9 @@ class TestCase(object):
     reactor_timeout = 30
     passed = False
 
-    def __init__(self, argv):
-        """
-
-        Keywork arguments:
-        argv --
-
-        """
-        # get version info
-        parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version",
-                help="Asterisk version string")
-        parser.add_option("-n", dest="test_name",
-                help="Test name")
-        parser.add_option("--valgrind", action="store_true",
-                dest="valgrind", default=False,
-                help="Run Asterisk under valgrind.")
-
-        (self.options, args) = parser.parse_args(argv)
-        self.options.base = self.options.test_name.lstrip("tests/")
+    def __init__(self):
+        self.test_name = os.path.dirname(sys.argv[0])
+        self.base = self.test_name.lstrip("tests/")
 
         reactor.callWhenRunning(self.run)
 
@@ -55,14 +39,13 @@ class TestCase(object):
         """
         for c in range(count):
             print "Creating Asterisk instance %d ..." % (c + 1)
-            self.ast.append(Asterisk(base=self.options.base))
-            self.ast[c].valgrind = self.options.valgrind
+            self.ast.append(Asterisk(base=self.base))
             # Copy shared config files
             self.ast[c].install_configs("%s/configs" %
-                    (self.options.test_name))
+                    (self.test_name))
             # Copy test specific config files
             self.ast[c].install_configs("%s/configs/ast%d" %
-                    (self.options.test_name, c + 1))
+                    (self.test_name, c + 1))
 
     def create_ami_factory(self, count=1, username="user", secret="mysecret", port=5038):
         """

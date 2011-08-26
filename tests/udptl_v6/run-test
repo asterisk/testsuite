@@ -10,31 +10,20 @@ import sys
 import os
 import signal
 import subprocess
-from optparse import OptionParser
 from twisted.application import service, internet
 from twisted.internet import reactor, defer
 from starpy import manager
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
-from asterisk.version import AsteriskVersion
 
 workingdir = "udptl_v6"
 testdir = "tests/%s" % workingdir
 
 class UdptlTest:
-    def __init__(self, argv):
+    def __init__(self):
         self.last_step = ""
         self.passed = False
-
-        parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version",
-                          help="Asterisk version string")
-        parser.add_option("-n", dest="test_name",
-                help="Test name")
-
-        (options, args) = parser.parse_args(argv)
-        self.ast_version = AsteriskVersion(options.ast_version)
 
         reactor.callWhenRunning(self.run)
 
@@ -112,12 +101,9 @@ class UdptlTest:
         self.shutdowncall = reactor.callLater(90, self.shut_down)
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
+def main():
     # Run UDPTL test
-    udptl_test = UdptlTest(argv)
+    udptl_test = UdptlTest()
     reactor.run()
     if not udptl_test.passed:
         return 1

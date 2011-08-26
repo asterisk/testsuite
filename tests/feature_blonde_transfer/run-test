@@ -10,20 +10,18 @@ the GNU General Public License Version 2.
 import sys
 import os
 import math
-from optparse import OptionParser
 from twisted.application import service, internet
 from twisted.internet import reactor
 from starpy import manager
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
-from asterisk.version import AsteriskVersion
 
 workingdir = "feature_blonde_transfer"
 testdir = "tests/%s" % workingdir
 
 class BlondeTransferTest:
-    def __init__(self, argv):
+    def __init__(self):
         self.passed = False
         self.alpha = False
         self.bravo = False
@@ -31,16 +29,6 @@ class BlondeTransferTest:
 
         # Test timeout in seconds
         self.test_to = 45
-
-        # get version info
-        parser = OptionParser()
-        parser.add_option("-v", "--version", dest="ast_version",
-                          help="Asterisk version string")
-        parser.add_option("-n", dest="test_name",
-                help="Test name")
-
-        (options, args) = parser.parse_args(argv)
-        self.ast_version = AsteriskVersion(options.ast_version)
 
         reactor.callWhenRunning(self.run)
 
@@ -146,12 +134,9 @@ class BlondeTransferTest:
         # stop and read results after timeout
         reactor.callLater(self.test_to, self.stop_reactor)
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
+def main():
      # Run Blonde Transfer Test
-    test = BlondeTransferTest(argv)
+    test = BlondeTransferTest()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()
