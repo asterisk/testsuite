@@ -9,4 +9,3 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-        - custom : 'soundcard'

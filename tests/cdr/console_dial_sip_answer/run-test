@@ -8,80 +8,72 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-from time import sleep
 import os
+import logging
+import re
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
-from asterisk.ami import AMI
+from asterisk.TestCase import TestCase
 from twisted.internet import reactor
-import logging
+
 
 workingdir = "cdr/console_dial_sip_answer"
-testdir = "tests/%s" workingdir
+testdir = "tests/%s" % workingdir
 
-class Test:
+class Test(TestCase):
     def __init__(self):
-        self.passed = False
+        TestCase.__init__(self)
+        self.create_asterisk(2)
 
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
+    def ami_connect(self, ami):
+        TestCase.ami_connect(self, ami)
 
-        self.ast2 = Asterisk(base=workingdir)
-        self.ast2.install_configs("%s/configs/ast2" % (testdir))
-
-        self.ast1.start()
-        self.ast2.start()
-
-        reactor.callLater(30, self.stop_reactor)
-
-        self.ami = AMI(self.start, self.stop_reactor, timeout=20)
-        self.ami.login()
-
-    def start(self, ami):
-        ami.registerEvent('Hangup', self.end)
-        self.ast1.cli_exec("console dial 1@default")
-
-    def stop_asterisk(self):
-        self.ast1.stop()
-        self.ast2.stop()
-
-    def stop_reactor(self):
-        print "Stopping Reactor ..."
-        if reactor.running:
-            reactor.stop()
-        self.stop_asterisk()
+        if ami.id == 0:
+            self.ami[0].registerEvent('Hangup', self.end)
+            self.ami[0].originate(channel = "Local/1@default", application = "Echo")
 
     def end(self, ami, event):
-        if event.get("channel").lower() != "console/dsp":
+        if not re.match(".*;1$", event['channel']):
             return
         self.stop_reactor()
 
-        cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.ast1.base))
-        cdr2 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.ast2.base))
+    def results(self):
+        cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" %
+                (self.ast[0].base))
+        cdr2 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" %
+                (self.ast[1].base))
 
         cdr1_expect = AsteriskCSVCDR(records=[AsteriskCSVCDRLine(accountcode="",
             source="", destination="1", dcontext="default", callerid="",
-            channel="Console/dsp", dchannel="SIP/test-00000000", lastapp="Dial",
+            channel="Local/1@default-.*", dchannel="SIP/test-00000000", lastapp="Dial",
             lastarg="SIP/1@test", disposition="ANSWERED",
             amaflags="DOCUMENTATION")])
         cdr2_expect = AsteriskCSVCDR(records=[AsteriskCSVCDRLine(accountcode="",
-            source="asterisk", destination="1", dcontext="default",
-            callerid='"asterisk" <asterisk>', channel="SIP/.*5065-.*",
+            source="Anonymous", destination="1", dcontext="default",
+            callerid='"Anonymous" <Anonymous>', channel="SIP/anonymous.invalid:5065-.*",
             dchannel="", lastapp="Hangup", lastarg="", disposition="ANSWERED",
             amaflags="DOCUMENTATION")])
 
-        if cdr1_expect.match(cdr1) and cdr2_expect.match(cdr2):
+        if cdr1_expect[0].match(cdr1[0]) and cdr2_expect.match(cdr2):
             print "Success"
             self.passed = True
         else:
             print "Failure"
 
+    def run(self):
+        TestCase.run(self)
+        self.create_ami_factory()
+
 def main():
-    logging.basicConfig()
     test = Test()
+    test.start_asterisk()
     reactor.run()
+    test.stop_asterisk()
+    test.results()
     return not test.passed
 
 if __name__ == '__main__':
     sys.exit(main())
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
