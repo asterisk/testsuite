@@ -18,10 +18,12 @@ import time
 import shutil
 import subprocess
 import utils
+import logging
 
 from config import ConfigFile
 from version import AsteriskVersion
 
+logger = logging.getLogger(__name__)
 
 class Asterisk:
     """An instance of Asterisk.
@@ -77,7 +79,7 @@ class Asterisk:
                 ast_conf = ConfigFile(c)
                 break
         if ast_conf is None:
-            print "No asterisk.conf found on the system!"
+            logger.error("No asterisk.conf found on the system!")
             return
 
         if base is not None:
@@ -97,7 +99,7 @@ class Asterisk:
             if c.name == "directories":
                 dir_cat = c
         if dir_cat is None:
-            print "Unable to discover dir layout from asterisk.conf"
+            logger.error("Unable to discover dir layout from asterisk.conf")
             return
         self.__gen_ast_conf(ast_conf, dir_cat, ast_conf_options)
         for (var, val) in dir_cat.options:
@@ -121,7 +123,7 @@ class Asterisk:
         try:
             self.process = subprocess.Popen(cmd)
         except OSError:
-            print "Failed to execute command: %s" % str(cmd)
+            logger.error("Failed to execute command: %s" % str(cmd))
             return False
 
         # Be _really_ sure that Asterisk has started up before returning.
@@ -232,7 +234,7 @@ class Asterisk:
         asterisk.install_config("tests/my-cool-test/configs/manager.conf")
         """
         if not os.path.exists(cfg_path):
-            print "Config file '%s' does not exist" % cfg_path
+            logger.error("Config file '%s' does not exist" % cfg_path)
             return
 
         tmp = "%s/%s/%s" % (os.path.dirname(cfg_path), self.ast_version.branch, os.path.basename(cfg_path))
@@ -244,9 +246,9 @@ class Asterisk:
         try:
             shutil.copyfile(cfg_path, target_path)
         except shutil.Error:
-            print "'%s' and '%s' are the same file" % (cfg_path, target_path)
+            logger.warn("'%s' and '%s' are the same file" % (cfg_path, target_path))
         except IOError:
-            print "The destination is not writable '%s'" % target_path
+            logger.warn("The destination is not writable '%s'" % target_path)
 
     def cli_originate(self, argstr, blocking=True):
         """Starts a call from the CLI and links it to an application or
@@ -272,13 +274,13 @@ class Asterisk:
         raise_error = False
         if len(args) != 3 and len(args) != 4:
             raise_error = True
-            print "Wrong number of arguments."
+            logger.error("Wrong number of arguments.")
         if args[1] != "extension" and args[1] != "application":
             raise_error = True
-            print '2nd argument must be "extension" or "application"'
+            logger.error('2nd argument must be "extension" or "application"')
         if args[0].find("/") == -1:
             raise_error = True
-            print 'Channel dial string must be in the form "tech/data".'
+            logger.error('Channel dial string must be in the form "tech/data".')
         if raise_error is True:
             raise Exception, "Cannot originate call!\n\
             Argument string must be in one of these forms:\n\
@@ -306,7 +308,7 @@ class Asterisk:
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
             "-rx", "%s" % cli_cmd
         ]
-        print "Executing %s ..." % cmd
+        logger.debug("Executing %s ..." % cmd)
 
         if not blocking:
             process = subprocess.Popen(cmd)
@@ -316,13 +318,13 @@ class Asterisk:
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                        stderr=subprocess.STDOUT)
         except OSError:
-            print "Failed to execute command: %s" % str(cmd)
+            logger.warn("Failed to execute command: %s" % str(cmd))
             return ""
 
         output = ""
         try:
             for l in process.stdout.readlines():
-                print l,
+                logger.debug(l),
                 output += l
         except IOError:
             pass
@@ -343,10 +345,10 @@ class Asterisk:
         try:
             f = open(local_ast_conf_path, "w")
         except IOError:
-            print "Failed to open %s" % local_ast_conf_path
+            logger.error("Failed to open %s" % local_ast_conf_path)
             return
         except:
-            print "Unexpected error: %s" % sys.exc_info()[0]
+            logger.error("Unexpected error: %s" % sys.exc_info()[0])
             return
 
         for c in ast_conf.categories:

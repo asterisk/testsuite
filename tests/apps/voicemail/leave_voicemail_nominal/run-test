@@ -11,6 +11,7 @@ the GNU General Public License Version 2.
 import sys
 import os
 import datetime
+import logging
 
 from datetime import datetime
 from twisted.internet import reactor
@@ -22,6 +23,7 @@ from asterisk.asterisk import Asterisk
 from asterisk.TestCase import TestCase
 from asterisk.voicemail import VoiceMailMailboxManagement
 
+logger = logging.getLogger(__name__)
 
 class LeaveVoicemailNominal(TestCase):
 
@@ -35,7 +37,7 @@ class LeaveVoicemailNominal(TestCase):
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
-        print str(datetime.now()) + " Got AMI Connect for instance " + str(ami.id)
+        logger.info("Got AMI Connect for instance " + str(ami.id))
         TestCase.ami_connect(self, ami)
 
         self.audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.testParentDir))
@@ -47,13 +49,13 @@ class LeaveVoicemailNominal(TestCase):
 
             extensions = [1234,1234,5678,5678,9000]
             for extension in extensions:
-                print str(datetime.now()) + " Originating call to sip/ast1/" + str(extension)
+                logger.debug("Originating call to sip/ast1/" + str(extension))
                 df = ami.originate("sip/ast1/" + str(extension), "sendvoicemail", str(extension), 1, None, "CallId-" + str(extension), None, None, None, {}, True )
                 df.addErrback(self.handleOriginateFailure)
 
     def handleOriginateFailure(self, reason):
-        print str(datetime.now()) + " error sending originate:"
-        print reason.getTraceback()
+        logger.error("Error sending originate:")
+        logger.error(reason.getTraceback())
         self.stop_reactor()
 
         return reason
@@ -64,11 +66,11 @@ class LeaveVoicemailNominal(TestCase):
 
         if event['result'] == "pass":
             self.passed = True
-            print str(datetime.now()) + " VoiceMail successfully exited"
+            logger.info("VoiceMail successfully exited")
         else:
-            print str(datetime.now()) + " VoiceMail did not successfully exit:"
-            print str(datetime.now()) + " result: %s" % (event['result'],)
-            print str(datetime.now()) + " error: %s" % (event['error'],)
+            logger.warn("VoiceMail did not successfully exit:")
+            logger.warn("result: %s" % (event['result'],))
+            logger.warn("error: %s" % (event['error'],))
 
         self.stop_reactor()
 
@@ -98,23 +100,23 @@ def main():
     if test.passed:
         formats = ["ulaw","wav","WAV"]
         if not voicemailManager.checkVoicemailExists("default","1234",0,formats):
-            print str(datetime.now()) + " Failed to find voicemail 0 for default/1234"
+            logger.warn("Failed to find voicemail 0 for default/1234")
             test.passed = 0
 
         if not voicemailManager.checkVoicemailExists("default","1234",1,formats):
-            print str(datetime.now()) + " Failed to find voicemail 1 for default/1234"
+            logger.warn("Failed to find voicemail 1 for default/1234")
             test.passed = 0
 
         if not voicemailManager.checkVoicemailExists("default","5678",0,formats):
-            print str(datetime.now()) + " Failed to find voicemail 0 for default/5678"
+            logger.warn("Failed to find voicemail 0 for default/5678")
             test.passed = 0
 
         if not voicemailManager.checkVoicemailExists("default","5678",1,formats):
-            print str(datetime.now()) + " Failed to find voicemail 0 for default/5678"
+            logger.warn("Failed to find voicemail 0 for default/5678")
             test.passed = 0
 
         if not voicemailManager.checkVoicemailExists("notdefault","1234",0,formats):
-            print str(datetime.now()) + " Failed to find voicemail 0 for notdefault/1234"
+            logger.warn("Failed to find voicemail 0 for notdefault/1234")
             test.passed = 0
 
     if not test.passed:

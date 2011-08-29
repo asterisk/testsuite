@@ -19,7 +19,9 @@ the GNU General Public License Version 2.
 import sys
 import re
 import unittest
+import logging
 
+logger = logging.getLogger(__name__)
 
 def is_blank_line(line):
     return re.match("\s*(?:;.*)?$", line) is not None
@@ -49,7 +51,7 @@ class Category:
         match = self.varval_re.match(line)
         if match is None:
             if not is_blank_line(line):
-                print "Invalid line: '%s'" % line.strip()
+                logger.warn("Invalid line: '%s'" % line.strip())
             return
         self.options.append((match.group("name"), match.group("value").strip()))
 
@@ -80,10 +82,10 @@ class ConfigFile:
                 config_str = f.read()
                 f.close()
             except IOError:
-                print "Failed to open config file '%s'" % fn
+                logger.error("Failed to open config file '%s'" % fn)
                 return
             except:
-                print "Unexpected error: %s" % sys.exc_info()[0]
+                logger.error("Unexpected error: %s" % sys.exc_info()[0])
                 return
 
         config_str = self.strip_mline_comments(config_str)
@@ -103,7 +105,7 @@ class ConfigFile:
             )
         elif len(self.categories) == 0:
             if not is_blank_line(line):
-                print "Invalid line: '%s'" % line.strip()
+                logger.warn("Invalid line: '%s'" % line.strip())
         else:
             self.categories[-1].parse_line(line)
 
@@ -178,9 +180,9 @@ def main(argv=None):
     if len(argv) == 2:
         conf = ConfigFile(argv[1])
         for c in conf.categories:
-            print "[%s]" % c.name
+            logger.debug("[%s]" % c.name)
             for (var, val) in c.options:
-                print "%s = %s" % (var, val)
+                logger.debug("%s = %s" % (var, val))
     else:
         return unittest.main()
 

@@ -14,6 +14,9 @@ the GNU General Public License Version 2.
 import sys
 import re
 import unittest
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AsteriskVersion:
     """An Asterisk Version.
@@ -146,10 +149,10 @@ class AsteriskVersion:
                 v = match.group(1)
             f.close()
         except IOError:
-            print "I/O Error getting Asterisk version from %s" % path
+            logger.error("I/O Error getting Asterisk version from %s" % path)
         except:
-            print "Unexpected error getting version from %s: %s" % (path,
-                    sys.exc_info()[0])
+            logger.error("Unexpected error getting version from %s: %s" % (path,
+                    sys.exc_info()[0]))
         return v
 
 

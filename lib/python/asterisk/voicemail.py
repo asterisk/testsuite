@@ -12,12 +12,20 @@ import sys
 import os
 import glob
 import shutil
+import logging
 
+from datetime import datetime
 from asterisk import Asterisk
 from config import Category
 from config import ConfigFile
+from TestCase import TestCase
+from TestState import TestState
+from TestState import TestStateController
 
 sys.path.append("lib/python")
+
+logger = logging.getLogger(__name__)
+
 
 """
 Class that manages creation of, verification of, and teardown of Asterisk mailboxes on the local filesystem
@@ -72,7 +80,6 @@ class VoiceMailMailboxManagement(object):
         self.__ast = ast
         self.voicemailDirectory = self.__ast.directories['astspooldir'] + '/voicemail'
 
-
     """
     Creates the basic set of folders needed for a mailbox on the file system
     context    The context that the mailbox will exist under
@@ -116,7 +123,7 @@ class VoiceMailMailboxManagement(object):
 
         except IOError as e:
             if e.errno == errno.EACCESS:
-                print "You do not have sufficient permissions to perform the necessary directory manipulations"
+                logger.error( "You do not have sufficient permissions to perform the necessary directory manipulations")
                 return False
 
         return True
@@ -154,14 +161,15 @@ class VoiceMailMailboxManagement(object):
         f.write('rdnis=unknown\n')
         f.write('priority=2\n')
         f.write('callerchan=SIP/ast1-00000000\n')
-        f.write('callerid=\"Anonymous\"<ast1>\n')
+        f.write('callerid=\"Anonymous\"<555-5555>\n')
         f.write('origdate=Tue Aug  9 10:05:13 PM UTC 2011\n')
         f.write('origtime=1312927513\n')
         if (folder == self.urgentFolderName):
             f.write('flag=Urgent\n')
         else:
             f.write('flag=\n')
-        f.write('duration=1\n')
+        f.write('category=tt-monkeys\n')
+        f.write('duration=6\n')
         f.close()
 
         for format in formats:
@@ -219,6 +227,24 @@ class VoiceMailMailboxManagement(object):
         return retVal
 
     """
+    Check if a voicemail greeting exists on the filesystem
+    context    The context of the mailbox
+    mailbox    The mailbox
+    msgname    The name of the greeting to find
+    lstFormats The formats we expect to be recorded for us
+
+    true if the greeting exists, false otherwise
+    """
+    def checkGreetingExists(self, context, mailbox, msgname, lstFormats):
+        retVal = True
+
+        for format in lstFormats:
+            fileName = msgname + "." + format
+            retVal = retVal & self.checkVoiceFileExists(context, mailbox, fileName, "")
+
+        return retVal
+
+    """
     Check if a voicemail has the property specified
     context    The context of the mailbox
     mailbox    The mailbox
@@ -248,6 +274,53 @@ class VoiceMailMailboxManagement(object):
         return False
 
     """
+    An object that holds voicemail user information
+    """
+    class UserObject(object):
+        def __init__(self):
+            self.password = ""
+            self.fullname = ""
+            self.emailaddress = ""
+            self.pageraddress = ""
+
+    """
+    Gets user information from the voicemail configuration file
+
+    context    The context of the mailbox
+    mailbox    The mailbox
+    sourceFile    The file containing the user information to pull from.  Defaults
+        to voicemail.conf
+
+    returns A VoiceMailMailboxManagement.UserObject object, populated with the user's values,
+        or an empty object
+    """
+    def getUserObject(self, context, mailbox, sourceFile="voicemail.conf"):
+
+        filePath = self.__ast.baseDirectory + self.__ast.directories['astetcdir'] + "/" + sourceFile
+
+        configFile = ConfigFile(filePath)
+        userObject = VoiceMailMailboxManagement.UserObject()
+        for cat in configFile.categories:
+            if cat.name == context:
+                for kvp in cat.options:
+                    if kvp[0] == mailbox:
+                        tokens = kvp[1].split(',')
+                        i = 0
+                        for token in tokens:
+                            if i == 0:
+                                userObject.password = token
+                            elif i == 1:
+                                userObject.fullname = token
+                            elif i == 2:
+                                userObject.emailaddress = token
+                            elif i == 3:
+                                userObject.pageraddress = token
+                            i += 1
+                        return userObject
+
+        return userObject
+
+    """
     Checks if a file exists under the voicemail file structure
     context    The context of the mailbox
     mailbox    The mailbox
@@ -266,7 +339,6 @@ class VoiceMailMailboxManagement(object):
             return True
         else:
             return False
-
 
     def __removeItemsFromFolder__(self, mailboxPath, folder):
         folderPath = os.path.join(self.__ast.baseDirectory, "%(mp)s/%(f)s" % {'mp':mailboxPath, 'f':folder})

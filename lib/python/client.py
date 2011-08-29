@@ -106,8 +106,7 @@ class EventWatcher():
         self.ordered = False
 
     def __init__(self, myargv, myasterisk, mytester, mytimeout = 5):
-        self.log = logging.getLogger('TestAMI')
-        self.log.setLevel(logging.INFO)
+        self.log = logging.getLogger(__name__)
         self.ami = None
         self.testcount = 0
         self.passed = True

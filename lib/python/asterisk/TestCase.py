@@ -8,14 +8,15 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-import logging
+import logging, logging.config
+import logging.config
 import os
 from twisted.internet import reactor
 from starpy import manager, fastagi
 
 from asterisk import Asterisk
 
-log = logging.getLogger('TestCase')
+logger = logging.getLogger(__name__)
 
 class TestCase(object):
     ast = []
@@ -23,11 +24,24 @@ class TestCase(object):
     fastagi = []
     reactor_timeout = 30
     passed = False
+    defaultLogLevel = "WARN"
+    defaultLogFileName = "logger.conf"
 
     def __init__(self):
         self.test_name = os.path.dirname(sys.argv[0])
         self.base = self.test_name.lstrip("tests/")
 
+        self.testStateController = None
+
+        """ Set up logging """
+        logConfigFile = os.path.join(os.getcwd(), "%s" % (self.defaultLogFileName))
+        if os.path.exists(logConfigFile):
+            logging.config.fileConfig(logConfigFile, None, False)
+        else:
+            print "WARNING: no logging.conf file found; using default configuration"
+            logging.basicConfig(level=self.defaultLogLevel)
+
+        logger.info("Executing " + self.test_name)
         reactor.callWhenRunning(self.run)
 
     def create_asterisk(self, count=1):
@@ -38,7 +52,7 @@ class TestCase(object):
 
         """
         for c in range(count):
-            print "Creating Asterisk instance %d ..." % (c + 1)
+            logger.info("Creating Asterisk instance %d" % (c + 1))
             self.ast.append(Asterisk(base=self.base))
             # Copy shared config files
             self.ast[c].install_configs("%s/configs" %
@@ -60,7 +74,7 @@ class TestCase(object):
         for c in range(count):
             host = "127.0.0.%d" % (c + 1)
             self.ami.append(None)
-            print "Creating AMIFactory %d ..." % (c + 1)
+            logger.info("Creating AMIFactory %d" % (c + 1))
             self.ami_factory = manager.AMIFactory(username, secret, c)
             self.ami_factory.login(host).addCallbacks(self.ami_connect,
                     self.ami_login_error)
@@ -70,7 +84,7 @@ class TestCase(object):
         for c in range(count):
             host = "127.0.0.%d" % (c + 1)
             self.fastagi.append(None)
-            print "Creating FastAGI Factory %d ..." % (c + 1)
+            logger.info("Creating FastAGI Factory %d" % (c + 1))
             self.fastagi_factory = fastagi.FastAGIFactory(self.fastagi_connect)
             reactor.listenTCP(4573, self.fastagi_factory,
                     self.reactor_timeout, host)
@@ -80,7 +94,7 @@ class TestCase(object):
 
         """
         for index, item in enumerate(self.ast):
-            print "Starting Asterisk instance %d ..." % (index + 1)
+            logger.info("Starting Asterisk instance %d" % (index + 1))
             self.ast[index].start()
 
     def stop_asterisk(self):
@@ -88,14 +102,14 @@ class TestCase(object):
 
         """
         for index, item in enumerate(self.ast):
-            print "Stopping Asterisk instance %d ..." % (index + 1)
+            logger.info("Stopping Asterisk instance %d" % (index + 1))
             self.ast[index].stop()
 
     def stop_reactor(self):
         """
 
         """
-        print "Stopping Reactor ..."
+        logger.info("Stopping Reactor")
         if reactor.running:
             reactor.stop()
 
@@ -106,10 +120,10 @@ class TestCase(object):
         reactor.callLater(self.reactor_timeout, self.stop_reactor)
 
     def ami_login_error(self, ami):
-        print "Error logging into AMI"
+        logger.error("Error logging into AMI")
         self.stop_reactor()
 
     def ami_connect(self, ami):
-        print "AMI Connect instance %s ..." % (ami.id + 1)
+        logger.info("AMI Connect instance %s" % (ami.id + 1))
         self.ami[ami.id] = ami
 

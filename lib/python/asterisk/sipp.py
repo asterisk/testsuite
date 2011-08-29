@@ -13,9 +13,11 @@ the GNU General Public License Version 2.
 import sys
 import os
 import subprocess
+import logging
 
 from asterisk import Asterisk
 
+logger = logging.getLogger(__name__)
 
 class SIPpTest:
     """
@@ -90,8 +92,8 @@ class SIPpTest:
         for (key, val) in default_args.items():
             sipp_args.extend([ key, val ])
 
-        print "Executing SIPp scenario: %s" % scenario['scenario']
-        print sipp_args
+        logger.debug("Executing SIPp scenario: %s" % scenario['scenario'])
+        logger.debug(sipp_args)
 
         return subprocess.Popen(sipp_args,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -115,13 +117,13 @@ class SIPpTest:
             self.stderr.append(err)
             self.result.append(self.sipp[i].wait())
             if self.result[i]:
-                print "SIPp scenario #%d FAILED" % i
+                logger.warn("SIPp scenario #%d FAILED" % i)
             else:
-                print "SIPp scenario #%d PASSED" % i
+                logger.info("SIPp scenario #%d PASSED" % i)
             if self.result[i]:
                 passed = False
                 #print self.stdout[i]
-                print self.stderr[i]
+                logger.warn(self.stderr[i])
 
         self.ast1.stop()
 

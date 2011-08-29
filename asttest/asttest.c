@@ -82,7 +82,7 @@ int parse_cmdline(int argc, char *argv[], struct asttest_opts *opts) {
 	opts->asterisk_path = "asterisk";
 
 	/* parse options */
-	while ((c = getopt(argc, argv, "l:a:s:v:n:wh")) != -1) {
+	while ((c = getopt(argc, argv, "l:a:s:v:wh")) != -1) {
 		switch (c) {
 		case 'l':
 			opts->log_filename = optarg;

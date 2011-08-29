@@ -14,6 +14,9 @@ import unittest
 import sys
 import csv
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AsteriskCSVCDRLine:
     "A single Asterisk call detail record"
@@ -46,8 +49,8 @@ class AsteriskCSVCDRLine:
         for k,v in self.iteritems():
             if None not in (v, other.get(k)) and not re.match(
                     "%s$" % (str(v).lower()), str(other.get(k)).lower()):
-                print "CDR MATCH FAILED, Expected: %s:%s Got: %s:%s" % (k, v,
-                        k, other.get(k))
+                logger.warn("CDR MATCH FAILED, Expected: %s:%s Got: %s:%s" % (k, v,
+                        k, other.get(k)))
                 return False
         return True
 
@@ -86,10 +89,10 @@ class AsteriskCSVCDR:
         try:
             cdr = csv.DictReader(open(fn, "r"), AsteriskCSVCDRLine.get_fields(), ",")
         except IOError:
-            print "Failed to open CDR file '%s'" % (fn)
+            logger.error("Failed to open CDR file '%s'" % (fn))
             return
         except:
-            print "Unexpected error: %s" % (sys.exc_info()[0])
+            logger.error("Unexpected error: %s" % (sys.exc_info()[0]))
             return
 
         for r in cdr:
@@ -110,7 +113,7 @@ class AsteriskCSVCDR:
         each record"""
 
         if len(self) != len(other):
-            print "CDR MATCH FAILED, different number of records"
+            logger.warn("CDR MATCH FAILED, different number of records")
             return False
         for i,x in enumerate(self):
             if not x.match(other[i]):
@@ -124,7 +127,7 @@ class AsteriskCSVCDR:
         try:
             open(self.filename, "w").close()
         except:
-            print "Unable to empty CDR file %s" % (self.filename)
+            logger.warn("Unable to empty CDR file %s" % (self.filename))
 
 
 class AsteriskCSVCDRTests(unittest.TestCase):
