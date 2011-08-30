@@ -18,9 +18,6 @@ from asterisk.TestCase import TestCase
 from twisted.internet import reactor
 
 
-workingdir = "cdr/console_dial_sip_answer"
-testdir = "tests/%s" % workingdir
-
 class Test(TestCase):
     def __init__(self):
         TestCase.__init__(self)
