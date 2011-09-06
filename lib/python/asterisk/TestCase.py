@@ -53,7 +53,8 @@ class TestCase(object):
         """
         for c in range(count):
             logger.info("Creating Asterisk instance %d" % (c + 1))
-            self.ast.append(Asterisk(base=self.base))
+            host = "127.0.0.%d" % (c + 1)
+            self.ast.append(Asterisk(base=self.base, host=host))
             # Copy shared config files
             self.ast[c].install_configs("%s/configs" %
                     (self.test_name))

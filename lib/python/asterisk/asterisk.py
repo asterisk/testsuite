@@ -107,6 +107,8 @@ class Asterisk:
 
         self.install_configs(os.getcwd() + "/configs")
 
+        self.__setup_configs()
+
     def start(self):
         """Start this instance of Asterisk.
 
@@ -250,6 +252,26 @@ class Asterisk:
         except IOError:
             logger.warn("The destination is not writable '%s'" % target_path)
 
+    def overwrite_file(self, path, filename, values):
+        target_filename = os.path.join(self.astetcdir, filename)
+
+        if not os.path.exists(target_filename):
+            logger.error("File '%s' does not exists" % filename)
+            return
+        try:
+            f = open(target_filename, "w")
+        except IOError:
+            logger.error("Failed to open %s" % target_filename)
+            return
+        except:
+            logger.error("Unexpected error: %s" % sys.exc_info()[0])
+            return
+
+        for (var, val) in values:
+            f.write('%s = %s\n' % (var, val))
+
+        f.close()
+
     def cli_originate(self, argstr, blocking=True):
         """Starts a call from the CLI and links it to an application or
         context.
@@ -333,6 +355,20 @@ class Asterisk:
         except OSError:
             pass
         return output
+
+    def __setup_configs(self):
+        self.__setup_manager_conf()
+
+    def __setup_manager_conf(self):
+        values = []
+
+        if self.host == '127.0.0.1':
+            return
+
+        values.append(['bindaddr', self.host])
+
+        self.overwrite_file(self.directories['astetcdir'],
+            "manager.general.conf.inc", values)
 
     def __gen_ast_conf(self, ast_conf, dir_cat, ast_conf_options):
         for (var, val) in dir_cat.options:
