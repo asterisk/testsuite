@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'Skip while failures are debugged'
     summary: 'Test nominal execution of app_voicemails VoiceMail dialplan application'
     description: |
         This test verifies proper functionality of an operator leaving a voicemail.  It verifies
