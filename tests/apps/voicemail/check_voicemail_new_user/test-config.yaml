@@ -1,0 +1,16 @@
+testinfo:
+    summary: 'Test execution of app_voicemails VoiceMailMain new user functionality'
+    description: |
+        This test verifies proper functionality of the new user flag.  When the user
+        logs in with their mailbox and password, they will be required to change
+        their password.  Upon successfully changing their password, they will be
+        authenticated and able to check their voicemail.
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_voicemail'
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'app_playback'

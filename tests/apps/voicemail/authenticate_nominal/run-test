@@ -1,0 +1,120 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+'''
+Copyright (C) 2011, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+
+logger = logging.getLogger(__name__)
+
+class AuthenticateNominal(TestCase):
+
+    """ Each key value pair is the mailbox / password to test """
+    credentials = [(9000, 1234), (9001, 0), (9002, 1234567890)]
+
+    """ Test results for each iterations """
+    results = [False, False, False]
+
+    def __init__(self):
+        super(AuthenticateNominal, self).__init__()
+
+        self.reactor_timeout = 60
+
+        self.create_asterisk(2)
+
+    def ami_connect(self, ami):
+        super(AuthenticateNominal, self).ami_connect(ami)
+
+        ami.registerEvent('UserEvent', self.user_event)
+
+        if not (ami.id == 0):
+            self.testCounter = 0
+            self.executeTest(ami)
+
+    def executeTest(self, ami):
+        if self.testCounter > 3:
+            return
+
+        credential = self.credentials[self.testCounter]
+        self.ast[ami.id].cli_exec("dialplan set global MAILBOX " + str(credential[0]))
+        self.ast[ami.id].cli_exec("dialplan set global PASSWORD " + str(credential[1]))
+
+        """ First time through test sending a mailbox and password; otherwise we just send the password """
+        extension = ""
+        if self.testCounter == 0:
+            extension = "mailboxAndPassword"
+        else:
+            extension = "password"
+
+        logger.debug("Originating call to sip/ast1/" + str(credential[0]) + " from " + extension + "@sendvoicemail")
+        df = ami.originate("sip/ast1/" + str(credential[0]), "sendvoicemail", extension, 1)
+        df.addErrback(self.handleOriginateFailure)
+
+        self.testCounter += 1
+
+    def user_event(self, ami, event):
+        if event['userevent'] != 'TestResult':
+            return
+
+        if ami.id == 0:
+            """
+            Note that by the time we receive this response, the test counter will have
+            incremented to the next test
+            """
+            if event['result'] == 'pass':
+                logger.info("VMAuthenticate successfully exited")
+                self.results[self.testCounter - 1] = True
+            else:
+                self.results[self.testCounter - 1] = False
+                logger.warn("VMAuthenticate did not successfully exit:")
+                logger.warn("result: %s" % (event['result'],))
+                logger.warn("error: %s" % (event['status'],))
+            """ If we've seen all the responses, stop the test """
+            if self.testCounter >= 3:
+                logger.info("All responses received - Stopping Test")
+                self.stop_reactor()
+        else:
+            """ If this is the caller, simply execute the next test """
+            if self.testCounter < 3:
+                self.executeTest(ami)
+
+    def run(self):
+        super(AuthenticateNominal, self).run()
+        self.create_ami_factory(2)
+
+
+def main():
+
+    test = AuthenticateNominal()
+
+    test.start_asterisk()
+
+    reactor.run()
+
+    test.stop_asterisk()
+
+    test.passed = True
+    for result in test.results:
+        test.passed = test.passed and result
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+   sys.exit(main() or 0)

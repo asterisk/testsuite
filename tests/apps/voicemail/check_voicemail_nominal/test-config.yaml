@@ -1,0 +1,14 @@
+testinfo:
+    summary: 'Test nominal execution of app_voicemails VoiceMailMain dialplan application'
+    description: |
+        This test verifies proper functionality of an operator checking their voicemails.
+        It checks listening to Urgent messages, Normal priority messages, and saving
+        these messages to the archive folder.
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_voicemail'
+        - asterisk : 'app_senddtmf'

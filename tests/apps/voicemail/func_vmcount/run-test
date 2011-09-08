@@ -1,0 +1,117 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+'''
+Copyright (C) 2011, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+from asterisk.voicemail import VoiceMailMailboxManagement
+
+logger = logging.getLogger(__name__)
+
+class FuncVmCount(TestCase):
+
+    """
+    The parent directory that this test resides in
+    """
+    testParentDir = "tests/apps/voicemail"
+
+    """
+    The voicemail manager object, used to manipulate and verify the voicemail test
+    """
+    voicemailManager = None
+
+    """
+    The formats a message can be left in
+    """
+    formats = ["ulaw","wav","WAV"]
+
+    def __init__(self):
+        super(FuncVmCount, self).__init__()
+
+        self.create_asterisk(1)
+
+    def ami_connect(self, ami):
+        super(FuncVmCount, self).ami_connect(ami)
+
+        self.passed = False
+
+        """
+        Create some dummy voicemails in a valid voicemailbox
+        """
+        self.voicemailManager = VoiceMailMailboxManagement(self.ast[0])
+        self.voicemailManager.createMailbox("default", "1234", True)
+
+        logger.debug("Creating dummy voicemails")
+        for i in range(0, 10):
+            self.voicemailManager.createDummyVoicemail("default","1234", self.voicemailManager.inboxFolderName, i, self.formats)
+        for i in range(0, 5):
+            self.voicemailManager.createDummyVoicemail("default", "1234", self.voicemailManager.urgentFolderName, i, self.formats)
+        for i in range(0, 15):
+            self.voicemailManager.createDummyVoicemail("default", "1234", self.voicemailManager.oldFolderName, i, self.formats)
+
+        ami.registerEvent('UserEvent', self.user_event)
+        self.ast[ami.id].cli_exec("dialplan set global EXPECTED_NEW 15")
+        self.ast[ami.id].cli_exec("dialplan set global EXPECTED_URGENT 5")
+        self.ast[ami.id].cli_exec("dialplan set global EXPECTED_OLD 15")
+
+        df1 = ami.originate("Local/s@listener", "voicemail", "1234", 1)
+        df1.addErrback(self.handleOriginateFailure)
+
+    def user_event(self, ami, event):
+
+        if event['userevent'] != 'TestResult':
+            return
+
+        if event["result"] != "fail":
+            logger.info("Received non-failure result " + event['result'])
+            self.passed = True
+        else:
+            self.passed = False
+            logger.warn("VoiceMail did not successfully exit:")
+            logger.warn("result: %s" % (event['result'],))
+            logger.warn("status: %s" % (event['status'],))
+
+        logger.info("Received all expected results; stopping Reactor")
+        self.stop_reactor()
+
+    def run(self):
+        super(FuncVmCount, self).run()
+        self.create_ami_factory()
+
+def main():
+
+    test = FuncVmCount()
+
+    test.start_asterisk()
+
+    reactor.run()
+
+    test.stop_asterisk()
+
+    """
+    Since this test creates a lot of files, go ahead and clean up the directory
+    """
+    if not test.voicemailManager == None:
+        test.voicemailManager.removeMailbox("default","1234")
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+   sys.exit(main() or 0)

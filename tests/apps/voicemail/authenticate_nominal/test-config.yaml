@@ -1,0 +1,13 @@
+testinfo:
+    summary: 'Test nominal execution of app_voicemails VMAuthenticate dialplan application'
+    description: |
+        This test verifies proper functionality of the VMAuthenticate dialplan application.  It
+        checks that a user can enter a mailbox and/or password and be authenticated properly against
+        the information in voicemail.conf
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+

@@ -10,10 +10,8 @@ the GNU General Public License Version 2.
 
 import sys
 import os
-import datetime
 import logging
 
-from datetime import datetime
 from twisted.internet import reactor
 
 sys.path.append("lib/python")
@@ -32,13 +30,12 @@ class LeaveVoicemailNominal(TestCase):
     testParentDir = "tests/apps/voicemail"
 
     def __init__(self):
-        TestCase.__init__(self)
-
+        super(LeaveVoicemailNominal, self).__init__()
+        self.testResultsReceived = 0
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
-        logger.info("Got AMI Connect for instance " + str(ami.id))
-        TestCase.ami_connect(self, ami)
+        super(LeaveVoicemailNominal, self).ami_connect(ami)
 
         self.audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.testParentDir))
 
@@ -49,21 +46,15 @@ class LeaveVoicemailNominal(TestCase):
 
             extensions = [1234,1234,5678,5678,9000]
             for extension in extensions:
-                logger.debug("Originating call to sip/ast1/" + str(extension))
+                logger.info("Originating call to sip/ast1/" + str(extension))
                 df = ami.originate("sip/ast1/" + str(extension), "sendvoicemail", str(extension), 1, None, "CallId-" + str(extension), None, None, None, {}, True )
                 df.addErrback(self.handleOriginateFailure)
-
-    def handleOriginateFailure(self, reason):
-        logger.error("Error sending originate:")
-        logger.error(reason.getTraceback())
-        self.stop_reactor()
-
-        return reason
 
     def user_event(self, ami, event):
         if event['userevent'] != 'TestResult':
             return
 
+        self.testResultsReceived += 1
         if event['result'] == "pass":
             self.passed = True
             logger.info("VoiceMail successfully exited")
@@ -72,11 +63,12 @@ class LeaveVoicemailNominal(TestCase):
             logger.warn("result: %s" % (event['result'],))
             logger.warn("error: %s" % (event['error'],))
 
-        self.stop_reactor()
-
+        if self.testResultsReceived == 5:
+            logger.debug("All results received; stopping reactor")
+            self.stop_reactor()
 
     def run(self):
-        TestCase.run(self)
+        super(LeaveVoicemailNominal, self).run()
         self.create_ami_factory(2)
 
 
