@@ -295,7 +295,7 @@ class CheckVoicemailNominal(VoiceMailTest):
             return False
         self.addTestCondition("savedMessages", TestCondition(checkSavedMessages, 0))
 
-        self.reactor_timeout = 120
+        self.reactor_timeout = 240
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
