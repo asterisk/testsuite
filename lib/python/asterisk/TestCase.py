@@ -8,7 +8,7 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-import logging, logging.config
+import logging
 import logging.config
 import os
 from twisted.internet import reactor
@@ -128,3 +128,9 @@ class TestCase(object):
         logger.info("AMI Connect instance %s" % (ami.id + 1))
         self.ami[ami.id] = ami
 
+    def handleOriginateFailure(self, reason):
+        """ Convenience callback handler for twisted deferred errors for an AMI originate call """
+        logger.error("Error sending originate:")
+        logger.error(reason.getTraceback())
+        self.stop_reactor()
+        return reason

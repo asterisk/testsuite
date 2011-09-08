@@ -12,12 +12,255 @@ import sys
 import os
 import glob
 import shutil
+import logging
 
 from asterisk import Asterisk
 from config import Category
 from config import ConfigFile
+from TestCase import TestCase
+from TestState import TestState
+from TestState import TestStateController
 
 sys.path.append("lib/python")
+
+logger = logging.getLogger(__name__)
+
+
+"""
+Class that holds the state of some test condition, and allows a callback function to be used to evaluate
+whether or not that test condition has passed
+"""
+class TestCondition(object):
+
+    """
+    evaluateFunc    function used to evaluate the condition
+    testConditionData    Some piece of data that will be passed to the evaluateFunc
+
+    Note that evaluteFunc should return True or False, and take in two parameters - a value being evaluated
+    and the member data testConditionData
+    """
+    def __init__(self, evaluateFunc = None, testConditionData = None):
+        self.__evaluateFunc = evaluateFunc
+        self.testConditionData = testConditionData
+        self.currentState = False
+
+    """
+    Evaluate the test condition
+
+    value    The value to evaluate
+    """
+    def evaluate(self, value):
+        if self.__evaluateFunc != None:
+            self.currentState = self.__evaluateFunc(value, self)
+        else:
+            logger.warn("WARNING: no evaluate function defined, setting currenState to value")
+            self.currentState = value
+        return
+
+
+"""
+Base class for voice mail tests that use the TestCase AMI event and the TestStateController
+"""
+class VoiceMailTest(TestCase):
+
+    """
+    The formats a message can be left in
+    """
+    formats = ["ulaw","wav","WAV"]
+
+    """
+    The default expected channel to be used to send info to the voicemail server
+    """
+    defaultSenderChannel = "SIP/ast1-00000000"
+
+    def __init__(self):
+        TestCase.__init__(self)
+
+        self.amiReceiver = None
+        self.amiSender = None
+        self.astSender = None
+        self.__testConditions = {}
+        self.senderChannel = VoiceMailTest.defaultSenderChannel
+
+    """
+    Create the test controller.  Should be called once amiReceiver and amiSender have both been set
+    """
+    def createTestController(self):
+        if (self.amiReceiver != None and self.amiSender != None):
+            self.testStateController = TestStateController(self, self.amiReceiver)
+
+    def __handleRedirectFailure__(self, reason):
+        logger.warn("Error sending redirect - test may or may not fail:")
+        logger.warn(reason.getTraceback())
+        return reason
+
+    """
+    Hangs up the current call
+    """
+    def hangup(self):
+        if self.astSender == None:
+            logger.error("Attempting to send hangup to non-existant Asterisk instance")
+            TestCase.testStateController.changeState(FailureTestState(self.controller))
+            return
+
+        df = self.amiSender.redirect(self.senderChannel, "voicemailCaller", "hangup", 1)
+        df.addErrback(self.__handleRedirectFailure__)
+
+    """
+    Send a DTMF signal to the voicemail server
+    dtmfToSend    The DTMF code to send
+    """
+    def sendDTMF(self, dtmfToSend):
+        logger.info("Attempting to send DTMF " + dtmfToSend)
+        if self.amiSender == None:
+            logger.error("Attempting to send DTMF to non-connected caller AMI")
+            TestCase.testStateController.changeState(FailureTestState(self.controller))
+            return
+
+        if self.astSender == None:
+            logger.error("Attempting to send DTMF to non-existant Asterisk instance")
+            TestCase.testStateController.changeState(FailureTestState(self.controller))
+            return
+
+        self.astSender.cli_exec("dialplan set global DTMF_TO_SEND " + dtmfToSend)
+
+        """
+        Redirect to the DTMF extension - note that we assume that we only have one channel to
+        the other asterisk instance
+        """
+        df = self.amiSender.redirect(self.senderChannel, "voicemailCaller", "sendDTMF", 1)
+        df.addErrback(self.__handleRedirectFailure__)
+
+    """
+    Send a sound file to the voicemail server
+    audioFile    The local path to the file to stream
+    """
+    def sendSoundFile(self, audioFile):
+        if self.amiSender == None:
+            logger.error("Attempting to send sound file to non-connected caller AMI")
+            TestCase.testStateController.changeState(FailureTestState(self.controller))
+            return
+
+        if self.astSender == None:
+            logger.error("Attempting to send sound file to non-existant Asterisk instance")
+            TestCase.testStateController.changeState(FailureTestState(self.controller))
+            return
+
+        self.astSender.cli_exec("dialplan set global TALK_AUDIO " + audioFile)
+
+        """
+        Redirect to the send sound file extension - note that we assume that we only have one channel to
+        the other asterisk instance
+        """
+        df = self.amiSender.redirect(self.senderChannel, "voicemailCaller", "sendAudio", 1)
+        df.addErrback(self.__handleRedirectFailure__)
+
+    """
+    Send a sound file to the voicemail server, then send a DTMF signal
+    audioFile    The local path to the file to stream
+    dtmfToSend   The DTMF signal to send
+
+    Note that this is necessary so that when the audio file is finished, we close the audio recording cleanly;
+    otherwise, Asterisk will detect the end of file as a hangup
+    """
+    def sendSoundFileWithDTMF(self, audioFile, dtmfToSend):
+        if self.amiSender == None:
+            logger.error("Attempting to send sound file / DTMF to non-connected caller AMI")
+            TestCase.testStateController.changeState(FailureTestState(self.controller))
+            return
+
+        if self.astSender == None:
+            logger.error("Attempting to send sound file / DTMF to non-existant Asterisk instance")
+            TestCase.testStateController.changeState(FailureTestState(self.controller))
+            return
+
+        self.astSender.cli_exec("dialplan set global TALK_AUDIO " + audioFile)
+        self.astSender.cli_exec("dialplan set global DTMF_TO_SEND " + dtmfToSend)
+
+        """
+        Redirect to the send sound file extension - note that we assume that we only have one channel to
+        the other asterisk instance
+        """
+        df = self.amiSender.redirect(self.senderChannel, "voicemailCaller", "sendAudioWithDTMF", 1)
+        df.addErrback(self.__handleRedirectFailure__)
+
+    """
+    Add a new test condition to track
+
+    conditionName    The unique name of the condition
+    condition        The TestCondition object
+    """
+    def addTestCondition(self, conditionName, condition):
+        self.__testConditions[conditionName] = condition
+
+    """
+    Set a test condition to the specified value, and evalute whether or not it has passed
+
+    conditionName    The unique name of the condition
+    value            The value to pass to the evaluation checker
+    """
+    def setTestCondition(self, conditionName, value):
+        if conditionName in self.__testConditions.keys():
+            self.__testConditions[conditionName].evaluate(value)
+
+    """
+    Get the current state of a test condition
+
+    conditionName    The unique name of the condition
+    returns True if the condition has passed; False otherwise
+    """
+    def getTestCondition(self, conditionName):
+        if conditionName in self.__testConditions.keys():
+            return self.__testConditions[conditionName].currentState
+        return False
+
+    """
+    Check all test conditions
+
+    returns True if all have passed; False if any have not
+    """
+    def checkTestConditions(self):
+        retVal = True
+        for k, v in self.__testConditions.items():
+            if not v.currentState:
+                logger.warn("Test Condition [" + k + "] has not passed") 
+                retVal = False
+
+        return retVal
+
+"""
+Base class for VoiceMail TestEvent state machine handling
+
+Note - this class exists mostly to share the VoiceMailTest object across the concrete class
+implementations
+"""
+class VoiceMailState(TestState):
+
+    """
+    controller        The TestStateController managing the test
+    voiceMailTest     The main test object
+    """
+    def __init__(self, controller, voiceMailTest):
+        TestState.__init__(self, controller)
+        self.voiceMailTest = voiceMailTest
+        if self.voiceMailTest == None:
+            logger.error("Failed to set voicemail test object")
+            raise RuntimeError('Failed to set voicemail test object')
+
+        logger.debug(" Entering state [" + self.getStateName() + "]")
+
+    """
+    Should be overriden by derived classes and return the name of the current state
+    """
+    def getStateName(self):
+        pass
+
+    """
+    Can be called by derived classes to output a state that is being ignored
+    """
+    def handleDefaultState(self, event):
+        logger.debug(" State [" + self.getStateName() + "] - ignoring state change " + event['state'])
+
 
 """
 Class that manages creation of, verification of, and teardown of Asterisk mailboxes on the local filesystem
@@ -72,7 +315,6 @@ class VoiceMailMailboxManagement(object):
         self.__ast = ast
         self.voicemailDirectory = self.__ast.directories['astspooldir'] + '/voicemail'
 
-
     """
     Creates the basic set of folders needed for a mailbox on the file system
     context    The context that the mailbox will exist under
@@ -116,7 +358,7 @@ class VoiceMailMailboxManagement(object):
 
         except IOError as e:
             if e.errno == errno.EACCESS:
-                print "You do not have sufficient permissions to perform the necessary directory manipulations"
+                logger.error( "You do not have sufficient permissions to perform the necessary directory manipulations")
                 return False
 
         return True
@@ -154,14 +396,15 @@ class VoiceMailMailboxManagement(object):
         f.write('rdnis=unknown\n')
         f.write('priority=2\n')
         f.write('callerchan=SIP/ast1-00000000\n')
-        f.write('callerid=\"Anonymous\"<ast1>\n')
+        f.write('callerid=\"Anonymous\"<555-5555>\n')
         f.write('origdate=Tue Aug  9 10:05:13 PM UTC 2011\n')
         f.write('origtime=1312927513\n')
         if (folder == self.urgentFolderName):
             f.write('flag=Urgent\n')
         else:
             f.write('flag=\n')
-        f.write('duration=1\n')
+        f.write('category=tt-monkeys\n')
+        f.write('duration=6\n')
         f.close()
 
         for format in formats:
@@ -219,6 +462,24 @@ class VoiceMailMailboxManagement(object):
         return retVal
 
     """
+    Check if a voicemail greeting exists on the filesystem
+    context    The context of the mailbox
+    mailbox    The mailbox
+    msgname    The name of the greeting to find
+    lstFormats The formats we expect to be recorded for us
+
+    true if the greeting exists, false otherwise
+    """
+    def checkGreetingExists(self, context, mailbox, msgname, lstFormats):
+        retVal = True
+
+        for format in lstFormats:
+            fileName = msgname + "." + format
+            retVal = retVal & self.checkVoiceFileExists(context, mailbox, fileName, "")
+
+        return retVal
+
+    """
     Check if a voicemail has the property specified
     context    The context of the mailbox
     mailbox    The mailbox
@@ -248,6 +509,53 @@ class VoiceMailMailboxManagement(object):
         return False
 
     """
+    An object that holds voicemail user information
+    """
+    class UserObject(object):
+        def __init__(self):
+            self.password = ""
+            self.fullname = ""
+            self.emailaddress = ""
+            self.pageraddress = ""
+
+    """
+    Gets user information from the voicemail configuration file
+
+    context    The context of the mailbox
+    mailbox    The mailbox
+    sourceFile    The file containing the user information to pull from.  Defaults
+        to voicemail.conf
+
+    returns A VoiceMailMailboxManagement.UserObject object, populated with the user's values,
+        or an empty object
+    """
+    def getUserObject(self, context, mailbox, sourceFile="voicemail.conf"):
+
+        filePath = self.__ast.baseDirectory + self.__ast.directories['astetcdir'] + "/" + sourceFile
+
+        configFile = ConfigFile(filePath)
+        userObject = VoiceMailMailboxManagement.UserObject()
+        for cat in configFile.categories:
+            if cat.name == context:
+                for kvp in cat.options:
+                    if kvp[0] == mailbox:
+                        tokens = kvp[1].split(',')
+                        i = 0
+                        for token in tokens:
+                            if i == 0:
+                                userObject.password = token
+                            elif i == 1:
+                                userObject.fullname = token
+                            elif i == 2:
+                                userObject.emailaddress = token
+                            elif i == 3:
+                                userObject.pageraddress = token
+                            i += 1
+                        return userObject
+
+        return userObject
+
+    """
     Checks if a file exists under the voicemail file structure
     context    The context of the mailbox
     mailbox    The mailbox
@@ -266,7 +574,6 @@ class VoiceMailMailboxManagement(object):
             return True
         else:
             return False
-
 
     def __removeItemsFromFolder__(self, mailboxPath, folder):
         folderPath = os.path.join(self.__ast.baseDirectory, "%(mp)s/%(f)s" % {'mp':mailboxPath, 'f':folder})
