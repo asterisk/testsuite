@@ -32,7 +32,7 @@ class LeaveVoicemailNominal(TestCase):
     def __init__(self):
         super(LeaveVoicemailNominal, self).__init__()
         self.testResultsReceived = 0
-        self.reactor_timeout = 600
+        self.reactor_timeout = 120
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
@@ -66,7 +66,7 @@ class LeaveVoicemailNominal(TestCase):
             logger.warn("error: %s" % (event['error'],))
 
         if self.testResultsReceived == 5:
-            logger.debug("All results received; stopping reactor")
+            logger.info("All results received; stopping reactor")
             self.stop_reactor()
 
     def run(self):
