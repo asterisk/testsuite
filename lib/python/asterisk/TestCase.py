@@ -11,6 +11,7 @@ import sys
 import logging
 import logging.config
 import os
+import datetime
 from twisted.internet import reactor
 from starpy import manager, fastagi
 
@@ -30,7 +31,7 @@ class TestCase(object):
     def __init__(self):
         self.test_name = os.path.dirname(sys.argv[0])
         self.base = self.test_name.lstrip("tests/")
-
+        self.timeoutId = None
         self.testStateController = None
 
         """ Set up logging """
@@ -127,7 +128,7 @@ class TestCase(object):
 
         """
         if (self.reactor_timeout > 0):
-            reactor.callLater(self.reactor_timeout, self.__reactor_timeout)
+            self.timeoutId = reactor.callLater(self.reactor_timeout, self.__reactor_timeout)
 
     def ami_login_error(self, ami):
         logger.error("Error logging into AMI")
@@ -143,3 +144,13 @@ class TestCase(object):
         logger.error(reason.getTraceback())
         self.stop_reactor()
         return reason
+
+    def reset_timeout(self):
+        """
+        Resets the reactor timeout
+        """
+        if (self.timeoutId != None):
+            originalTime = datetime.datetime.fromtimestamp(self.timeoutId.getTime())
+            self.timeoutId.reset(self.reactor_timeout)
+            newTime = datetime.datetime.fromtimestamp(self.timeoutId.getTime())
+            logger.info("Reactor timeout originally scheduled for %s, rescheduled for %s" % (str(originalTime), str(newTime)))

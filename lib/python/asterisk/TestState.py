@@ -146,7 +146,7 @@ class FailureTestState(TestState):
 
     def __init__(self, controller):
         TestState(controller)
-        self.controller.failTest()
+        controller.failTest()
 
     def handleStateChange(self, ami, event):
         pass

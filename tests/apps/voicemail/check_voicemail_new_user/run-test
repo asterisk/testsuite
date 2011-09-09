@@ -50,6 +50,7 @@ class StartVoiceMailState(VoiceMailState):
             elif message == 'vm-password':
                 self.voiceMailTest.sendDTMF(self.userPassword)
         elif state == 'AUTHENTICATED':
+            self.voiceMailTest.reset_timeout()
             self.changeState(AuthenticatedTestState(self.controller, self.voiceMailTest))
         else:
             self.handleDefaultState(event)
@@ -136,10 +137,13 @@ class NewUserTestState(VoiceMailState):
                 """ If we review a message, tell it to save the message """
                 self.voiceMailTest.sendDTMF("1")
             elif message == 'vm-rec-name':
+                self.voiceMailTest.reset_timeout()
                 self.voiceMailTest.setTestCondition('recordName', True)
             elif message == 'vm-rec-unv':
+                self.voiceMailTest.reset_timeout()
                 self.voiceMailTest.setTestCondition('recordUnavailable', True)
             elif message == 'vm-rec-busy':
+                self.voiceMailTest.reset_timeout()
                 self.voiceMailTest.setTestCondition('recordBusy', True)
             elif message == 'beep':
                 """ A beep indicates we need to stream some sound file over - use the same sound file for everything """
@@ -266,6 +270,7 @@ class CheckVoicemailNewUser(VoiceMailTest):
 
         if event['result'] == "pass":
             self.passed = True
+            super(CheckVoicemailNewUser, self).hangup()
             logger.info("VoiceMail successfully exited")
         else:
             logger.warn("VoiceMail did not successfully exit:")

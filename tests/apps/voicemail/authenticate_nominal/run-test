@@ -90,6 +90,7 @@ class AuthenticateNominal(TestCase):
         else:
             """ If this is the caller, simply execute the next test """
             if self.testCounter < 3:
+                super(AuthenticateNominal, self).reset_timeout()
                 self.executeTest(ami)
 
     def run(self):

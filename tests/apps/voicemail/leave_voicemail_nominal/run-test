@@ -56,6 +56,7 @@ class LeaveVoicemailNominal(TestCase):
             return
 
         self.testResultsReceived += 1
+        super(LeaveVoicemailNominal, self).reset_timeout()
         if event['result'] == "pass":
             self.passed = True
             logger.info("VoiceMail successfully exited")

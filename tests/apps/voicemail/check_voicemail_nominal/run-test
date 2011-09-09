@@ -116,6 +116,7 @@ class IntroTestState(VoiceMailState):
                 """
                 Tell it to play the first message
                 """
+                self.voiceMailTest.reset_timeout()
                 self.voiceMailTest.sendDTMF("1")
         else:
             self.handleDefaultState(event)
@@ -218,6 +219,7 @@ class SaveMessageTestState(VoiceMailState):
                 self.voiceMailTest.sendDTMF('1')
             elif message == 'vm-savedto':
                 """ Notify the test that we saved a message """
+                self.voiceMailTest.reset_timeout()
                 self.voiceMailTest.setTestCondition("savedMessages", 1)
                 self.changeState(PlayNextMessageTestState(self.controller, self.voiceMailTest))
         else:
@@ -295,8 +297,7 @@ class CheckVoicemailNominal(VoiceMailTest):
             return False
         self.addTestCondition("savedMessages", TestCondition(checkSavedMessages, 0))
 
-        """ Force this test not to timeout.  On bamboo, this test can take a *very* long time """
-        self.reactor_timeout = 0
+        self.reactor_timeout = 120
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
@@ -359,6 +360,7 @@ class CheckVoicemailNominal(VoiceMailTest):
 
         if event['result'] == "pass":
             self.passed = True
+            super(CheckVoicemailNominal, self).hangup()
             logger.info("VoiceMail successfully exited")
         else:
             logger.warn("VoiceMail did not successfully exit:")
