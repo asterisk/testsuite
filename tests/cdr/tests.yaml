@@ -13,3 +13,4 @@ tests:
     #- test: 'app_queue'
     - test: 'blind-transfer-accountcode'
     - test: 'originate-cdr-disposition'
+    - test: 'app_dial_G_flag'
