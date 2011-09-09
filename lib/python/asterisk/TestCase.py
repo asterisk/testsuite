@@ -114,12 +114,20 @@ class TestCase(object):
         if reactor.running:
             reactor.stop()
 
+    def __reactor_timeout(self):
+        '''
+        A wrapper function for stop_reactor(), so we know when a reactor timeout
+        has occurred.
+        '''
+        logger.warning("Reactor timeout: '%s' seconds" % self.reactor_timeout)
+        self.stop_reactor()
+
     def run(self):
         """
 
         """
         if (self.reactor_timeout > 0):
-            reactor.callLater(self.reactor_timeout, self.stop_reactor)
+            reactor.callLater(self.reactor_timeout, self.__reactor_timeout)
 
     def ami_login_error(self, ami):
         logger.error("Error logging into AMI")
