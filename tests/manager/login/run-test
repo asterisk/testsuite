@@ -28,7 +28,7 @@ class AMILoginTest(TestCase):
 
     def run(self):
         TestCase.run(self)
-        self.create_ami_factory(1, "user", "mysecret")
+        self.create_ami_factory()
 
 def main():
     test = AMILoginTest()
