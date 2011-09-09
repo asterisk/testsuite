@@ -360,7 +360,6 @@ class CheckVoicemailNominal(VoiceMailTest):
 
         if event['result'] == "pass":
             self.passed = True
-            super(CheckVoicemailNominal, self).hangup()
             logger.info("VoiceMail successfully exited")
         else:
             logger.warn("VoiceMail did not successfully exit:")
