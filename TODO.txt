@@ -19,5 +19,8 @@ TODO List:
 
  * Covert existing tests to use new TestCase python library.
 
+ * Replace cli_originate() with ami.originate() then remove cli_originate()
+   function.
+
 ================================================================================
 ================================================================================
