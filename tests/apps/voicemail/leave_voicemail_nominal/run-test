@@ -32,6 +32,7 @@ class LeaveVoicemailNominal(TestCase):
     def __init__(self):
         super(LeaveVoicemailNominal, self).__init__()
         self.testResultsReceived = 0
+        self.reactor_timeout = 600
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
@@ -104,7 +105,7 @@ def main():
             test.passed = 0
 
         if not voicemailManager.checkVoicemailExists("default","5678",1,formats):
-            logger.warn("Failed to find voicemail 0 for default/5678")
+            logger.warn("Failed to find voicemail 1 for default/5678")
             test.passed = 0
 
         if not voicemailManager.checkVoicemailExists("notdefault","1234",0,formats):
