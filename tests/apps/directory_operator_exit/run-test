@@ -27,8 +27,6 @@ class DirectoryTest(TestCase):
       self.create_asterisk(2)
 
    def ami_connect(self, ami):
-      TestCase.ami_connect(self, ami)
-
       ami.registerEvent('UserEvent', self.user_event)
 
       if ami.id == 0:

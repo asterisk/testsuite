@@ -42,8 +42,6 @@ class SIPCallTest(TestCase):
 
     # Once the AMI Factory connects to Asterisk, this function fires.
     def ami_connect(self, ami):
-        TestCase.ami_connect(self, ami)
-
         print "AMI - connected"
 
         # Register for the AMI event we are interested in.

@@ -26,8 +26,6 @@ class PbxLuaTest(TestCase):
       self.create_asterisk(2)
 
    def ami_connect(self, ami):
-      TestCase.ami_connect(self, ami)
-
       if ami.id == 0:
 
          print "sending a call from ast1 to ast2"

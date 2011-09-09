@@ -36,8 +36,6 @@ class LeaveVoicemailNominal(TestCase):
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
-        super(LeaveVoicemailNominal, self).ami_connect(ami)
-
         self.audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.testParentDir))
 
         ami.registerEvent('UserEvent', self.user_event)

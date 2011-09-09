@@ -32,8 +32,6 @@ class GatewayTest(TestCase):
       shutil.copy("%s/send.tiff" % (os.path.dirname(os.path.realpath(__file__)),), "%s%s" % (self.ast[0].base, self.ast[0].directories['astdatadir']))
 
    def ami_connect(self, ami):
-      TestCase.ami_connect(self, ami)
-
       if ami.id == 0:
 
          print "sending a call from ast1 to ast2"

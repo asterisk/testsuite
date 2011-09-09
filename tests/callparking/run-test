@@ -59,8 +59,6 @@ class CallParkingTest(TestCase):
         self.check_result()
 
     def ami_connect(self, ami):
-        TestCase.ami_connect(self, ami)
-
         if ami.id == 0:
             self.ami[ami.id].registerEvent("ParkedCall", self.ast1_parkedcall)
             self.ami[ami.id].registerEvent("UnParkedCall", self.ast1_unparkedcall)

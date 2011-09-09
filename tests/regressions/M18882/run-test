@@ -30,7 +30,6 @@ class AsteriskTest(TestCase):
         self.stop_reactor()
 
     def ami_connect(self, ami):
-        TestCase.ami_connect(self, ami)
         self.ami[0].dbPut(self.family, self.key, self.value).addCallbacks(self.ami_dbGet)
 
     def ami_dbGet(self, ami):

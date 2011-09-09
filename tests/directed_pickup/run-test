@@ -71,7 +71,6 @@ class PickupTest(TestCase):
         self.firstChannel = event.get('channel')
 
     def ami_connect(self, ami):
-        TestCase.ami_connect(self, ami)
         self.ami[0].registerEvent("Dial", self.check_Dial)
         self.ami[0].registerEvent("UserEvent", self.check_UserEvent)
         self.ami[0].originate(

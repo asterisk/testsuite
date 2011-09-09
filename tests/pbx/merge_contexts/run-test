@@ -28,8 +28,6 @@ class PbxMergeContextsTest(TestCase):
       self.create_asterisk(2)
 
    def ami_connect(self, ami):
-      TestCase.ami_connect(self, ami)
-
       if ami.id == 0:
 
          print "sending a calls from ast1 to ast2"

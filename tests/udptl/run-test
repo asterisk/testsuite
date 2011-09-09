@@ -22,7 +22,6 @@ class UdptlTest(TestCase):
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
-        TestCase.ami_connect(self, ami)
         if ami.id == 0:
             self.ami[0].originate(channel = "SIP/666@receiver",
                     application = "SendFax",

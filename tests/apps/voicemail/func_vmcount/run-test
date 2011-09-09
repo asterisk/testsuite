@@ -45,8 +45,6 @@ class FuncVmCount(TestCase):
         self.create_asterisk(1)
 
     def ami_connect(self, ami):
-        super(FuncVmCount, self).ami_connect(ami)
-
         self.passed = False
 
         """

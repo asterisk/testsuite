@@ -58,10 +58,10 @@ class TestCase(object):
             self.ast.append(Asterisk(base=self.base, host=host))
             # Copy shared config files
             self.ast[c].install_configs("%s/configs" %
-                    (self.test_name))
+                (self.test_name))
             # Copy test specific config files
             self.ast[c].install_configs("%s/configs/ast%d" %
-                    (self.test_name, c + 1))
+                (self.test_name, c + 1))
 
     def create_ami_factory(self, count=1, username="user", secret="mysecret", port=5038):
         """
@@ -71,25 +71,26 @@ class TestCase(object):
         username --
         secret --
         port --
-
         """
         for c in range(count):
             host = "127.0.0.%d" % (c + 1)
             self.ami.append(None)
             logger.info("Creating AMIFactory %d" % (c + 1))
             self.ami_factory = manager.AMIFactory(username, secret, c)
-            self.ami_factory.login(host).addCallbacks(self.ami_connect,
-                    self.ami_login_error)
+            self.ami_factory.login(host).addCallbacks(self.__ami_connect,
+                self.ami_login_error)
 
     def create_fastagi_factory(self, count=1):
+        """
 
+        """
         for c in range(count):
             host = "127.0.0.%d" % (c + 1)
             self.fastagi.append(None)
             logger.info("Creating FastAGI Factory %d" % (c + 1))
             self.fastagi_factory = fastagi.FastAGIFactory(self.fastagi_connect)
             reactor.listenTCP(4573, self.fastagi_factory,
-                    self.reactor_timeout, host)
+                self.reactor_timeout, host)
 
     def start_asterisk(self):
         """
@@ -116,10 +117,10 @@ class TestCase(object):
             reactor.stop()
 
     def __reactor_timeout(self):
-        '''
+        """
         A wrapper function for stop_reactor(), so we know when a reactor timeout
         has occurred.
-        '''
+        """
         logger.warning("Reactor timeout: '%s' seconds" % self.reactor_timeout)
         self.stop_reactor()
 
@@ -135,8 +136,16 @@ class TestCase(object):
         self.stop_reactor()
 
     def ami_connect(self, ami):
+        """
+        Hook method used after create_ami_factory() successfully logs into
+        the Asterisk AMI.
+        """
+        pass
+
+    def __ami_connect(self, ami):
         logger.info("AMI Connect instance %s" % (ami.id + 1))
         self.ami[ami.id] = ami
+        self.ami_connect(ami)
 
     def handleOriginateFailure(self, reason):
         """ Convenience callback handler for twisted deferred errors for an AMI originate call """

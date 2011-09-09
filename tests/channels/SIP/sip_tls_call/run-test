@@ -59,8 +59,6 @@ class SIPTLSCallTest(TestCase):
 
     # Once the AMI Factory connects to the AMI, this function fires.
     def ami_connect(self, ami):
-        TestCase.ami_connect(self, ami)
-
         print "AMI %d - connected, registering DTMF event..." % (ami.id + 1)
 
         # This will make the manager listen for DTMF and callback ami_test when it sees some.

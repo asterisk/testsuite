@@ -301,8 +301,6 @@ class CheckVoicemailNominal(VoiceMailTest):
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
-        super(CheckVoicemailNominal, self).ami_connect(ami)
-
         """ Record which AMI instance we've received and attempt to set up the test controller """
         if (ami.id == 0):
             self.amiReceiver = ami

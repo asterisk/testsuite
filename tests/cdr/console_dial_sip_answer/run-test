@@ -24,8 +24,6 @@ class Test(TestCase):
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
-        TestCase.ami_connect(self, ami)
-
         if ami.id == 0:
             self.ami[0].registerEvent('Hangup', self.end)
             self.ami[0].originate(channel = "Local/1@default", application = "Echo")

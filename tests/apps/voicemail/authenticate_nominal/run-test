@@ -37,8 +37,6 @@ class AuthenticateNominal(TestCase):
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
-        super(AuthenticateNominal, self).ami_connect(ami)
-
         ami.registerEvent('UserEvent', self.user_event)
 
         if not (ami.id == 0):

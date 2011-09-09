@@ -45,12 +45,8 @@ class func_srv_test(TestCase):
         self.create_asterisk()
 
     def ami_connect(self, ami):
-        TestCase.ami_connect(self, ami)
-
         self.ami[0].registerEvent("UserEvent", self.analyze_srv)
-
         self.ami[0].originate(channel = "Local/test@test_context", application = "Echo")
-
         self.ami[0].originate(channel = "Local/test2@test_context", application = "Echo")
 
     def analyze_srv(self, ami, event):
