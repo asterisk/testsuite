@@ -118,7 +118,8 @@ class TestCase(object):
         """
 
         """
-        reactor.callLater(self.reactor_timeout, self.stop_reactor)
+        if (self.reactor_timeout > 0):
+            reactor.callLater(self.reactor_timeout, self.stop_reactor)
 
     def ami_login_error(self, ami):
         logger.error("Error logging into AMI")
