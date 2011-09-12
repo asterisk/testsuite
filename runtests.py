@@ -28,6 +28,9 @@ TEST_RESULTS = "asterisk-test-suite-report.xml"
 
 
 class Dependency:
+
+    __ast = Asterisk()
+
     def __init__(self, dep):
         self.name = ""
         self.version = ""
@@ -120,11 +123,10 @@ class Dependency:
         return False
 
     def __find_asterisk_module(self, name):
-        ast = Asterisk()
-        if "astmoddir" not in ast.directories:
+        if "astmoddir" not in Dependency.__ast.directories:
             return False
 
-        module = "%s/%s.so" % (ast.directories["astmoddir"], name)
+        module = "%s/%s.so" % (Dependency.__ast.directories["astmoddir"], name)
         if os.path.exists(module):
             return True
 
