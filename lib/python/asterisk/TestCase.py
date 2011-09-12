@@ -37,7 +37,7 @@ class TestCase(object):
         """ Set up logging """
         logConfigFile = os.path.join(os.getcwd(), "%s" % (self.defaultLogFileName))
         if os.path.exists(logConfigFile):
-            logging.config.fileConfig(logConfigFile, None, False)
+            logging.config.fileConfig(logConfigFile)
         else:
             print "WARNING: no logging.conf file found; using default configuration"
             logging.basicConfig(level=self.defaultLogLevel)
