@@ -33,7 +33,7 @@ class AuthenticateNominal(TestCase):
         super(AuthenticateNominal, self).__init__()
 
         self.reactor_timeout = 60
-
+        self.senderAmi = None
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
@@ -41,6 +41,7 @@ class AuthenticateNominal(TestCase):
 
         if not (ami.id == 0):
             self.testCounter = 0
+            self.senderAmi = ami
             self.executeTest(ami)
 
     def executeTest(self, ami):
@@ -85,11 +86,11 @@ class AuthenticateNominal(TestCase):
             if self.testCounter >= 3:
                 logger.info("All responses received - Stopping Test")
                 self.stop_reactor()
-        else:
-            """ If this is the caller, simply execute the next test """
+
             if self.testCounter < 3:
                 super(AuthenticateNominal, self).reset_timeout()
-                self.executeTest(ami)
+                self.executeTest(self.senderAmi)
+
 
     def run(self):
         super(AuthenticateNominal, self).run()
@@ -99,6 +100,7 @@ class AuthenticateNominal(TestCase):
 def main():
 
     test = AuthenticateNominal()
+    test.passed = True
 
     test.start_asterisk()
 
@@ -106,7 +108,6 @@ def main():
 
     test.stop_asterisk()
 
-    test.passed = True
     for result in test.results:
         test.passed = test.passed and result
 
