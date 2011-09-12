@@ -416,6 +416,9 @@ def main(argv=None):
     parser.add_option("-t", "--test",
             dest="test",
             help="Run a single specified test instead of all tests.")
+    parser.add_option("-v", "--version",
+            dest="version", default=None,
+            help="Specify the version of Asterisk rather then detecting it.")
     (options, args) = parser.parse_args(argv)
 
     # Check to see if this has been executed within a sub directory of an
@@ -431,7 +434,7 @@ def main(argv=None):
               "***************\n"
         return 1
 
-    ast_version = AsteriskVersion()
+    ast_version = AsteriskVersion(options.version)
 
     #remove any trailing '/' from a test specified with the -t option
     if options.test and options.test[-1] == '/':
