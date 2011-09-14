@@ -159,7 +159,7 @@ class TestSuite:
                 if t.test_config.maxversion is not None:
                     print "--- --> Maximum Version: %s (%s)" % \
                         (str(t.test_config.maxversion), str(t.test_config.maxversion_check))
-                for d in t.deps:
+                for d in t.test_config.deps:
                     print "--- --> Dependency: %s - %s" % (d.name, str(d.met))
                 print
                 continue
