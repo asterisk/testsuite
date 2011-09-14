@@ -7,7 +7,16 @@ testinfo:
 
 properties:
     minversion: '1.8'
+    testconditions:
+        -
+            name: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+            type: 'Pre'
+        -
+            name: 'asterisk.ThreadTestCondition.ThreadPostTestCondition'
+            type: 'Post'
+            relatedCondition: 'ThreadPreTestCondition'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-
+        - asterisk : 'app_voicemail'
+        - asterisk : 'app_senddtmf'

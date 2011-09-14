@@ -91,7 +91,6 @@ class AuthenticateNominal(TestCase):
                 super(AuthenticateNominal, self).reset_timeout()
                 self.executeTest(self.senderAmi)
 
-
     def run(self):
         super(AuthenticateNominal, self).run()
         self.create_ami_factory(2)

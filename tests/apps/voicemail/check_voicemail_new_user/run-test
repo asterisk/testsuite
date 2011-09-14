@@ -268,7 +268,6 @@ class CheckVoicemailNewUser(VoiceMailTest):
 
         if event['result'] == "pass":
             self.passed = True
-            super(CheckVoicemailNewUser, self).hangup()
             logger.info("VoiceMail successfully exited")
         else:
             logger.warn("VoiceMail did not successfully exit:")

@@ -14,7 +14,7 @@ import sys
 import unittest
 sys.path.append("lib/python")
 
-from asterisk import utils
+import utils
 
 class SIPpVersion:
     """A SIPp Version.

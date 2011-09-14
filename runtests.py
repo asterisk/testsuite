@@ -20,138 +20,24 @@ sys.path.append("lib/python")
 
 from asterisk.version import AsteriskVersion
 from asterisk.asterisk import Asterisk
+from asterisk.TestConfig import Dependency, TestConfig
 from asterisk import utils
-from sipp.version import SIPpVersion
 
 TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
 
-
-class Dependency:
-
-    __ast = Asterisk()
-
-    def __init__(self, dep):
-        self.name = ""
-        self.version = ""
-        self.met = False
-        if "app" in dep:
-            self.name = dep["app"]
-            self.met = utils.which(self.name) is not None
-        elif "python" in dep:
-            self.name = dep["python"]
-            try:
-                __import__(self.name)
-                self.met = True
-            except ImportError:
-                pass
-        elif "sipp" in dep:
-            self.name = "SIPp"
-            version = None
-            feature = None
-            if 'version' in dep['sipp']:
-                version = dep['sipp']['version']
-            if 'feature' in dep['sipp']:
-                feature = dep['sipp']['feature']
-            self.sipp_version = SIPpVersion()
-            self.version = SIPpVersion(version, feature)
-            if self.sipp_version >= self.version:
-                self.met = True
-            if self.version.tls and not self.sipp_version.tls:
-                self.met = False
-            if self.version.pcap and not self.sipp_version.pcap:
-                self.met = False
-
-        elif "custom" in dep:
-            self.name = dep["custom"]
-            method = "depend_%s" % self.name
-            found = False
-            for m in dir(self):
-                if m == method:
-                    self.met = getattr(self, m)()
-                    found = True
-            if not found:
-                print "Unknown custom dependency - '%s'" % self.name
-        elif "asterisk" in dep:
-            self.name = dep["asterisk"]
-            self.met = self.__find_asterisk_module(self.name)
-
-        else:
-            print "Unknown dependency type specified."
-
-    def depend_soundcard(self):
-        try:
-            f = open("/dev/dsp", "r")
-            f.close()
-            return True
-        except:
-            return False
-    def depend_ipv6(self):
-        try:
-            s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-            s.close()
-            return True
-        except:
-            return False
-
-    def depend_pjsuav6(self):
-        '''
-        This tests if pjsua was compiled with IPv6 support. To do this,
-        we run pjsua --help and parse the output to determine if --ipv6
-        is a valid option
-        '''
-        if utils.which('pjsua') is None:
-            return False
-
-        help_output = subprocess.Popen(['pjsua', '--help'],
-                                       stdout=subprocess.PIPE).communicate()[0]
-        if help_output.find('--ipv6') == -1:
-            return False
-        return True
-
-    def depend_fax(self):
-        fax_providers = [
-            "app_fax",
-            "res_fax_spandsp",
-            "res_fax_digium",
-        ]
-
-        for f in fax_providers:
-            if self.__find_asterisk_module(f):
-                return True
-
-        return False
-
-    def __find_asterisk_module(self, name):
-        if "astmoddir" not in Dependency.__ast.directories:
-            return False
-
-        module = "%s/%s.so" % (Dependency.__ast.directories["astmoddir"], name)
-        if os.path.exists(module):
-            return True
-
-        return False
-
-class TestConfig:
+class TestRun:
     def __init__(self, test_name, ast_version, options):
-        self.can_run = True
+        self.can_run = False
         self.did_run = False
         self.time = 0.0
         self.test_name = test_name
         self.ast_version = ast_version
         self.options = options
-        self.skip = None
-        self.config = None
-        self.summary = None
-        self.maxversion = None
-        self.maxversion_check = False
-        self.minversion = None
-        self.minversion_check = False
-        self.deps = []
-        self.expectPass = True
-
-        self.__parse_config()
+        self.test_config = TestConfig(test_name)
+        self.failure_message = "<failure />"
         self.__check_deps(ast_version)
+        self.stdout = ""
 
     def run(self):
         self.passed = False
@@ -162,109 +48,40 @@ class TestConfig:
         ]
 
         if os.path.exists(cmd[0]) and os.access(cmd[0], os.X_OK):
-            print "Running %s ..." % cmd
+            msg = "Running %s ..." % cmd
+            print msg
+            self.stdout += msg
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
             try:
                 for l in p.stdout.readlines():
                     print l,
+                    self.stdout += l
             except IOError:
                 pass
             p.wait()
 
-            self.passed = (p.returncode == 0 and self.expectPass) or (p.returncode and not self.expectPass)
+            """ Parse out ERROR messages """
+            self.__parse_run_output(self.stdout)
+
+            self.passed = (p.returncode == 0 and self.test_config.expectPass) or (p.returncode and not self.test_config.expectPass)
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
         self.time = time.time() - start_time
 
-    def __process_testinfo(self):
-        self.summary = "(none)"
-        self.description = "(none)"
-        if "testinfo" not in self.config:
-            return
-        testinfo = self.config["testinfo"]
-        if "skip" in testinfo:
-            self.skip = testinfo['skip']
-            self.can_run = False
-        if "summary" in testinfo:
-            self.summary = testinfo["summary"]
-        if "description" in testinfo:
-            self.description = testinfo["description"]
-
-    def __process_properties(self):
-        self.minversion = AsteriskVersion("1.4")
-        if "properties" not in self.config:
-            return
-        properties = self.config["properties"]
-        if "minversion" in properties:
-            try:
-                self.minversion = AsteriskVersion(properties["minversion"])
-            except:
-                self.can_run = False
-                print "ERROR: '%s' is not a valid minversion" % \
-                        properties["minversion"]
-        if "maxversion" in properties:
-            try:
-                self.maxversion = AsteriskVersion(properties["maxversion"])
-            except:
-                self.can_run = False
-                print "ERROR: '%s' is not a valid maxversion" % \
-                        properties["maxversion"]
-        if "expectedResult" in properties:
-            try:
-                self.expectPass = not (properties["expectedResult"].upper().strip() == "FAIL")
-            except:
-                self.can_run = False
-                print "ERROR: '%s' is not a valid value for expectedResult" %\
-                        properties["expectedResult"]
-
-    def __parse_config(self):
-        test_config = "%s/test-config.yaml" % self.test_name
-        try:
-            f = open(test_config, "r")
-        except IOError:
-            print "Failed to open %s" % test_config
-            return
-        except:
-            print "Unexpected error: %s" % sys.exc_info()[0]
-            return
-
-        self.config = yaml.load(f)
-        f.close()
-
-        if not self.config:
-            print "ERROR: Failed to load configuration for test '%s'" % \
-                    self.test_name
-            return
-
-        self.__process_testinfo()
-        self.__process_properties()
-
     def __check_deps(self, ast_version):
-        if not self.config:
-            return
+        self.can_run = self.test_config.check_deps(ast_version)
 
-        self.deps = [
-            Dependency(d)
-                for d in self.config["properties"].get("dependencies") or []
-        ]
-
-        self.minversion_check = True
-        if ast_version < self.minversion:
-            self.can_run = False
-            self.minversion_check = False
-            return
-
-        self.maxversion_check = True
-        if self.maxversion is not None and ast_version > self.maxversion:
-            self.can_run = False
-            self.maxversion_check = False
-            return
-
-        for d in self.deps:
-            if d.met is False:
-                self.can_run = False
-                break
+    def __parse_run_output(self, output):
+        tokens = output.split('\n')
+        failureBody = ""
+        for line in tokens:
+            if 'ERROR' in line:
+                failureBody += line + '\n'
+        if failureBody != "":
+            """ This is commented out for now until we can investigate bamboos failure to parse complex messages """
+            """self.failure_message = '<failure type="ERROR" message="%s" />' % failureBody"""
+            self.failure_message = '<failure />'
 
 
 class TestSuite:
@@ -296,11 +113,11 @@ class TestSuite:
             for val in t:
                 path = "%s/%s" % (test_dir, t[val])
                 if val == "test":
-                    # If we specified a test, there's no point loading the others.
-                    if self.options.test and path != self.options.test:
+                    # If we specified a subset of tests, there's no point loading the others.
+                    if self.options.test and not self.options.test in path:
                         continue
 
-                    tests.append(TestConfig(path, ast_version, self.options))
+                    tests.append(TestRun(path, ast_version, self.options))
                 elif val == "dir":
                     tests += self._parse_test_yaml(path, ast_version)
 
@@ -310,14 +127,14 @@ class TestSuite:
         print "Configured tests:"
         i = 1
         for t in self.tests:
-            print "%.3d) %s" % (i, t.test_name)
-            print "      --> Summary: %s" % t.summary
+            print "%.3d) %s" % (i, t.test_config.test_name)
+            print "      --> Summary: %s" % t.test_config.summary
             print "      --> Minimum Version: %s (%s)" % \
-                         (str(t.minversion), str(t.minversion_check))
-            if t.maxversion is not None:
+                         (str(t.test_config.minversion), str(t.test_config.minversion_check))
+            if t.test_config.maxversion is not None:
                 print "      --> Maximum Version: %s (%s)" % \
-                             (str(t.maxversion), str(t.maxversion_check))
-            for d in t.deps:
+                             (str(t.test_config.maxversion), str(t.test_config.maxversion_check))
+            for d in t.test_config.deps:
                 if d.version:
                     print "      --> Dependency: %s" % (d.name)
                     print "        --> Version: %s -- Met: %s" % (d.version,
@@ -332,16 +149,16 @@ class TestSuite:
 
         for t in self.tests:
             if t.can_run is False:
-                if t.skip is not None:
-                    print "--> %s ... skipped '%s'" % (t.test_name, t.skip)
+                if t.test_config.skip is not None:
+                    print "--> %s ... skipped '%s'" % (t.test_name, t.test_config.skip)
                     continue
 
                 print "--> Cannot run test '%s'" % t.test_name
                 print "--- --> Minimum Version: %s (%s)" % \
-                    (str(t.minversion), str(t.minversion_check))
-                if t.maxversion is not None:
+                    (str(t.test_config.minversion), str(t.test_config.minversion_check))
+                if t.test_config.maxversion is not None:
                     print "--- --> Maximum Version: %s (%s)" % \
-                        (str(t.maxversion), str(t.maxversion_check))
+                        (str(t.test_config.maxversion), str(t.test_config.maxversion_check))
                 for d in t.deps:
                     print "--- --> Dependency: %s - %s" % (d.name, str(d.met))
                 print
@@ -366,6 +183,7 @@ class TestSuite:
                 self.total_failures += 1
 
     def write_results_xml(self, fn, stdout=False):
+        testOutput = ""
         try:
             f = open(TEST_RESULTS, "w")
         except IOError:
@@ -386,9 +204,8 @@ class TestSuite:
             if t.passed is True:
                 f.write('/>\n')
                 continue
-            f.write(">\n\t\t<failure />")
+            f.write(">\n\t\t%s" % t.failure_message)
             f.write("\n\t</testcase>\n")
-
         f.write('</testsuite>\n')
         f.close()
 
