@@ -15,6 +15,12 @@ properties:
             name: 'asterisk.ThreadTestCondition.ThreadPostTestCondition'
             type: 'Post'
             relatedCondition: 'ThreadPreTestCondition'
+        -
+            name: 'asterisk.LockTestCondition.LockTestCondition'
+            type: 'Pre'
+        -
+            name: 'asterisk.LockTestCondition.LockTestCondition'
+            type: 'Post'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

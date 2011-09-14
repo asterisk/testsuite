@@ -169,15 +169,6 @@ class TestCase(object):
         start_asterisk.  Note that this should be called after the reactor has
         returned from its run.
         """
-        for amiInstance in self.ami:
-            try:
-                logger.debug("Logging off of AMI instance %d" % amiInstance.id)
-                amiInstance.logoff()
-            except:
-                logger.warning("Exception occurred while logging off of AMI instance %d" % amiInstance.id)
-
-        """ Pause for one second to allow dialplan to catch up with AMI logoffs """
-        time.sleep(1)
         self.testConditionController.evaluate_post_checks()
         for index, item in enumerate(self.ast):
             logger.info("Stopping Asterisk instance %d" % (index + 1))
