@@ -15,6 +15,7 @@ import optparse
 import time
 import yaml
 import socket
+import shutil
 
 sys.path.append("lib/python")
 
@@ -65,9 +66,39 @@ class TestRun:
             self.__parse_run_output(self.stdout)
 
             self.passed = (p.returncode == 0 and self.test_config.expectPass) or (p.returncode and not self.test_config.expectPass)
+            if not self.passed:
+                self.__archive_ast_logs()
+
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
         self.time = time.time() - start_time
+
+    def __archive_ast_logs(self):
+        ast_directories = "%s/%s" % (Asterisk.test_suite_root, self.test_name.lstrip("tests/"))
+        i = 1
+        while True:
+            if os.path.isdir("%s/ast%d" % (ast_directories, i)):
+                ast_dir = "%s/ast%d/var/log/asterisk" % (ast_directories, i)
+                dest_dir = "./logs/%s/ast%d/var/log/asterisk" % (self.test_name.lstrip("tests/"), i)
+                """ Only archive the logs if we havent archived it for this test run yet """
+                if not os.path.exists(dest_dir):
+                    try:
+                        os.makedirs(dest_dir)
+                        os.link(ast_dir + "/messages", dest_dir + "/messages")
+                        os.link(ast_dir + "/full", dest_dir + "/full")
+                    except OSError as (errno, strerror):
+                        """ Different partitions can cause this to fail """
+                        print "OSError occurred while copying %s ([%d]: %s)" % (ast_dir, errno, strerror)
+                        print "Attempting copy"
+                        try:
+                            shutil.copy(ast_dir + "/messages", dest_dir + "/messages")
+                            shutil.copy(ast_dir + "/full", dest_dir + "/full")
+                        except shutil.Error, err:
+                            for e in err:
+                                print "Exception occurred while archiving logs from %s to %s: %s" % (e[0], e[1], e[2])
+            else:
+                break
+            i += 1
 
     def __check_deps(self, ast_version):
         self.can_run = self.test_config.check_deps(ast_version)

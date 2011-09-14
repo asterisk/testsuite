@@ -45,9 +45,7 @@ class Asterisk:
     asterisk.conf.
     """
 
-    """The base working directory of this instance of Asterisk
-    """
-    baseDirectory = ""
+    test_suite_root = "/tmp/asterisk-testsuite"
 
     def __init__(self, base=None, ast_conf_options=None, host="127.0.0.1"):
         """Construct an Asterisk instance.
@@ -63,7 +61,8 @@ class Asterisk:
         self.directories = {}
         self.ast_version = AsteriskVersion()
 
-        self.base = "/tmp/asterisk-testsuite"
+        self.base = Asterisk.test_suite_root
+        self.baseDirectory = self.base
         self.astetcdir = "/etc/asterisk"
         self.ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
         self.host = host
