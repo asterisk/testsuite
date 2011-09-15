@@ -26,6 +26,7 @@ class AuthenticateInvalidMailbox(TestCase):
     def __init__(self):
         super(AuthenticateInvalidMailbox, self).__init__()
 
+        self.reactor_timeout = 60
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
