@@ -22,10 +22,10 @@ from asterisk.TestCase import TestCase
 class GatewayTest(TestCase):
    event_count = 0
    success_count = 0
-   reactor_timeout = 120
 
    def __init__(self):
       TestCase.__init__(self)
+      self.reactor_timeout = 120      
       self.create_asterisk(2)
 
       # copy the tiff file we are going to send to a good known location

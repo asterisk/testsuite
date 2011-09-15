@@ -16,9 +16,9 @@ from asterisk.TestCase import TestCase
 
 class UdptlTest(TestCase):
     def __init__(self):
-        self.reactor_timeout = 60
-
         TestCase.__init__(self)
+
+        self.reactor_timeout = 60
         self.create_asterisk(2)
 
     def ami_connect(self, ami):

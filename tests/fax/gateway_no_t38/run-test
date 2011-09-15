@@ -22,11 +22,11 @@ from asterisk.TestCase import TestCase
 class GatewayTest(TestCase):
    event_count = 0
    success_count = 0
-   reactor_timeout = 120
 
    def __init__(self):
       TestCase.__init__(self)
       self.create_asterisk(2)
+      self.reactor_timeout = 120
 
       # copy the tiff file we are going to send to a good known location
       shutil.copy("%s/send.tiff" % (os.path.dirname(os.path.realpath(__file__)),), "%s%s" % (self.ast[0].base, self.ast[0].directories['astdatadir']))
