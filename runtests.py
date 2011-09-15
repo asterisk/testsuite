@@ -86,9 +86,9 @@ class TestRun:
                         os.makedirs(dest_dir)
                         os.link(ast_dir + "/messages", dest_dir + "/messages")
                         os.link(ast_dir + "/full", dest_dir + "/full")
-                    except OSError as (errno, strerror):
+                    except OSError, ose:
                         """ Different partitions can cause this to fail """
-                        print "OSError occurred while copying %s ([%d]: %s)" % (ast_dir, errno, strerror)
+                        print "OSError occurred while copying %s ([%d]: %s)" % (ast_dir, ose.errno, ose.strerror)
                         print "Attempting copy"
                         try:
                             shutil.copy(ast_dir + "/messages", dest_dir + "/messages")
