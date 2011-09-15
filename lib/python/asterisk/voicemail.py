@@ -80,6 +80,8 @@ class VoiceMailTest(TestCase):
         self.amiSender = None
         self.astSender = None
         self.__testConditions = {}
+        self.__previous_audio = ""
+        self.__previous_dtmf = ""
         self.senderChannel = VoiceMailTest.defaultSenderChannel
 
     """
@@ -122,7 +124,9 @@ class VoiceMailTest(TestCase):
             TestCase.testStateController.changeState(FailureTestState(self.controller))
             return
 
-        self.astSender.cli_exec("dialplan set global DTMF_TO_SEND " + dtmfToSend)
+        if (self.__previous_dtmf != dtmfToSend):
+            self.astSender.cli_exec("dialplan set global DTMF_TO_SEND " + dtmfToSend)
+            self.__previous_dtmf = dtmfToSend
 
         """
         Redirect to the DTMF extension - note that we assume that we only have one channel to
@@ -146,7 +150,9 @@ class VoiceMailTest(TestCase):
             TestCase.testStateController.changeState(FailureTestState(self.controller))
             return
 
-        self.astSender.cli_exec("dialplan set global TALK_AUDIO " + audioFile)
+        if (self.__previous_audio != audioFile):
+            self.astSender.cli_exec("dialplan set global TALK_AUDIO " + audioFile)
+            self.__previous_audio = audioFile
 
         """
         Redirect to the send sound file extension - note that we assume that we only have one channel to
@@ -174,8 +180,12 @@ class VoiceMailTest(TestCase):
             TestCase.testStateController.changeState(FailureTestState(self.controller))
             return
 
-        self.astSender.cli_exec("dialplan set global TALK_AUDIO " + audioFile)
-        self.astSender.cli_exec("dialplan set global DTMF_TO_SEND " + dtmfToSend)
+        if (self.__previous_audio != audioFile):
+            self.astSender.cli_exec("dialplan set global TALK_AUDIO " + audioFile)
+            self.__previous_audio = audioFile
+        if (self.__previous_dtmf != dtmfToSend):
+            self.astSender.cli_exec("dialplan set global DTMF_TO_SEND " + dtmfToSend)
+            self.__previous_dtmf = dtmfToSend
 
         """
         Redirect to the send sound file extension - note that we assume that we only have one channel to
