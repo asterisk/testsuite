@@ -15,8 +15,19 @@ properties:
         -
             name: 'asterisk.ThreadTestCondition.ThreadPostTestCondition'
             type: 'Post'
-            relatedCondition: 'ThreadPreTestCondition'
-            expectedResult: 'FAIL'
+            ignoredThreads:
+                - 'netconsole'
+                - 'pbx_thread'
+            relatedCondition: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+        -
+            name: 'asterisk.SipDialogTestCondition.SipDialogPreTestCondition'
+            type: 'Pre'
+        -
+            name: 'asterisk.SipDialogTestCondition.SipDialogPostTestCondition'
+            type: 'Post'
+            sipHistoryRequirements:
+                - 'NewChan'
+                - 'Hangup'
         -
             name: 'asterisk.LockTestCondition.LockTestCondition'
             type: 'Pre'

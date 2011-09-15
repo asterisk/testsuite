@@ -52,6 +52,8 @@ class TestConditionConfig:
             self.type = config['type'].upper().strip()
         if 'relatedCondition' in config:
             self.relatedCondition = config['relatedCondition'].strip()
+        """ Let non-standard configuration items be obtained from the config object """
+        self.config = config
 
     def get_type(self):
         """
@@ -75,9 +77,7 @@ class TestConditionConfig:
             m = __import__(module)
             for comp in parts[1:]:
                 m = getattr(m, comp)
-            obj = m()
-            if not self.passExpected:
-                obj.pass_expected = False
+            obj = m(self)
             return obj
         return None
 

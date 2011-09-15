@@ -145,8 +145,8 @@ class LockTestCondition(TestCondition):
     is never a good thing.
     """
 
-    def __init__(self):
-        super(LockTestCondition, self).__init__("LockTestCondition")
+    def __init__(self, test_config):
+        super(LockTestCondition, self).__init__(test_config)
         self.locks = []
 
         """ core show locks is dependent on DEBUG_THREADS """
@@ -265,17 +265,26 @@ class AstMockObjectFailure(object):
         lockLines += "=======================================================================\n"
         return lockLines
 
+class TestConfig(object):
+    def __init__(self):
+        """ Values here don't matter much - we just need to have something """
+        self.classTypeName = "asterisk.LockTestCondition.LockTestCondition"
+        self.passExpected = True
+        self.type = "Post"
+        self.relatedCondition = ""
+        self.config = {}
+
 class LockTestConditionUnitTest(unittest.TestCase):
     def test_evaluate_failed(self):
         ast = AstMockObjectFailure()
-        obj = LockTestCondition()
+        obj = LockTestCondition(TestConfig())
         obj.register_asterisk_instance(ast)
         obj.evaluate()
         self.assertEqual(obj.getStatus(), 'Failed')
 
     def test_evaluate_pass(self):
         ast = AstMockObjectPassed()
-        obj = LockTestCondition()
+        obj = LockTestCondition(TestConfig())
         obj.register_asterisk_instance(ast)
         obj.evaluate()
         self.assertEqual(obj.getStatus(), 'Passed')
@@ -283,7 +292,7 @@ class LockTestConditionUnitTest(unittest.TestCase):
     def test_evaluate_multiple(self):
         ast1 = AstMockObjectPassed()
         ast2 = AstMockObjectFailure()
-        obj = LockTestCondition()
+        obj = LockTestCondition(TestConfig())
         obj.register_asterisk_instance(ast1)
         obj.register_asterisk_instance(ast2)
         obj.evaluate()

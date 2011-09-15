@@ -157,19 +157,19 @@ class TestCondition(object):
 
     __buildOptions = AsteriskBuildOptions()
 
-    def __init__(self, name):
+    def __init__(self, test_config):
         """
         Initialize a new test condition
 
         Keyword arguments:
-        name -- The name of the condition that is being checked
+        test_config - the test configuration object that defines this Test Condition
         """
         self.failureReasons = []
-        self.__name = name
+        self.__name = test_config.classTypeName
         self.__testStatus = TestStatuses.Inconclusive
         self.ast = []
         self.build_options = []
-        self.pass_expected = True
+        self.pass_expected = test_config.passExpected
 
     def __str__(self):
         """

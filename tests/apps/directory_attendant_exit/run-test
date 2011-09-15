@@ -20,10 +20,10 @@ from asterisk.asterisk import Asterisk
 from asterisk.TestCase import TestCase
 
 class DirectoryTest(TestCase):
-   reactor_timeout = 60
 
    def __init__(self):
       TestCase.__init__(self)
+      self.reactor_timeout = 60
       self.create_asterisk(2)
 
    def ami_connect(self, ami):

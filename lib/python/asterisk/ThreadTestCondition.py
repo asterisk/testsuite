@@ -10,6 +10,7 @@ the GNU General Public License Version 2.
 import logging
 import logging.config
 from TestConditions import TestCondition
+from version import AsteriskVersion
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +22,11 @@ class ThreadTestCondition(TestCondition):
     command
     """
 
-    def __init__(self, name):
-        super(ThreadTestCondition, self).__init__(name)
+    __ast_version = AsteriskVersion()
+    __ast_version_10 = AsteriskVersion("10")
+
+    def __init__(self, test_config):
+        super(ThreadTestCondition, self).__init__(test_config)
 
         """
         astThreads is a list of tuples, where the first entry is the host IP of the
@@ -30,6 +34,10 @@ class ThreadTestCondition(TestCondition):
         thread name
         """
         self.astThreads = []
+
+        self.ignoredThreads = []
+        if 'ignoredThreads' in test_config.config:
+            self.ignoredThreads = test_config.config['ignoredThreads']
 
         """ Core show threads is not available if LOW_MEMORY is turned on """
         self.add_build_option("LOW_MEMORY", "0")
@@ -46,10 +54,15 @@ class ThreadTestCondition(TestCondition):
             if not 'threads listed' in line and not 'Asterisk ending' in line:
                 """ get the name and thread ID - strip off the cli_exec / pthread ID """
                 initialPartition = line.partition(' ')
-                initialPartition = initialPartition[2].partition(' ')
+                """
+                In v10 and greater, the result of core show threads introduces the Asterisk thread ID
+                immediately after the pthread ID.  Use that if its available.
+                """
+                if (ThreadTestCondition.__ast_version >= ThreadTestCondition.__ast_version_10):
+                    initialPartition = initialPartition[2].partition(' ')
                 threadId = initialPartition[0]
                 threadName = initialPartition[2].partition(' ')[0]
-                if threadId != "" and threadName != "":
+                if threadId != "" and threadName != "" and threadName not in self.ignoredThreads:
                     logger.debug("Tracking thread %s[%s]" % (threadName, threadId))
                     thread_list.append((threadId, threadName))
 
@@ -64,8 +77,8 @@ class ThreadPreTestCondition(ThreadTestCondition):
     in the system prior to test execution.
     """
 
-    def __init__(self):
-        super(ThreadPreTestCondition, self).__init__("ThreadPreTestCondition")
+    def __init__(self, test_config):
+        super(ThreadPreTestCondition, self).__init__(test_config)
 
     def evaluate(self, related_test_condition = None):
         for ast in self.ast:
@@ -88,8 +101,8 @@ class ThreadPostTestCondition(ThreadTestCondition):
     failure is flagged.
     """
 
-    def __init__(self):
-        super(ThreadPostTestCondition, self).__init__("ThreadPostTestCondition")
+    def __init__(self, test_config):
+        super(ThreadPostTestCondition, self).__init__(test_config)
 
     def evaluate(self, related_test_condition = None):
 
