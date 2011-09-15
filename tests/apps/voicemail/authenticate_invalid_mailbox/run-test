@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+'''
+Copyright (C) 2011, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+
+logger = logging.getLogger(__name__)
+
+class AuthenticateInvalidMailbox(TestCase):
+
+    def __init__(self):
+        super(AuthenticateInvalidMailbox, self).__init__()
+
+        self.create_asterisk(2)
+
+    def ami_connect(self, ami):
+        super(AuthenticateInvalidMailbox, self).ami_connect(ami)
+
+        ami.registerEvent('UserEvent', self.user_event)
+
+        if not (ami.id == 0):
+            self.executeTest(ami)
+
+    def executeTest(self, ami):
+        """ Mailbox / password set to invalid mailbox, but valid password """
+        self.ast[ami.id].cli_exec("dialplan set global MAILBOX 5555")
+        self.ast[ami.id].cli_exec("dialplan set global PASSWORD 1234")
+
+        logger.debug("Originating call to sip/ast1/9000 from invalidMailbox@sendvoicemail")
+        df = ami.originate("sip/ast1/9000", "sendvoicemail", "invalidMailbox", 1)
+        df.addErrback(self.handleOriginateFailure)
+
+    def user_event(self, ami, event):
+        if event['userevent'] != 'TestResult':
+            return
+
+        """
+        Note that in this test, failure to see any UserEvents is a good thing - if we get to a
+        UserEvent its because we authenticated something invalid
+        """
+        self.passed = False
+        if event['result'] == 'pass':
+            logger.error("Test configuration error - there should be no pass results returned")
+        else:
+            logger.warn("VMAuthenticate Failure:")
+            logger.warn("result: %s" % (event['result'],))
+            logger.warn("error: %s" % (event['status'],))
+
+        self.stop_reactor()
+
+    def run(self):
+        super(AuthenticateInvalidMailbox, self).run()
+        self.passed = True
+        self.create_ami_factory(2)
+
+
+def main():
+
+    test = AuthenticateInvalidMailbox()
+
+    test.start_asterisk()
+
+    reactor.run()
+
+    test.stop_asterisk()
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+   sys.exit(main() or 0)

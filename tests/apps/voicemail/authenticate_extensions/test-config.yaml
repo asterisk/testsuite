@@ -1,0 +1,12 @@
+testinfo:
+    summary: 'Test entering the attendant extension from VMAuthenticate dialplan application'
+    description: |
+        This test verifies that a user will be transferred to the attendant extension a when they
+        enter the * character either from a mailbox or from a password
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+

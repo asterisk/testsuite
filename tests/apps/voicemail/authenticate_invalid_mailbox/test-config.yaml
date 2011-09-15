@@ -1,0 +1,12 @@
+testinfo:
+    summary: 'Test entering an invalid mailbox in VMAuthenticate dialplan application'
+    description: |
+        This test verifies that a user that enters an invalid mailbox will be rejected
+        by the VMAuthenticate dialplan application after the appropriate number of retries
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+
