@@ -16,6 +16,7 @@ properties:
             name: 'asterisk.ThreadTestCondition.ThreadPostTestCondition'
             type: 'Post'
             relatedCondition: 'ThreadPreTestCondition'
+            expectedResult: 'FAIL'
         -
             name: 'asterisk.LockTestCondition.LockTestCondition'
             type: 'Pre'
