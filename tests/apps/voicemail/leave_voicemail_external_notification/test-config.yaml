@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'External files not being created in tmp location during test execution, needs debugging'
     summary: 'Tests execution of notifying external entities of new VoiceMails'
     description: |
         This test verifies the ability of the VoiceMail application to automatically
