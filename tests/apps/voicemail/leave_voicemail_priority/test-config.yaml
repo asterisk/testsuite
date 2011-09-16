@@ -1,0 +1,14 @@
+testinfo:
+    summary: 'Tests execution of leaving high priority voicemails'
+    description: |
+        This test verifies proper functionality of the various mechanisms that can be used to leave
+        Urgent or Priority voicemails
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk: 'app_voicemail'
+        - asterisk: 'app_senddtmf'
+

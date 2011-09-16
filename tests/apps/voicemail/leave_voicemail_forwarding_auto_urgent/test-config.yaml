@@ -1,0 +1,15 @@
+testinfo:
+    summary: 'Tests execution of auto-forwarding urgent voicemails from VoiceMail'
+    description: |
+        This test verifies the ability of the VoiceMail application to automatically
+        forward recorded urgent messages from the specified recipient to a list of
+        mailboxes.  This preserves the Urgent flag on the mailboxes.
+
+properties:
+    # Expected to fail per ASTERISK-18246
+    expectedResult: 'Fail'
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+

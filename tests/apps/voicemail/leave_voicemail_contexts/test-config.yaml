@@ -1,0 +1,14 @@
+testinfo:
+    summary: 'Tests execution of exiting to other contexts in app_voicemails VoiceMail dialplan application'
+    description: |
+        This test verifies proper functionality of the various mechanisms that can be used to switch to
+        other contexts when leaving a voicemail.
+
+properties:
+    # Expected to fail per ASTERISK-18243
+    expectedResult: 'Fail'
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+

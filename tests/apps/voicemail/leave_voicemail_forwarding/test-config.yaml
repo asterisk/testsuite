@@ -1,0 +1,15 @@
+testinfo:
+    summary: 'Tests execution of auto-forwarding voicemails from VoiceMail'
+    description: |
+        This test verifies the ability of the VoiceMail application to automatically
+        forward recorded messages from the specified recipient to a list of
+        mailboxes
+
+properties:
+    # Expected to fail per ASTERISK-18245
+    expectedResult: 'Fail'
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+
