@@ -12,4 +12,5 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-
+        - asterisk: 'app_voicemail'
+        - asterisk: 'app_senddtmf'

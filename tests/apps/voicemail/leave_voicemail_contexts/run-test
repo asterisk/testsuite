@@ -29,15 +29,10 @@ class LeaveVoicemailContexts(TestCase):
     """
     testParentDir = "tests/apps/voicemail"
 
-    """
-    Tracks each AMI connection to see if we've received it an executed our dialplan functions
-    """
-    executed = []
-
     def __init__(self):
         super(LeaveVoicemailContexts, self).__init__()
 
-        self.reactor_timeout = 60
+        self.reactor_timeout = 45
         self.testCounter = 0
         self.create_asterisk(2)
         self.expectedValues = {'attendant': False, 'operator': False, 'othercontext@1': False, 'othercontext@3': False, 'othercontext@operator': False}
@@ -54,7 +49,6 @@ class LeaveVoicemailContexts(TestCase):
         self.ast[ami.id].cli_exec("dialplan set global DTMF_TO_SEND 1")
 
         logger.debug("AMI ID: " + str(ami.id))
-        logger.debug("Executed: " + str(self.executed[ami.id]))
         if (ami.id != 0):
             self.senderAmi = ami
             LeaveVoicemailContexts.executeTest(self)
@@ -148,7 +142,7 @@ def main():
     """
     Verify that we received all expected results
     """
-    for k, v in LeaveVoicemailContexts.expectedValues.items():
+    for k, v in test.expectedValues.items():
         if not v:
             logger.warn("Failed to receive expected result: " + k)
             test.passed = False

@@ -40,7 +40,6 @@ class LeaveVoicemailPriority(TestCase):
             ami.registerEvent('UserEvent', self.user_event)
 
         if (ami.id != 0):
-            self.executed[ami.id] = True
             self.ast[ami.id].cli_exec("dialplan set global TALK_AUDIO " + self.audioFile)
 
             df1 = ami.originate("sip/ast1/1234", "sendvoicemail", "1234", 1)

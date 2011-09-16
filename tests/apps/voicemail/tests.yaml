@@ -1,11 +1,11 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 'leave_voicemail_nominal'
-#    - test: 'leave_voicemail_contexts'
-#    - test: 'leave_voicemail_priority'
-#    - test: 'leave_voicemail_forwarding'
-#    - test: 'leave_voicemail_forwarding_auto_urgent'
-#    - test: 'leave_voicemail_external_notification'
+    - test: 'leave_voicemail_contexts'
+    - test: 'leave_voicemail_priority'
+    - test: 'leave_voicemail_forwarding'
+    - test: 'leave_voicemail_forwarding_auto_urgent'
+    - test: 'leave_voicemail_external_notification'
     - test: 'func_vmcount'
     - test: 'authenticate_nominal'
     - test: 'authenticate_invalid_mailbox'
