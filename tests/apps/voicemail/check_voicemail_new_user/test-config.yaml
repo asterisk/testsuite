@@ -8,6 +8,7 @@ testinfo:
 
 properties:
     minversion: '1.8'
+    buildoption: 'TEST_FRAMEWORK'
     testconditions:
         -
             name: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
