@@ -19,6 +19,89 @@ from asterisk import Asterisk
 
 logger = logging.getLogger(__name__)
 
+
+class SIPpScenario:
+    """
+    A SIPp based scenario for the Asterisk testsuite.
+
+    Unlike SIPpTest, SIPpScenario does not attempt to manage the Asterisk instance.
+    Instead, it will launch a SIPp scenario, assuming that there is an instance of
+    Asterisk already in existence to handle the SIP messages.  This is useful
+    when a SIPp scenario must be integrated with a more complex test (using the TestCase
+    class, for example)
+    """
+    def __init__(self, test_dir, scenario):
+        """
+        Arguments:
+
+        test_dir - The path to the directory containing the run-test file.
+
+        scenario - a SIPp scenario to execute.  The scenario should
+        be a dictionary with the key 'scenario' being the filename
+        of the SIPp scneario.  Any other key-value pairs are treated as arguments
+        to SIPp.  For example, specity '-timeout' : '60s' to set the
+        timeout option to SIPp to 60 seconds.  If a parameter specified
+        is also one specified by default, the value provided will be used.
+        The default SIPp parameters include:
+            -p <port>    - Unless otherwise specified, the port number will
+                           be 5060 + <scenario list index, starting at 1>.
+                           So, the first SIPp sceario will use port 5061.
+            -m 1         - Stop the test after 1 'call' is processed.
+            -i 127.0.0.1 - Use this as the local IP address for the Contact
+                           headers, Via headers, etc.
+            -timeout 20s - Set a global test timeout of 20 seconds.
+        """
+        self.scenario = scenario
+        self.test_dir = test_dir
+        self.default_port = 5061
+        self.sipp = None
+
+    def run(self):
+        sipp_args = [
+                'sipp', '127.0.0.1',
+                '-sf', '%s/sipp/%s' % (self.test_dir, self.scenario['scenario'])
+        ]
+        default_args = {
+            '-p' : self.default_port,
+            '-m' : '1',
+            '-i' : '127.0.0.1',
+            '-timeout' : '20s'
+        }
+
+        # Override and extend defaults
+        default_args.update(self.scenario)
+        del default_args['scenario']
+
+        # Override and extend defaults
+        default_args.update(self.scenario)
+        del default_args['scenario']
+
+        for (key, val) in default_args.items():
+            sipp_args.extend([ key, val ])
+
+        logger.info("Executing SIPp scenario: %s" % self.scenario['scenario'])
+        logger.info(sipp_args)
+
+        self.sipp = subprocess.Popen(sipp_args,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    def waitAndEvaluate(self):
+
+        (out, err) = self.sipp.communicate()
+
+        result = self.sipp.wait()
+        logger.debug(out)
+        if result:
+            logger.warn("SIPp scenario FAILED")
+            passed = False
+            logger.warn(err)
+        else:
+            logger.info("SIPp scenario PASSED")
+            passed = True
+
+        return passed
+
+
 class SIPpTest:
     """
     A SIPp based test for the Asterisk testsuite.
