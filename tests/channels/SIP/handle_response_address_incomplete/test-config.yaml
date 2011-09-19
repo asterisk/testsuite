@@ -1,0 +1,12 @@
+testinfo:
+    summary: 'Test that asterisk properly handles a 484 Number Incomplete response'
+    description: |
+        This test checks proper handling of SIP response 484 Address Incomplete.  The
+        dialplan should forward the response back to the dialing device without
+        automatically triggering the Incomplete application logic.
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - sipp :
+            version : 'v3.0'

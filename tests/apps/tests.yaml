@@ -4,3 +4,4 @@ tests:
     - test: 'directory_context_operator_exit'
     - test: 'directory_attendant_exit'
     - dir: 'voicemail'
+    - dir: 'incomplete'
