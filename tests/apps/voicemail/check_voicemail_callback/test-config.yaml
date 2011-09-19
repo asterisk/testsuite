@@ -7,6 +7,7 @@ testinfo:
 
 properties:
     minversion: '1.8'
+    buildoption: 'TEST_FRAMEWORK'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

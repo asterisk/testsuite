@@ -127,8 +127,8 @@ class BrowseMessageTestState(VoiceMailState):
             message = event['message']
 
             if message == 'instructions':
-                """ Save the message """
-                self.voiceMailTest.sendDTMF("9")
+                """ Exit voicemail """
+                self.voiceMailTest.sendDTMF("#")
             elif message == 'vm-nomore':
                 """ Exit voicemail """
                 self.voiceMailTest.sendDTMF("#")

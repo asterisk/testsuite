@@ -127,8 +127,8 @@ class BrowseMessageTestState(VoiceMailState):
             message = event['message']
 
             if message == 'instructions':
-                """ Delete the message """
-                self.voiceMailTest.sendDTMF("7")
+                """ Exit voicemail """
+                self.voiceMailTest.sendDTMF("#")
             elif message == 'vm-nomore':
                 """ Exit voicemail """
                 self.voiceMailTest.sendDTMF("#")
@@ -165,6 +165,7 @@ class PlayVoiceMailTestState(VoiceMailState):
             elif message == 'vm-nomore':
                 """ Exit """
                 self.voiceMailTest.sendDTMF("#")
+                self.changeState(BrowseMessageTestState(self.controller, self.voiceMailTest))
         elif state == 'BROWSE':
             self.changeState(BrowseMessageTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYVOICE':
@@ -206,7 +207,7 @@ class CheckVoicemailDelete(VoiceMailTest):
         self.addTestCondition("messagesHeard", TestCondition(checkMessages, 0))
         self.addTestCondition("messagesDeleted", TestCondition(checkMessages, 0))
 
-        self.reactor_timeout = 90
+        self.reactor_timeout = 120
         self.create_asterisk(2)
 
     def ami_connect(self, ami):

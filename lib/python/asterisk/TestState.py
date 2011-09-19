@@ -35,7 +35,7 @@ class TestStateController(object):
 
         event    The TestEvent
         """
-        logger.debug(" Test Event received:")
+        logger.debug("Test Event received:")
         for k, v in event.items():
             logger.debug("\t" + k + "\t=\t" + v)
 
@@ -46,8 +46,7 @@ class TestStateController(object):
         ami     The AMI instance that sent us the TestEvent
         event   The TestEvent
         """
-        if (logger.getEffectiveLevel() == logging.DEBUG):
-            self.printTestEvent(event)
+        self.printTestEvent(event)
 
         if event['type'] == 'StateChange':
             if (self.__currentState != None):

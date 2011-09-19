@@ -276,7 +276,7 @@ class CheckVoicemailCallback(VoiceMailTest):
             return
 
         if event['result'] == "pass":
-            if event['number'] == "555-5555":
+            if event['number'] == "555-5555" or event['number'] == "5555555":
                 self.passed = True
                 logger.info("VoiceMail successfully exited")
             else:
