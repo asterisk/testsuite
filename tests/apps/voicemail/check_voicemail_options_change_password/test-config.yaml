@@ -1,0 +1,43 @@
+testinfo:
+    summary: 'Test the ability to change a password in app_voicemails VoiceMailMain'
+    description: |
+        This test verifies proper functionality of the new user flag.  When the user
+        logs in with their mailbox and password, they will be required to change
+        their password.  Upon successfully changing their password, they will be
+        authenticated and able to check their voicemail.
+
+properties:
+    minversion: '1.8'
+    buildoptions: 'TEST_FRAMEWORK'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_voicemail'
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'app_playback'
+    testconditions:
+        -
+            name: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+            type: 'Pre'
+        -
+            name: 'asterisk.ThreadTestCondition.ThreadPostTestCondition'
+            type: 'Post'
+            ignoredThreads:
+                - 'netconsole'
+                - 'pbx_thread'
+            relatedCondition: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+        -
+            name: 'asterisk.SipDialogTestCondition.SipDialogPreTestCondition'
+            type: 'Pre'
+        -
+            name: 'asterisk.SipDialogTestCondition.SipDialogPostTestCondition'
+            type: 'Post'
+            sipHistoryRequirements:
+                - 'NewChan'
+                - 'Hangup'
+        -
+            name: 'asterisk.LockTestCondition.LockTestCondition'
+            type: 'Pre'
+        -
+            name: 'asterisk.LockTestCondition.LockTestCondition'
+            type: 'Post'
