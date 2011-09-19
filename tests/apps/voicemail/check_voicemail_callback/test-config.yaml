@@ -1,0 +1,14 @@
+testinfo:
+    summary: 'Test calling back the CID from a voicemail message in app_voicemails VoiceMailMain'
+    description: |
+        This test verifies that a person listening to their voicemail can, if
+        the caller ID is valid, directly callback that caller ID from the
+        VoiceMailMain application
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_voicemail'
+        - asterisk : 'app_senddtmf'

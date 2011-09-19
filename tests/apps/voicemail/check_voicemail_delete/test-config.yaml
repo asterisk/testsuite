@@ -1,0 +1,14 @@
+testinfo:
+    summary: 'Test deleting a voicemail message in app_voicemails VoiceMailMain'
+    description: |
+        This test verifies that a user can delete a voicemail message.  Upon leaving the
+        VoiceMailMain application, the test verifies that the message is completely removed
+        from the file system.
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_voicemail'
+        - asterisk : 'app_senddtmf'
