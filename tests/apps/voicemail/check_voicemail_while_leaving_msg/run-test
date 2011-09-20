@@ -247,7 +247,7 @@ class CheckVoicemailWhileLeavingMessage(VoiceMailTest):
             return value
         self.addTestCondition("leftVoiceMailMain", TestCondition(passValue, False))
 
-        self.reactor_timeout = 240
+        self.reactor_timeout = 120
         self.create_asterisk(2)
         self.audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.testParentDir))
 

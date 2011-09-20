@@ -23,11 +23,12 @@ properties:
             name: 'asterisk.SipDialogTestCondition.SipDialogPreTestCondition'
             type: 'Pre'
         -
+            # Note: the abrupt hangup will leave the SIP dialog in flight
             name: 'asterisk.SipDialogTestCondition.SipDialogPostTestCondition'
             type: 'Post'
+            expectedResult: 'FAIL'
             sipHistoryRequirements:
                 - 'NewChan'
-                - 'Hangup'
         -
             name: 'asterisk.LockTestCondition.LockTestCondition'
             type: 'Pre'
