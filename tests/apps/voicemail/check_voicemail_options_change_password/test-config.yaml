@@ -22,9 +22,12 @@ properties:
         -
             name: 'asterisk.ThreadTestCondition.ThreadPostTestCondition'
             type: 'Post'
+            # Allow shaun_of_the_dead to exist after a run, as our external password check
+            # may still be going on
             ignoredThreads:
                 - 'netconsole'
                 - 'pbx_thread'
+                - 'shaun_of_the_dead'
             relatedCondition: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
         -
             name: 'asterisk.SipDialogTestCondition.SipDialogPreTestCondition'
