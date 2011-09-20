@@ -1,0 +1,45 @@
+testinfo:
+    summary: 'Test concurrent access of a mailbox from app_voicemails VoiceMail and VoiceMailMain applications'
+    description: |
+        This test verifies that a person can listen to their voicemails at the same time
+        as another person leaves voicemail messages for them.  The test begins with two
+        voicemails in the mailbox, and during test execution, a further five voicemails are left.
+        The person listening to the voicemails deletes the messages as they listen to them;
+        at the end of the test, the five voicemails left should remain in the INBOX.  The
+        voicemails should be numbered contiguously.
+
+properties:
+    minversion: '1.8'
+    buildoption: 'TEST_FRAMEWORK'
+    testconditions:
+        -
+            name: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+            type: 'Pre'
+        -
+            name: 'asterisk.ThreadTestCondition.ThreadPostTestCondition'
+            type: 'Post'
+            ignoredThreads:
+                - 'netconsole'
+                - 'pbx_thread'
+            relatedCondition: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+        -
+            name: 'asterisk.SipDialogTestCondition.SipDialogPreTestCondition'
+            type: 'Pre'
+        -
+            name: 'asterisk.SipDialogTestCondition.SipDialogPostTestCondition'
+            type: 'Post'
+            sipHistoryRequirements:
+                - 'NewChan'
+                - 'Hangup'
+        -
+            name: 'asterisk.LockTestCondition.LockTestCondition'
+            type: 'Pre'
+        -
+            name: 'asterisk.LockTestCondition.LockTestCondition'
+            type: 'Post'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_voicemail'
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'app_playback'

@@ -1,0 +1,360 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+'''
+Copyright (C) 2011, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+from asterisk.TestState import TestStateController
+from asterisk.TestState import TestState
+from asterisk.TestState import FailureTestState
+from asterisk.voicemail import VoiceMailMailboxManagement
+from asterisk.voicemail import TestCondition
+from asterisk.voicemail import VoiceMailTest
+from asterisk.voicemail import VoiceMailState
+
+logger = logging.getLogger(__name__)
+
+"""
+TestState that is the entry point for the VoiceMailMain application
+"""
+class StartVoiceMailState(VoiceMailState):
+
+    mailbox = "1234#"
+
+    userPassword = "1234#"
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+
+        if state == 'PLAYBACK':
+            message = event['message']
+            if message == 'vm-login':
+                self.voiceMailTest.sendDTMF(self.mailbox)
+            elif message == 'vm-password':
+                self.voiceMailTest.sendDTMF(self.userPassword)
+        elif state == 'AUTHENTICATED':
+            self.changeState(AuthenticatedTestState(self.controller, self.voiceMailTest))
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "START"
+
+
+"""
+TestState that occurs after a user has been authenticated
+"""
+class AuthenticatedTestState(VoiceMailState):
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+
+        if state == 'AUTHENTICATED':
+            logger.error("Received two authenticated events?")
+            self.changeState(FailureTestState(self.controller))
+        elif state == 'INTRO':
+            self.changeState(IntroTestState(self.controller, self.voiceMailTest))
+        elif state == 'PLAYBACK':
+            message = event['message']
+            if message == 'new user':
+                logger.error("New user played; user credentials must have failed")
+                self.changeState(FailureTestState(self.controller))
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "AUTHENTICATED"
+
+
+"""
+TestState that occurs after when the user is being presented with the initial message counts and the main
+voicemail menu
+"""
+class IntroTestState(VoiceMailState):
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+
+        if state == 'BROWSE':
+            self.changeState(BrowseMessageTestState(self.controller, self.voiceMailTest))
+        elif state == 'PLAYBACK':
+            message = event['message']
+
+            if message == 'instructions':
+                """ Play the first message """
+                self.voiceMailTest.sendDTMF("1")
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "INTRO"
+
+
+"""
+TestState that occurs when a user chooses to play a message
+"""
+class BrowseMessageTestState(VoiceMailState):
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+
+        if state == 'PLAYVOICE':
+            self.changeState(PlayVoiceMailTestState(self.controller, self.voiceMailTest))
+        elif state == 'PLAYBACK':
+            message = event['message']
+
+            if message == 'instructions':
+                """ Exit voicemail """
+                self.voiceMailTest.sendDTMF("#")
+            elif message == 'vm-nomore':
+                """ Exit voicemail """
+                self.voiceMailTest.sendDTMF("#")
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "BROWSE"
+
+
+"""
+TestState that occurs when the actual voicemail is being played back to the user
+"""
+class PlayVoiceMailTestState(VoiceMailState):
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+        """ Notify the test that we heard a message """
+        self.voiceMailTest.setTestCondition("messagesHeard", 1)
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+
+        if state == 'FORWARD':
+            self.changeState(ForwardTestState(self.controller, self.voiceMailTest))
+        elif state == 'PLAYBACK':
+            message = event['message']
+
+            if message == 'instructions':
+                """ Instruct the server to forward the voicemail """
+                self.voiceMailTest.sendDTMF("8")
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "PLAYVOICE"
+
+
+"""
+TestState that occurs when the voicemail menu for forwarding a voicemail is being played
+"""
+class ForwardTestState(VoiceMailState):
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+
+        if state == 'PLAYBACK':
+            message = event['message']
+
+            if message == 'vm-forward':
+                """ Tell it to not use the directory """
+                self.voiceMailTest.sendDTMF("1")
+            elif message == 'vm-extension':
+                """ Send to extension 5555 and 5556 """
+                self.voiceMailTest.sendDTMF('5555*5556#')
+            elif message == 'vm-forwardoptions':
+                """ Press 1 to prepend a message """
+                self.voiceMailTest.sendDTMF("1")
+            elif message == 'beep':
+                """ Instruct it to foward the audio """
+                audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.voiceMailTest.testParentDir))
+                self.voiceMailTest.sendSoundFileWithDTMF(audioFile,"#")
+            elif message == 'vm-msgsaved':
+                self.voiceMailTest.setTestCondition("msgForwarded", True)
+            elif message == 'pbx-invalid':
+                """ If this occurs, our extension didn't match - fail the test """
+                self.changeState(FailureTestState(self.controller))
+            elif message == 'instructions':
+                """ Made it back to main menu, exit out """
+                self.voiceMailTest.sendDTMF("#")
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "FORWARD"
+
+
+"""
+The TestCase class that executes the test
+"""
+class CheckVoicemailForwardPrepend(VoiceMailTest):
+
+    """
+    The parent directory that this test resides in
+    """
+    testParentDir = "tests/apps/voicemail"
+
+    """
+    The channel to connect to that acts as the voicemail server
+    """
+    channel = "sip/ast1/8052"
+
+    """
+    The voicemail manager object
+    """
+    voicemailManager = None
+
+    def __init__(self):
+        super(CheckVoicemailForwardPrepend, self).__init__()
+
+        """
+        Add our test conditions to the test - these will help us verify through the
+        state changes whether or not we've passed or failed
+        """
+        def checkMessagesHeard(value, testCondition):
+            testCondition.testConditionData += value
+            if (testCondition.testConditionData == 1):
+                return True
+            return False
+        self.addTestCondition("messagesHeard", TestCondition(checkMessagesHeard, 0))
+
+        def returnValue(value, testCondition):
+            return value
+        self.addTestCondition("msgForwarded", TestCondition(returnValue, False))
+
+        self.reactor_timeout = 90
+        self.create_asterisk(2)
+
+    def ami_connect(self, ami):
+        super(CheckVoicemailForwardPrepend, self).ami_connect(ami)
+
+        """ Record which AMI instance we've received and attempt to set up the test controller """
+        if (ami.id == 0):
+            self.amiReceiver = ami
+        elif (ami.id == 1):
+            self.amiSender = ami
+            self.astSender = self.ast[self.amiSender.id]
+
+        self.createTestController()
+        if (self.testStateController != None):
+            startObject = StartVoiceMailState(self.testStateController, self)
+            self.testStateController.changeState(startObject)
+            self.testStateController.addAssertHandler(self.handleAssert)
+
+        """ Now do specific processing on the AMI instances """
+        if (ami.id == 0):
+
+            ami.registerEvent('UserEvent', self.user_event)
+
+            """ Create a dummy voicemail """
+            self.voicemailManager = VoiceMailMailboxManagement(self.ast[0])
+            self.voicemailManager.createMailbox("default", "1234", True)
+
+            logger.debug("Creating dummy voicemail")
+            if not self.voicemailManager.createDummyVoicemail("default","1234", self.voicemailManager.inboxFolderName, 0, self.formats):
+                logger.error("Failed to create voicemails in folder " + self.voicemailManager.inboxFolderName)
+                self.stop_reactor()
+
+        else:
+            logger.debug("Originating call to " + self.channel)
+            df = ami.originate(self.channel, "voicemailCaller", "wait", 1)
+            df.addErrback(self.handleOriginateFailure)
+
+    def handleAssert(self, event):
+        self.passed = False
+        logger.error("Test Failed - Assert received")
+        logger.error("\t\t AppFunction: " + event['appfunction'])
+        logger.error("\t\t AppLine: " + event['appline'])
+        logger.error("\t\t Expression: " + event['expression'])
+
+        self.stop_reactor()
+
+    def user_event(self, ami, event):
+        if event['userevent'] != 'TestResult':
+            return
+
+        if event['result'] == "pass":
+            self.passed = True
+            logger.info("VoiceMail successfully exited")
+        else:
+            logger.warn("VoiceMail did not successfully exit:")
+            logger.warn("result: %s" % (event['result'],))
+            logger.warn("error: %s" % (event['error'],))
+
+        self.stop_reactor()
+
+    def run(self):
+        super(CheckVoicemailForwardPrepend, self).run()
+        self.create_ami_factory(2)
+
+
+def main():
+
+    test = CheckVoicemailForwardPrepend()
+    voicemailManager = VoiceMailMailboxManagement(test.ast[0])
+
+    test.start_asterisk()
+
+    reactor.run()
+
+    test.stop_asterisk()
+
+    """
+    Post-test processing - verify that we listened to all the messages we wanted to listen to, that
+    we saved the messages, and that the messages were moved successfully
+    """
+    if test.passed:
+
+        if not test.checkTestConditions():
+            logger.warn("Test failed condition checks")
+            test.passed = False
+
+        formats = ["ulaw","wav","WAV"]
+        if voicemailManager.checkVoicemailExists("default","1234", 0, formats, "INBOX"):
+            logger.warn("Voicemail left in INBOX - should have been saved to old")
+            test.passed = False
+        if not voicemailManager.checkVoicemailExists("default","5555", 0, formats, "INBOX"):
+            logger.warn("Failed to find voicemail for forward recipient 5555@default")
+            test.passed = False
+        if not voicemailManager.checkVoicemailExists("default","5556", 0, formats, "INBOX"):
+            logger.warn("Failed to find voicemail for forward recipient 5556@default")
+            test.passed = False
+        if not voicemailManager.checkVoicemailExists("default","1234", 0, formats, "Old"):
+            logger.warn("Failed to find voicemail in folder Old")
+            test.passed = False
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+   sys.exit(main() or 0)

@@ -1,0 +1,42 @@
+testinfo:
+    summary: 'Test off-nominal hangup while forwarding messages from app_voicemails VoiceMailMain'
+    description: |
+        This test verifies that if a user hangs up while forwarding voicemails, the
+        voicemails are not forwarded.  This occurs typically when choosing the prepend
+        option, and the user fails to leave a full message while prepending.
+
+properties:
+    minversion: '1.8'
+    buildoption: 'TEST_FRAMEWORK'
+    testconditions:
+        -
+            name: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+            type: 'Pre'
+        -
+            name: 'asterisk.ThreadTestCondition.ThreadPostTestCondition'
+            type: 'Post'
+            ignoredThreads:
+                - 'netconsole'
+                - 'pbx_thread'
+            relatedCondition: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+        -
+            name: 'asterisk.SipDialogTestCondition.SipDialogPreTestCondition'
+            type: 'Pre'
+        -
+            name: 'asterisk.SipDialogTestCondition.SipDialogPostTestCondition'
+            type: 'Post'
+            sipHistoryRequirements:
+                - 'NewChan'
+                - 'Hangup'
+        -
+            name: 'asterisk.LockTestCondition.LockTestCondition'
+            type: 'Pre'
+        -
+            name: 'asterisk.LockTestCondition.LockTestCondition'
+            type: 'Post'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_voicemail'
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'app_playback'

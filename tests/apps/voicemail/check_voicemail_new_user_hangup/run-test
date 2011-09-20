@@ -1,0 +1,298 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+'''
+Copyright (C) 2011, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+from asterisk.TestState import TestStateController
+from asterisk.TestState import TestState
+from asterisk.TestState import FailureTestState
+from asterisk.voicemail import VoiceMailMailboxManagement
+from asterisk.voicemail import TestCondition
+from asterisk.voicemail import VoiceMailTest
+from asterisk.voicemail import VoiceMailState
+
+logger = logging.getLogger(__name__)
+
+"""
+TestState that is the entry point for the VoiceMailMain application
+"""
+class StartVoiceMailState(VoiceMailState):
+
+    userMailbox = "1234#"
+
+    userPassword = "1234#"
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+
+        if state == 'PLAYBACK':
+            message = event['message']
+            if message == 'vm-login':
+                self.voiceMailTest.sendDTMF(self.userMailbox)
+            elif message == 'vm-password':
+                self.voiceMailTest.sendDTMF(self.userPassword)
+        elif state == 'AUTHENTICATED':
+            self.changeState(AuthenticatedTestState(self.controller, self.voiceMailTest))
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "START"
+
+
+"""
+TestState that occurs after a user has been authenticated
+"""
+class AuthenticatedTestState(VoiceMailState):
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+
+        if state == 'AUTHENTICATED':
+            logger.error("Received two authenticated events?")
+            self.changeState(FailureTestState(self.controller))
+        elif state == 'NEWUSER':
+            self.changeState(NewUserTestState(self.controller, self.voiceMailTest))
+        elif state == 'INTRO':
+            self.changeState(IntroTestState(self.controller, self.voiceMailTest))
+        elif state == 'PLAYBACK':
+            message = event['message']
+            if message == 'vm-newuser':
+                logger.debug("New user played")
+                self.voiceMailTest.setTestCondition("newUserPromptPlayed", True)
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "AUTHENTICATED"
+
+
+"""
+TestState that occurs after a user has been authenticated
+"""
+class NewUserTestState(VoiceMailState):
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+        self.voiceMailTest.setTestCondition("newUser", True)
+
+        self.newPassword = "5555#"
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+
+        if state == 'AUTHENTICATED':
+            logger.error("Received authentication event after NEWUSER?")
+            self.changeState(FailureTestState(self.controller))
+        elif state == 'NEWUSER':
+            logger.error("Received two NEWUSER states?")
+            self.changeState(FailureTestState(self.controller))
+        elif state == 'INTRO':
+            self.changeState(IntroTestState(self.controller, self.voiceMailTest))
+        elif state == 'HANGUP':
+            logger.error("Received unexpected hangup")
+            self.changeState(FailureTestState(self.controller))
+        elif state == 'PASSWORDCHANGED':
+            source = event['passwordsource']
+            if source == 'voicemail.conf':
+                self.voiceMailTest.setTestCondition('passwordChanged', True)
+            else:
+                logger.error("Unknown password source [" + source + "]")
+                self.changeState(FailureTestState(self.controller))
+        elif state == 'PLAYBACK':
+            message = event['message']
+
+            if message == 'vm-newpassword':
+                """ Change our password to something other than the default of 1234 """
+                self.voiceMailTest.sendDTMF(self.newPassword)
+            elif message == 'vm-reenterpassword':
+                self.voiceMailTest.hangup()
+            else:
+                self.handleDefaultState(event)
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "NEWUSER"
+
+
+"""
+TestState that occurs after when the user is being presented with the initial message counts and the main
+voicemail menu
+"""
+class IntroTestState(VoiceMailState):
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+        """
+        We should not have entered into this state without first having gone through the new user 
+        prompts
+        """
+        if ((not self.voiceMailTest.getTestCondition("newUserPromptPlayed")) or (not self.voiceMailTest.getTestCondition("newUser"))):
+            logger.error("Entered into INTRO state without first having been prompted for new user checks")
+            self.changeState(FailureTestState(self.controller))
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+
+        if state == 'PLAYBACK':
+            message = event['message']
+
+            if message == 'instructions':
+                """ Tell it to exit out of voicemail """
+                self.voiceMailTest.sendDTMF("#")
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "INTRO"
+
+
+"""
+The TestCase class that executes the test
+"""
+class CheckVoicemailNewUserHangup(VoiceMailTest):
+
+    """
+    The parent directory that this test resides in
+    """
+    testParentDir = "tests/apps/voicemail"
+
+    """
+    The channel to connect to that acts as the voicemail server
+    """
+    channel = "sip/ast1/8052"
+
+    """
+    The voicemail manager object
+    """
+    voicemailManager = None
+
+    def __init__(self):
+        super(CheckVoicemailNewUserHangup, self).__init__()
+
+        """
+        This merely passes back the value to the test condition, as all of our conditions
+        in this test are pass / fail tests
+        """
+        def checkTrueCondition(value, testCondition):
+            return value
+        self.addTestCondition("newUser", TestCondition(checkTrueCondition, False))
+        self.addTestCondition("newUserPromptPlayed", TestCondition(checkTrueCondition, False))
+        self.addTestCondition("initialHangup", TestCondition(checkTrueCondition, False))
+
+        self.reactor_timeout = 120
+        self.create_asterisk(2)
+
+
+    def ami_connect(self, ami):
+        super(CheckVoicemailNewUserHangup, self).ami_connect(ami)
+
+        """ Record which AMI instance we've received and attempt to set up the test controller """
+        if (ami.id == 0):
+            self.amiReceiver = ami
+        elif (ami.id == 1):
+            self.amiSender = ami
+            self.astSender = self.ast[self.amiSender.id]
+
+        self.createTestController()
+        if (self.testStateController != None):
+            startObject = StartVoiceMailState(self.testStateController, self)
+            self.testStateController.changeState(startObject)
+            self.testStateController.addAssertHandler(self.handleAssert)
+
+        ami.registerEvent('UserEvent', self.user_event)
+        """ Now do specific processing on the AMI instances """
+        if (ami.id != 0):
+            logger.debug("Originating call to " + self.channel)
+            df = ami.originate(self.channel, "voicemailCaller", "wait", 1)
+            df.addErrback(self.handleOriginateFailure)
+
+    def handleAssert(self, event):
+        self.passed = False
+        logger.error("Test Failed - Assert received")
+        logger.error("\t\t AppFunction: " + event['appfunction'])
+        logger.error("\t\t AppLine: " + event['appline'])
+        logger.error("\t\t Expression: " + event['expression'])
+
+        self.stop_reactor()
+
+    def user_event(self, ami, event):
+        if event['userevent'] == 'TestResult':
+            if event['result'] == "pass":
+                self.passed = True
+                logger.info("VoiceMail successfully exited")
+            else:
+                logger.warn("VoiceMail did not successfully exit:")
+                logger.warn("result: %s" % (event['result'],))
+                logger.warn("error: %s" % (event['error'],))
+        elif event['userevent'] == 'Hangup':
+            logger.info("Expected Hangup detected from call")
+            self.setTestCondition('initialHangup', True)
+            self.passed = True
+        else:
+            return
+
+        self.stop_reactor()
+
+    def run(self):
+        super(CheckVoicemailNewUserHangup, self).run()
+        self.create_ami_factory(2)
+
+
+def main():
+
+    test = CheckVoicemailNewUserHangup()
+    voicemailManager = VoiceMailMailboxManagement(test.ast[0])
+
+    test.start_asterisk()
+
+    reactor.run()
+
+    test.stop_asterisk()
+
+    """
+    Post-test processing - verify that we listened to all the messages we wanted to listen to, that
+    we saved the messages, and that the messages were moved successfully
+    """
+    if test.passed:
+
+        if not test.checkTestConditions():
+            logger.warn("Test failed condition checks")
+            test.passed = False
+
+        formats = ["ulaw","wav","WAV"]
+        """ Verify that the password wasn't changed """
+        userObject = voicemailManager.getUserObject("default","1234")
+        if not userObject.password == "1234":
+            logger.warn("User password was changed to [" + userObject.password + "]; test failed")
+            test.passed = False
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+   sys.exit(main() or 0)
