@@ -33,7 +33,7 @@ Receiver_Scenario = {
 class SipIncompleteTest(TestCase):
     def __init__(self):
         TestCase.__init__(self)
-        self.create_asterisk(1)
+        self.create_asterisk()
         self.receiverTest = SIPpScenario(TEST_DIR, Receiver_Scenario)
         self.senderTest = SIPpScenario(TEST_DIR, Sender_Scenario)
 
@@ -74,8 +74,7 @@ class SipIncompleteTest(TestCase):
 
     def run(self):
         TestCase.run(self)
-        logger.debug("Creating AMI factory")
-        self.create_ami_factory(1)
+        self.create_ami_factory()
 
 
 def main():

@@ -29,7 +29,7 @@ SIPP_SCENARIO = {
 class HandleResponseAddressIncomplete(TestCase):
     def __init__(self):
         TestCase.__init__(self)
-        self.create_asterisk(1)
+        self.create_asterisk()
         self.sipTest = SIPpScenario(TEST_DIR, SIPP_SCENARIO)
 
 
@@ -45,13 +45,6 @@ class HandleResponseAddressIncomplete(TestCase):
         logger.debug("Originating call from local channel to SIPp peer")
         df = ami.originate("Local/1234@default", "default", "1234", 1, None, "CallId", None, None, None, {}, True)
         df.addErrback(self.handleOriginateFailure)
-
-    def handleOriginateFailure(self, reason):
-        logger.error("Error sending originate:")
-        logger.error(reason.getTraceback())
-        self.stop_reactor()
-
-        return reason
 
     def user_event(self, ami, event):
         if event['userevent'] != 'TestResult':
@@ -80,7 +73,7 @@ class HandleResponseAddressIncomplete(TestCase):
     def run(self):
         TestCase.run(self)
         logger.debug("Creating AMI factory")
-        self.create_ami_factory(1)
+        self.create_ami_factory()
 
 
 def main():
