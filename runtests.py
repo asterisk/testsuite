@@ -16,6 +16,7 @@ import time
 import yaml
 import socket
 import shutil
+import xml.dom
 
 sys.path.append("lib/python")
 
@@ -36,7 +37,7 @@ class TestRun:
         self.ast_version = ast_version
         self.options = options
         self.test_config = TestConfig(test_name)
-        self.failure_message = "<failure />"
+        self.failure_message = ""
         self.__check_deps(ast_version)
         self.stdout = ""
 
@@ -62,7 +63,6 @@ class TestRun:
                 pass
             p.wait()
 
-            """ Parse out ERROR messages """
             self.__parse_run_output(self.stdout)
 
             self.passed = (p.returncode == 0 and self.test_config.expectPass) or (p.returncode and not self.test_config.expectPass)
@@ -104,15 +104,7 @@ class TestRun:
         self.can_run = self.test_config.check_deps(ast_version)
 
     def __parse_run_output(self, output):
-        tokens = output.split('\n')
-        failureBody = ""
-        for line in tokens:
-            if 'ERROR' in line:
-                failureBody += line + '\n'
-        if failureBody != "":
-            """ This is commented out for now until we can investigate bamboos failure to parse complex messages """
-            """self.failure_message = '<failure type="ERROR" message="%s" />' % failureBody"""
-            self.failure_message = '<failure />'
+        self.failure_message = output
 
 
 class TestSuite:
@@ -213,6 +205,26 @@ class TestSuite:
             if t.passed is False:
                 self.total_failures += 1
 
+    def __strip_illegal_xml_chars(self, data):
+        """
+        Strip illegal XML characters from the given data. The character range
+        is taken from section 2.2 of the XML spec.
+        """
+        bad_chars = [
+            (0x0, 0x8),
+            (0xb, 0xc),
+            (0xe, 0x1f),
+            (0x7f, 0x84),
+            (0x86, 0x9f),
+        ]
+
+        char_list = []
+        for r in bad_chars:
+            # we do +1 here to include the last item
+            for i in range(r[0], r[1]+1):
+                char_list.append(chr(i))
+        return data.translate(None, ''.join(char_list))
+
     def write_results_xml(self, fn, stdout=False):
         testOutput = ""
         try:
@@ -224,33 +236,37 @@ class TestSuite:
             print "Unexpected error: %s" % sys.exc_info()[0]
             return
 
-        f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        f.write('<testsuite errors="0" tests="%d" time="%.2f" failures="%d" '
-                'name="AsteriskTestSuite">\n' %
-                (self.total_count, self.total_time, self.total_failures))
+        dom = xml.dom.getDOMImplementation()
+        doc = dom.createDocument(None, "testsuite", None)
+
+        ts = doc.documentElement
+        ts.setAttribute("errors", "0")
+        ts.setAttribute("tests", str(self.total_count))
+        ts.setAttribute("time", "%.2f" % self.total_time)
+        ts.setAttribute("failures", str(self.total_failures))
+        ts.setAttribute("name", "AsteriskTestSuite")
+
         for t in self.tests:
             if t.did_run is False:
                 continue
-            f.write('\t<testcase time="%.2f" name="%s"' % (t.time, t.test_name))
-            if t.passed is True:
-                f.write('/>\n')
+
+            tc = doc.createElement("testcase")
+            ts.appendChild(tc)
+            tc.setAttribute("time", "%.2f" % t.time)
+            tc.setAttribute("name", t.test_name)
+
+            if t.passed:
                 continue
-            f.write(">\n\t\t%s" % t.failure_message)
-            f.write("\n\t</testcase>\n")
-        f.write('</testsuite>\n')
+
+            f = doc.createElement("failure")
+            f.appendChild(doc.createTextNode(__strip_illegal_xml_chars(t.failure_message)))
+            tc.appendChild(f)
+
+        doc.writexml(f, encoding = "utf-8")
         f.close()
 
-        if stdout is True:
-            try:
-                f = open(TEST_RESULTS, "r")
-            except IOError:
-                print "Failed to open test results output file: %s" % \
-                        TEST_RESULTS
-            except:
-                print "Unexpected error: %s" % sys.exc_info()[0]
-            else:
-                print f.read()
-                f.close()
+        if stdout:
+            print doc.toprettyxml("    ", encoding = "utf-8")
 
 
 def main(argv=None):
