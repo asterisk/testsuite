@@ -258,9 +258,9 @@ class TestSuite:
             if t.passed:
                 continue
 
-            f = doc.createElement("failure")
-            f.appendChild(doc.createTextNode(self.__strip_illegal_xml_chars(t.failure_message)))
-            tc.appendChild(f)
+            failure = doc.createElement("failure")
+            failure.appendChild(doc.createTextNode(self.__strip_illegal_xml_chars(t.failure_message)))
+            tc.appendChild(failure)
 
         doc.writexml(f, encoding = "utf-8")
         f.close()
