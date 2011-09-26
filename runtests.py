@@ -266,7 +266,7 @@ class TestSuite:
         f.close()
 
         if stdout:
-            print doc.toprettyxml("    ", encoding = "utf-8")
+            print doc.toprettyxml("  ", encoding="utf-8")
 
 
 def main(argv=None):
