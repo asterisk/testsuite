@@ -9,3 +9,4 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk : 'cdr_csv'

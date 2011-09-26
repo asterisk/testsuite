@@ -12,3 +12,4 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - custom : 'soundcard'
+        - asterisk : 'cdr_csv'
