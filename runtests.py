@@ -262,7 +262,7 @@ class TestSuite:
             failure.appendChild(doc.createTextNode(self.__strip_illegal_xml_chars(t.failure_message)))
             tc.appendChild(failure)
 
-        doc.writexml(f, encoding = "utf-8")
+        doc.writexml(f, addindent="  ", newl="\n", encoding="utf-8")
         f.close()
 
         if stdout:
