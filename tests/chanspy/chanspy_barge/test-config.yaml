@@ -16,3 +16,4 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - app : 'pjsua'
+        - asterisk : 'app_talkdetect'

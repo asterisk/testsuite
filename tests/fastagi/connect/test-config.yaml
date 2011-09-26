@@ -10,3 +10,4 @@ properties:
         - app : 'python'
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk : 'app_talkdetect'
