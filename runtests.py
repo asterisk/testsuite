@@ -259,7 +259,7 @@ class TestSuite:
                 continue
 
             f = doc.createElement("failure")
-            f.appendChild(doc.createTextNode(__strip_illegal_xml_chars(t.failure_message)))
+            f.appendChild(doc.createTextNode(self.__strip_illegal_xml_chars(t.failure_message)))
             tc.appendChild(f)
 
         doc.writexml(f, encoding = "utf-8")
