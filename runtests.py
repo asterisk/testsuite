@@ -84,15 +84,18 @@ class TestRun:
                 if not os.path.exists(dest_dir):
                     try:
                         os.makedirs(dest_dir)
-                        os.link(ast_dir + "/messages", dest_dir + "/messages")
-                        os.link(ast_dir + "/full", dest_dir + "/full")
+                        os.link(ast_dir + "/messages.txt", dest_dir +
+                                "/messages.txt")
+                        os.link(ast_dir + "/full.txt", dest_dir + "/full.txt")
                     except OSError, ose:
                         """ Different partitions can cause this to fail """
                         print "OSError occurred while copying %s ([%d]: %s)" % (ast_dir, ose.errno, ose.strerror)
                         print "Attempting copy"
                         try:
-                            shutil.copy(ast_dir + "/messages", dest_dir + "/messages")
-                            shutil.copy(ast_dir + "/full", dest_dir + "/full")
+                            shutil.copy(ast_dir + "/messages.txt", dest_dir +
+                                    "/messages.txt")
+                            shutil.copy(ast_dir + "/full.txt", dest_dir +
+                                    "/full.txt")
                         except shutil.Error, err:
                             for e in err:
                                 print "Exception occurred while archiving logs from %s to %s: %s" % (e[0], e[1], e[2])
