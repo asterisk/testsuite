@@ -279,13 +279,86 @@ found at http://www.yaml.org/.
 #
 # Example test configuration file - test-config.yaml
 #
-# All elements are required unless explicitly noted as OPTIONAL
+# All elements are required unless explicitly noted as OPTIONAL.  If marked
+# GLOBAL, those elements are only processed if they exist in the top level
+# test-config.yaml file, which applies global options across the test.
 #
 
-# The testinfo section contains information that describes the purpose of the
-# test.
+# The global settings section, which defines which test configuration to execute
+# and other non-test specific information
+global-settings: # GLOBAL
+    # The active test configuration.  The value must match a subsequent key
+    # in this file, which defines the global settings to apply to the test execution
+    # run.
+    test-configuration: config-pessimistic # GLOBAL
+
+    # The following sequence defines for any test configuration the available pre-
+    # and post-test conditions.  The 'name' field specifies how the test configurations
+    # refer to the pre- and post-test conditions in order to activate them.
+    condition-definitions: # GLOBAL
+            -
+                name: 'threads'
+                # A pre-test condition, which specifies that the object will be evaluated
+                # prior to test execution
+                pre:
+                    # The fully qualified Python typename of the object to create using
+                    # introspection
+                    typename: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+                post:
+                    typename: 'asterisk.ThreadTestCondition.ThreadPostTestCondition'
+                    # The fully qualified Python typename of the object to pass to the evaluate
+                    # function of this object
+                    related-type: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+            -
+                name: 'sip-dialogs'
+                pre:
+                    typename: 'asterisk.SipDialogTestCondition.SipDialogPreTestCondition'
+                post:
+                    typename: 'asterisk.SipDialogTestCondition.SipDialogPostTestCondition'
+            -
+                name: 'locks'
+                pre:
+                    typename: 'asterisk.LockTestCondition.LockTestCondition'
+                post:
+                    typename: 'asterisk.LockTestCondition.LockTestCondition'
+            -
+                name: 'file-descriptors'
+                pre:
+                    typename: 'asterisk.FdTestCondition.FdPreTestCondition'
+                post:
+                    typename: 'asterisk.FdTestCondition.FdPostTestCondition'
+                    related-type: 'asterisk.FdTestCondition.FdPreTestCondition'
+            -
+                name: 'channels'
+                pre:
+                    typename: 'asterisk.ChannelTestCondition.ChannelTestCondition'
+                post:
+                    typename: 'asterisk.ChannelTestCondition.ChannelTestCondition'
+
+# A global test definition.  This name can be anything, but must be referenced
+# by the global-settings.test-configuration key.
+config-pessimistic: # GLOBAL
+    # A list of tests to explicitly exclude from execution.  This overrides the
+    # test listsing in the tests.yaml files.
+    exclude-tests: # GLOBAL
+        # The name of a test to exclude.  Name matching is done using the Python
+        # in operator.
+        - 'authenticate_invalid_password'
+    properties:
+        # The test conditions to apply to all tests.  See specific configuration
+        # information for the test conditions in the individual test configuration
+        # section below.
+        testconditions:
+            - name: 'threads'
+            - name: 'sip-dialogs'
+            - name: 'locks'
+            - name: 'file-descriptors'
+            - name: 'channels'
+
+# The testinfo section contains information that describes the purpose of an
+# individual test
 testinfo:
-    skip : 'Breif reason for skipping test' # OPTIONAL
+    skip : 'Brief reason for skipping test' # OPTIONAL
     summary     : 'Put a short one liner summary of the test here'
     issues      : |
         # List of issue numbers associated with this test
@@ -300,6 +373,7 @@ testinfo:
 # dependencies for this test.
 properties:
     minversion : '1.4' # minimum Asterisk version compatible with this test
+    buildoption : 'TEST_FRAMEWORK' # OPTIONAL - Asterisk compilation flag
     maxversion : '1.8' # OPTIONAL
     dependencies : |   # OPTIONAL
         # List dependencies that must be met for this test to run
@@ -313,13 +387,72 @@ properties:
         # met.
         - python : 'yaml'
 
+        # A 'module' dependency is an Asterisk module that must be loaded by
+        # Asterisk in order for this test to execute.  If the module is not loaded,
+        # the test will not execute.
+        - module : 'app_dial'
+
         # 'custom' dependency can be anything.  Checking for this dependency is
         # done by calling a corresponding method in the Dependency class in
         # runtests.py.  For example, if the dependency is 'ipv6', then the
         # depend_ipv6() method is called to determine if the dependency is met.
         - custom : 'ipv6'
         - custom : 'fax'
-
+    testconditions: # OPTIONAL
+        #
+        # List of overrides for pre-test and post-test conditions.  If a condition is
+        # defined for a test, the configuration of that condition in the test overrides
+        # the setting defined in the global test configuration file.
+        #
+        -   # Check for thread usage in Asterisk.  Any threads present in Asterisk after test
+            # execution - and any threads that were detected prior to test execution
+            # that are no longer present - will be flagged as a test error.
+            name: 'threads'
+            #
+            # Disable execution of this condition.  This setting applies to any defined condition.
+            # Any other value but 'False' will result in the condition being executed.
+            enabled: 'False'
+            #
+            # Execute the condition, but expect the condition to fail
+            expectedResult: 'Fail'
+            #
+            # The thread test condition allows for certain detected threads to be
+            # ignored.  This is a list of the thread names, as reported by the CLI
+            # command 'core show threads'
+            ignoredThreads:
+                - 'netconsole'
+                - 'pbx_thread'
+        #
+        -   # Check for SIP dialog usage.  This looks for any SIP dialogs present
+            # in the system before and after a run; if any are present and are not
+            # scheduled for destruction, an error is raised.
+            name: 'sip-dialogs'
+            #
+            # In addition to checking for scheduled destruction, a test can request that
+            # certain entries should appear in the SIP history.  If the entries do not
+            # appear, an error is raised.
+            sipHistoryRequirements:
+                - 'NewChan'
+                - 'Hangup'
+        #
+        -   # Check for held locks in Asterisk after test execution.  A lock is determined to
+            # be in potential error if threads are detected holding mutexes and waiting on
+            # other threads that are also holding mutexes.
+            name: 'locks'
+        #
+        -   # Check for active channels in Asterisk.  If active channels are detected, flag
+            # an error
+            name: 'channels'
+            #
+            # The number of allowed active channels that can exist when the condition is checked.
+            # If the number of channels detected is greater than this value, an error is raised.
+            # By default, this value is 0.
+            allowedchannels: 1
+        #
+        -   # Check for active file descriptors in Asterisk.  File descriptors detected before
+            # test execution are tracked throughout the test; if any additional file descriptors
+            # after test execution are detected, the test condition fails.
+            name: 'file-descriptors'
 
 
 --------------------------------------------------------------------------------

@@ -51,12 +51,29 @@ class FdTestCondition(TestCondition):
             return
 
         lines = ast.cli_exec("core show fd")
+        if 'No such command' in lines:
+            return
+
         """ Trim off the first and last lines """
         lines = lines[lines.find('\n'):].strip()
         lines = lines[:lines.find("Asterisk ending")].strip()
         line_tokens = lines.split('\n')
         fds = []
         for line in line_tokens:
+            """
+            chan_sip is going to create sockets for the active channels and won't close them until
+            the dialog is reclaimed - 32 seconds after the test.  We ignore the UDP socket file
+            descriptors because of this.
+            """
+            if 'socket(PF_INET,SOCK_DGRAM,"udp")' in line:
+                logger.debug("Ignoring created UDP socket: " + line)
+                continue
+            """
+            If we have MALLOC_DEBUG on and are writing out to the mmlog, ignore
+            """
+            if '__ast_mm_init' in line:
+                logger.debug("Ignoring malloc debug: " + line)
+                continue
             fd = FileDescriptor(line)
             if fd.number != -1:
                 logger.debug("Tracking %d [%s]", fd.number, fd.info)

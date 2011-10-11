@@ -28,6 +28,7 @@ class AuthenticateExtensions(TestCase):
 
         self.reactor_timeout = 60
         self.create_asterisk(2)
+        self.pass_results = 0
 
     def ami_connect(self, ami):
         super(AuthenticateExtensions, self).ami_connect(ami)
@@ -55,15 +56,17 @@ class AuthenticateExtensions(TestCase):
             return
 
         if event['result'] == 'pass':
-            self.passed = self.passed and True
+            self.pass_results += 1
+            if self.pass_results == 2:
+                self.passed = True
+                self.stop_reactor()
             logger.info("Received pass result from VMAuthenticate test")
         else:
             logger.warn("VMAuthenticate Failure:")
             logger.warn("result: %s" % (event['result'],))
             logger.warn("error: %s" % (event['status'],))
             self.passed = False
-
-        self.stop_reactor()
+            self.stop_reactor()
 
     def run(self):
         super(AuthenticateExtensions, self).run()

@@ -8,6 +8,15 @@ testinfo:
 properties:
     minversion: '1.8'
     buildoption: 'TEST_FRAMEWORK'
+    testconditions:
+        - name: 'threads'
+          ignoredThreads:
+            - 'netconsole'
+            - 'pbx_thread'
+        - name: 'sip-dialogs'
+          sipHistoryRequirements:
+            - 'NewChan'
+            - 'Hangup'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

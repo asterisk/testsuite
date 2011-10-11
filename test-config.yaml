@@ -1,0 +1,93 @@
+# This configuration file defines global settings for test execution.
+# The test suite will attempt to apply these settings to all tests that
+# support them.
+
+# Global settings
+global-settings:
+    # The active test configuration.  The value must match a subsequent key
+    # in this file, which defines the global settings to apply to the test execution
+    # run.
+    test-configuration: config-fast
+
+    # The following sequence defines for any test configuration the available pre-
+    # and post-test conditions.  The 'name' field specifies how the test configurations
+    # refer to the pre- and post-test conditions in order to activate them.
+    condition-definitions:
+            -
+                name: 'threads'
+                pre:
+                    typename: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+                post:
+                    typename: 'asterisk.ThreadTestCondition.ThreadPostTestCondition'
+                    related-type: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+            -
+                name: 'sip-dialogs'
+                pre:
+                    typename: 'asterisk.SipDialogTestCondition.SipDialogPreTestCondition'
+                post:
+                    typename: 'asterisk.SipDialogTestCondition.SipDialogPostTestCondition'
+            -
+                name: 'locks'
+                pre:
+                    typename: 'asterisk.LockTestCondition.LockTestCondition'
+                post:
+                    typename: 'asterisk.LockTestCondition.LockTestCondition'
+            -
+                name: 'file-descriptors'
+                pre:
+                    typename: 'asterisk.FdTestCondition.FdPreTestCondition'
+                post:
+                    typename: 'asterisk.FdTestCondition.FdPostTestCondition'
+                    related-type: 'asterisk.FdTestCondition.FdPreTestCondition'
+            -
+                name: 'channels'
+                pre:
+                    typename: 'asterisk.ChannelTestCondition.ChannelTestCondition'
+                post:
+                    typename: 'asterisk.ChannelTestCondition.ChannelTestCondition'
+
+# Exclude all long-running tests (greater than one minute)
+config-fast:
+    exclude-tests:
+        - 'authenticate_invalid_password'
+        - 'check_voicemail_callback'
+        - 'check_voicemail_delete'
+        - 'check_voicemail_dialout'
+        - 'check_voicemail_envelope'
+        - 'check_voicemail_new_user'
+        - 'check_voicemail_nominal'
+        - 'check_voicemail_reply'
+        - 'leave_voicemail_external_notification'
+        - 'leave_voicemail_nominal'
+        - 'gateway_g711_t38'
+        - 'gateway_mix1'
+        - 'gateway_mix2'
+        - 'gateway_mix3'
+        - 'gateway_mix4'
+        - 'gateway_native_t38'
+        - 'gateway_native_t38_ced'
+        - 'gateway_no_t38'
+        - 'gateway_t38_g711'
+        - 'gateway_timeout1'
+        - 'gateway_timeout2'
+        - 'gateway_timeout3'
+        - 'gateway_timeout4'
+        - 'gateway_timeout5'
+
+# Include all tests that can run under the installed version of Asterisk.
+# It is included merely for completeness.
+config-standard:
+
+# This test enables the pre- and post-test condition checking on all tests
+# that support it.  Individual tests can override the behavior of a pre-
+# and post-test in their test-config.yaml files.
+config-pessimistic:
+    properties:
+        testconditions:
+            - name: 'threads'
+            - name: 'sip-dialogs'
+            - name: 'locks'
+            - name: 'file-descriptors'
+            - name: 'channels'
+
+

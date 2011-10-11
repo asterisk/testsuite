@@ -16,31 +16,15 @@ properties:
         - asterisk : 'app_senddtmf'
         - asterisk : 'app_playback'
     testconditions:
-        -
-            name: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
-            type: 'Pre'
-        -
-            name: 'asterisk.ThreadTestCondition.ThreadPostTestCondition'
-            type: 'Post'
+        - name: 'threads'
+          ignoredThreads:
+            - 'netconsole'
+            - 'pbx_thread'
             # Allow shaun_of_the_dead to exist after a run, as our external password check
             # may still be going on
-            ignoredThreads:
-                - 'netconsole'
-                - 'pbx_thread'
-                - 'shaun_of_the_dead'
-            relatedCondition: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
-        -
-            name: 'asterisk.SipDialogTestCondition.SipDialogPreTestCondition'
-            type: 'Pre'
-        -
-            name: 'asterisk.SipDialogTestCondition.SipDialogPostTestCondition'
-            type: 'Post'
-            sipHistoryRequirements:
-                - 'NewChan'
-                - 'Hangup'
-        -
-            name: 'asterisk.LockTestCondition.LockTestCondition'
-            type: 'Pre'
-        -
-            name: 'asterisk.LockTestCondition.LockTestCondition'
-            type: 'Post'
+            - 'shaun_of_the_dead'
+        - name: 'sip-dialogs'
+          sipHistoryRequirements:
+            - 'NewChan'
+            - 'Hangup'
+

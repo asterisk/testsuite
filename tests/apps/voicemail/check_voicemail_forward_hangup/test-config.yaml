@@ -9,33 +9,16 @@ properties:
     minversion: '1.8'
     buildoption: 'TEST_FRAMEWORK'
     testconditions:
-        -
-            name: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
-            type: 'Pre'
-        -
-            name: 'asterisk.ThreadTestCondition.ThreadPostTestCondition'
-            type: 'Post'
-            ignoredThreads:
-                - 'netconsole'
-                - 'pbx_thread'
-            relatedCondition: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
-        -
-            name: 'asterisk.SipDialogTestCondition.SipDialogPreTestCondition'
-            type: 'Pre'
-        -
-            # Note: the abrupt hangup will leave the SIP dialog in flight
-            name: 'asterisk.SipDialogTestCondition.SipDialogPostTestCondition'
-            type: 'Post'
-            expectedResult: 'FAIL'
-            sipHistoryRequirements:
-                - 'NewChan'
-                - 'Hangup'
-        -
-            name: 'asterisk.LockTestCondition.LockTestCondition'
-            type: 'Pre'
-        -
-            name: 'asterisk.LockTestCondition.LockTestCondition'
-            type: 'Post'
+        - name: 'threads'
+          ignoredThreads:
+            - 'netconsole'
+            - 'pbx_thread'
+        - name: 'sip-dialogs'
+          # Note: the abrupt hangup will leave the SIP dialog in flight
+          expectedResult: 'FAIL'
+          sipHistoryRequirements:
+            - 'NewChan'
+            - 'Hangup'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

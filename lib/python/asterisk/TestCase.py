@@ -46,7 +46,8 @@ class TestCase(object):
         self.defaultLogLevel = "WARN"
         self.defaultLogFileName = "logger.conf"
         self.timeoutId = None
-        self.test_config = TestConfig(self.test_name)
+        self.global_config = TestConfig(os.getcwd())
+        self.test_config = TestConfig(self.test_name, self.global_config)
         self.testStateController = None
 
         """ Set up logging """
@@ -72,7 +73,19 @@ class TestCase(object):
         Register pre and post-test conditions.  Note that we have to first register condition checks
         without related conditions, so that those that have dependencies can find them
         """
+        self.global_conditions = self.global_config.get_conditions()
         self.conditions = self.test_config.get_conditions()
+
+        """ If there are no global conditions return """
+        if (len(self.global_conditions) == 0):
+            return
+
+        """ Get those global conditions that are not in the self conditions """
+        for g in self.global_conditions:
+            disallowed = [i for i in self.conditions if i[0].getName() == g[0].getName() and i[1] == g[1]]
+            if (len(disallowed) == 0):
+                self.conditions.append(g)
+
         for c in self.conditions:
             """ c is a 3-tuple of object, pre-post type, and related name """
             if (c[2] == ""):

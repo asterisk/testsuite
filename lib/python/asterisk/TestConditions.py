@@ -121,13 +121,13 @@ class TestConditionController(object):
             if (check[0].check_build_options()):
                 for ast in self.__ast:
                     check[0].register_asterisk_instance(ast)
-
-                logger.debug("Evaluating %s" % check[0].getName())
-                if (check[1] != None):
-                    check[0].evaluate(check[1])
-                else:
-                    check[0].evaluate()
-                self.__check_observers(check[0])
+                if (check[0].getEnabled()):
+                    logger.debug("Evaluating %s" % check[0].getName())
+                    if (check[1] != None):
+                        check[0].evaluate(check[1])
+                    else:
+                        check[0].evaluate()
+                    self.__check_observers(check[0])
 
     def __check_observers(self, test_condition):
         for observerTuple in self.__observers:
@@ -141,6 +141,7 @@ class TestConditionController(object):
         if (test_condition.getStatus() == 'Inconclusive'):
             logger.warning(test_condition)
         elif (test_condition.getStatus() == 'Failed'):
+            logger.info(str(test_condition.pass_expected))
             if test_condition.pass_expected:
                 logger.error(test_condition)
             else:
@@ -169,6 +170,7 @@ class TestCondition(object):
         self.__testStatus = TestStatuses.Inconclusive
         self.ast = []
         self.build_options = []
+        self.__enabled = test_config.enabled
         self.pass_expected = test_config.passExpected
 
     def __str__(self):
@@ -228,6 +230,12 @@ class TestCondition(object):
             when this test condition is registered to the test condition controller.
         """
         pass
+
+    def getEnabled(self):
+        """
+        True if the condition is enabled and should run, false otherwise
+        """
+        return self.__enabled
 
     def getName(self):
         """

@@ -31,27 +31,30 @@ class TestConditionConfig:
     object that derives from TestCondition based on that configuration
     """
 
-    def __init__(self, config):
+    def __init__(self, config, definition, pre_post_type):
         """
-        Construct a new test condition from a config sequence constructed
-        from the test-config.yaml file
+        Construct a new test condition
+
+        config - the test condition specific configuration, from a test-config.yaml file
+        definition - the global type information, obtained from the global test-config.yaml file
+        pre_post_type - 'pre' or 'post', depending on the type to build
         """
-        self.classTypeName = ""
         self.passExpected = True
-        self.type = ""
         self.relatedCondition = ""
-        if 'name' in config:
-            self.classTypeName = config['name']
+        self.type = pre_post_type.upper().strip()
+        self.classTypeName = definition[pre_post_type.lower()]['typename']
+        self.enabled = True
+        if 'related-type' in definition[pre_post_type.lower()]:
+            self.relatedCondition = definition[pre_post_type.lower()]['related-type'].strip()
+        if 'enabled' in config:
+            if config ['enabled'].upper().strip() == 'FALSE':
+                self.enabled = False
         if 'expectedResult' in config:
             try:
                 self.passExpected = not (config["expectedResult"].upper().strip() == "FAIL")
             except:
                 self.passExpected = False
                 print "ERROR: '%s' is not a valid value for expectedResult" % config["expectedResult"]
-        if 'type' in config:
-            self.type = config['type'].upper().strip()
-        if 'relatedCondition' in config:
-            self.relatedCondition = config['relatedCondition'].strip()
         """ Let non-standard configuration items be obtained from the config object """
         self.config = config
 
@@ -222,7 +225,7 @@ class TestConfig:
     by that tests test.yaml file.
     """
 
-    def __init__(self, test_name):
+    def __init__(self, test_name, global_test_config = None):
         """
         Create a new TestConfig
 
@@ -240,12 +243,40 @@ class TestConfig:
         self.minversion_check = False
         self.deps = []
         self.expectPass = True
-
+        self.excludedTests = []
+        self.test_configuration = "(none)"
+        self.condition_definitions = []
+        self.global_test_config = global_test_config
         self.__parse_config()
+
+    def __process_global_settings(self):
+        """
+        These settings only apply to the 'global' test-yaml config file.  If we were passed in
+        the global settings, grab what we need and return
+        """
+        if self.global_test_config != None:
+            self.condition_definitions = self.global_test_config.condition_definitions
+            return
+
+        if "global-settings" in self.config:
+            global_settings = self.config['global-settings']
+            if "condition-definitions" in global_settings:
+                self.condition_definitions = global_settings['condition-definitions']
+            if "test-configuration" in global_settings:
+                self.test_configuration = global_settings['test-configuration']
+                if self.test_configuration in self.config:
+                    self.config = self.config[self.test_configuration]
+
+                    if self.config != None and 'exclude-tests' in self.config:
+                        self.excludedTests = self.config['exclude-tests']
+                else:
+                    print "WARNING - test configuration [%s] not found in config file" % self.test_configuration
 
     def __process_testinfo(self):
         self.summary = "(none)"
         self.description = "(none)"
+        if self.config == None:
+            return
         if "testinfo" not in self.config:
             return
         testinfo = self.config["testinfo"]
@@ -259,6 +290,8 @@ class TestConfig:
 
     def __process_properties(self):
         self.minversion = AsteriskVersion("1.4")
+        if self.config == None:
+            return
         if "properties" not in self.config:
             return
         properties = self.config["properties"]
@@ -303,6 +336,7 @@ class TestConfig:
                     self.test_name
             return
 
+        self.__process_global_settings()
         self.__process_testinfo()
         self.__process_properties()
 
@@ -316,12 +350,21 @@ class TestConfig:
             2: The name of the related condition that this one depends on
         """
         conditions = []
-        if not self.config:
+        conditions_temp = []
+        if not self.config or 'properties' not in self.config or 'testconditions' not in self.config['properties']:
             return conditions
 
-        conditionsTemp = [TestConditionConfig(c) for c in self.config["properties"].get("testconditions") or [] ]
+        for c in self.config['properties'].get('testconditions'):
+            matched_definition = [d for d in self.condition_definitions if d['name'] == c['name']]
+            if len(matched_definition) != 1:
+                print "Unknown or too many matches for condition: " + c['name']
+            else:
+                pre_cond = TestConditionConfig(c, matched_definition[0], "Pre")
+                post_cond = TestConditionConfig(c, matched_definition[0], "Post")
+                conditions_temp.append(pre_cond)
+                conditions_temp.append(post_cond)
 
-        for cond in conditionsTemp:
+        for cond in conditions_temp:
             c = cond.make_condition(), cond.get_type(), cond.get_related_condition()
             conditions.append(c)
 

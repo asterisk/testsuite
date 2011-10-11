@@ -99,6 +99,15 @@ class TestRun:
                         except shutil.Error, err:
                             for e in err:
                                 print "Exception occurred while archiving logs from %s to %s: %s" % (e[0], e[1], e[2])
+                    except IOError, io:
+                        """ Don't let an IOError blow out the whole test run """
+                        print "IOError Exception occured while archiving logs"
+                        try:
+                            (code, message) = io
+                        except:
+                            code = 0
+                            message = io
+                        print "ErrNo: %d - %s" % code, message
             else:
                 break
             i += 1
@@ -116,10 +125,13 @@ class TestSuite:
 
         self.tests = []
         self.tests = self._parse_test_yaml("tests", ast_version)
-
+        self.global_config = self._parse_global_config()
         self.total_time = 0.0
         self.total_count = 0
         self.total_failures = 0
+
+    def _parse_global_config(self):
+        return TestConfig(os.getcwd())
 
     def _parse_test_yaml(self, test_dir, ast_version):
         tests = []
@@ -189,6 +201,14 @@ class TestSuite:
                     print "--- --> Dependency: %s - %s" % (d.name, str(d.met))
                 print
                 continue
+            if self.global_config != None:
+                exclude = False
+                for excluded in self.global_config.excludedTests:
+                    if excluded in t.test_name:
+                        print "--- ---> Excluded test: %s" % excluded
+                        exclude = True
+                if exclude:
+                    continue
 
             print "--> Running test '%s' ...\n" % t.test_name
 
