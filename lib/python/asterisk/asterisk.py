@@ -134,7 +134,7 @@ class Asterisk:
         self.process.poll()
         if self.process.returncode != None:
             """ Rut roh, Asterisk process exited prematurely """
-            logger.error("Asterisk instance %s exited prematurely with return code %d" % self.host, self.process.returncode)
+            logger.error("Asterisk instance %s exited prematurely with return code %d" % (self.host, self.process.returncode))
 
         self.cli_exec("core waitfullybooted")
 

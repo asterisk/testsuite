@@ -99,6 +99,17 @@ class TestRun:
                         except shutil.Error, err:
                             for e in err:
                                 print "Exception occurred while archiving logs from %s to %s: %s" % (e[0], e[1], e[2])
+                        except IOError, io:
+                            """ Don't let an IOError blow out the whole test run """
+                            print "IOError Exception occured while copying logs"
+                            try:
+                                (code, message) = io
+                            except:
+                                code = 0
+                                message = io
+                            print "ErrNo: %d - %s" % code, message
+                        except:
+                            print "Unknown exception occurred while attempting to copy logs"
                     except IOError, io:
                         """ Don't let an IOError blow out the whole test run """
                         print "IOError Exception occured while archiving logs"
@@ -108,6 +119,8 @@ class TestRun:
                             code = 0
                             message = io
                         print "ErrNo: %d - %s" % code, message
+                    except:
+                        print "Unknown exception occurred while attempting to copy logs"
             else:
                 break
             i += 1
