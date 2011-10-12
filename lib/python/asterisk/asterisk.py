@@ -129,6 +129,13 @@ class Asterisk:
 
         # Be _really_ sure that Asterisk has started up before returning.
         time.sleep(5.0)
+
+        # Poll the instance to make sure we created it successfully
+        self.process.poll()
+        if self.process.returncode != None:
+            """ Rut roh, Asterisk process exited prematurely """
+            logger.error("Asterisk instance %s exited prematurely with return code %d" % self.host, self.process.returncode)
+
         self.cli_exec("core waitfullybooted")
 
     def stop(self):
