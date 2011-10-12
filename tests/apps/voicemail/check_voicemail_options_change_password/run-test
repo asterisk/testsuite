@@ -155,6 +155,7 @@ class VoicemailOptionsTestState(VoiceMailState):
                 """ Back at main menu; exit """
                 self.voiceMailTest.sendDTMF("#")
             elif message == 'vm-newpassword':
+                self.voiceMailTest.reset_timeout()
                 self.voiceMailTest.sendDTMF(self.passwords[self.passwordCounter])
                 self.voiceMailTest.setTestCondition("passwordAttempt",1)
             elif message == 'vm-reenterpassword':

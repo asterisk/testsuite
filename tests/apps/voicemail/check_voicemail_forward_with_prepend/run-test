@@ -194,9 +194,14 @@ class ForwardTestState(VoiceMailState):
                 """ Press 1 to prepend a message """
                 self.voiceMailTest.sendDTMF("1")
             elif message == 'beep':
-                """ Instruct it to foward the audio """
+                """
+                Instruct it to foward the audio.  Note that on some systems, changing the DTMF
+                and the TALK_AUDIO variables takes too much time - here we use an explicit extension to avoid
+                having to set the DTMF.
+                """
                 audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.voiceMailTest.testParentDir))
-                self.voiceMailTest.sendSoundFileWithDTMF(audioFile,"#")
+                self.voiceMailTest.astSender.cli_exec("dialplan set global TALK_AUDIO " + audioFile)
+                df = self.voiceMailTest.amiSender.redirect(self.voiceMailTest.senderChannel, "voicemailCaller", "sendAudioWithPound", 1)
             elif message == 'vm-msgsaved':
                 self.voiceMailTest.setTestCondition("msgForwarded", True)
             elif message == 'pbx-invalid':
