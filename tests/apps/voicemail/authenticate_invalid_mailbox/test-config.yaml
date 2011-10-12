@@ -10,7 +10,6 @@ properties:
         - name: 'threads'
           ignoredThreads:
             - 'netconsole'
-            - 'pbx_thread'
         - name: 'sip-dialogs'
           sipHistoryRequirements:
             - 'NewChan'

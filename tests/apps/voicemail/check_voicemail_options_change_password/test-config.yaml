@@ -19,7 +19,6 @@ properties:
         - name: 'threads'
           ignoredThreads:
             - 'netconsole'
-            - 'pbx_thread'
             # Allow shaun_of_the_dead to exist after a run, as our external password check
             # may still be going on
             - 'shaun_of_the_dead'

@@ -10,3 +10,7 @@ properties:
     dependencies:
         - sipp :
             version : 'v3.0'
+    testconditions:
+        - name: 'sip-dialogs'
+          # SIP dialog will never be disposed of in this test
+          expectedResult: 'Fail'

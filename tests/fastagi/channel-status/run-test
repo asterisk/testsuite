@@ -18,7 +18,7 @@ from asterisk.TestCase import TestCase
 class FastAGIChannelStatusTest(TestCase):
     def __init__(self):
         TestCase.__init__(self)
-        self.passed = {'4': False, '6':False}
+        self.test_status = {'4': False, '6':False}
         self.test = 4
 
         self.create_asterisk()
@@ -38,7 +38,7 @@ class FastAGIChannelStatusTest(TestCase):
 
     def finish_test(self, status):
         print "status is", status
-        self.passed[status] = (self.test == status)
+        self.test_status[status] = (self.test == status)
         if self.test == 4:
             print "Answering call"
             self.test = 6
@@ -63,7 +63,7 @@ class FastAGIChannelStatusTest(TestCase):
     def read_result(self):
         self.agi.finish()
         self.stop_reactor()
-        if self.passed[4] is True and self.passed[6] is True:
+        if self.test_status[4] is True and self.test_status[6] is True:
             print "Success"
         else:
             print "Failed"
@@ -74,7 +74,7 @@ class FastAGIChannelStatusTest(TestCase):
 
     # Read result before timeout 
     def result_changed(self):
-        if self.passed[6] is not None:
+        if self.test_status[6] is not None:
             self.read_result()
 
     def run(self):
@@ -86,7 +86,7 @@ def main():
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()
-    if test.passed[4] is not True or test.passed[6] is not True:
+    if test.test_status[4] is not True or test.test_status[6] is not True:
         return 1
 
     return 0

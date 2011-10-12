@@ -12,7 +12,6 @@ properties:
         - name: 'threads'
           ignoredThreads:
             - 'netconsole'
-            - 'pbx_thread'
         - name: 'sip-dialogs'
           # Note: the abrupt hangup will leave the SIP dialog in flight
           expectedResult: 'FAIL'
