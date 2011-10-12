@@ -9,6 +9,7 @@ the GNU General Public License Version 2.
 
 import logging
 import logging.config
+import time
 
 from buildoptions import AsteriskBuildOptions
 from TestConfig import TestConfig
@@ -105,15 +106,18 @@ class TestConditionController(object):
         """
         Evaluate the pre-test conditions
         """
-        logger.debug("Evaluating pre checks")
-        self.__evaluate_checks(self.__prechecks)
+        if (len(self.__prechecks) > 0):
+            logger.debug("Evaluating pre checks")
+            self.__evaluate_checks(self.__prechecks)
 
     def evaluate_post_checks(self):
         """
         Evaluate the post-test conditions
         """
-        logger.debug("Evaluating post checks")
-        self.__evaluate_checks(self.__postchecks)
+        if (len(self.__postchecks) > 0):
+            time.sleep(5)
+            logger.debug("Evaluating post checks")
+            self.__evaluate_checks(self.__postchecks)
 
     def __evaluate_checks(self, check_list):
         """ Register the instances of Asterisk and evaluate """
