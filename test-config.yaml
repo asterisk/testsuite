@@ -7,7 +7,7 @@ global-settings:
     # The active test configuration.  The value must match a subsequent key
     # in this file, which defines the global settings to apply to the test execution
     # run.
-    test-configuration: config-fast
+    test-configuration: config-standard
 
     # The following sequence defines for any test configuration the available pre-
     # and post-test conditions.  The 'name' field specifies how the test configurations
