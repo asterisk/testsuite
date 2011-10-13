@@ -91,7 +91,7 @@ class TestRun:
                 print "Unknown exception occurred while executing %s" % cmd
                 return
 
-            if not os.path.exists(des_dir):
+            if not os.path.exists(dest_dir):
                 try:
                     os.makedirs(dest_dir)
                     os.link("./backtrace.txt", dest_dir + "/backtrace.txt")
