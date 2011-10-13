@@ -79,10 +79,18 @@ class TestRun:
             print "Core dump detected; an Asterisk instance must have crashed"
             cmd = 'gdb -se "asterisk" -ex "bt full" -ex "thread apply all bt" --batch -c core > ./backtrace.txt'
             print "Running %s" % cmd
-            btp = subprocess.Popen(cmd)
-            btp.wait()
-            """ Copy the backtrace over to the logs """
-            dest_dir = "./logs/%s" % self.test_name.lstrip("tests/")
+            try:
+                btp = subprocess.Popen(cmd)
+                btp.wait()
+                """ Copy the backtrace over to the logs """
+                dest_dir = "./logs/%s" % self.test_name.lstrip("tests/")
+            except OSError, ose:
+                print "OSError ([%d]: %s) occurred while executing %s" % (ose.errno, ose.strerror, cmd)
+                return
+            except:
+                print "Unknown exception occurred while executing %s" % cmd
+                return
+
             if not os.path.exists(des_dir):
                 try:
                     os.makedirs(dest_dir)
