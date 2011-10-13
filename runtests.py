@@ -86,7 +86,7 @@ class TestRun:
             if not os.path.exists(des_dir):
                 try:
                     os.makedirs(dest_dir)
-                    os.link("./backtrace.txt", dest_dir + "./backtrace.txt")
+                    os.link("./backtrace.txt", dest_dir + "/backtrace.txt")
                 except OSError, ose:
                     """ Different partitions can cause this to fail """
                     print "OSError occurred while copying %s ([%d]: %s)" % ("backtrace.txt", ose.errno, ose.strerror)
