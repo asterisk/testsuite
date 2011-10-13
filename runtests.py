@@ -68,10 +68,56 @@ class TestRun:
             self.passed = (p.returncode == 0 and self.test_config.expectPass) or (p.returncode and not self.test_config.expectPass)
             if not self.passed:
                 self.__archive_ast_logs()
+                self.__archive_core_dump()
 
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
         self.time = time.time() - start_time
+
+    def __archive_core_dump(self):
+        if os.path.exists('./core'):
+            print "Core dump detected; an Asterisk instance must have crashed"
+            cmd = 'gdb -se "asterisk" -ex "bt full" -ex "thread apply all bt" --batch -c core > ./backtrace.txt'
+            print "Running %s" % cmd
+            btp = subprocess.Popen(cmd)
+            btp.wait()
+            """ Copy the backtrace over to the logs """
+            dest_dir = "./logs/%s" % self.test_name.lstrip("tests/")
+            if not os.path.exists(des_dir):
+                try:
+                    os.makedirs(dest_dir)
+                    os.link("./backtrace.txt", dest_dir + "./backtrace.txt")
+                except OSError, ose:
+                    """ Different partitions can cause this to fail """
+                    print "OSError occurred while copying %s ([%d]: %s)" % ("backtrace.txt", ose.errno, ose.strerror)
+                    print "Attempting copy"
+                    try:
+                        shutil.copy("./backtrace.txt", dest_dir + "/backtrace.txt")
+                    except shutil.Error, err:
+                        for e in err:
+                            print "Exception occurred while archiving backtrace from %s to %s: %s" % (e[0], e[1], e[2])
+                    except IOError, io:
+                        """ Don't let an IOError blow out the whole test run """
+                        print "IOError Exception occured while copying backtrace"
+                        try:
+                            (code, message) = io
+                        except:
+                            code = 0
+                            message = io
+                        print "ErrNo: %d - %s" % code, message
+                    except:
+                        print "Unknown exception occurred while attempting to copy backtrace"
+                except IOError, io:
+                    """ Don't let an IOError blow out the whole test run """
+                    print "IOError Exception occured while copying backtrace"
+                    try:
+                        (code, message) = io
+                    except:
+                        code = 0
+                        message = io
+                    print "ErrNo: %d - %s" % code, message
+                except:
+                    print "Unknown exception occurred while attempting to copy backtrace"
 
     def __archive_ast_logs(self):
         ast_directories = "%s/%s" % (Asterisk.test_suite_root, self.test_name.lstrip("tests/"))

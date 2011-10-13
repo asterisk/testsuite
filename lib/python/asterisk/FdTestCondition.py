@@ -53,6 +53,8 @@ class FdTestCondition(TestCondition):
         lines = ast.cli_exec("core show fd")
         if 'No such command' in lines:
             return
+        if 'Unable to connect to remote asterisk' in lines:
+            return
 
         """ Trim off the first and last lines """
         lines = lines[lines.find('\n'):].strip()
