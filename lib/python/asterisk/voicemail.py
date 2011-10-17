@@ -102,7 +102,7 @@ class VoiceMailTest(TestCase):
     def hangup(self):
         if self.astSender == None:
             logger.error("Attempting to send hangup to non-existant Asterisk instance")
-            TestCase.testStateController.changeState(FailureTestState(self.controller))
+            self.testStateController.changeState(FailureTestState(self.controller))
             return
 
         df = self.amiSender.redirect(self.senderChannel, "voicemailCaller", "hangup", 1)
@@ -116,12 +116,12 @@ class VoiceMailTest(TestCase):
         logger.info("Attempting to send DTMF " + dtmfToSend)
         if self.amiSender == None:
             logger.error("Attempting to send DTMF to non-connected caller AMI")
-            TestCase.testStateController.changeState(FailureTestState(self.controller))
+            self.testStateController.changeState(FailureTestState(self.controller))
             return
 
         if self.astSender == None:
             logger.error("Attempting to send DTMF to non-existant Asterisk instance")
-            TestCase.testStateController.changeState(FailureTestState(self.controller))
+            self.testStateController.changeState(FailureTestState(self.controller))
             return
 
         if (self.__previous_dtmf != dtmfToSend):
@@ -142,12 +142,12 @@ class VoiceMailTest(TestCase):
     def sendSoundFile(self, audioFile):
         if self.amiSender == None:
             logger.error("Attempting to send sound file to non-connected caller AMI")
-            TestCase.testStateController.changeState(FailureTestState(self.controller))
+            self.testStateController.changeState(FailureTestState(self.controller))
             return
 
         if self.astSender == None:
             logger.error("Attempting to send sound file to non-existant Asterisk instance")
-            TestCase.testStateController.changeState(FailureTestState(self.controller))
+            self.testStateController.changeState(FailureTestState(self.controller))
             return
 
         if (self.__previous_audio != audioFile):
