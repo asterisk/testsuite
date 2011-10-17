@@ -11,5 +11,6 @@ properties:
         - asterisk : 'pbx_lua'
     testconditions:
         - name: 'threads'
-          # We expect this to fail per ASTERISK-18713
-          expectedResult: 'Fail'
+          ignoredThreads:
+            - 'autoservice_run'
+

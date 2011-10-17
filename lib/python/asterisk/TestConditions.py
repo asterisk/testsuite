@@ -115,7 +115,7 @@ class TestConditionController(object):
         Evaluate the post-test conditions
         """
         if (len(self.__postchecks) > 0):
-            time.sleep(5)
+            time.sleep(10)
             logger.debug("Evaluating post checks")
             self.__evaluate_checks(self.__postchecks)
 

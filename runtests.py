@@ -112,7 +112,7 @@ class TestRun:
                         except:
                             code = 0
                             message = io
-                        print "ErrNo: %d - %s" % code, message
+                        print "ErrNo: %d - %s" % (code, message)
                     except:
                         print "Unknown exception occurred while attempting to copy backtrace"
                 except IOError, io:
@@ -123,7 +123,7 @@ class TestRun:
                     except:
                         code = 0
                         message = io
-                    print "ErrNo: %d - %s" % code, message
+                    print "ErrNo: %d - %s" % (code, message)
                 except:
                     print "Unknown exception occurred while attempting to copy backtrace"
 
@@ -161,7 +161,7 @@ class TestRun:
                             except:
                                 code = 0
                                 message = io
-                            print "ErrNo: %d - %s" % code, message
+                            print "ErrNo: %d - %s" % (code, message)
                         except:
                             print "Unknown exception occurred while attempting to copy logs"
                     except IOError, io:
@@ -172,7 +172,7 @@ class TestRun:
                         except:
                             code = 0
                             message = io
-                        print "ErrNo: %d - %s" % code, message
+                        print "ErrNo: %d - %s" % (code, message)
                     except:
                         print "Unknown exception occurred while attempting to copy logs"
             else:
