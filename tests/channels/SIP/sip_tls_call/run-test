@@ -32,23 +32,35 @@ class SIPTLSCallTest(TestCase):
     def __init__(self):
         TestCase.__init__(self)
 
+        workingdir = "channels/SIP/sip_tls_call"
+        testdir = "tests/%s" % workingdir
+
+        # Additional setup for config files and keys
+        print "Building test resources ..."
+        if os.path.exists('%s/configs/ast1/sip_helper.inc' % (testdir)):
+            os.remove('%s/configs/ast1/sip_helper.inc' % (testdir))
+        shutil.copy('%s/configs/helper1' % (testdir), '%s/configs/ast1/sip_helper.inc' % (testdir))
+
+        if os.path.exists('%s/configs/ast2/sip_helper.inc' % (testdir)):
+            os.remove('%s/configs/ast2/sip_helper.inc' % (testdir))
+        shutil.copy('%s/configs/helper2' % (testdir), '%s/configs/ast2/sip_helper.inc' % (testdir))
+        file_replace_string('%s/configs/ast1/sip_helper.inc' % (testdir), '<<path>>', '%s' % (workingdir))
+        file_replace_string('%s/configs/ast2/sip_helper.inc' % (testdir), '<<path>>', '%s' % (workingdir))
+
         print "Creating Asterisk instances ..."
         self.create_asterisk(2)
 
-        workingdir = "channels/SIP/sip_tls_call"
-        testdir = "tests/%s" % workingdir
+        #Now that we've created the Asterisk instances, let's go ahead and remove the sip_helper.inc files
+        if os.path.exists('%s/configs/ast1/sip_helper.inc' % (testdir)):
+            os.remove('%s/configs/ast1/sip_helper.inc' % (testdir))
+
+        if os.path.exists('%s/configs/ast2/sip_helper.inc' % (testdir)):
+            os.remove('%s/configs/ast2/sip_helper.inc' % (testdir))
 
         # initialize test variables
         self.passed = False
         self.tone1 = False
         self.tone2 = False
-
-        # Additional setup for config files and keys
-        print "Building test resources ..."
-        shutil.copy('%s/configs/helper1' % (testdir), '%s/configs/ast1/sip_helper.inc' % (testdir))
-        shutil.copy('%s/configs/helper2' % (testdir), '%s/configs/ast2/sip_helper.inc' % (testdir))
-        file_replace_string('%s/configs/ast1/sip_helper.inc' % (testdir), '<<path>>', '%s' % (workingdir))
-        file_replace_string('%s/configs/ast2/sip_helper.inc' % (testdir), '<<path>>', '%s' % (workingdir))
 
         if not os.path.exists('%s/' % workingdir):
             os.makedirs('%s' % workingdir);

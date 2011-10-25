@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Skip while failures are debugged'
     summary:     'Test a SIP TLS call'
     description: |
         'This test initiates an SIP TLS call between 2 instances of Asterisk.
