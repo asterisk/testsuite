@@ -24,3 +24,5 @@ tests:
     - test: 'message_auth'
     - test: 'message_from_call'
     - test: 'handle_response_address_incomplete'
+    - test: 'realtime_sipregs'
+    - test: 'realtime_nosipregs'

@@ -1,0 +1,10 @@
+testinfo:
+    summary:    'Test SIP realtime peer matching with sipregs enabled'
+    description: |
+        'Make sure that realtime peers are matched properly when sipreg is enabled'
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'res_config_sqlite'
