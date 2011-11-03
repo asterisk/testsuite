@@ -40,10 +40,10 @@ class SIPRealtimeTest(TestCase):
     def __init__(self):
         TestCase.__init__(self)
         self.passed = False
-        self.scenarios_left = {
+        self.scenarios_left = [
             "test1",
             "test2",
-        }
+        ]
         self.create_asterisk()
 
     def run(self):
@@ -69,7 +69,7 @@ class SIPRealtimeTest(TestCase):
             return
         logger.debug("Passed: " + peername)
         self.reset_timeout()
-        self.scenarios_left.discard(peername)
+        self.scenarios_left.remove(peername)
         if (len(self.scenarios_left) == 0):
             self.passed = True
             self.stop_reactor()
