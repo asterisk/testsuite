@@ -1,0 +1,11 @@
+testinfo:
+    skip: 'Skip until fixes it depends on are committed'
+    summary: 'Test codec negotiation for audio and video codecs.'
+    description: |
+        'Set up several calls with Asterisk testing edge cases of codec
+         negotiation.'
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - app : 'sipp'

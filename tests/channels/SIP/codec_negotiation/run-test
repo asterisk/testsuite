@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2011, Digium, Inc.
+Kinsey Moore <kmoore@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+
+sys.path.append("lib/python")
+from asterisk.sipp import SIPpTest
+
+
+WORKING_DIR = "sip/codec_negotiation"
+TEST_DIR = os.path.dirname(os.path.realpath(__file__))
+
+SIPP_SCENARIOS = [
+    {
+        'scenario' : 'single_audio.xml',
+        '-p' : '5061'
+    },
+    {
+        'scenario' : 'decline_incompat_audio.xml',
+        '-p' : '5062'
+    },
+    {
+        'scenario' : 'single_video.xml',
+        '-p' : '5063'
+    },
+    {
+        'scenario' : 'single_video_inverse.xml',
+        '-p' : '5064'
+    },
+    {
+        'scenario' : 'decline_incompat_video.xml',
+        '-p' : '5065'
+    },
+    {
+        'scenario' : 'single_text.xml',
+        '-p' : '5066'
+    },
+    {
+        'scenario' : 'single_text_inverse.xml',
+        '-p' : '5067'
+    },
+    {
+        'scenario' : 'decline_incompat_text.xml',
+        '-p' : '5068'
+    },
+    {
+        'scenario' : 'single_image.xml',
+        '-p' : '5069'
+    },
+    {
+        'scenario' : 'single_image_inverse.xml',
+        '-p' : '5070'
+    },
+    {
+        'scenario' : 'avt_streams.xml',
+        '-p' : '5071'
+    },
+    {
+        'scenario' : 'multistream.xml',
+        '-p' : '5072'
+    },
+    {
+        'scenario' : 'orderstream.xml',
+        '-p' : '5073'
+    }
+]
+
+# generate SIPP scenarios with appropriate port numbers and the config to go with it
+def main():
+    test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
+    return test.run()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
