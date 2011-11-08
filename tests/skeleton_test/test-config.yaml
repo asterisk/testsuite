@@ -1,0 +1,18 @@
+testinfo:
+    summary:     'A brief description of your test'
+    description: |
+        'A verbose description of your test.  Please fill this out - you should describe
+        what your test is actually going to do, the steps it takes, etc.  If there are
+        operations you dont test that are related to the functionality you are testing,
+        it would be good to note them here as well.
+
+properties:
+    # Specify the minimum version to prevent your test from failing for older versions of Asterisk
+    minversion: '1.8'
+    # List dependencies your test will need to run.  You'll typically need twisted and starpy.  Other
+    # options are listed in the README for the testsuite.
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - module : 'app_userevent'
+
