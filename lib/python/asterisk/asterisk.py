@@ -45,7 +45,11 @@ class Asterisk:
     asterisk.conf.
     """
 
+    """ The base location of the temporary files created by the testsuite """
     test_suite_root = "/tmp/asterisk-testsuite"
+
+    """ The default etc directory for Asterisk """
+    asterisk_etc_directory = "/etc/asterisk"
 
     def __init__(self, base=None, ast_conf_options=None, host="127.0.0.1"):
         """Construct an Asterisk instance.
@@ -60,53 +64,45 @@ class Asterisk:
         """
         self.directories = {}
         self.ast_version = AsteriskVersion()
-
         self.base = Asterisk.test_suite_root
-        self.baseDirectory = self.base
-        self.astetcdir = "/etc/asterisk"
+        if base is not None:
+            self.base = "%s/%s" % (self.base, base)
+        self.astetcdir = Asterisk.asterisk_etc_directory
         self.ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
         self.host = host
 
-        # Find the system installed asterisk.conf
+        self.__ast_conf_options = ast_conf_options
+        self.__directory_structure_made = False
+        self.__configs_installed = False
+        self.__configs_set_up = False
+
+        """ Find the system installed asterisk.conf """
         ast_confs = [
                 "/etc/asterisk/asterisk.conf",
                 "/usr/local/etc/asterisk/asterisk.conf"
         ]
-        ast_conf = None
+        self.__ast_conf = None
         for c in ast_confs:
             if os.path.exists(c):
-                ast_conf = ConfigFile(c)
+                self.__ast_conf = ConfigFile(c)
                 break
-        if ast_conf is None:
-            logger.error("No asterisk.conf found on the system!")
-            return
+        if self.__ast_conf is None:
+            logger.error("Unable to locate asterisk.conf file in any known location")
+            raise Exception("Unable to locate asterisk.conf file in any known location")
 
-        if base is not None:
-            self.base = "%s/%s" % (self.base, base)
+        """ Set which astxxx this instance will be """
         i = 1
         while True:
             if not os.path.isdir("%s/ast%d" % (self.base, i)):
                 self.base = "%s/ast%d" % (self.base, i)
                 break
             i += 1
-        os.makedirs(self.base)
-        self.baseDirectory = self.base
 
-        # Mirror system install directory structure
-        dir_cat = None
-        for c in ast_conf.categories:
+        """ Get the Asterisk directories from the Asterisk config file """
+        for c in self.__ast_conf.categories:
             if c.name == "directories":
-                dir_cat = c
-        if dir_cat is None:
-            logger.error("Unable to discover dir layout from asterisk.conf")
-            return
-        self.__gen_ast_conf(ast_conf, dir_cat, ast_conf_options)
-        for (var, val) in dir_cat.options:
-            self.__mirror_dir(var, val)
-
-        self.install_configs(os.getcwd() + "/configs")
-
-        self.__setup_configs()
+                for (var, val) in c.options:
+                    self.directories[var] = val
 
     def start(self):
         """Start this instance of Asterisk.
@@ -115,7 +111,15 @@ class Asterisk:
 
         Example Usage:
         asterisk.start()
+
+        Note that calling this will install the default testsuite
+        config files, if they have not already been installed
         """
+        if self.__configs_installed == False:
+            self.install_configs(os.getcwd() + "/configs")
+        if self.__configs_set_up == False:
+            self.__setup_configs()
+
         cmd = [
             self.ast_binary,
             "-f", "-g", "-q", "-m", "-n",
@@ -206,7 +210,20 @@ class Asterisk:
 
         Example Usage:
         asterisk.install_configs("tests/my-cool-test/configs")
+
+        Note that this will install the default testsuite config files,
+        if they have not already been installed.
         """
+
+        if not self.__directory_structure_made:
+            self.__make_directory_structure()
+
+        if not self.__configs_installed:
+            if cfg_path != ("%s/configs" % os.getcwd()):
+                """ Do a one-time installation of the base configs """
+                self.install_configs("%s/configs" % os.getcwd())
+            self.__configs_installed = True
+
         for f in os.listdir(cfg_path):
             target = "%s/%s" % (cfg_path, f)
             if os.path.isfile(target):
@@ -241,6 +258,9 @@ class Asterisk:
         Example Usage:
         asterisk.install_config("tests/my-cool-test/configs/manager.conf")
         """
+
+        self.__make_directory_structure()
+
         if not os.path.exists(cfg_path):
             logger.error("Config file '%s' does not exist" % cfg_path)
             return
@@ -362,7 +382,36 @@ class Asterisk:
             pass
         return output
 
+    def __make_directory_structure(self):
+        """ Mirror system directory structure """
+
+        if self.__directory_structure_made:
+            return
+
+        """ Make the directory structure if not available """
+        if not os.path.exists(self.base):
+            os.makedirs(self.base)
+
+        dir_cat = None
+        for c in self.__ast_conf.categories:
+            if c.name == "directories":
+                dir_cat = c
+        if dir_cat is None:
+            logger.error("Unable to discover dir layout from asterisk.conf")
+            raise Exception("Unable to discover dir layout from asterisk.conf")
+
+        self.__gen_ast_conf(self.__ast_conf, dir_cat, self.__ast_conf_options)
+        for (var, val) in dir_cat.options:
+            self.__mirror_dir(var, val)
+
+        self.__directory_structure_made = True
+
+
     def __setup_configs(self):
+        """
+        Perform any post-installation manipulation of the config
+        files
+        """
         self.__setup_manager_conf()
 
     def __setup_manager_conf(self):
@@ -393,11 +442,10 @@ class Asterisk:
             logger.error("Unexpected error: %s" % sys.exc_info()[0])
             return
 
-        for c in ast_conf.categories:
+        for c in self.__ast_conf.categories:
             f.write("[%s]\n" % c.name)
             if c.name == "directories":
                 for (var, val) in c.options:
-                    self.directories[var] = val
                     f.write("%s = %s%s\n" % (var, self.base, val))
             elif c.name == "options":
                 f.write("#include \"%s/asterisk.options.conf.inc\"\n" %

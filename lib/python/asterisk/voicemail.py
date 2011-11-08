@@ -338,7 +338,7 @@ class VoiceMailMailboxManagement(object):
     true on success, false on error
     """
     def createMailbox(self, context, mailbox, createAllFolders=False):
-        mailboxPath = self.__ast.baseDirectory + "%(vd)s/%(c)s/%(m)s" %{'vd': self.voicemailDirectory, 'c': context, 'm': mailbox}
+        mailboxPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s" %{'vd': self.voicemailDirectory, 'c': context, 'm': mailbox}
 
         try:
             if not os.path.isdir(mailboxPath):
@@ -392,7 +392,7 @@ class VoiceMailMailboxManagement(object):
 
         msgName = 'msg%04d' % (msgnum)
         msgEnvName = msgName + ".txt"
-        msgEnvPath = self.__ast.baseDirectory + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':msgEnvName}
+        msgEnvPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':msgEnvName}
 
         f = open(msgEnvPath, 'w')
         f.write(';\n')
@@ -419,7 +419,7 @@ class VoiceMailMailboxManagement(object):
 
         for format in formats:
             msgFormatName = msgName + '.' + format
-            msgFormatPath = self.__ast.baseDirectory + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':msgFormatName}
+            msgFormatPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':msgFormatName}
             audioFile = os.path.join(os.getcwd(), "%s/sounds/talking.ulaw" % (self.testParentDir))
             shutil.copy(audioFile, msgFormatPath)
 
@@ -434,7 +434,7 @@ class VoiceMailMailboxManagement(object):
     true if the folder exists, false otherwise
     """
     def checkFolderExists(self, context, mailbox, folder=inboxFolderName):
-        mailboxPath = self.__ast.baseDirectory + "%(vd)s/%(c)s/%(m)s" %{'vd': self.voicemailDirectory, 'c': context, 'm': mailbox}
+        mailboxPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s" %{'vd': self.voicemailDirectory, 'c': context, 'm': mailbox}
 
         if not (os.path.exists(mailboxPath)):
             return False
@@ -507,7 +507,7 @@ class VoiceMailMailboxManagement(object):
 
         msgName = 'msg%(msgnum)04d' %{"msgnum":msgnum}
         msgName = msgName + ".txt"
-        msgPath = self.__ast.baseDirectory + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':msgName}
+        msgPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':msgName}
 
         configFile = ConfigFile(msgPath)
         for cat in configFile.categories:
@@ -541,7 +541,7 @@ class VoiceMailMailboxManagement(object):
     """
     def getUserObject(self, context, mailbox, sourceFile="voicemail.conf"):
 
-        filePath = self.__ast.baseDirectory + self.__ast.directories['astetcdir'] + "/" + sourceFile
+        filePath = self.__ast.base + self.__ast.directories['astetcdir'] + "/" + sourceFile
 
         configFile = ConfigFile(filePath)
         userObject = VoiceMailMailboxManagement.UserObject()
@@ -578,7 +578,7 @@ class VoiceMailMailboxManagement(object):
         if not (self.checkFolderExists(context, mailbox, folder)):
             return False
 
-        msgPath = self.__ast.baseDirectory + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':name}
+        msgPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':name}
 
         if (os.path.exists(msgPath)):
             return True
@@ -586,7 +586,7 @@ class VoiceMailMailboxManagement(object):
             return False
 
     def __removeItemsFromFolder__(self, mailboxPath, folder):
-        folderPath = os.path.join(self.__ast.baseDirectory, "%(mp)s/%(f)s" % {'mp':mailboxPath, 'f':folder})
+        folderPath = os.path.join(self.__ast.base, "%(mp)s/%(f)s" % {'mp':mailboxPath, 'f':folder})
 
         if not (os.path.exists(folderPath)):
             return
@@ -609,7 +609,7 @@ class VoiceMailMailboxManagement(object):
     False if the mailbox does not exist, otherwise True
     """
     def removeMailbox(self, context, mailbox, removeFolders=False):
-        mailboxPath = self.__ast.baseDirectory + "/%(vd)s/%(c)s/%(m)s" %{'vd': self.voicemailDirectory, 'c': context, 'm': mailbox}
+        mailboxPath = self.__ast.base + "/%(vd)s/%(c)s/%(m)s" %{'vd': self.voicemailDirectory, 'c': context, 'm': mailbox}
 
         if not (os.path.exists(mailboxPath)):
             return False
@@ -621,11 +621,11 @@ class VoiceMailMailboxManagement(object):
         self.__removeItemsFromFolder__(mailboxPath, self.greetingsFolderName)
 
         if (removeFolders):
-            rmdir(os.path.join(self.__ast.baseDirectory, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.inboxFolderName}))
-            rmdir(os.path.join(self.__ast.baseDirectory, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.tempFolderName}))
-            rmdir(os.path.join(self.__ast.baseDirectory, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.oldFolderName}))
-            rmdir(os.path.join(self.__ast.baseDirectory, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.urgentFolderName}))
-            rmdir(os.path.join(self.__ast.baseDirectory, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.greetingsFolderName}))
+            rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.inboxFolderName}))
+            rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.tempFolderName}))
+            rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.oldFolderName}))
+            rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.urgentFolderName}))
+            rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.greetingsFolderName}))
 
             rmdir(mailboxPath)
 
