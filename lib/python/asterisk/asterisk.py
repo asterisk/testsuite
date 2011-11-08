@@ -115,10 +115,8 @@ class Asterisk:
         Note that calling this will install the default testsuite
         config files, if they have not already been installed
         """
-        if self.__configs_installed == False:
-            self.install_configs(os.getcwd() + "/configs")
-        if self.__configs_set_up == False:
-            self.__setup_configs()
+        self.install_configs(os.getcwd() + "/configs")
+        self.__setup_configs()
 
         cmd = [
             self.ast_binary,
@@ -215,13 +213,14 @@ class Asterisk:
         if they have not already been installed.
         """
 
-        if not self.__directory_structure_made:
-            self.__make_directory_structure()
+        self.__make_directory_structure()
 
-        if not self.__configs_installed:
-            if cfg_path != ("%s/configs" % os.getcwd()):
-                """ Do a one-time installation of the base configs """
-                self.install_configs("%s/configs" % os.getcwd())
+        if self.__configs_installed and cfg_path == ("%s/configs" % os.getcwd()):
+            return
+
+        if not self.__configs_installed and cfg_path != ("%s/configs" % os.getcwd()):
+            """ Do a one-time installation of the base configs """
+            self.install_configs("%s/configs" % os.getcwd())
             self.__configs_installed = True
 
         for f in os.listdir(cfg_path):
@@ -412,7 +411,10 @@ class Asterisk:
         Perform any post-installation manipulation of the config
         files
         """
+        if self.__configs_set_up:
+            return
         self.__setup_manager_conf()
+        self.__configs_set_up = True
 
     def __setup_manager_conf(self):
         values = []
