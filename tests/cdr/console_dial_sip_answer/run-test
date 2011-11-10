@@ -46,7 +46,7 @@ class Test(TestCase):
             amaflags="DOCUMENTATION")])
         cdr2_expect = AsteriskCSVCDR(records=[AsteriskCSVCDRLine(accountcode="",
             source="Anonymous", destination="1", dcontext="default",
-            callerid='"Anonymous" <Anonymous>', channel="SIP/anonymous.invalid:5065-.*",
+            callerid='"Anonymous" <Anonymous>', channel="SIP/anonymous.invalid-.*",
             dchannel="", lastapp="Hangup", lastarg="", disposition="ANSWERED",
             amaflags="DOCUMENTATION")])
 
