@@ -22,6 +22,12 @@ class CallParkingTest(TestCase):
         TestCase.__init__(self)
 
         self.ami_count = 0
+
+        # Initial parked call subtest.
+        self.expected_space = 701
+        self.request_exten = 101
+
+        # Clear parked call subtest completion stage flags.
         self.got_AMI_UnParkedCall = False
         self.ast1_event = False
         self.ast2_event = False
@@ -30,21 +36,53 @@ class CallParkingTest(TestCase):
         self.create_asterisk(2)
 
     def check_result(self):
-        if self.got_AMI_UnParkedCall is True and self.ast1_event is True and self.ast2_event is True:
-            self.passed = True
-            self.stop_reactor()
+        if not self.got_AMI_UnParkedCall:
+            return
+        if not self.ast1_event:
+            return
+        if not self.ast2_event:
+            return
+
+        # Parked call subtest completed successfully.
+        # Clear parked call subtest completion stage flags.
+        self.got_AMI_UnParkedCall = False
+        self.ast1_event = False
+        self.ast2_event = False
+
+        if self.request_exten == 101:
+            # Start next parked call subtest.
+            self.expected_space = 702
+            self.request_exten = 102
+            self.initate_call_to_park()
+            return
+
+        if self.request_exten == 102:
+            # Start next parked call subtest.
+            self.expected_space = 703
+            self.request_exten = 103
+            self.initate_call_to_park()
+            return
+
+        # All parked call subtests completed successfully.
+        self.passed = True
+        self.stop_reactor()
+
+    # Initiate test call to park.
+    def initate_call_to_park(self):
+        logger.info("Initiating test call for " + str(self.request_exten))
+        self.ast[0].cli_originate("Local/9876@ast2/n extension " + str(self.request_exten) + "@ast2")
 
     # Initiate a call to retrieve the parked call.
     def get_parkedcall(self):
-        logger.info("Fetching parked call")
-        self.ast[1].cli_originate("IAX2/ast1/701 extension s@ast1")
+        logger.info("Fetching parked call at " + str(self.expected_space))
+        self.ast[1].cli_originate("IAX2/ast1/" + str(self.expected_space) + " extension retrieve@ast1")
 
     # Called when got UnParkedCall AMI event
     def ast1_unparkedcall(self, ami, event):
         exten = event.get("exten").lower()
-        logger.info("Parked call retrieved from exten:" + str(exten))
-        if exten != "701":
-            logger.info("Call not retrieved from expected space")
+        logger.info("Parked call retrieved from exten: " + str(exten))
+        if exten != str(self.expected_space):
+            logger.info("Call not retrieved from expected space " + str(self.expected_space))
             self.stop_reactor()
             return
 
@@ -54,9 +92,9 @@ class CallParkingTest(TestCase):
     # Called when got ParkedCall AMI event
     def ast1_parkedcall(self, ami, event):
         exten = event.get("exten").lower()
-        logger.info("Call parked at exten:" + str(exten))
-        if exten != "701":
-            logger.info("Call not parked in expected space")
+        logger.info("Call parked at exten: " + str(exten))
+        if exten != str(self.expected_space):
+            logger.info("Call not parked in expected space " + str(self.expected_space))
             self.stop_reactor()
             return
 
@@ -65,7 +103,7 @@ class CallParkingTest(TestCase):
     # Called when got UserEvent AMI event from Ast2
     def ast2_userevent(self, ami, event):
         status = event.get("status")
-        logger.info("ast2_userevent status:" + str(status))
+        logger.info("ast2_userevent status: " + str(status))
         if status != "SUCCESS":
             self.stop_reactor()
             return
@@ -76,7 +114,7 @@ class CallParkingTest(TestCase):
     # Called when got UserEvent AMI event from Ast1
     def ast1_userevent(self, ami, event):
         status = event.get("status")
-        logger.info("ast1_userevent status:" + str(status))
+        logger.info("ast1_userevent status: " + str(status))
         if status != "SUCCESS":
             self.stop_reactor()
             return
@@ -97,8 +135,7 @@ class CallParkingTest(TestCase):
         # Initiate test when both AMI connections are established.
         self.ami_count += 1
         if self.ami_count == 2:
-            logger.info("Initiating test call")
-            self.ast[0].cli_originate("Local/9876@ast2/n extension 101@ast2")
+            self.initate_call_to_park()
 
     # This is called when the reactor has started running.
     def run(self):
