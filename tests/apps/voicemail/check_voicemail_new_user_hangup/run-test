@@ -128,6 +128,22 @@ class NewUserTestState(VoiceMailState):
                 self.voiceMailTest.sendDTMF(self.newPassword)
             elif message == 'vm-reenterpassword':
                 self.voiceMailTest.hangup()
+            elif message == 'vm-review':
+                """ If we review a message, tell it to save the message """
+                self.voiceMailTest.sendDTMF("1")
+            elif message == 'vm-rec-name':
+                self.voiceMailTest.reset_timeout()
+                self.voiceMailTest.setTestCondition('recordName', True)
+            elif message == 'vm-rec-unv':
+                self.voiceMailTest.reset_timeout()
+                self.voiceMailTest.setTestCondition('recordUnavailable', True)
+            elif message == 'vm-rec-busy':
+                self.voiceMailTest.reset_timeout()
+                self.voiceMailTest.setTestCondition('recordBusy', True)
+            elif message == 'beep':
+                """ A beep indicates we need to stream some sound file over - use the same sound file for everything """
+                audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.voiceMailTest.testParentDir))
+                self.voiceMailTest.sendSoundFileWithDTMF(audioFile, "#")
             else:
                 self.handleDefaultState(event)
         else:
