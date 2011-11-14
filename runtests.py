@@ -38,7 +38,7 @@ class TestRun:
         self.options = options
         self.test_config = TestConfig(test_name)
         self.failure_message = ""
-        self.__check_deps(ast_version)
+        self.__check_can_run(ast_version)
         self.stdout = ""
 
     def run(self):
@@ -179,8 +179,11 @@ class TestRun:
                 break
             i += 1
 
-    def __check_deps(self, ast_version):
-        self.can_run = self.test_config.check_deps(ast_version)
+    def __check_can_run(self, ast_version):
+        """Check tags and dependencies in the test config."""
+        if self.test_config.check_deps(ast_version) and \
+                self.test_config.check_tags(self.options.tags):
+            self.can_run = True
 
     def __parse_run_output(self, output):
         self.failure_message = output
@@ -264,6 +267,7 @@ class TestSuite:
                 if t.test_config.maxversion is not None:
                     print "--- --> Maximum Version: %s (%s)" % \
                         (str(t.test_config.maxversion), str(t.test_config.maxversion_check))
+                print "--- --> Tags: %s" % (t.test_config.tags)
                 for d in t.test_config.deps:
                     print "--- --> Dependency: %s - %s" % (d.name, str(d.met))
                 print
@@ -372,6 +376,9 @@ def main(argv=None):
     parser.add_option("-t", "--test",
             dest="test",
             help="Run a single specified test instead of all tests.")
+    parser.add_option("-g", "--tag", action="append",
+            dest="tags",
+            help="Specify one or more tags to select a subset of tests.")
     parser.add_option("-v", "--version",
             dest="version", default=None,
             help="Specify the version of Asterisk rather then detecting it.")

@@ -453,6 +453,12 @@ properties:
             # test execution are tracked throughout the test; if any additional file descriptors
             # after test execution are detected, the test condition fails.
             name: 'file-descriptors'
+    tags: # OPTIONAL
+        #
+        # List of tags used to select a subset of tests to run.  A test must have all tags to run.
+        #
+        -   core # This test is part of the core support level.
+        -   voicemail # This test involves voicemail functionality.
 
 
 --------------------------------------------------------------------------------

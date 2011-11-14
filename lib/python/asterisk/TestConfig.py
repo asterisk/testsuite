@@ -242,6 +242,7 @@ class TestConfig:
         self.minversion = None
         self.minversion_check = False
         self.deps = []
+        self.tags = []
         self.expectPass = True
         self.excludedTests = []
         self.test_configuration = "(none)"
@@ -404,4 +405,42 @@ class TestConfig:
             if d.met is False:
                 self.can_run = False
                 break
+        return self.can_run
+
+    def check_tags(self, requested_tags):
+        """
+        Check whether or not a test should execute based on its tags
+
+        Keyword arguments:
+        requested_tags -- The list of tags used for selecting a subset of
+            tests.  The test must have all tags to run.
+        returns can_run - True if the test can execute, False otherwise
+        """
+
+        if not self.config:
+            return False
+
+        if "properties" in self.config:
+            self.tags = self.config["properties"].get("tags")
+
+        # if no tags are requested, this test's tags don't matter
+        if not requested_tags or not len(requested_tags):
+            return self.can_run
+
+        for tag in requested_tags:
+            if tag.startswith("-"):
+                try:
+                    self.tags.index(tag[1:])
+                    self.can_run = False
+                    return self.can_run
+                except:
+                    pass
+            else:
+                try:
+                    self.tags.index(tag)
+                except:
+                    self.can_run = False
+                    return self.can_run
+
+        # all tags matched successfully
         return self.can_run
