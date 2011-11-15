@@ -80,8 +80,9 @@ class TestRun:
             cmd = 'gdb -se "asterisk" -ex "bt full" -ex "thread apply all bt" --batch -c core > ./backtrace.txt'
             print "Running %s" % cmd
             try:
-                btp = subprocess.Popen(cmd)
-                btp.wait()
+                res = subprocess.call(cmd, shell = True)
+                if res != 0:
+                    print "error analyzing core dump; gdb exited with %d" (res)
                 """ Copy the backtrace over to the logs """
                 dest_dir = "./logs/%s" % self.test_name.lstrip("tests/")
             except OSError, ose:
