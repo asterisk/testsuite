@@ -15,7 +15,7 @@ from starpy import fastagi
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 
-workingdir = "fastagi/execute"
+workingdir = "fastagi/sounds"
 testdir = "tests/fastagi"
 
 
@@ -38,7 +38,7 @@ class FastAGIRecordFileTest:
 
         self.ast1 = Asterisk(base=workingdir)
         self.ast1.install_configs("%s/configs/ast1" % (testdir))
-	self.audio_file = "%s/out.ulaw" % (workingdir)
+	self.audio_file = "%s/talking.ulaw" % (workingdir)
 
     def on_record_failure(self, reason):
         if os.path.exists(self.audio_file):
@@ -87,7 +87,7 @@ class FastAGIRecordFileTest:
     # This gets invoked by the dialplan when the call is answered
     def do_test(self, agi):
         self.agi = agi
-        return agi.recordFile("%s/out" % (workingdir), "ulaw", "#", "3"
+        return agi.recordFile("%s/talking" % (workingdir), "ulaw", "#", "3"
             ).addCallback(self.on_record_success).addErrback(self.on_record_failure)
 
     def read_result(self):
