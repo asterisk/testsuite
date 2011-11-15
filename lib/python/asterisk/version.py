@@ -75,7 +75,10 @@ class AsteriskVersion:
                 if self.minor is not None:
                     res += int(self.minor) * 10000
                     if self.patch is not None:
-                        res += int(self.__parse_version_patch(self.patch))
+                        if isinstance(self.patch, (int, long)):
+                            res += self.patch
+                        else:
+                            res += int(self.__parse_version_patch(self.patch))
             return res
 
     def __cmp__(self, other):
@@ -97,6 +100,9 @@ class AsteriskVersion:
             self.major = parts[1]
         if len(parts) >= 3:
             self.minor = parts[2]
+            if "-" in self.minor:
+                self.patch = self.__parse_version_patch(self.minor)
+                self.minor = self.minor[:self.minor.find("-")]
         if len(parts) >= 4:
             self.patch = parts[3]
 
