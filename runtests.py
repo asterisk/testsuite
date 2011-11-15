@@ -82,7 +82,7 @@ class TestRun:
             try:
                 res = subprocess.call(cmd, shell = True)
                 if res != 0:
-                    print "error analyzing core dump; gdb exited with %d" (res)
+                    print "error analyzing core dump; gdb exited with %d" % (res)
                 """ Copy the backtrace over to the logs """
                 dest_dir = "./logs/%s" % self.test_name.lstrip("tests/")
             except OSError, ose:
