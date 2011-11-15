@@ -92,30 +92,19 @@ class TestRun:
                 print "Unknown exception occurred while executing %s" % cmd
                 return
 
-            if not os.path.exists(dest_dir):
-                try:
+            try:
+                if not os.path.exists(dest_dir):
                     os.makedirs(dest_dir)
-                    os.link("./backtrace.txt", dest_dir + "/backtrace.txt")
-                except OSError, ose:
-                    """ Different partitions can cause this to fail """
-                    print "OSError occurred while copying %s ([%d]: %s)" % ("backtrace.txt", ose.errno, ose.strerror)
-                    print "Attempting copy"
-                    try:
-                        shutil.copy("./backtrace.txt", dest_dir + "/backtrace.txt")
-                    except shutil.Error, err:
-                        for e in err:
-                            print "Exception occurred while archiving backtrace from %s to %s: %s" % (e[0], e[1], e[2])
-                    except IOError, io:
-                        """ Don't let an IOError blow out the whole test run """
-                        print "IOError Exception occured while copying backtrace"
-                        try:
-                            (code, message) = io
-                        except:
-                            code = 0
-                            message = io
-                        print "ErrNo: %d - %s" % (code, message)
-                    except:
-                        print "Unknown exception occurred while attempting to copy backtrace"
+                os.link("./backtrace.txt", dest_dir + "/backtrace.txt")
+            except OSError, ose:
+                """ Different partitions can cause this to fail """
+                print "OSError occurred while copying %s ([%d]: %s)" % ("backtrace.txt", ose.errno, ose.strerror)
+                print "Attempting copy"
+                try:
+                    shutil.copy("./backtrace.txt", dest_dir + "/backtrace.txt")
+                except shutil.Error, err:
+                    for e in err:
+                        print "Exception occurred while archiving backtrace from %s to %s: %s" % (e[0], e[1], e[2])
                 except IOError, io:
                     """ Don't let an IOError blow out the whole test run """
                     print "IOError Exception occured while copying backtrace"
@@ -127,6 +116,17 @@ class TestRun:
                     print "ErrNo: %d - %s" % (code, message)
                 except:
                     print "Unknown exception occurred while attempting to copy backtrace"
+            except IOError, io:
+                """ Don't let an IOError blow out the whole test run """
+                print "IOError Exception occured while copying backtrace"
+                try:
+                    (code, message) = io
+                except:
+                    code = 0
+                    message = io
+                print "ErrNo: %d - %s" % (code, message)
+            except:
+                print "Unknown exception occurred while attempting to copy backtrace"
 
     def __archive_ast_logs(self):
         ast_directories = "%s/%s" % (Asterisk.test_suite_root, self.test_name.lstrip("tests/"))
