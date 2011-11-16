@@ -6,7 +6,6 @@ testinfo:
         mailboxes
 
 properties:
-    # Expected to fail per ASTERISK-18245
     minversion: '1.8'
     testconditions:
     testconditions:

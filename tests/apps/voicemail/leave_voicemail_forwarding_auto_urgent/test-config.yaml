@@ -6,7 +6,6 @@ testinfo:
         mailboxes.  This preserves the Urgent flag on the mailboxes.
 
 properties:
-    # Expected to fail per ASTERISK-18246
     minversion: '1.8'
     testconditions:
     testconditions:
