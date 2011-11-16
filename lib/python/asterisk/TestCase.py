@@ -178,11 +178,28 @@ class TestCase(object):
         Stop the instances of Asterisk that were previously started.  See
         start_asterisk.  Note that this should be called after the reactor has
         returned from its run.
+
+        If there were errors exiting asterisk, this function will return False.
         """
+        res = True
         self.testConditionController.evaluate_post_checks()
         for index, item in enumerate(self.ast):
             logger.info("Stopping Asterisk instance %d" % (index + 1))
-            self.ast[index].stop()
+            returncode = self.ast[index].stop()
+            if returncode < 0:
+                # XXX setting passed here might be overridden later in a
+                # derived class. This is bad.
+                self.passed = False
+                logger.error("Asterisk instance %d exited with signal %d" % (index + 1, abs(returncode)))
+                res = False
+            elif returncode > 0:
+                # XXX same here
+                self.passed = False
+                logger.error("Asterisk instance %d exited with non-zero return code %d" % (index + 1, returncode))
+                res = False
+
+        return res
+
 
     def stop_reactor(self):
         """
