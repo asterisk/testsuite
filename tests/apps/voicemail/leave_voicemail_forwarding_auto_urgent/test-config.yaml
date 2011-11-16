@@ -7,7 +7,6 @@ testinfo:
 
 properties:
     # Expected to fail per ASTERISK-18246
-    expectedResult: 'Fail'
     minversion: '1.8'
     testconditions:
     testconditions:

@@ -114,13 +114,12 @@ def main():
         if not voicemailManager.checkVoicemailExists("default","9002",0,formats):
             logger.warn("No voicemail left for default/9002")
             test.passed = False
-        if not voicemailManager.checkVoicemailExists("default","9003",0,formats):
+        if not voicemailManager.checkVoicemailExists("default","9003",0,formats,"Urgent"):
             logger.warn("No voicemail left for default/9003")
             test.passed = False
-        if not voicemailManager.checkVoicemailExists("notdefault","9004",0,formats):
+        if not voicemailManager.checkVoicemailExists("notdefault","9004",0,formats,"Urgent"):
             logger.warn("No voicemail left for notdefault/9004")
             test.passed = False
-
     if not test.passed:
         return 1
 
