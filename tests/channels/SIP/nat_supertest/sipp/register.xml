@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-2" ?>
+
+<!--  Use with CSV file struct like: 5061,;rport;
+-->
+
+<scenario name="register_client">
+  <send>
+    <![CDATA[
+
+      REGISTER sip:[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[field0 line=0];branch=[branch];[field1 line=0]
+      From: <sip:[service]@[local_ip]>;tag=[call_number]
+      To: <sip:[service]@[local_ip]>
+      Call-ID: [call_id]
+      CSeq: [cseq] REGISTER
+      Contact: sip:[service]@[local_ip]:[local_port]
+      Max-Forwards: 10
+      Expires: 120
+      User-Agent: SIPp
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- asterisk -->
+  <recv response="100" optional="true">
+  </recv>
+
+  <recv response="401">
+  </recv>
+
+</scenario>

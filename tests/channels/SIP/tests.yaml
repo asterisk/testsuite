@@ -27,3 +27,4 @@ tests:
     - test: 'realtime_sipregs'
     - test: 'realtime_nosipregs'
     - test: 'codec_negotiation'
+    - test: 'nat_supertest'

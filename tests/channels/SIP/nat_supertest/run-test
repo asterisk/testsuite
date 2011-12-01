@@ -1,0 +1,163 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2011, Digium, Inc.
+Terry Wilson <twilson@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+sys.path.append("lib/python")
+
+from asterisk.TestCase import TestCase
+from asterisk.sipp import SIPpScenario
+from asterisk.syncami import SyncAMI, InvalidAMIResponse
+from twisted.internet import reactor
+from qm import QM
+
+TEST_DIR = os.path.dirname(os.path.realpath(__file__))
+logger = logging.getLogger(__name__)
+INJECT_FILE = TEST_DIR + "/sipp/inject.csv"
+
+expected_failures = {
+    'branch-1.4': [4, 6, 8, 10],
+    'branch-1.6.2': [4, 6, 8, 10],
+    'branch-1.8': [4, 8],
+    'branch-10': [4, 8],
+    'trunk': [4, 8]
+}
+
+nat_modes = {
+    'branch-1.4': {False: 'no', True: 'route'},
+    'branch-1.6.2': {False: 'no', True: 'route'},
+    'branch-1.8': {False: 'no', True: 'force_rport'},
+    'branch-10': {False: 'no', True: 'force_rport'},
+    'trunk': {False: 'no', True: 'force_rport'},
+}
+
+def compute_value(val):
+    """ Take an iterable of booleans (MSB-first) and return their integer value
+    For example:
+        compute_value((False, False)) => 0
+        compute_value((False, True)) => 1
+        compute_value((True, False)) => 2
+        compute_value((True, True)) => 3"""
+    return sum(map(lambda (n, x) : ((2 ** n) * int(x)), enumerate(reversed(val))))
+
+
+class SIPNatTest(TestCase):
+    def __init__(self):
+        super(SIPNatTest, self).__init__()
+        self.passed = False
+        self.create_asterisk()
+        self.failures = []
+
+    def run(self):
+        super(SIPNatTest, self).run()
+        self.create_ami_factory()
+
+    def get_nat_value(self, route):
+        return nat_modes[self.ast[0].ast_version.branch][route]
+
+    def update_config(self, general_nat, peer_nat):
+        global_nat = self.get_nat_value(general_nat)
+        spec_nat = self.get_nat_value(peer_nat)
+        message = {
+            'Action': 'UpdateConfig',
+            'SrcFilename': 'sip.conf',
+            'DstFilename': 'sip.conf',
+            'Action-000000': 'Update',
+            'Var-000000': 'nat'
+        }
+
+        try:
+            message['Value-000000'] = global_nat
+            message['Cat-000000'] = 'general'
+            self.syncami.send(message)
+
+            message['Value-000000'] = spec_nat
+            message['Cat-000000'] = 'existing'
+            message['Reload'] = 'chan_sip.so'
+            self.syncami.send(message)
+        except InvalidAMIResponse as err:
+            logger.warn("Inavlid Response: %s\n" % (err,))
+            reactor.stop()
+
+    def update_inject_file(self, rport_specified, port_matches_via):
+        inject_str = '%d;%s\n' % ((5062,5061)[port_matches_via], ('ignored', 'rport')[rport_specified])
+
+        try:
+            os.remove(INJECT_FILE)
+        except:
+            pass
+        f = open(INJECT_FILE, 'w+')
+        f.writelines(["SEQUENTIAL\n", inject_str])
+        f.close()
+
+    def run_combos(self):
+        scenario_def = {'scenario': 'register.xml', '-p': '5061', '-recv_timeout': '1000', '-inf': INJECT_FILE}
+        for general_nat in [False, True]:
+            for peer_nat in [False, True]:
+                self.update_config(general_nat, peer_nat)
+                for rport_specified in [False, True]:
+                    for port_matches_via in [False, True]:
+                        existing_result = None
+                        nonexisting_result = None
+                        self.update_inject_file(rport_specified, port_matches_via)
+                        for peer_name in ["existing", "nonexisting"]:
+                            scenario_def['-s'] = peer_name
+                            scenario = SIPpScenario(TEST_DIR, scenario_def)
+                            scenario.run()
+                            if peer_name == "existing":
+                                existing_result = scenario.waitAndEvaluate()
+                            else:
+                                nonexisting_result = scenario.waitAndEvaluate()
+                            self.reset_timeout()
+                        if nonexisting_result != existing_result:
+                            values = [general_nat, peer_nat, rport_specified, port_matches_via]
+                            logger.debug("Failed global_nat=%s peer_nat=%s rport_sepcified=%s port_matches_via=%s" % (self.get_nat_value(general_nat),self. get_nat_value(peer_nat), rport_specified, port_matches_via))
+                            self.failures.append(compute_value(values))
+
+        # order of variables is least significant first!
+        qm = QM(["port_matches_via", "rport_specified", "peer_nat", "general_nat"])
+        logger.debug("Failures: %s" % (self.failures,))
+        try:
+            if self.failures == expected_failures[self.ast[0].ast_version.branch]:
+                self.passed = True
+                logger.info(qm.get_function(qm.solve(self.failures, [])[1]))
+            else:
+                logger.warn(qm.get_function(qm.solve(self.failures, [])[1]))
+        except KeyError:
+            log.error("We don't know the expected failures for branch: %s\n" % (self.ast[0].ast_version.branch,))
+            self.passed = True
+
+        reactor.stop()
+
+    def ami_connect(self, ami):
+        logger.debug("Connected to AMI")
+        # Use synchronous calls to AMI over HTTP to make life simpler
+        self.syncami = SyncAMI()
+        self.run_combos()
+
+
+def main():
+    test = SIPNatTest()
+    test.start_asterisk()
+    reactor.run()
+    test.stop_asterisk()
+
+    if test.passed:
+        return 0
+
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
