@@ -16,3 +16,7 @@ properties:
         - app : 'bash'
         - app : 'asttest'
         - custom : 'fax'
+    tags:
+        - fax
+        - fax_passthrough
+        - chan_local

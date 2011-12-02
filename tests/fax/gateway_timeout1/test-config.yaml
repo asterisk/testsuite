@@ -19,3 +19,6 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - custom : 'fax'
+    tags:
+        - fax
+        - fax_gateway
