@@ -24,3 +24,4 @@ properties:
     tags:
         - fax
         - fax_gateway
+        - fax_passthrough
