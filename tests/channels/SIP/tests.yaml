@@ -13,6 +13,7 @@ tests:
     - test: 'sip_one_legged_transfer'
     - test: 'sip_one_legged_transfer_v6'
     - test: 'sip_register'
+    - test: 'sip_register_domain_acl'
     - test: 'sip_channel_params'
     - test: 'sip_tls_call'
 #    - test: 'sip_srtp'

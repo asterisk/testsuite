@@ -30,7 +30,7 @@ class SIPpScenario:
     when a SIPp scenario must be integrated with a more complex test (using the TestCase
     class, for example)
     """
-    def __init__(self, test_dir, scenario):
+    def __init__(self, test_dir, scenario, positional_args=()):
         """
         Arguments:
 
@@ -38,8 +38,8 @@ class SIPpScenario:
 
         scenario - a SIPp scenario to execute.  The scenario should
         be a dictionary with the key 'scenario' being the filename
-        of the SIPp scneario.  Any other key-value pairs are treated as arguments
-        to SIPp.  For example, specity '-timeout' : '60s' to set the
+        of the SIPp scenario.  Any other key-value pairs are treated as arguments
+        to SIPp.  For example, specify '-timeout' : '60s' to set the
         timeout option to SIPp to 60 seconds.  If a parameter specified
         is also one specified by default, the value provided will be used.
         The default SIPp parameters include:
@@ -50,8 +50,15 @@ class SIPpScenario:
             -i 127.0.0.1 - Use this as the local IP address for the Contact
                            headers, Via headers, etc.
             -timeout 20s - Set a global test timeout of 20 seconds.
+
+        positional_args - certain SIPp parameters can be specified multiple
+        times, or take multiple arguments. Supply those through this iterable.
+        The canonical example being -key:
+            ('-key', 'extra_via_param', ';rport',
+             '-key', 'user_addr', 'sip:myname@myhost')
         """
         self.scenario = scenario
+        self.positional_args = tuple(positional_args) # don't allow caller to mangle his own list
         self.test_dir = test_dir
         self.default_port = 5061
         self.sipp = None
@@ -78,6 +85,7 @@ class SIPpScenario:
 
         for (key, val) in default_args.items():
             sipp_args.extend([ key, val ])
+        sipp_args.extend(self.positional_args)
 
         logger.info("Executing SIPp scenario: %s" % self.scenario['scenario'])
         logger.info(sipp_args)

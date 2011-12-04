@@ -1,0 +1,11 @@
+testinfo:
+    summary:    'Test SIP registration for non-local domains'
+    description: |
+        'Make sure that allowexternaldomains works properly'
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python: 'twisted'
+        - sipp:
+            version: 'v3.1'
+            feature: 'TLS'

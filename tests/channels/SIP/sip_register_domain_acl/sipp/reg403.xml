@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic REGISTER, Walter Doekes 2011, with custom register useraddr">
+  <label id="register"/>
+
+  <send retrans="500">
+    <![CDATA[
+
+      REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:[useraddr]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:[useraddr]>
+      Contact: <sip:[service]@[local_ip]:[local_port];transport=[transport]>
+      Expires: 15
+      Call-ID: [call_id]
+      CSeq: 1 REGISTER
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="403" optional="true" next="register-done"/>
+
+  <recv response="401" optional="true" next="register-with-auth" auth="true"/>
+
+  <recv response="407" auth="true"/>
+
+  <label id="register-with-auth"/>
+
+  <send retrans="500">
+    <![CDATA[
+
+      REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:[useraddr]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:[useraddr]>
+      Contact: <sip:[service]@[local_ip]:[local_port];transport=[transport]>
+      Expires: 15
+      [authentication]
+      Call-ID: [call_id]
+      CSeq: 2 REGISTER
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="403"/>
+
+  <label id="register-done"/>
+</scenario><!-- vim: set ts=8 sw=2 sts=2 et ai: -->
