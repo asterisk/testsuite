@@ -10,6 +10,7 @@ the GNU General Public License Version 2.
 
 import sys
 import os
+import errno
 import subprocess
 import optparse
 import time
@@ -52,7 +53,7 @@ class TestRun:
         if os.path.exists(cmd[0]) and os.access(cmd[0], os.X_OK):
             msg = "Running %s ..." % cmd
             print msg
-            self.stdout += msg
+            self.stdout += msg + "\n"
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
             try:
@@ -75,58 +76,31 @@ class TestRun:
         self.time = time.time() - start_time
 
     def __archive_core_dump(self):
-        if os.path.exists('./core'):
+        if os.path.exists("./core"):
             print "Core dump detected; an Asterisk instance must have crashed"
-            cmd = 'gdb -se "asterisk" -ex "bt full" -ex "thread apply all bt" --batch -c core > ./backtrace.txt'
-            print "Running %s" % cmd
+            dest_dir = "./logs/%s" % self.test_name.lstrip("tests/")
+            if not os.path.exists(dest_dir):
+                os.makedirs(dest_dir)
+            dest_file = open(dest_dir + "/backtrace.txt", "w")
+            gdb_cmd = ["gdb", "-se", "asterisk", "-ex", "bt full", "-ex", "thread apply all bt", "--batch", "-c", "core"]
+            print "Running %s" % (" ".join(gdb_cmd),)
             try:
-                res = subprocess.call(cmd, shell = True)
+                res = subprocess.call(gdb_cmd, stdout=dest_file, stderr=subprocess.STDOUT)
                 if res != 0:
-                    print "error analyzing core dump; gdb exited with %d" % (res)
+                    print "error analyzing core dump; gdb exited with %d" % res
                 """ Copy the backtrace over to the logs """
-                dest_dir = "./logs/%s" % self.test_name.lstrip("tests/")
             except OSError, ose:
-                print "OSError ([%d]: %s) occurred while executing %s" % (ose.errno, ose.strerror, cmd)
+                print "OSError ([%d]: %s) occurred while executing %r" % (ose.errno, ose.strerror, gdb_cmd)
                 return
             except:
-                print "Unknown exception occurred while executing %s" % cmd
+                print "Unknown exception occurred while executing %r" % (gdb_cmd,)
                 return
-
-            try:
-                if not os.path.exists(dest_dir):
-                    os.makedirs(dest_dir)
-                os.link("./backtrace.txt", dest_dir + "/backtrace.txt")
-            except OSError, ose:
-                """ Different partitions can cause this to fail """
-                print "OSError occurred while copying %s ([%d]: %s)" % ("backtrace.txt", ose.errno, ose.strerror)
-                print "Attempting copy"
+            finally:
+                dest_file.close()
                 try:
-                    shutil.copy("./backtrace.txt", dest_dir + "/backtrace.txt")
-                except shutil.Error, err:
-                    for e in err:
-                        print "Exception occurred while archiving backtrace from %s to %s: %s" % (e[0], e[1], e[2])
-                except IOError, io:
-                    """ Don't let an IOError blow out the whole test run """
-                    print "IOError Exception occured while copying backtrace"
-                    try:
-                        (code, message) = io
-                    except:
-                        code = 0
-                        message = io
-                    print "ErrNo: %d - %s" % (code, message)
-                except:
-                    print "Unknown exception occurred while attempting to copy backtrace"
-            except IOError, io:
-                """ Don't let an IOError blow out the whole test run """
-                print "IOError Exception occured while copying backtrace"
-                try:
-                    (code, message) = io
-                except:
-                    code = 0
-                    message = io
-                print "ErrNo: %d - %s" % (code, message)
-            except:
-                print "Unknown exception occurred while attempting to copy backtrace"
+                    os.rename("./core", dest_dir + "/core")
+                except OSError, e:
+                    print "Error moving core file: %s: Beware of the stale core file in CWD!" % (e,)
 
     def __archive_ast_logs(self):
         ast_directories = "%s/%s" % (Asterisk.test_suite_root, self.test_name.lstrip("tests/"))
@@ -138,44 +112,12 @@ class TestRun:
                 """ Only archive the logs if we havent archived it for this test run yet """
                 if not os.path.exists(dest_dir):
                     try:
-                        os.makedirs(dest_dir)
-                        os.link(ast_dir + "/messages.txt", dest_dir +
-                                "/messages.txt")
-                        os.link(ast_dir + "/full.txt", dest_dir + "/full.txt")
-                    except OSError, ose:
-                        """ Different partitions can cause this to fail """
-                        print "OSError occurred while copying %s ([%d]: %s)" % (ast_dir, ose.errno, ose.strerror)
-                        print "Attempting copy"
-                        try:
-                            shutil.copy(ast_dir + "/messages.txt", dest_dir +
-                                    "/messages.txt")
-                            shutil.copy(ast_dir + "/full.txt", dest_dir +
-                                    "/full.txt")
-                        except shutil.Error, err:
-                            for e in err:
-                                print "Exception occurred while archiving logs from %s to %s: %s" % (e[0], e[1], e[2])
-                        except IOError, io:
-                            """ Don't let an IOError blow out the whole test run """
-                            print "IOError Exception occured while copying logs"
-                            try:
-                                (code, message) = io
-                            except:
-                                code = 0
-                                message = io
-                            print "ErrNo: %d - %s" % (code, message)
-                        except:
-                            print "Unknown exception occurred while attempting to copy logs"
-                    except IOError, io:
-                        """ Don't let an IOError blow out the whole test run """
-                        print "IOError Exception occured while archiving logs"
-                        try:
-                            (code, message) = io
-                        except:
-                            code = 0
-                            message = io
-                        print "ErrNo: %d - %s" % (code, message)
-                    except:
-                        print "Unknown exception occurred while attempting to copy logs"
+                        hardlink_or_copy(ast_dir + "/messages.txt", dest_dir + "/messages.txt")
+                        hardlink_or_copy(ast_dir + "/full.txt", dest_dir + "/full.txt")
+                    except Exception, e:
+                        print "Exception occurred while archiving logs from %s to %s: %s" % (
+                            ast_dir, dest_dir, e
+                        )
             else:
                 break
             i += 1
@@ -434,6 +376,28 @@ def main(argv=None):
                 print "FAILED"
 
     print "\n"
+
+
+def hardlink_or_copy(source, destination):
+    """May raise all sorts of exceptions, most notably the OSError and
+    the IOError."""
+    if os.path.exists(destination):
+        os.unlink(destination)
+    else:
+        destination_dir = os.path.dirname(destination)
+        if not os.path.exists(destination_dir):
+            os.makedirs(destination_dir)
+
+    try:
+        os.link(source, destination)
+    except OSError, e:
+        # Different partitions can cause hard links to fail (error 18),
+        # if there's a different error, bail out immediately.
+        if e.args[0] != errno.EXDEV:
+            raise e
+
+        # Try a copy instead
+        shutil.copyfile(source, destination)
 
 
 if __name__ == "__main__":
