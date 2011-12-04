@@ -1,4 +1,4 @@
 #!/bin/bash
 
-for n in `find . -type d -name 'tmp' | grep -v ".svn"` ; do rm -rf $n ; done
+find . -type d -name tmp | grep -vF .svn | xargs -d\\n rm -rf
 rm -rf /tmp/asterisk-testsuite
