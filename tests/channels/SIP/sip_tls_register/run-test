@@ -1,0 +1,152 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2011, Digium, Inc.
+Jonathan Rose <jrose@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+import fileinput
+import sys
+import os
+import shutil
+import logging
+from twisted.internet import reactor, defer
+
+sys.path.append("lib/python")
+from asterisk.TestCase import TestCase
+from asterisk.utils import FileReplaceString
+from asterisk.sipp import SIPpScenario
+from starpy import manager
+
+logger = logging.getLogger(__name__)
+
+"""
+Creates an Asterisk instance with a TLS enabled SIP client and then uses sipp to register that client
+with sipp via TLS.
+"""
+class SIPTLS_Register_Test(TestCase):
+
+    # Preps test objects and configuration additions as well as copies TLS keys to test folder.
+    def __init__(self):
+        TestCase.__init__(self)
+
+        self.testdir = "tests/channels/SIP/sip_tls_register"
+
+        self.pass_sipp = False
+        self.pass_event = False
+
+        # Additional setup for config files and keys
+        logger.debug("Building test resources ...")
+
+        self.create_asterisk()
+
+        self.keysdir = "%s%s" % (self.ast[0].base, self.ast[0].directories['astkeydir'])
+        self.etcdir = "%s%s" % (self.ast[0].base, self.ast[0].directories['astetcdir'])
+
+        # Additional setup for config files and keys
+        logger.debug( "Building test resources ...")
+        if os.path.exists('%s/configs/ast1/sip_helper.inc' % (self.testdir)):
+            os.remove('%s/configs/ast1/sip_helper.inc' % (self.testdir))
+        shutil.copy('%s/configs/sip_helper_template.inc' % (self.testdir), '%s/configs/ast1/sip_helper.inc' % (self.testdir))
+
+        FileReplaceString('%s/configs/ast1/sip_helper.inc' % (self.testdir), '<<path>>', '%s' % (self.keysdir))
+
+        #recopy sip_helper.inc since it's been changed. Remove first in case one already exists.
+        if os.path.exists('%s/sip_helper.inc' % self.etcdir):
+            os.remove('%s/sip_helper.inc' % self.etcdir)
+        shutil.copy('%s/configs/ast1/sip_helper.inc' % (self.testdir), '%s' % (self.etcdir))
+
+        #For the registration test, we need to copy some keys for use with sipp.
+        #first delete them if they are already in the folder.
+        self.cleanup_tls()
+
+        #then copy them from the test directory to the working directory that sipp runs from.
+        shutil.copy('%s/configs/keys/serverA.key' % (self.testdir), 'cakey.pem')
+        shutil.copy('%s/configs/keys/serverA.crt' % (self.testdir), 'cacert.pem')
+
+        #Now that we've created the Asterisk instances, let's go ahead and remove the sip_helper.inc files
+
+        if os.path.exists('%s/configs/ast1/sip_helper.inc' % (self.testdir)):
+            os.remove('%s/configs/ast1/sip_helper.inc' % (self.testdir))
+
+        # initialize test variables
+        self.passed = False
+        self.tone1 = False
+        self.tone2 = False
+
+        if not os.path.exists('%s/' % self.keysdir):
+            os.makedirs('%s' % self.keysdir);
+        if os.path.exists('%s/keys' % (self.keysdir)):
+            shutil.rmtree('%s/keys' % (self.keysdir))
+        shutil.copytree('%s/configs/keys' % (self.testdir), '%s/keys' % (self.keysdir))
+        # End of additional setup for config files and keys
+
+    # Sets up callback function for PeerStatus events and runs/evaluates SIPp for the necessary scenario with TLS.
+    def ami_connect(self, ami):
+        self.ami = ami
+        self.ami.registerEvent("PeerStatus", self.check_register_result)
+        scenario_def = {'scenario': 'register.xml', '-p': '5061', '-recv_timeout': '1000', '-s': 'SIP/v4-in', '-t': 'ln'}
+
+        scenario = SIPpScenario("tests/channels/SIP/sip_tls_register", scenario_def)
+        scenario.run()
+
+        #Status of SIPp success/failure is partial success condition of registration test.
+        self.pass_sipp = scenario.waitAndEvaluate()
+        if (self.pass_sipp and self.pass_event):
+            self.passed = True
+            #avoid stop_reactor until testsuite crashes are solved
+            #self.stop_reactor()
+
+    # Callback for PeerStatus events, checks to see if the correct peer registered successfully.
+    def check_register_result(self, ami, event):
+        peer = event.get("peer")
+        status = event.get("peerstatus")
+        logger.info("PeerStatus event received")
+
+        if peer == "SIP/v4-in":
+            logger.info("PeerStatus event peer matched SIP/v4-in")
+        else:
+            logger.info("PeerStatus event peer did not match SIP/v4-in, was %s" % peer)
+            return
+
+        if status == "Registered":
+            logger.info("Successful registration for peer %s" % peer)
+            self.pass_event = True
+            if (self.pass_event and self.pass_sipp):
+                self.passed = True
+                #avoid stop_reactor until testsuite crashes are solved
+                #self.stop_reactor()
+            return
+        else:
+            logger.info("Registration for peer %s in state %s" % (peer, status))
+            return
+
+    # Cleans up TLS cert files used by SIPp
+    def cleanup_tls(self):
+        if os.path.exists('cacert.pem'):
+            os.remove('cacert.pem')
+        if os.path.exists('cakey.pem'):
+            os.remove('cakey.pem')
+
+    # Sets up reactor and AMI connection
+    def run(self):
+        TestCase.run(self)
+        self.create_ami_factory()
+
+
+def main():
+    test = SIPTLS_Register_Test()
+    test.start_asterisk()
+    reactor.run()
+    test.stop_asterisk()
+
+    if test.passed:
+        return 0
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79

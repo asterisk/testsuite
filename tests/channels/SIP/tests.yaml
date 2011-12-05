@@ -16,6 +16,7 @@ tests:
     - test: 'sip_register_domain_acl'
     - test: 'sip_channel_params'
     - test: 'sip_tls_call'
+    - test: 'sip_tls_register'
 #    - test: 'sip_srtp'
     - test: 'noload_res_srtp'
 #    - test: 'noload_res_srtp_attempt_srtp'
