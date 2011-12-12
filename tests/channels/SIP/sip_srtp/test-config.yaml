@@ -9,4 +9,4 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-
+        - asterisk: 'res_srtp'
