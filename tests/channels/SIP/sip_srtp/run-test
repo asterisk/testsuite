@@ -36,8 +36,7 @@ class SIPCallTest(TestCase):
         TestCase.run(self)
 
         print "Initiating test call"
-        self.ast[0].cli_exec(
-            "originate SIP/2000/2000 extension 1000@siptest1")
+        self.ast[0].cli_originate("SIP/2000/2000 extension 1000@siptest1")
 
     # This is called by each Asterisk instance if the call gets connected.
     def fastagi_connect(self, agi):
@@ -56,6 +55,10 @@ class SIPCallTest(TestCase):
             else:
                 print "Don't know which side is connected."
 
+            if self.connected_chan1 and self.connected_srtp1 and self.connected_chan2 and self.connected_srtp2:
+                print "Test passed"
+                self.passed = True
+                reactor.stop()
             # Hold the AGI connection until the reactor times out
             # so the other side has a chance to get its test result.
             ## Drop the AGI connection
@@ -65,15 +68,6 @@ class SIPCallTest(TestCase):
 
     def stop_asterisk(self):
         TestCase.stop_asterisk(self)
-
-        # Determine if the test passed
-        print "self.connected_chan1:%s" % (self.connected_chan1)
-        print "self.connected_srtp1:%s" % (self.connected_srtp1)
-        print "self.connected_chan2:%s" % (self.connected_chan2)
-        print "self.connected_srtp2:%s" % (self.connected_srtp2)
-        if self.connected_chan1 and self.connected_srtp1 and self.connected_chan2 and self.connected_srtp2:
-            print "Test passed"
-            self.passed = True
 
 def main():
     test = SIPCallTest()

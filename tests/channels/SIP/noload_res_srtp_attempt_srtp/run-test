@@ -48,8 +48,7 @@ class SIPCallTest(TestCase):
         self.ami[ami.id].registerEvent("VarSet", self.ami_test_varset)
 
         print "Initiating test call"
-        self.ast[0].cli_exec(
-            "originate SIP/2000/2000 extension 1000@siptest1")
+        self.ast[0].cli_originate("SIP/2000/2000 extension 1000@siptest1", blocking=False)
 
     # This is called whenever an AMI VarSet event occurs on Ast1.
     def ami_test_varset(self, ami, event):
@@ -61,7 +60,7 @@ class SIPCallTest(TestCase):
             return
         print "  Value of event[variable] = %s" % (event["variable"])
         print "  Value of event[value] = %s" % (event["value"])
-        if 0 <= event["variable"].startswith("~HASH~SIP_CAUSE~"):
+        if event["variable"].startswith("~HASH~SIP_CAUSE~"):
             cause_code = event["value"].split(" ")[1]
             if cause_code == "488":
                 # The call failed for the expected reason "488 Not acceptable".

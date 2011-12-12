@@ -56,6 +56,10 @@ class SIPCallTest(TestCase):
             else:
                 print "Don't know which side is connected."
 
+            if self.connected_chan1 and self.connected_no_srtp1 and self.connected_chan2 and self.connected_no_srtp2:
+                print "Test passed"
+                self.passed = True
+                reactor.stop()
             # Hold the AGI connection until the reactor times out
             # so the other side has a chance to get its test result.
             ## Drop the AGI connection
@@ -71,9 +75,6 @@ class SIPCallTest(TestCase):
         print "self.connected_no_srtp1:%s" % (self.connected_no_srtp1)
         print "self.connected_chan2:   %s" % (self.connected_chan2)
         print "self.connected_no_srtp2:%s" % (self.connected_no_srtp2)
-        if self.connected_chan1 and self.connected_no_srtp1 and self.connected_chan2 and self.connected_no_srtp2:
-            print "Test passed"
-            self.passed = True
 
 def main():
     test = SIPCallTest()
