@@ -1,0 +1,12 @@
+testinfo:
+    summary: 'Test a variety of dialplan functions and features'
+    description: |
+        This test verifies a number of dialplan specific functions and features.  This includes,
+        but is not limited to, pattern matching, Goto, GotoIf, math functions, string functions,
+        looping, etc.
+
+properties:
+    minversion: '1.6.2'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
