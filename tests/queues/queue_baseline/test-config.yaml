@@ -8,4 +8,4 @@ testinfo:
 properties:
     minversion: '1.4'
     dependencies:
-        - app: 'asttest'
+        - asterisk: 'app_queue'
