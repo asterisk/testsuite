@@ -2,6 +2,7 @@
 tests:
     - test: 'queue_baseline'
     - test: 'position_priority_maxlen'
+    - test: 'set_penalty'
     # Temporarily disabled while failures are debugged
     #- test: 'macro_gosub_test'
     # Temporarily disabled while failures are debugged

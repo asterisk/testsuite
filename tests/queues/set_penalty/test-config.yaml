@@ -1,0 +1,13 @@
+testinfo:
+    summary: 'Test functionality of queue set penalty CLI command'
+    description: |
+        This test performs a series of queue set penalty commands and QueuePenalty
+        actions in order to check whether or not they fail in some way or cause
+        Asterisk to crash.
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_queue'
