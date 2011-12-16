@@ -1,0 +1,10 @@
+testinfo:
+    summary:    'Demo of PCAP and SIPMessage tests'
+    description: |
+        'Make a simple call and verify via pcap that an INVITE and a 200 happen'
+properties:
+    minversion: '1.4'
+    dependencies:
+        - python : 'twisted'
+        - python : 'construct'
+        - 'pcap'

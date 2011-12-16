@@ -147,6 +147,10 @@ class Dependency:
         elif "buildoption" in dep:
             self.name = dep["buildoption"]
             self.met = self.__find_build_flag(self.name)
+        elif "pcap" in dep:
+            self.name = "pcap"
+            from TestCase import PCAP_AVAILABLE
+            self.met = PCAP_AVAILABLE
         else:
             print "Unknown dependency type specified:"
             for key in dep.keys():

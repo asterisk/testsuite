@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+
+import re
+import sys
+import os
+import logging
+
+sys.path.append("lib/python")
+
+from asterisk.TestCase import TestCase
+from asterisk.syncami import SyncAMI
+from sip_message import SIPMessage, SIPMessageTest
+
+from twisted.internet import reactor
+from construct.protocols.ipstack import ip_stack
+
+logger = logging.getLogger(__name__)
+test1 = [
+    ("first_line", r'^INVITE'),
+    ('Via', r'branch=z9hG4bK'),
+    ('Call-ID', r'.*')
+]
+test2 = [("first_line", r'^SIP/2.0 200')]
+
+DUMP_FILE = '/tmp/dumpfile.pcap'
+
+class PcapSIPTest(TestCase):
+    def __init__(self):
+        super(PcapSIPTest, self).__init__()
+        self.passed = False
+        self.create_asterisk()
+        self.listener = self.create_pcap_listener(None, "port 5060", dumpfile=DUMP_FILE)
+
+        # Creates a SIP matching test based on regular expression matching
+        # The required matches must be matched in order
+        self.siptest = SIPMessageTest(self.on_pcap_complete)
+        self.siptest.add_required_match(test1)
+        self.siptest.add_required_match(test2)
+
+        if not self.listener.pf.pcap.datalink == "EN10MB":
+            raise Exception("Unknown datalink")
+
+    def run(self):
+        super(PcapSIPTest, self).run()
+        self.ast[0].cli_exec("channel originate SIP/blah@127.0.0.1 application Hangup")
+
+    def pcap_callback(self, pkt):
+        # Note, this only works because we are doing UDP. TCP-stream reassembly would
+        # need to be done for TCP data. We also don't handle fragmented IP here.
+        obj = ip_stack.parse(pkt.data)
+        # Ethernet->IP->UDP->Application
+        data = obj.next.next.next
+        try:
+            sipmsg = SIPMessage(data)
+            logger.info(sipmsg)
+            self.siptest.test_sip_msg(sipmsg)
+        except SIPParseError:
+            logger.warning("Got a packet we didn't think was SIP");
+
+
+    def on_pcap_complete(self):
+        logger.info("Test passed")
+        self.passed = True
+        reactor.stop()
+
+def main():
+    t = PcapSIPTest()
+    t.start_asterisk()
+    reactor.run()
+    t.stop_asterisk()
+    if t.passed:
+        return 0
+    return 1
+
+if __name__ == '__main__':
+    sys.exit(main())

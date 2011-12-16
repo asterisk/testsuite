@@ -21,6 +21,12 @@ from TestConfig import TestConfig
 from TestConditions import TestConditionController, TestCondition
 from ThreadTestCondition import ThreadPreTestCondition, ThreadPostTestCondition
 
+try:
+    from pcap_listener import PcapListener
+    PCAP_AVAILABLE = True
+except:
+    PCAP_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 class TestCase(object):
@@ -49,6 +55,11 @@ class TestCase(object):
         self.global_config = TestConfig(os.getcwd())
         self.test_config = TestConfig(self.test_name, self.global_config)
         self.testStateController = None
+        self.pcap = None
+        self.pcapfilename = None
+        self.testlogdir = os.path.join(Asterisk.test_suite_root, self.base, str(os.getpid()))
+
+        os.makedirs(self.testlogdir)
 
         """ Set up logging """
         logConfigFile = os.path.join(os.getcwd(), "%s" % (self.defaultLogFileName))
@@ -61,6 +72,10 @@ class TestCase(object):
         else:
             print "WARNING: no logging.conf file found; using default configuration"
             logging.basicConfig(level=self.defaultLogLevel)
+
+        if PCAP_AVAILABLE:
+            self.pcapfilename = os.path.join(self.testlogdir, "dumpfile.pcap")
+            self.pcap = self.create_pcap_listener(dumpfile=self.pcapfilename)
 
         self.testConditionController = TestConditionController(self.test_config, self.ast, self.stop_reactor)
         self.__setup_conditions()
@@ -162,6 +177,24 @@ class TestCase(object):
             reactor.listenTCP(4573, self.fastagi_factory,
                     self.reactor_timeout, host)
 
+    def create_pcap_listener(self, device=None, bpf_filter=None, dumpfile=None):
+        """Create a single instance of a pcap listener.
+
+        Keyword arguments:
+        device -- The interface to listen on. Defaults to the first interface beginning with 'lo'.
+        bpf_filter -- BPF (filter) describing what packets to match, i.e. "port 5060"
+        dumpfile -- The filename at which to save a pcap capture
+
+        """
+
+        if not PCAP_AVAILABLE:
+            raise Exception("PCAP not available on this machine. Test config is missing pcap dependency.")
+
+        # TestCase will create a listener for logging purposes, and individual tests can
+        # create their own. Tests may only want to watch a specific port, while a general
+        # logger will want to watch more general traffic which can be filtered later.
+        return PcapListener(device, bpf_filter, dumpfile, self.__pcap_callback)
+
     def start_asterisk(self):
         """
         Start the instances of Asterisk that were previously created.  See
@@ -249,6 +282,16 @@ class TestCase(object):
         logger.info("AMI Connect instance %s" % (ami.id + 1))
         self.ami[ami.id] = ami
         self.ami_connect(ami)
+
+    def pcap_callback(self, packet):
+        """
+        Hook method used to receive captured packets.
+        """
+        pass
+
+    def __pcap_callback(self, packet):
+        logger.debug("Received packet: %s\n" % (packet,))
+        self.pcap_callback(packet)
 
     def handleOriginateFailure(self, reason):
         """

@@ -56,6 +56,7 @@ class TestRun:
             self.stdout += msg + "\n"
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
+            self.pid = p.pid
             try:
                 for l in p.stdout.readlines():
                     print l,
@@ -70,6 +71,7 @@ class TestRun:
             if not self.passed:
                 self.__archive_ast_logs()
                 self.__archive_core_dump()
+                self.__archive_pcap_dump()
 
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
@@ -121,6 +123,19 @@ class TestRun:
             else:
                 break
             i += 1
+
+    def __archive_pcap_dump(self):
+        filename = "dumpfile.pcap"
+        test_base = self.test_name.lstrip("tests/")
+        src = os.path.join(Asterisk.test_suite_root, test_base, str(self.pid), filename)
+        dst = os.path.join("logs", test_base, filename)
+        if os.path.exists(src):
+            try:
+                hardlink_or_copy(src, dst)
+            except Exception, e:
+                print "Exeception occured while archiving pcap file from %s to %s: %s" % (
+                    src, dst, e
+                )
 
     def __check_can_run(self, ast_version):
         """Check tags and dependencies in the test config."""
