@@ -16,6 +16,8 @@ testinfo:
 
 properties:
     minversion: '10'
+    # Expected to fail per ASTERISK-19053
+    expectedResult: 'Fail'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
