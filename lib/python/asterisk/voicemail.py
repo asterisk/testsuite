@@ -53,7 +53,7 @@ class TestCondition(object):
         if self.__evaluateFunc != None:
             self.currentState = self.__evaluateFunc(value, self)
         else:
-            logger.warn("WARNING: no evaluate function defined, setting currenState to value")
+            logger.warn("no evaluate function defined, setting currentState to value")
             self.currentState = value
         return
 
@@ -119,13 +119,8 @@ class VoiceMailTest(TestCase):
             self.testStateController.changeState(FailureTestState(self.controller))
             return
 
-        if self.astSender == None:
-            logger.error("Attempting to send DTMF to non-existant Asterisk instance")
-            self.testStateController.changeState(FailureTestState(self.controller))
-            return
-
         if (self.__previous_dtmf != dtmfToSend):
-            self.astSender.cli_exec("dialplan set global DTMF_TO_SEND " + dtmfToSend)
+            self.amiSender.setVar(channel = "", variable = "DTMF_TO_SEND", value = dtmfToSend)
             self.__previous_dtmf = dtmfToSend
 
         """
@@ -145,13 +140,8 @@ class VoiceMailTest(TestCase):
             self.testStateController.changeState(FailureTestState(self.controller))
             return
 
-        if self.astSender == None:
-            logger.error("Attempting to send sound file to non-existant Asterisk instance")
-            self.testStateController.changeState(FailureTestState(self.controller))
-            return
-
         if (self.__previous_audio != audioFile):
-            self.astSender.cli_exec("dialplan set global TALK_AUDIO " + audioFile)
+            self.amiSender.setVar(channel = "", variable = "TALK_AUDIO", value = audioFile)
             self.__previous_audio = audioFile
 
         """
@@ -175,16 +165,11 @@ class VoiceMailTest(TestCase):
             TestCase.testStateController.changeState(FailureTestState(self.controller))
             return
 
-        if self.astSender == None:
-            logger.error("Attempting to send sound file / DTMF to non-existant Asterisk instance")
-            TestCase.testStateController.changeState(FailureTestState(self.controller))
-            return
-
         if (self.__previous_audio != audioFile):
-            self.astSender.cli_exec("dialplan set global TALK_AUDIO " + audioFile)
+            self.amiSender.setVar(channel = "", variable = "TALK_AUDIO", value = audioFile)
             self.__previous_audio = audioFile
         if (self.__previous_dtmf != dtmfToSend):
-            self.astSender.cli_exec("dialplan set global DTMF_TO_SEND " + dtmfToSend)
+            self.amiSender.setVar(channel = "", variable = "DTMF_TO_SEND", value = dtmfToSend)
             self.__previous_dtmf = dtmfToSend
 
         """
