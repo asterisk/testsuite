@@ -4,6 +4,6 @@ testinfo:
         'Send Asterisk a MESSAGE and expect that it gets denied'
 
 properties:
-    minversion: '10'
+    minversion: '1.8'
     dependencies:
         - app : 'sipp'
