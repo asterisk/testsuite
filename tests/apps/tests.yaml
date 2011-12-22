@@ -5,3 +5,4 @@ tests:
     - test: 'directory_attendant_exit'
     - dir: 'voicemail'
     - dir: 'incomplete'
+    - dir: 'confbridge'

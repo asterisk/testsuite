@@ -1,0 +1,17 @@
+testinfo:
+    summary: 'Test nominal operation of app_confbridge'
+    description: |
+        This tests nominal execution of app_confbridge with multiple users entering and
+        participating in a single audio conference.  This includes multiple user profiles and
+        DTMF menus;  admin users; and the interaction of the confbridge with its participants
+        when they join / leave the conference.
+
+properties:
+    minversion: '10'
+    buildoption: 'TEST_FRAMEWORK'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_confbridge'
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'app_playback'

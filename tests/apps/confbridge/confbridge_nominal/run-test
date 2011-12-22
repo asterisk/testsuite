@@ -1,0 +1,333 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+'''
+Copyright (C) 2011, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+from asterisk.TestState import TestStateController
+from asterisk.TestState import TestState
+from asterisk.TestState import FailureTestState
+from asterisk.confbridge import ConfbridgeTestState
+from asterisk.confbridge import ConfbridgeChannelObject
+
+logger = logging.getLogger(__name__)
+
+
+class StartConfBridgeState(ConfbridgeTestState):
+    """
+    The initial state for the ConfBridge.  This state handles logging in all of the
+    calls to the ConfBridge.  Once all users are in the ConfBridge, it transitions
+    to the ActiveConfBridgeState
+    """
+
+    def __init__(self, controller, testCase, calls):
+        """
+        controller      The TestStateController managing the test
+        testCase        The main test object
+        calls           A dictionary (keyed by conf_bridge_channel ID) of ConfbridgeChannelObjects
+        """
+        ConfbridgeTestState.__init__(self, controller, testCase, calls)
+        self.__bridge_channel = ""
+        self.__joined_channels = 0
+        self.__joined_bridges = 0
+        self.__recorded_names = 0
+        self.__played_names = 0
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+        channel = ""
+        if 'channel' in event:
+            channel = event['channel']
+            if "Bridge" in channel:
+                self.__bridge_channel = channel
+        if state == 'PLAYBACK' and channel != "":
+            playfile = event['message']
+            if playfile == 'conf-getpin':
+                self.__handle_pin(channel)
+            elif playfile == 'vm-rec-name':
+                self.testCase.expectedEvents['recordname'] = True
+            elif playfile == 'beep':
+                audioFile = os.path.join(os.getcwd(), "tests/apps/confbridge/sounds/talking")
+                self.sendSoundFileWithDTMF(channel, audioFile, "#")
+                self.__recorded_names += 1
+            elif playfile == 'conf-onlyperson':
+                self.testCase.expectedEvents['onlyperson'] = True
+            elif playfile == 'confbridge-join':
+                self.__handle_confbridge_join(channel)
+            elif playfile == 'conf-placeintoconf':
+                self.testCase.expectedEvents['onlypersonplaced'] = True
+            elif 'confbridge-name' in playfile:
+                self.__played_names += 1
+                if (self.__played_names == self.__recorded_names):
+                    self.testCase.expectedEvents['namesplayed'] = True
+
+    def __handle_pin(self, channel):
+        """ Handles a user entering a pin to the ConfBridge """
+        number_to_send = "1111#"
+        if channel in self.calls:
+            if "admin_profile" in self.calls[channel].profile:
+                number_to_send = "2222#"
+                self.testCase.expectedEvents['adminpin'] = True
+            else:
+                self.testCase.expectedEvents['userpin'] = True
+        self.sendDTMF(channel, number_to_send)
+
+    def __handle_confbridge_join(self, channel):
+        """ Handles when the ConfBridge notifies the users that someone has joined """
+
+        """ We'll hear this twice for each channel that joins """
+        if channel == self.__bridge_channel:
+            self.__joined_bridges += 1
+            if (self.__joined_bridges == len(self.calls)):
+                self.testCase.expectedEvents['joinannouncetoall'] = True
+        else:
+            self.__joined_channels += 1
+            if (self.__joined_channels == len(self.calls)):
+                self.testCase.expectedEvents['joinannouncetochannel'] = True
+        if (self.__joined_bridges == len(self.calls) and self.__joined_channels == len(self.calls)):
+            """ Everyone has joined the conference! """
+            self.changeState(ActiveConfBridgeState(self.controller, self.testCase, self.calls))
+
+    def getStateName(self):
+        return "START"
+
+class ActiveConfBridgeState(ConfbridgeTestState):
+    """
+    State when all users are in the ConfBridge.  In this test, after the users
+    are in the conference the admin unmutes themselves, then they and the other
+    marked user leave.  This state tracks that leave notifications are sent, and
+    that the last unmarked user is notified that the leader has left.
+    """
+
+    def __init__(self, controller, testCase, calls):
+        """
+        controller      The TestStateController managing the test
+        testCase        The main test object
+        calls           A dictionary (keyed by conf_bridge_channel ID) of ConfbridgeChannelObjects
+        """
+        ConfbridgeTestState.__init__(self, controller, testCase, calls)
+        self.testCase.reset_timeout()
+        self.__left_notifications = 0
+        self.__admin_channel = ""
+        """
+        Schedule actions to take place.  Since confbridge doesn't process DTMF
+        during an audio file playback, this has to be done now, as opposed to
+        in reaction to an PLAYBACK event (as the PLAYBACK events occur when the stream
+        begins)
+        """
+        self.send_admin_dtmf(5, "1")
+        self.send_user_dtmf(5, "2")
+        self.send_admin_dtmf(10, "3")
+
+    def send_admin_dtmf(self, delay, dtmf_key):
+        for callkey, callObject in self.calls.items():
+            if "admin_profile" in callObject.profile:
+                self.__admin_channel = callkey
+                if delay > 0:
+                    self.scheduleDTMF(delay, callkey, dtmf_key)
+                else:
+                    self.sendDTMF(callkey, dtmf_key)
+
+    def send_user_dtmf(self, delay, dtmf_key):
+        for callkey, callObject in self.calls.items():
+            if "user_profile" in callObject.profile:
+                if delay > 0:
+                    self.scheduleDTMF(delay, callkey, dtmf_key)
+                else:
+                    self.sendDTMF(callkey, dtmf_key)
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+        channel = ""
+        if 'channel' in event:
+            channel = event['channel']
+        if state == 'CONF_MUTE':
+            if channel == self.__admin_channel and "unmuted" in event['message']:
+                self.testCase.expectedEvents['adminunmuted'] = True
+        elif state == 'PLAYBACK' and channel != "":
+            playfile = event['message']
+            if playfile == 'conf-hasleft':
+                self.__left_notifications += 1
+                if (self.__left_notifications == 2):
+                    self.testCase.expectedEvents['userhasleft'] = True
+            elif playfile == 'conf-leaderhasleft':
+                self.testCase.expectedEvents['leaderhasleft'] = True
+                for callkey, callObject in self.calls.items():
+                    if "parameterless" in callObject.profile:
+                        self.hangup(callkey)
+
+    def getStateName(self):
+        return "ACTIVE"
+
+"""
+The TestCase class that executes the test
+"""
+class ConfBridgeNominal(TestCase):
+
+    asterisk_instances = 2
+
+    def __init__(self):
+        super(ConfBridgeNominal, self).__init__()
+
+        self.reactor_timeout = 30
+        self.create_asterisk(ConfBridgeNominal.asterisk_instances)
+        self.ami_1_originates = ["sip/ast1/parameterless", "sip/ast1/user_profile", "sip/ast1/admin_profile"]
+        self.__amis_connected = 0
+        self.__user_events_confbridge = 0
+        self.__user_events_hangup = 0
+        self.__temp_caller_channel_name = []
+        self.__temp_conf_bridge_channel_name = []
+        self.__temp_caller_ami = []
+        self.__originate = []
+        self.__temp_current_index = 0
+        self.__startObject = None
+        self.expectedEvents = {}
+        self.passed = False
+
+        """ Add the events we expect to receive in order for the test to pass """
+        self.expectedEvents['onlyperson'] = False               # User is told when they are the only person in conference
+        self.expectedEvents['onlypersonplaced'] = False         # User, when only person, is told when they are put into conference
+        self.expectedEvents['userpin'] = False                  # User is prompted for a pin (when configured)
+        self.expectedEvents['adminpin'] = False                 # Admin user is prompted for a pin (when configured)
+        self.expectedEvents['recordname'] = False               # User is prompted to record name (when configured)
+        self.expectedEvents['joinannouncetochannel'] = False    # When bridge is started / user joins, the channel joining is notified
+        self.expectedEvents['joinannouncetoall'] = False        # When bridge is started / user joins, the bridge is notified
+        self.expectedEvents['namesplayed'] = False              # All names recorded are spoken in conference when users join
+        self.expectedEvents['adminunmuted'] = False             # Admin should start off as muted, and toggling the mute should unmute them
+        self.expectedEvents['userhasleft'] = False              # Track that when a user leaves a conference we're notified
+        self.expectedEvents['leaderhasleft'] = False            # Send when the last marked user leaves
+
+    def ami_connect(self, ami):
+        super(ConfBridgeNominal, self).ami_connect(ami)
+
+        self.__amis_connected += 1
+        if (ami.id == 0):
+            ami.registerEvent('UserEvent', self.user_event_handler)
+            ami.registerEvent('Newchannel', self.conf_bridge_new_channel_handler)
+        elif (ami.id == 1):
+            ami.registerEvent('Newchannel', self.caller_new_channel_handler)
+
+        """
+        If all AMI instances have connected, start the state machine that handles the test events
+        and originate the calls
+        """
+        if self.__amis_connected == ConfBridgeNominal.asterisk_instances:
+            self.testStateController = TestStateController(self, self.ami[0])
+            self.__startObject = StartConfBridgeState(self.testStateController, self, {})
+            self.testStateController.changeState(self.__startObject)
+            self.testStateController.addAssertHandler(self.handleAssert)
+
+            """ Originate the calls """
+            self.originate_calls(1, self.ami_1_originates)
+
+    def originate_calls(self, ami_id, originates):
+        for originate in originates:
+            logger.debug("Originating call to %s" % originate)
+            self.__originate.append(originate)
+            df = self.ami[ami_id].originate(originate, "caller", "wait", 1, None, "", None, None, None, {}, False)
+            df.addErrback(self.handleOriginateFailure)
+
+    def handleAssert(self, event):
+        self.passed = False
+        logger.error(" Test Failed - Assert received")
+        logger.error("\t\t AppFunction: " + event['appfunction'])
+        logger.error("\t\t AppLine: " + event['appline'])
+        logger.error("\t\t Expression: " + event['expression'])
+
+        self.stop_reactor()
+
+    def conf_bridge_new_channel_handler(self, ami, event):
+        if not 'channel' in event:
+            return
+        if 'Bridge' in event['channel']:
+            return
+        self.__temp_conf_bridge_channel_name.append(event['channel'])
+        self.check_and_register()
+
+    def caller_new_channel_handler(self, ami, event):
+        if not 'channel' in event:
+            return
+        if 'Bridge' in event['channel']:
+            return
+        self.__temp_caller_channel_name.append(event['channel'])
+        self.__temp_caller_ami.append(ami)
+        self.check_and_register()
+
+    def check_and_register(self):
+        """
+        As we receive NewChannel events back over the AMI connections, we cache them in the temporary lists.  Since
+        these arrive in a non-deterministic fashion and we need to associate them across the Asterisk instances, we
+        wait until all lists have been populated up to the current index, then form a ConfbridgeChannelObject from
+        those items and register it with the initial state object.
+
+        Note that we do make the assumption that we wont receive any two Newchannel events from one Asterisk server
+        out of order with respect to another, i.e., that if we originate call A, and originate call B, we receive
+        them in the order of their originations:
+        AMI 1                   AMI 2
+        NewChan1_1 from A       NewChan2_1 from A
+        NewChan1_2 from B       NewChan2_2 from B
+        """
+        if ((len(self.__temp_caller_channel_name) >= self.__temp_current_index + 1) and (len(self.__temp_conf_bridge_channel_name) >= self.__temp_current_index + 1)):
+            logger.debug("Registering new ConfBridge object: caller channel %s, conf_bridge channel %s, AMI %d (originated to %s)"
+                % (self.__temp_caller_channel_name[self.__temp_current_index],
+                   self.__temp_conf_bridge_channel_name[self.__temp_current_index],
+                   self.__temp_caller_ami[self.__temp_current_index].id,
+                   self.__originate[self.__temp_current_index]))
+            self.__startObject.registerNewCaller(
+                    ConfbridgeChannelObject(
+                        self.__temp_conf_bridge_channel_name[self.__temp_current_index],
+                        self.__temp_caller_channel_name[self.__temp_current_index],
+                        self.__temp_caller_ami[self.__temp_current_index],
+                        self.__originate[self.__temp_current_index]))
+            self.__temp_current_index += 1
+
+    def user_event_handler(self, ami, event):
+        if event['userevent'] != 'TestStatus':
+            return
+        if "ConfBridge" in event['status']:
+            self.__user_events_confbridge += 1
+        if "Hangup" in event['status']:
+            self.__user_events_hangup += 1
+        if (self.__user_events_confbridge == 2 and self.__user_events_hangup == 3):
+            logger.info("Received expected exit messages")
+            self.passed = True
+            self.stop_reactor()
+
+    def run(self):
+        super(ConfBridgeNominal, self).run()
+        self.create_ami_factory(ConfBridgeNominal.asterisk_instances)
+
+
+def main():
+
+    test = ConfBridgeNominal()
+    test.start_asterisk()
+    reactor.run()
+    test.stop_asterisk()
+
+    for event, status in test.expectedEvents.items():
+        if not status:
+            logger.error("Expected event %s failed" % event)
+            test.passed = False
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+   sys.exit(main() or 0)
