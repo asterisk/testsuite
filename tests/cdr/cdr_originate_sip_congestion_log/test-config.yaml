@@ -1,0 +1,11 @@
+testinfo:
+    summary: CLI exec console dial which dials via SIP which returns congestion
+    description: |
+        'CDRTestCase Test - Asterisk dials an extension locally which dials with SIP
+         to another extension which does not pick up and sends congestion.'
+
+properties:
+    minversion: '11.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'

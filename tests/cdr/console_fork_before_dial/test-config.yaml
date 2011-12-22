@@ -1,14 +1,13 @@
 testinfo:
     summary: CLI exec console dial which calls ForkCDR before dialing via SIP which answers
     description: |
-        'One Asterisk instance with console dial excutes ForkCDR and calls another
-        instance via SIP. The other instance answers and the CDRs are tested for
-        expected behavior.'
+        'An Asterisk instance originates a Local channel which will play silence for about
+        3 seconds before using ForkCDR and then dial itself via SIP. The receiving channel
+        answers and then immediately hangs up. CDRs are tested for expected behavior.'
 
 properties:
     minversion: '1.4'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-        - python : 'soundcard'
         - asterisk : 'cdr_csv'

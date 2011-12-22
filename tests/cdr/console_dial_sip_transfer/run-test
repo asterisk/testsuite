@@ -15,79 +15,31 @@ from asterisk.asterisk import Asterisk
 from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
 from asterisk.ami import AMI
 from twisted.internet import reactor
+from asterisk.CDRTestCase import CDRTestCase
 import logging
 
-workingdir = "cdr/console_dial_sip_transfer"
-testdir = "tests/%s" % workingdir
-
-class Test:
+class SIP_Dial_Transfer_Test(CDRTestCase):
     def __init__(self):
-        self.passed = False
-
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
-
-        self.ast2 = Asterisk(base=workingdir)
-        self.ast2.install_configs("%s/configs/ast2" % (testdir))
-
-        self.ast1.start()
-        self.ast2.start()
-
-        reactor.callLater(30, self.stop_reactor)
-
-        self.ami = AMI(self.start, self.stop_reactor, timeout=20)
-        self.ami.login()
-
-    def start(self, ami):
-        ami.registerEvent('Hangup', self.end)
-        self.ast1.cli_exec("console dial 1@default")
-
-    def stop_asterisk(self):
-        self.ast1.stop()
-        self.ast2.stop()
-
-    def stop_reactor(self):
-        print "Stopping Reactor ..."
-        if reactor.running:
-            reactor.stop()
-        self.stop_asterisk()
-
-    def end(self, ami, event):
-        if event.get('channel').lower() != "console/dsp":
-            return
-
-        self.stop_reactor()
-
-        cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.ast1.base))
-        cdr2 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.ast2.base))
-
-        cdr1_records=[]
-        cdr1_records.append(AsteriskCSVCDRLine(
-            disposition="ANSWERED", dchannel="SIP/test-.*", dcontext="default",
-            amaflags="DOCUMENTATION", callerid="", userfield="", source="",
-            destination="2", lastapp="Dial", lastarg="SIP/2@test"))
-        cdr1_records.append(AsteriskCSVCDRLine(
-            disposition="ANSWERED", dcontext="default", amaflags="DOCUMENTATION",
-            accountcode="", callerid="", userfield="", destination="1", lastapp="Dial",
-            lastarg="SIP/1@test", channel="Console/dsp"))
-
-        cdr1_expect = AsteriskCSVCDR(records=cdr1_records)
-
-        cdr2_expect=AsteriskCSVCDR(records=[AsteriskCSVCDRLine(
-            disposition="ANSWERED", dchannel="", dcontext="default", amaflags="DOCUMENTATION",
-            accountcode="", callerid='"asterisk" <asterisk>', userfield="", source="asterisk",
-            destination="2", lastapp="Hangup", lastarg="", channel="SIP/.*5065-.*")])
-        if cdr1_expect.match(cdr1) and cdr2_expect.match(cdr2):
-            print "Success"
-            self.passed = True
-        else:
-            print "Failure"
+        CDRTestCase.__init__(self)
+        self.add_expectation('cdrtest_local', AsteriskCSVCDRLine(
+            destination="1",
+            dcontext="default",
+            channel="Local/1@default-.*",
+            disposition="ANSWERED",
+            amaflags="DOCUMENTATION"))
+        self.add_expectation('cdrtest_local3', AsteriskCSVCDRLine(
+            destination="3",
+            dcontext="default",
+            channel="Local/3@default-.*",
+            disposition="ANSWERED",
+            amaflags="DOCUMENTATION"))
 
 def main():
-    logging.basicConfig()
-    test = Test()
+    test = SIP_Dial_Transfer_Test()
+    test.start_asterisk()
     reactor.run()
-    return not test.passed
+    test.stop_asterisk()
+    return test.results()
 
 if __name__ == '__main__':
     sys.exit(main())

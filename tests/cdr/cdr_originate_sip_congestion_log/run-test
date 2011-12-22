@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+"""
+Copyright (C) 2011, Digium, Inc.
+Jonathan Rose <jrose@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+"""
+
+import sys
+sys.path.append("lib/python")
+from asterisk.CDRTestCase import CDRTestCase
+from asterisk.asterisk import Asterisk
+from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
+from twisted.internet import reactor
+
+class CDRCongestionLogTest(CDRTestCase):
+
+    def __init__(self):
+        CDRTestCase.__init__(self)
+
+        self.add_expectation('cdrtest_sip', AsteriskCSVCDRLine(
+            source='Anonymous',
+            destination='2',
+            dcontext='default',
+            callerid='"Anonymous" <Anonymous>',
+            channel='SIP/test-00000001',
+            disposition='CONGESTION',
+            amaflags='DOCUMENTATION'
+        ))
+
+        self.add_expectation('cdrtest_local', AsteriskCSVCDRLine(
+            destination='1',
+            dcontext='default',
+            disposition='CONGESTION',
+            amaflags='DOCUMENTATION'
+        ))
+
+def main():
+    test = CDRCongestionLogTest()
+    test.start_asterisk()
+    reactor.run()
+    test.stop_asterisk()
+
+    return test.results()
+
+if __name__ == '__main__':
+    sys.exit(main())
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
+

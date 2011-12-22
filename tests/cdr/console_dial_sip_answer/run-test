@@ -15,58 +15,33 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
 from asterisk.TestCase import TestCase
+from asterisk.CDRTestCase import CDRTestCase
 from twisted.internet import reactor
 
 
-class Test(TestCase):
+class SIP_Dial_Answer_Test(CDRTestCase):
     def __init__(self):
-        TestCase.__init__(self)
-        self.create_asterisk(2)
+        CDRTestCase.__init__(self)
 
-    def ami_connect(self, ami):
-        if ami.id == 0:
-            self.ami[0].registerEvent('Hangup', self.end)
-            self.ami[0].originate(channel = "Local/1@default", application = "Echo")
-
-    def end(self, ami, event):
-        if not re.match(".*;1$", event['channel']):
-            return
-        self.stop_reactor()
-
-    def results(self):
-        cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" %
-                (self.ast[0].base))
-        cdr2 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" %
-                (self.ast[1].base))
-
-        cdr1_expect = AsteriskCSVCDR(records=[AsteriskCSVCDRLine(accountcode="",
-            source="", destination="1", dcontext="default", callerid="",
-            channel="Local/1@default-.*", dchannel="SIP/test-00000000", lastapp="Dial",
-            lastarg="SIP/1@test", disposition="ANSWERED",
-            amaflags="DOCUMENTATION")])
-        cdr2_expect = AsteriskCSVCDR(records=[AsteriskCSVCDRLine(accountcode="",
-            source="Anonymous", destination="1", dcontext="default",
-            callerid='"Anonymous" <Anonymous>', channel="SIP/anonymous.invalid-.*",
-            dchannel="", lastapp="Hangup", lastarg="", disposition="ANSWERED",
-            amaflags="DOCUMENTATION")])
-
-        if cdr1_expect[0].match(cdr1[0]) and cdr2_expect.match(cdr2):
-            print "Success"
-            self.passed = True
-        else:
-            print "Failure"
-
-    def run(self):
-        TestCase.run(self)
-        self.create_ami_factory()
+        self.add_expectation('cdrtest_local', AsteriskCSVCDRLine(
+            destination="1",
+            dcontext="default",
+            channel="Local/1@default-.*",
+            disposition="ANSWERED",
+            amaflags="DOCUMENTATION"))
+        self.add_expectation('cdrtest_sip', AsteriskCSVCDRLine(
+            destination="2",
+            dcontext="default",
+            channel="SIP/test-.*",
+            disposition="ANSWERED",
+            amaflags="DOCUMENTATION"))
 
 def main():
-    test = Test()
+    test = SIP_Dial_Answer_Test()
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()
-    test.results()
-    return not test.passed
+    return test.results()
 
 if __name__ == '__main__':
     sys.exit(main())

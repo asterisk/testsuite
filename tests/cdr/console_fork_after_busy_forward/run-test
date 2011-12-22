@@ -8,100 +8,60 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-from time import sleep
 import os
+import logging
+import re
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
-from asterisk.ami import AMI
+from asterisk.TestCase import TestCase
+from asterisk.CDRTestCase import CDRTestCase
 from twisted.internet import reactor
-import logging
 
-workingdir = "cdr/console_fork_after_busy_forward"
-testdir = "tests/%s" % workingdir
+logger = logging.getLogger(__name__)
 
-class Test:
+class Fork_After_Busy_Test(CDRTestCase):
     def __init__(self):
-        self.passed = False
+        CDRTestCase.__init__(self)
 
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
+        self.add_expectation('cdrtest_local', AsteriskCSVCDRLine(
+            destination="1",
+            lastapp="Dial",
+            lastarg="SIP/test/3",
+            dcontext="default",
+            dchannel="SIP/test-.*",
+            channel="Local/1@default-.*",
+            disposition="ANSWERED",
+            amaflags="DOCUMENTATION"
+        ))
+        self.add_expectation('cdrtest_local', AsteriskCSVCDRLine(
+            destination="1",
+            lastapp="Dial",
+            lastarg="SIP/test/3",
+            dcontext="default",
+            dchannel="SIP/test-.*",
+            channel="Local/1@default-.*",
+            disposition="ANSWERED",
+            amaflags="DOCUMENTATION"
+        ))
 
-        self.ast2 = Asterisk(base=workingdir)
-        self.ast2.install_configs("%s/configs/ast2" % (testdir))
-
-        self.ast1.start()
-        self.ast2.start()
-
-        reactor.callLater(30, self.stop_reactor)
-
-        self.ami = AMI(self.start, self.stop_reactor, timeout=20)
-        self.ami.login()
-
-    def start(self, ami):
-        ami.registerEvent('Hangup', self.end)
-        self.ast1.cli_exec("console dial 1@default")
-
-    def stop_asterisk(self):
-        self.ast1.stop()
-        self.ast2.stop()
-
-    def stop_reactor(self):
-        print "Stopping Reactor ..."
-        if reactor.running:
-            reactor.stop()
-        self.stop_asterisk()
-
-    def end(self, ami, event):
-        if event.get('channel').lower() != "console/dsp":
+    def match_cdrs(self):
+        CDRTestCase.match_cdrs(self)
+        if (self.passed == False):
             return
-        self.stop_reactor()
 
-        cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.ast1.base))
-        cdr2 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.ast2.base))
-
-        records = []
-
-        records.append(AsteriskCSVCDRLine(disposition='ANSWERED', dchannel='SIP/test-.*',
-            dcontext='default', amaflags='DOCUMENTATION', uniqueid=cdr1[0].uniqueid,
-            accountcode='', callerid='', userfield='', source='', destination='1',
-            lastapp='Dial', lastarg='SIP/2@test', channel='Console/dsp', billsec=cdr1[0].billsec))
-
-        records.append(AsteriskCSVCDRLine(disposition='ANSWERED', dchannel='SIP/test-.*',
-            dcontext='default', amaflags='DOCUMENTATION', uniqueid=cdr1[0].uniqueid,
-            accountcode='', callerid='', userfield='', source='', destination='1',
-            lastapp='Dial', lastarg='SIP/2@test', channel='Console/dsp', billsec=cdr1[0].billsec))
-
-        cdr1_expect = AsteriskCSVCDR(records=records)
-
-        cdr2_expect = AsteriskCSVCDR(records=[AsteriskCSVCDRLine(accountcode="",
-            source="asterisk", destination="2", dcontext="default",
-            callerid='"asterisk" <asterisk>', channel="SIP/.*5065-.*",
-            dchannel="", lastapp="Hangup", lastarg="", disposition="ANSWERED",
-            amaflags="DOCUMENTATION")])
-
-        if len(cdr1) < 2:
-            print "Fewer cdr records than expected! (%d)" % len(cdr1)
-            reactor.stop()
-            return
+        cdr1 = AsteriskCSVCDR(fn="%s/%s/cdr-csv/%s.csv" % (self.ast[0].base, self.ast[0].directories['astlogdir'], "cdrtest_local"))
 
         if int(cdr1[0].duration) < int(cdr1[1].duration):
-            print "Fail: Original CDR duration shorter than forked"
-            sys.exit(-1)
-
-        if cdr1_expect.match(cdr1) and cdr2_expect.match(cdr2):
-            print "Success"
-            self.passed = True
-        else:
-            print "Failure"
+            logger.error("Fail: Original CDR duration shorter than forked")
+            self.passed = False
 
 def main():
-    logging.basicConfig()
-    test = Test()
+    test = Fork_After_Busy_Test()
+    test.start_asterisk()
     reactor.run()
-    return not test.passed
+    test.stop_asterisk()
+    return test.results()
 
 if __name__ == '__main__':
     sys.exit(main())
-
-# vim:sw=4:ts=4:expandtab:textwidth=79

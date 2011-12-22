@@ -8,73 +8,30 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-from time import sleep
-import os
 sys.path.append("lib/python")
+from asterisk.CDRTestCase import CDRTestCase
 from asterisk.asterisk import Asterisk
 from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
-from asterisk.ami import AMI
 from twisted.internet import reactor
-import logging
 import re
 
-workingdir = "cdr/cdr_userfield"
-testdir = "tests/%s" % workingdir
-
-class Test:
+class CDRUserFieldTest(CDRTestCase):
     def __init__(self):
-        self.passed = False
 
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
+        CDRTestCase.__init__(self)
 
-        self.ast1.start()
-
-        reactor.callLater(30, self.stop_reactor)
-
-        self.ami = AMI(self.start, self.stop_reactor, timeout=20)
-        self.ami.login()
-
-    def start(self, ami):
-        ami.registerEvent('Hangup', self.end)
-        ami.originate(channel = "Local/1@default", application = "Echo")
-
-    def stop_asterisk(self):
-        self.ast1.stop()
-
-    def stop_reactor(self):
-        print "Stopping Reactor ..."
-        if reactor.running:
-            reactor.stop()
-        self.stop_asterisk()
-
-    def end(self, ami, event):
-        if not re.match(".*;2$", event['channel']):
-                return
-        self.stop_reactor()
-
-        cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.ast1.base))
-
-        cdr1_expect = AsteriskCSVCDR(records=[AsteriskCSVCDRLine(accountcode="",
-            source="", destination="1", dcontext="default", callerid="",
-            channel="Local/1@default;2", dchannel="", lastapp="Hangup", lastarg="",
-            disposition="ANSWERED", amaflags="DOCUMENTATION", userfield="bazinga")])
-
-        if re.match("Local/1@default-....;2", cdr1[0].channel):
-                # Small hack to force channels to match.  No problem, since we just checked them ourselves.
-                cdr1[0].channel = cdr1_expect[0].channel
-
-        if cdr1_expect[0].match(cdr1[0]):
-            print "Success"
-            self.passed = True
-        else:
-            print "Failure"
+        self.add_expectation('cdrtest_local',AsteriskCSVCDRLine(source="", 
+            destination="1", dcontext="default", callerid="",
+            channel="Local/1@default-.*", dchannel="", lastapp="Hangup", lastarg="",
+            disposition="ANSWERED", amaflags="DOCUMENTATION", userfield="bazinga"
+        ))
 
 def main():
-    logging.basicConfig()
-    test = Test()
+    test = CDRUserFieldTest()
+    test.start_asterisk()
     reactor.run()
-    return not test.passed
+    test.stop_asterisk()
+    return test.results()
 
 if __name__ == '__main__':
     sys.exit(main())

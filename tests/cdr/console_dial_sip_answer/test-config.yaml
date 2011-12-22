@@ -1,8 +1,8 @@
 testinfo:
     summary: CLI exec console dial which dials via SIP which answers
     description: |
-        'One Asterisk instance with console dial calls another instance via SIP.
-        the other instance answers and the CDRs are tested for expected behavior.'
+        'An Asterisk instance originates a local channel to dial an internal extension
+        with a SIP peer. Asterisk then answers this call and shortly after hangs up.'
 
 properties:
     minversion: '1.4'

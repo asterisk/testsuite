@@ -14,72 +14,26 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
 from asterisk.ami import AMI
+from asterisk.CDRTestCase import CDRTestCase
 from twisted.internet import reactor
 import logging
 
-workingdir = "cdr/console_dial_sip_busy"
-testdir = "tests/%s" workingdir
-
-class Test:
+class SIP_Dial_Busy_Test(CDRTestCase):
     def __init__(self):
-        self.passed = False
-
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
-
-        self.ast2 = Asterisk(base=workingdir)
-        self.ast2.install_configs("%s/configs/ast2" % (testdir))
-
-        self.ast1.start()
-        self.ast2.start()
-
-        reactor.callLater(30, self.stop_reactor)
-
-        self.ami = AMI(self.start, self.stop_reactor, timeout=20)
-        self.ami.login()
-
-    def start(self, ami):
-        ami.registerEvent('Hangup', self.end)
-        self.ast1.cli_exec("console dial 1@default")
-
-    def stop_asterisk(self):
-        self.ast1.stop()
-        self.ast2.stop()
-
-    def stop_reactor(self):
-        print "Stopping Reactor ..."
-        if reactor.running:
-            reactor.stop()
-        self.stop_asterisk()
-
-    def end(self, ami, event):
-        if event.get('channel').lower() != 'console/dsp':
-            return
-
-        self.stop_reactor()
-
-        cdr1 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.ast1.base))
-
-        print "The failure to open the next CDR is expected"
-        cdr2 = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" % (self.ast2.base))
-
-        cdr1_expect = AsteriskCSVCDR(records=[AsteriskCSVCDRLine(accountcode="",
-            source="", destination="1", dcontext="default", callerid="",
-            channel="Console/dsp", dchannel="SIP/test-00000000", lastapp="Dial",
-            lastarg="SIP/1@test", disposition="BUSY",
-            amaflags="DOCUMENTATION")])
-
-        if cdr1_expect.match(cdr1) and len(cdr2) == 0:
-            print "Success"
-            self.passed = True
-        else:
-            print "Failure"
+        CDRTestCase.__init__(self)
+        self.add_expectation('cdrtest_local', AsteriskCSVCDRLine(
+            destination="1",
+            dcontext="default",
+            channel="Local/1@default-.*",
+            disposition="BUSY",
+            amaflags="DOCUMENTATION"))
 
 def main():
-    logging.basicConfig()
-    test = Test()
+    test = SIP_Dial_Busy_Test()
+    test.start_asterisk()
     reactor.run()
-    return not test.passed
+    test.stop_asterisk()
+    return test.results()
 
 if __name__ == '__main__':
     sys.exit(main())

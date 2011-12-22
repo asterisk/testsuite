@@ -1,14 +1,12 @@
 testinfo:
     summary: CLI exec console dial which dials via SIP which returns congestion
     description: |
-        'One Asterisk instance with console dial calls another instance via SIP.
-        the other instance returns congestion and the CDRs are tested for expected
-        behavior.'
+        'An Asterisk instance originates a local channel to dial itself via SIP.
+        Upon reaching the extension the SIP channel dials, Asterisk will return congestion.'
 
 properties:
     minversion: '1.4'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-        - custom : 'soundcard'
         - asterisk : 'cdr_csv'
