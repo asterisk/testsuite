@@ -43,7 +43,7 @@ class TestCase(object):
         """
 
         self.test_name = os.path.dirname(sys.argv[0])
-        self.base = self.test_name.lstrip("tests/")
+        self.base = self.test_name.replace("tests/", "", 1)
         self.ast = []
         self.ami = []
         self.fastagi = []
