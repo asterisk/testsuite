@@ -3,7 +3,7 @@ testinfo:
     description: |
         'Make sure that allowexternaldomains works properly'
 properties:
-    minversion: '1.8'
+    minversion: '1.8.9'
     dependencies:
         - python: 'twisted'
         - sipp:
