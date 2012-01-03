@@ -79,10 +79,6 @@ class SIPpScenario:
         default_args.update(self.scenario)
         del default_args['scenario']
 
-        # Override and extend defaults
-        default_args.update(self.scenario)
-        del default_args['scenario']
-
         for (key, val) in default_args.items():
             sipp_args.extend([ key, val ])
         sipp_args.extend(self.positional_args)

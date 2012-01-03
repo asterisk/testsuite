@@ -31,3 +31,4 @@ tests:
     - test: 'codec_negotiation'
     - test: 'nat_supertest'
     - test: 'pcap_demo'
+    - test: 'sip_hold'

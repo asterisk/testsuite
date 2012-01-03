@@ -1,0 +1,126 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2011, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+sys.path.append("lib/python")
+
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+from asterisk.sipp import SIPpScenario
+from twisted.internet import reactor
+
+logger = logging.getLogger(__name__)
+TEST_DIR = os.path.dirname(os.path.realpath(__file__))
+INJECT_FILE_BYPASS = TEST_DIR + "/sipp/inject_bypass.csv"
+INJECT_FILE_BRIDGE = TEST_DIR + "/sipp/inject_bridge.csv"
+
+class SIPHold(TestCase):
+    def __init__(self):
+        TestCase.__init__(self)
+        self.create_asterisk()
+        self.sipp_phone_a_scenarios = [{'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BYPASS},
+            {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BYPASS},
+            {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BYPASS},
+            {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BRIDGE},
+            {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BRIDGE},
+            {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BRIDGE},]
+        self.sipp_phone_b_scenarios = [{'scenario':'phone_B_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BYPASS},
+            {'scenario':'phone_B_IP_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BYPASS},
+            {'scenario':'phone_B_IP_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BYPASS},
+            {'scenario':'phone_B_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BRIDGE},
+            {'scenario':'phone_B_IP_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BRIDGE},
+            {'scenario':'phone_B_IP_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BRIDGE},]
+
+        self.passed = True
+        self.moh_start_events = 0
+        self.moh_stop_events = 0
+        self.user_events = 0
+
+    def ami_connect(self, ami):
+        TestCase.ami_connect(self, ami)
+        ami.registerEvent('UserEvent', self.user_event_handler)
+        ami.registerEvent('MusicOnHold', self.moh_event_handler)
+        logger.info("Starting SIP scenario")
+        self.execute_scenarios()
+
+    def execute_scenarios(self):
+        for i in range(len(self.sipp_phone_a_scenarios)):
+            sipp_a = SIPpScenario(TEST_DIR, self.sipp_phone_a_scenarios[i])
+            sipp_b = SIPpScenario(TEST_DIR, self.sipp_phone_b_scenarios[i])
+
+            """ Start up the listener first - Phone A calls Phone B """
+            sipp_b.run()
+            sipp_a.run()
+
+            sipp_a_result = sipp_a.waitAndEvaluate()
+            sipp_b_result = sipp_b.waitAndEvaluate()
+
+            if (not sipp_a_result):
+                logger.warn("SIPp Scenario Phone A (%s) failed" % self.sipp_phone_a_scenarios[i]['scenario'])
+                self.passed = False
+            if (not sipp_b_result):
+                logger.warn("SIPp Scenario Phone B (%s) failed" % self.sipp_phone_b_scenarios[i]['scenario'])
+                self.passed = False
+            self.reset_timeout()
+
+        logger.info("All scenarios executed")
+        """
+        Note: you can't stop the reactor here, as the AMI events will be pooled up.  Let the AMI events
+        determine when the reactor is stopped
+        """
+
+    def user_event_handler(self, ami, event):
+        self.user_events += 1
+        if (self.user_events == len(self.sipp_phone_a_scenarios)):
+            logger.info("All user events received; stopping reactor")
+            self.stop_reactor()
+
+    def moh_event_handler(self, ami, event):
+        if event['state'] == "Start":
+            logger.debug("Received MOH start event")
+            self.moh_start_events += 1
+        elif event['state'] == "Stop":
+            logger.debug("Received MOH stop event")
+            self.moh_stop_events += 1
+
+    def run(self):
+        TestCase.run(self)
+        self.create_ami_factory()
+
+
+def main():
+    test = SIPHold()
+    test.start_asterisk()
+    reactor.run()
+    test.stop_asterisk()
+
+    if (test.moh_start_events != len(test.sipp_phone_a_scenarios)):
+        logger.error("Failed to receive %d MOH start events (received %d)" % (len(test.sipp_phone_a_scenarios), test.moh_start_events))
+        test.passed = False
+    if (test.moh_stop_events != len(test.sipp_phone_a_scenarios)):
+        logger.error("Failed to receive %d MOH stop events (received %d)" % (len(test.sipp_phone_a_scenarios), test.moh_stop_events))
+        test.passed = False
+    if (test.user_events != len(test.sipp_phone_a_scenarios)):
+        logger.error("Failed to receive %d user test events (received %d)" % (len(test.sipp_phone_a_scenarios), test.user_events))
+        test.passed = False
+
+    if test.passed:
+        return 0
+    else:
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79

@@ -1,0 +1,17 @@
+testinfo:
+    summary: 'Test various SIP Hold scenarios'
+    description: |
+        This tests SIP Hold, where one SIP phone puts another SIP phone on hold by
+        sending a re-INVITE with a modified SDP containing either a restricted audio
+        direction, an IP address of 0.0.0.0, or a combination thereof.  This
+        is tested both for a local RTP bridge, and a non-bridged scenario.
+
+properties:
+    minversion: '1.8.9'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+    testconditions:
+        - name: 'threads'
+          ignoredThreads:
+            - 'autoservice_run'
