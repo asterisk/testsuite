@@ -23,6 +23,7 @@ tests:
     - test: 'secure_bridge_media'
     - test: 'message_disabled'
     - test: 'message_unauth'
+    - test: 'message_unauth_from'
     - test: 'message_auth'
     - test: 'message_from_call'
     - test: 'handle_response_address_incomplete'
