@@ -9,10 +9,13 @@ the GNU General Public License Version 2.
 import sys
 from twisted.internet import reactor
 from starpy import manager
+import logging
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.TestCase import TestCase
+
+logger = logging.getLogger(__name__)
 
 class UdptlTest(TestCase):
     def __init__(self):
@@ -32,16 +35,16 @@ class UdptlTest(TestCase):
     def check_recv_fax_result(self, ami, event):
         if event.get("userevent").lower() != "recvstatus":
             return
-        self.stop_reactor()
 
         status = event.get("status")
-        print ("Status of FAX is %s" % (status))
+        logger.debug("Status of FAX is %s" % (status))
         if status == "SUCCESS":
             self.passed = True
-            print "UDPTL test passed!"
+            logger.debug("UDPTL test passed!")
         else:
             self.passed = False
-            print "UDPTL test failed!"
+            logger.warn("UDPTL test failed!")
+        self.stop_reactor()
 
     def run(self):
         TestCase.run(self)
@@ -54,6 +57,7 @@ def main():
     test.start_asterisk()
     reactor.run()
     test.stop_asterisk()
+
     if not test.passed:
         return 1
     return 0
