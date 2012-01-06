@@ -385,8 +385,8 @@ class Asterisk:
             pass
         try:
             res = process.wait()
-            if res != 0:
-                raise Exception("Exited non-zero: " % (res,))
+            if res != None and res != 0:
+                logger.warn("Exited non-zero [%d] while executing command %s" % (res, str(cmd)))
         except OSError:
             pass
         return output
