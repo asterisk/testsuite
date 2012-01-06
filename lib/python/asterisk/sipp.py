@@ -66,7 +66,8 @@ class SIPpScenario:
     def run(self):
         sipp_args = [
                 'sipp', '127.0.0.1',
-                '-sf', '%s/sipp/%s' % (self.test_dir, self.scenario['scenario'])
+                '-sf', '%s/sipp/%s' % (self.test_dir, self.scenario['scenario']),
+                '-nostdin'
         ]
         default_args = {
             '-p' : self.default_port,
@@ -163,7 +164,8 @@ class SIPpTest:
     def __run_sipp(self, scenario, default_port):
         sipp_args = [
                 'sipp', '127.0.0.1',
-                '-sf', '%s/sipp/%s' % (self.test_dir, scenario['scenario'])
+                '-sf', '%s/sipp/%s' % (self.test_dir, scenario['scenario']),
+                '-nostdin'
         ]
         default_args = {
             '-p' : default_port,
