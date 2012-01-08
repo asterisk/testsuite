@@ -139,14 +139,12 @@ class Asterisk:
 
         start = time.time()
         while True:
-            try:
-                self.cli_exec("core waitfullybooted")
-            except:
+            if (self.cli_exec("core waitfullybooted") != ""):
+                break
+            else:
                 if time.time() - start > 5:
                     break
                 continue
-            else:
-                break
 
     def stop(self):
         """Stop this instance of Asterisk.
