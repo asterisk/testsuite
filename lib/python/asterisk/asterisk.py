@@ -144,6 +144,7 @@ class Asterisk:
             else:
                 if time.time() - start > 5:
                     break
+                logger.debug("Attempting waitfullybooted again...")
                 continue
 
     def stop(self):
@@ -385,6 +386,7 @@ class Asterisk:
             res = process.wait()
             if res != None and res != 0:
                 logger.warn("Exited non-zero [%d] while executing command %s" % (res, str(cmd)))
+                output = ""
         except OSError:
             pass
         return output
