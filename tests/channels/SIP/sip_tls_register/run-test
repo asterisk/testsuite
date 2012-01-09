@@ -95,8 +95,7 @@ class SIPTLS_Register_Test(TestCase):
         self.pass_sipp = scenario.waitAndEvaluate()
         if (self.pass_sipp and self.pass_event):
             self.passed = True
-            #avoid stop_reactor until testsuite crashes are solved
-            #self.stop_reactor()
+            self.stop_reactor()
 
     # Callback for PeerStatus events, checks to see if the correct peer registered successfully.
     def check_register_result(self, ami, event):
@@ -115,8 +114,7 @@ class SIPTLS_Register_Test(TestCase):
             self.pass_event = True
             if (self.pass_event and self.pass_sipp):
                 self.passed = True
-                #avoid stop_reactor until testsuite crashes are solved
-                #self.stop_reactor()
+                self.stop_reactor()
             return
         else:
             logger.info("Registration for peer %s in state %s" % (peer, status))
