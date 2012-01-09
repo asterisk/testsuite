@@ -1,8 +1,12 @@
 testinfo:
-    skip: 'Skip while failures are debugged'
+#    skip: 'Skip while failures are debugged'
     summary:     'Test SIP One-legged Transfer'
     description: |
-        'This test verifies a SIP One-legged transfer.'
+        This test verifies a SIP One-legged transfer.  Phone C
+        calls Phone B.  Phone B then calls Phone A.  Phone B
+        transfers Phone A to Phone C.  At the end of the test, Phone
+        C and Phone A should be bridged, while Phone B should be
+        hung up.
 
 properties:
     minversion: '1.4'

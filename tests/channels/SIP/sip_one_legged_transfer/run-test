@@ -11,99 +11,97 @@ import sys
 import os
 import signal
 import subprocess
+import logging
+
 from twisted.application import service, internet
 from twisted.internet import reactor, defer
 from starpy import manager
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
 
-workingdir = "sip_one_legged_transfer"
-testdir = "tests/%s" % workingdir
+logger = logging.getLogger(__name__)
 
-class AttTransferTest:
+class OneLeggedTransfer(TestCase):
     def __init__(self):
-        self.last_step = ""
+        TestCase.__init__(self)
         self.passed = False
-
-        reactor.callWhenRunning(self.run)
-
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
+        self.create_asterisk()
 
     def readResult(self):
-        self.logLastStep("Reading results")
-        self.ast1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
-        self.ast1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+        logger.debug("Reading results")
+        self.ast[0].cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+        self.ast[0].cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
         self.stopProcesses()
 
         if self.passed == True:
-            print 'SIP Attended Transfer Test Passed!'
+            logger.info('SIP Transfer Test Passed!')
         else:
-            print 'SIP Attended Transfer Test Failed'
+            logger.error('SIP Transfer Test Failed')
+        self.stop_reactor()
 
-        if reactor.running:
-            print "Stopping Reactor ..."
-            reactor.stop()
+    def ami_connect(self, ami):
+        TestCase.ami_connect(self, ami)
 
-    def amiOnConnect(self, ami):
-        self.logLastStep("Connected to the AMI")
-        self.ami = ami
+        # start up the processes
+        self.startProcesses()
+        reactor.callLater(5, self.cCallB)
+        reactor.callLater(10, self.bCallA)
+        reactor.callLater(15, self.bTransferAToC)
+        reactor.callLater(20, self.amiCheckBridge)
 
-    def amiLoginError(self, ami):
-        self.logLastStep("AMI login failed")
-        reactor.callLater(1, self.readResult)
+        # stop and read results after timeout
+        reactor.callLater(25, self.readResult)
 
-    def amiLogin(self):
-        self.logLastStep("Logging in to the AMI")
-        self.ami_factory = manager.AMIFactory("user", "mysecret")
-        self.ami_factory.login('127.0.0.1', 5038).addCallbacks(self.amiOnConnect, self.amiLoginError)
 
     def checkBridgeResult(self, result):
-        print 'Result', result
+        logger.debug('Result %s' % str(result))
         if "bridgedchannel" not in result[0]:
-            print "bridgedchannel was not a valid key."
+            logger.debug("bridgedchannel was not a valid key; checking for link")
+            if "link" not in result[0]:
+                logger.warn("'link' and 'bridgedchannel' not found")
+            elif result[0]['link'] == 'SIP/end_a-00000001': # check link for older versions of asterisk
+                self.passed = True
         elif result[0]['bridgedchannel'] == 'SIP/end_a-00000001':
             self.passed = True
 
-        if "link" not in result[0]:
-            print "'link' was not a valid key."
-        elif result[0]['link'] == 'SIP/end_a-00000001': # check link for older versions of asterisk
-            self.passed = True
-
         if self.passed == True:
-            self.logLastStep("Found Bridge!!!")
+            logger.debug("Found Bridge!!!")
         else:
-            self.logLastStep("Detecting Bridge failed")
+            logger.warn("Detecting Bridge failed")
 
 
     def checkBridgeError(self, reason):
-        print reason.getTraceback()
-        self.logLastStep("Checking Bridge failed.  Channel did not exist.")
+        logger.error(reason.getTraceback())
+        logger.error("Checking Bridge failed.  Channel did not exist.")
         reactor.callLater(1, self.readResult)
 
     def amiCheckBridge(self):
-        self.logLastStep("Get AMI results")
-        self.ami.status('SIP/end_c-00000002').addCallbacks(self.checkBridgeResult, self.checkBridgeError)
+        logger.debug("Get AMI results")
+        self.ami[0].status('SIP/end_c-00000002').addCallbacks(self.checkBridgeResult, self.checkBridgeError)
+        self.reset_timeout()
 
     def cCallB(self):
-        self.logLastStep("C Calling B")
+        logger.info("C Calling B")
         self.pjc.stdin.write("m\n")
         self.pjc.stdin.write("sip:127.0.0.1:5066\n")
+        self.reset_timeout()
 
     def bCallA(self):
-        self.logLastStep("B Calling A")
+        logger.info("B Calling A")
         self.pjb.stdin.write("m\n")
         self.pjb.stdin.write("sip:call_a@127.0.0.1:5060\n")
+        self.reset_timeout()
 
     def bTransferAToC(self):
-        self.logLastStep("B Transfering A to C")
+        logger.info("B Transfering A to C")
         self.pjb.stdin.write("X\n")
         self.pjb.stdin.write("1\n")
+        self.reset_timeout()
 
     def startProcesses(self):
-        self.logLastStep("Starting Processes")
-        self.ast1.start()
+        logger.info("Starting Processes")
         self.pja = subprocess.Popen(['pjsua', '--local-port=5065',
                                      '--auto-answer=200', '--null-audio'],
                                      stdin=subprocess.PIPE,
@@ -118,38 +116,23 @@ class AttTransferTest:
                                      stdout=subprocess.PIPE)
 
     def stopProcesses(self):
-        self.logLastStep("Stopping Processes")
-        self.ast1.stop()
+        logger.info("Stopping Processes")
         os.kill(self.pja.pid, signal.SIGKILL)
         os.kill(self.pjb.pid, signal.SIGKILL)
         os.kill(self.pjc.pid, signal.SIGKILL)
 
-
-    def logLastStep(self, step):
-        print step
-        self.lastStep = step
-
     def run(self):
-
-        # start up the processes
-        self.startProcesses()
-
-        # call extensions
-        self.amiLogin()
-        reactor.callLater(5, self.cCallB)
-        reactor.callLater(10, self.bCallA)
-        reactor.callLater(15, self.bTransferAToC)
-        reactor.callLater(20, self.amiCheckBridge)
-
-        # stop and read results after timeout
-        reactor.callLater(25, self.readResult)
+        TestCase.run(self)
+        self.create_ami_factory()
 
 def main():
-    # Run Attended Transfer Test
-    att_transfer_test = AttTransferTest()
+    # Run Transfer Test
+    transfer_test = OneLeggedTransfer()
+
+    transfer_test.start_asterisk()
     reactor.run()
-    att_transfer_test.stopProcesses()
-    if att_transfer_test.passed != True:
+    transfer_test.stop_asterisk()
+    if transfer_test.passed != True:
         return 1
     return 0
 
