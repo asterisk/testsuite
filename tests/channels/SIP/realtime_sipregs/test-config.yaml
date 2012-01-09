@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Currently failing due to seg fault on exit - see ASTERISK-18883'
     summary:    'Test SIP realtime peer matching with sipregs enabled'
     description: |
         'Make sure that realtime peers are matched properly when sipreg is enabled'
