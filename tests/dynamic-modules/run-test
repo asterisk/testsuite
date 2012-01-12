@@ -151,6 +151,8 @@ class moduleLoadUnloadTest(TestCase):
 
             self.check_failures(module);
 
+        self.stop_reactor()
+
 def main():
     test = moduleLoadUnloadTest()
     test.start_asterisk()
