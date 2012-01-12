@@ -136,6 +136,14 @@ Optional (needed by specific tests):
         - pjsua python bindings
             - Go to pjsip-apps/src/python directory
             - Run 'sudo python ./setup.py install' or just 'sudo make'
+        - libpcap and yappcap
+            - Install the libpcap development library package for your system
+              (libpcap-dev for Debian-based distros, pcap-devel for Red Hat)
+            - Download yappcap from:
+              https://github.com/otherwiseguy/yappcap/tarball/master
+            - tar -xvzf otherwiseguy-yappcap*.tar.gz
+            - cd otherwiseguy-yappcap*
+            - make and && sudo make install
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
