@@ -143,7 +143,7 @@ Optional (needed by specific tests):
               https://github.com/otherwiseguy/yappcap/tarball/master
             - tar -xvzf otherwiseguy-yappcap*.tar.gz
             - cd otherwiseguy-yappcap*
-            - make and && sudo make install
+            - make && sudo make install
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
