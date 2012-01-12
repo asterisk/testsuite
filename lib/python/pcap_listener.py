@@ -1,17 +1,17 @@
 from twisted.internet import abstract, protocol
-from yappcap import PcapLive, findalldevs
+from yappcap import PcapLive, findalldevs, PcapTimeout
 
 class PcapFile(abstract.FileDescriptor):
     """Treat a live pcap capture as a file for Twisted to call select() on"""
-    def __init__(self, protocol, interface, filter=None, dumpfile=None):
+    def __init__(self, protocol, interface, xfilter=None, dumpfile=None):
         abstract.FileDescriptor.__init__(self)
 
         p = PcapLive(interface, autosave=dumpfile)
         p.activate()
         p.blocking = False
 
-        if filter is not None:
-            p.setfilter(filter)
+        if xfilter is not None:
+            p.filter = xfilter
 
         self.pcap = p
         self.fd = p.fileno
@@ -23,7 +23,10 @@ class PcapFile(abstract.FileDescriptor):
         return self.fd
 
     def doRead(self):
-        pkt = self.pcap.next()
+        try:
+            pkt = self.pcap.next()
+        except PcapTimeout:
+            return 0
 
         # we may not have a packet if something weird happens
         if not pkt:
