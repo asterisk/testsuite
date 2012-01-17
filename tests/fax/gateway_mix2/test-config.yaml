@@ -16,8 +16,6 @@ testinfo:
 
 properties:
     minversion: '10'
-    # Expected to fail per ASTERISK-19053
-    #expectedResult: 'Fail' # set so failures get noticed to capture logs
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
