@@ -18,62 +18,33 @@ WORKING_DIR = "sip/codec_negotiation"
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 
 SIPP_SCENARIOS = [
-    {
-        'scenario' : 'single_audio.xml',
-        '-p' : '5061'
-    },
-    {
-        'scenario' : 'decline_incompat_audio.xml',
-        '-p' : '5062'
-    },
-    {
-        'scenario' : 'single_video.xml',
-        '-p' : '5063'
-    },
-    {
-        'scenario' : 'single_video_inverse.xml',
-        '-p' : '5064'
-    },
-    {
-        'scenario' : 'decline_incompat_video.xml',
-        '-p' : '5065'
-    },
-    {
-        'scenario' : 'single_text.xml',
-        '-p' : '5066'
-    },
-    {
-        'scenario' : 'single_text_inverse.xml',
-        '-p' : '5067'
-    },
-    {
-        'scenario' : 'decline_incompat_text.xml',
-        '-p' : '5068'
-    },
-    {
-        'scenario' : 'single_image.xml',
-        '-p' : '5069'
-    },
-    {
-        'scenario' : 'single_image_inverse.xml',
-        '-p' : '5070'
-    },
-    {
-        'scenario' : 'avt_streams.xml',
-        '-p' : '5071'
-    },
-    {
-        'scenario' : 'multistream.xml',
-        '-p' : '5072'
-    },
-    {
-        'scenario' : 'orderstream.xml',
-        '-p' : '5073'
-    }
+    {'scenario' : 'single_audio.xml',},
+    {'scenario' : 'decline_incompat_audio.xml',},
+    {'scenario' : 'single_video.xml',},
+    {'scenario' : 'single_video_inverse.xml',},
+    {'scenario' : 'decline_incompat_video.xml',},
+    {'scenario' : 'single_text.xml',},
+    {'scenario' : 'single_text_inverse.xml',},
+    {'scenario' : 'decline_incompat_text.xml',},
+    {'scenario' : 'single_image.xml',},
+    {'scenario' : 'single_image_inverse.xml',},
+    {'scenario' : 'avt_streams.xml',},
+    {'scenario' : 'multistream.xml',},
+    {'scenario' : 'fax_sim.xml',},
+    {'scenario' : 'decline_crypto.xml',},
+    {'scenario' : 'orderstream.xml',},
 ]
+
+# set port numberings and timeouts
+port = 5061
+def update_entry(entry):
+    global port
+    entry['-p'] = "%d" % port
+    port += 1
 
 # generate SIPP scenarios with appropriate port numbers and the config to go with it
 def main():
+    [update_entry(i) for i in SIPP_SCENARIOS]
     test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
     return test.run()
 
