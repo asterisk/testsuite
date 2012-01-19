@@ -17,11 +17,12 @@ from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
 from asterisk.TestCase import TestCase
 from asterisk.CDRTestCase import CDRTestCase
 from twisted.internet import reactor
-
+from asterisk.version import AsteriskVersion
 
 class SIP_Dial_Answer_Test(CDRTestCase):
     def __init__(self):
         CDRTestCase.__init__(self)
+        cdr2channel = "SIP/test-.*"
 
         self.add_expectation('cdrtest_local', AsteriskCSVCDRLine(
             destination="1",
@@ -29,10 +30,14 @@ class SIP_Dial_Answer_Test(CDRTestCase):
             channel="Local/1@default-.*",
             disposition="ANSWERED",
             amaflags="DOCUMENTATION"))
+
+        if self.ast_version < AsteriskVersion("1.8"):
+                cdr2channel = "Local/2@test-.*"
+
         self.add_expectation('cdrtest_sip', AsteriskCSVCDRLine(
             destination="2",
-            dcontext="default",
-            channel="SIP/test-.*",
+            dcontext="test",
+            channel=cdr2channel,
             disposition="ANSWERED",
             amaflags="DOCUMENTATION"))
 

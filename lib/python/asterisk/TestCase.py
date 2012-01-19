@@ -20,6 +20,8 @@ from asterisk import Asterisk
 from TestConfig import TestConfig
 from TestConditions import TestConditionController, TestCondition
 from ThreadTestCondition import ThreadPreTestCondition, ThreadPostTestCondition
+from version import AsteriskVersion
+
 
 try:
     from pcap_listener import PcapListener
@@ -58,6 +60,7 @@ class TestCase(object):
         self.pcap = None
         self.pcapfilename = None
         self.testlogdir = os.path.join(Asterisk.test_suite_root, self.base, str(os.getpid()))
+        self.ast_version = AsteriskVersion()
 
         os.makedirs(self.testlogdir)
 
