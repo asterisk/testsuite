@@ -1,0 +1,15 @@
+testinfo:
+    summary:     'Test SIP Blind Transfer (callee transfers with hold)'
+    description: |
+        This test verifies a SIP Blind transfer in which
+        Phone A calls Phone B through Asterisk.  Phone B then
+        requests a transfer for Phone A to Phone C.  At the end
+        of the test, Phone B is hung up, while Phone A and C
+        are bridged together.
+
+properties:
+    minversion: '1.8.9'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - app : 'pjsua'

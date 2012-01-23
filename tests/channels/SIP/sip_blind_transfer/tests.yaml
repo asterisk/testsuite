@@ -1,0 +1,6 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'callee_refer_only'
+    - test: 'callee_with_reinvite'
+    - test: 'caller_refer_only'
+    - test: 'caller_with_reinvite'

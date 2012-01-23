@@ -1,0 +1,189 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2012, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import signal
+import subprocess
+import logging
+
+from twisted.application import service, internet
+from twisted.internet import reactor, defer
+from starpy import manager
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+
+logger = logging.getLogger(__name__)
+
+class BlindTransfer(TestCase):
+
+    """ Constants """
+    phone_a_channel = "SIP/end_a-00000000"
+    phone_b_channel = "SIP/end_b-00000001"
+    phone_c_channel = "SIP/end_c-00000002"
+
+    phone_b_uri = "sip:call_b@127.0.0.1:5060"
+    phone_c_uri = "sip:call_c@127.0.0.1:5060"
+
+    def __init__(self):
+        TestCase.__init__(self)
+        self.passed = False
+        self.create_asterisk()
+
+    def read_result(self):
+        logger.debug("Reading results")
+        self.ast[0].cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+        self.ast[0].cli_exec("core show channels")
+        self.stop_processes()
+
+        if self.passed == True:
+            logger.info('SIP Transfer Test Passed!')
+        else:
+            logger.error('SIP Transfer Test Failed')
+        self.stop_reactor()
+
+    def ami_connect(self, ami):
+        TestCase.ami_connect(self, ami)
+
+        # start up the processes
+        self.start_processes()
+        ami.registerEvent('Bridge', self.bridge_event_handler)
+        ami.registerEvent('Transfer', self.transfer_event_handler)
+        ami.registerEvent('Hangup', self.hangup_event_handler)
+
+        self.a_call_b()
+
+    def bridge_event_handler(self, ami, event):
+        bridgetype = event['bridgetype'].lower()
+        bridgestate = event['bridgestate'].lower()
+        channel1 = event['channel1']
+        channel2 = event['channel2']
+        logger.debug("Received bridge type %s (%s) for channel %s and %s" % (bridgetype, bridgestate, channel1, channel2))
+        if (bridgetype == 'core' and bridgestate == 'link'):
+            if (channel1 == BlindTransfer.phone_a_channel and channel2 == BlindTransfer.phone_b_channel):
+                logger.debug("Starting transfer of Phone B to Phone C")
+                self.b_transfer_a_to_c()
+            elif (channel1 == BlindTransfer.phone_a_channel and channel2 == BlindTransfer.phone_c_channel):
+                self.ami_check_bridge()
+            else:
+                logger.warning("Unexpected bridge (%s and %s) received!" % (channel1, channel2))
+        else:
+            logger.warning("Unexpected bridgetype %s or bridgestate %s received!" % (bridgetype, bridgestate))
+
+    def transfer_event_handler(self, ami, event):
+        transfertype = event['transfertype'].lower()
+        transfermethod = event['transfermethod'].lower()
+        channel = event['channel']
+        targetchannel = event['targetchannel']
+        logger.debug("Received %s %s transfer initiated by %s on %s" % (transfermethod, transfertype, channel, targetchannel))
+        if transfertype != 'blind':
+            logger.warn("Unexpected transfer type: %s" % transfertype)
+        elif transfermethod != 'sip':
+            logger.warn("Unexpected transfer method: %s" % transfermethod)
+        else:
+            self.transfer_event_received = True
+
+    def hangup_event_handler(self, ami, event):
+        channel = event['channel']
+        if channel == BlindTransfer.phone_c_channel:
+            self.read_result()
+
+    def check_bridge_result(self, result):
+        """ By now, we should have received the transfer event """
+        if not self.transfer_event_received:
+            logger.warn("Transfer event failed or contained incorrect data; not checking bridge results")
+            self.passed = False
+            self.read_result()
+            return
+
+        logger.debug('Result %s' % str(result))
+        if "bridgedchannel" not in result[0]:
+            logger.warn("'bridgedchannel' not found")
+        elif result[0]['bridgedchannel'] == BlindTransfer.phone_c_channel:
+            self.passed = True
+
+        if self.passed == True:
+            logger.debug("Found Bridge!!!")
+            self.hangup_channel_c()
+        else:
+            logger.warn("Detecting Bridge failed")
+            self.read_result()
+
+    def check_bridge_error(self, reason):
+        logger.error(reason.getTraceback())
+        logger.error("Checking Bridge failed.  Channel did not exist.")
+        reactor.callLater(1, self.read_result)
+
+    def ami_check_bridge(self):
+        logger.debug("Getting AMI results")
+        obj = self.ami[0].status(BlindTransfer.phone_a_channel)
+        if obj != None:
+            obj.addCallbacks(self.check_bridge_result, self.check_bridge_error)
+        else:
+            logger.warn("Failed to get status object back for %s" % BlindTransfer.phone_a_channel)
+
+    def a_call_b(self):
+        logger.debug("Phone A Calling Phone B (%s)" % BlindTransfer.phone_b_uri)
+        self.pja.stdin.write("m\n")
+        self.pja.stdin.write("%s\n" % BlindTransfer.phone_b_uri)
+        self.reset_timeout()
+
+    def b_transfer_a_to_c(self):
+        logger.debug("Phone B puts Phone A on Hold")
+        self.pjb.stdin.write("H\n")
+        logger.info("Phone B Transferring Phone A to Phone C (%s)" % BlindTransfer.phone_c_uri)
+        self.pjb.stdin.write("x\n")
+        self.pjb.stdin.write("%s\n" % BlindTransfer.phone_c_uri)
+        self.reset_timeout()
+
+    def start_processes(self):
+        logger.debug("Starting Processes")
+        self.pja = subprocess.Popen(['pjsua', '--local-port=5065',
+                                     '--auto-answer=200', '--null-audio'],
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE)
+        self.pjb = subprocess.Popen(['pjsua', '--local-port=5066',
+                                     '--auto-answer=200', '--null-audio'],
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE)
+        self.pjc = subprocess.Popen(['pjsua', '--local-port=5067',
+                                     '--auto-answer=200', '--null-audio'],
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE)
+
+    def hangup_channel_c(self):
+        logger.debug("Hanging up Phone C")
+        self.pjc.stdin.write("h\n")
+
+    def stop_processes(self):
+        logger.debug("Stopping Processes")
+        os.kill(self.pja.pid, signal.SIGKILL)
+        os.kill(self.pjb.pid, signal.SIGKILL)
+        os.kill(self.pjc.pid, signal.SIGKILL)
+
+    def run(self):
+        TestCase.run(self)
+        self.create_ami_factory()
+
+def main():
+    # Run Transfer Test
+    transfer_test = BlindTransfer()
+
+    transfer_test.start_asterisk()
+    reactor.run()
+    transfer_test.stop_asterisk()
+    if transfer_test.passed != True:
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
