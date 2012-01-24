@@ -10,6 +10,7 @@ the GNU General Public License Version 2.
 import sys
 import logging
 from twisted.internet import reactor
+from twisted.internet.error import ReactorNotRunning
 
 sys.path.append("lib/python")
 from asterisk import Asterisk
@@ -26,7 +27,7 @@ class CDRTestCase(TestCase):
     Example Usage:
     class TestFoo(CDRTestCase):
         def __init__(self):
-            TestCase.__init__(self):
+            super(TestFoo, self).__init__()
             self.add_expectation("Master", AsteriskCSVCDRLine(
                 accountcode='testsuite',
                 source='',
@@ -50,7 +51,7 @@ class CDRTestCase(TestCase):
         """
         Create a single Asterisk instance.
         """
-        TestCase.__init__(self)
+        super(CDRTestCase, self).__init__()
         self.CDRFileExpectations = defaultdict(list)
         self.create_asterisk()
 
@@ -121,15 +122,26 @@ class CDRTestCase(TestCase):
         """
         An AMI callback event from create_ami_factory() function.
         """
-        TestCase.ami_connect(self, ami)
+        super(CDRTestCase, self).ami_connect(self)
+        ami.registerEvent("Hangup", self.ami_test_done)
+
         self.ami[0].originate(
             channel = 'Local/1@default',
             application = 'Echo'
         ).addErrback(self.ami_logoff)
 
+    def ami_test_done(self, ami, event):
+        if event.get("event") == "Hangup":
+            if self.no_active_channels():
+                try:
+                    self.stop_reactor()
+                except ReactorNotRunning:
+                    # No problemo.
+                    pass
+
     def run(self):
         """
         Create an AMI factory with a calback for the ami_connect() function.
         """
-        TestCase.run(self)
+        super(CDRTestCase, self).run()
         self.create_ami_factory()

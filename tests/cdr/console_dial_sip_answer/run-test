@@ -8,13 +8,8 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-import os
-import logging
-import re
 sys.path.append("lib/python")
-from asterisk.asterisk import Asterisk
-from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
-from asterisk.TestCase import TestCase
+from asterisk.cdr import AsteriskCSVCDRLine
 from asterisk.CDRTestCase import CDRTestCase
 from twisted.internet import reactor
 from asterisk.version import AsteriskVersion

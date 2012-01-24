@@ -236,6 +236,18 @@ class TestCase(object):
 
         return res
 
+    def no_active_channels(self):
+        """
+        Return true if all our asterisk children have 0 active channels.
+        """
+        for asterisk in self.ast:
+            # 0 active channels
+            first_line = asterisk.cli_exec('core show channels count').split('\n', 1)[0]
+            # 0
+            first_number = first_line.split(' ', 1)[0]
+            if first_number != '0':
+                return False
+        return True
 
     def stop_reactor(self):
         """
@@ -246,10 +258,10 @@ class TestCase(object):
             reactor.stop()
 
     def __reactor_timeout(self):
-        '''
+        """
         A wrapper function for stop_reactor(), so we know when a reactor timeout
         has occurred.
-        '''
+        """
         logger.warning("Reactor timeout: '%s' seconds" % self.reactor_timeout)
         self.stop_reactor()
 

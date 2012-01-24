@@ -139,13 +139,16 @@ class Asterisk:
 
         start = time.time()
         while True:
-            if (self.cli_exec("core waitfullybooted") != ""):
-                break
-            else:
+            # This command should stall until completed, but if an
+            # exception occurs, it returns the empty string.
+            if not self.cli_exec("core waitfullybooted"):
                 if time.time() - start > 5:
+                    logger.error("Unknown state of asterisk. Stopping waitfullybooted...")
                     break
                 logger.debug("Attempting waitfullybooted again...")
-                continue
+            else:
+                # We're fully booted...
+                break
 
     def stop(self):
         """Stop this instance of Asterisk.
