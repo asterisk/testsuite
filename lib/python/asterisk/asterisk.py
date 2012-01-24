@@ -141,7 +141,7 @@ class Asterisk:
         while True:
             # This command should stall until completed, but if an
             # exception occurs, it returns the empty string.
-            if not self.cli_exec("core waitfullybooted"):
+            if not self.cli_exec("core waitfullybooted", warn_on_fail=False):
                 if time.time() - start > 5:
                     logger.error("Unknown state of asterisk. Stopping waitfullybooted...")
                     break
@@ -349,7 +349,7 @@ class Asterisk:
         else:
             self.cli_exec("channel originate %s" % argstr, blocking=blocking)
 
-    def cli_exec(self, cli_cmd, blocking=True):
+    def cli_exec(self, cli_cmd, blocking=True, warn_on_fail=True):
         """Execute a CLI command on this instance of Asterisk.
 
         Keyword Arguments:
@@ -360,6 +360,9 @@ class Asterisk:
         Example Usage:
         asterisk.cli_exec("core set verbose 10")
         """
+        # Downplay warnings if the caller requests it
+        warn = (logger.debug, logger.warn)[bool(warn_on_fail)]
+
         cmd = [
             self.ast_binary,
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
@@ -375,20 +378,20 @@ class Asterisk:
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                        stderr=subprocess.STDOUT)
         except OSError:
-            logger.warn("Failed to execute command: %s" % str(cmd))
+            warn("Failed to execute command: %s" % str(cmd))
             return ""
 
         output = ""
         try:
             for l in process.stdout.readlines():
-                logger.debug(l),
+                logger.debug(l.rstrip())
                 output += l
         except IOError:
             pass
         try:
             res = process.wait()
             if res != None and res != 0:
-                logger.warn("Exited non-zero [%d] while executing command %s" % (res, str(cmd)))
+                warn("Exited non-zero [%d] while executing command %s" % (res, str(cmd)))
                 output = ""
         except OSError:
             pass
