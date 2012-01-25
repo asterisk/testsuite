@@ -17,53 +17,127 @@ from twisted.internet import reactor
 sys.path.append("lib/python")
 
 from asterisk.asterisk import Asterisk
-from asterisk.TestCase import TestCase
+from asterisk.voicemail import VoiceMailTest, VoiceMailState
 
 logger = logging.getLogger(__name__)
 
-class AuthenticateNominal(TestCase):
+"""
+TestState that attempts a login with a mailbox / incorrect password
+"""
+class LoginWithMailbox(VoiceMailState):
 
-    """ Each key value pair is the mailbox / password to test """
-    credentials = [(9000, 1234), (9001, 0), (9002, 1234567890)]
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+        self.mailbox = "0"
+        self.password = "0"
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+        if state == 'PLAYBACK':
+            message = event['message']
+            if message == 'vm-login':
+                self.voiceMailTest.sendDTMF(self.mailbox)
+            elif message == 'vm-password':
+                self.voiceMailTest.sendDTMF(self.password)
+                self.voiceMailTest.reset_timeout()
+            elif message == 'vm-incorrect-mailbox':
+                logger.warn("Failed to authenticate properly, failing test")
+                self.voiceMailTest.passed = False
+                self.voiceMailTest.stop_reactor()
+            elif message == 'vm-goodbye':
+                self.voiceMailTest.hangup()
+            else:
+                self.handleDefaultState(event)
+        elif state == 'AUTHENTICATED':
+            logger.info("Authenticated for %s/%s, hanging up" % (self.mailbox, self.password))
+            self.voiceMailTest.hangup()
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "LOGIN WITH MAILBOX"
+
+"""
+TestState that attempts a login with an incorrect password only
+"""
+class LoginWithoutMailbox(VoiceMailState):
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+        self.mailbox = "0"
+        self.password = "0"
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+        if state == 'PLAYBACK':
+            message = event['message']
+            if message == 'vm-password':
+                self.voiceMailTest.sendDTMF(self.password)
+                self.voiceMailTest.reset_timeout()
+            elif message == 'vm-incorrect-mailbox' or message == 'vm-incorrect':
+                logger.warn("Failed to authenticate properly, failing test")
+                self.voiceMailTest.passed = False
+                self.voiceMailTest.stop_reactor()
+            elif message == 'vm-goodbye':
+                self.voiceMailTest.hangup()
+            else:
+                self.handleDefaultState(event)
+        elif state == 'AUTHENTICATED':
+            logger.info("Authenticated for %s/%s, hanging up" % (self.mailbox, self.password))
+            self.voiceMailTest.hangup()
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "LOGIN WITHOUT MAILBOX"
+
+
+
+class AuthenticateNominal(VoiceMailTest):
+
+
 
     """ Test results for each iterations """
     results = [False, False, False]
 
     def __init__(self):
         super(AuthenticateNominal, self).__init__()
-
-        self.reactor_timeout = 60
-        self.senderAmi = None
+        """ Each tuple consists of the mailbox, password, expected channel and test controller object type """
+        self.credentials = [
+            ("9000", "1234", "SIP/ast1-00000000", LoginWithMailbox),
+            ("9001", "0", "SIP/ast1-00000001", LoginWithoutMailbox),
+            ("9002", "1234567890", "SIP/ast1-00000002", LoginWithoutMailbox)]
         self.create_asterisk(2)
+        self.test_counter = 0
 
     def ami_connect(self, ami):
-        ami.registerEvent('UserEvent', self.user_event)
+        super(AuthenticateNominal, self).ami_connect(ami)
 
-        if not (ami.id == 0):
-            self.testCounter = 0
-            self.senderAmi = ami
-            self.executeTest(ami)
+        """ Record which AMI instance we've received and attempt to set up the test controller """
+        if (ami.id == 0):
+            self.amiReceiver = ami
+            ami.registerEvent('UserEvent', self.user_event)
+        elif (ami.id == 1):
+            self.amiSender = ami
+            self.astSender = self.ast[self.amiSender.id]
+            #ami.registerEvent('Hangup', self.hangup_event_handler)
+        self.createTestController()
 
-    def executeTest(self, ami):
-        if self.testCounter > 3:
-            return
+        if (self.amiReceiver != None and self.amiSender != None):
+            self.executeTest()
 
-        credential = self.credentials[self.testCounter]
-        self.ast[ami.id].cli_exec("dialplan set global MAILBOX " + str(credential[0]))
-        self.ast[ami.id].cli_exec("dialplan set global PASSWORD " + str(credential[1]))
+    def executeTest(self):
+        tuple = self.credentials[self.test_counter]
+        startObject = tuple[3](self.testStateController, self)
+        startObject.mailbox = tuple[0]
+        startObject.password = tuple[1]
+        self.testStateController.changeState(startObject)
+        self.senderChannel = tuple[2]
 
-        """ First time through test sending a mailbox and password; otherwise we just send the password """
-        extension = ""
-        if self.testCounter == 0:
-            extension = "mailboxAndPassword"
-        else:
-            extension = "password"
-
-        logger.debug("Originating call to sip/ast1/" + str(credential[0]) + " from " + extension + "@sendvoicemail")
-        df = ami.originate("sip/ast1/" + str(credential[0]), "sendvoicemail", extension, 1)
+        logger.debug("Originating call to sip/ast1/" + tuple[0])
+        df = self.amiSender.originate("sip/ast1/" + tuple[0], "voicemailCaller", "wait", 1)
         df.addErrback(self.handleOriginateFailure)
-
-        self.testCounter += 1
+        self.test_counter += 1
 
     def user_event(self, ami, event):
         if event['userevent'] != 'TestResult':
@@ -76,20 +150,20 @@ class AuthenticateNominal(TestCase):
             """
             if event['result'] == 'pass':
                 logger.info("VMAuthenticate successfully exited")
-                self.results[self.testCounter - 1] = True
+                self.results[self.test_counter - 1] = True
             else:
-                self.results[self.testCounter - 1] = False
+                self.results[self.test_counter - 1] = False
                 logger.warn("VMAuthenticate did not successfully exit:")
                 logger.warn("result: %s" % (event['result'],))
                 logger.warn("error: %s" % (event['status'],))
             """ If we've seen all the responses, stop the test """
-            if self.testCounter >= 3:
+            if self.test_counter >= 3:
                 logger.info("All responses received - Stopping Test")
                 self.stop_reactor()
 
-            if self.testCounter < 3:
+            if self.test_counter < 3:
                 super(AuthenticateNominal, self).reset_timeout()
-                self.executeTest(self.senderAmi)
+                self.executeTest()
 
     def run(self):
         super(AuthenticateNominal, self).run()

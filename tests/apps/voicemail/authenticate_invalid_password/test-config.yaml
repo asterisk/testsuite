@@ -6,6 +6,7 @@ testinfo:
 
 properties:
     minversion: '1.8'
+    buildoption: 'TEST_FRAMEWORK'
     testconditions:
         - name: 'threads'
           ignoredThreads:
@@ -17,4 +18,5 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'app_voicemail'

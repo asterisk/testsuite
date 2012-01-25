@@ -17,33 +17,78 @@ from twisted.internet import reactor
 sys.path.append("lib/python")
 
 from asterisk.asterisk import Asterisk
-from asterisk.TestCase import TestCase
+from asterisk.voicemail import VoiceMailState, VoiceMailTest
 
 logger = logging.getLogger(__name__)
 
-class AuthenticateInvalidMailbox(TestCase):
+"""
+TestState that is the entry point for the VoiceMail application
+"""
+class StartVoiceMailState(VoiceMailState):
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+        self.login_attempts = 0
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+        if state == 'PLAYBACK':
+            message = event['message']
+            if message == 'vm-login' or message == 'vm-incorrect-mailbox':
+                self.voiceMailTest.sendDTMF("5555")
+                self.voiceMailTest.reset_timeout()
+                self.login_attempts += 1
+                if (self.login_attempts == 3):
+                    logger.info("Failed to login 3 times - setting test result to Pass")
+                    self.voiceMailTest.passed = True
+            elif message == 'vm-password':
+                self.voiceMailTest.sendDTMF("1234")
+            elif message == 'vm-goodbye':
+                self.voiceMailTest.hangup()
+            else:
+                self.handleDefaultState(event)
+        elif state == 'AUTHENTICATED':
+            logger.warn("We authenticated with an invalid mailbox - failing the test")
+            self.voiceMailTest.passed = False
+            self.voiceMailTest.stop_reactor()
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "START"
+
+class AuthenticateInvalidMailbox(VoiceMailTest):
 
     def __init__(self):
         super(AuthenticateInvalidMailbox, self).__init__()
-
-        self.reactor_timeout = 60
         self.create_asterisk(2)
+        self.channel = "sip/ast1/9000"
 
     def ami_connect(self, ami):
         super(AuthenticateInvalidMailbox, self).ami_connect(ami)
 
-        ami.registerEvent('UserEvent', self.user_event)
+        """ Record which AMI instance we've received and attempt to set up the test controller """
+        if (ami.id == 0):
+            self.amiReceiver = ami
+            ami.registerEvent('UserEvent', self.user_event)
+        elif (ami.id == 1):
+            self.amiSender = ami
+            self.astSender = self.ast[self.amiSender.id]
+            ami.registerEvent('Hangup', self.hangup_event_handler)
+        self.createTestController()
+        if (self.testStateController != None):
+            startObject = StartVoiceMailState(self.testStateController, self)
+            self.testStateController.changeState(startObject)
 
         if not (ami.id == 0):
             self.executeTest(ami)
 
-    def executeTest(self, ami):
-        """ Mailbox / password set to invalid mailbox, but valid password """
-        self.ast[ami.id].cli_exec("dialplan set global MAILBOX 5555")
-        self.ast[ami.id].cli_exec("dialplan set global PASSWORD 1234")
+    def hangup_event_handler(self, ami, event):
+        logger.debug("Hangup event received; stopping reactor")
+        self.stop_reactor()
 
-        logger.debug("Originating call to sip/ast1/9000 from invalidMailbox@sendvoicemail")
-        df = ami.originate("sip/ast1/9000", "sendvoicemail", "invalidMailbox", 1)
+    def executeTest(self, ami):
+        df = ami.originate(self.channel, "voicemailCaller", "wait", 1)
         df.addErrback(self.handleOriginateFailure)
 
     def user_event(self, ami, event):
