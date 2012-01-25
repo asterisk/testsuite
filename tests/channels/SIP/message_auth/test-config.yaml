@@ -1,7 +1,7 @@
 testinfo:
-    summary: 'Test inbound and outbound unauthenticated MESSAGE'
+    summary: 'Test inbound and outbound authenticated MESSAGE'
     description: |
-        'Send Asterisk a MESSAGE and wait for Asterisk to send it back.'
+        'Send Asterisk a MESSAGE and wait for Asterisk to send it back with authentication.'
 
 properties:
     minversion: '10'

@@ -18,10 +18,41 @@ WORKING_DIR = "sip/message_unauth"
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 
 SIPP_SCENARIOS = [
+    # Start the receiver SIPp scenario's first
+    # Match the scenarios below with the extensions.conf MessageSend() lines by port number.
     {
-        'scenario' : 'message_recv.xml',
+        'scenario' : 'message_recv_fred.xml',
         '-p' : '5062'
     },
+    {
+        'scenario' : 'message_recv_unknown.xml',
+        '-p' : '5063'
+    },
+    {
+        'scenario' : 'message_recv_default.xml',
+        '-p' : '5064'
+    },
+    {
+        'scenario' : 'message_recv_anonymous.xml',
+        '-p' : '5065'
+    },
+    {
+        'scenario' : 'message_recv_goober.xml',
+        '-p' : '5066'
+    },
+    {
+        'scenario' : 'message_recv_noname.xml',
+        '-p' : '5067'
+    },
+    {
+        'scenario' : 'message_recv_passed.xml',
+        '-p' : '5068'
+    },
+    {
+        'scenario' : 'message_recv_passed.xml',
+        '-p' : '5069'
+    },
+    # Finally start the sending SIPp scenario that kicks everything off.
     {
         'scenario' : 'message.xml',
         '-p' : '5061'

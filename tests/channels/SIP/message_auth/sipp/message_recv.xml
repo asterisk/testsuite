@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
 
-<scenario name="Basic MESSAGE send and receive">
+<scenario name="Authenticated MESSAGE send and receive">
   <recv request="MESSAGE" crlf="true">
   </recv>
 

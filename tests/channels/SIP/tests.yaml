@@ -26,6 +26,7 @@ tests:
     - test: 'message_unauth'
     - test: 'message_unauth_from'
     - test: 'message_auth'
+    - test: 'message_auth_cust_hdr'
     - test: 'message_from_call'
     - test: 'handle_response_address_incomplete'
     - test: 'realtime_sipregs'

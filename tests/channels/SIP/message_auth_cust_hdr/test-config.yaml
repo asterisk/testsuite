@@ -1,0 +1,11 @@
+testinfo:
+    summary: 'Test MessageSend with authentication and custom headers.'
+    description: |
+        'Send Asterisk a MESSAGE and wait for Asterisk to send it back with custom headers.'
+
+properties:
+    minversion: '10'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+            feature : 'TLS'

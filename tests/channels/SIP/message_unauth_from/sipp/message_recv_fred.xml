@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <!DOCTYPE scenario SYSTEM "sipp.dtd">
 
-<scenario name="Basic MESSAGE send and receive">
+<scenario name="Basic MESSAGE send and receive Johnny Appleseed">
   <recv request="MESSAGE" crlf="true">
     <action>
       <!-- Check that the From header is what we expect. -->
