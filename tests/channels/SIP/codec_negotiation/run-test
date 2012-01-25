@@ -49,7 +49,10 @@ def main():
     [update_entry(i) for i in SIPP_SCENARIOS]
     test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
     reactor.run()
-    return not test.passed
+    if not test.passed:
+        return 1
+
+    return 0
 
 
 if __name__ == "__main__":

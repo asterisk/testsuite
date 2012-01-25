@@ -211,14 +211,14 @@ class SIPpTest(TestCase):
             self.result.append(self.sipp[i].wait())
             logger.debug(self.stdout[i])
             if self.result[i]:
-                logger.warn("SIPp scenario #%d FAILED" % i)
+                logger.warn("SIPp scenario #%d (%s) FAILED" % (i, self.scenarios[i]['scenario']))
                 logger.warn(self.stderr[i])
                 passed = False
             else:
-                logger.info("SIPp scenario #%d PASSED" % i)
+                logger.info("SIPp scenario #%d (%s) PASSED" % (i,  self.scenarios[i]['scenario']))
 
-        self.stop_reactor()
         self.stop_asterisk()
+        self.stop_reactor()
         if passed:
             return 0
         else:
