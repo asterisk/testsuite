@@ -203,7 +203,7 @@ class SIPpTest(TestCase):
             default_port = 5060 + len(self.sipp) + 1
             self.sipp.append(self.__run_sipp(s, str(default_port)))
 
-        passed = True
+        self.passed = True
         for i in range(len(self.sipp)):
             (out, err) = self.sipp[i].communicate()
             self.stdout.append(out)
@@ -213,13 +213,13 @@ class SIPpTest(TestCase):
             if self.result[i]:
                 logger.warn("SIPp scenario #%d (%s) FAILED" % (i, self.scenarios[i]['scenario']))
                 logger.warn(self.stderr[i])
-                passed = False
+                self.passed = False
             else:
                 logger.info("SIPp scenario #%d (%s) PASSED" % (i,  self.scenarios[i]['scenario']))
 
         self.stop_asterisk()
         self.stop_reactor()
-        if passed:
+        if self.passed:
             return 0
         else:
             return 1
