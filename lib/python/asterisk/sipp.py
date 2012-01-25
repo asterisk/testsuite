@@ -15,7 +15,9 @@ import os
 import subprocess
 import logging
 
+from twisted.internet import reactor
 from asterisk import Asterisk
+from TestCase import TestCase
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +109,7 @@ class SIPpScenario:
         return passed
 
 
-class SIPpTest:
+class SIPpTest(TestCase):
     """
     A SIPp based test for the Asterisk testsuite.
 
@@ -150,6 +152,7 @@ class SIPpTest:
                                headers, Via headers, etc.
                 -timeout 20s - Set a global test timeout of 20 seconds.
         """
+        TestCase.__init__(self)
         self.working_dir = working_dir
         self.test_dir = test_dir
         self.scenarios = scenarios
@@ -158,8 +161,7 @@ class SIPpTest:
         self.stderr = []
         self.result = []
 
-        self.ast1 = Asterisk(base=self.working_dir)
-        self.ast1.install_configs('%s/configs/ast1' % self.test_dir)
+        self.create_asterisk()
 
     def __run_sipp(self, scenario, default_port):
         sipp_args = [
@@ -193,7 +195,9 @@ class SIPpTest:
 
         Returns 0 for success, 1 for failure.
         """
-        self.ast1.start()
+        self.start_asterisk()
+
+        TestCase.run(self)
 
         for s in self.scenarios:
             default_port = 5060 + len(self.sipp) + 1
@@ -205,17 +209,16 @@ class SIPpTest:
             self.stdout.append(out)
             self.stderr.append(err)
             self.result.append(self.sipp[i].wait())
+            logger.debug(self.stdout[i])
             if self.result[i]:
                 logger.warn("SIPp scenario #%d FAILED" % i)
+                logger.warn(self.stderr[i])
+                passed = False
             else:
                 logger.info("SIPp scenario #%d PASSED" % i)
-            if self.result[i]:
-                passed = False
-                #print self.stdout[i]
-                logger.warn(self.stderr[i])
 
-        self.ast1.stop()
-
+        self.stop_reactor()
+        self.stop_asterisk()
         if passed:
             return 0
         else:

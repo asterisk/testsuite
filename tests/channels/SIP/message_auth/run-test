@@ -11,6 +11,8 @@ import sys
 import os
 
 sys.path.append("lib/python")
+
+from twisted.internet import reactor
 from asterisk.sipp import SIPpTest
 
 
@@ -31,7 +33,8 @@ SIPP_SCENARIOS = [
 
 def main():
     test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
-    return test.run()
+    reactor.run()
+    return not test.passed
 
 
 if __name__ == "__main__":
