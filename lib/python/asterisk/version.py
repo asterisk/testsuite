@@ -33,6 +33,7 @@ class AsteriskVersion:
         for a version.h file in this location that will contain the Asterisk
         version string to pull out and Parse.
         """
+        self.svn = False
         if version is not None:
             self.version_str = version
         else:
