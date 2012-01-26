@@ -15,6 +15,8 @@ import sys
 import re
 import unittest
 import logging
+import subprocess
+import utils
 
 logger = logging.getLogger(__name__)
 
@@ -23,31 +25,44 @@ class AsteriskVersion:
 
     This class handles Asterisk version strings.
     """
+    ast_version = ''
 
-    def __init__(self, version=None, path=None):
+    def __init__(self, version=None):
         """Construct an Asterisk Version parser.
 
         Keyword Arguments:
         version -- The Asterisk version string to parse.
-        path -- If an Asterisk version string is not directly provided, look
-        for a version.h file in this location that will contain the Asterisk
-        version string to pull out and Parse.
         """
         self.svn = False
-        if version is not None:
-            self.version_str = version
-        else:
-            version_hdr_paths = [
-                "../include/asterisk/version.h",
-                "/usr/include/asterisk/version.h",
-                "/usr/local/include/asterisk/version.h"
+
+        if version is None and AsteriskVersion.ast_version == '':
+            self.ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
+            cmd = [
+                self.ast_binary,
+                "-V",
             ]
-            if path:
-                version_hdr_paths.insert(0, path)
-            for p in version_hdr_paths:
-                self.version_str = self.__get_ast_version(p)
-                if self.version_str:
-                    break
+
+            try:
+                process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT)
+            except OSError:
+                print "Failed to execute command: %s" % str(cmd)
+                return
+
+            try:
+                AsteriskVersion.ast_version = process.stdout.read()
+            except OSError:
+                print "Failed to execute command: %s" % str(cmd)
+                return
+
+            AsteriskVersion.ast_version = AsteriskVersion.ast_version.replace("Asterisk ", "")
+            self.version_str = AsteriskVersion.ast_version
+
+        elif version is not None:
+            self.version_str = version
+
+        else:
+            self.version_str = AsteriskVersion.ast_version
 
         if not self.version_str:
             return
@@ -143,24 +158,6 @@ class AsteriskVersion:
             ret = ret + 1000
 
         return ret
-
-    def __get_ast_version(self, path):
-        '''
-        Determine the version of Asterisk installed from the installed version.h.
-        '''
-        v = None
-        try:
-            f = open(path, "r")
-            match = re.search("ASTERISK_VERSION\s+\"(.*)\"", f.read())
-            if match is not None:
-                v = match.group(1)
-            f.close()
-        except IOError:
-            logger.error("I/O Error getting Asterisk version from %s" % path)
-        except:
-            logger.error("Unexpected error getting version from %s: %s" % (path,
-                    sys.exc_info()[0]))
-        return v
 
 
 class AsteriskVersionTests(unittest.TestCase):
