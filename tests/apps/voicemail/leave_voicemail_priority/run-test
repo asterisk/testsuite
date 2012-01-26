@@ -19,59 +19,139 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.TestCase import TestCase
 from asterisk.voicemail import VoiceMailMailboxManagement
+from asterisk.voicemail import VoiceMailState
+from asterisk.voicemail import VoiceMailTest
 
 logger = logging.getLogger(__name__)
 
-class LeaveVoicemailPriority(TestCase):
+"""
+TestState that is the entry point for the VoiceMail application
+"""
+class StartVoiceMailState(VoiceMailState):
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+        if state == 'PLAYBACK':
+            message = event['message']
+
+            if message == 'vm-intro':
+                self.changeState(IntroVoiceMailState(self.controller, self.voiceMailTest))
+            else:
+                self.handleDefaultState(event)
+        else:
+            self.handleDefaultState(event)
+
+    def getStateName(self):
+        return "START"
+
+"""
+TestState that occurs when the Intro message is read, and will start the audio playback at the beep.
+After this the test states transition to a pending until switched back to Start by the reception
+of a UserEvent.
+"""
+class IntroVoiceMailState(VoiceMailState):
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+
+    def handleStateChange(self, ami, event):
+        state = event['state']
+        if state == 'PLAYBACK':
+            message = event['message']
+
+            if message == 'beep':
+                """ A beep indicates we need to stream some sound file over - use the same sound file for everything """
+                audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.voiceMailTest.testParentDir))
+                self.voiceMailTest.sendSoundFileWithDTMF(audioFile, "#")
+                self.changeState(PendingVoiceMailState(self.controller, self.voiceMailTest))
+            else:
+                self.handleDefaultState(event)
+        else:
+            self.handleDefaultState(event)
+    def getStateName(self):
+        return "INTRO"
+
+"""
+TestState that occurs between leaving voicemails
+"""
+class PendingVoiceMailState(VoiceMailState):
+
+    def __init__(self, controller, voiceMailTest):
+        VoiceMailState.__init__(self, controller, voiceMailTest)
+        """ Reset the reactor timeout """
+        self.voiceMailTest.reset_timeout()
+
+    def handleStateChange(self, ami, event):
+        pass
+
+    def getStateName(self):
+        return "PENDING"
+
+class LeaveVoicemailPriority(VoiceMailTest):
 
     def __init__(self):
         super(LeaveVoicemailPriority, self).__init__()
         self.testParentDir = "tests/apps/voicemail"
-        self.testCounter = 0
-        self.reactor_timeout = 60
+        self.testResultsReceived = 0
+        self.reactor_timeout = 45
+        self.test_counter = 0
+        self.extensions = [1234,5678]
+
         self.create_asterisk(2)
 
     def ami_connect(self, ami):
         super(LeaveVoicemailPriority, self).ami_connect(ami)
-
         self.audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.testParentDir))
 
+        """ Record which AMI instance we've received and attempt to set up the test controller """
         if (ami.id == 0):
             ami.registerEvent('UserEvent', self.user_event)
+            self.amiReceiver = ami
+        elif (ami.id == 1):
+            self.amiSender = ami
+            self.astSender = self.ast[self.amiSender.id]
+        self.createTestController()
+        if (self.testStateController != None):
+            startObject = StartVoiceMailState(self.testStateController, self)
+            self.testStateController.changeState(startObject)
 
-        if (ami.id != 0):
-            self.ast[ami.id].cli_exec("dialplan set global TALK_AUDIO " + self.audioFile)
+        if not (ami.id == 0):
+            self.originate_call()
 
-            df1 = ami.originate("sip/ast1/1234", "sendvoicemail", "1234", 1)
-            df1.addErrback(self.handleOriginateFailure)
-
-            df2 = ami.originate("sip/ast1/5678", "sendvoicemail", "1234", 1)
-            df2.addErrback(self.handleOriginateFailure)
+    def originate_call(self):
+        extension = self.extensions[self.test_counter]
+        logger.info("Originating call to sip/ast1/" + str(extension))
+        df = self.amiSender.originate("sip/ast1/" + str(extension), "voicemailCaller", "wait", 1, None, "CallId-" + str(extension), None, None, None, {}, True )
+        df.addErrback(self.handleOriginateFailure)
 
     def user_event(self, ami, event):
-
         if event['userevent'] != 'TestResult':
             return
 
-        self.testCounter += 1
-
-        if event["result"] != "fail":
-            logger.info("Received non-failure result " + event['result'])
-            if self.testCounter == 2:
-                logger.info("Received all expected results; stopping Reactor")
-                self.passed = True
-                self.stop_reactor()
+        self.testResultsReceived += 1
+        if event['result'] == "pass":
+            self.passed = True
+            logger.info("VoiceMail successfully exited")
         else:
-            self.passed = False
             logger.warn("VoiceMail did not successfully exit:")
             logger.warn("result: %s" % (event['result'],))
-            logger.warn("expected: %s" % (expected))
             logger.warn("error: %s" % (event['error'],))
+
+        if self.testResultsReceived == 2:
+            logger.info("All results received; stopping reactor")
             self.stop_reactor()
+        else:
+            """ Originate the next call and reset the state machine """
+            self.test_counter += 1
+            self.senderChannel = "SIP/ast1-0000000" + str(self.test_counter)
+            self.testStateController.changeState(StartVoiceMailState(self.testStateController, self))
+            self.originate_call()
 
     def run(self):
         super(LeaveVoicemailPriority, self).run()
-
         self.create_ami_factory(2)
 
 def main():
@@ -80,9 +160,7 @@ def main():
     voicemailManager = VoiceMailMailboxManagement(test.ast[0])
 
     test.start_asterisk()
-
     reactor.run()
-
     test.stop_asterisk()
 
     logger.info("Verifying voicemails (test result: [" + str(test.passed) + "])")
