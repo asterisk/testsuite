@@ -29,22 +29,15 @@ end
 function version(ver)
 	local version = ver or _version()
 	if version == "unknown" then
-		-- read version from path .. /usr/include/asterisk/version.h
-		local f, err = io.open(path .. "/usr/include/asterisk/version.h")
-		if not f then
-			error("error determining asterisk verison; unable to open version.h: " .. err)
+		-- read version from Asterisk
+		local ast = proc.exec_io("asterisk", "-V")
+		if not ast then
+			error("error determining asterisk version; unable to execute asterisk -V")
 		end
-
-		for line in f:lines() do
-			version = line:match('ASTERISK_VERSION%s"([^"]+)"')
-			if version then
-				break
-			end
-		end
-		f:close()
-
+		version = ast.stdout:read("*all")
+		version = string.gsub(version,"Asterisk ", "")
 		if not version then
-			error("error determining asterisk version; version not found in version.h")
+			error("error determining asterisk version")
 		end
 	end
 	return asterisk_version:new(version)

@@ -34,38 +34,12 @@ class AsteriskVersion:
         version -- The Asterisk version string to parse.
         """
         self.svn = False
+        self.__get_asterisk_version_from_binary()
 
-        if version is None and AsteriskVersion.ast_version == '':
-            self.ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
-            cmd = [
-                self.ast_binary,
-                "-V",
-            ]
-
-            try:
-                process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT)
-            except OSError:
-                print "Failed to execute command: %s" % str(cmd)
-                return
-
-            try:
-                AsteriskVersion.ast_version = process.stdout.read()
-            except OSError:
-                print "Failed to execute command: %s" % str(cmd)
-                return
-
-            AsteriskVersion.ast_version = AsteriskVersion.ast_version.replace("Asterisk ", "")
-            self.version_str = AsteriskVersion.ast_version
-
-        elif version is not None:
+        if version is not None:
             self.version_str = version
-
         else:
             self.version_str = AsteriskVersion.ast_version
-
-        if not self.version_str:
-            return
 
         if self.version_str[:3] == "SVN":
             self.__parse_svn_version()
@@ -74,6 +48,29 @@ class AsteriskVersion:
 
     def __str__(self):
         return self.version_str
+
+    @classmethod
+    def __get_asterisk_version_from_binary(cls):
+        """
+        Obtain the version from Asterisk and store in a class variable
+        """
+        if (AsteriskVersion.ast_version):
+            return
+        version = ""
+        ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
+        cmd = [
+            ast_binary,
+            "-V",
+        ]
+
+        try:
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT)
+            version = process.stdout.read()
+        except OSError as oe:
+            logger.error("OSError [%d]: %s" % (oe.errno, oe.strerror))
+            raise
+        AsteriskVersion.ast_version = version.replace("Asterisk ", "")
 
     def __int__(self):
         if self.svn is True:
