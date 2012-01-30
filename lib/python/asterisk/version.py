@@ -25,8 +25,6 @@ class AsteriskVersion:
 
     This class handles Asterisk version strings.
     """
-    ast_version = ''
-
     def __init__(self, version=None):
         """Construct an Asterisk Version parser.
 
@@ -34,12 +32,11 @@ class AsteriskVersion:
         version -- The Asterisk version string to parse.
         """
         self.svn = False
-        self.__get_asterisk_version_from_binary()
 
         if version is not None:
             self.version_str = version
         else:
-            self.version_str = AsteriskVersion.ast_version
+            self.version_str = self.get_asterisk_version_from_binary()
 
         if self.version_str[:3] == "SVN":
             self.__parse_svn_version()
@@ -48,29 +45,6 @@ class AsteriskVersion:
 
     def __str__(self):
         return self.version_str
-
-    @classmethod
-    def __get_asterisk_version_from_binary(cls):
-        """
-        Obtain the version from Asterisk and store in a class variable
-        """
-        if (AsteriskVersion.ast_version):
-            return
-        version = ""
-        ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
-        cmd = [
-            ast_binary,
-            "-V",
-        ]
-
-        try:
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT)
-            version = process.stdout.read()
-        except OSError as oe:
-            logger.error("OSError [%d]: %s" % (oe.errno, oe.strerror))
-            raise
-        AsteriskVersion.ast_version = version.replace("Asterisk ", "")
 
     def __int__(self):
         if self.svn is True:
@@ -140,8 +114,8 @@ class AsteriskVersion:
         ret = int(parts[0])
         if len(parts) >= 2:
             versions = [
-                ['rc', 100],
-                ['beta', 10],
+                ["rc", 100],
+                ["beta", 10],
             ]
             for v, cost in versions:
                 match = re.search(
@@ -155,6 +129,30 @@ class AsteriskVersion:
             ret = ret + 1000
 
         return ret
+
+    @classmethod
+    def get_asterisk_version_from_binary(cls):
+        """
+        Obtain the version from Asterisk and return (a cached version of) it
+        """
+        if not hasattr(cls, "_asterisk_version_from_binary"):
+            version = ""
+            ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
+            cmd = [
+                ast_binary,
+                "-V",
+            ]
+
+            try:
+                process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT)
+                version = process.stdout.read()
+            except OSError as oe:
+                logger.error("OSError [%d]: %s" % (oe.errno, oe.strerror))
+                raise
+
+            cls._asterisk_version_from_binary = version.replace("Asterisk ", "")
+        return cls._asterisk_version_from_binary
 
 
 class AsteriskVersionTests(unittest.TestCase):
