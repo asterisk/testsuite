@@ -91,11 +91,6 @@ class moduleLoadUnloadTest(TestCase):
                 print "WARNING: " + module[0] + " does not exist!"
                 continue
 
-            # TODO: Fix unloading of res_calendar.so
-            if module[0] == "res_calendar.so":
-                if not module[3]:
-                    continue
-
             # TODO: Fix unloading of res_curl.so
             if module[0] == "res_curl.so":
                 if not module[3]:
