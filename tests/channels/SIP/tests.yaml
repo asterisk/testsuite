@@ -36,3 +36,4 @@ tests:
     - test: 'nat_supertest'
     - test: 'pcap_demo'
     - test: 'sip_hold'
+    - test: 'header_parsing'

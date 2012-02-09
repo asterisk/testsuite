@@ -1,0 +1,9 @@
+testinfo:
+    summary: 'Test for consistency in SIP header parsing.'
+    description: |
+        'Use calls to ensure asterisk behaves properly with various headers.'
+
+properties:
+    minversion: '1.8.10'
+    dependencies:
+        - app : 'sipp'
