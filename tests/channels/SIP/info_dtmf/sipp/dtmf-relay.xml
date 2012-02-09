@@ -1,0 +1,733 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="INFO Test">
+  <!-- Connect to Asterisk -->
+  <send retrans="500">
+    <![CDATA[
+
+      INVITE sip:test@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 INVITE
+      Contact: sip:test@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: INFO Test
+      User-Agent: Channel Param Test
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=guest1 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio 6000 RTP/AVP 0 3
+      a=rtpmap:0 PCMU/8000
+      a=rtpmap:3 GSM/8000
+    ]]>
+  </send>
+
+  <recv response="100"
+        optional="true">
+  </recv>
+
+  <recv response="180" optional="true">
+  </recv>
+
+  <recv response="183" optional="true">
+  </recv>
+
+  <recv response="200" rtd="true">
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      ACK sip:test@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 1 ACK
+      Contact:sip:test@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: INFO Test
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 2 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=1
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 3 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=2
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 4 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=3
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 5 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=4
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 6 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=5
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 7 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=6
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 8 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=7
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 9 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=8
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 10 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=9
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 11 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=0
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 12 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=11
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 13 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=10
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 14 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=A
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+        INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        Max-Forwards: 70
+        Content-Length: [len]
+        From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+        To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+        Call-ID: [call_id]
+        CSeq: 15 INFO
+        Supported: timer
+        Content-Type: application/dtmf-relay
+        Contact: sip:test@[local_ip]:[local_port]
+        Supported: replaces
+        User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+        Signal=a
+        Duration=160
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+        INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        Max-Forwards: 70
+        Content-Length: [len]
+        From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+        To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+        Call-ID: [call_id]
+        CSeq: 16 INFO
+        Supported: timer
+        Content-Type: application/dtmf-relay
+        Contact: sip:test@[local_ip]:[local_port]
+        Supported: replaces
+        User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+        Signal=12
+        Duration=160
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 17 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=b
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+        INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        Max-Forwards: 70
+        Content-Length: [len]
+        From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+        To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+        Call-ID: [call_id]
+        CSeq: 18 INFO
+        Supported: timer
+        Content-Type: application/dtmf-relay
+        Contact: sip:test@[local_ip]:[local_port]
+        Supported: replaces
+        User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+        Signal=B
+        Duration=160
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+        INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        Max-Forwards: 70
+        Content-Length: [len]
+        From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+        To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+        Call-ID: [call_id]
+        CSeq: 19 INFO
+        Supported: timer
+        Content-Type: application/dtmf-relay
+        Contact: sip:test@[local_ip]:[local_port]
+        Supported: replaces
+        User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+        Signal=13
+        Duration=160
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 20 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=c
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+        INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        Max-Forwards: 70
+        Content-Length: [len]
+        From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+        To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+        Call-ID: [call_id]
+        CSeq: 21 INFO
+        Supported: timer
+        Content-Type: application/dtmf-relay
+        Contact: sip:test@[local_ip]:[local_port]
+        Supported: replaces
+        User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+        Signal=C
+        Duration=160
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+        INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        Max-Forwards: 70
+        Content-Length: [len]
+        From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+        To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+        Call-ID: [call_id]
+        CSeq: 22 INFO
+        Supported: timer
+        Content-Type: application/dtmf-relay
+        Contact: sip:test@[local_ip]:[local_port]
+        Supported: replaces
+        User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+        Signal=14
+        Duration=160
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+	<![CDATA[
+
+		INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		Content-Length: [len]
+		From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+		To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+		Call-ID: [call_id]
+		CSeq: 23 INFO
+		Supported: timer
+		Content-Type: application/dtmf-relay
+		Contact: sip:test@[local_ip]:[local_port]
+		Supported: replaces
+		User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+		Signal=d
+		Duration=160
+	]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+        INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        Max-Forwards: 70
+        Content-Length: [len]
+        From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+        To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+        Call-ID: [call_id]
+        CSeq: 24 INFO
+        Supported: timer
+        Content-Type: application/dtmf-relay
+        Contact: sip:test@[local_ip]:[local_port]
+        Supported: replaces
+        User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+        Signal=D
+        Duration=160
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+        INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        Max-Forwards: 70
+        Content-Length: [len]
+        From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+        To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+        Call-ID: [call_id]
+        CSeq: 25 INFO
+        Supported: timer
+        Content-Type: application/dtmf-relay
+        Contact: sip:test@[local_ip]:[local_port]
+        Supported: replaces
+        User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+        Signal=15
+        Duration=160
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+        INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        Max-Forwards: 70
+        Content-Length: [len]
+        From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+        To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+        Call-ID: [call_id]
+        CSeq: 26 INFO
+        Supported: timer
+        Content-Type: application/dtmf-relay
+        Contact: sip:test@[local_ip]:[local_port]
+        Supported: replaces
+        User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+
+        Signal=16
+        Duration=160
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+        INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        Max-Forwards: 70
+        From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+        To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+        Call-ID: [call_id]
+        CSeq: 27 INFO
+        Supported: timer
+        Content-Type: application/dtmf-relay
+        Contact: sip:test@[local_ip]:[local_port]
+        Supported: replaces
+        User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+        Content-Length: [len]
+
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+    <!-- Wait for the BYE from Asterisk -->
+    <recv request="BYE"/>
+
+    <send retrans="500">
+        <![CDATA[
+            SIP/2.0 200 OK
+            [last_Via:]
+            [last_From:]
+            [last_To:];tag=[call_number]
+            [last_Call-ID:]
+            [last_CSeq:]
+            Contact: <sip:test@[local_ip]:[local_port];transport=[transport]>
+            Allow: INVITE, ACK, BYE, CANCEL, OPTIONS, INFO, MESSAGE, SUBSCRIBE, NOTIFY, PRACK, UPDATE, REFER
+            Supported: 100rel,replaces
+            User-Agent: Aastra 480i Cordless/1.4.3.1001 Brcm Callctrl/1.5.1.0 MxSF/v3.2.8.45
+            Accept-Language: en
+            Content-Type: application/sdp
+            Content-Length: 0
+        ]]>
+    </send>
+
+</scenario>
+

@@ -1,0 +1,14 @@
+testinfo:
+    summary: 'Test that asterisk properly handles DTMF relayed in SIP INFO requests'
+    description: |
+        This test checks proper handling of SIP INFO requests containing DTMF events.
+        This includes both application/dtmf-relay and application/dtmf content types,
+        and checks for DTMF values 0-9, A-D, a-d, *, #, !, and blank message bodies.
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - sipp :
+            version : 'v3.0'
