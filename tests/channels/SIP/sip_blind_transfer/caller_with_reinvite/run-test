@@ -103,7 +103,7 @@ class BlindTransfer(TestCase):
         if channel == BlindTransfer.phone_c_channel:
             self.read_result()
 
-    def check_bridge_result(self, result):
+    def check_bridge_result(self, results):
         """ By now, we should have received the transfer event """
         if not self.transfer_event_received:
             logger.warn("Transfer event failed or contained incorrect data; not checking bridge results")
@@ -111,11 +111,19 @@ class BlindTransfer(TestCase):
             self.read_result()
             return
 
-        logger.debug('Result %s' % str(result))
-        if "bridgedchannel" not in result[0]:
-            logger.warn("'bridgedchannel' not found")
-        elif result[0]['bridgedchannel'] == BlindTransfer.phone_c_channel:
-            self.passed = True
+        logger.debug('Results %s' % str(results))
+        """
+        Multiple results may be returned.  For example, at times, you may get a message
+        back that states "channel state will follow".  Iterate through each and only fail
+        if we don't get a match
+        """
+        i = 0
+        for result in results:
+            if "bridgedchannel" not in result:
+                logger.debug("'bridgedchannel' not found in result %d" % i)
+            elif result['bridgedchannel'] == BlindTransfer.phone_c_channel:
+                self.passed = True
+            i += 1
 
         if self.passed == True:
             logger.debug("Found Bridge!!!")
