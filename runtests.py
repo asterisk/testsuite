@@ -180,7 +180,7 @@ class TestSuite:
                 path = "%s/%s" % (test_dir, t[val])
                 if val == "test":
                     # If we specified a subset of tests, there's no point loading the others.
-                    if self.options.test and not self.options.test in path:
+                    if self.options.test and not (path + '/').startswith(self.options.test):
                         continue
 
                     tests.append(TestRun(path, ast_version, self.options))
@@ -357,9 +357,9 @@ def main(argv=None):
 
     ast_version = AsteriskVersion(options.version)
 
-    #remove any trailing '/' from a test specified with the -t option
-    if options.test and options.test[-1] == '/':
-        options.test = options.test[0:-1]
+    # Ensure that there's a trailing '/' in the test specified with -t
+    if options.test and options.test[-1] != '/':
+        options.test += '/'
 
     test_suite = TestSuite(ast_version, options)
 
