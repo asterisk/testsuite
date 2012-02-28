@@ -9,101 +9,36 @@ the GNU General Public License Version 2.
 
 import sys
 import os
-import signal
-import subprocess
-from twisted.application import service, internet
-from twisted.internet import reactor, defer
-from starpy import manager
 
 sys.path.append("lib/python")
-from asterisk.asterisk import Asterisk
 
-workingdir = "channels/SIP/sip_register"
-testdir = "tests/%s" % workingdir
+from twisted.internet import reactor
+from asterisk.sipp import SIPpTest
 
-class RegisterTest:
-    def __init__(self):
-        self.passed = False
-        self.last_step = ""
-        self.sipps = {}
+WORKING_DIR = "channels/SIP/sip_register"
+TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 
-        reactor.callWhenRunning(self.run)
+SIPP_SCENARIOS = [
+    {
+        'scenario' : 'registerv4.xml'
+    },
+    {
+        'scenario' : 'registerv6.xml'
+    }
+]
 
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
-
-    def start_asterisk(self):
-        self.log_last_step("Starting Asterisk")
-        self.ast1.start()
-
-    def stop_asterisk(self):
-        self.log_last_step("Stopping Asterisk")
-        self.ast1.stop()
-
-    def ami_on_connect(self, ami):
-        self.log_last_step("Connected to the AMI")
-        self.ami = ami
-        self.ami.registerEvent("PeerStatus", self.check_register_result)
-        self.start_sipp("SIP/v4-in", "127.0.0.1", "registerv4.xml", "5061")
-        self.start_sipp("SIP/v6-in", "[::1]", "registerv6.xml", "5062")
-
-    def ami_login_error(self, ami):
-        self.log_last_step("AMI login failed")
-        self.stop_reactor()
-
-    def ami_login(self):
-        self.log_last_step("Logging in to the AMI")
-        self.ami_factory = manager.AMIFactory("user", "mysecret")
-        self.ami_factory.login('127.0.0.1', 5038).addCallbacks(self.ami_on_connect, self.ami_login_error)
-
-    def check_register_result(self, ami, event):
-        peer = event.get("peer")
-        status = event.get("peerstatus")
-        self.log_last_step("Checking registration result")
-        if not self.sipps[peer]:
-            return
-
-        if status == "Registered":
-            print "Successful registration for peer %s" % (peer)
-            self.sipps[peer]['pass'] = True
-        else:
-            print ("Registration for peer %s in state %s" % (peer, status))
-
-        if (self.sipps['SIP/v4-in']['pass'] is True and
-                self.sipps['SIP/v6-in']['pass'] is True):
-            self.stop_reactor()
-            self.passed = True
-            print "SIP registration test passed!"
-
-    def start_sipp(self, peer, host, scenario, port):
-        self.log_last_step("Starting SIPp scenario %s" % (scenario))
-        self.sipps[peer] = {'process': subprocess.Popen(['sipp', host, '-sf', 'tests/channels/SIP/sip_register/sipp/%s' % (scenario), '-p', '%s' % (port), '-m', '1', '-i', '%s' % (host), '-bg']),
-                           'pass': False}
-
-    def log_last_step(self, step):
-        print step
-        self.lastStep = step
-
-    def stop_reactor(self):
-        print "Stopping reactor"
-        if reactor.running:
-            reactor.stop()
-
-    def run(self):
-        self.ami_login()
-        reactor.callLater(30, self.stop_reactor)
 
 def main():
-    # Run Register Test
-    test = RegisterTest()
-    test.start_asterisk()
+    test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
     reactor.run()
-    test.stop_asterisk()
     if not test.passed:
         return 1
+
     return 0
 
+
 if __name__ == "__main__":
-    sys.exit(main() or 0)
+    sys.exit(main())
+
 
 # vim:sw=4:ts=4:expandtab:textwidth=79
