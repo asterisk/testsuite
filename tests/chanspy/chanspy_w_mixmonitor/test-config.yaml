@@ -17,3 +17,7 @@ properties:
         - python : 'starpy'
         - app : 'pjsua'
         - asterisk : 'app_talkdetect'
+    tags:
+        - SIP
+        - chanspy
+        - mixmonitor

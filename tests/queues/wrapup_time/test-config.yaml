@@ -10,3 +10,5 @@ properties:
     minversion: '1.6.0'
     dependencies:
         - app: 'asttest'
+    tags:
+        - queues

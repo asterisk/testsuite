@@ -11,3 +11,6 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - custom : 'fax'
+    tags:
+        - SIP
+        - fax

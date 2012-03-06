@@ -11,4 +11,5 @@ properties:
     dependencies:
         - app : 'bash'
         - app : 'asttest'
-
+    tags:
+        - AMI

@@ -12,3 +12,5 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'app_talkdetect'
+    tags:
+        - AGI

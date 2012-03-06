@@ -321,6 +321,8 @@ class TestConfig:
                 self.can_run = False
                 print "ERROR: '%s' is not a valid value for expectedResult" %\
                         properties["expectedResult"]
+        if "tags" in properties:
+            self.tags = properties["tags"]
 
     def __parse_config(self):
         test_config = "%s/test-config.yaml" % self.test_name
@@ -424,11 +426,8 @@ class TestConfig:
         if not self.config:
             return False
 
-        if "properties" in self.config:
-            self.tags = self.config["properties"].get("tags")
-
-        # if no tags are requested, this test's tags don't matter
-        if not requested_tags or not len(requested_tags):
+        """ If no tags are requested, this test's tags don't matter """
+        if not requested_tags:
             return self.can_run
 
         for tag in requested_tags:

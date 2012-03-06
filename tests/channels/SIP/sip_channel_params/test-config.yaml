@@ -21,3 +21,5 @@ properties:
         - app : 'asttest'
         - sipp :
             version : 'v3.0'
+    tags:
+        - SIP

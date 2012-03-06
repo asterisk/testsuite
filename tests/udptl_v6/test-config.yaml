@@ -13,3 +13,6 @@ properties:
         - python : 'starpy'
         - custom : 'fax'
         - custom : 'ipv6'
+    tags:
+        - SIP
+        - fax

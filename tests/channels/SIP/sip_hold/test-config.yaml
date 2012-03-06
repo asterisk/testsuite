@@ -15,3 +15,5 @@ properties:
         - name: 'threads'
           ignoredThreads:
             - 'autoservice_run'
+    tags:
+        - SIP

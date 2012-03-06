@@ -12,3 +12,9 @@ properties:
         - python : 'starpy'
         - custom : 'soundcard'
         - asterisk : 'cdr_csv'
+    tags:
+        - dial
+        - SIP
+        - CDR
+        - chan_local
+        - transfer

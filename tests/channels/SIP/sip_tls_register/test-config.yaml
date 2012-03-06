@@ -10,3 +10,5 @@ properties:
         - python : 'starpy'
         - sipp :
             version : 'v3.0'
+    tags:
+        - SIP

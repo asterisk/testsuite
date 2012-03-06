@@ -14,3 +14,5 @@ properties:
         - custom : 'ipv6'
         - sipp :
             version : 'v3.0'
+    tags:
+        - SIP

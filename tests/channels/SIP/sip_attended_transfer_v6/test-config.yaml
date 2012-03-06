@@ -12,3 +12,6 @@ properties:
         - app : 'pjsua'
         - custom : 'ipv6'
         - custom : 'pjsuav6'
+    tags:
+        - SIP
+        - transfer

@@ -5,3 +5,5 @@ testinfo:
 
 properties:
     minversion: '1.8'
+    tags:
+        - dialplan

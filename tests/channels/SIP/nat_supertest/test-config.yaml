@@ -7,3 +7,5 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
+    tags:
+        - SIP

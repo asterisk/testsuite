@@ -9,3 +9,5 @@ properties:
     minversion: '1.4'
     dependencies:
         - asterisk: 'app_queue'
+    tags:
+        - queues

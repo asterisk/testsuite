@@ -26,4 +26,6 @@ properties:
           sipHistoryRequirements:
             - 'NewChan'
             - 'Hangup'
-
+    tags:
+        - voicemail
+        - apps

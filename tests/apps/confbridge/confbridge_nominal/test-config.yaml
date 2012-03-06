@@ -9,6 +9,9 @@ testinfo:
 properties:
     minversion: '10'
     buildoption: 'TEST_FRAMEWORK'
+    tags:
+        - confbridge
+        - apps
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

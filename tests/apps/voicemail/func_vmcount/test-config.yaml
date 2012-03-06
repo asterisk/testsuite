@@ -16,4 +16,6 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-
+    tags:
+        - voicemail
+        - apps

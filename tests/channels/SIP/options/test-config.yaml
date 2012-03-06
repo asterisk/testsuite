@@ -9,3 +9,5 @@ properties:
     dependencies:
         - sipp :
             version : 'v3.0'
+    tags:
+        - SIP

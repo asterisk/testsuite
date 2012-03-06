@@ -9,3 +9,7 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
+    tags:
+        - IAX
+        - transfer
+        - parking

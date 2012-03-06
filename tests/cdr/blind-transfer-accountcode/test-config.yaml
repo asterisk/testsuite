@@ -18,3 +18,7 @@ properties:
             version : 'v3.0'
             feature : 'TLS'
         - asterisk : 'cdr_csv'
+    tags:
+        - CDR
+        - SIP
+        - transfer

@@ -189,6 +189,26 @@ class TestSuite:
 
         return tests
 
+    def list_tags(self):
+        def chunks(l, n):
+            for i in xrange(0, len(l), n):
+                yield l[i:i+n]
+
+        tags= set()
+        for test in self.tests:
+            tags = tags.union(test.test_config.tags)
+        tags = list(set(tags))
+        tags.sort(key=str.lower)
+        maxwidth = max(len(t) for t in tags)
+
+        print "Available test tags:"
+        tags = chunks(tags, 3)
+        for tag in tags:
+            print "\t%-*s     %-*s     %-*s" % (
+                maxwidth, tag[0],
+                maxwidth, len(tag) > 1 and tag[1] or '',
+                maxwidth, len(tag) > 2 and tag[2] or '')
+
     def list_tests(self):
         print "Configured tests:"
         i = 1
@@ -200,6 +220,8 @@ class TestSuite:
             if t.test_config.maxversion is not None:
                 print "      --> Maximum Version: %s (%s)" % \
                              (str(t.test_config.maxversion), str(t.test_config.maxversion_check))
+            if t.test_config.tags:
+                print "      --> Tags: %s" % str(t.test_config.tags)
             for d in t.test_config.deps:
                 if d.version:
                     print "      --> Dependency: %s" % (d.name)
@@ -340,6 +362,9 @@ def main(argv=None):
     parser.add_option("-v", "--version",
             dest="version", default=None,
             help="Specify the version of Asterisk rather then detecting it.")
+    parser.add_option("-L", "--list-tags", action="store_true",
+            dest="list_tags", default=False,
+            help="List available tags")
     (options, args) = parser.parse_args(argv)
 
     # Check to see if this has been executed within a sub directory of an
@@ -363,9 +388,13 @@ def main(argv=None):
 
     test_suite = TestSuite(ast_version, options)
 
-    if options.list_tests is True:
+    if options.list_tests:
         print "Asterisk Version: %s\n" % str(ast_version)
         test_suite.list_tests()
+        return 0
+
+    if options.list_tags:
+        test_suite.list_tags()
         return 0
 
     print "Running tests for Asterisk %s ...\n" % str(ast_version)
@@ -384,6 +413,9 @@ def main(argv=None):
                 for d in t.test_config.deps:
                     print "      --> Dependency: %s -- Met: %s" % (d.name,
                                  str(d.met))
+                if options.tags:
+                    for t in t.test_config.tags:
+                        print "      --> Tag: %s -- Met: %s" % (t, str(t in options.tags))
                 continue
             if t.passed is True:
                 print "PASSED"

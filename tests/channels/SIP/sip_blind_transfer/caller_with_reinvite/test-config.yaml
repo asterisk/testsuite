@@ -13,3 +13,6 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - app : 'pjsua'
+    tags:
+        - SIP
+        - transfer

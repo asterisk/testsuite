@@ -9,3 +9,5 @@ properties:
         - sipp:
             version: 'v3.1'
             feature: 'TLS'
+    tags:
+        - SIP

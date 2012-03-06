@@ -7,3 +7,5 @@ properties:
     minversion: '10'
     dependencies:
         - app : 'sipp'
+    tags:
+        - SIP

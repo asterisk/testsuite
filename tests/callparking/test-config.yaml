@@ -12,3 +12,6 @@ properties:
         - name: 'threads'
           ignoredThreads:
             - 'autoservice_run'
+    tags:
+        - parking
+        - IAX

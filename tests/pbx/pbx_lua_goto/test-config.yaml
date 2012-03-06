@@ -13,4 +13,6 @@ properties:
         - name: 'threads'
           ignoredThreads:
             - 'autoservice_run'
-
+    tags:
+        - dialplan
+        - dialplan_lua

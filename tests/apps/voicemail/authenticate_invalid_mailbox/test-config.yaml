@@ -20,3 +20,6 @@ properties:
         - python : 'starpy'
         - asterisk : 'app_senddtmf'
         - asterisk : 'app_voicemail'
+    tags:
+        - voicemail
+        - apps

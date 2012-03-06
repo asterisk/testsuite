@@ -11,3 +11,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'cdr_csv'
+    tags:
+        - dial
+        - CDR
+        - chan_local

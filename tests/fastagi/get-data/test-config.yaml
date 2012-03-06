@@ -9,3 +9,5 @@ properties:
         - app : 'python'
         - python : 'twisted'
         - python : 'starpy'
+    tags:
+        - AGI

@@ -17,3 +17,6 @@ properties:
         - sipp :
             version : 'v3.0'
         - asterisk : 'cdr_csv'
+    tags:
+        - SIP
+        - CDR

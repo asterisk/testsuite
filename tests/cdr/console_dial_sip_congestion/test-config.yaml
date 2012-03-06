@@ -10,3 +10,8 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'cdr_csv'
+    tags:
+        - dial
+        - SIP
+        - CDR
+        - chan_local

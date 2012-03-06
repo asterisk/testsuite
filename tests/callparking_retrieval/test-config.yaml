@@ -6,3 +6,6 @@ testinfo:
 
 properties:
     minversion: '1.4'
+    tags:
+        - parking
+        - IAX

@@ -12,3 +12,6 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'cdr_csv'
+    tags:
+        - CDR
+        - chan_local
