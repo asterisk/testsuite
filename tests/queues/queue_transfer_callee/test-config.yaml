@@ -1,0 +1,15 @@
+testinfo:
+    summary:     'Test transfer member after caller hangup [F()] option for queues'
+    description: |
+        'When a member of a queue (the callee) is connected to someone who called a queue application
+         (the caller) with option F(), and the caller hangs up, then the callee will be transfered to
+         a place in the dialplan specified by the argument to the F option. This test verifies that
+         the callee is transferred to the expected extensions for a number of Queues with different
+         arguments of F().'
+
+properties:
+    minversion: '11'
+    dependencies:
+        - asterisk: 'app_queue'
+    tags:
+        - queues

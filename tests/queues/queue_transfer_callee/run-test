@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+'''
+Copyright (C) 2012, Digium, Inc.
+Jonathan Rose <jrose@digium.com>
+
+Test for observing proper call pathing with Queue transfer callee (F) option
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.TestCase import TestCase
+
+logger = logging.getLogger(__name__)
+
+class QueueTransfer(TestCase):
+
+    def __init__(self):
+        super(QueueTransfer, self).__init__()
+        self.passed = True
+        self.test = 0
+        self.test_count = 4
+        self.passed_count = 0
+        self.create_asterisk()
+
+    def run(self):
+        super(QueueTransfer, self).run()
+        self.create_ami_factory()
+
+    def ami_connect(self, ami):
+        """ Register for all events we care about """
+        ami.registerEvent('UserEvent', self.test_event)
+        self.originate_next_test(ami)
+
+    def test_event(self, ami, event):
+        logger.debug("Event Received: %s" % event)
+        self.check_result(event, ami)
+
+    def check_result(self, event, ami):
+        failure = False
+
+        if event['userevent'] != "Alpha":
+            return
+
+        if event['status'] == "FAILURE":
+            failure = True
+
+        if self.test != int(event['test']):
+            logger.error("Event test number [%d] does not match expected value [%d]. Test Failed." % (int(event['test']), self.test))
+            self.passed = False
+            self.stop_reactor()
+            return;
+
+        if failure:
+            logger.error("Queue Test %d returned status FAILURE. Test Failed." % self.test)
+            self.passed = False
+        else:
+            logger.info("Queue Test %d returned status SUCCESS." % self.test)
+            self.passed_count = self.passed_count + 1
+
+        self.test = self.test + 1
+        self.originate_next_test(ami)
+
+    def originate_next_test(self, ami):
+        if self.test < self.test_count:
+            logger.info("Starting Test %d" % self.test)
+            df = ami.originate(channel = "Local/test@test_context", exten = "queue%d" % self.test, context = "test_context", priority = 1)
+            df.addErrback(self.handleOriginateFailure)
+        else:
+            self.stop_reactor()
+
+def main():
+    test = QueueTransfer()
+    test.start_asterisk()
+    reactor.run()
+    test.stop_asterisk()
+
+    if not test.passed:
+        logger.error("Failed - FAILURE flag was raised. Look for above error message.")
+        return 1
+    if test.passed_count < test.test_count:
+        logger.error("Failed - passed_count was less than test_count. A SUCCESS UserEvent probably wasn't reached.")
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+   sys.exit(main() or 0)
