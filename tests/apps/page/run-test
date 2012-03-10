@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2012, Digium, Inc.
+Joshua Colp <jcolp@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+import sys
+from twisted.internet import reactor
+from starpy import manager
+import logging
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+
+logger = logging.getLogger(__name__)
+
+class PageTest(TestCase):
+    def __init__(self):
+        TestCase.__init__(self)
+
+        self.reactor_timeout = 60
+        self.create_asterisk()
+
+    def ami_connect(self, ami):
+        self.ami[0].registerEvent("UserEvent", self.check_amd_status_result)
+        self.ami[0].originate(channel = "IAX2/localhost/1000",
+                              application = "Playback",
+                              data = "demo-congrats")
+
+    def check_amd_status_result(self, ami, event):
+        if event.get("userevent").lower() != "amdevent":
+            return
+
+        status = event.get("status")
+        logger.debug("Status of AMD is %s" % (status))
+        if status == "MACHINE":
+            self.passed = True
+            logger.debug("Page test passed -- detected machine")
+        elif status == "HUMAN":
+            self.passed = True
+            logger.debug("Page test passed -- detected human")
+        else:
+            self.passed = False
+            logger.warn("Page test failed!")
+        self.stop_reactor()
+
+    def run(self):
+        TestCase.run(self)
+        self.create_ami_factory()
+
+def main():
+    test = PageTest()
+    test.start_asterisk()
+    reactor.run()
+    test.stop_asterisk()
+
+    if not test.passed:
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+# vim:sw=4:ts=4:expandtab:textwidth=79

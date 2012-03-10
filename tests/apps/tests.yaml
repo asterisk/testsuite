@@ -6,3 +6,4 @@ tests:
     - dir: 'voicemail'
     - dir: 'incomplete'
     - dir: 'confbridge'
+    - test: 'page'
