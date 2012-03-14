@@ -16,7 +16,7 @@ from twisted.internet import reactor
 from asterisk.sipp import SIPpTest
 
 
-WORKING_DIR = "sip/codec_negotiation"
+WORKING_DIR = "SIP/SDP_offer_answer"
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 
 SIPP_SCENARIOS = [

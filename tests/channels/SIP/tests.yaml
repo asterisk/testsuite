@@ -32,7 +32,7 @@ tests:
     - test: 'handle_response_address_incomplete'
     - test: 'realtime_sipregs'
     - test: 'realtime_nosipregs'
-    - test: 'codec_negotiation'
+    - test: 'SDP_offer_answer'
     - test: 'nat_supertest'
     - test: 'pcap_demo'
     - test: 'sip_hold'
