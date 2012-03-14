@@ -86,7 +86,7 @@
 
   <recv response="200" rtd="true" optional="true" next="1">
     <action>
-      <!-- ensure that we get back 1 audio, 1 text, and 1 video streams in that order, even if one or more streams are declined -->
+      <!-- ensure that we get back 1 audio, 1 text, and 1 video stream in that order, even if one or more streams are declined -->
       <ereg regexp="m=audio [0-9]{1,5} RTP/AVP .*m=text [0-9]{1,5} RTP/AVP .*m=video [0-9]{1,5} RTP/AVP "
             search_in="body" check_it="true" assign_to="1"/>
       <strcmp assign_to="1" variable="1" value=""/>
