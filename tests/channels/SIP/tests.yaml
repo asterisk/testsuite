@@ -38,3 +38,4 @@ tests:
     - test: 'sip_hold'
     - test: 'header_parsing'
     - test: 'use_contact_from_200'
+    - test: 'generic_ccss'

@@ -27,3 +27,5 @@ tests:
     - dir: 'pbx'
     - dir: 'fax'
     - dir: 'apps'
+    - dir: 'connected_line'
+    - dir: 'redirecting'
