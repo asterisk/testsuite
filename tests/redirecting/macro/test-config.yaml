@@ -1,0 +1,12 @@
+testinfo:
+    summary: 'Test redirecting macro execution.'
+    description: 'Ensures that the macro execution for redirecting executes as expected and receives its arguments properly.  This verifies functional usage of the following variables: REDIRECTING_CALLER_SEND_MACRO, REDIRECTING_CALLER_SEND_MACRO_ARGS'
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - redirecting
+        - macro

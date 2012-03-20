@@ -1,0 +1,12 @@
+testinfo:
+    summary: 'Test connected line macro execution.'
+    description: 'Ensures that the macro execution for connected line executes as expected and receives its arguments properly.  This verifies functional usage of the following variables: CONNECTED_LINE_CALLEE_SEND_MACRO, CONNECTED_LINE_CALLEE_SEND_MACRO_ARGS, CONNECTED_LINE_CALLER_SEND_MACRO, CONNECTED_LINE_CALLER_SEND_MACRO_ARGS'
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - connected_line
+        - macro

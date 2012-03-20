@@ -1,0 +1,15 @@
+testinfo:
+    summary: 'Test SIP CCSS.'
+    description: 'Test generic SIP CCSS and usage of macro and subroutine callbacks.'
+
+properties:
+    minversion: '11'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - sip
+        - ccss
+        - macro
+        - gosub
+        - subroutine
