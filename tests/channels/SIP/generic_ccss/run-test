@@ -79,10 +79,10 @@ class GenericCCSSTest(TestCase):
 
     def status_callback(self, result):
         # hangup all channels listed on the second instance
-        def hangupchan(status_result):
-            if status_result['context'] == 'bob-incoming':
-                self.ami[1].hangup(status_result['channel'])
-        [hangupchan(i) for i in result]
+        for status_result in result:
+            if 'context' in status_result and
+                status_result['context'] == 'bob-incoming':
+                self.ami[0].hangup(status_result['channel'])
 
     def status_failed(self, reason):
         pass
