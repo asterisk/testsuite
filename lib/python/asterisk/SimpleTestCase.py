@@ -21,6 +21,7 @@ class SimpleTestCase(TestCase):
     event.'''
     event_count = 0
     expected_events = 1
+    hangup_chan = None
 
     def __init__(self):
         TestCase.__init__(self)
@@ -30,6 +31,7 @@ class SimpleTestCase(TestCase):
         LOGGER.info("Initiating call to local/100@test on Echo() for simple test")
 
         ami.registerEvent('UserEvent', self.__event_cb)
+        ami.registerEvent('Newchannel', self.__channel_cb)
         df = ami.originate("local/100@test", application="Echo")
 
         def handle_failure(reason):
@@ -40,34 +42,22 @@ class SimpleTestCase(TestCase):
 
         df.addErrback(handle_failure)
 
+    def __channel_cb(self, ami, event):
+        if not self.hangup_chan:
+            self.hangup_chan = event['channel']
+
     def __event_cb(self, ami, event):
         if self.verify_event(event):
             self.event_count += 1
             if self.event_count == self.expected_events:
-                # get list of channels so hangups can happen
-                df = self.ami[0].status().addCallbacks(self.status_callback,
-                    self.status_failed)
+                self.passed = True
+                LOGGER.info("Test ending, hanging up channel")
+                self.ami[0].hangup(self.hangup_chan).addCallbacks(
+                    self.hangup)
 
-    def status_callback(self, result):
-        '''Initiate hangup since no more testing will take place'''
-        for status_result in result:
-            if 'channel' in status_result:
-                self.ami[0].hangup(status_result['channel']).addCallbacks(
-                    self.hangup_success)
-            break
-        else:
-            # no channels to hang up? close it out
-            self.passed = True
-            self.stop_reactor()
-
-    def hangup_success(self, result):
+    def hangup(self, result):
         '''Now that the channels are hung up, the test can be ended'''
-        self.passed = True
-        self.stop_reactor()
-
-    def status_failed(self, reason):
-        '''If the channel listing failed, we still need to shut down'''
-        self.passed = True
+        LOGGER.info("Hangup complete, stopping reactor")
         self.stop_reactor()
 
     def verify_event(self, event):
