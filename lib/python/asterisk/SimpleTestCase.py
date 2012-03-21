@@ -44,8 +44,30 @@ class SimpleTestCase(TestCase):
         if self.verify_event(event):
             self.event_count += 1
             if self.event_count == self.expected_events:
-                self.passed = True
-                self.stop_reactor()
+                # get list of channels so hangups can happen
+                df = self.ami[0].status().addCallbacks(self.status_callback,
+                    self.status_failed)
+
+    def status_callback(self, result):
+        '''Initiate hangup since no more testing will take place'''
+        for status_result in result:
+            self.ami[0].hangup(status_result['channel']).addCallbacks(
+                self.hangup_success)
+            break
+        else:
+            # no channels to hang up? close it out
+            self.passed = True
+            self.stop_reactor()
+
+    def hangup_success(self, result):
+        '''Now that the channels are hung up, the test can be ended'''
+        self.passed = True
+        self.stop_reactor()
+
+    def status_failed(self, reason):
+        '''If the channel listing failed, we still need to shut down'''
+        self.passed = True
+        self.stop_reactor()
 
     def verify_event(self, event):
         """
