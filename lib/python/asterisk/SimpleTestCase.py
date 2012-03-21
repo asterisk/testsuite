@@ -51,8 +51,9 @@ class SimpleTestCase(TestCase):
     def status_callback(self, result):
         '''Initiate hangup since no more testing will take place'''
         for status_result in result:
-            self.ami[0].hangup(status_result['channel']).addCallbacks(
-                self.hangup_success)
+            if 'channel' in status_result:
+                self.ami[0].hangup(status_result['channel']).addCallbacks(
+                    self.hangup_success)
             break
         else:
             # no channels to hang up? close it out
