@@ -3,7 +3,7 @@ testinfo:
     description: 'Ensures that the subroutine execution for redirecting executes as expected and receives its arguments properly.  This verifies functional usage of the following variables: REDIRECTING_SEND_SUB, REDIRECTING_SEND_SUB_ARGS'
 
 properties:
-    minversion: '1.8'
+    minversion: '11'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
