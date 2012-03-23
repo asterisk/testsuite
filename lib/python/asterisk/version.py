@@ -51,7 +51,7 @@ class AsteriskVersion:
             if self.branch == "trunk":
                 res = 9999999999
             elif self.branch[:6] == "branch":
-                res = int(AsteriskVersion(self.branch[7:])) + 99999
+                res = int(AsteriskVersion(self.branch[7:])) + 999999
             else:
                 # team branch XXX (may not be off of trunk)
                 res = 9999999999
@@ -346,12 +346,12 @@ class AsteriskVersionTests(unittest.TestCase):
         self.assertTrue(v1 < v2)
 
     def test_cmp21(self):
-        v1 = AsteriskVersion("1.8.9")
+        v1 = AsteriskVersion("1.8.10")
         v2 = AsteriskVersion("SVN-branch-1.8-r360138")
         self.assertTrue(v1 < v2)
 
     def test_cmp22(self):
-        v1 = AsteriskVersion("1.8.9")
+        v1 = AsteriskVersion("1.8.10")
         v2 = AsteriskVersion("SVN-branch-1.8-r360138M")
         self.assertTrue(v1 < v2)
 
