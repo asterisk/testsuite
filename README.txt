@@ -3,7 +3,7 @@
 ===                           Asterisk Test Suite                            ===
 ===                                                                          ===
 ===                         http://www.asterisk.org/                         ===
-===                  Copyright (C) 2010 - 2011, Digium, Inc.                 ===
+===                  Copyright (C) 2010 - 2012, Digium, Inc.                 ===
 ===                                                                          ===
 ================================================================================
 
@@ -67,12 +67,12 @@ methods:
 
 Automated testing for Asterisk is approached from two directions.  The first is
 bottom-up unit testing.  Those tests are implemented within Asterisk in the C
-programming language, using the Asterisk C APIs.  These tests are enabled by 
+programming language, using the Asterisk C APIs.  These tests are enabled by
 turning on the TEST_FRAMEWORK compile time option in menuselect.  The CLI
 commands related to the test framework all begin with "test".
 
 The second approach is top down using tests developed outside of Asterisk.
-This test suite is the collection of top-down functionality tests. The test 
+This test suite is the collection of top-down functionality tests. The test
 suite is made up as a collection of scripts that test some portion of Asterisk
 functionality given a set of preconditions, and then provide a pass/fail result
 via a predefined method of doing so.
@@ -101,6 +101,10 @@ Required:
         - python-yaml
         - git-core
 
+Note: Many commands below will install files into system directories;
+if you are executing these commands as an unprivileged user, you might
+need to use 'sudo' or similar.
+
 Optional (needed by specific tests):
         - bash
         - SIPp
@@ -108,8 +112,14 @@ Optional (needed by specific tests):
             - http://sipp.sourceforge.net/snapshots/
             - Compile the version with pcap and OpenSSL support using:
                   $ make pcapplay_ossl
+            - Install sipp into a directory in the execution path:
+                  $ cp sipp /usr/local/bin
         - asttest
-            - included with the test suite
+            - include with the test suite
+            - Install from the asttest directory
+                  $ cd asttest
+                  $ make
+                  $ make install
         - Python modules
             - starpy
                 - Install starpy from the addons directory
@@ -118,21 +128,29 @@ Optional (needed by specific tests):
                   $ make install
             - python-twisted
         - pjsua
+            - Download and build pjproject 1.x from source
             - http://www.pjsip.org/download.htm
-            - Download and build pjsip from source
-              $ ./configure && make dep && make
-            - Rename 'pjsua-x86-unknown-linux-gnu' executable found in the
-              pjsip-apps/bin/ directory to 'pjsua', and place the 'pjsua'
-              executable into a directory located in the execution path.
-              $ cp pjsip-apps/bin/pjsua-x86-unknown-linux-gnu /usr/sbin/pjsua 
-	    - pjsuav6
-            - If you require IPv6 support in pjsua, then after running
-              the configure script, open the pjlib/include/pj/config_site.h
-              file in the pjsip source and add the line
+            - On an x86-32 machine, run the configure script as follows:
+              $ ./configure
+            - On an x86-64 machine, run the configure script as follows:
+              $ ./configure CFLAGS=-fPIC
+            - There are tests in the testsuite that require IPv6
+	      support in pjsua, so create a pjlib/include/pj/config_site.h
+              file and add the line
 
               #define PJ_HAS_IPV6 1
-
-              before running the `make dep && make` command.
+            - Build
+              $ make dep && make
+            - On an x86-32 machine, copy the
+              'pjsua-x86-unknown-linux-gnu' executable found in the
+              pjsip-apps/bin/ directory to a directory located in the
+              execution path, and name it 'pjsua'.
+              $ cp pjsip-apps/bin/pjsua-x86-unknown-linux-gnu /usr/local/bin/pjsua
+            - On an x86-64 machine, copy the
+              'pjsua-x86_64-unknown-linux-gnu' executable found in the
+              pjsip-apps/bin/ directory to a directory located in the
+              execution path, and name it 'pjsua'.
+              $ cp pjsip-apps/bin/pjsua-x86_64-unknown-linux-gnu /usr/local/bin/pjsua
         - pjsua python bindings
             - Go to pjsip-apps/src/python directory
             - Run 'sudo python ./setup.py install' or just 'sudo make'
@@ -156,8 +174,10 @@ Get the Asterisk source tree you want to test:
     $ svn co http://svn.digium.com/svn/asterisk/trunk asterisk-trunk
     $ cd asterisk-trunk
 
-Build it.
+Build and install it.
     $ ./configure && make
+    $ make install
+    $ make samples
 
 Check out the test suite inside of the Asterisk source tree.  In this case, we
 will have the testsuite directory inside of the asterisk-trunk directory.
