@@ -49,12 +49,12 @@ class AsteriskVersion:
     def __int__(self):
         if self.svn is True:
             if self.branch == "trunk":
-                return 9999999999
+                res = 9999999999
             elif self.branch[:6] == "branch":
-                return int(AsteriskVersion(self.branch[7:])) + 99
+                res = int(AsteriskVersion(self.branch[7:])) + 99999
             else:
                 # team branch XXX (may not be off of trunk)
-                return 9999999999
+                res = 9999999999
         else:
             res = int(self.concept) * 100000000
             if self.major is not None:
@@ -66,7 +66,7 @@ class AsteriskVersion:
                             res += self.patch
                         else:
                             res += int(self.__parse_version_patch(self.patch))
-            return res
+        return res
 
     def __cmp__(self, other):
         res = cmp(int(self), int(other))
@@ -343,6 +343,16 @@ class AsteriskVersionTests(unittest.TestCase):
     def test_cmp20(self):
         v1 = AsteriskVersion("1.8.5.0")
         v2 = AsteriskVersion("1.8.5.1")
+        self.assertTrue(v1 < v2)
+
+    def test_cmp21(self):
+        v1 = AsteriskVersion("1.8.9")
+        v2 = AsteriskVersion("SVN-branch-1.8-r360138")
+        self.assertTrue(v1 < v2)
+
+    def test_cmp22(self):
+        v1 = AsteriskVersion("1.8.9")
+        v2 = AsteriskVersion("SVN-branch-1.8-r360138M")
         self.assertTrue(v1 < v2)
 
 def main():
