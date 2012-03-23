@@ -103,9 +103,14 @@ class FastAGIRecordFileTest:
             print "Failed"
 
     def stop_reactor(self):
-        print "Stopping Reactor ..."
-        if reactor.running:
-            reactor.stop()
+        def __finish_stop(result):
+            print "Stopping Reactor ..."
+            if reactor.running:
+                reactor.stop()
+            return result
+
+        df = self.ast1.stop()
+        df.addCallback(__finish_stop)
 
     def launch_test(self):
         print "Originating call to begin test which terminates recording",\
@@ -117,29 +122,25 @@ class FastAGIRecordFileTest:
         else:
             self.result_changed()
 
-    def start_asterisk(self):
-        print "Starting Asterisk"
-        self.ast1.start()
-
-    def stop_asterisk(self):
-        print "Stopping Asterisk"
-        self.ast1.stop()
-
     # Read result before timeout
     def result_changed(self):
         if self.passed['DTMF'] is True and self.passed['HANGUP'] is True:
             self.read_result()
 
     def run(self):
-        self.launch_test()
-        reactor.callLater(self.timeout, self.stop_reactor)
+        def __finish_start_ops(result):
+            self.launch_test()
+            reactor.callLater(self.timeout, self.stop_reactor)
+            return result
+
+        print "Starting Asterisk"
+        df = self.ast1.start()
+        df.addCallback(__finish_start_ops)
 
 
 def main():
     test = FastAGIRecordFileTest()
-    test.start_asterisk()
     reactor.run()
-    test.stop_asterisk()
     if test.overall_result is not True:
         return 1
 
