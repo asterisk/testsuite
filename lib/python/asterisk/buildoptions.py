@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-"""Asterisk Version String Handling
+"""Asterisk Build Options Handling
 
-This module implements an Asterisk compilation flag parser.  It
-tracks what compiler flags Asterisk was compiled with, and returns
-whether or not a particular compiler flag is supported.
+This module implements an Asterisk build options parser.  It
+tracks what build options Asterisk was compiled with, and returns
+whether or not a particular build option was enabled.
 
-Copyright (C) 2011, Digium, Inc.
+Copyright (C) 2011-2012, Digium, Inc.
 Matt Jordan <mjordan@digium.com>
 
 This program is free software, distributed under the terms of
@@ -40,7 +40,8 @@ class AsteriskBuildOptions:
             buildopts_hdr_paths.insert(0, path)
         for p in buildopts_hdr_paths:
             if (self.__parse_buildopts_file(p)):
-                break
+                return
+        print "Failed to open any build options files"
 
 
     def __parse_buildopts_file(self, path):
@@ -50,7 +51,6 @@ class AsteriskBuildOptions:
             fileLines = f.readlines()
             f.close()
         except IOError:
-            print "Failed to open config file '%s'" % path
             return retVal
         except:
             print "Unexpected error: %s" % sys.exc_info()[0]
@@ -85,3 +85,15 @@ class AsteriskBuildOptions:
             return True
         return False
 
+class AsteriskBuildOptionsTests(unittest.TestCase):
+    def test_1(self):
+        b1 = AsteriskBuildOptions()
+        self.assertTrue(1)
+
+
+def main():
+    unittest.main()
+
+
+if __name__ == "__main__":
+    main()
