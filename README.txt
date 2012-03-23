@@ -195,7 +195,7 @@ List the tests:
 Run the tests:
     # ./runtests.py
 
-For more syntax informatino:
+For more syntax information:
     $ ./runtests.py --help
 
 --------------------------------------------------------------------------------
