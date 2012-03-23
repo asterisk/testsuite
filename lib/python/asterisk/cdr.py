@@ -15,6 +15,7 @@ import sys
 import csv
 import re
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -86,13 +87,17 @@ class AsteriskCSVCDR:
             return
 
         self.__records = []
+
+        cdr = None
         try:
             cdr = csv.DictReader(open(fn, "r"), AsteriskCSVCDRLine.get_fields(), ",")
-        except IOError:
-            logger.error("Failed to open CDR file '%s'" % (fn))
-            return
+        except IOError as (errno, strerror):
+            logger.debug("IOError %d[%s] while opening CDR file '%s'" % (errno, strerror, fn))
         except:
-            logger.error("Unexpected error: %s" % (sys.exc_info()[0]))
+            logger.debug("Unexpected error: %s" % (sys.exc_info()[0]))
+
+        if not cdr:
+            logger.error("Unable to open CDR file '%s'" % (fn))
             return
 
         for r in cdr:

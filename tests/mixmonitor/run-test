@@ -74,9 +74,13 @@ class MixMonitorTest:
             self.log_last_step("Test Passed... All audio files are the correct.")
 
     def stop_reactor(self):
-        print "Stopping Reactor ..."
-        if reactor.running:
-            reactor.stop()
+        def __finish_stop(result):
+            print "Stopping Reactor ..."
+            if reactor.running:
+                reactor.stop()
+            return result
+        df = self.ast1.stop()
+        df.addCallback(__finish_stop)
 
     def launch_test1(self):
         self.log_last_step("Placing call to test1 exten")
@@ -85,18 +89,6 @@ class MixMonitorTest:
     def launch_test2(self):
         self.log_last_step("Placing call to test2 exten")
         self.ast1.cli_originate("Local/s@listener extension s@test2")
-
-    def start_asterisk(self):
-        self.log_last_step("Starting Asterisk")
-        self.ast1.start()
-
-        self.ast1.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
-        self.ast1.cli_exec("core set global TESTAUDIO2 " + self.audiofile2)
-        self.ast1.cli_exec("core set global TESTAUDIO3 " + self.audiofile3)
-        self.ast1.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
-
-    def stop_asterisk(self):
-        self.ast1.stop()
 
     def log_last_step(self, step):
         print step
@@ -132,6 +124,11 @@ class MixMonitorTest:
         self.ami = ami
         self.ami.registerEvent("UserEvent", self.check_test1)
 
+        self.ami.setVar(channel = "", variable = "TESTAUDIO1", value = self.audiofile1)
+        self.ami.setVar(channel = "", variable = "TESTAUDIO2", value = self.audiofile2)
+        self.ami.setVar(channel = "", variable = "TESTAUDIO3", value = self.audiofile3)
+        self.ami.setVar(channel = "", variable = "TALK_AUDIO", value = self.talkingaudio)
+
     def ami_login_error(self, ami):
         self.log_last_step("AMI login failed")
         self.stop_reactor()
@@ -142,16 +139,22 @@ class MixMonitorTest:
         self.ami_factory1.login('127.0.0.1', 5038).addCallbacks(self.ami_on_connect1, self.ami_login_error)
 
     def run(self):
-        self.ami_login()
-        self.launch_test1()
+        def __finish_start_ops(result):
+            self.ami_login()
+            self.launch_test1()
 
-        reactor.callLater(30, self.stop_reactor)
+            reactor.callLater(30, self.stop_reactor)
+            return result
+
+        self.log_last_step("Starting Asterisk")
+        df = self.ast1.start()
+        df.addCallback(__finish_start_ops)
+
+
 
 def main():
     test = MixMonitorTest()
-    test.start_asterisk()
     reactor.run()
-    test.stop_asterisk()
     if test.passed:
         return 0
     return 1

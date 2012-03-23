@@ -17,7 +17,7 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 
-from asterisk.sipp import SIPpScenario
+from asterisk.sipp import SIPpScenario, SIPpScenarioSequence
 from asterisk.TestCase import TestCase
 
 """
@@ -55,17 +55,11 @@ class InfoDTMF(TestCase):
         """
         ami.registerEvent('DTMF', self.handle_dtmf_event)
         sipp_scenario_params = [{'scenario':'dtmf-relay.xml','-p':'5061'}, {'scenario':'dtmf.xml','-p':'5061'}]
+        sequence = SIPpScenarioSequence(test_case = self)
         for scenario_param in sipp_scenario_params:
-            sipp_scenario = SIPpScenario(TEST_DIR, scenario_param)
-            logger.info("Starting SIPp Scenario (%s)" % scenario_param['scenario'])
-            sipp_scenario.run()
-            sipp_result = sipp_scenario.waitAndEvaluate()
+            sequence.register_scenario(SIPpScenario(TEST_DIR, scenario_param))
 
-            self.reset_timeout()
-            if (not sipp_result):
-                logger.warn("SIPp Scenario (%s) failed" % scenario_param['scenario'])
-                self.passed = False
-                self.stop_reactor()
+        sequence.execute()
 
     def handle_dtmf_event(self, ami, event):
         """

@@ -15,7 +15,7 @@ from twisted.internet import reactor, defer
 
 sys.path.append("lib/python")
 from asterisk.TestCase import TestCase
-from asterisk.utils import FileReplaceString
+from asterisk.TestSuiteUtils import FileReplaceString
 from asterisk.sipp import SIPpScenario
 from starpy import manager
 
@@ -84,16 +84,22 @@ class SIPTLS_Register_Test(TestCase):
 
     # Sets up callback function for PeerStatus events and runs/evaluates SIPp for the necessary scenario with TLS.
     def ami_connect(self, ami):
+        def __stop_test(result):
+            if (result.passed):
+                self.pass_sipp = True
+                self.check_pass_fail()
+            return result
+
         self.ami = ami
         self.ami.registerEvent("PeerStatus", self.check_register_result)
         scenario_def = {'scenario': 'register.xml', '-p': '5061', '-recv_timeout': '1000', '-s': 'SIP/v4-in', '-t': 'ln'}
 
         scenario = SIPpScenario("tests/channels/SIP/sip_tls_register", scenario_def)
-        scenario.run()
+        df = scenario.run(self)
+        df.addCallback(__stop_test)
 
-        #Status of SIPp success/failure is partial success condition of registration test.
-        self.pass_sipp = scenario.waitAndEvaluate()
-        if (self.pass_sipp and self.pass_event):
+    def check_pass_fail(self):
+        if (self.pass_event and self.pass_sipp):
             self.passed = True
             self.stop_reactor()
 
@@ -112,9 +118,7 @@ class SIPTLS_Register_Test(TestCase):
         if status == "Registered":
             logger.info("Successful registration for peer %s" % peer)
             self.pass_event = True
-            if (self.pass_event and self.pass_sipp):
-                self.passed = True
-                self.stop_reactor()
+            self.check_pass_fail()
             return
         else:
             logger.info("Registration for peer %s in state %s" % (peer, status))

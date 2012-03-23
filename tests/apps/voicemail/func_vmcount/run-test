@@ -62,9 +62,9 @@ class FuncVmCount(TestCase):
             self.voicemailManager.createDummyVoicemail("default", "1234", self.voicemailManager.oldFolderName, i, self.formats)
 
         ami.registerEvent('UserEvent', self.user_event)
-        self.ast[ami.id].cli_exec("dialplan set global EXPECTED_NEW 15")
-        self.ast[ami.id].cli_exec("dialplan set global EXPECTED_URGENT 5")
-        self.ast[ami.id].cli_exec("dialplan set global EXPECTED_OLD 15")
+        ami.setVar(channel = "", variable = "EXPECTED_NEW", value = "15")
+        ami.setVar(channel = "", variable = "EXPECTED_URGENT", value = "5")
+        ami.setVar(channel = "", variable = "EXPECTED_OLD", value = "15")
 
         df1 = ami.originate("Local/s@listener", "voicemail", "1234", 1)
         df1.addErrback(self.handleOriginateFailure)

@@ -24,7 +24,7 @@ sys.path.append("lib/python")
 from asterisk.version import AsteriskVersion
 from asterisk.asterisk import Asterisk
 from asterisk.TestConfig import Dependency, TestConfig
-from asterisk import utils
+from asterisk import TestSuiteUtils
 
 TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"

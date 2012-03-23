@@ -75,6 +75,7 @@ class MixMonitorTest:
         self.log_last_step("Connected to AMI 1")
         self.ami = ami
         self.ami.registerEvent("UserEvent", self.check_test1)
+        self.ami.setVar(channel = "", variable = "TESTAUDIO1", value = self.audiofile1)
 
     def ami_login_error(self, ami):
         self.log_last_step("AMI login failed")
@@ -88,8 +89,6 @@ class MixMonitorTest:
     def start_asterisk(self):
         self.log_last_step("Starting Asterisk")
         self.ast1.start()
-
-        self.ast1.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
 
     def stop_asterisk(self):
         self.ast1.stop()

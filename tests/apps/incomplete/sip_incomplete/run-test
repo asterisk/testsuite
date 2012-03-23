@@ -44,8 +44,8 @@ class SipIncompleteTest(TestCase):
         ami.registerEvent('UserEvent', self.user_event)
 
         logger.debug("Starting SIP scenarios")
-        self.receiverTest.run()
-        self.senderTest.run()
+        self.receiverTest.run(self)
+        self.senderTest.run(self)
 
     def user_event(self, ami, event):
         if event['userevent'] != 'TestResult':
@@ -61,16 +61,6 @@ class SipIncompleteTest(TestCase):
             self.passed = False
 
         self.stop_reactor()
-
-    def stop_asterisk(self):
-        TestCase.stop_asterisk(self)
-
-        """ Wait for SIPp to exit """
-        logger.debug("Waiting for SIPp to end")
-        result = self.senderTest.waitAndEvaluate()
-        result = result and self.receiverTest.waitAndEvaluate()
-        if not result:
-            self.passed = False
 
     def run(self):
         TestCase.run(self)

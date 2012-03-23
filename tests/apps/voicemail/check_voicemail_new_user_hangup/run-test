@@ -111,8 +111,8 @@ class NewUserTestState(VoiceMailState):
         elif state == 'INTRO':
             self.changeState(IntroTestState(self.controller, self.voiceMailTest))
         elif state == 'HANGUP':
-            logger.error("Received unexpected hangup")
-            self.changeState(FailureTestState(self.controller))
+            logger.info("Received hangup")
+            self.voiceMailTest.stop_reactor()
         elif state == 'PASSWORDCHANGED':
             source = event['passwordsource']
             if source == 'voicemail.conf':

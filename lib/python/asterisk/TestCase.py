@@ -13,7 +13,7 @@ import logging.config
 import os
 import datetime
 import time
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 from starpy import manager, fastagi
 
 from asterisk import Asterisk
@@ -59,6 +59,7 @@ class TestCase(object):
         self.testStateController = None
         self.pcap = None
         self.pcapfilename = None
+        self.__stopping = False
         self.testlogdir = os.path.join(Asterisk.test_suite_root, self.base, str(os.getpid()))
         self.ast_version = AsteriskVersion()
 
@@ -84,7 +85,7 @@ class TestCase(object):
         self.__setup_conditions()
 
         logger.info("Executing " + self.test_name)
-        reactor.callWhenRunning(self.run)
+        reactor.callWhenRunning(self.__run)
 
     def __setup_conditions(self):
         """
@@ -199,63 +200,120 @@ class TestCase(object):
         return PcapListener(device, bpf_filter, dumpfile, self.__pcap_callback)
 
     def start_asterisk(self):
+        """ This is kept mostly for legacy support.  When the TestCase previously
+        used a synchronous, blocking mechanism independent of the twisted
+        reactor to spawn Asterisk, this method was called.  Now the Asterisk
+        instances are started immediately after the reactor has started.
+
+        Derived methods can still implement this and have it be called when
+        the reactor is running, but immediately before instances of Asterisk
+        are launched.
+        """
+        pass
+
+    def __start_asterisk(self):
         """
         Start the instances of Asterisk that were previously created.  See
-        create_asterisk.  Note that this should be called before the reactor is
-        told to run.
+        create_asterisk.  Note that this should be the first thing called
+        when the reactor has started to run
         """
+        def __check_success_failure(result):
+            """ Make sure the instances started properly """
+            for (success, value) in result:
+                if not success:
+                    logger.error(value)
+                    self.stop_reactor()
+            return result
+
+        def __perform_pre_checks(result):
+            """ Execute the pre-condition checks """
+            self.testConditionController.evaluate_pre_checks()
+            return result
+
+        def __run_callback(result):
+            """ Notify the test that we are running """
+            self.run()
+            return result
+
+        # Call the method that derived objects can override
+        self.start_asterisk()
+
+        # Gather up the deferred objects from each of the instances of Asterisk
+        # and wait until all are finished before proceeding
+        start_defers = []
         for index, item in enumerate(self.ast):
             logger.info("Starting Asterisk instance %d" % (index + 1))
-            self.ast[index].start()
-        self.testConditionController.evaluate_pre_checks()
+            temp_defer = self.ast[index].start()
+            start_defers.append(temp_defer)
+
+        d = defer.DeferredList(start_defers, consumeErrors=True)
+        d.addCallback(__check_success_failure)
+        d.addCallback(__perform_pre_checks)
+        d.addCallback(__run_callback)
 
     def stop_asterisk(self):
         """
-        Stop the instances of Asterisk that were previously started.  See
-        start_asterisk.  Note that this should be called after the reactor has
-        returned from its run.
+        Called when the instances of Asterisk are being stopped.  Note that previously,
+        this explicitly stopped the Asterisk instances: now they are stopped automatically
+        when the reactor is stopped.
 
-        If there were errors exiting asterisk, this function will return False.
+        Derived methods can still implement this and have it be called when
+        the reactor is running, but immediately before instances of Asterisk
+        are stopped.
         """
-        res = True
+        pass
+
+    def __stop_asterisk(self):
+        """ Stops the instances of Asterisk.
+
+        Stops the instances of Asterisk - called when stop_reactor is called.  This
+        returns a deferred object that can be used to be notified when all instances
+        of Asterisk have stopped.
+         """
+        def __check_success_failure(result):
+            """ Make sure the instances stopped properly """
+            for (success, value) in result:
+                if not success:
+                    logger.warning(value)
+                    # This should already be called when the reactor is being terminated.
+                    # If we couldn't stop the instance of Asterisk, there isn't much else to do
+                    # here other then complain
+            return result
+
+        # Call the overridable method
+        self.stop_asterisk()
+
         self.testConditionController.evaluate_post_checks()
+
+        # Gather up the stopped defers; check success failure of stopping when
+        # all instances of Asterisk have stopped
+        stop_defers = []
         for index, item in enumerate(self.ast):
             logger.info("Stopping Asterisk instance %d" % (index + 1))
-            returncode = self.ast[index].stop()
-            if returncode < 0:
-                # XXX setting passed here might be overridden later in a
-                # derived class. This is bad.
-                self.passed = False
-                logger.error("Asterisk instance %d exited with signal %d" % (index + 1, abs(returncode)))
-                res = False
-            elif returncode > 0:
-                # XXX same here
-                self.passed = False
-                logger.error("Asterisk instance %d exited with non-zero return code %d" % (index + 1, returncode))
-                res = False
+            temp_defer = self.ast[index].stop()
+            stop_defers.append(temp_defer)
 
-        return res
-
-    def no_active_channels(self):
-        """
-        Return true if all our asterisk children have 0 active channels.
-        """
-        for asterisk in self.ast:
-            # 0 active channels
-            first_line = asterisk.cli_exec('core show channels count').split('\n', 1)[0]
-            # 0
-            first_number = first_line.split(' ', 1)[0]
-            if first_number != '0':
-                return False
-        return True
+        d = defer.DeferredList(stop_defers, consumeErrors=True)
+        d.addCallback(__check_success_failure)
+        return d
 
     def stop_reactor(self):
         """
         Stop the reactor and cancel the test.
         """
-        logger.info("Stopping Reactor")
-        if reactor.running:
-            reactor.stop()
+        def __stop_reactor(result):
+            """ Called when the Asterisk instances are stopped """
+            logger.info("Stopping Reactor")
+            if reactor.running:
+                try:
+                    reactor.stop()
+                except twisted.internet.error.ReactorNotRunning:
+                    # Something stopped it between our checks - at least we're stopped
+                    pass
+        if not self.__stopping:
+            df = self.__stop_asterisk()
+            df.addCallback(__stop_reactor)
+            self.__stopping = True
 
     def __reactor_timeout(self):
         """
@@ -264,6 +322,18 @@ class TestCase(object):
         """
         logger.warning("Reactor timeout: '%s' seconds" % self.reactor_timeout)
         self.stop_reactor()
+
+    def __run(self):
+        """
+        Private entry point called when the reactor first starts up.
+        This needs to first ensure that Asterisk is fully up and running before
+        moving on.
+        """
+        if (self.ast):
+            self.__start_asterisk()
+        else:
+            # If no instances of Asterisk are needed, go ahead and just run
+            self.run()
 
     def run(self):
         """
@@ -305,7 +375,6 @@ class TestCase(object):
         pass
 
     def __pcap_callback(self, packet):
-        logger.debug("Received packet: %s\n" % (packet,))
         self.pcap_callback(packet)
 
     def handleOriginateFailure(self, reason):

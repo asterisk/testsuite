@@ -9,144 +9,149 @@ the GNU General Public License Version 2.
 
 import sys
 import os
+import logging
 
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.TestCase import TestCase
 
+logger = logging.getLogger(__name__)
 
 class moduleLoadUnloadTest(TestCase):
     def __init__(self):
         TestCase.__init__(self)
         self.create_asterisk()
 
-    def load_module(self, module):
-        if not self.check_file(module):
-            print module[0] + " does not exist! Skipping test."
-            return False
+    def check_file(self, module):
+        module[1] = (os.path.isfile(self.ast[0].base + "/usr/lib/asterisk/modules/" + module[0]))
+        return module[1]
 
-        text = "Loaded " + module[0]
-        res = self.ast[0].cli_exec("module load " + module[0])
-        if res.count(text) > 0:
-            module[2] = True
-        return module[2]
+    def pre_load_next(self):
+        self.__preload_test_counter += 1
+        if (self.__preload_test_counter < len(self.preload_res)):
+            self.pre_load_module(self.preload_res[self.__preload_test_counter])
+        else:
+            self.load_next()
+
+    def pre_load_module(self, module):
+        def __module_callback(reason):
+            text = "Loaded " + self.__module[0]
+            if reason.output.count(text) > 0:
+                self.__module[2] = True
+            logger.debug("Pre-load %s: %r" % (self.__module[0], self.__module[2]))
+            self.pre_load_next()
+            return reason
+
+        if not self.check_file(module):
+            logger.info(module[0] + " does not exist! Skipping this test.")
+            self.pre_load_next()
+            return
+
+        df = self.ast[0].cli_exec("module load " + module[0])
+        df.addCallback(__module_callback)
+        self.__module = module
+
+    def load_next(self):
+        self.__load_test_counter += 1
+        if (self.__load_test_counter < len(self.res)):
+            self.load_module(self.res[self.__load_test_counter])
+        else:
+            self.unload_next()
+
+    def load_module(self, module):
+        def __module_callback(reason):
+            text = "Loaded " + self.__module[0]
+            if reason.output.count(text) > 0:
+                self.__module[2] = True
+            logger.debug("Load %s: %r" % (self.__module[0], self.__module[2]))
+            self.load_next()
+            return reason
+
+        if not self.check_file(module):
+            logger.info(module[0] + " does not exist! Skipping test.")
+            self.load_next()
+            return
+
+        df = self.ast[0].cli_exec("module load " + module[0])
+        df.addCallback(__module_callback)
+        self.__module = module
+
+    def unload_next(self):
+        self.__unload_test_counter += 1
+        if (self.__unload_test_counter < len(self.unloads)):
+            self.unload_module(self.unloads[self.__unload_test_counter])
+        else:
+            if not self.__checking_results:
+                self.__checking_results = True
+                self.check_results()
 
     def unload_module(self, module):
-        text = "Unloaded " + module[0]
-        res = self.ast[0].cli_exec("module unload " + module[0])
-        if res.count(text) > 0:
-            module[3] = True
+        def __module_callback(reason):
+            text = "Unloaded " + self.__module[0]
+            if reason.output.count(text) > 0:
+                self.__module[3] = True
+            logger.debug("Load %s: %r" % (self.__module[0], self.__module[3]))
+            self.unload_next()
+            return reason
 
-    def check_file(self, module):
-        module[1] = (os.path.isfile(self.ast[0].base +
-            "/usr/lib/asterisk/modules/" + module[0]))
-        return module[1]
+        if not self.check_file(module):
+            logger.info(module[0] + " does not exist! Skipping test.")
+            self.unload_next()
+            return
+
+        # Don't attempt an unload if we didn't load it
+        if not module[2]:
+            self.unload_next()
+            return
+
+        df = self.ast[0].cli_exec("module unload " + module[0])
+        df.addCallback(__module_callback)
+        self.__module = module
+
+    def check_results(self):
+        logger.info("Checking Results")
+        for module in self.unloads:
+            if not self.check_file(module):
+                logger.info(module[0] + " does not exist! Skipping test.")
+            else:
+                self.check_failures(module);
+        self.stop_reactor()
 
     def check_failures(self, module):
         if not module[2]:
-            print "ERROR: Loading " + module[0]
+            logger.error("ERROR: Loading " + module[0])
             self.passed = False
 
         if not module[3]:
-            print "ERROR: Unloading " + module[0]
+            logger.error("ERROR: Unloading " + module[0])
             self.passed = False
 
     def run(self):
         TestCase.run(self)
         self.passed = True
-        preload_res = []
-        res = []
+        self.preload_res = []
+        self.res = []
+        self.unloads = []
 
         # TODO: Do not hardcode, read from source code. 
         preload_resources = ["res_calendar", "res_curl", "res_fax", "res_odbc"]
-
-        for module in preload_resources:
-            preload_res.append([module + ".so", False, False, False])
+        self.preload_res = [ [module + ".so", False, False, False] for module in preload_resources ]
 
         # TODO: Do not hardcode, read from source code. 
         # TODO: Fixed res_http_post crash
         resources = ["res_adsi", "res_ael_share", "res_agi", "res_ais", "res_calendar_caldav", "res_calendar_exchange", "res_calendar_icalendar", "res_clialiases", "res_clioriginate", "res_config_curl", "res_config_ldap", "res_config_odbc", "res_config_pgsql", "res_config_sqlite", "res_convert", "res_crypto", "res_fax_spandsp", "res_jabber", "res_limit", "res_monitor", "res_musiconhold", "res_mutestream", "res_phoneprov", "res_pktccops", "res_realtime", "res_rtp_asterisk", "res_rtp_multicast", "res_security_log", "res_smdi", "res_snmp", "res_speech", "res_timing_dahdi", "res_timing_kqueue", "res_timing_pthread", "res_timing_timerfd"]
+        self.res = [ [module + ".so", False, False, False] for module in resources ]
+        self.unloads.extend(self.preload_res)
+        self.unloads.extend(self.res)
 
-        res = [ [module + ".so", False, False, False] for module in resources ]
+        self.__preload_test_counter = -1
+        self.__load_test_counter = -1
+        self.__unload_test_counter = -1
+        self.__checking_results = False
+        self.pre_load_next()
 
-        for module in preload_res:
-            self.load_module(module)
-
-        for module in res:
-            result = self.load_module(module)
-
-            if not result:
-                continue
-
-            self.unload_module(module)
-
-        for module in preload_res:
-            self.unload_module(module)
-
-        for module in preload_res:
-            # modules does not exist
-            if not module[1]:
-                print "WARNING: " + module[0] + " does not exist!"
-                continue
-
-            # TODO: Fix unloading of res_curl.so
-            if module[0] == "res_curl.so":
-                if not module[3]:
-                    continue
-
-            # TODO: Fix unloading of res_odbc.so
-            if module[0] == "res_odbc.so":
-                if not module[3]:
-                    continue
-
-            self.check_failures(module);
-
-        for module in res:
-            # modules does not exist
-            if not module[1]:
-                print "WARNING: " + module[0] + " does not exist!"
-                continue
-
-            # TODO: Fix unloading of res_adsi.so
-            if module[0] == "res_adsi.so":
-                if not module[3]:
-                    continue
-
-            # TODO: Fix loading / unloading of res_ais.so
-            if module[0] == "res_ais.so":
-                if not module[2] and not module[3]:
-                    continue
-
-            # TODO: Fix loading / unloading of res_config_sqlite.so
-            if module[0] == "res_config_sqlite.so":
-                if not module[2] and not module[3]:
-                    continue
-
-            # TODO: Fix loading / unloading of res_timing_dahdi.so
-            if module[0] == "res_timing_dahdi.so":
-                if not module[2] and not module[3]:
-                    continue
-
-            # TODO: Fix unloading of res_crypto.so
-            if module[0] == "res_crypto.so":
-                if not module[3]:
-                    continue
-
-            # TODO: Fix loading / unloading of res_smdi.so
-            if module[0] == "res_smdi.so":
-                if not module[2] and not module[3]:
-                    continue
-
-            # TODO: Fix unloading of res_speech.so
-            if module[0] == "res_speech.so":
-                if not module[3]:
-                    continue
-
-            self.check_failures(module);
-
-        self.stop_reactor()
 
 def main():
     test = moduleLoadUnloadTest()

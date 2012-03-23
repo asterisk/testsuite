@@ -38,19 +38,22 @@ class UseContactFrom200Test(TestCase):
         self.ast[0].cli_exec("channel originate "
                              "SIP/test@127.0.0.1:5062 "
                              "application Wait 1")
-        self.passed = self.finish_listening()
-        self.stop_reactor()
 
     def start_listening(self):
+        def finish_listening(result):
+            if result.passed:
+                self.passed = True
+            self.stop_reactor()
+
         self.scenario = SIPpScenario(TEST_DIR, {
             'scenario': 'proxy_fork_invite_no_rr.xml',
             '-p': '5062',
             '-timeout': '8s',
         })
-        self.scenario.run()
+        df = self.scenario.run(self)
+        df.addCallback(finish_listening)
 
-    def finish_listening(self):
-        return self.scenario.waitAndEvaluate()
+
 
 
 def main():

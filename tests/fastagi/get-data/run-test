@@ -68,21 +68,20 @@ class FastAGIGetDataTest:
             print "Failed"
 
     def stop_reactor(self):
-        print "Stopping Reactor ..."
-        if reactor.running:
-            reactor.stop()
+        reactor.callLater(1, self.stop_asterisk)
 
     def launch_test(self):
         print "Originating call to begin test."
         self.ast1.cli_originate("Local/502@agitest extension 1@get-data")
 
-    def start_asterisk(self):
-        print "Starting Asterisk"
-        self.ast1.start()
-
     def stop_asterisk(self):
+        def __finish_stop(result):
+            if reactor.running:
+                reactor.stop()
+            return result
         print "Stopping Asterisk"
-        self.ast1.stop()
+        df = self.ast1.stop()
+        df.addCallback(__finish_stop)
 
     # Read result before timeout
     def result_changed(self):
@@ -90,14 +89,18 @@ class FastAGIGetDataTest:
             self.read_result()
 
     def run(self):
-        self.launch_test()
-        reactor.callLater(self.timeout, self.stop_reactor)
+        def __finish_start_ops(result):
+            self.launch_test()
+            reactor.callLater(self.timeout, self.stop_reactor)
+            return result
+
+        print "Starting Asterisk"
+        df = self.ast1.start()
+        df.addCallback(__finish_start_ops)
 
 def main():
     test = FastAGIGetDataTest()
-    test.start_asterisk()
     reactor.run()
-    test.stop_asterisk()
     if test.passed is not True:
         return 1
 

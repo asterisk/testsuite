@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'See ASTERISK-19567'
     summary:     'Test dynamicly loading and unloading modules'
     description: |
         'This test provides a basic sanity check on Asterisk

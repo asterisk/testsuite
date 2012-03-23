@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'See ASTERISK-19565'
     summary:    'Test SIP realtime peer matching'
     description: |
         'Make sure that realtime peers are matched properly'

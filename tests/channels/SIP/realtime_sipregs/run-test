@@ -17,7 +17,7 @@ sys.path.append("lib/python")
 logging.basicConfig()
 
 from asterisk.TestCase import TestCase
-from asterisk.sipp import SIPpScenario
+from asterisk.sipp import SIPpScenario, SIPpScenarioSequence
 from twisted.internet import reactor
 from starpy import manager
 
@@ -53,11 +53,11 @@ class SIPRealtimeTest(TestCase):
     def ami_connect(self, ami):
         logger.debug("Connected to AMI")
         ami.registerEvent("UserEvent", self.ami_test)
-        for scenario_def in SIPP_SCENARIOS:
-            scenario = SIPpScenario(TEST_DIR, scenario_def)
-            scenario.run()
-            if scenario.waitAndEvaluate() == False:
-                self.stop_reactor()
+        sequence = SIPpScenarioSequence(test_case = self)
+        for scenario_param in SIPP_SCENARIOS:
+            sequence.register_scenario(SIPpScenario(TEST_DIR, scenario_param))
+
+        sequence.execute()
 
     def ami_test(self, ami, event):
         if event.get("userevent") != "CallFromPeer":

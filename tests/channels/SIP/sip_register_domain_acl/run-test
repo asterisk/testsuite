@@ -14,7 +14,7 @@ import logging
 sys.path.append("lib/python")
 
 from asterisk.TestCase import TestCase
-from asterisk.sipp import SIPpScenario
+from asterisk.sipp import SIPpScenario, SIPpScenarioSequence
 from twisted.internet import reactor
 from starpy import manager
 
@@ -66,7 +66,8 @@ class SIPRegisterDomainAclTest(TestCase):
                 '-key', 'useraddr', scenario['USERADDR'],
             )))
 
-        self.passed = False
+        # If any of the tests fails, they'll automatically set the passed result to False
+        self.passed = True
         self.create_asterisk()
 
     def run(self):
@@ -77,17 +78,10 @@ class SIPRegisterDomainAclTest(TestCase):
         super(SIPRegisterDomainAclTest, self).ami_connect(ami)
 
         logger.debug("Connected to AMI")
-        passed = True
+        sequence = SIPpScenarioSequence(test_case = self)
         for scenario_def in self.scenario_defs:
-            scenario = SIPpScenario(TEST_DIR, scenario_def[0], scenario_def[1])
-            scenario.run()
-            if scenario.waitAndEvaluate() == False:
-                passed = False
-
-        # All done
-        self.passed = passed
-        self.stop_reactor()
-
+            sequence.register_scenario(SIPpScenario(TEST_DIR, scenario_def[0], scenario_def[1]))
+        sequence.execute()
 
 def main():
     test = SIPRegisterDomainAclTest()

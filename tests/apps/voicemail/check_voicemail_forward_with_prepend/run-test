@@ -199,9 +199,13 @@ class ForwardTestState(VoiceMailState):
                 and the TALK_AUDIO variables takes too much time - here we use an explicit extension to avoid
                 having to set the DTMF.
                 """
+                def __send_redirect(result):
+                    self.voiceMailTest.amiSender.redirect(self.voiceMailTest.senderChannel, "voicemailCaller", "sendAudioWithPound", 1)
+                    return result
+
                 audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.voiceMailTest.testParentDir))
-                self.voiceMailTest.astSender.cli_exec("dialplan set global TALK_AUDIO " + audioFile)
-                df = self.voiceMailTest.amiSender.redirect(self.voiceMailTest.senderChannel, "voicemailCaller", "sendAudioWithPound", 1)
+                df = self.voiceMailTest.astSender.cli_exec("dialplan set global TALK_AUDIO " + audioFile)
+                df.addCallback(__send_redirect)
             elif message == 'vm-msgsaved':
                 self.voiceMailTest.setTestCondition("msgForwarded", True)
             elif message == 'pbx-invalid':

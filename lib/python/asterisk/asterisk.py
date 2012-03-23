@@ -13,17 +13,130 @@ the GNU General Public License Version 2.
 
 import sys
 import os
-import signal
 import time
 import shutil
-import subprocess
-import utils
 import logging
+
+import TestSuiteUtils
 
 from config import ConfigFile
 from version import AsteriskVersion
 
+from twisted.internet import reactor, protocol, defer, utils, error
+
 logger = logging.getLogger(__name__)
+
+class AsteriskCliCommand():
+    """
+    Class that manages an Asterisk CLI command.
+    """
+
+    def __init__(self, host, cmd):
+        """ Create a new Asterisk CLI Protocol instance
+
+        This class wraps an Asterisk instance that executes a CLI command
+        against another instance of Asterisk.
+
+        Keyword Arguments:
+        host    The host this CLI instance will connect to
+        cmd     List of command arguments to spawn.  The first argument must be
+        the location of the Asterisk executable; each subsequent argument should define
+        the CLI command to run and the instance of Asterisk to run it against.
+        """
+        self.__host = host
+        self.__cmd = cmd
+        self.exitcode = -1
+        self.output = ""
+        self.err = ""
+
+    def execute(self):
+        """ Execute the CLI command.
+
+        Returns a deferred that will be called when the operation completes.  The
+        parameter to the deferred is this object.
+        """
+        def __cli_output_callback(result):
+            """ Callback from getProcessOutputAndValue """
+            self.__set_properties(result)
+            logger.debug("Asterisk CLI %s exited %d" % (self.__host, self.exitcode))
+            if self.exitcode:
+                self.__deferred.errback(self)
+            else:
+                self.__deferred.callback(self)
+
+        def __cli_error_callback(result):
+            """ Errback from getProcessOutputAndValue """
+            self.__set_properties(result)
+            logger.warning("Asterisk CLI %s exited %d with error: %s" % (self.__host, self.exitcode, self.err))
+            self.__deferred.errback(self)
+
+        self.__deferred = defer.Deferred()
+        df = utils.getProcessOutputAndValue(self.__cmd[0], self.__cmd)
+        df.addCallbacks(__cli_output_callback, __cli_error_callback)
+
+        return self.__deferred
+
+    def __set_properties(self, result):
+        """ Set the properties based on the result of the getProcessOutputAndValue call """
+        out, err, code = result
+        self.exitcode = code
+        self.output = out
+        self.err = err
+
+class AsteriskProtocol(protocol.ProcessProtocol):
+    """
+    Class that manages an Asterisk instance
+    """
+
+    def __init__(self, host, stop_deferred):
+        """ Create an AsteriskProtocol object
+
+        Create an AsteriskProtocol object, which manages the interactions with
+        the Asterisk process
+
+        Keyword Arguments:
+        host - the hostname or address of the Asterisk instance
+        stop_deferred - a twisted Deferred object that will be called when the
+        process has exited
+        """
+
+        self.output = ""
+        self.__host = host
+        self.exitcode = 0
+        self.exited = False
+        self.__stop_deferred = stop_deferred
+
+    def outReceived(self, data):
+        """ Override of ProcessProtocol.outReceived """
+        logger.debug("Asterisk %s received: %s" % (self.__host, data))
+        self.output += data
+
+    def connectionMade(self):
+        """ Override of ProcessProtocol.connectionMade """
+        logger.debug("Asterisk %s - connection made" % (self.__host))
+
+    def errReceived(self, data):
+        """ Override of ProcessProtocol.errReceived """
+        logger.warn("Asterisk %s received error: %s" % (self.__host, data))
+
+    def processEnded(self, reason):
+        """ Override of ProcessProtocol.processEnded """
+        message = ""
+        if reason.value and reason.value.exitCode:
+            message = "Asterisk %s ended with code %d" % (self.__host, reason.value.exitCode,)
+            self.exitcode = reason.value.exitCode
+        else:
+            message = "Asterisk %s ended " % self.__host
+        try:
+            # When Asterisk gets itself terminated with a KILL signal, this may (or may not)
+            # ever get called, in which case the Asterisk object itself that is terminating
+            # this process will attempt to raise the stop deferred.  Prevent calling the
+            # object twice.
+            if not self.__stop_deferred.called:
+                self.__stop_deferred.callback(message)
+        except defer.AlreadyCalledError:
+            logger.warning("Asterisk %s stop deferred already called" % self.__host)
+        self.exited = True
 
 class Asterisk:
     """An instance of Asterisk.
@@ -68,7 +181,7 @@ class Asterisk:
         if base is not None:
             self.base = "%s/%s" % (self.base, base)
         self.astetcdir = Asterisk.asterisk_etc_directory
-        self.ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
+        self.ast_binary = TestSuiteUtils.which("asterisk") or "/usr/sbin/asterisk"
         self.host = host
 
         self.__ast_conf_options = ast_conf_options
@@ -105,9 +218,10 @@ class Asterisk:
                     self.directories[var] = val
 
     def start(self):
-        """Start this instance of Asterisk.
+        """ Start this instance of Asterisk.
 
-        This function starts up this instance of Asterisk.
+        Returns:
+        A deferred object that will be called when Asterisk is fully booted.
 
         Example Usage:
         asterisk.start()
@@ -115,6 +229,21 @@ class Asterisk:
         Note that calling this will install the default testsuite
         config files, if they have not already been installed
         """
+
+        def __wait_fully_booted_callback(cli_command):
+            """ Callback for CLI command waitfullybooted """
+            self.__start_deferred.callback("Successfully started Asterisk %s" % self.host)
+
+        def __wait_fully_booted_error(cli_command):
+            """ Errback for CLI command waitfullybooted """
+            if time.time() - self.__start_asterisk_time > 5:
+                logger.error("Asterisk core waitfullybooted for %s failed" % self.host)
+                self.__start_deferred.errback("Command core waitfullybooted failed")
+            else:
+                logger.debug("Asterisk core waitfullybooted failed, attempting again...")
+                cli_deferred = self.cli_exec("core waitfullybooted")
+                cli_deferred.addCallbacks(__wait_fully_booted_callback, __wait_fully_booted_error)
+
         self.install_configs(os.getcwd() + "/configs")
         self.__setup_configs()
 
@@ -123,85 +252,143 @@ class Asterisk:
             "-f", "-g", "-q", "-m", "-n",
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
         ]
-        try:
-            self.process = subprocess.Popen(cmd)
-        except OSError:
-            logger.error("Failed to execute command: %s" % str(cmd))
-            return False
 
-        # Be _really_ sure that Asterisk has started up before returning.
+        # Make the start/stop deferreds - this method will return
+        # the start deferred, and pass the stop deferred to the AsteriskProtocol
+        # object.  The stop deferred will be raised when the Asterisk process
+        # exits
+        self.__start_deferred = defer.Deferred()
+        self.__stop_deferred = defer.Deferred()
+        self.processProtocol = AsteriskProtocol(self.host, self.__stop_deferred)
+        self.process = reactor.spawnProcess(self.processProtocol, cmd[0], cmd)
 
-        # Poll the instance to make sure we created it successfully
-        self.process.poll()
-        if self.process.returncode != None:
-            """ Rut roh, Asterisk process exited prematurely """
-            logger.error("Asterisk instance %s exited prematurely with return code %d" % (self.host, self.process.returncode))
-
-        start = time.time()
-        while True:
-            # This command should stall until completed, but if an
-            # exception occurs, it returns the empty string.
-            if not self.cli_exec("core waitfullybooted", warn_on_fail=False):
-                if time.time() - start > 5:
-                    logger.error("Unknown state of asterisk. Stopping waitfullybooted...")
-                    break
-                logger.debug("Attempting waitfullybooted again...")
-            else:
-                # We're fully booted...
-                break
+        # Begin the wait fully booted cycle
+        self.__start_asterisk_time = time.time()
+        cli_deferred = self.cli_exec("core waitfullybooted")
+        cli_deferred.addCallbacks(__wait_fully_booted_callback, __wait_fully_booted_error)
+        return self.__start_deferred
 
     def stop(self):
         """Stop this instance of Asterisk.
 
         This function is used to stop this instance of Asterisk.
 
+        Returns:
+        A deferred that can be used to detect when Asterisk exits,
+        or if it fails to exit.
+
         Example Usage:
         asterisk.stop()
         """
+
+        def __send_stop_gracefully():
+            """ Send a core stop gracefully CLI command """
+            if self.ast_version < AsteriskVersion("1.6.0"):
+                cli_deferred = self.cli_exec("stop gracefully")
+            else:
+                cli_deferred = self.cli_exec("core stop gracefully")
+            cli_deferred.addCallbacks(__stop_gracefully_callback, __stop_gracefully_error)
+
+        def __stop_gracefully_callback(cli_command):
+            """ Callback handler for the core stop gracefully CLI command """
+            logger.debug("Successfully stopped Asterisk %s" % self.host)
+            self.__stop_attempts = 0
+
+        def __stop_gracefully_error(cli_command):
+            """ Errback for the core stop gracefully CLI command """
+            if self.__stop_attempts > 5:
+                self.__stop_attempts = 0
+                logger.warning("Asterisk graceful stop for %s failed" % self.host)
+            else:
+                logger.debug("Asterisk graceful stop failed, attempting again...")
+                self.__stop_attempts += 1
+                __send_stop_gracefully()
+
+        def __send_stop_now():
+            """ Send a core stop now CLI command """
+            if self.ast_version < AsteriskVersion("1.6.0"):
+                cli_deferred = self.cli_exec("stop now")
+            else:
+                cli_deferred = self.cli_exec("core stop now")
+            if cli_deferred:
+                cli_deferred.addCallbacks(__stop_now_callback, __stop_now_error)
+
+        def __stop_now_callback(cli_command):
+            """ Callback handler for the core stop now CLI command """
+            logger.debug("Successfully stopped Asterisk %s" % self.host)
+            self.__stop_attempts = 0
+
+        def __stop_now_error(cli_command):
+            """ Errback handler for the core stop now CLI command """
+            if self.__stop_attempts > 5:
+                self.__stop_attempts = 0
+                logger.warning("Asterisk graceful stop for %s failed" % self.host)
+            else:
+                logger.debug("Asterisk stop now failed, attempting again...")
+                self.__stop_attempts += 1
+                cli_deferred = __send_stop_now()
+                if cli_deferred:
+                    cli_deferred.addCallbacks(__stop_now_callback, __stop_now_error)
+
+        def __send_term():
+            """ Send a TERM signal to the Asterisk instance """
+            try:
+                logger.info("Sending TERM to Asterisk %s" % self.host)
+                self.process.signalProcess("TERM")
+            except error.ProcessExitedAlready:
+                # Probably that we sent a signal to a process that was already
+                # dead.  Just ignore it.
+                pass
+
+        def __send_kill():
+            """ Check to see if the process is running and kill it with fire """
+            try:
+                if not self.processProtocol.exited:
+                    logger.info("Sending KILL to Asterisk %s" % self.host)
+                    self.process.signalProcess("KILL")
+            except error.ProcessExitedAlready:
+                # Pass on this
+                pass
+            # If you kill the process, the ProcessProtocol may never get the note
+            # that its dead.  Call the stop callback to notify everyone that we did
+            # indeed kill the Asterisk instance.
+            try:
+                # Attempt to signal the process object that it should lose its
+                # connection - it may already be gone however.
+                self.process.loseConnection()
+            except:
+                pass
+            try:
+                if not self.__stop_deferred.called:
+                    self.__stop_deferred.callback("Asterisk %s KILLED" % self.host)
+            except defer.AlreadyCalledError:
+                logger.warning("Asterisk %s stop deferred already called" % self.host)
+
+        def __cancel_stops(reason):
+            """ Cancel all stop actions - called when the process exits """
+            for token in self.__stop_cancel_tokens:
+                try:
+                    if token.active():
+                        token.cancel()
+                except error.AlreadyCalled:
+                    # If we're canceling something that's already been called, move on
+                    pass
+            return reason
+
+        self.__stop_cancel_tokens = []
+        self.__stop_attempts = 0
         # Start by asking to stop gracefully.
-        if self.ast_version < AsteriskVersion("1.6.0"):
-            self.cli_exec("stop gracefully")
-        else:
-            self.cli_exec("core stop gracefully")
-        for i in xrange(5):
-            time.sleep(1.0)
-            if self.process.poll() is not None:
-                return self.process.returncode
+        __send_stop_gracefully()
 
-        # Check for locks
-        self.cli_exec("core show locks")
+        # Schedule progressively more aggressive mechanisms of stopping Asterisk.  If any
+        # stop mechanism succeeds, all are canceled
+        self.__stop_cancel_tokens.append(reactor.callLater(5, __send_stop_now))
+        self.__stop_cancel_tokens.append(reactor.callLater(10, __send_term))
+        self.__stop_cancel_tokens.append(reactor.callLater(15, __send_kill))
 
-        # If the graceful shutdown did not complete within 5 seconds, ask
-        # Asterisk to stop right now.
-        if self.ast_version < AsteriskVersion("1.6.0"):
-            self.cli_exec("stop now")
-        else:
-            self.cli_exec("core stop now")
-        for i in xrange(5):
-            time.sleep(1.0)
-            if self.process.poll() is not None:
-                return self.process.returncode
+        self.__stop_deferred.addCallback(__cancel_stops)
 
-        # If even a "stop now" didn't do the trick, fall back to sending
-        # signals to the process.  First, send a SIGTERM.  If it _STILL_ hasn't
-        # gone away after another 5 seconds, send SIGKILL.
-        try:
-            os.kill(self.process.pid, signal.SIGTERM)
-            for i in xrange(5):
-                time.sleep(1.0)
-                if self.process.poll() is not None:
-                    return self.process.returncode
-            os.kill(self.process.pid, signal.SIGKILL)
-        except OSError:
-            # Probably that we sent a signal to a process that was already
-            # dead.  Just ignore it.
-            pass
-
-        # We have done everything we can do at this point.  Wait for the
-        # process to exit.
-        self.process.wait()
-
-        return self.process.returncode
+        return self.__stop_deferred
 
     def install_configs(self, cfg_path):
         """Installs all files located in the configuration directory for this
@@ -320,8 +507,14 @@ class Asterisk:
         used. If no extension is given, the 's' extension will be used.
 
         Keyword Arguments:
-        blocking -- When True, do not return from this function until the CLI
-                    command finishes running.  The default is True.
+        blocking -- This used to specify that we should block until the
+        CLI command finished executing.  When the Asterisk process was turned
+        over to twisted, that's no longer the case.  The keyword argument
+        was kept merely for backwards compliance; callers should *not* expect
+        their calls to block.
+
+        Returns:
+        A deferred object that can be used to listen for command completion
 
         Example Usage:
         asterisk.originate("Local/a_exten@context extension b_exten@context")
@@ -345,17 +538,23 @@ class Asterisk:
             <tech/data> extension <exten>@<context>"
 
         if self.ast_version < AsteriskVersion("1.6.2"):
-            self.cli_exec("originate %s" % argstr, blocking=blocking)
+            return self.cli_exec("originate %s" % argstr, blocking=blocking)
         else:
-            self.cli_exec("channel originate %s" % argstr, blocking=blocking)
+            return self.cli_exec("channel originate %s" % argstr, blocking=blocking)
 
     def cli_exec(self, cli_cmd, blocking=True, warn_on_fail=True):
         """Execute a CLI command on this instance of Asterisk.
 
         Keyword Arguments:
         cli_cmd -- The command to execute.
-        blocking -- When True, do not return from this function until the CLI
-                    command finishes running.  The default is True.
+        blocking -- This used to specify that we should block until the
+        CLI command finished executing.  When the Asterisk process was turned
+        over to twisted, that's no longer the case.  The keyword argument
+        was kept merely for backwards compliance; callers should *not* expect
+        their calls to block.
+
+        Returns:
+        A deferred object that will be signaled when the process has exited
 
         Example Usage:
         asterisk.cli_exec("core set verbose 10")
@@ -370,32 +569,8 @@ class Asterisk:
         ]
         logger.debug("Executing %s ..." % cmd)
 
-        if not blocking:
-            process = subprocess.Popen(cmd)
-            return ""
-
-        try:
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                       stderr=subprocess.STDOUT)
-        except OSError:
-            warn("Failed to execute command: %s" % str(cmd))
-            return ""
-
-        output = ""
-        try:
-            for l in process.stdout.readlines():
-                logger.debug(l.rstrip())
-                output += l
-        except IOError:
-            pass
-        try:
-            res = process.wait()
-            if res != None and res != 0:
-                warn("Exited non-zero [%d] while executing command %s" % (res, str(cmd)))
-                output = ""
-        except OSError:
-            pass
-        return output
+        cliProtocol = AsteriskCliCommand(self.host, cmd)
+        return cliProtocol.execute()
 
     def __make_directory_structure(self):
         """ Mirror system directory structure """

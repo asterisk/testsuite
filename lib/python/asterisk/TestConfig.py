@@ -12,14 +12,13 @@ the GNU General Public License Version 2.
 import sys
 import os
 import subprocess
-import optparse
-import time
 import yaml
 import socket
 
 sys.path.append("lib/python")
 
-import utils
+import TestSuiteUtils
+
 from version import AsteriskVersion
 from asterisk import Asterisk
 from buildoptions import AsteriskBuildOptions
@@ -107,7 +106,7 @@ class Dependency:
         self.met = False
         if "app" in dep:
             self.name = dep["app"]
-            self.met = utils.which(self.name) is not None
+            self.met = TestSuiteUtils.which(self.name) is not None
         elif "python" in dep:
             self.name = dep["python"]
             try:
@@ -184,7 +183,7 @@ class Dependency:
         we run pjsua --help and parse the output to determine if --ipv6
         is a valid option
         '''
-        if utils.which('pjsua') is None:
+        if TestSuiteUtils.which('pjsua') is None:
             return False
 
         help_output = subprocess.Popen(['pjsua', '--help'],

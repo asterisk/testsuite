@@ -32,7 +32,6 @@ class HandleResponseAddressIncomplete(TestCase):
         self.create_asterisk()
         self.sipTest = SIPpScenario(TEST_DIR, SIPP_SCENARIO)
 
-
     def ami_connect(self, ami):
         TestCase.ami_connect(self, ami)
 
@@ -40,7 +39,7 @@ class HandleResponseAddressIncomplete(TestCase):
         ami.registerEvent('UserEvent', self.user_event)
 
         logger.debug("Starting SIP scenario")
-        result = self.sipTest.run()
+        self.sipTest.run(self)
 
         logger.debug("Originating call from local channel to SIPp peer")
         df = ami.originate("Local/1234@default", "default", "1234", 1, None, "CallId", None, None, None, {}, True)
@@ -60,15 +59,6 @@ class HandleResponseAddressIncomplete(TestCase):
             self.passed = False
 
         self.stop_reactor()
-
-    def stop_asterisk(self):
-        TestCase.stop_asterisk(self)
-
-        """ Wait for SIPp to exit """
-        logger.debug("Waiting for SIPp to end")
-        result = self.sipTest.waitAndEvaluate()
-        if not result:
-            self.passed = False
 
     def run(self):
         TestCase.run(self)

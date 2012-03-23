@@ -10,88 +10,88 @@ the GNU General Public License Version 2.
 import sys
 import os
 import time
+import logging
 from twisted.application import service, internet
 from twisted.internet import reactor, defer
 from starpy import fastagi
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
 from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
 
-workingdir = "iax2/basic-call"
-testdir = "tests/%s" % workingdir
+logger = logging.getLogger(__name__)
 
-
-class IAXCallTest:
+class IAXCallTest(TestCase):
     def __init__(self):
-        self.chan1_connected = False
-        self.chan2_connected = False
-        self.cdr_match = False
-        self.f = fastagi.FastAGIFactory(self.fastagi_func)
-        reactor.listenTCP(4573, self.f, 50, '127.0.0.1')
-        reactor.callWhenRunning(self.run)
+        super(IAXCallTest, self).__init__()
+        self.channel1_events = { 'Created': False, 'Hangup': False }
+        self.channel2_events = { 'Created': False, 'Hangup': False, 'CSV': False}
+        self.create_asterisk(2)
 
-        print "Creating Asterisk instances ..."
+    def ami_connect(self, ami):
+        super(IAXCallTest, self).ami_connect(ami)
 
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
+        ami.registerEvent('Hangup', self.hangup_event_handler)
+        ami.registerEvent('Newchannel', self.new_channel_event_handler)
 
-        self.ast2 = Asterisk(base=workingdir)
-        self.ast2.install_configs("%s/configs/ast2" % (testdir))
+        if ami.id == 1:
+            self.ast[0].cli_originate("IAX2/guest@127.0.0.1:4569/1000 extension 1000@iaxtest")
 
-    def fastagi_func(self, agi):
-        sequence = fastagi.InSequence()
-        def get_channel(c):
-            print "Connection received for %s ..." % c
-            if c.split("-")[0] == "IAX2/127.0.0.1:4569":
-                self.chan1_connected = True
-            elif c.split("-")[0] == "IAX2/127.0.0.1:4570":
-                self.chan2_connected = True
-        agi.getVariable("CHANNEL").addCallback(get_channel)
-        sequence.append(agi.execute, "Wait", "5")
-        sequence.append(agi.hangup)
-        sequence.append(agi.finish)
+    def hangup_event_handler(self, ami, event):
+        channel = event['channel']
+        logger.info("Hangup for channel %s received" % channel)
+        if channel.split("-")[0] == "IAX2/127.0.0.1:4569":
+            self.channel1_events['Hangup'] = True
+        elif channel.split("-")[0] == "IAX2/127.0.0.1:4570":
+            self.channel2_events['Hangup'] = True
+        if self.channel1_events['Hangup'] and self.channel2_events['Hangup']:
+            self.stop_reactor()
 
-    def stop_reactor(self):
-        print "Stopping Reactor ..."
-        if reactor.running:
-            reactor.stop()
+    def new_channel_event_handler(self, ami, event):
+        channel = event['channel']
+        logger.info("New channel %s received" % channel)
+        if channel.split("-")[0] == "IAX2/127.0.0.1:4569":
+            self.channel1_events['Created'] = True
+        elif channel.split("-")[0] == "IAX2/127.0.0.1:4570":
+            self.channel2_events['Created'] = True
 
-    def start_asterisk(self):
-        print "Starting Asterisk instances ..."
-        self.ast1.start()
-        self.ast2.start()
+    def run(self):
+        super(IAXCallTest, self).run()
 
-    def stop_asterisk(self):
-        print "Stopping Asterisk instances ..."
-        self.ast1.stop()
-        self.ast2.stop()
+        self.create_ami_factory(2)
+
+    def check_cdrs(self):
         cdr = AsteriskCSVCDR(fn="%s/var/log/asterisk/cdr-csv/Master.csv" %
-                self.ast2.base)
+                self.ast[1].base)
         cdr_test = AsteriskCSVCDR(
                 records=[AsteriskCSVCDRLine(disposition="ANSWERED", dchannel="",
                 dcontext="iaxtest", amaflags="DOCUMENTATION", accountcode="",
                 callerid="", userfield="", source="", destination="1000",
-                lastapp="AGI", lastarg="GET")])
+                lastapp="Wait", lastarg="1")])
         if cdr_test.match(cdr):
-            self.cdr_match = True
+            self.channel2_events['CSV'] = True
 
-    def run(self):
-        self.start_asterisk()
-
-        reactor.callLater(20, self.stop_reactor)
-
-        self.ast1.cli_originate(
-                "IAX2/guest@127.0.0.1:4569/1000 extension 1000@iaxtest")
-
+    def check_results(self):
+        self.passed = True
+        for k, v in self.channel1_events.items():
+            if not v:
+                logger.warn("Failed to receive exepcted event %s for channel 1" % k)
+                self.passed = False
+        for k, v in self.channel2_events.items():
+            if not v:
+                logger.warn("Failed to receive expected event %s for channel 2" % k)
+                self.passed = False
 
 def main():
     test = IAXCallTest()
     reactor.run()
-    test.stop_asterisk()
-    if test.chan1_connected and test.chan2_connected and test.cdr_match:
-        return 0
-    return 1
+    test.check_cdrs()
+    test.check_results()
+
+    if not test.passed:
+        return 1
+    return 0
 
 
 if __name__ == "__main__":

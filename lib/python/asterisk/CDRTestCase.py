@@ -73,7 +73,8 @@ class CDRTestCase(TestCase):
         self.CDRFileExpectations[recordname].append(cdrline)
 
     def match_cdrs(self):
-        #Automatically invoked at the end of the test, this will test the CDR files against the listed expectations.
+        """ Automatically invoked at the end of the test, this will test the CDR files against the listed expectations.
+        """
         self.passed = True
 
         for key in self.CDRFileExpectations:
@@ -114,7 +115,6 @@ class CDRTestCase(TestCase):
     def ami_logoff(self, ami):
         """
         An AMI callback event.
-
         """
         self.stop_reactor()
 
@@ -131,13 +131,25 @@ class CDRTestCase(TestCase):
         ).addErrback(self.ami_logoff)
 
     def ami_test_done(self, ami, event):
+        """ Check to see if the test is done during a hangup event
+        """
+        logger.debug(str(event))
         if event.get("event") == "Hangup":
-            if self.no_active_channels():
-                try:
-                    self.stop_reactor()
-                except ReactorNotRunning:
-                    # No problemo.
-                    pass
+            self.check_active_channels()
+
+    def check_active_channels(self):
+        """ Check to see if we have any active channels.  If we don't kill the reactor.
+        """
+        def __parse_output(result):
+            first_line = result.output.split('\n', 1)[0]
+            first_number = first_line.split(' ', 1)[0]
+            if first_number == '0':
+                logger.debug("No channels detected; stopping reactor")
+                self.stop_reactor()
+
+        for asterisk in self.ast:
+            cli_deferred = asterisk.cli_exec('core show channels count')
+            cli_deferred.addCallback(__parse_output)
 
     def run(self):
         """

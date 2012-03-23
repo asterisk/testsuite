@@ -11,12 +11,12 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
 
-import sys
 import re
 import unittest
 import logging
 import subprocess
-import utils
+
+import TestSuiteUtils
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +137,7 @@ class AsteriskVersion:
         """
         if not hasattr(cls, "_asterisk_version_from_binary"):
             version = ""
-            ast_binary = utils.which("asterisk") or "/usr/sbin/asterisk"
+            ast_binary = TestSuiteUtils.which("asterisk") or "/usr/sbin/asterisk"
             cmd = [
                 ast_binary,
                 "-V",

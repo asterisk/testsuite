@@ -58,9 +58,13 @@ class ChanSpyMixMonitorTest:
             print 'SIP ChanSpy Test FAILED'
 
     def stop_reactor(self):
-        print "Stopping Reactor ..."
-        if reactor.running:
-            reactor.stop()
+        def __finish_stop(result):
+            print "Stopping Reactor ..."
+            if reactor.running:
+                reactor.stop()
+            return result
+        df = self.ast1.stop()
+        df.addCallback(__finish_stop)
 
     def chanspyEvent(self, ami, event):
         self.numSpyEvents += 1
@@ -79,6 +83,8 @@ class ChanSpyMixMonitorTest:
         self.logLastStep("Connected to the AMI")
         self.ami = ami
         self.ami.registerEvent('ChanSpyStart', self.chanspyEvent)
+        self.ami.setVar(channel = "", variable = "TESTAUDIO1", value = self.audiofile1)
+        self.ami.setVar(channel = "", variable = "TALK_AUDIO", value = self.talkingaudio)
 
     def amiLoginError(self, ami):
         self.logLastStep("AMI login failed")
@@ -115,17 +121,12 @@ class ChanSpyMixMonitorTest:
 
     def startProcesses(self):
         self.logLastStep("Starting Processes")
-        self.ast1.start()
         self.pja = subprocess.Popen(['pjsua', '--local-port=5065', '--auto-answer=200', '--null-audio'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         self.pjb = subprocess.Popen(['pjsua', '--local-port=5066', '--auto-answer=200', '--null-audio'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         self.pjc = subprocess.Popen(['pjsua', '--local-port=5067', '--auto-answer=200', '--null-audio'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
-        self.ast1.cli_exec("core set global TESTAUDIO1 " + self.audiofile1)
-        self.ast1.cli_exec("core set global TALK_AUDIO " + self.talkingaudio)
-
     def stopProcesses(self):
         self.logLastStep("Stopping Processes")
-        self.ast1.stop()
         os.kill(self.pja.pid, signal.SIGKILL)
         os.kill(self.pjb.pid, signal.SIGKILL)
         os.kill(self.pjc.pid, signal.SIGKILL)
@@ -147,19 +148,22 @@ class ChanSpyMixMonitorTest:
         self.ast1.cli_originate("Local/play_recording@test extension detect_audio@test")
 
     def run(self):
-        # call extensions
-        self.amiLogin()
-        reactor.callLater(1, self.callChanSpy)
-        reactor.callLater(2, self.aCall)
+        def __finish_start_ops(result):
+            self.startProcesses()
+            # call extensions
+            self.amiLogin()
+            reactor.callLater(1, self.callChanSpy)
+            reactor.callLater(2, self.aCall)
+            # stop and read results after timeout
+            reactor.callLater(self.test_to, self.readResult)
+            return result
 
-        # stop and read results after timeout
-        reactor.callLater(self.test_to, self.stop_reactor)
+        df = self.ast1.start()
+        df.addCallback(__finish_start_ops)
 
 def main():
     test = ChanSpyMixMonitorTest()
-    test.startProcesses()
     reactor.run()
-    test.stopProcesses()
     if test.passed != True:
         return 1
     return 0

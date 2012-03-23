@@ -6,108 +6,65 @@ Mark Michelson <mmichelson@digium.com>
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 '''
+
 import sys
-import os
-import signal
-import subprocess
-from twisted.application import service, internet
-from twisted.internet import reactor, defer
+from twisted.internet import reactor
 from starpy import manager
+import logging
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
 
-workingdir = "udptl_v6"
-testdir = "tests/%s" % workingdir
+logger = logging.getLogger(__name__)
 
-class UdptlTest:
+class UdptlTest(TestCase):
     def __init__(self):
-        self.last_step = ""
-        self.passed = False
+        TestCase.__init__(self)
 
-        reactor.callWhenRunning(self.run)
+        self.reactor_timeout = 60
+        self.create_asterisk(2)
 
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
-
-        self.ast2 = Asterisk(base=workingdir)
-        self.ast2.install_configs("%s/configs/ast2" % (testdir))
-
-    def start_asterisk(self):
-        self.log_last_step("Starting Asterisk")
-        self.ast1.start()
-        self.ast1.cli_exec("fax set debug on")
-        self.ast2.start()
-        self.ast2.cli_exec("fax set debug on")
-
-    def ami_on_connect1(self, ami):
-        self.log_last_step("Connected to AMI 1")
-        self.ami1 = ami
-        self.ami1.originate(channel = "SIP/666@receiver",
-                            application = "SendFax",
-                            data = "tests/udptl_v6/1page.tif")
+    def ami_connect(self, ami):
+        if ami.id == 0:
+            self.ami[0].originate(channel = "SIP/666@receiver",
+                    application = "SendFax",
+                    data = "tests/udptl_v6/1page.tif")
+        elif ami.id == 1:
+            self.ami[1].registerEvent("UserEvent", self.check_recv_fax_result)
 
     def check_recv_fax_result(self, ami, event):
-        self.log_last_step("Checking Userevent")
         if event.get("userevent").lower() != "recvstatus":
             return
 
         status = event.get("status")
-        print ("Status of FAX is %s" % (status))
+        logger.debug("Status of FAX is %s" % (status))
         if status == "SUCCESS":
             self.passed = True
+            logger.debug("UDPTL test passed!")
         else:
             self.passed = False
-
-        if self.shutdowncall.active():
-            self.shutdowncall.reset(1)
-
-    def ami_on_connect2(self, ami):
-        self.log_last_step("Connected to AMI 2")
-        self.ami2 = ami
-        self.ami2.registerEvent("UserEvent", self.check_recv_fax_result)
-
-    def ami_login_error(self, ami):
-        self.log_last_step("AMI login failed")
-        reactor.callLater(1, self.shut_down)
-
-    def ami_login(self):
-        self.log_last_step("Logging in to the AMI")
-        self.ami_factory1 = manager.AMIFactory("user", "mysecret")
-        self.ami_factory2 = manager.AMIFactory("user", "mysecret")
-        self.ami_factory1.login('127.0.0.1', 5038).addCallbacks(self.ami_on_connect1, self.ami_login_error)
-        self.ami_factory2.login('127.0.0.1', 5039).addCallbacks(self.ami_on_connect2, self.ami_login_error)
-
-    def log_last_step(self, step):
-        print step
-        self.lastStep = step
-
-    def shut_down(self):
-        self.ast1.stop()
-        self.ast2.stop()
-
-        if self.passed:
-            print "UDPTL test passed!"
-        else:
-            print "UDPTL test failed!"
-
-        if reactor.running:
-            print "Stopping reactor"
-            reactor.stop()
+            logger.warn("UDPTL test failed!")
+        self.stop_reactor()
 
     def run(self):
-        self.start_asterisk()
-        self.ami_login()
-        self.shutdowncall = reactor.callLater(90, self.shut_down)
-
+        TestCase.run(self)
+        self.ast[0].cli_exec("fax set debug on")
+        self.ast[1].cli_exec("fax set debug on")
+        self.create_ami_factory(2)
 
 def main():
     # Run UDPTL test
-    udptl_test = UdptlTest()
+    test = UdptlTest()
+    test.start_asterisk()
     reactor.run()
-    if not udptl_test.passed:
+    test.stop_asterisk()
+
+    if not test.passed:
         return 1
     return 0
 
 if __name__ == "__main__":
     sys.exit(main() or 0)
+
+# vim:sw=4:ts=4:expandtab:textwidth=79

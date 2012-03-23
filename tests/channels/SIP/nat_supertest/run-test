@@ -14,9 +14,9 @@ import logging
 sys.path.append("lib/python")
 
 from asterisk.TestCase import TestCase
-from asterisk.sipp import SIPpScenario
+from asterisk.sipp import SIPpScenario, SIPpScenarioSequence
 from asterisk.syncami import SyncAMI, InvalidAMIResponse
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 from qm import QM
 
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -55,6 +55,8 @@ class SIPNatTest(TestCase):
         self.passed = False
         self.create_asterisk()
         self.failures = []
+        self.__existing_executed = False
+        self.__nonexisting_executed = False
 
     def run(self):
         super(SIPNatTest, self).run()
@@ -99,43 +101,66 @@ class SIPNatTest(TestCase):
         f.close()
 
     def run_combos(self):
-        scenario_def = {'scenario': 'register.xml', '-p': '5061', '-recv_timeout': '1000', '-inf': INJECT_FILE}
+        def __check_intermediate_result(result):
+            if (result.scenario['-s'] == "existing"):
+                self.__existing_result = result.passed
+                self.__existing_executed = True
+            elif (result.scenario['-s'] == "nonexisting"):
+                self.__nonexisting_result = result.passed
+                self.__nonexisting_executed = True
+            if (self.__existing_executed and self.__nonexisting_executed):
+                self.__existing_executed = False
+                self.__nonexisting_executed = False
+                if self.__nonexisting_result != self.__existing_result:
+                    values = self.__scenario_values[self.__test_counter]
+                    logger.debug("Failed global_nat=%s peer_nat=%s rport_sepcified=%s port_matches_via=%s"
+                        % (self.get_nat_value(values[0]),self.get_nat_value(values[1]), str(values[2]), str(values[2])))
+                    self.failures.append(compute_value(values))
+
+            self.__test_counter += 1
+            values = self.__scenario_values[0]
+            self.reset_timeout()
+            self.update_config(values[0], values[1])
+            self.update_inject_file(values[2], values[3])
+            return result
+
+        def __check_failures(result):
+            # Only evaluate if this is the last test executed
+            logger.info("Checking Failures")
+            if (self.__test_counter == len(self.__scenario_values)):
+                # order of variables is least significant first!
+                qm = QM(["port_matches_via", "rport_specified", "peer_nat", "general_nat"])
+                logger.debug("Failures: %s" % (self.failures,))
+                try:
+                    if self.failures == expected_failures[self.ast[0].ast_version.branch]:
+                        self.passed = True
+                        logger.info(qm.get_function(qm.solve(self.failures, [])[1]))
+                    else:
+                        logger.warn(qm.get_function(qm.solve(self.failures, [])[1]))
+                except KeyError:
+                    log.error("We don't know the expected failures for branch: %s\n" % (self.ast[0].ast_version.branch,))
+                    self.passed = True
+            return result
+
+        self.__test_counter = 0
+        self.__scenario_values = []
+        fin = defer.Deferred()
+        fin.addCallback(__check_failures)
+        sequence = SIPpScenarioSequence(test_case = self, intermediate_cb_fn = __check_intermediate_result, final_deferred = fin)
+
         for general_nat in [False, True]:
             for peer_nat in [False, True]:
-                self.update_config(general_nat, peer_nat)
                 for rport_specified in [False, True]:
                     for port_matches_via in [False, True]:
-                        existing_result = None
-                        nonexisting_result = None
-                        self.update_inject_file(rport_specified, port_matches_via)
                         for peer_name in ["existing", "nonexisting"]:
-                            scenario_def['-s'] = peer_name
-                            scenario = SIPpScenario(TEST_DIR, scenario_def)
-                            scenario.run()
-                            if peer_name == "existing":
-                                existing_result = scenario.waitAndEvaluate()
-                            else:
-                                nonexisting_result = scenario.waitAndEvaluate()
-                            self.reset_timeout()
-                        if nonexisting_result != existing_result:
-                            values = [general_nat, peer_nat, rport_specified, port_matches_via]
-                            logger.debug("Failed global_nat=%s peer_nat=%s rport_sepcified=%s port_matches_via=%s" % (self.get_nat_value(general_nat),self. get_nat_value(peer_nat), rport_specified, port_matches_via))
-                            self.failures.append(compute_value(values))
+                            scenario_def = {'-s': peer_name, 'scenario': 'register.xml', '-p': '5061', '-recv_timeout': '1000', '-inf': INJECT_FILE}
+                            sequence.register_scenario(SIPpScenario(TEST_DIR, scenario_def))
+                            self.__scenario_values.append([general_nat, peer_nat, rport_specified, port_matches_via])
 
-        # order of variables is least significant first!
-        qm = QM(["port_matches_via", "rport_specified", "peer_nat", "general_nat"])
-        logger.debug("Failures: %s" % (self.failures,))
-        try:
-            if self.failures == expected_failures[self.ast[0].ast_version.branch]:
-                self.passed = True
-                logger.info(qm.get_function(qm.solve(self.failures, [])[1]))
-            else:
-                logger.warn(qm.get_function(qm.solve(self.failures, [])[1]))
-        except KeyError:
-            log.error("We don't know the expected failures for branch: %s\n" % (self.ast[0].ast_version.branch,))
-            self.passed = True
-
-        reactor.stop()
+        values = self.__scenario_values[0]
+        self.update_config(values[0], values[1])
+        self.update_inject_file(values[2], values[3])
+        sequence.execute()
 
     def ami_connect(self, ami):
         logger.debug("Connected to AMI")

@@ -8,13 +8,12 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
 
-import re
 import subprocess
 import sys
 import unittest
 sys.path.append("lib/python")
 
-import utils
+import TestSuiteUtils
 
 class SIPpVersion:
     """A SIPp Version.
@@ -35,7 +34,7 @@ class SIPpVersion:
         self.pcap = False
 
         if version is None and feature is None:
-            sipp = utils.which("sipp")
+            sipp = TestSuiteUtils.which("sipp")
             if sipp is None:
                return
 
