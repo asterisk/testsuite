@@ -661,7 +661,7 @@ class Asterisk:
         dirs_only = [ "astrundir", "astlogdir", "astspooldir" ]
         if ast_dir_name in dirs_only:
             return
-        blacklist = [ "astdb" ]
+        blacklist = [ "astdb", "astdb.sqlite3" ]
         for dirname, dirnames, filenames in os.walk(ast_dir_path):
             for filename in filenames:
                 target = "%s/%s" % (self.base, os.path.join(ast_dir_path,
