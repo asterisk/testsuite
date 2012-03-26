@@ -13,6 +13,7 @@ import logging.config
 import os
 import datetime
 import time
+import traceback
 from twisted.internet import reactor, defer
 from twisted.python import failure
 from starpy import manager, fastagi
@@ -346,7 +347,7 @@ class TestCase(object):
         if (self.reactor_timeout > 0):
             self.timeoutId = reactor.callLater(self.reactor_timeout, self.__reactor_timeout)
 
-    def ami_login_error(self, ami):
+    def ami_login_error(self, reason):
         """
         Handler for login errors into AMI.  This will stop the test.
 
@@ -354,9 +355,10 @@ class TestCase(object):
         ami -- The instance of AMI that raised the login error
 
         """
-        logger.error("Error logging into AMI")
+        logger.error("Error logging into AMI: %s" % reason.getErrorMessage())
+        logger.error(reason.getTraceback())
         self.stop_reactor()
-        return failure.Failure()
+        return reason
 
     def ami_connect(self, ami):
         """
@@ -368,7 +370,13 @@ class TestCase(object):
     def __ami_connect(self, ami):
         logger.info("AMI Connect instance %s" % (ami.id + 1))
         self.ami[ami.id] = ami
-        self.ami_connect(ami)
+        try:
+            self.ami_connect(ami)
+        except:
+            logger.error("Exception raised in ami_connect:")
+            logger.error(traceback.format_exc())
+            self.stop_reactor()
+        return ami
 
     def pcap_callback(self, packet):
         """
@@ -388,7 +396,7 @@ class TestCase(object):
         Keyword arguments:
         reason -- The reason the originate failed
         """
-        logger.error("Error sending originate:")
+        logger.error("Error sending originate: %s" % reason.getErrorMessage())
         logger.error(reason.getTraceback())
         self.stop_reactor()
         return reason
