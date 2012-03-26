@@ -14,6 +14,7 @@ import os
 import datetime
 import time
 from twisted.internet import reactor, defer
+from twisted.python import failure
 from starpy import manager, fastagi
 
 from asterisk import Asterisk
@@ -355,6 +356,7 @@ class TestCase(object):
         """
         logger.error("Error logging into AMI")
         self.stop_reactor()
+        return failure.Failure()
 
     def ami_connect(self, ami):
         """
