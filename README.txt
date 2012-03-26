@@ -157,11 +157,16 @@ Optional (needed by specific tests):
         - libpcap and yappcap
             - Install the libpcap development library package for your system
               (libpcap-dev for Debian-based distros, pcap-devel for Red Hat)
+	    - Install cython
             - Download yappcap from:
               https://github.com/otherwiseguy/yappcap/tarball/master
             - tar -xvzf otherwiseguy-yappcap*.tar.gz
             - cd otherwiseguy-yappcap*
             - make && sudo make install
+	    - Note that if you install these packages, you'll need to
+              execute tests in the testsuite using an account with
+              privileges to do raw packet captures ('root', of course,
+              but other accounts may work on your system).
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -177,7 +182,6 @@ Get the Asterisk source tree you want to test:
 Build and install it.
     $ ./configure && make
     $ make install
-    $ make samples
 
 Check out the test suite inside of the Asterisk source tree.  In this case, we
 will have the testsuite directory inside of the asterisk-trunk directory.
