@@ -1,0 +1,12 @@
+testinfo:
+    summary:     'Get a baseline for Bridge operations'
+    description: |
+        'This tests the bridging of two local channels using the Bridge application.
+         If successful, a BridgeExec event is sent which the test checks for the
+         expected results.  The test passes if the event indicates a successful bridge
+         and if the channels is the bridge are the expected channels.'
+
+properties:
+    minversion: '1.6.2'
+    tags:
+        - bridge
