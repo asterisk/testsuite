@@ -13,7 +13,7 @@ import logging
 sys.path.append("lib/python")
 from TestCase import TestCase
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 class SimpleTestCase(TestCase):
     '''The base class for extremely simple tests requiring only a spawned call
@@ -28,19 +28,11 @@ class SimpleTestCase(TestCase):
         self.create_asterisk()
 
     def ami_connect(self, ami):
-        LOGGER.info("Initiating call to local/100@test on Echo() for simple test")
+        logger.info("Initiating call to local/100@test on Echo() for simple test")
 
         ami.registerEvent('UserEvent', self.__event_cb)
         ami.registerEvent('Newchannel', self.__channel_cb)
-        df = ami.originate("local/100@test", application="Echo")
-
-        def handle_failure(reason):
-            LOGGER.info("error sending originate:")
-            LOGGER.info(reason.getTraceback())
-            self.stop_reactor()
-            return reason
-
-        df.addErrback(handle_failure)
+        ami.originate("local/100@test", application="Echo").addErrback(handleOriginationFailure)
 
     def __channel_cb(self, ami, event):
         if not self.hangup_chan:
@@ -51,13 +43,13 @@ class SimpleTestCase(TestCase):
             self.event_count += 1
             if self.event_count == self.expected_events:
                 self.passed = True
-                LOGGER.info("Test ending, hanging up channel")
+                logger.info("Test ending, hanging up channel")
                 self.ami[0].hangup(self.hangup_chan).addCallbacks(
                     self.hangup)
 
     def hangup(self, result):
         '''Now that the channels are hung up, the test can be ended'''
-        LOGGER.info("Hangup complete, stopping reactor")
+        logger.info("Hangup complete, stopping reactor")
         self.stop_reactor()
 
     def verify_event(self, event):
