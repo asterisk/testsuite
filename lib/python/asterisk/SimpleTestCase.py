@@ -32,7 +32,7 @@ class SimpleTestCase(TestCase):
 
         ami.registerEvent('UserEvent', self.__event_cb)
         ami.registerEvent('Newchannel', self.__channel_cb)
-        ami.originate("local/100@test", application="Echo").addErrback(handleOriginateFailure)
+        ami.originate("local/100@test", application="Echo").addErrback(self.handleOriginateFailure)
 
     def __channel_cb(self, ami, event):
         if not self.hangup_chan:
