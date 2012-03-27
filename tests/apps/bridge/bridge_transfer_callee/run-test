@@ -1,0 +1,118 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+'''
+Copyright (C) 2012, Digium, Inc.
+Jonathan Rose <jrose@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+import sys
+import os
+import logging
+import re
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.TestCase import TestCase
+
+logger = logging.getLogger(__name__)
+
+class BridgeTransferTest(TestCase):
+
+    def __init__(self):
+        TestCase.__init__(self)
+        self.current_test = 0
+        self.total_tests = 4
+        self.create_asterisk()
+
+    def run(self):
+        TestCase.run(self)
+        self.create_ami_factory()
+
+    def ami_connect(self, ami):
+        TestCase.ami_connect(self, ami)
+        """ Register for all events we care about """
+
+        ami.registerEvent("UserEvent", self.user_event)
+        ami.registerEvent("BridgeExec", self.bridge_event)
+        #originate the bridgee
+        df = ami.originate(channel = "Local/local@call1", exten = "call", context = "test_context", priority = 1)
+        df.addErrback(self.handleOriginateFailure)
+
+    def user_event(self, ami, event):
+        if (event['userevent'] == 'StartBridge'):
+            self.start_next_test(ami)
+        elif (event['userevent'] == 'Alpha'):
+            self.process_test_event(ami, event)
+
+    def start_next_test(self, ami):
+        df = ami.originate(channel = "Local/local@call2", exten = "bridge%d" % self.current_test, context = "test_context", priority = 1)
+        df.addErrback(self.handleOriginateFailure)
+
+    def process_test_event(self, ami, event):
+        #evaluate pass/failure
+        logger.info("event: %s" % event)
+
+        if (event.get('test') != "%d" % self.current_test):
+            logger.error("test %d event didn't match expected test number. Test Failed." % self.current_test)
+            self.stop_reactor()
+            return
+
+        if (event.get('status') != "SUCCESS"):
+            logger.error("test %d event did not specify SUCCESS. Test Failed." % self.current_test)
+            self.stop_reactor()
+            return
+
+        channel = event.get('channel')
+        if channel is None:
+            logger.error("test %d did not include a channel in test event.")
+            self.stop_reactor()
+            return
+
+        if not self.match_starts("Local/local@call1-", channel):
+            logger.error("test %d SUCCESS was placed on the wrong channel. Test Failed." % self.current_test)
+            self.stop_reactor()
+            return
+
+        #get first call for next test set up
+        self.current_test = self.current_test + 1
+        if (self.current_test < self.total_tests):
+            df = ami.originate(channel = "Local/local@call1", exten = "call", context = "test_context", priority = 1)
+            df.addErrback(self.handleOriginateFailure)
+        else:
+            logger.info("All Bridge Transfer tests complete. Test Successful.")
+            self.passed = True
+            self.stop_reactor()
+
+    def bridge_event(self, ami, event):
+        if (event.get('response') == 'Success'):
+            channel = event.get('channel1')
+            if channel is not None:
+                ami.hangup(channel)
+            else:
+                logger.error("bridge event didn't include a channel1. That's not supposed to happen.")
+        else:
+            logger.error("A bridge failed. That's rather abnormal.")
+
+    def match_starts(self, string1, string2):
+        pattern = re.compile(string1)
+        if not (pattern.match(string2)):
+            return False
+        else:
+            return True
+
+
+def main():
+    test = BridgeTransferTest()
+    reactor.run()
+
+    if (test.passed):
+        return 0
+    else:
+        return 1
+
+if __name__ == "__main__":
+   sys.exit(main() or 0)

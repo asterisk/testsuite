@@ -1,0 +1,13 @@
+testinfo:
+    summary:     'Test transfer bridgee after bridger hangup [F()] option for Bridge'
+    description: |
+        'This test verifies that when the F option is used to bridge two channels and
+         the appropriate channel hangs up first that the other channel will be directed
+         to the appropriate extension based on the arguments of F. The test passes if
+         it reaches all of the expected pass events on the appropriate channel in the
+         correct order.'
+
+properties:
+    minversion: '11'
+    tags:
+        - bridge
