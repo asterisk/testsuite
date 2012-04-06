@@ -148,7 +148,6 @@ class SIPpScenario:
         def __output_callback(result):
             """ Callback from getProcessOutputAndValue """
             out, err, code = result
-            logger.debug(out)
             logger.debug("Launching SIPp Scenario %s exited %d"
                 % (self.scenario['scenario'], code))
             if (code == 0):
