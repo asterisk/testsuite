@@ -4,7 +4,7 @@
 This module provides an interface for creating instances of Asterisk
 from within python code.
 
-Copyright (C) 2010, Digium, Inc.
+Copyright (C) 2010-2012, Digium, Inc.
 Russell Bryant <russell@digium.com>
 
 This program is free software, distributed under the terms of
@@ -43,8 +43,9 @@ class AsteriskCliCommand():
         the location of the Asterisk executable; each subsequent argument should define
         the CLI command to run and the instance of Asterisk to run it against.
         """
-        self.__host = host
+        self.host = host
         self.__cmd = cmd
+        self.cli_cmd = cmd[4]
         self.exitcode = -1
         self.output = ""
         self.err = ""
@@ -58,7 +59,7 @@ class AsteriskCliCommand():
         def __cli_output_callback(result):
             """ Callback from getProcessOutputAndValue """
             self.__set_properties(result)
-            logger.debug("Asterisk CLI %s exited %d" % (self.__host, self.exitcode))
+            logger.debug("Asterisk CLI %s exited %d" % (self.host, self.exitcode))
             if self.exitcode:
                 self.__deferred.errback(self)
             else:
@@ -67,7 +68,7 @@ class AsteriskCliCommand():
         def __cli_error_callback(result):
             """ Errback from getProcessOutputAndValue """
             self.__set_properties(result)
-            logger.warning("Asterisk CLI %s exited %d with error: %s" % (self.__host, self.exitcode, self.err))
+            logger.warning("Asterisk CLI %s exited %d with error: %s" % (self.host, self.exitcode, self.err))
             self.__deferred.errback(self)
 
         self.__deferred = defer.Deferred()
@@ -240,6 +241,7 @@ class Asterisk:
                 logger.error("Asterisk core waitfullybooted for %s failed" % self.host)
                 self.__start_deferred.errback("Command core waitfullybooted failed")
             else:
+                logger.debug(cli_command.output)
                 logger.debug("Asterisk core waitfullybooted failed, attempting again...")
                 cli_deferred = self.cli_exec("core waitfullybooted")
                 cli_deferred.addCallbacks(__wait_fully_booted_callback, __wait_fully_booted_error)
