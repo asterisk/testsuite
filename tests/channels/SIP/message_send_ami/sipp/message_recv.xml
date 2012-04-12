@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Authenticated MESSAGE send and receive from Johnny Appleseed">
+  <recv request="MESSAGE" crlf="true">
+    <action>
+      <!-- Check that the From header is what we expect. -->
+      <!-- NOTE: The regexp action must assign_to a variable and that variable must be used. -->
+      <ereg regexp=".*" search_in="hdr" header="From:" check_it="true" assign_to="1" />
+      <log message="Received MESSAGE From header: [$1]." />
+      <ereg regexp=" \"Johnny Appleseed\" <sip:9876@" search_in="hdr" header="From:" check_it="true" assign_to="2" />
+      <log message="Using assigned value because I must: [$2]." />
+      <!-- Check that the X-Custom-Header header is what we expect. -->
+      <ereg regexp=".*" search_in="hdr" header="X-Custom-Header:" check_it="true" assign_to="1" />
+      <log message="Received MESSAGE X-Custom-Header header: [$1]." />
+      <ereg regexp="Custom shopping" search_in="hdr" header="X-Custom-Header:" check_it="true" assign_to="2" />
+      <log message="Using assigned value because I must: [$2]." />
+    </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+      SIP/2.0 401 Unauthorized
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      WWW-Authenticate: digest realm="test",stale=true
+
+    ]]>
+  </send>
+
+  <recv request="MESSAGE" crlf="true">
+    <action>
+      <!-- Check that the From header is what we expect. -->
+      <!-- NOTE: The regexp action must assign_to a variable and that variable must be used. -->
+      <ereg regexp=".*" search_in="hdr" header="From:" check_it="true" assign_to="1" />
+      <log message="Received MESSAGE From header: [$1]." />
+      <ereg regexp=" \"Johnny Appleseed\" <sip:9876@" search_in="hdr" header="From:" check_it="true" assign_to="2" />
+      <log message="Using assigned value because I must: [$2]." />
+      <!-- Check that the X-Custom-Header header is what we expect. -->
+      <ereg regexp=".*" search_in="hdr" header="X-Custom-Header:" check_it="true" assign_to="1" />
+      <log message="Received MESSAGE X-Custom-Header header: [$1]." />
+      <ereg regexp="Custom shopping" search_in="hdr" header="X-Custom-Header:" check_it="true" assign_to="2" />
+      <log message="Using assigned value because I must: [$2]." />
+    </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+      SIP/2.0 202 Accepted
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, SUBSCRIBE, NOTIFY, INFO, PUBLISH
+      Supported: replaces, timer
+      Content-Length: 0
+
+    ]]>
+  </send>
+</scenario>

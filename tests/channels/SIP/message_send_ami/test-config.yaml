@@ -1,0 +1,17 @@
+testinfo:
+    skip : 'Must wait until mmichelson's trunk-digiumphones branch is merged.'
+    summary: 'Test handling an AMI MessageSend action'
+    description: |
+        This tests the AMI action MessageSend to see if it sends a SIP MESSAGE.
+
+properties:
+    minversion: '11'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+    testconditions:
+        - name: 'threads'
+          ignoredThreads:
+            - 'autoservice_run'
+    tags:
+        - SIP
