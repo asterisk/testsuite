@@ -60,6 +60,9 @@ class AsteriskCliCommand():
             """ Callback from getProcessOutputAndValue """
             self.__set_properties(result)
             logger.debug("Asterisk CLI %s exited %d" % (self.host, self.exitcode))
+            logger.debug(self.output)
+            if self.err:
+                logger.debug(self.err)
             if self.exitcode:
                 self.__deferred.errback(self)
             else:
@@ -69,6 +72,9 @@ class AsteriskCliCommand():
             """ Errback from getProcessOutputAndValue """
             self.__set_properties(result)
             logger.warning("Asterisk CLI %s exited %d with error: %s" % (self.host, self.exitcode, self.err))
+            logger.debug(self.output)
+            if self.err:
+                logger.debug(self.err)
             self.__deferred.errback(self)
 
         self.__deferred = defer.Deferred()
@@ -241,7 +247,6 @@ class Asterisk:
                 logger.error("Asterisk core waitfullybooted for %s failed" % self.host)
                 self.__start_deferred.errback("Command core waitfullybooted failed")
             else:
-                logger.debug(cli_command.output)
                 logger.debug("Asterisk core waitfullybooted failed, attempting again...")
                 cli_deferred = self.cli_exec("core waitfullybooted")
                 cli_deferred.addCallbacks(__wait_fully_booted_callback, __wait_fully_booted_error)
