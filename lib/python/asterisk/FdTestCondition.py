@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-Copyright (C) 2011, Digium, Inc.
+Copyright (C) 2011-2012, Digium, Inc.
 Matt Jordan <mjordan@digium.com>
 
 This program is free software, distributed under the terms of
@@ -11,6 +11,7 @@ import logging
 import logging.config
 import unittest
 
+from twisted.internet import defer
 from TestConditions import TestCondition
 
 logger = logging.getLogger(__name__)
@@ -47,73 +48,83 @@ class FdTestCondition(TestCondition):
         self.add_build_option("DEBUG_FD_LEAKS", "1")
 
     def get_file_descriptors(self, ast):
-        if ast == None:
-            return
+        def __show_fd_callback(result):
+            lines = result.output
+            if 'No such command' in lines:
+                return result
+            if 'Unable to connect to remote asterisk' in lines:
+                return result
 
-        lines = ast.cli_exec("core show fd")
-        if 'No such command' in lines:
-            return
-        if 'Unable to connect to remote asterisk' in lines:
-            return
+            """ Trim off the first and last lines """
+            lines = lines[lines.find('\n'):].strip()
+            lines = lines[:lines.find("Asterisk ending")].strip()
+            line_tokens = lines.split('\n')
+            fds = []
+            for line in line_tokens:
+                # chan_sip is going to create sockets for the active channels and won't close them until
+                # the dialog is reclaimed - 32 seconds after the test.  We ignore the UDP socket file
+                # descriptors because of this.
+                if 'socket(PF_INET,SOCK_DGRAM,"udp")' in line:
+                    logger.debug("Ignoring created UDP socket: " + line)
+                    continue
+                # If we have MALLOC_DEBUG on and are writing out to the mmlog, ignore
+                if '__ast_mm_init' in line:
+                    logger.debug("Ignoring malloc debug: " + line)
+                    continue
+                fd = FileDescriptor(line)
+                if fd.number != -1:
+                    logger.debug("Tracking %d [%s]", fd.number, fd.info)
+                    fds.append(fd)
+                else:
+                    logger.warn("Failed to parse [%s] into file descriptor object" % line)
+            self.file_descriptors[result.host] = fds
 
-        """ Trim off the first and last lines """
-        lines = lines[lines.find('\n'):].strip()
-        lines = lines[:lines.find("Asterisk ending")].strip()
-        line_tokens = lines.split('\n')
-        fds = []
-        for line in line_tokens:
-            """
-            chan_sip is going to create sockets for the active channels and won't close them until
-            the dialog is reclaimed - 32 seconds after the test.  We ignore the UDP socket file
-            descriptors because of this.
-            """
-            if 'socket(PF_INET,SOCK_DGRAM,"udp")' in line:
-                logger.debug("Ignoring created UDP socket: " + line)
-                continue
-            """
-            If we have MALLOC_DEBUG on and are writing out to the mmlog, ignore
-            """
-            if '__ast_mm_init' in line:
-                logger.debug("Ignoring malloc debug: " + line)
-                continue
-            fd = FileDescriptor(line)
-            if fd.number != -1:
-                logger.debug("Tracking %d [%s]", fd.number, fd.info)
-                fds.append(fd)
-            else:
-                logger.warn("Failed to parse [%s] into file descriptor object" % line)
-        self.file_descriptors[ast.host] = fds
+        return ast.cli_exec("core show fd").addCallback(__show_fd_callback)
 
 class FdPreTestCondition(FdTestCondition):
     def evaluate(self, related_test_condition = None):
-        for ast in self.ast:
-            super(FdPreTestCondition, self).get_file_descriptors(ast)
+        def __raise_finished(result):
+            self.__finished_deferred.callback(self)
+            return result
 
-        """
-        Automatically pass the pre-test condition - whatever file descriptors are currently
-        open are needed by Asterisk and merely expected to exist when the test is finished
-        """
+        #Automatically pass the pre-test condition - whatever file descriptors are currently
+        #open are needed by Asterisk and merely expected to exist when the test is finished
         super(FdPreTestCondition, self).passCheck()
+
+        defer.DeferredList([super(FdPreTestCondition, self).get_file_descriptors(ast)
+            for ast in self.ast]).addCallback(__raise_finished)
+
+        self.__finished_deferred = defer.Deferred()
+        return self.__finished_deferred
 
 class FdPostTestCondition(FdTestCondition):
     def evaluate(self, related_test_condition = None):
+        def __file_descriptors_obtained(result):
+            for ast_host in related_test_condition.file_descriptors.keys():
+                if not ast_host in self.file_descriptors:
+                    super(FdPostTestCondition, self).failCheck("Asterisk host in pre-test check [%s]"
+                        " not found in post-test check" % ast_host)
+                else:
+                    # Find all file descriptors in pre-check not in post-check
+                    for fd in related_test_condition.file_descriptors[ast_host]:
+                        if (len([f for f in self.file_descriptors[ast_host] if fd.number == f.number]) == 0):
+                            super(FdPostTestCondition, self).failCheck("Failed to find file descriptor %d [%s] in "
+                                "post-test check" % (fd.number, fd.info))
+                    # Find all file descriptors in post-check not in pre-check
+                    for fd in self.file_descriptors[ast_host]:
+                        if (len([f for f in related_test_condition.file_descriptors[ast_host] if fd.number == f.number]) == 0):
+                            super(FdPostTestCondition, self).failCheck("Failed to find file descriptor %d [%s] in "
+                            "pre-test check" % (fd.number, fd.info))
+            super(FdPostTestCondition, self).passCheck()
+            self.__finished_deferred.callback(self)
+            return result
+
         if related_test_condition == None:
             super(FdPostTestCondition, self).failCheck("No pre-test condition object provided")
             return
 
-        for ast in self.ast:
-            super(FdPostTestCondition, self).get_file_descriptors(ast)
+        defer.DeferredList([super(FdPostTestCondition, self).get_file_descriptors(ast) for ast in self.ast]
+                           ).addCallback(__file_descriptors_obtained)
+        self.__finished_deferred = defer.Deferred()
+        return self.__finished_deferred
 
-        for ast_host in related_test_condition.file_descriptors.keys():
-            if not ast_host in self.file_descriptors:
-                super(FdPostTestCondition, self).failCheck("Asterisk host in pre-test check [%s] not found in post-test check" % ast_host)
-            else:
-                for fd in related_test_condition.file_descriptors[ast_host]:
-                    match = [f for f in self.file_descriptors[ast_host] if fd.number == f.number]
-                    if (len(match) == 0):
-                        super(FdPostTestCondition, self).failCheck("Failed to find file descriptor %d [%s] in post-test check" % (fd.number, fd.info))
-                for fd in self.file_descriptors[ast_host]:
-                    match = [f for f in related_test_condition.file_descriptors[ast_host] if fd.number == f.number]
-                    if (len(match) == 0):
-                        super(FdPostTestCondition, self).failCheck("Failed to find file descriptor %d [%s] in pre-test check" % (fd.number, fd.info))
-        super(FdPostTestCondition, self).passCheck()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-Copyright (C) 2011, Digium, Inc.
+Copyright (C) 2011-2012, Digium, Inc.
 Matt Jordan <mjordan@digium.com>
 
 This program is free software, distributed under the terms of
@@ -13,6 +13,7 @@ import time
 
 from buildoptions import AsteriskBuildOptions
 from TestConfig import TestConfig
+from twisted.internet import defer
 
 logger = logging.getLogger(__name__)
 
@@ -105,33 +106,75 @@ class TestConditionController(object):
     def evaluate_pre_checks(self):
         """
         Evaluate the pre-test conditions
+
+        Returns:
+        A deferred that will be raised when all pre-checks have finished,
+        or None if no pre-checks exist
         """
-        if (len(self.__prechecks) > 0):
-            logger.debug("Evaluating pre checks")
-            self.__evaluate_checks(self.__prechecks)
+        if (not self.__prechecks):
+            return None
+
+        logger.debug("Evaluating pre checks")
+        self.__finished_deferred = defer.Deferred()
+        self.__evaluate_check(self.__prechecks, 0)
+        return self.__finished_deferred
 
     def evaluate_post_checks(self):
         """
         Evaluate the post-test conditions
-        """
-        if (len(self.__postchecks) > 0):
-            time.sleep(10)
-            logger.debug("Evaluating post checks")
-            self.__evaluate_checks(self.__postchecks)
 
-    def __evaluate_checks(self, check_list):
+        Returns:
+        A deferred that will be raised when all post-checks have finished,
+        or None if no post-checks exist
+        """
+        if (not self.__postchecks):
+            return None
+
+        logger.debug("Evaluating post checks")
+        self.__finished_deferred = defer.Deferred()
+        self.__evaluate_check(self.__postchecks, 0)
+        return self.__finished_deferred
+
+    def __evaluate_check(self, check_list, counter):
         """ Register the instances of Asterisk and evaluate """
-        for check in check_list:
-            if (check[0].check_build_options()):
-                for ast in self.__ast:
-                    check[0].register_asterisk_instance(ast)
-                if (check[0].getEnabled()):
-                    logger.debug("Evaluating %s" % check[0].getName())
-                    if (check[1] != None):
-                        check[0].evaluate(check[1])
-                    else:
-                        check[0].evaluate()
-                    self.__check_observers(check[0])
+        def __evaluate_callback(result):
+            self.__check_observers(result)
+            self.__check_list_counter += 1
+            self.__evaluate_check(self.__check_list, self.__check_list_counter)
+            return result
+
+        def __evaluate_errback(result):
+            logger.warning("Failed to evaluate condition check %s" % str(result))
+            self.__check_observers(result)
+            self.__check_list_counter += 1
+            self.__evaluate_check(self.__check_list, self.__check_list_counter)
+            return result
+
+        if (counter >= len(check_list)):
+            # All done - raise the finished deferred
+            self.__finished_deferred.callback(self)
+            return
+
+        self.__check_list = check_list
+        self.__check_list_counter = counter
+        # A check object is a tuple of a pre/post condition check, and either
+        # a matching check object used in the evaluation, or None
+        check = check_list[counter]
+
+        # Check to see if the build supports this condition check
+        if not (check[0].check_build_options()):
+            self.__check_list_counter += 1
+            self.__evaluate_check(self.__check_list, self.__check_list_counter)
+
+        for ast in self.__ast:
+            check[0].register_asterisk_instance(ast)
+        if (check[0].getEnabled()):
+            logger.debug("Evaluating %s" % check[0].getName())
+            if (check[1] != None):
+                df = check[0].evaluate(check[1])
+            else:
+                df = check[0].evaluate()
+            df.addCallbacks(__evaluate_callback, __evaluate_errback)
 
     def __check_observers(self, test_condition):
         for observerTuple in self.__observers:
@@ -227,11 +270,15 @@ class TestCondition(object):
 
         Derived classes must implement this method and check their test condition
         here.  If the test condition passes they should call passCheck, otherwise they
-        should call failCheck.
+        should call failCheck.  Each test condition must return a twisted deferred, and
+        raise a callback on the deferred when the condition is finished being evaluated.
+        They may raise an errback if a serious error occurs in the evaluation.
 
         Keyword arguments:
         related_test_condition -- A test condition object that is related to this one.  Provided if specified
             when this test condition is registered to the test condition controller.
+        Returns:
+        A twisted deferred object
         """
         pass
 

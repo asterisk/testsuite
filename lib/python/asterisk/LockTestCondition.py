@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-Copyright (C) 2011, Digium, Inc.
+Copyright (C) 2011-2012, Digium, Inc.
 Matt Jordan <mjordan@digium.com>
 
 This program is free software, distributed under the terms of
@@ -11,6 +11,7 @@ import logging
 import logging.config
 import unittest
 
+from twisted.internet import defer
 from TestConditions import TestCondition
 
 logger = logging.getLogger(__name__)
@@ -153,43 +154,55 @@ class LockTestCondition(TestCondition):
         self.add_build_option("DEBUG_THREADS", "1")
 
     def __get_locks(self, ast):
-        locks = ast.cli_exec("core show locks", True)
-        """ The first 6 lines are header information - look for a return thread ID """
-        if "=== Thread ID:" in locks:
-            locks = locks[locks.find("=== Thread ID:"):]
-            lockTokens = locks.split("=== -------------------------------------------------------------------")
-            for token in lockTokens:
-                if "Thread ID" in token:
-                    try:
-                        obj = LockSequence()
-                        obj.parseLockSequence(token)
-                        t = ast.host, obj
-                        self.locks.append(t)
-                    except:
-                        logger.warning("Unable to parse lock information into a manageable object:\n%s" % token)
+        """ Build the locks for an instance of Asterisk
+        Returns:
+        A deferred for when the locks are built for a given instance
+        """
+        def __show_locks_callback(result):
+            locks = result.output
+            # The first 6 lines are header information - look for a return thread ID
+            if "=== Thread ID:" in locks:
+                locks = locks[locks.find("=== Thread ID:"):]
+                lockTokens = locks.split("=== -------------------------------------------------------------------")
+                for token in lockTokens:
+                    if "Thread ID" in token:
+                        try:
+                            obj = LockSequence()
+                            obj.parseLockSequence(token)
+                            t = result.host, obj
+                            self.locks.append(t)
+                        except:
+                            logger.warning("Unable to parse lock information into a manageable object:\n%s" % token)
+            return result
+
+        return ast.cli_exec("core show locks").addCallback(__show_locks_callback)
 
     def evaluate(self, related_test_condition = None):
-        """ Build up the locks for each instance of asterisk """
-        for ast in self.ast:
-            self.__get_locks(ast)
+        def __lock_info_obtained(result):
+            if (len(self.locks) > 0):
+                """
+                Sometimes, a lock will be held at the end of a test run (typically a logger RDLCK).  Only
+                report a held lock as a failure if the thread is waiting for another lock - that would
+                indicate that we may be in a deadlock situation.  Since that shouldnt happen either
+                before or after a test run, treat that as an error.
+                """
+                for lockPair in self.locks:
+                    logger.info("Detected locks on Asterisk instance: %s" % lockPair[0])
+                    logger.info("Lock trace: %s" % str(lockPair[1]))
+                    for lock in lockPair[1].locks:
+                        if not lock.held:
+                            super(LockTestCondition, self).failCheck("Lock detected in a waiting state")
 
-        if (len(self.locks) > 0):
-            """
-            Sometimes, a lock will be held at the end of a test run (typically a logger RDLCK).  Only
-            report a held lock as a failure if the thread is waiting for another lock - that would
-            indicate that we may be in a deadlock situation.  Since that shouldnt happen either
-            before or after a test run, treat that as an error.
-            """
-            for lockPair in self.locks:
-                logger.info("Detected locks on Asterisk instance: %s" % lockPair[0])
-                logger.info("Lock trace: %s" % str(lockPair[1]))
-                for lock in lockPair[1].locks:
-                    if not lock.held:
-                        super(LockTestCondition, self).failCheck("Lock detected in a waiting state")
+            if super(LockTestCondition, self).getStatus() == 'Inconclusive':
+                super(LockTestCondition, self).passCheck()
+            self.__finished_deferred.callback(self)
+            return result
 
-        if super(LockTestCondition, self).getStatus() == 'Inconclusive':
-            super(LockTestCondition, self).passCheck()
-
+        # Build up the locks for each instance of asterisk
+        defer.DeferredList([self.__get_locks(ast) for ast in self.ast]
+                           ).addCallback(__lock_info_obtained)
+        self.__finished_deferred = defer.Deferred()
+        return self.__finished_deferred
 
 class AstMockObjectPassed(object):
     def __init__(self):

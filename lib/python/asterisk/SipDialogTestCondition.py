@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-Copyright (C) 2011, Digium, Inc.
+Copyright (C) 2011-2012, Digium, Inc.
 Matt Jordan <mjordan@digium.com>
 
 This program is free software, distributed under the terms of
@@ -14,6 +14,7 @@ import unittest
 
 from TestConditions import TestCondition
 from starpy import manager
+from twisted.internet import defer
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,8 @@ class SipDialogTestCondition(TestCondition):
 
     def __init__(self, test_config):
         super(SipDialogTestCondition, self).__init__(test_config)
+        # a dictionary of ast objects to a dictionary of SIP dialogs and a list of their history
+        self.dialogs_history = {}
 
     def __get_dialog_names(self, objects):
         inObjects = False
@@ -40,19 +43,48 @@ class SipDialogTestCondition(TestCondition):
         return dialogNames
 
     def get_sip_dialogs(self, ast):
-        dialogNames = []
-        dialogsHistory = {}
-        objects = ast.cli_exec("sip show objects", True)
-        dialogNames = self.__get_dialog_names(objects)
+        """ Build the dialog history and objects for a particular Asterisk instance """
+        def __show_objects_callback(result):
+            """ Callback for sip show objects """
+            logger.debug(result.output)
+            dialogNames = self.__get_dialog_names(result.output)
+            logger.debug(dialogNames)
+            if not dialogNames:
+                logger.debug("No SIP history found for Asterisk instance %s" % ast.host)
+                self.__finished_deferred.callback(self.__ast)
+                return result
 
-        for dn in dialogNames:
-            logger.debug("Retrieving history for SIP dialog %s" % dn)
-            rawHistory = ast.cli_exec("sip show history %s" % dn, True)
+            deferds = []
+            self.__history_requests = []
+            for dn in dialogNames:
+                logger.debug("Retrieving history for SIP dialog %s" % dn)
+                cmd = "sip show history %s" % dn
+                self.__history_requests.append(cmd)
+                deferds.append(ast.cli_exec(cmd).addCallback(__show_history_callback))
+            defer.DeferredList(deferds).addCallback(__history_complete)
+            return result
+
+        def __show_history_callback(result):
+            """ Callback for sip show history """
+            # Get the Call ID from the result
+            call_id = result.cli_cmd.replace("sip show history", "").strip()
+            rawHistory = result.output
+            logger.debug(result.output)
             if 'No such SIP Call ID' not in rawHistory:
-                """ dialog got disposed before we could get its history; ignore """
-                dialogsHistory[dn] = rawHistory.split('\n')
+                # dialog got disposed before we could get its history; ignore
+                self.dialogs_history[self.__ast.host][call_id] = rawHistory.split('\n')
+            return result
 
-        return dialogsHistory
+        def __history_complete(result):
+            self.__finished_deferred.callback(self.__ast)
+            return result
+
+        self.__ast = ast
+        self.dialogs_history[self.__ast.host] = {}
+        self.__finished_deferred = defer.Deferred()
+        ast.cli_exec("sip show objects").addCallback(__show_objects_callback)
+
+        return self.__finished_deferred
 
 class SipDialogPreTestCondition(SipDialogTestCondition):
     """
@@ -64,17 +96,38 @@ class SipDialogPreTestCondition(SipDialogTestCondition):
         super(SipDialogPreTestCondition, self).__init__(test_config)
 
     def evaluate(self, related_test_condition = None):
-        for ast in self.ast:
-            ast.cli_exec("sip set history on")
-            dialogsHistory = super(SipDialogPreTestCondition, self).get_sip_dialogs(ast)
+        def __history_finished(result):
+            for ast in self.ast:
+                if ast.host == result.host:
+                    __get_dialogs(ast)
+                    return result
+            logger.warning("Unable to determine Asterisk instance from CLI command run on host %s" % result.host)
+            return result
 
+        def __get_dialogs(ast):
+            super(SipDialogPreTestCondition, self).get_sip_dialogs(ast).addCallback(__dialogs_obtained)
+
+        def __dialogs_obtained(result):
+            dialogsHistory = self.dialogs_history[result.host]
             if len(dialogsHistory) > 0:
-                """ If any dialogs are present before test execution, something funny is going on """
+                # If any dialogs are present before test execution, something funny is going on
                 super(SipDialogPreTestCondition, self).failCheck(
-                    "%d dialogs were detected in Asterisk %s before test execution" % (len(dialogsHistory), ast.host))
+                    "%d dialogs were detected in Asterisk %s before test execution"
+                    % (len(dialogsHistory), result.host))
             else:
                 super(SipDialogPreTestCondition, self).passCheck()
+            self.__counter += 1
+            if self.__counter == len(self.ast):
+                # All asterisk instances have been checked
+                self.__finished_deferred.callback(self)
+            return result
 
+        self.__counter = 0
+        self.__finished_deferred = defer.Deferred()
+        # Turn on history and check for dialogs
+        for ast in self.ast:
+            ast.cli_exec("sip set history on").addCallback(__history_finished) 
+        return self.__finished_deferred
 
 class SipDialogPostTestCondition(SipDialogTestCondition):
     """
@@ -97,37 +150,54 @@ class SipDialogPostTestCondition(SipDialogTestCondition):
             self.sipHistorySequence = test_config.config['sipHistoryRequirements']
 
     def evaluate(self, related_test_condition = None):
+        def __get_dialogs():
+            self.__counter += 1
+            if self.__counter == len(self.ast):
+                self.__finished_deferred.callback(self)
+                return
+            super(SipDialogPostTestCondition, self).get_sip_dialogs(
+                self.ast[self.__counter]).addCallback(__dialogs_obtained)
 
-        for ast in self.ast:
+        def __dialogs_obtained(result):
             sipHistoryRequirements = {}
-            dialogsHistory = super(SipDialogPostTestCondition, self).get_sip_dialogs(ast)
+            dialogsHistory = self.dialogs_history[self.ast[self.__counter].host]
+            if not dialogsHistory:
+                __get_dialogs()
+                return result
 
-            """ Set up the history statements to look for in each dialog history """
+            # Set up the history statements to look for in each dialog history
             for dialogName in dialogsHistory.keys():
                 sipHistoryCheck = {}
                 for h in self.sipHistorySequence:
                     sipHistoryCheck[h] = False
                 sipHistoryRequirements[dialogName] = sipHistoryCheck
 
-            """ Assume we pass the check.  This will be overriden if any history check fails """
+            # Assume we pass the check.  This will be overriden if any history check fails
             super(SipDialogPostTestCondition, self).passCheck()
-            if (len(dialogsHistory) > 0):
-                for dialog, history in dialogsHistory.items():
-                    scheduled = False
-                    for h in history:
-                        if "SchedDestroy" in h:
-                            scheduled = True
-                        for req in sipHistoryRequirements[dialog].keys():
-                            if req in h:
-                                sipHistoryRequirements[dialog][req] = True
-
-                    if not scheduled:
-                        super(SipDialogPostTestCondition, self).failCheck(
-                            "Dialog %s in Asterisk instance %s not scheduled for destruction" % (dialog, ast.host))
+            for dialog, history in dialogsHistory.items():
+                scheduled = False
+                for h in history:
+                    if "SchedDestroy" in h:
+                        scheduled = True
                     for req in sipHistoryRequirements[dialog].keys():
-                        if sipHistoryRequirements[dialog][req] == False:
-                            super(SipDialogPostTestCondition, self).failCheck(
-                                "Dialog %s in Asterisk instance %s did not have required step in history: %s" % (dialog, ast.host, req))
+                        if req in h:
+                            sipHistoryRequirements[dialog][req] = True
+                if not scheduled:
+                    super(SipDialogPostTestCondition, self).failCheck(
+                        "Dialog %s in Asterisk instance %s not scheduled for destruction"
+                        % (dialog, self.ast[self.__counter].host))
+                for req in sipHistoryRequirements[dialog].keys():
+                    if sipHistoryRequirements[dialog][req] == False:
+                        super(SipDialogPostTestCondition, self).failCheck(
+                            "Dialog %s in Asterisk instance %s did not have required step in history: %s"
+                            % (dialog, self.ast[self.__counter].host, req))
+            __get_dialogs()
+            return result
+
+        self.__finished_deferred = defer.Deferred()
+        self.__counter = -1
+        __get_dialogs()
+        return self.__finished_deferred
 
 class TestConfig(object):
     def __init__(self):

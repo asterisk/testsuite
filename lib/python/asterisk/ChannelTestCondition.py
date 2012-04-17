@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-Copyright (C) 2011, Digium, Inc.
+Copyright (C) 2011-2012, Digium, Inc.
 Matt Jordan <mjordan@digium.com>
 
 This program is free software, distributed under the terms of
@@ -11,6 +11,7 @@ import logging
 import logging.config
 import unittest
 
+from twisted.internet import defer
 from TestConditions import TestCondition
 
 logger = logging.getLogger(__name__)
@@ -32,10 +33,8 @@ class ChannelTestCondition(TestCondition):
             self.allowed_channels = test_config.config['allowedchannels']
 
     def evaluate(self, related_test_condition = None):
-        for ast in self.ast:
-            """ For logging / debug purposes, do a full core show channels """
-            channel_lines = ast.cli_exec('core show channels')
-            channel_tokens = channel_lines.strip().split('\n')
+        def __channel_callback(result):
+            channel_tokens = result.output.strip().split('\n')
             active_channels = 0
             for token in channel_tokens:
                 if 'active channels' in token:
@@ -43,7 +42,18 @@ class ChannelTestCondition(TestCondition):
                     active_channels = int(active_channel_tokens[0].strip())
             if active_channels > self.allowed_channels:
                 super(ChannelTestCondition, self).failCheck(
-                    'Detected number of active channels %d is greater than the allowed %d on Asterisk %s' % (active_channels, self.allowed_channels, ast.host))
-        """ Set to pass if we haven't detected any failures """
+                    'Detected number of active channels %d is greater than the allowed %d on Asterisk %s'
+                     % (active_channels, self.allowed_channels, result.host))
+            return result
+
+        def __raise_finished(result):
+            self.__finished_deferred.callback(self)
+            return result
+
+        self.__finished_deferred = defer.Deferred()
+        # Set to pass and let a failure override
         super(ChannelTestCondition, self).passCheck()
 
+        defer.DeferredList([ast.cli_exec('core show channels').addCallback(__channel_callback) for ast in self.ast]
+                           ).addCallback(__raise_finished)
+        return self.__finished_deferred

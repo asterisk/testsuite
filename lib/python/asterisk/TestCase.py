@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-Copyright (C) 2010, Digium, Inc.
+Copyright (C) 2010-2012, Digium, Inc.
 Paul Belanger <pabelanger@digium.com>
 
 This program is free software, distributed under the terms of
@@ -229,8 +229,11 @@ class TestCase(object):
 
         def __perform_pre_checks(result):
             """ Execute the pre-condition checks """
-            self.testConditionController.evaluate_pre_checks()
-            return result
+            df = self.testConditionController.evaluate_pre_checks()
+            if df is None:
+                return result
+            else:
+                return df
 
         def __run_callback(result):
             """ Notify the test that we are running """
@@ -280,24 +283,31 @@ class TestCase(object):
                     # This should already be called when the reactor is being terminated.
                     # If we couldn't stop the instance of Asterisk, there isn't much else to do
                     # here other then complain
+            self.__stop_deferred.callback(self)
             return result
 
-        # Call the overridable method
-        self.stop_asterisk()
+        def __stop_instances(result):
+            # Call the overridable method
+            self.stop_asterisk()
+            # Gather up the stopped defers; check success failure of stopping when
+            # all instances of Asterisk have stopped
+            stop_defers = []
+            for index, item in enumerate(self.ast):
+                logger.info("Stopping Asterisk instance %d" % (index + 1))
+                temp_defer = self.ast[index].stop()
+                stop_defers.append(temp_defer)
 
-        self.testConditionController.evaluate_post_checks()
+            d = defer.DeferredList(stop_defers, consumeErrors=True)
+            d.addCallback(__check_success_failure)
+            return result
 
-        # Gather up the stopped defers; check success failure of stopping when
-        # all instances of Asterisk have stopped
-        stop_defers = []
-        for index, item in enumerate(self.ast):
-            logger.info("Stopping Asterisk instance %d" % (index + 1))
-            temp_defer = self.ast[index].stop()
-            stop_defers.append(temp_defer)
-
-        d = defer.DeferredList(stop_defers, consumeErrors=True)
-        d.addCallback(__check_success_failure)
-        return d
+        self.__stop_deferred = defer.Deferred()
+        df = self.testConditionController.evaluate_post_checks()
+        if df:
+            df.addCallback(__stop_instances)
+        else:
+            __stop_instances(None)
+        return self.__stop_deferred
 
     def stop_reactor(self):
         """
