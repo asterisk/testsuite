@@ -145,7 +145,7 @@ class AsteriskVersion:
 
             try:
                 process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT)
+                        stderr=None)
                 version = process.stdout.read()
             except OSError as oe:
                 logger.error("OSError [%d]: %s" % (oe.errno, oe.strerror))
