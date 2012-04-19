@@ -1,0 +1,70 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2012, Digium, Inc.
+Walter Doekes <walter+asterisk@wjd.nu>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+sys.path.append("lib/python")
+from asterisk.CDRTestCase import CDRTestCase
+from asterisk.asterisk import Asterisk
+from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
+from twisted.internet import reactor
+import re
+
+class CDRUserFieldTest(CDRTestCase):
+    def __init__(self):
+
+        CDRTestCase.__init__(self)
+
+        # 3@default -> (answer)
+        # accountcode: third
+        self.add_expectation("Master", AsteriskCSVCDRLine(source="",
+            accountcode="third",
+            destination="3", dcontext="default", callerid="",
+            channel="Local/3@default-.*", dchannel="",
+            lastapp="Hangup", lastarg="",
+            disposition="ANSWERED", amaflags="DOCUMENTATION",
+        ))
+        # 2@default -> 3@default
+        # accountcode: initial
+        self.add_expectation("Master", AsteriskCSVCDRLine(source="",
+            accountcode="initial",
+            destination="2", dcontext="default", callerid="",
+            channel="Local/2@default-.*", dchannel="Local/3@default-.*",
+            lastapp="Dial", lastarg="Local/3@default",
+            disposition="ANSWERED", amaflags="DOCUMENTATION",
+        ))
+        # 1@default -> 2@default
+        # accountcode: initial
+        self.add_expectation("Master", AsteriskCSVCDRLine(source="",
+            accountcode="initial",
+            destination="1", dcontext="default", callerid="",
+            channel="Local/1@default-.*", dchannel="Local/2@default-.*",
+            lastapp="Dial", lastarg="Local/2@default",
+            disposition="ANSWERED", amaflags="DOCUMENTATION",
+        ))
+
+        # caller with Echo app
+        self.add_expectation("Master", AsteriskCSVCDRLine(source="",
+            accountcode="",
+            destination="1", dcontext="default", callerid="",
+            channel="Local/1@default-.*", dchannel="",
+            lastapp="Echo", lastarg="",
+            disposition="ANSWERED", amaflags="DOCUMENTATION",
+        ))
+
+def main():
+    test = CDRUserFieldTest()
+    test.start_asterisk()
+    reactor.run()
+    test.stop_asterisk()
+    return test.results()
+
+if __name__ == '__main__':
+    sys.exit(main())
+
+# vim: set ts=8 sw=4 sts=4 et ai:

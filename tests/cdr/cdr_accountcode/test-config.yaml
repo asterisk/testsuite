@@ -1,0 +1,15 @@
+testinfo:
+    summary: 'Test that Set(CDR(accountcode)=...) works'
+    description: |
+        'Test that the setting the accountcode field in the CDR works
+        and that it is passed to local dials.'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'cdr_csv'
+    tags:
+        - CDR
+        - chan_local

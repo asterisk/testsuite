@@ -9,6 +9,7 @@ tests:
     - test: 'console_fork_before_dial'
     - test: 'cdr_fork_end_time'
     - test: 'cdr_unanswered_yes'
+    - test: 'cdr_accountcode'
     - test: 'cdr_userfield'
     - test: 'nocdr'
     # Temporarily disabled while failures are debugged
