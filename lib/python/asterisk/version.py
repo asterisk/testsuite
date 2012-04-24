@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Asterisk Version String Handling
 
 This module implements an Asterisk version string parser.  It can also compare
@@ -32,6 +33,7 @@ class AsteriskVersion:
         version -- The Asterisk version string to parse.
         """
         self.svn = False
+        self.phone = None
 
         if version is not None:
             self.version_str = version
@@ -82,7 +84,8 @@ class AsteriskVersion:
         self.major = None
         self.minor = None
         self.patch = None
-        self.branch = "branch-%s" % self.concept
+        self.branch = self.__parse_version_branch("branch-%s" % self.concept)
+
         if len(parts) >= 2:
             self.major = parts[1]
         if len(parts) >= 3:
@@ -105,9 +108,13 @@ class AsteriskVersion:
                 self.version_str
         )
         if match is not None:
-            self.branch = match.group("branch")
+            self.branch = self.__parse_version_branch(match.group("branch"))
             self.revision = match.group("revision")
             self.parent = match.group("parent")
+
+    def __parse_version_branch(self, branch):
+        self.phone = '-digiumphones' in branch
+        return branch.replace("-digiumphones", "")
 
     def __parse_version_patch(self, patch):
         parts = patch.split("-")
@@ -129,6 +136,10 @@ class AsteriskVersion:
             ret = ret + 1000
 
         return ret
+
+    def is_same_branch(self, version):
+        if (version.branch == self.branch) and (version.phone == self.phone):
+            return True
 
     @classmethod
     def get_asterisk_version_from_binary(cls):
@@ -244,6 +255,23 @@ class AsteriskVersionTests(unittest.TestCase):
         self.assertEqual(str(v), "SVN-branch-10-r12345")
         self.assertEqual(v.branch, "branch-10")
         self.assertEqual(v.revision, "12345")
+        self.assertFalse(v.phone)
+
+    def test_svn_version6(self):
+        v = AsteriskVersion("SVN-branch-1.8-digiumphones-r357808-/branches/1.8")
+        self.assertTrue(v.svn)
+        self.assertEqual(v.branch, "branch-1.8")
+        self.assertEqual(v.revision, "357808")
+        self.assertEqual(v.parent, "/branches/1.8")
+        self.assertTrue(v.phone)
+
+    def test_svn_version7(self):
+        v = AsteriskVersion("SVN-branch-10-digiumphones-r365402-/branches/10")
+        self.assertTrue(v.svn)
+        self.assertEqual(v.branch, "branch-10")
+        self.assertEqual(v.revision, "365402")
+        self.assertEqual(v.parent, "/branches/10")
+        self.assertTrue(v.phone)
 
     def test_cmp(self):
         v1 = AsteriskVersion("1.4")
@@ -354,6 +382,7 @@ class AsteriskVersionTests(unittest.TestCase):
         v1 = AsteriskVersion("1.8.10")
         v2 = AsteriskVersion("SVN-branch-1.8-r360138M")
         self.assertTrue(v1 < v2)
+
 
 def main():
     unittest.main()

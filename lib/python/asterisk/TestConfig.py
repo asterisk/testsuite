@@ -84,6 +84,19 @@ class TestConditionConfig:
         return None
 
 
+class SkipTest:
+    def __init__(self, skip):
+        self.name = ""
+        self.met = True
+        if "branch" in skip:
+            self.name = skip["branch"]
+            tmp = "%s-%s-%s" % ("SVN-branch", skip["branch"], "r12345")
+            ast_version = AsteriskVersion()
+            version = AsteriskVersion(tmp)
+            if ast_version.is_same_branch(version):
+                self.met = False
+
+
 class Dependency:
     """
     This class checks and stores the dependencies for a particular Test.
@@ -245,6 +258,7 @@ class TestConfig:
         self.minversion = None
         self.minversion_check = False
         self.deps = []
+        self.skips = []
         self.tags = []
         self.expectPass = True
         self.excludedTests = []
@@ -322,6 +336,8 @@ class TestConfig:
                         properties["expectedResult"]
         if "tags" in properties:
             self.tags = properties["tags"]
+        if "skip" in properties:
+            self.skip = properties["skip"]
 
     def __parse_config(self):
         test_config = "%s/test-config.yaml" % self.test_name
@@ -410,6 +426,18 @@ class TestConfig:
             if d.met is False:
                 self.can_run = False
                 break
+        return self.can_run
+
+    def check_skip(self, ast_version):
+        if not self.config:
+            return False
+
+        self.skips = [
+            SkipTest(s)
+                for s in self.config["properties"].get("skip") or []
+        ]
+
+        self.can_run = all([s.met for s in self.skips if s.met is False])
         return self.can_run
 
     def check_tags(self, requested_tags):

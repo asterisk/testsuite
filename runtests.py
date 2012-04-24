@@ -140,7 +140,8 @@ class TestRun:
     def __check_can_run(self, ast_version):
         """Check tags and dependencies in the test config."""
         if self.test_config.check_deps(ast_version) and \
-                self.test_config.check_tags(self.options.tags):
+                self.test_config.check_tags(self.options.tags) and \
+                self.test_config.check_skip(ast_version):
             self.can_run = True
 
     def __parse_run_output(self, output):
@@ -230,6 +231,9 @@ class TestSuite:
                 else:
                     print "      --> Dependency: %s -- Met: %s" % (d.name,
                              str(d.met))
+            for s in t.test_config.skips:
+                    print "      --> Skip: %s -- Met: %s" % (s.name, str(s.met))
+
             i += 1
 
     def run(self):
@@ -240,7 +244,6 @@ class TestSuite:
                 if t.test_config.skip is not None:
                     print "--> %s ... skipped '%s'" % (t.test_name, t.test_config.skip)
                     continue
-
                 print "--> Cannot run test '%s'" % t.test_name
                 print "--- --> Minimum Version: %s (%s)" % \
                     (str(t.test_config.minversion), str(t.test_config.minversion_check))
@@ -250,6 +253,8 @@ class TestSuite:
                 print "--- --> Tags: %s" % (t.test_config.tags)
                 for d in t.test_config.deps:
                     print "--- --> Dependency: %s - %s" % (d.name, str(d.met))
+                for s in t.test_config.skips:
+                    print "--- --> Skip: %s - %s" % (s.name, str(s.met))
                 print
                 continue
             if self.global_config != None:

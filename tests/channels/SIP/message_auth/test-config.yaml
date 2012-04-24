@@ -4,7 +4,9 @@ testinfo:
         'Send Asterisk a MESSAGE and wait for Asterisk to send it back with authentication.'
 
 properties:
-    minversion: '10'
+    minversion : '1.8'
+    skip:
+        - branch : '1.8'
     dependencies:
         - sipp :
             version : 'v3.0'
