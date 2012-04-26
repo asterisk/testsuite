@@ -10,7 +10,7 @@ testinfo:
          time of the second (<=1 second to accomodate potential timing differences).'
 
 properties:
-    minversion: '1.8'
+    minversion: '1.8.13.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
