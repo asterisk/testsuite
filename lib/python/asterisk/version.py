@@ -53,7 +53,7 @@ class AsteriskVersion:
             if self.branch == "trunk":
                 res = 9999999999
             elif self.branch[:6] == "branch":
-                res = int(AsteriskVersion(self.branch[7:])) + 999999
+                res = int(AsteriskVersion(self.branch[7:]))
             else:
                 # team branch XXX (may not be off of trunk)
                 res = 9999999999
@@ -68,6 +68,9 @@ class AsteriskVersion:
                             res += self.patch
                         else:
                             res += int(self.__parse_version_patch(self.patch))
+                else:
+                    # If no minor version, assume that this is a branch
+                    res += 999999
         return res
 
     def __cmp__(self, other):
@@ -292,13 +295,19 @@ class AsteriskVersionTests(unittest.TestCase):
         self.assertEqual(v.minor, "11")
         self.assertEqual(v.patch, 1002)
 
+    def test_svn_version10(self):
+        v = AsteriskVersion("SVN-branch-1.8.11-r363674")
+        self.assertTrue(v.svn)
+        self.assertEqual(v.branch, "branch-1.8.11")
+        self.assertEqual(v.revision, "363674")
+
     def test_cmp(self):
         v1 = AsteriskVersion("1.4")
         v2 = AsteriskVersion("1.6.0")
         self.assertTrue(v1 < v2)
 
     def test_cmp2(self):
-        v1 = AsteriskVersion("1.4")
+        v1 = AsteriskVersion("1.4.0")
         v2 = AsteriskVersion("1.4.15")
         self.assertTrue(v1 < v2)
 
@@ -410,6 +419,26 @@ class AsteriskVersionTests(unittest.TestCase):
     def test_cmp24(self):
         v1 = AsteriskVersion("1.8.11-cert1")
         v2 = AsteriskVersion("1.8.15-cert1")
+        self.assertTrue(v1 < v2)
+
+    def test_cmp25(self):
+        v1 = AsteriskVersion("1.8.11-cert1")
+        v2 = AsteriskVersion("1.8.13.0")
+        self.assertTrue(v1 < v2)
+
+    def test_cmp26(self):
+        v1 = AsteriskVersion("SVN-branch-1.8.11-r363674")
+        v2 = AsteriskVersion("1.8.12.0")
+        self.assertTrue(v1 < v2)
+
+    def test_cmp26(self):
+        v1 = AsteriskVersion("SVN-branch-1.8.11-r363674")
+        v2 = AsteriskVersion("SVN-branch-1.8.15-r363674")
+        self.assertTrue(v1 < v2)
+
+    def test_cmp27(self):
+        v1 = AsteriskVersion("SVN-branch-1.8.11-r363674")
+        v2 = AsteriskVersion("SVN-branch-1.8-r369138M")
         self.assertTrue(v1 < v2)
 
 def main():
