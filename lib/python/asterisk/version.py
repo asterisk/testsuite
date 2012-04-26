@@ -123,6 +123,7 @@ class AsteriskVersion:
             versions = [
                 ["rc", 100],
                 ["beta", 10],
+                ["cert", 1000]
             ]
             for v, cost in versions:
                 match = re.search(
@@ -273,6 +274,24 @@ class AsteriskVersionTests(unittest.TestCase):
         self.assertEqual(v.parent, "/branches/10")
         self.assertTrue(v.phone)
 
+    def test_svn_version8(self):
+        v = AsteriskVersion("1.8.11-cert1")
+        self.assertFalse(v.svn)
+        self.assertEqual(str(v), "1.8.11-cert1")
+        self.assertEqual(v.concept, "1")
+        self.assertEqual(v.major, "8")
+        self.assertEqual(v.minor, "11")
+        self.assertEqual(v.patch, 1001)
+
+    def test_svn_version9(self):
+        v = AsteriskVersion("1.8.11-cert2")
+        self.assertFalse(v.svn)
+        self.assertEqual(str(v), "1.8.11-cert2")
+        self.assertEqual(v.concept, "1")
+        self.assertEqual(v.major, "8")
+        self.assertEqual(v.minor, "11")
+        self.assertEqual(v.patch, 1002)
+
     def test_cmp(self):
         v1 = AsteriskVersion("1.4")
         v2 = AsteriskVersion("1.6.0")
@@ -383,6 +402,15 @@ class AsteriskVersionTests(unittest.TestCase):
         v2 = AsteriskVersion("SVN-branch-1.8-r360138M")
         self.assertTrue(v1 < v2)
 
+    def test_cmp23(self):
+        v1 = AsteriskVersion("1.8.11-cert1")
+        v2 = AsteriskVersion("1.8.11-cert2")
+        self.assertTrue(v1 < v2)
+
+    def test_cmp24(self):
+        v1 = AsteriskVersion("1.8.11-cert1")
+        v2 = AsteriskVersion("1.8.15-cert1")
+        self.assertTrue(v1 < v2)
 
 def main():
     unittest.main()
