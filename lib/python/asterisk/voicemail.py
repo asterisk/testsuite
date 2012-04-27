@@ -13,6 +13,8 @@ import os
 import glob
 import shutil
 import logging
+import time
+import random
 
 from asterisk import Asterisk
 from config import Category
@@ -309,6 +311,7 @@ class VoiceMailMailboxManagement(object):
     def __init__(self, ast):
         self.__ast = ast
         self.voicemailDirectory = self.__ast.directories['astspooldir'] + '/voicemail'
+        self.createdVoicemails = {}
 
     """
     Creates the basic set of folders needed for a mailbox on the file system
@@ -379,6 +382,9 @@ class VoiceMailMailboxManagement(object):
         msgEnvName = msgName + ".txt"
         msgEnvPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':msgEnvName}
 
+        random.seed()
+        msg_id = str(int(time.time())) + "-" + str(random.randrange(0, 1, sys.maxint - 1))
+
         f = open(msgEnvPath, 'w')
         f.write(';\n')
         f.write('; Message Information file\n')
@@ -394,6 +400,7 @@ class VoiceMailMailboxManagement(object):
         f.write('callerid=\"Anonymous\"<555-5555>\n')
         f.write('origdate=Tue Aug  9 10:05:13 PM UTC 2011\n')
         f.write('origtime=1312927513\n')
+        f.write('msg_id=%s\n' % msg_id)
         if (folder == self.urgentFolderName):
             f.write('flag=Urgent\n')
         else:
@@ -407,6 +414,10 @@ class VoiceMailMailboxManagement(object):
             msgFormatPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':msgFormatName}
             audioFile = os.path.join(os.getcwd(), "%s/sounds/talking.ulaw" % (self.testParentDir))
             shutil.copy(audioFile, msgFormatPath)
+
+        if folder not in self.createdVoicemails.keys():
+            self.createdVoicemails[folder] = []
+        self.createdVoicemails[folder].append((msgnum, msg_id))
 
         return True
 

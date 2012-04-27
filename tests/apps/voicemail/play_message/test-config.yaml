@@ -1,0 +1,29 @@
+testinfo:
+    skip: 'Until digium phone support is merged into trunk'
+    summary: 'Test the VoiceMailPlayMsg application'
+    description: |
+        This test verifies playing back a voicemail using the VoiceMailPlayMsg application
+        in a variety of settings.  It tests:
+        * playing a message from multiple mailboxes (in both default and non-default contexts)
+        * playing a message from multiple folders
+        * failure to play a message with no mailbox or message ID specified
+        * failure to play a message with an invalid message ID specified
+
+properties:
+    # min version is cert-1.8.11
+    minversion: '1.8.11'
+    # Skip open source Asterisk versions up to 11
+    skip: '1.8'
+    skip: '10'
+    buildoption: 'TEST_FRAMEWORK'
+    testconditions:
+        - name: 'threads'
+          ignoredThreads:
+            - 'netconsole'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk: 'app_voicemail'
+    tags:
+        - voicemail
+        - apps

@@ -28,3 +28,4 @@ tests:
     - test: 'check_voicemail_dialout'
     - test: 'check_voicemail_reply'
     - test: 'check_voicemail_while_leaving_msg'
+    - test: 'play_message'

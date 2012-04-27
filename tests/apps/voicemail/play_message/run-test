@@ -1,0 +1,118 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+'''
+Copyright (C) 2012, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+from asterisk.voicemail import VoiceMailMailboxManagement
+from twisted.internet import defer
+
+logger = logging.getLogger(__name__)
+
+class PlayMsg(TestCase):
+
+    def __init__(self):
+        super(PlayMsg, self).__init__()
+        self._voicemailManager = None
+        self._formats = ["ulaw","wav","WAV"]
+        self._current_test = 0
+        self._tests = []
+        self._results = []
+
+        self.create_asterisk(1)
+
+    def ami_connect(self, ami):
+        # Create the mailboxes
+        self.voicemailManager = VoiceMailMailboxManagement(self.ast[0])
+        self.voicemailManager.createMailbox("default", "1234", True)
+        self.voicemailManager.createMailbox("notdefault", "5678", True)
+
+        self.voicemailManager.createDummyVoicemail("default", "1234", self.voicemailManager.inboxFolderName, 0, self._formats)
+        self.voicemailManager.createDummyVoicemail("default", "1234", self.voicemailManager.oldFolderName, 0, self._formats)
+        self.voicemailManager.createDummyVoicemail("notdefault", "5678", self.voicemailManager.urgentFolderName, 0, self._formats)
+
+        # For each of the created voicemails, push a dictionary onto the list containing the information for that test
+        self._tests.append({"context": "default", "mailbox": "1234", "msg_id": self.voicemailManager.createdVoicemails[self.voicemailManager.inboxFolderName][0][1], "expected_result": True})
+        self._tests.append({"context": "default", "mailbox": "1234", "msg_id": self.voicemailManager.createdVoicemails[self.voicemailManager.oldFolderName][0][1], "expected_result": True})
+        self._tests.append({"context": "notdefault", "mailbox": "5678", "msg_id": self.voicemailManager.createdVoicemails[self.voicemailManager.urgentFolderName][0][1], "expected_result": True})
+        # Bad message ID
+        self._tests.append({"context": "default", "mailbox": "1234", "msg_id": "12345678", "expected_result": False})
+        # Empty mailbox
+        self._tests.append({"context": "default", "mailbox": "", "msg_id": self.voicemailManager.createdVoicemails[self.voicemailManager.inboxFolderName][0][1], "expected_result": False})
+        # Empty message ID
+        self._tests.append({"context":"default", "mailbox": "1234", "msg_id": "", "expected_result": False})
+        # Default context
+        self._tests.append({"context": "", "mailbox": "1234", "msg_id": self.voicemailManager.createdVoicemails[self.voicemailManager.oldFolderName][0][1], "expected_result": True})
+
+        ami.registerEvent('TestEvent', self.test_event_handler)
+        ami.registerEvent('UserEvent', self.user_event_handler)
+
+        self._start_test(ami)
+
+    def _start_test(self, ami):
+        test = self._tests[self._current_test]
+        logger.debug("Setting context=%s; mailbox=%s; msgid=%s" % (test["context"], test["mailbox"], test["msg_id"]))
+        ami.originate(channel = "Local/playmsg@voicemail", application = "Echo",
+            variable={"MAILCONTEXT": test["context"], "MAILBOX": test["mailbox"], "MSGID": test["msg_id"]}).addErrback(self.handleOriginateFailure)
+
+    def test_event_handler(self, ami, event):
+        if 'state' in event and 'message' in event:
+            if event['state'] == 'PLAYBACK':
+                logger.debug("Playing back %s" % event['message'])
+
+    def user_event_handler(self, ami, event):
+        if 'userevent' not in event or 'result' not in event or 'status' not in event:
+            return
+
+        if event['result'] == 'fail' and self._tests[self._current_test]["expected_result"]:
+            logger.warning("Test %d failed: expected result was pass but UserEvent indicated failure" % self._current_test)
+            logger.warning(event['status'])
+            self._results.append(False)
+        elif event['result'] == 'pass' and not self._tests[self._current_test]["expected_result"]:
+            logger.warning("Test %d failed: expected result was fail but UserEvent indicated success" % self._current_test)
+            logger.warning(event['status'])
+            self._results.append(False)
+        else:
+            logger.info("Test %d passed" % self._current_test)
+            self._results.append(True)
+
+        self._current_test += 1
+        if (self._current_test == len(self._tests)):
+            # Evaluate the tests
+            self.passed = len([result for result in self._results if not result]) == 0
+            logger.info("All tests executed; stopping reactor")
+            self.stop_reactor()
+        else:
+            self._start_test(ami)
+        return
+
+    def run(self):
+        super(PlayMsg, self).run()
+        self.create_ami_factory()
+
+def main():
+
+    test = PlayMsg()
+    reactor.run()
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+   sys.exit(main() or 0)
