@@ -1,0 +1,28 @@
+testinfo:
+    summary: 'Test conference recording in app_confbridge'
+    description: |
+        This tests recording conferences in ConfBridge.  In each scenario, a
+        local channel is placed into a ConfBridge, and a sound file containing
+        a voice talking is played into the conference.  The channel is then
+        hung up, and the expected sound file analyzed using the BackgroundDetect
+        application.  This test checks three scenarios:
+        1) Setting the record_conference bridge parameter using the CONFBRIDGE
+        function on a default bridge.
+        2) Using a non-default bridge with the record_conference/record_file
+        parameters set.
+        3) Setting the record_conference/record_file bridge parameters using
+        the CONFBRIDGE function on a default bridge.
+
+properties:
+    minversion: '10'
+    buildoption: 'TEST_FRAMEWORK'
+    tags:
+        - confbridge
+        - mixmonitor
+        - apps
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_confbridge'
+        - asterisk : 'app_playback'
+        - asterisk : 'app_talkdetect'

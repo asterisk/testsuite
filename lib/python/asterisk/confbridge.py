@@ -133,9 +133,9 @@ class ConfbridgeTestState(TestState):
         audioFile    The local path to the file to stream
         """
         if call_id in self.calls:
-            logger.debug("Attempting to send audio file %s via %s", audioFile, call_id)
+            logger.debug("Attempting to send audio file %s via %s", audioFile, self.calls[call_id].caller_channel)
             if (self.__previous_audio[call_id] != audioFile):
-                self.calls[call_id].caller_ami.setVar(channel = call_id, variable = "TALK_AUDIO", value = audioFile)
+                self.calls[call_id].caller_ami.setVar(channel = self.calls[call_id].caller_channel, variable = "TALK_AUDIO", value = audioFile)
                 self.__previous_audio[call_id] = audioFile
             """
             Redirect to the send sound file extension - note that we assume that we only have one channel to

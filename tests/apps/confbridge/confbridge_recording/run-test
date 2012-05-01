@@ -1,0 +1,342 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+'''
+Copyright (C) 2012, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+from asterisk.TestState import TestStateController
+from asterisk.confbridge import ConfbridgeTestState
+from asterisk.confbridge import ConfbridgeChannelObject
+
+logger = logging.getLogger(__name__)
+
+
+class StartConfBridgeState(ConfbridgeTestState):
+    """
+    The initial state when users join the ConfBridge.  This particular state
+    tracks the user through the initial ConfBridge login.  It also sets in the
+    TestCase the MixMonitor filename being created.  Once the user has joined
+    into the conference, the state transitions to the ActiveConfBridgeState.
+    """
+
+    def __init__(self, controller, testCase, calls, ami):
+        """
+        controller      The TestStateController managing the test
+        testCase        The main test object
+        calls           A dictionary (keyed by conf_bridge_channel ID) of ConfbridgeChannelObjects
+        ami             AMI instance
+        """
+        ConfbridgeTestState.__init__(self, controller, testCase, calls)
+
+        self._ami = ami
+        ami.registerEvent('ConfbridgeJoin', self.handle_confbridge_join_event)
+        ami.registerEvent('VarSet', self.handle_varset_event)
+
+    def handle_varset_event(self, ami, event):
+        """ VarSet event handler """
+
+        if 'variable' not in event or 'value' not in event:
+            return
+        if event['variable'] != 'MIXMONITOR_FILENAME':
+            return
+        logger.debug("Detected variable MIXMONITOR_FILENAME: %s" % event['value'])
+        self.testCase.set_recording_file(event['value'])
+
+    def handle_confbridge_join_event(self, ami, event):
+        """ ConfBridgeJoin event handler """
+
+        if 'channel' not in event:
+            return
+        if not self.calls:
+            logger.warning("No callers registered when channels joined")
+            return
+        if len(self.calls) > 1:
+            logger.warning("More then one channel in ConfBridge, using first")
+        self.conf_bridge_channel = self.calls.keys()[0]
+
+        if event['channel'] == self.conf_bridge_channel:
+            self.testCase.expected_events['confbridgejoined'] = True
+            # Transition to the next state
+            logger.debug("Joined ConfBridge, transitioning to next state")
+            self.changeState(ActiveConfBridgeState(self.controller, self.testCase, self.calls, self._ami))
+
+    def handleStateChange(self, ami, event):
+        """ TestEvent handler """
+
+        state = event['state']
+        if state == 'CONF_START_RECORD':
+            logger.debug("Detected CONF_START_RECORD")
+            self.testCase.expected_events['recordingstarted'] = True
+
+    def getStateName(self):
+        return "START"
+
+class ActiveConfBridgeState(ConfbridgeTestState):
+    """
+    State when the user is in the ConfBridge.  A sound file containing some
+    voice is passed into the ConfBridge, then the user hangs up.  This will
+    trigger the talk detection in the TestCase class.  The state verifies
+    that the user leaves the conference and that the conference ends
+    appropriately.
+    """
+
+    def __init__(self, controller, testCase, calls, ami):
+        """
+        controller      The TestStateController managing the test
+        testCase        The main test object
+        calls           A dictionary (keyed by conf_bridge_channel ID) of ConfbridgeChannelObjects
+        ami             The instance of AMI to subscribe for events on
+        """
+        ConfbridgeTestState.__init__(self, controller, testCase, calls)
+        self.testCase.reset_timeout()
+        self._ami = ami
+        ami.registerEvent('ConfbridgeLeave', self.handle_confbridge_leave_event)
+        ami.registerEvent('ConfbridgeEnd', self.handle_confbridge_end_event)
+
+        if len(calls) != 1:
+            logger.warning("Multiple channels detected in ConfBridge, only the first will be used")
+        self._bridge_channel = calls.keys()[0]
+
+        # Schedule actions to take place
+        audio_file = os.path.join(os.getcwd(), "tests/apps/confbridge/sounds/talking")
+        self.scheduleSendSoundFile(1, self._bridge_channel, audio_file)
+        reactor.callLater(5, self.send_hangup)
+
+    def send_hangup(self):
+        self.hangup(self._bridge_channel)
+
+    def handleStateChange(self, ami, event):
+        """ TestEvent handler.  Check for end of recording. """
+
+        state = event['state']
+        if state == 'CONF_STOP_RECORD':
+            logger.debug("Detected CONF_STOP_RECORD")
+            self.testCase.expected_events['recordingstopped'] = True
+
+    def handle_confbridge_leave_event(self, ami, event):
+        """ ConfBridgeLeave event handler """
+
+        if 'channel' not in event:
+            return
+        if event['channel'] != self._bridge_channel:
+            return
+        self.testCase.expected_events['confbridgeleave'] = True
+
+    def handle_confbridge_end_event(self, ami, event):
+        """ ConfBridgeEndEvent handler """
+
+        self.testCase.expected_events['confbridgeend'] = True
+
+    def getStateName(self):
+        return "ACTIVE"
+
+
+class ConfBridgeRecording(TestCase):
+    """
+    The TestCase class that executes the test.  In each iteration of the test,
+    a local channel is created that is placed into a ConfBridge and activates
+    recording in some fashion.  A TestStateController is used to manage the
+    actions of the channel in the ConfBridge.
+    """
+
+    def __init__(self):
+        super(ConfBridgeRecording, self).__init__()
+        self.create_asterisk()
+
+        # A dictionary is used to set the parameters for each test.
+        # This includes the channel to create, and, if applicable, the
+        # recording file to set for the ConfBridge.
+        self._tests = [{'channel':'local/record-default@confbridge',
+                        'file': ''},
+                {'channel': 'local/record-conf@confbridge',
+                 'file': ''},
+                {'channel': 'local/record-func@confbridge',
+                'file': 'confbridge_recording_func.wav'},]
+        self._test_results = []
+        self._current_test = 0
+        self._controlling_channel = ''
+        self._confbridge_channel = ''
+        self._candidate_channels = []
+        self.expected_events = {}
+        self.record_file = ''
+
+        # Add the events we expect to see and receive
+        self.expected_events['confbridgejoined'] = False
+        self.expected_events['recordingstarted'] = False
+        self.expected_events['recordingstopped'] = False
+        self.expected_events['recordingfilename'] = False
+        self.expected_events['confbridgeleave'] = False
+        self.expected_events['confbridgeend'] = False
+
+    def confbridge_ended(self):
+        """ Called when the confbridge channels have hung up.  This
+        causes the talk detection extension to be called to determine
+        if we've recorded anything, and if we received all expected
+        events from the test states.
+        """
+
+        # Check that we got all the expected events
+        failed_events = [e for e, v in self.expected_events.items() if not v]
+        if failed_events:
+            for event in failed_events:
+                logger.warning("Failed to detect %s" % event)
+            self._test_results.append(False)
+        else:
+            # Set to true for now; the talk detection result will set this to
+            # False if needed
+            self._test_results.append(True)
+
+        # Check the recorded file
+        logger.debug("Performing talk detection on file %s " % self._record_file[:len(self._record_file) - 4])
+        self.ami[0].originate(channel = "Local/detect_audio@talkdetect",
+            context = 'talkdetect', exten='playback', priority='1',
+            variable = {'TESTAUDIO': '"%s"' % (self._record_file[:len(self._record_file) - 4])}
+            ).addErrback(self.handleOriginateFailure)
+
+    def set_recording_file(self, filename):
+        """ Called by the test states when the recorded file is known """
+        self._record_file = filename
+        self.expected_events['recordingfilename'] = True
+
+    def ami_connect(self, ami):
+        super(ConfBridgeRecording, self).ami_connect(ami)
+
+        self.testStateController = TestStateController(self, ami)
+
+        ami.registerEvent('UserEvent', self.user_event_handler)
+        ami.registerEvent('Newchannel', self.new_channel_handler)
+        ami.registerEvent('Hangup', self.hangup_event_handler)
+        ami.registerEvent('Newexten', self.new_exten_event_handler)
+        self.originate_call(ami)
+
+    def _reset_objects(self, ami):
+        """ Reset objects for the next test execution """
+
+        self._confbridge_channel = ''
+        self._controlling_channel = ''
+        self.record_file = ''
+        self._candidate_channels = []
+        self._start_object = StartConfBridgeState(self.testStateController, self, {}, ami)
+        self.testStateController.changeState(self._start_object)
+        for e in self.expected_events:
+            self.expected_events[e] = False
+
+    def originate_call(self, ami):
+        """ Originate a new test """
+
+        self._reset_objects(ami)
+
+        channel = self._tests[self._current_test]['channel']
+        logger.debug("Originating call to %s" % channel)
+        variable = {}
+        if self._tests[self._current_test]['file']:
+            variable["RECORD_FILE"] = self._tests[self._current_test]['file']
+        ami.originate(channel = channel,
+            context = 'caller', exten='wait', priority='1',
+            variable = variable
+            ).addErrback(self.handleOriginateFailure)
+
+    def new_exten_event_handler(self, ami, event):
+        """ NewExten event handler.  We use this to determine which
+        of the local channels is entering the ConfBridge, and which
+        is the 'controlling' channel """
+
+        if 'application' not in event or 'channel' not in event:
+            return
+
+        # We only care about the NewExten event that contains the ConfBridge
+        # application
+        if event['application'] != 'ConfBridge':
+            return
+
+        self._confbridge_channel = event['channel']
+
+        # Find the channel not in the ConfBridge
+        controlling_channels = [c for c in self._candidate_channels if c != self._confbridge_channel]
+        if (len(controlling_channels) != 1):
+            logger.warning("We only expected 1 controlling channel: %s" % str(controlling_channels))
+            return
+        self._controlling_channel = controlling_channels[0]
+
+        self._start_object.registerNewCaller(
+            ConfbridgeChannelObject(self._confbridge_channel, self._controlling_channel, ami))
+
+    def hangup_event_handler(self, ami, event):
+        """ Hangup event handler.  Trigger the end of test logic when the confbridge
+        channel has hung up """
+
+        if 'channel' not in event:
+            return
+        if event['channel'] != self._confbridge_channel:
+            return
+        logger.debug("Hangup detected of ConfBridge channel %s" % self._confbridge_channel)
+        self.confbridge_ended()
+
+    def new_channel_handler(self, ami, event):
+        """ Record all new non-Bridge channels.  This lets us later determine
+        which channel is in the ConfBridge, and which is the controlling channel
+        """
+
+        if 'channel' not in event:
+            return
+        if 'Bridge' in event['channel']:
+            # Disregard the ConfBridge Bridge channel
+            return
+        self._candidate_channels.append(event['channel'])
+
+    def user_event_handler(self, ami, event):
+        """ UserEvents are fired with the pass/fail status of the talk detection """
+
+        if event['userevent'] != 'TestStatus':
+            return
+        if 'status' not in event or 'message' not in event:
+            return
+        logger.debug("Received status %s: %s" % (event['status'], event['message']))
+        # Note that we only want to override the test results if it Failed
+        if event['status'] == 'fail':
+            logger.warning("Failed [%s] on test %d" % (event['message'], self._current_test))
+            self._test_results[self._current_test] = False
+        else:
+            logger.info("Passed [%s] in test %d" % (event['message'], self._current_test))
+
+        self._current_test += 1
+        if (self._current_test == len(self._tests)):
+            # Set the overall test status
+            self.passed = all(self._test_results)
+            logger.info("All tests executed, stopping reactor")
+            self.stop_reactor()
+        else:
+            logger.debug("Starting next test")
+            self.originate_call(ami)
+
+    def run(self):
+        super(ConfBridgeRecording, self).run()
+        self.create_ami_factory()
+
+def main():
+
+    test = ConfBridgeRecording()
+    reactor.run()
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+   sys.exit(main() or 0)
+
