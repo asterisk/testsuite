@@ -5,9 +5,7 @@ testinfo:
         other contexts when leaving a voicemail.
 
 properties:
-    # Expected to fail per ASTERISK-18243
-    expectedResult: 'Fail'
-    minversion: '1.8'
+    minversion: '1.8.0.0'
     testconditions:
         - name: 'threads'
           ignoredThreads:
