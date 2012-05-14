@@ -1,0 +1,12 @@
+testinfo:
+    summary: 'Test SIP support for HANGUPCAUSE.'
+    description: 'Test generation of informational frames for usage by the HANGUPCAUSE hash feature.'
+
+properties:
+    minversion: '11'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - sip
+        - hangupcause
