@@ -30,6 +30,7 @@ tests:
     - test: 'message_auth_cust_hdr'
     - test: 'message_send_ami'
     - test: 'message_from_call'
+    - test: 'message_mark_all_outbound'
     - test: 'handle_response_address_incomplete'
     - test: 'realtime_sipregs'
     - test: 'realtime_nosipregs'
