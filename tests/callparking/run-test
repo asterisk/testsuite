@@ -53,14 +53,14 @@ class CallParkingTest(TestCase):
             # Start next parked call subtest.
             self.expected_space = 702
             self.request_exten = 102
-            self.initate_call_to_park()
+            self.initiate_call_to_park()
             return
 
         if self.request_exten == 102:
             # Start next parked call subtest.
             self.expected_space = 703
             self.request_exten = 103
-            self.initate_call_to_park()
+            self.initiate_call_to_park()
             return
 
         # All parked call subtests completed successfully.
@@ -68,7 +68,7 @@ class CallParkingTest(TestCase):
         self.stop_reactor()
 
     # Initiate test call to park.
-    def initate_call_to_park(self):
+    def initiate_call_to_park(self):
         logger.info("Initiating test call for " + str(self.request_exten))
         self.ast[0].cli_originate("Local/9876@ast2/n extension " + str(self.request_exten) + "@ast2")
 
@@ -135,7 +135,7 @@ class CallParkingTest(TestCase):
         # Initiate test when both AMI connections are established.
         self.ami_count += 1
         if self.ami_count == 2:
-            self.initate_call_to_park()
+            self.initiate_call_to_park()
 
     # This is called when the reactor has started running.
     def run(self):
