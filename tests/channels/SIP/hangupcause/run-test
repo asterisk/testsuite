@@ -55,16 +55,24 @@ class HUCTest(TestCase):
                 logger.info("got result for single channel call")
                 if event['hangupcause'] == '34':
                     self.success_count += 1
+                else:
+                    logger.error("Received 'single' event with bad HANGUPCAUSE code")
             elif event ['status'] == "double":
                 logger.info("got result for branched call")
                 if event['hangupcause'] == '17' and\
                         res_good(event['chan2'], event['res2']):
                     self.success_count += 1
+                else:
+                    logger.error("Received 'double' event with bad cause information")
             elif event ['status'] == "local":
                 logger.info("got result for local-indirected branched call")
                 if event['hangupcause'] == '0' and\
                         res_good(event['chan2'], event['res2']):
                     self.success_count += 1
+                else:
+                    logger.error("Received 'local' event with bad cause information")
+        else:
+            logger.error("Received '%s' event with bad cause information" % (event['status']))
 
         self.are_we_there_yet()
 
