@@ -428,6 +428,7 @@ def main(argv=None):
                 print "FAILED"
 
     print "\n"
+    return test_suite.total_failures
 
 
 def hardlink_or_copy(source, destination):

@@ -19,13 +19,14 @@ sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.TestCase import TestCase
 from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
+from asterisk.cel import AsteriskCSVCEL, AsteriskCSVCELLine
 
 logger = logging.getLogger(__name__)
 
 class IAXCallTest(TestCase):
     def __init__(self):
         super(IAXCallTest, self).__init__()
-        self.channel1_events = { 'Created': False, 'Hangup': False }
+        self.channel1_events = { 'Created': False, 'Hangup': False, 'CEL' : False }
         self.channel2_events = { 'Created': False, 'Hangup': False, 'CSV': False}
         self.create_asterisk(2)
 
@@ -72,6 +73,22 @@ class IAXCallTest(TestCase):
         if cdr_test.match(cdr):
             self.channel2_events['CSV'] = True
 
+    def check_cels(self):
+        cel = AsteriskCSVCEL(fn="%s/var/log/asterisk/cel-custom/Master.csv" %
+                self.ast[0].base)
+
+        cel_test = AsteriskCSVCEL(
+                records = [
+                    AsteriskCSVCELLine(accountcode="", eventtime="[0-9.]+", linkedid="[0-9.]+", uniqueid="[0-9.]+", appdata="", bridgepeer="", eventtype="CHAN_START", cidname="", eventextra="", ani="", dnid="", amaflags="3", cidnum="", rdnis="", context="default", exten="s", userfield="", app="", channel="IAX2/.*", userdeftype=""),
+                    AsteriskCSVCELLine(accountcode="", eventtime="[0-9.]+", linkedid="[0-9.]+", uniqueid="[0-9.]+", appdata="", bridgepeer="", eventtype="ANSWER", cidname="", eventextra="", ani="", dnid="", amaflags="3", cidnum="", rdnis="", context="", exten="s", userfield="", app="", channel="IAX2/.*", userdeftype=""),
+                    AsteriskCSVCELLine(accountcode="", eventtime="[0-9.]+", linkedid="[0-9.]+", uniqueid="[0-9.]+", appdata="", bridgepeer="", eventtype="HANGUP", cidname="", eventextra="16,dialplan/builtin,", ani="", dnid="", amaflags="3", cidnum="", rdnis="", context="iaxtest", exten="1000", userfield="", app="", channel="IAX2/.*", userdeftype=""),
+                    AsteriskCSVCELLine(accountcode="", eventtime="[0-9.]+", linkedid="[0-9.]+", uniqueid="[0-9.]+", appdata="", bridgepeer="", eventtype="CHAN_END", cidname="", eventextra="", ani="", dnid="", amaflags="3", cidnum="", rdnis="", context="iaxtest", exten="1000", userfield="", app="", channel="IAX2/.*", userdeftype=""),
+                    AsteriskCSVCELLine(accountcode="", eventtime="[0-9.]+", linkedid="[0-9.]+", uniqueid="[0-9.]+", appdata="", bridgepeer="", eventtype="LINKEDID_END", cidname="", eventextra="", ani="", dnid="", amaflags="3", cidnum="", rdnis="", context="iaxtest", exten="1000", userfield="", app="", channel="IAX2/.*", userdeftype="")
+                ]
+        )
+        if cel_test.match(cel):
+            self.channel1_events['CEL'] = True
+
     def check_results(self):
         self.passed = True
         for k, v in self.channel1_events.items():
@@ -87,6 +104,7 @@ def main():
     test = IAXCallTest()
     reactor.run()
     test.check_cdrs()
+    test.check_cels()
     test.check_results()
 
     if not test.passed:
