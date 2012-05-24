@@ -18,6 +18,7 @@ tests:
     - test: 'one-step-parking'
     - test: 'callparking'
     - test: 'callparking_retrieval'
+    - test: 'masquerade'
     - test: 'mixmonitor'
     - test: 'mixmonitor_audiohook_inherit'
     - dir: 'chanspy'

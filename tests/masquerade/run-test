@@ -1,0 +1,186 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2012, Digium, Inc.
+Richard Mudgett <rmudgett@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import logging
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.TestCase import TestCase
+
+logger = logging.getLogger(__name__)
+
+
+class MasqueradeTest(TestCase):
+    def __init__(self):
+        TestCase.__init__(self)
+
+        self.ami_count = 0
+        self.test_complete = False
+
+        # Initial call chain parameters.
+        self.chain_length = 300
+        self.expected_space = 701
+
+        # Clear test completion stage flags.
+        self.removed_count = 0
+        self.park_retrieved = False
+        self.got_AMI_ParkedCall = False
+        self.got_AMI_UnParkedCall = False
+        self.ast1_event = False
+        self.ast2_event = False
+
+        # Create two Asterisk instances ...
+        self.create_asterisk(2)
+
+    def check_result(self):
+        if not self.got_AMI_ParkedCall:
+            return
+        if not self.park_retrieved:
+            if self.removed_count == self.chain_length:
+                # Call chain successfully optimized itself.
+                # Time to see if the call audio path is ok.
+                self.park_retrieved = True
+                self.get_parkedcall()
+            return
+        if not self.got_AMI_UnParkedCall:
+            return
+        if not self.ast1_event:
+            return
+        if not self.ast2_event:
+            return
+
+        # Call chain completed successfully.
+        self.passed = True
+        self.stop_reactor()
+
+    # Initiate test call chain.
+    def initiate_call_chain(self):
+        logger.info("Initiating test call for a chain length of " + str(self.chain_length))
+        exten = 9000 + self.chain_length
+        self.ast[0].cli_originate("Local/" + str(exten) + "@outgoing/n extension parkme@parked")
+
+    # Initiate a call to retrieve the parked call.
+    def get_parkedcall(self):
+        logger.info("Fetching parked call at " + str(self.expected_space))
+        self.ast[1].cli_originate("IAX2/ast1/" + str(self.expected_space) + " extension retrieve@getit")
+
+    # Called when got ParkedCall AMI event
+    def evt_parkedcall(self, ami, event):
+        if self.test_complete:
+            return
+        exten = event.get("exten").lower()
+        logger.info("Call parked at exten: " + str(exten))
+        if exten != str(self.expected_space):
+            logger.warning("Call not parked in expected space " + str(self.expected_space))
+            self.stop_reactor()
+            return
+
+        self.got_AMI_ParkedCall = True
+        self.check_result()
+
+    # Called when got UnParkedCall AMI event
+    def evt_unparkedcall(self, ami, event):
+        if self.test_complete:
+            return
+        exten = event.get("exten").lower()
+        logger.info("Parked call retrieved from exten: " + str(exten))
+        if exten != str(self.expected_space):
+            logger.warning("Call not retrieved from expected space " + str(self.expected_space))
+            self.stop_reactor()
+            return
+
+        self.got_AMI_UnParkedCall = True
+        self.check_result()
+
+    # Called when got ParkedCallTimeOut AMI event
+    def evt_parkedcalltimeout(self, ami, event):
+        if self.test_complete:
+            return
+        logger.warning("Call park timeout!")
+        self.stop_reactor()
+
+    # Called when got UserEvent event from either Asterisk instance
+    def evt_userevent(self, ami, event):
+        if self.test_complete:
+            return
+        # We want the AMI UserEvent header but the headers put
+        # in as dictionary keys are lowercased.
+        evt = event.get("userevent")
+        status = event.get("status")
+        logger.info("UserEvent: " + str(evt) + " status: " + str(status))
+
+        if evt == "optout":
+            self.removed_count += 1
+            logger.info("Calls optimized out: " + str(self.removed_count))
+            # Restart the timeout timer after so many local channels optimize out.
+            #if 0 == self.removed_count % 50:
+            #    self.reset_timeout()
+            self.reset_timeout()
+            self.check_result()
+            return
+        elif evt == "ast1":
+            if status == "SUCCESS":
+                self.ast1_event = True
+                self.check_result()
+                return
+        elif evt == "ast2":
+            if status == "SUCCESS":
+                self.ast2_event = True
+                self.check_result()
+                return
+        else:
+            logger.info("Unknown UserEvent")
+            return
+        logger.warning("UserEvent: " + str(evt) + " status: " + str(status))
+        self.stop_reactor()
+
+    # This is called for each AMI connection established.
+    def ami_connect(self, ami):
+        # Add AMI event triggers
+        if ami.id == 0:
+            # Ast1 events to handle
+            self.ami[ami.id].registerEvent("ParkedCall", self.evt_parkedcall)
+            self.ami[ami.id].registerEvent("UnParkedCall", self.evt_unparkedcall)
+            self.ami[ami.id].registerEvent("ParkedCallTimeOut", self.evt_parkedcalltimeout)
+            self.ami[ami.id].registerEvent("UserEvent", self.evt_userevent)
+        elif ami.id == 1:
+            # Ast2 events to handle
+            self.ami[ami.id].registerEvent("UserEvent", self.evt_userevent)
+
+        # Initiate test when both AMI connections are established.
+        self.ami_count += 1
+        if self.ami_count == 2:
+            self.initiate_call_chain()
+
+    # This is called when the reactor has started running.
+    def run(self):
+        TestCase.run(self)
+        self.create_ami_factory(2)
+
+    # This is called when we stop the reactor.
+    def stop_reactor(self):
+        self.test_complete = True
+        TestCase.stop_reactor(self)
+
+
+def main():
+    # Run Masquerade local channel chain Test
+    test = MasqueradeTest()
+    reactor.run()
+    if test.passed:
+        logger.info("Test passed")
+        return 0
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79

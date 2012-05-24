@@ -1,0 +1,17 @@
+testinfo:
+    summary:     'Test Masquerading'
+    description: |
+        'Create a long chain of local channels to be optimized out.'
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    testconditions:
+        - name: 'threads'
+          ignoredThreads:
+            - 'autoservice_run'
+    tags:
+        - parking
+        - IAX
