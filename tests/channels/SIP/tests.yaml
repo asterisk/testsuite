@@ -43,3 +43,4 @@ tests:
     - test: 'generic_ccss'
     - test: 'hangupcause'
     - test: 'sip_cause'
+    - test: 'invite_no_totag'
