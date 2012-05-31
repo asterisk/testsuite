@@ -24,6 +24,12 @@ class MasqueradeTest(TestCase):
         self.ami_count = 0
         self.test_complete = False
 
+        # Set longer timeout than default.
+        #
+        # Optimizing out long chains of local channels can
+        # take awhile and they can come in bursts.
+        self.reactor_timeout = 60
+
         # Initial call chain parameters.
         self.chain_length = 300
         self.expected_space = 701
