@@ -172,6 +172,15 @@ class MasqueradeTest(TestCase):
 
     # This is called when we stop the reactor.
     def stop_reactor(self):
+        # Get some useful output from the Asterisk instance
+        # under test before tearing down in case of problems.
+        self.ast[0].cli_exec("core show locks")
+        # Must do "core show channels" after "core show locks" because
+        # the show channels command is likely to fail if a deadlock
+        # has happened.
+        #self.ast[0].cli_exec("core show channels concise")
+        self.ast[0].cli_exec("core show channels")
+
         self.test_complete = True
         TestCase.stop_reactor(self)
 
