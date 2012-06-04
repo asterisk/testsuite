@@ -41,6 +41,8 @@ tests:
     - test: 'header_parsing'
     - test: 'use_contact_from_200'
     - test: 'generic_ccss'
+    - dir: 'sip_custom_presence'
+    - test: 'custom_info'
     - test: 'hangupcause'
     - test: 'sip_cause'
     - test: 'invite_no_totag'

@@ -1,0 +1,22 @@
+testinfo:
+    summary: 'Test custom SIP INFO message generation.'
+    skip: 'Currently disabled until versioning can deal with digiumphones branches'
+    description: |
+        'Ensure that custom SIP INFO messages are generated properly via AST_CONTROL_CUSTOM frames with AST_CUSTOM_SIP_INFO payload type.'
+
+properties:
+    dependencies:
+        - app : 'sipp'
+    tags:
+        - sip
+testinfo:
+    summary: 'Test custom SIP INFO message generation.'
+    skip: 'Currently disabled until versioning can deal with digiumphones branches'
+    description: |
+        'Ensure that custom SIP INFO messages are generated properly via AST_CONTROL_CUSTOM frames with AST_CUSTOM_SIP_INFO payload type.'
+
+properties:
+    dependencies:
+        - app : 'sipp'
+    tags:
+        - sip

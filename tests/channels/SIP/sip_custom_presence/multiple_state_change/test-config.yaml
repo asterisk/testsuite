@@ -1,0 +1,11 @@
+testinfo:
+    summary: 'Test Reception of Digium custom presence'
+    description: |
+        'Subscribe to presence and get notified of multiple presence changes'
+
+properties:
+    minversion: '11'
+    dependencies:
+        - app : 'sipp'
+    tags:
+        - SIP

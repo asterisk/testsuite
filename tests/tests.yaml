@@ -30,3 +30,4 @@ tests:
     - dir: 'apps'
     - dir: 'connected_line'
     - dir: 'redirecting'
+    - test: 'func_presencestate'
