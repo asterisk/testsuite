@@ -1,0 +1,11 @@
+testinfo:
+    summary: 'Test AST_CAUSE_ANSWERED_ELSEWHERE usage.'
+    description: 'Ensure that AST_CAUSE_ANSWERED_ELSEWHERE is used and passed appropriately'
+
+properties:
+    minversion: '11'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - answered_elsewhere

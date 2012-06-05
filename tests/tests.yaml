@@ -31,3 +31,4 @@ tests:
     - dir: 'connected_line'
     - dir: 'redirecting'
     - test: 'func_presencestate'
+    - test: 'cause_answered_elsewhere'
