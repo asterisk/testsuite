@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 class AnsweredElsewhereTest(TestCase):
     def __init__(self):
         self.event_count = 0
-        self.expected_events = 8
+        self.expected_events = 6
         self.ans_elsewhere_count = 0
-        self.expected_ans_elsewhere = 4
+        self.expected_ans_elsewhere = 2
         TestCase.__init__(self)
         self.create_asterisk()
 
