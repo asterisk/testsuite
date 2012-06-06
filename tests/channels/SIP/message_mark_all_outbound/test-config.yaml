@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Must wait until mmichelsons trunk-digiumphones branch is merged.'
     summary: 'Test MessageSend with mark_all_outbound application.'
     description: |
         'Send Asterisk a MESSAGE and wait for Asterisk to send it back with all headers.'

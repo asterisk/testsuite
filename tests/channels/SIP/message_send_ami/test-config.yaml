@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Must wait until mmichelsons trunk-digiumphones branch is merged.'
     summary: 'Test handling an AMI MessageSend action'
     description: |
         This tests the AMI action MessageSend to see if it sends a SIP MESSAGE.
