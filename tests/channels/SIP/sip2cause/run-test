@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2012, Digium, Inc.
+Walter Doekes <walter+asterisk@wjd.nu>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+sys.path.append("lib/python")
+
+from asterisk.TestCase import TestCase
+from asterisk.sipp import SIPpScenario
+from twisted.internet import reactor
+
+CAUSE_UNALLOCATED = 1 # SIP/404
+TEST_DIR = os.path.dirname(os.path.realpath(__file__))
+logger = logging.getLogger(__name__)
+
+class SIP2HangupCauseTest(TestCase):
+    def __init__(self):
+        super(SIP2HangupCauseTest, self).__init__()
+        self.expect_hangups = 3
+        self.create_asterisk()
+
+    def run(self):
+        super(SIP2HangupCauseTest, self).run()
+        self.create_ami_factory()
+
+    def ami_connect(self, ami):
+        self.start_listening()
+        self.ami[0].registerEvent('Hangup', self.on_hangup)
+
+        logger.info("Setting up call that should receive 404")
+        self.ami[0].originate("Local/1111@dial-alice", "dpwait", "1234",
+                              1).addErrback(self.on_originate_fail)
+
+    def on_originate_fail(self, ami):
+        # We don't mind that it fails. In fact, it should fail.
+        pass
+
+    def start_listening(self):
+        logger.info("Listening for request to respond with 404")
+
+        self.scenario = SIPpScenario(TEST_DIR, {
+            'scenario': 'invite_recv_do_404.xml',
+            '-p': '5062',
+            '-timeout': '8s',
+        })
+        self.scenario.run(self)
+
+    def on_hangup(self, ami, event):
+        assert event['event'] == 'Hangup'
+        logger.info('Got event: %r' % (event,))
+
+        # We expect 3 channels here, and they should all have cause code 1.
+        #   SIP/alice -> world
+        #   Local/1111@dial-alice;2 -> SIP/alice
+        #   Local/1111@dial-alice;1 -> Local/1111@dial-alice;2
+        # For that, we require and test these things:
+        #   - Hangup event generation
+        #   - hangup_sip2cause (404 -> 1)
+        #   - propagation of HANGUPCAUSE over local channels
+        cause = int(event['cause'])
+        if cause != CAUSE_UNALLOCATED:
+            logger.error('Unexpected HANGUPCAUSE %d (not %d) for channel %s' %
+                         (cause, CAUSE_UNALLOCATED, event['channel']))
+            self.stop_reactor()
+            return
+
+        self.expect_hangups -= 1
+        if not self.expect_hangups:
+            self.passed = True
+            self.stop_reactor()
+
+
+def main():
+    test = SIP2HangupCauseTest()
+    reactor.run()
+    if test.passed:
+        return 0
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+# vim:ts=8:sw=4:sts=4:expandtab:textwidth=79

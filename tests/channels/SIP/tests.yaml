@@ -46,3 +46,4 @@ tests:
     - test: 'hangupcause'
     - test: 'sip_cause'
     - test: 'invite_no_totag'
+    - test: 'sip2cause'

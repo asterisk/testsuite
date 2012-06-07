@@ -1,0 +1,15 @@
+testinfo:
+    summary: 'Test SIP failure code to internal cause code conversion (hangup_sip2cause).'
+    description: |
+        'Test whether certain SIP response codes (404) are mapped to
+        the Q.850 equivalent (1/UNALLOCATED).'
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+    tags:
+        - sip
+        - sip_cause
