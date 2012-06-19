@@ -1,0 +1,20 @@
+testinfo:
+    summary:     'Test outbound proxy use on outbound INVITE dialog'
+    description: |
+        "Send an INVITE to an outbound proxy, who challenges for authentication.
+        The authentication challenge will have a Contact header set to a different
+        address. Asterisk should send the ACK as well as the followup INVITE to
+        the outbound proxy. The outbound proxy will then respond to the followup
+        INVITE with a 200 OK. The 200 OK will have a Contact header set to a a
+        different address from the outbound proxy. Asterisk should then send the
+        ACK to the 200 OK to this Contact."
+    issues:
+        - jira : 'ASTERISK-20008'
+
+properties:
+    minversion: '1.8'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+    tags:
+        - SIP

@@ -47,3 +47,4 @@ tests:
     - test: 'sip_cause'
     - test: 'invite_no_totag'
     - test: 'sip2cause'
+    - test: 'sip_outbound_proxy'

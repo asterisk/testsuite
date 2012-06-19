@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2011, Digium, Inc.
+Mark Michelson <mmichelson@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+
+sys.path.append("lib/python")
+
+from twisted.internet import reactor
+from asterisk.sipp import SIPpTest
+
+
+WORKING_DIR = "SIP/sip_outbound_proxy"
+TEST_DIR = os.path.dirname(os.path.realpath(__file__))
+
+SIPP_SCENARIOS = [
+    {'scenario' : 'uas-ackonly.xml',},
+    {'scenario' : 'uas.xml',},
+    {'scenario' : 'uac.xml', '-d' : '3000', '-s' : 'uas' },
+]
+
+# generate SIPP scenarios with appropriate port numbers and the config to go with it
+def main():
+    test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
+    reactor.run()
+    if not test.passed:
+        return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
