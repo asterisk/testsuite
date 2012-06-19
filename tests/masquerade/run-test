@@ -31,7 +31,7 @@ class MasqueradeTest(TestCase):
         self.reactor_timeout = 60
 
         # Initial call chain parameters.
-        self.chain_length = 150
+        self.chain_length = 300
         self.expected_space = 701
 
         # Clear test completion stage flags.
