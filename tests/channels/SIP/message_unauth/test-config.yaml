@@ -5,8 +5,8 @@ testinfo:
 
 properties:
     minversion: '1.8.0.0'
-    skip:
-        - branch : '1.8'
+    features:
+        - 'digiumphones'
     dependencies:
         - app : 'sipp'
     tags:
