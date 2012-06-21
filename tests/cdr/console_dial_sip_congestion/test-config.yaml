@@ -5,7 +5,7 @@ testinfo:
         Upon reaching the extension the SIP channel dials, Asterisk will return congestion.'
 
 properties:
-    minversion: '1.4'
+    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

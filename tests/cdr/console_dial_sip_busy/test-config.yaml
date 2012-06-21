@@ -5,7 +5,7 @@ testinfo:
         The extension sends a busy indication.'
 
 properties:
-    minversion: '1.4'
+    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

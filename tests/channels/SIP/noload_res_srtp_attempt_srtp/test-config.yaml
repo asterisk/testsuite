@@ -4,7 +4,7 @@ testinfo:
         'Place a call that has encryption=yes set, but the peer does not support it.'
 
 properties:
-    minversion: '1.8'
+    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

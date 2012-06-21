@@ -4,7 +4,7 @@ testinfo:
         'Send Asterisk a MESSAGE and wait for Asterisk to send it back with custom headers.'
 
 properties:
-    minversion: '10'
+    minversion: '10.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'

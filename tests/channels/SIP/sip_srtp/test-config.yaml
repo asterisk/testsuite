@@ -5,7 +5,7 @@ testinfo:
          that it is connected with SRTP.'
 
 properties:
-    minversion: '1.8'
+    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

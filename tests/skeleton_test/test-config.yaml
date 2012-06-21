@@ -8,7 +8,7 @@ testinfo:
 
 properties:
     # Specify the minimum version to prevent your test from failing for older versions of Asterisk
-    minversion: '1.8'
+    minversion: '1.8.0.0'
     # List dependencies your test will need to run.  You'll typically need twisted and starpy.  Other
     # options are listed in the README for the testsuite.
     dependencies:

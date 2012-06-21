@@ -5,7 +5,7 @@ testinfo:
          we expect a 200 response, and in the other we expect a 404 response.'
 
 properties:
-    minversion: '1.4'
+    minversion: '1.8.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'

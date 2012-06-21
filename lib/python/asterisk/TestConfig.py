@@ -83,20 +83,6 @@ class TestConditionConfig:
             return obj
         return None
 
-
-class SkipTest:
-    def __init__(self, skip):
-        self.name = ""
-        self.met = True
-        if "branch" in skip:
-            self.name = skip["branch"]
-            tmp = "%s-%s-%s" % ("SVN-branch", skip["branch"], "r12345")
-            ast_version = AsteriskVersion()
-            version = AsteriskVersion(tmp)
-            if ast_version.is_same_branch(version):
-                self.met = False
-
-
 class Dependency:
     """
     This class checks and stores the dependencies for a particular Test.
@@ -258,10 +244,11 @@ class TestConfig:
         self.minversion = None
         self.minversion_check = False
         self.deps = []
-        self.skips = []
         self.tags = []
         self.expectPass = True
         self.excludedTests = []
+        self.features = []
+        self.feature_check = {}
         self.test_configuration = "(none)"
         self.condition_definitions = []
         self.global_test_config = global_test_config
@@ -320,6 +307,9 @@ class TestConfig:
                 self.can_run = False
                 print "ERROR: '%s' is not a valid minversion" % \
                         properties["minversion"]
+            if self.minversion.feature:
+                self.features.append(self.minversion.feature)
+                self.feature_check[self.minversion.feature] = False
         if "maxversion" in properties:
             try:
                 self.maxversion = AsteriskVersion(properties["maxversion"])
@@ -336,8 +326,10 @@ class TestConfig:
                         properties["expectedResult"]
         if "tags" in properties:
             self.tags = properties["tags"]
-        if "skip" in properties:
-            self.skip = properties["skip"]
+        if "feature" in properties:
+            self.features.extend(properties["features"])
+            for f in self.features:
+                self.feature_check[f] = False
 
     def __parse_config(self):
         test_config = "%s/test-config.yaml" % self.test_name
@@ -422,22 +414,15 @@ class TestConfig:
             self.maxversion_check = False
             return self.can_run
 
+        for f in self.features:
+            self.feature_check[f] = ast_version.has_feature(f)
+            if not self.feature_check[f]:
+                self.can_run = False
+
         for d in self.deps:
             if d.met is False:
                 self.can_run = False
                 break
-        return self.can_run
-
-    def check_skip(self, ast_version):
-        if not self.config:
-            return False
-
-        self.skips = [
-            SkipTest(s)
-                for s in self.config["properties"].get("skip") or []
-        ]
-
-        self.can_run = all([s.met for s in self.skips if s.met is False])
         return self.can_run
 
     def check_tags(self, requested_tags):

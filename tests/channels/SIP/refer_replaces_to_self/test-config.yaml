@@ -6,7 +6,7 @@ testinfo:
         and 6002. The result should be that the NOTIFY w/ sipfrag returns a 404'
 
 properties:
-    minversion: '1.4'
+    minversion: '1.8.0.0'
     dependencies:
         - python : 'pjsua'
     tags:

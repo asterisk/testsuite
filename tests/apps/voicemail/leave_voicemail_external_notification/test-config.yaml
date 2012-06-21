@@ -8,7 +8,7 @@ testinfo:
         built into app_voicemail
 
 properties:
-    minversion: '1.8'
+    minversion: '1.8.0.0'
     testconditions:
     testconditions:
         - name: 'threads'

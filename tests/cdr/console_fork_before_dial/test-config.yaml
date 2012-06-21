@@ -6,7 +6,7 @@ testinfo:
         answers and then immediately hangs up. CDRs are tested for expected behavior.'
 
 properties:
-    minversion: '1.4'
+    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

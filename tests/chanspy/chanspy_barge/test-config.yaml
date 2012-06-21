@@ -11,7 +11,7 @@ testinfo:
          fail.'
 
 properties:
-    minversion: '1.6.2'
+    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

@@ -7,7 +7,7 @@ testinfo:
         authenticated and able to check their voicemail.
 
 properties:
-    minversion: '1.8'
+    minversion: '1.8.0.0'
     buildoptions: 'TEST_FRAMEWORK'
     dependencies:
         - python : 'twisted'

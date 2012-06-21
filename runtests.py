@@ -140,8 +140,7 @@ class TestRun:
     def __check_can_run(self, ast_version):
         """Check tags and dependencies in the test config."""
         if self.test_config.check_deps(ast_version) and \
-                self.test_config.check_tags(self.options.tags) and \
-                self.test_config.check_skip(ast_version):
+                self.test_config.check_tags(self.options.tags):
             self.can_run = True
 
     def __parse_run_output(self, output):
@@ -250,11 +249,11 @@ class TestSuite:
                 if t.test_config.maxversion is not None:
                     print "--- --> Maximum Version: %s (%s)" % \
                         (str(t.test_config.maxversion), str(t.test_config.maxversion_check))
+                for f in t.test_config.features:
+                    print "--- --> Version Feature: %s - %s" % (f, str(t.test_config.feature_check[f]))
                 print "--- --> Tags: %s" % (t.test_config.tags)
                 for d in t.test_config.deps:
                     print "--- --> Dependency: %s - %s" % (d.name, str(d.met))
-                for s in t.test_config.skips:
-                    print "--- --> Skip: %s - %s" % (s.name, str(s.met))
                 print
                 continue
             if self.global_config != None:

@@ -6,7 +6,7 @@ testinfo:
         to ensure that the caller has entered the queue in the position we expect."
 
 properties:
-    minversion: '1.8'
+    minversion: '1.8.0.0'
     dependencies:
         - app : 'bash'
         - app : 'asttest'

@@ -4,7 +4,7 @@ testinfo:
         'A UAC registers with Asterisk.  It uses TLS with IPv4 addresses.'
 
 properties:
-    minversion: '1.6'
+    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

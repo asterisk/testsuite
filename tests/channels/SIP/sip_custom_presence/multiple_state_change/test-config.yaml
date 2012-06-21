@@ -4,7 +4,7 @@ testinfo:
         'Subscribe to presence and get notified of multiple presence changes'
 
 properties:
-    minversion: '11'
+    minversion: '11.0.0'
     dependencies:
         - app : 'sipp'
     tags:

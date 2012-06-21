@@ -13,7 +13,7 @@ testinfo:
         attempt to call the member, we will not autopause him."
 
 properties:
-    minversion: '1.4'
+    minversion: '1.8.0.0'
     dependencies:
         - app : 'bash'
         - app : 'asttest'

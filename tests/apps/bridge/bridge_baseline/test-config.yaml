@@ -7,6 +7,6 @@ testinfo:
          and if the channels is the bridge are the expected channels.'
 
 properties:
-    minversion: '1.6.2'
+    minversion: '1.8.0.0'
     tags:
         - bridge

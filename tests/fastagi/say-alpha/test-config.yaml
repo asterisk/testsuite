@@ -4,7 +4,7 @@ testinfo:
         'Test AGI SAY ALPHA command using FastAGI.'
 
 properties:
-    minversion: '1.4'
+    minversion: '1.8.0.0'
     dependencies:
         - app : 'python'
         - python : 'twisted'

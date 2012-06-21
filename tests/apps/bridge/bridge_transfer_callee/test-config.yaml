@@ -8,6 +8,6 @@ testinfo:
          correct order.'
 
 properties:
-    minversion: '11'
+    minversion: '11.0.0'
     tags:
         - bridge

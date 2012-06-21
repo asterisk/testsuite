@@ -14,7 +14,7 @@ testinfo:
         the CONFBRIDGE function on a default bridge.
 
 properties:
-    minversion: '10'
+    minversion: '10.0.0'
     buildoption: 'TEST_FRAMEWORK'
     tags:
         - confbridge

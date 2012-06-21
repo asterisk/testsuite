@@ -8,7 +8,7 @@ testinfo:
          arguments of F().'
 
 properties:
-    minversion: '11'
+    minversion: '11.0.0'
     dependencies:
         - asterisk: 'app_queue'
     tags:

@@ -6,7 +6,7 @@ testinfo:
         from in-dialog requests, where in-dialog requests face less scrutiny.'
 
 properties:
-    minversion: '1.4'
+    minversion: '1.8.0.0'
     dependencies:
         - python: 'twisted'
         - sipp:

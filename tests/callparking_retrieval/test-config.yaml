@@ -5,7 +5,7 @@ testinfo:
         'This test verifies that retrieving a parked call does not hamper the ability to park it once again.'
 
 properties:
-    minversion: '1.4'
+    minversion: '1.8.0.0'
     tags:
         - parking
         - IAX

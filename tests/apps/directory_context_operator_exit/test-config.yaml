@@ -5,7 +5,7 @@ testinfo:
         app_directory when a dial context is specified.
 
 properties:
-    minversion: '1.8'
+    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

@@ -10,7 +10,7 @@ testinfo:
         - mantis : '16331'
 
 properties:
-    minversion: '1.4'
+    minversion: '1.8.0.0'
     dependencies:
         - app : 'bash'
         - app : 'asttest'

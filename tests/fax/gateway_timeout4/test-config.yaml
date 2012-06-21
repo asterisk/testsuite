@@ -17,7 +17,7 @@ testinfo:
         - jira : 'ASTERISK-18219'
 
 properties:
-    minversion: '10'
+    minversion: '10.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

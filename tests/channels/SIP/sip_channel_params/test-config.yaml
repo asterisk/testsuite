@@ -15,7 +15,7 @@ testinfo:
         -jira : ABE-2103
 
 properties:
-    minversion: '1.8'
+    minversion: '1.8.0.0'
     dependencies:
         - app : 'bash'
         - app : 'asttest'

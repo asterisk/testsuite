@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Until digium phone support is merged into trunk'
     summary: 'Test the VoiceMailPlayMsg application'
     description: |
         This test verifies playing back a voicemail using the VoiceMailPlayMsg application
@@ -10,11 +9,7 @@ testinfo:
         * failure to play a message with an invalid message ID specified
 
 properties:
-    # min version is cert-1.8.11
-    minversion: '1.8.11'
-    # Skip open source Asterisk versions up to 11
-    skip: '1.8'
-    skip: '10'
+    minversion: '1.8.11-cert1'
     buildoption: 'TEST_FRAMEWORK'
     testconditions:
         - name: 'threads'
