@@ -326,7 +326,7 @@ class TestConfig:
                         properties["expectedResult"]
         if "tags" in properties:
             self.tags = properties["tags"]
-        if "feature" in properties:
+        if "features" in properties:
             self.features.extend(properties["features"])
             for f in self.features:
                 self.feature_check[f] = False
