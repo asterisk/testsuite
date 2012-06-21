@@ -11,4 +11,4 @@ properties:
         - python : 'starpy'
         - asterisk : 'cdr_csv'
     tags:
-        - IAX
+        - iax2

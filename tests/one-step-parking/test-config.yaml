@@ -9,5 +9,5 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
     tags:
-        - IAX
+        - iax2
         - parking
