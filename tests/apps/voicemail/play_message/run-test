@@ -66,8 +66,9 @@ class PlayMsg(TestCase):
     def _start_test(self, ami):
         test = self._tests[self._current_test]
         logger.debug("Setting context=%s; mailbox=%s; msgid=%s" % (test["context"], test["mailbox"], test["msg_id"]))
+        variable_value = '%s,MAILBOX=%s,MSGID=%s' % (test['context'], test['mailbox'], test['msg_id'])
         ami.originate(channel = "Local/playmsg@voicemail", application = "Echo",
-            variable={"MAILCONTEXT": test["context"], "MAILBOX": test["mailbox"], "MSGID": test["msg_id"]}).addErrback(self.handleOriginateFailure)
+            variable={"MAILCONTEXT": variable_value}).addErrback(self.handleOriginateFailure)
 
     def test_event_handler(self, ami, event):
         if 'state' in event and 'message' in event:
