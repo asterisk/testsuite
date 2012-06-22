@@ -220,6 +220,11 @@ class TestSuite:
             if t.test_config.maxversion is not None:
                 print "      --> Maximum Version: %s (%s)" % \
                              (str(t.test_config.maxversion), str(t.test_config.maxversion_check))
+            if t.test_config.features:
+                print "      --> Features:"
+                for feature_name in t.test_config.features:
+                    print "        --> %s: -- Met: %s" % \
+                        (feature_name, str(t.test_config.feature_check[feature_name]))
             if t.test_config.tags:
                 print "      --> Tags: %s" % str(t.test_config.tags)
             for d in t.test_config.deps:
@@ -230,8 +235,6 @@ class TestSuite:
                 else:
                     print "      --> Dependency: %s -- Met: %s" % (d.name,
                              str(d.met))
-            for s in t.test_config.skips:
-                    print "      --> Skip: %s -- Met: %s" % (s.name, str(s.met))
 
             i += 1
 
