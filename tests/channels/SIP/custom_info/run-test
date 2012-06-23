@@ -25,64 +25,8 @@ SIPP_SCENARIOS = [
     {'scenario' : 'excluded_useragent.xml',},
 ]
 
-# set port numberings
-port = 5061
-def update_entry(entry):
-    global port
-    entry['-p'] = "%d" % port
-    port += 1
-
 # generate SIPP scenarios with appropriate port numbers and the config to go with it
 def main():
-    [update_entry(i) for i in SIPP_SCENARIOS]
-    test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
-    reactor.run()
-    if not test.passed:
-        return 1
-
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
-
-#!/usr/bin/env python
-'''
-Copyright (C) 2011, Digium, Inc.
-Kinsey Moore <kmoore@digium.com>
-
-This program is free software, distributed under the terms of
-the GNU General Public License Version 2.
-'''
-
-import sys
-import os
-
-sys.path.append("lib/python")
-
-from twisted.internet import reactor
-from asterisk.sipp import SIPpTest
-
-
-WORKING_DIR = "SIP/custom_info"
-TEST_DIR = os.path.dirname(os.path.realpath(__file__))
-
-SIPP_SCENARIOS = [
-    {'scenario' : 'send_all.xml',},
-    {'scenario' : 'selected_useragent.xml',},
-    {'scenario' : 'excluded_useragent.xml',},
-]
-
-# set port numberings
-port = 5061
-def update_entry(entry):
-    global port
-    entry['-p'] = "%d" % port
-    port += 1
-
-# generate SIPP scenarios with appropriate port numbers and the config to go with it
-def main():
-    [update_entry(i) for i in SIPP_SCENARIOS]
     test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
     reactor.run()
     if not test.passed:
