@@ -17,3 +17,4 @@ tests:
     - test: 'blind-transfer-accountcode'
     - test: 'originate-cdr-disposition'
     - test: 'app_dial_G_flag'
+    - test: 'batch_cdrs'

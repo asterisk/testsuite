@@ -3,6 +3,40 @@ testinfo:
     description: |
         'Do a simple unanswered call and check for a CDR'
 
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/1@default'
+            application: 'Echo'
+
+cdr-config:
+    -
+        file: 'cdrtest_local'
+        lines:
+            -
+                accountcode: 'cdrtest_local'
+                source: ''
+                destination: '1'
+                dcontext: 'default'
+                callerid: ''
+                channel: 'Local/1@default-.*'
+                dchannel: ''
+                lastapp: 'Hangup'
+                lastarg: ''
+                disposition: 'NO ANSWER'
+                amaflags: 'DOCUMENTATION'
+
 properties:
     minversion: '1.8.0.0'
     dependencies:

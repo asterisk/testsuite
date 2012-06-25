@@ -50,6 +50,9 @@ class TestRun:
             "%s/run-test" % self.test_name,
         ]
 
+        if not os.path.exists(cmd[0]):
+            cmd = ["./lib/python/asterisk/TestRunner.py",
+                   "%s" % self.test_name]
         if os.path.exists(cmd[0]) and os.access(cmd[0], os.X_OK):
             msg = "Running %s ..." % cmd
             print msg

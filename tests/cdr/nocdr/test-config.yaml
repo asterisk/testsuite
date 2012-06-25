@@ -1,7 +1,35 @@
 testinfo:
     summary: 'Test the NoCDR application'
     description: |
-        'Answer a call and run NoCDR and unsure no CDR is produced'
+        'Answer a call and run NoCDR and ensure no CDR is produced'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -
+            channel: 'Local/1@default'
+            application: 'Echo'
+
+cdr-config:
+    -
+        file: 'Master'
+        lines:
+            -
+                destination: '1'
+                dcontext: 'default'
+                channel: 'Local/1@default-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
 
 properties:
     minversion: '1.8.0.0'

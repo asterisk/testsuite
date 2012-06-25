@@ -4,6 +4,45 @@ testinfo:
         'CDRTestCase Test - Asterisk dials an extension locally which dials with SIP
          to another extension which does not pick up and sends congestion.'
 
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/1@default'
+            application: 'Echo'
+
+cdr-config:
+    -
+        file: 'cdrtest_sip'
+        lines:
+            -
+                accountcode: 'cdrtest_sip'
+                source: 'Anonymous'
+                destination: '2'
+                dcontext: 'default'
+                callerid: '"Anonymous" <Anonymous>'
+                channel: 'SIP/test-00000001'
+                disposition: 'CONGESTION'
+                amaflags: 'DOCUMENTATION'
+    -
+        file: 'cdrtest_local'
+        lines:
+            -
+                destination: '1'
+                dcontext: 'default'
+                disposition: 'CONGESTION'
+                amaflags: 'DOCUMENTATION'
+
 properties:
     minversion: '11.0'
     dependencies:

@@ -1,0 +1,155 @@
+testinfo:
+    summary: "Test batch creation of CDR entries"
+    description: |
+        "This test sets the CDR configuration to record CDR in a batch, triggered
+        either by 10 records being created or by the default timeout.  10 calls
+        are then made: 8 that result in a BUSY indication, and 2 that are answered
+        by a SIP endpoint.  The test then verifies that all 10 CDR records were
+        created with the correct values, including duration and billsec."
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/dial_busy@default'
+            application: 'Echo'
+        -
+            channel: 'Local/dial_busy@default'
+            application: 'Echo'
+        -
+            channel: 'Local/dial_busy@default'
+            application: 'Echo'
+        -
+            channel: 'Local/dial_busy@default'
+            application: 'Echo'
+        -
+            channel: 'Local/dial_busy@default'
+            application: 'Echo'
+        -
+            channel: 'Local/dial_busy@default'
+            application: 'Echo'
+        -
+            channel: 'Local/dial_busy@default'
+            application: 'Echo'
+        -
+            channel: 'Local/dial_busy@default'
+            application: 'Echo'
+        -
+            channel: 'Local/dial_answer@default'
+            application: 'Echo'
+        -
+            channel: 'Local/dial_answer@default'
+            application: 'Echo'
+
+cdr-config:
+    -
+        file: 'cdrtest_local'
+# Note that this will emit a warning when run:
+# WARNING[11196]: astcsv:192 match: More than one CSV permutation results in success
+# This is true - more then one CSV record could match the expected results below,
+# as the duration and/or billsec use a regular expression to match the times.
+# However, what we care about is that (a) the call was either busy or answered,
+# and that (b) the duration/billsec are within an acceptable range.  For BUSY,
+# that should be no more then a single second; for ANSWERED, that should be
+# non-zero (and definitely less than 10 seconds)
+        lines:
+            -
+                destination: 'dial_busy'
+                dcontext: 'default'
+                channel: 'Local/dial_busy@default-.*'
+                disposition: 'BUSY'
+                amaflags: 'DOCUMENTATION'
+                duration: '^([0-1])$'
+                billsec: '0'
+            -
+                destination: 'dial_busy'
+                dcontext: 'default'
+                channel: 'Local/dial_busy@default-.*'
+                disposition: 'BUSY'
+                amaflags: 'DOCUMENTATION'
+                duration: '^([0-1])$'
+                billsec: '0'
+            -
+                destination: 'dial_busy'
+                dcontext: 'default'
+                channel: 'Local/dial_busy@default-.*'
+                disposition: 'BUSY'
+                amaflags: 'DOCUMENTATION'
+                duration: '^([0-1])$'
+                billsec: '0'
+            -
+                destination: 'dial_busy'
+                dcontext: 'default'
+                channel: 'Local/dial_busy@default-.*'
+                disposition: 'BUSY'
+                amaflags: 'DOCUMENTATION'
+                duration: '^([0-1])$'
+                billsec: '0'
+            -
+                destination: 'dial_busy'
+                dcontext: 'default'
+                channel: 'Local/dial_busy@default-.*'
+                disposition: 'BUSY'
+                amaflags: 'DOCUMENTATION'
+                duration: '^([0-1])$'
+                billsec: '0'
+            -
+                destination: 'dial_busy'
+                dcontext: 'default'
+                channel: 'Local/dial_busy@default-.*'
+                disposition: 'BUSY'
+                amaflags: 'DOCUMENTATION'
+                duration: '^([0-1])$'
+                billsec: '0'
+            -
+                destination: 'dial_busy'
+                dcontext: 'default'
+                channel: 'Local/dial_busy@default-.*'
+                disposition: 'BUSY'
+                amaflags: 'DOCUMENTATION'
+                duration: '^([0-1])$'
+                billsec: '0'
+            -
+                destination: 'dial_busy'
+                dcontext: 'default'
+                channel: 'Local/dial_busy@default-.*'
+                disposition: 'BUSY'
+                amaflags: 'DOCUMENTATION'
+                duration: '^([0-1])$'
+                billsec: '0'
+            -
+                destination: 'dial_answer'
+                dcontext: 'default'
+                channel: 'Local/dial_answer@default-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+                duration: '^([1-9])$'
+                billsec: '^([1-9])$'
+            -
+                destination: 'dial_answer'
+                dcontext: 'default'
+                channel: 'Local/dial_answer@default-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+                duration: '^([1-9])$'
+                billsec: '^([1-9])$'
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'cdr_csv'
+    tags:
+        - CDR
+        - chan_local

@@ -40,13 +40,20 @@ class TestCase(object):
     other utilities.
     """
 
-    def __init__(self):
+    def __init__(self, test_path = ''):
         """
         Create a new instance of a TestCase.  Must be called by inheriting
         classes.
+
+        Parameters:
+        test_path Optional parameter that specifies the path where this test
+            resides
         """
 
-        self.test_name = os.path.dirname(sys.argv[0])
+        if not len(test_path):
+            self.test_name = os.path.dirname(sys.argv[0])
+        else:
+            self.test_name = test_path
         self.base = self.test_name.replace("tests/", "", 1)
         self.ast = []
         self.ami = []
@@ -61,9 +68,10 @@ class TestCase(object):
         self.testStateController = None
         self.pcap = None
         self.pcapfilename = None
-        self.__stopping = False
+        self._stopping = False
         self.testlogdir = os.path.join(Asterisk.test_suite_root, self.base, str(os.getpid()))
         self.ast_version = AsteriskVersion()
+        self._stop_callbacks = []
 
         os.makedirs(self.testlogdir)
 
@@ -297,8 +305,8 @@ class TestCase(object):
                 temp_defer = self.ast[index].stop()
                 stop_defers.append(temp_defer)
 
-            d = defer.DeferredList(stop_defers, consumeErrors=True)
-            d.addCallback(__check_success_failure)
+            defer.DeferredList(stop_defers, consumeErrors=True).addCallback(
+                __check_success_failure)
             return result
 
         self.__stop_deferred = defer.Deferred()
@@ -322,10 +330,12 @@ class TestCase(object):
                 except twisted.internet.error.ReactorNotRunning:
                     # Something stopped it between our checks - at least we're stopped
                     pass
-        if not self.__stopping:
+        if not self._stopping:
+            self._stopping = True
             df = self.__stop_asterisk()
             df.addCallback(__stop_reactor)
-            self.__stopping = True
+            for callback in self._stop_callbacks:
+                df.addCallback(callback)
 
     def __reactor_timeout(self):
         """
@@ -430,3 +440,19 @@ class TestCase(object):
             self.passed = False
         else:
             logger.info("Test Condition %s failed but expected failure was set; test status not modified" % test_condition.getName())
+
+    def evaluate_results(self):
+        """ Return whether or not the test has passed """
+        return self.passed
+
+    def register_stop_observer(self, callback):
+        ''' Register an observer that will be called when Asterisk is stopped
+
+        Parameters:
+        callback The deferred callback function to be called when Asterisk is stopped
+
+        Note:
+        This appends a callback to the deferred chain of callbacks executed when
+        all instances of Asterisk are stopped.
+        '''
+        self._stop_callbacks.append(callback)

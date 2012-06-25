@@ -4,6 +4,36 @@ testinfo:
         'An Asterisk instance originates a local channel to dial itself via SIP.
         Upon reaching the extension the SIP channel dials, Asterisk will return congestion.'
 
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/1@default'
+            application: 'Echo'
+
+cdr-config:
+    -
+        file: 'cdrtest_local'
+        lines:
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                dcontext: 'default'
+                channel: 'Local/1@default-.*'
+                dchannel: 'SIP/test-.*'
+                disposition: 'FAILED'
+                amaflags: 'DOCUMENTATION'
+
 properties:
     minversion: '1.8.0.0'
     dependencies:

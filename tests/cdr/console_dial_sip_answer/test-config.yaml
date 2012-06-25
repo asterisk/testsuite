@@ -4,6 +4,46 @@ testinfo:
         'An Asterisk instance originates a local channel to dial an internal extension
         with a SIP peer. Asterisk then answers this call and shortly after hangs up.'
 
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/1@default'
+            application: 'Echo'
+
+cdr-config:
+    -
+        file: 'cdrtest_local'
+        lines:
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                dcontext: 'default'
+                channel: 'Local/1@default-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+    -
+        file: 'cdrtest_sip'
+        lines:
+            -
+                accountcode: 'cdrtest_sip'
+                destination: '2'
+                dcontext: 'test'
+                channel: 'SIP/test-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+
 properties:
     minversion: '1.8.0.0'
     dependencies:

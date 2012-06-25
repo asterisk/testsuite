@@ -1,7 +1,40 @@
 testinfo:
     summary: 'Test that Set(CDR(userfield)=...) works'
     description: |
-        'Test that the setting the userfield field in the CDR works'
+        'Test that setting the userfield field in the CDR works'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -
+            channel: 'Local/1@default'
+            application: 'Echo'
+
+cdr-config:
+    -
+        file: 'cdrtest_local'
+        lines:
+            -
+                source: ''
+                destination: '1'
+                dcontext: 'default'
+                callerid: ''
+                channel: 'Local/1@default-.*'
+                dchannel: ''
+                lastapp: 'Hangup'
+                lastarg: ''
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+                userfield: 'bazinga'
 
 properties:
     minversion: '1.8.0.0'

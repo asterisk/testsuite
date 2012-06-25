@@ -5,12 +5,50 @@ testinfo:
         the other instance transfers to another exetnsion  and the CDRs are
         tested for expected behavior.'
 
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/1@default'
+            application: 'Echo'
+
+cdr-config:
+    -
+        file: 'cdrtest_local'
+        lines:
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                dcontext: 'default'
+                channel: 'Local/1@default-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+    -
+        file: 'cdrtest_local3'
+        lines:
+            -
+                accountcode: 'cdrtest_local3'
+                destination: '3'
+                dcontext: 'default'
+                channel: 'Local/3@default-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
 properties:
     minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-        - custom : 'soundcard'
         - asterisk : 'cdr_csv'
     tags:
         - dial

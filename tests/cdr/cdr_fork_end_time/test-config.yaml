@@ -9,6 +9,47 @@ testinfo:
          the first record is checked to see if it came reasonably close to the beginning
          time of the second (<=1 second to accomodate potential timing differences).'
 
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            load-from-path: 'tests/cdr'
+            config-section: 'cdr-config'
+            typename: 'ForkCdrModule.ForkCdrModuleEndTime'
+
+test-object-config:
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/1@default'
+            application: 'Echo'
+
+cdr-config:
+    -
+        file: 'cdrtest_local'
+        lines:
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'ForkCDR'
+                dcontext: 'default'
+                channel: 'Local/1@default-.*'
+                dchannel: 'SIP/test-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'Hangup'
+                dcontext: 'default'
+                dchannel: 'SIP/test-.*'
+                channel: 'Local/1@default-.*'
+                disposition: 'NO ANSWER'
+                amaflags: 'DOCUMENTATION'
+
 properties:
     minversion: '1.8.13.0'
     dependencies:

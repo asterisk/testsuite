@@ -6,6 +6,49 @@ testinfo:
         dial another number which answers. Afterwards, the CDRs are tested for
         expected behavior.'
 
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            load-from-path: 'tests/cdr'
+            config-section: 'cdr-config'
+            typename: 'ForkCdrModule.ForkCdrModuleBasic'
+
+test-object-config:
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/1@default'
+            application: 'Echo'
+
+cdr-config:
+    -
+        file: 'cdrtest_local'
+        lines:
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'Dial'
+                lastarg: 'SIP/test/3'
+                dcontext: 'default'
+                channel: 'Local/1@default-.*'
+                dchannel: 'SIP/test-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'Dial'
+                lastarg: 'SIP/test/3'
+                dcontext: 'default'
+                dchannel: 'SIP/test-.*'
+                channel: 'Local/1@default-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
 properties:
     minversion: '1.8.0.0'
     dependencies:
