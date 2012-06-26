@@ -1,7 +1,9 @@
 testinfo:
     summary: 'Test Reception of Digium custom presence'
     description: |
-        'Subscribe to presence and get notified of presence changes'
+        'Subscribe to presence and device state from a device without
+        a "Digium" User-agent header. Ensure that Presence updates are not
+        sent but that the device state updates are sent.'
 
 properties:
     minversion: '11.0.0'
