@@ -41,7 +41,7 @@
 
   <recv response="200" rtd="true">
     <action>
-      <ereg regexp="m=text [0-9]{1,5} RTP/AVP( [0-9]{1,3})+..?a=rtpmap:106 [tT]140/1000"
+      <ereg regexp="m=text [0-9]{1,5} RTP/AVP( [0-9]{1,3})+..*a=rtpmap:106 [tT]140/1000"
             search_in="body" check_it="true" assign_to="1"/>
       <strcmp assign_to="1" variable="1" value=""/>
     </action>

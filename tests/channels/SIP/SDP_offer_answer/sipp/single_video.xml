@@ -43,7 +43,7 @@
 
   <recv response="200" rtd="true">
     <action>
-      <ereg regexp="m=video [0-9]{1,5} RTP/AVP( [0-9]{1,3})+..?a=rtpmap:31 H261/90000"
+      <ereg regexp="m=video [0-9]{1,5} RTP/AVP( [0-9]{1,3})+..*a=rtpmap:31 H261/90000"
             search_in="body" check_it="true" assign_to="1"/>
       <strcmp assign_to="1" variable="1" value=""/>
     </action>
