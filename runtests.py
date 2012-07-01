@@ -18,6 +18,7 @@ import yaml
 import socket
 import shutil
 import xml.dom
+import random
 
 sys.path.append("lib/python")
 
@@ -71,23 +72,38 @@ class TestRun:
             self.__parse_run_output(self.stdout)
 
             self.passed = (p.returncode == 0 and self.test_config.expectPass) or (p.returncode and not self.test_config.expectPass)
+            core_dumps = self.__check_for_core()
+            if (len(core_dumps)):
+                print "Core dumps detected; failing test"
+                self.passed = False
+                self.__archive_core_dumps(core_dumps)
             if not self.passed:
                 self.__archive_ast_logs()
-                self.__archive_core_dump()
                 self.__archive_pcap_dump()
 
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
         self.time = time.time() - start_time
 
-    def __archive_core_dump(self):
-        if os.path.exists("./core"):
-            print "Core dump detected; an Asterisk instance must have crashed"
+    def __check_for_core(self):
+        contents = os.listdir('.')
+        core_files = []
+        for item in contents:
+            if item.startswith('core.'):
+                core_files.append(item)
+        return core_files
+
+    def __archive_core_dumps(self, core_dumps):
+        for core in core_dumps:
+            if not os.path.exists(core):
+                print "Unable to find core dump file %s, skipping" % core
+                continue
+            random_num = random.randint(0, 16000)
             dest_dir = "./logs/%s" % self.test_name.lstrip("tests/")
             if not os.path.exists(dest_dir):
                 os.makedirs(dest_dir)
-            dest_file = open(dest_dir + "/backtrace.txt", "w")
-            gdb_cmd = ["gdb", "-se", "asterisk", "-ex", "bt full", "-ex", "thread apply all bt", "--batch", "-c", "core"]
+            dest_file = open(dest_dir + "/backtrace_%s.txt" % str(random_num), "w")
+            gdb_cmd = ["gdb", "-se", "asterisk", "-ex", "bt full", "-ex", "thread apply all bt", "--batch", "-c", core]
             print "Running %s" % (" ".join(gdb_cmd),)
             try:
                 res = subprocess.call(gdb_cmd, stdout=dest_file, stderr=subprocess.STDOUT)
@@ -103,7 +119,7 @@ class TestRun:
             finally:
                 dest_file.close()
                 try:
-                    os.rename("./core", dest_dir + "/core")
+                    os.rename(core, "%s/core_%s" % (dest_dir,str(random_num)))
                 except OSError, e:
                     print "Error moving core file: %s: Beware of the stale core file in CWD!" % (e,)
 
