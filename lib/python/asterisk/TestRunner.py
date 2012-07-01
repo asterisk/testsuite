@@ -233,7 +233,7 @@ def main(argv = None):
         args = sys.argv
 
     # Set up logging - we're probably the first ones run!
-    logConfigFile = os.path.join(os.getcwd(), "%s" % 'LOGGER.conf')
+    logConfigFile = os.path.join(os.getcwd(), "%s" % 'logger.conf')
     if os.path.exists(logConfigFile):
         try:
             logging.config.fileConfig(logConfigFile, None, False)
@@ -242,7 +242,8 @@ def main(argv = None):
             "logging statements may be missing"
             logging.config.fileConfig(logConfigFile)
     else:
-        print "WARNING: no logging.conf file found; using default configuration"
+        print "WARNING: no logging.conf file found at %s; using default " \
+        " configuration" % (logConfigFile)
         logging.basicConfig()
 
     if (len(args) < 2):
