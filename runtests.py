@@ -119,9 +119,9 @@ class TestRun:
             finally:
                 dest_file.close()
                 try:
-                    os.rename(core, "%s/core_%s" % (dest_dir,str(random_num)))
+                    os.unlink(core)
                 except OSError, e:
-                    print "Error moving core file: %s: Beware of the stale core file in CWD!" % (e,)
+                    print "Error removing core file: %s: Beware of the stale core file in CWD!" % (e,)
 
     def __archive_ast_logs(self):
         ast_directories = "%s/%s" % (Asterisk.test_suite_root, self.test_name.lstrip("tests/"))
