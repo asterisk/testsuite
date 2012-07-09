@@ -26,6 +26,7 @@ tests:
     - dir: 'fastagi'
     - dir: 'agi'
     - dir: 'pbx'
+    - test: 'predial'
     - dir: 'fax'
     - dir: 'apps'
     - dir: 'connected_line'

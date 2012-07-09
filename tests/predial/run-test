@@ -1,0 +1,194 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2012, Digium, Inc.
+Richard Mudgett <rmudgett@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import logging
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.TestCase import TestCase
+
+logger = logging.getLogger(__name__)
+
+
+class PredialTest(TestCase):
+    def __init__(self):
+        TestCase.__init__(self)
+
+        self.test_complete = False
+
+        # Number of tests in each series
+        self.single_tests = 6
+        self.forked_tests = 6
+        self.followme_tests = 6
+
+        self.test_series = 0
+
+        # Total number of subtests run
+        self.test_count = 0
+        # Number of subtests that passed
+        self.pass_count = 0
+
+        # Create an Asterisk instance ...
+        self.create_asterisk()
+
+    # Initiate next test call.
+    def initiate_next_test(self, ami):
+        # Determine which test call to make.
+        if 0 < self.single_tests:
+            # Setup the current test in the series
+            self.test_name = "single_test%d" % self.test_series
+            self.expected_predial_out_count = 1
+
+            # Prepare for next test in the series
+            self.test_series += 1
+            if self.single_tests <= self.test_series:
+                # Did all single_tests
+                self.single_tests = 0
+                self.test_series = 0
+        elif 0 < self.forked_tests:
+            # Setup the current test in the series
+            self.test_name = "forked_test%d" % self.test_series
+            self.expected_predial_out_count = 2
+
+            # Prepare for next test in the series
+            self.test_series += 1
+            if self.forked_tests <= self.test_series:
+                # Did all forked_tests
+                self.forked_tests = 0
+                self.test_series = 0
+        elif 0 < self.followme_tests:
+            # Setup the current test in the series
+            self.test_name = "followme_test%d" % self.test_series
+            self.expected_predial_out_count = 3
+
+            # Prepare for next test in the series
+            self.test_series += 1
+            if self.followme_tests <= self.test_series:
+                # Did all followme_tests
+                self.followme_tests = 0
+                self.test_series = 0
+        else:
+            # Evaluate overall test result and end test
+            if self.test_count == self.pass_count:
+                self.passed = True
+            self.stop_reactor()
+            return
+
+        # Reset UserEvent counts and flags.
+        self.predial_in_count = 0
+        self.predial_out_count = 0
+        self.saw_connected = False
+        self.saw_after = False
+
+        self.test_count += 1
+
+        # Originate the test call.
+        logger.info("Starting Test %s" % self.test_name)
+        df = ami.originate(channel = "Local/ans@caller_context", exten = self.test_name, context = "test_context", priority = 1)
+        df.addErrback(self.handleOriginateFailure)
+
+    # Called when got UserEvent event from the Asterisk instance
+    def evt_userevent(self, ami, event):
+        if self.test_complete:
+            return
+        # We want the AMI UserEvent header but the headers put
+        # in as dictionary keys are lowercased.
+        evt = event.get("userevent")
+        tst = event.get("test")
+
+        if tst != self.test_name:
+            logger.debug("Stale Test: " + str(tst) + " UserEvent: " + str(evt) + " Expected-test: " + str(self.test_name))
+            return
+
+        if evt == "U_Predial":
+            which = event.get("which")
+            who = event.get("who")
+            exten = event.get("exten")
+            expected = event.get("expected")
+            logger.debug("Test: " + str(tst) + " UserEvent: " + str(evt) + " which: " + str(which) + " who: " + str(who) + " exten: " + str(exten) + " expected: " + str(expected))
+            if exten != expected:
+                logger.warning("Test: " + str(tst) + " UserEvent: " + str(evt) + " exten: " + str(exten) + " expected: " + str(expected) +  " Does not match!")
+                return
+            if exten != "predial" and exten != "xtn" and exten != tst:
+                logger.warning("Test: " + str(tst) + " UserEvent: " + str(evt) + " exten: " + str(exten) + " is unknown")
+                return
+            if which != who:
+                logger.warning("Test: " + str(tst) + " UserEvent: " + str(evt) + " which: " + str(which) + " who: " + str(who) +  " Does not match!")
+                return
+            if which == "CALLER":
+                self.predial_in_count += 1
+            elif which == "callee":
+                self.predial_out_count += 1
+            else:
+                logger.warning("Test: " + str(tst) + " UserEvent: " + str(evt) + " which: " + str(which) + " is unknown")
+            return
+        if evt == "U_Connected":
+            to = event.get("to")
+            logger.debug("Test: " + str(tst) + " UserEvent: " + str(evt) + " to: " + str(to))
+            self.saw_connected = True
+            return
+        if evt == "U_After":
+            status = event.get("status")
+            logger.warning("Test: " + str(tst) + " UserEvent: " + str(evt) + " status: " + str(status))
+            self.saw_after = True
+            return
+        if evt == "U_Hangup":
+            channel = event.get("channel")
+            logger.debug("Test: " + str(tst) + " UserEvent: " + str(evt) + " channel: " + str(channel))
+
+            # Evaluate subtest result
+            if not self.saw_after \
+                and self.saw_connected \
+                and self.predial_in_count == 1 \
+                and self.predial_out_count == self.expected_predial_out_count:
+                self.pass_count += 1
+            else:
+                logger.warning("Test " + str(self.test_name) + " failed")
+
+            # Give each subtest the full time
+            self.reset_timeout()
+
+            self.initiate_next_test(ami)
+            return
+        logger.debug("Test: " + str(tst) + " UserEvent: " + str(evt) + " Unknown UserEvent")
+
+    # This is called for each AMI connection established.
+    def ami_connect(self, ami):
+        # Add AMI event triggers
+        # Ast1 events to handle
+        self.ami[ami.id].registerEvent("UserEvent", self.evt_userevent)
+        self.initiate_next_test(ami)
+
+    # This is called when the reactor has started running.
+    def run(self):
+        TestCase.run(self)
+        self.create_ami_factory()
+
+    # This is called when we stop the reactor.
+    def stop_reactor(self):
+        self.test_complete = True
+
+        TestCase.stop_reactor(self)
+
+
+def main():
+    # Run Predial Test
+    test = PredialTest()
+    reactor.run()
+    if test.passed:
+        logger.info("Test passed")
+        return 0
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
