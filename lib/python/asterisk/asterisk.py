@@ -237,6 +237,19 @@ class Asterisk:
         config files, if they have not already been installed
         """
 
+        def __start_asterisk_callback():
+            self.processProtocol = AsteriskProtocol(self.host, self.__stop_deferred)
+            self.process = reactor.spawnProcess(self.processProtocol,
+                                                self.cmd[0],
+                                                self.cmd)
+            # Begin the wait fully booted cycle
+            self.__start_asterisk_time = time.time()
+            reactor.callLater(0, __execute_wait_fully_booted)
+
+        def __execute_wait_fully_booted():
+            cli_deferred = self.cli_exec("core waitfullybooted")
+            cli_deferred.addCallbacks(__wait_fully_booted_callback, __wait_fully_booted_error)
+
         def __wait_fully_booted_callback(cli_command):
             """ Callback for CLI command waitfullybooted """
             self.__start_deferred.callback("Successfully started Asterisk %s" % self.host)
@@ -248,13 +261,12 @@ class Asterisk:
                 self.__start_deferred.errback("Command core waitfullybooted failed")
             else:
                 logger.debug("Asterisk core waitfullybooted failed, attempting again...")
-                cli_deferred = self.cli_exec("core waitfullybooted")
-                cli_deferred.addCallbacks(__wait_fully_booted_callback, __wait_fully_booted_error)
+                reactor.callLater(0, __execute_wait_fully_booted)
 
         self.install_configs(os.getcwd() + "/configs")
         self.__setup_configs()
 
-        cmd = [
+        self.cmd = [
             self.ast_binary,
             "-f", "-g", "-q", "-m", "-n",
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
@@ -266,13 +278,14 @@ class Asterisk:
         # exits
         self.__start_deferred = defer.Deferred()
         self.__stop_deferred = defer.Deferred()
-        self.processProtocol = AsteriskProtocol(self.host, self.__stop_deferred)
-        self.process = reactor.spawnProcess(self.processProtocol, cmd[0], cmd)
 
-        # Begin the wait fully booted cycle
-        self.__start_asterisk_time = time.time()
-        cli_deferred = self.cli_exec("core waitfullybooted")
-        cli_deferred.addCallbacks(__wait_fully_booted_callback, __wait_fully_booted_error)
+        # Asterisk will attempt to use built in configuration information if
+        # it can't find the configuration files that are being installed - which
+        # can happen due to the files being created due to a copy operation.
+        # If that happens, the test will fail - wait a second to give
+        # Asterisk time to come up fully
+        reactor.callLater(1, __start_asterisk_callback)
+
         return self.__start_deferred
 
     def stop(self):
