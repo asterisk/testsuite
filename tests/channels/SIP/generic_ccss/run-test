@@ -55,6 +55,9 @@ class GenericCCSSTest(TestCase):
         elif event ['status'] == "macro":
             LOGGER.info("macro executed as expected")
             self.success_count += 1
+        elif event ['status'] == "callback":
+            LOGGER.info("callback executed as expected")
+            self.success_count += 1
         elif event ['status'] == "BOB":
             LOGGER.info("Bouncing a call off the ccss test instance (ast2) now that bob is occupied")
             df = self.ami[0].originate("local/1234@dial-alice", "dpwait", "1234", 1)
@@ -72,8 +75,8 @@ class GenericCCSSTest(TestCase):
         self.are_we_there_yet()
 
     def are_we_there_yet(self):
-        if self.event_count == 5:
-            if self.success_count == 2:
+        if self.event_count == 6:
+            if self.success_count == 3:
                 self.passed = True
             self.stop_reactor()
 
