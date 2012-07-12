@@ -24,16 +24,8 @@ SIPP_SCENARIOS = [
     {'scenario' : 'mixed_compact_inverse.xml',},
 ]
 
-# set port numberings and timeouts
-port = 5061
-def update_entry(entry):
-    global port
-    entry['-p'] = "%d" % port
-    port += 1
-
 # generate SIPP scenarios with appropriate port numbers and the config to go with it
 def main():
-    [update_entry(i) for i in SIPP_SCENARIOS]
     test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
     reactor.run()
     if not test.passed:
