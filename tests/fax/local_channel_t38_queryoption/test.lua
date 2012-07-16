@@ -76,6 +76,8 @@ function a(host1, host2)
    s["load"] = "res_timing_timerfd.so"
    s["load"] = "res_timing_pthread.so"
 
+   s["load"] = "res_http_websocket.so"
+
    s["load"] = "codec_ulaw.so"
    s["load"] = "codec_gsm.so"
 
