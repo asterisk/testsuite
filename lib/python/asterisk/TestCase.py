@@ -59,7 +59,7 @@ class TestCase(object):
         self.ami = []
         self.fastagi = []
         self.reactor_timeout = 30
-        self.passed = False
+        self.passed = None
         self.defaultLogLevel = "WARN"
         self.defaultLogFileName = "logger.conf"
         self.timeoutId = None
@@ -72,6 +72,7 @@ class TestCase(object):
         self.testlogdir = os.path.join(Asterisk.test_suite_root, self.base, str(os.getpid()))
         self.ast_version = AsteriskVersion()
         self._stop_callbacks = []
+        self._ami_callbacks = []
 
         os.makedirs(self.testlogdir)
 
@@ -392,6 +393,8 @@ class TestCase(object):
         self.ami[ami.id] = ami
         try:
             self.ami_connect(ami)
+            for callback in self._ami_callbacks:
+                callback(ami)
         except:
             logger.error("Exception raised in ami_connect:")
             logger.error(traceback.format_exc())
@@ -456,3 +459,20 @@ class TestCase(object):
         all instances of Asterisk are stopped.
         '''
         self._stop_callbacks.append(callback)
+
+    def register_ami_observer(self, callback):
+        ''' Register an observer that will be called when TestCase connects with
+        Asterisk over the Manager interface
+
+        Parameters:
+        callback The deferred callback function to be called when AMI connects
+        '''
+        self._ami_callbacks.append(callback)
+
+    def set_passed(self, value):
+        '''Accumulate pass/fail value. If a test module has already
+        claimed that the test has failed, then this method will ignore
+        any further attempts to change the pass/fail status.'''
+        if self.passed == False:
+            return
+        self.passed = value

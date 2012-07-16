@@ -91,7 +91,7 @@ class CDRModule(object):
                 LOGGER.error("%s.csv - CDR results did not meet expectations.  Test Failed." % key)
                 expectations_met = False
 
-        self.test_object.passed = expectations_met
+        self.test_object.set_passed(expectations_met)
 
 
 class AsteriskCSVCDRLine(astcsv.AsteriskCSVLine):

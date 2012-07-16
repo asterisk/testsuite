@@ -6,12 +6,14 @@ testinfo:
         answers and then immediately hangs up. CDRs are tested for expected behavior.'
 
 test-modules:
+    add-to-search-path:
+        -
+            'tests/cdr'
     test-object:
         config-section: test-object-config
         typename: 'SimpleTestCase.SimpleTestCase'
     modules:
         -
-            load-from-path: 'tests/cdr'
             config-section: 'cdr-config'
             typename: 'ForkCdrModule.ForkCdrModuleBasic'
 

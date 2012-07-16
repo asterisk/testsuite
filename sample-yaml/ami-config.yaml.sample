@@ -1,0 +1,79 @@
+# Configuration sample for the Generic AMI Module for Events
+
+ami-config:
+    -
+        # The type of the instance. 'headermatch' means that when
+        # certain events with certain headers are encountered,
+        # Then regexes should be applied to the event to ensure that
+        # the event has expected contents
+        type: 'headermatch'
+
+        # Identifies which Asterisk server's AMI that this instance cares about.
+        # This corresponds to the AMI object's id parameter. If this option is
+        # excluded from the configuration, then "0" is implied. If multiple Asterisk
+        # instances should be evaluated, then multiple ids may be specified. The
+        # meaning behind the ids will vary between test objects
+        id: '0,1'
+
+        # Conditions that must be met in order to consider performing
+        # the match. In this case, we must receive a "Bridge" event
+        # with the "BridgeState" header set to "Link", and the CallerID1
+        # header not beginning with "Bob". An event must appear
+        # in the "match" section or the configuration is considered invalid.
+        conditions:
+            match:
+                Event: 'Bridge'
+                BridgeState: 'Link'
+            nomatch:
+                CallerID1: 'Bob.*'
+
+        # If the parameters in the "conditions" section match, then
+        # the parameters in the "requirements" section will be checked.
+        # If any of the requirements should fail, then the test has
+        # failed. In this case, The header "Uniqueid1" must begin with
+        # 1234, and the header "Bridgetype" must exactly match the string
+        # "core". If either of these requirements fails, then the
+        # test will fail.
+        requirements:
+            match:
+                Uniqueid1: '1234.*'
+                BridgeType: 'core'
+
+        # The number of times this event is expected. If just a number is
+        # provided, then the event must happen exactly that number of times.
+        # If the number is preceded by a ">" then the event must happen at
+        # least that many times. If the number is preceded by a "<" then the
+        # event must happen at most that many times. In this case, the event
+        # must occur 3 or more times.
+        count: '>3'
+    -
+        # The "callback" type indicates that when event conditions are fulfilled
+        # A callback should be called into. This is useful if pass/fail conditions
+        # depend on more than just having specific headers match what is expected.
+        # Note that while they are not described below, the "count" and "id" options
+        # are also applicable to callback types.
+        type: 'callback'
+
+        # The starting disposition of the test. If set to "pass" then the test
+        # is considered to be in a passing state at the beginning. This can be
+        # useful for cases where reception of events should not happen at all.
+        # The default is to have a starting disposition of "pass".
+        start: 'pass'
+
+        # Conditions for "callback" type are handled exactly the same
+        # as for "headermatch" types. In this case, we will only call the
+        # callback if the event is "UserEvent" and the "UserEvent" header
+        # has the value "Armageddon"
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'Armageddon'
+
+        # This is the module in which the callback will be found.
+        callbackModule: 'Butter'
+
+        # And this is the method to call for this callback instance.
+        # The callback will be given the AMI instance and the event. The
+        # expected return is a boolean to indicate the current pass/fail
+        # status of the test.
+        callbackMethod: 'fly'

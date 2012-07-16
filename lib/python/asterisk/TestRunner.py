@@ -107,15 +107,6 @@ def load_test_modules(test_config, test_object, test_path):
         else:
             module_config = test_config
 
-        if ('load-from-test' in module_spec and module_spec['load-from-test']):
-            TestModuleFinder.supported_paths.append(test_path)
-            sys.path.append(test_path)
-
-        if ('load-from-path' in module_spec):
-            TestModuleFinder.supported_paths.append(
-                module_spec['load-from-path'])
-            sys.path.append(module_spec['load-from-path'])
-
         module_type = load_and_parse_module(module_spec['typename'])
         # Modules take in two parameters: the module configuration object,
         # and the test object that they attach to
@@ -220,6 +211,28 @@ def load_test_config(test_directory):
 
     return test_config
 
+def read_module_paths(test_config, test_path):
+    '''
+    Read additional paths required for loading modules for the test
+
+    Parameters:
+    test_config The test configuration object
+    '''
+
+    if not 'test-modules' in test_config:
+        # Don't log anything. The test will complain later when
+        # attempting to load modules
+        return
+
+    if ('add-test-to-search-path' in test_config['test-modules'] and
+            test_config['test-modules']['add-test-to-search-path']):
+        TestModuleFinder.supported_paths.append(test_path)
+        sys.path.append(test_path)
+
+    if 'add-to-search-path' in test_config['test-modules']:
+        for path in test_config['test-modules']['add-to-search-path']:
+            TestModuleFinder.supported_paths.append(path)
+            sys.path.append(path)
 
 def main(argv = None):
     ''' Main entry point for the test run
@@ -256,6 +269,8 @@ def main(argv = None):
     test_config = load_test_config(test_directory)
     if test_config is None:
         return 1
+
+    read_module_paths(test_config, test_directory)
 
     test_object = create_test_object(test_directory, test_config)
     if test_object is None:

@@ -39,7 +39,7 @@ class ForkCdrModuleBasic(CDRModule):
 
         if int(cdr1[0].duration) < int(cdr1[1].duration):
             logger.error("Fail: Original CDR duration shorter than forked")
-            self.test_object.passed = False
+            self.test_object.set_passed(False)
         return
 
 
@@ -76,7 +76,7 @@ class ForkCdrModuleEndTime(CDRModule):
                 logger.Error("EPIC FAILURE: CDR record %s is missing one or " \
                              "more key fields. This should never be able to " \
                              "happen." % cdritem)
-                self.test_object.passed = False
+                self.test_object.set_passed(False)
                 return
 
         # The dialplan is set up so that these two CDRs should each last at
@@ -85,7 +85,7 @@ class ForkCdrModuleEndTime(CDRModule):
         if ((int(cdr1[0].duration) <= 1) or (int(cdr1[1].duration) <= 1)):
             logger.error("FAILURE: One or both CDRs only lasted a second or " \
                          "less (expected more)")
-            self.test_object.passed = False
+            self.test_object.set_passed(False)
             return
 
         end = time.strptime(cdr1[0].end, "%Y-%m-%d %H:%M:%S")
@@ -98,6 +98,6 @@ class ForkCdrModuleEndTime(CDRModule):
                          "one second or less.\n")
             logger.error("Actual times: end cdr1 = %s   begin cdr2 = %s" %
                          (cdr1[0].end, cdr1[1].start))
-            self.test_object.passed = False
+            self.test_object.set_passed(False)
             return
 

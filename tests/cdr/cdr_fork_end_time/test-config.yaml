@@ -10,12 +10,14 @@ testinfo:
          time of the second (<=1 second to accomodate potential timing differences).'
 
 test-modules:
+    add-to-search-path:
+        -
+            'tests/cdr'
     test-object:
         config-section: test-object-config
         typename: 'SimpleTestCase.SimpleTestCase'
     modules:
         -
-            load-from-path: 'tests/cdr'
             config-section: 'cdr-config'
             typename: 'ForkCdrModule.ForkCdrModuleEndTime'
 
