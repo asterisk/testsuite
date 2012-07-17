@@ -1,0 +1,169 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2012, Digium, Inc.
+Jonathan Rose <jrose@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import logging
+import logging.config
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.TestCase import TestCase
+from starpy import manager
+
+logger = logging.getLogger(__name__)
+
+"""
+This test case attempts to log in to AMI with various users from different addresses that are either accepted or rejected
+by the ACL definitions established for those AMI users. Tests include locally defined ACLs within manager.conf, Single use
+of named ACLs, use of multiple named ACLs, and use of an undefined ACL.
+"""
+
+class AMILoginACLTest(TestCase):
+
+    # Prepare test object and establish what logins should be attempted and what the expectations of those logins are.
+    def __init__(self):
+        TestCase.__init__(self)
+        self.test_components = {}
+
+        #success evaluation stuff
+        self.components_expected = 0   # total number of login attempts we expected
+        self.components_received = 0   # total number of login attempts made
+        self.successes_expected = []   # ami indices of test components that are supposed to successfully login
+        self.got_bad_event = False     # raised when a successful login occurs that defies expectations
+
+        #test1 - No named ACL, login only available to 127.0.0.1
+        self.add_test_component("test1", "127.0.0.1", "allow")
+        self.add_test_component("test1", "127.0.0.2", "deny")
+        self.add_test_component("test1", "127.0.0.3", "deny")
+        self.add_test_component("test1", "127.0.0.4", "deny")
+
+        #test2 - Same permissible addresses as test 1, obtained through named ACL instead.
+        self.add_test_component("test2", "127.0.0.1", "allow")
+        self.add_test_component("test2", "127.0.0.2", "deny")
+        self.add_test_component("test2", "127.0.0.3", "deny")
+        self.add_test_component("test2", "127.0.0.4", "deny")
+
+        #test3 - Multiple named ACL rules. Collectively only 127.0.0.2 should be allowed in.
+        self.add_test_component("test3", "127.0.0.1", "deny")
+        self.add_test_component("test3", "127.0.0.2", "allow")
+        self.add_test_component("test3", "127.0.0.3", "deny")
+        self.add_test_component("test3", "127.0.0.4", "deny")
+
+        #test4 - An undefined rule is used. This should reject all of the test addresses.
+        self.add_test_component("test4", "127.0.0.1", "deny")
+        self.add_test_component("test4", "127.0.0.2", "deny")
+        self.add_test_component("test4", "127.0.0.3", "deny")
+        self.add_test_component("test4", "127.0.0.4", "deny")
+
+        self.create_asterisk()
+
+    # Add a single login attempt to be made and what its expectation should be
+    def add_test_component(self, test, address, expectation):
+        this_tuple = address, expectation
+        this_dict_entry = self.test_components.get(test)
+        if not this_dict_entry:
+            self.test_components[test] = [this_tuple]
+        else:
+            this_dict_entry.append(this_tuple)
+
+        self.components_expected += 1
+
+    # Callback to handle AMI logoffs
+    def ami_logoff(self, ami):
+        pass
+
+    # Callback for a successful AMI Connection. This evaluates whether the connection should have been successful or not.
+    def ami_connect(self, ami):
+        success_expected = False
+        logger.info("AMI %d: login authenticated" % ami.id)
+
+        for item in self.successes_expected:
+            if item == ami.id:
+                success_expected = True
+                break
+
+        if not success_expected:
+            logger.error("AMI %d: Login was allowed and it shouldn't have been." % ami.id)
+            self.got_bad_event = True
+        else:
+            #We no longer expect this entry since we already got it
+            logger.info("AMI %d: Login successful and expected." % ami.id)
+            self.successes_expected.remove(ami.id)
+
+        self.components_received += 1
+
+        ami.logoff().addCallbacks(self.ami_logoff, self.ami_logoff_error)
+
+        if self.components_received == self.components_expected:
+            self.evaluate_success()
+            self.stop_reactor()
+
+    # Callback for handling AMI logoff failures
+    def ami_logoff_error(self, ami):
+        pass
+
+    # Callback for failed AMI Connections. This evaluates whether the conditions for finishing the test have been met as well.
+    def ami_login_error(self, ami):
+        self.components_received += 1
+
+        if self.components_received == self.components_expected:
+            self.evaluate_success()
+            self.stop_reactor()
+
+    def run(self):
+        TestCase.run(self)
+        self.ami_test_func()
+
+    # Checks the test components and passes data to the ami_factory_test_function
+    def ami_test_func(self):
+        entry = 0
+        for key in self.test_components.iterkeys():
+            this_dict_entry = self.test_components.get(key)
+            for item in this_dict_entry:
+                if item[1] == "allow":
+                    self.successes_expected.append(entry)
+                self.ami_factory_test_function(entry = entry, username = key, address = item[0])
+                entry += 1
+
+    # Receives data about test components and attempts to login to AMI using that data
+    def ami_factory_test_function(self, entry=0, username="user", secret="mysecret", port = 5038, address = "127.0.0.1"):
+        self.ami.append(None)
+        logger.info("Creating AMI %d - %s / %s" % (entry, username, address))
+        self.ami_factory = manager.AMIFactory(username, secret, entry)
+        self.ami_factory.login(address).addCallbacks(self.ami_connect, self.ami_login_error)
+
+    # Post test evaluation of success conditions
+    def evaluate_success(self):
+        self.passed = True
+        if self.components_received != self.components_expected:
+            logger.error("Did not receive expected number of login events. Received %d/%d." % (self.components_received % self.components_expected))
+            self.passed = False
+
+        if len(self.successes_expected) != 0:
+            logger.error("Not all logins that were expected to be allowed were completed. Missed: %s" % self.successes_expected)
+            self.passed = False
+
+        if self.got_bad_event:
+            logger.error("An AMI login was allowed which was not expected.")
+            self.passed = False
+
+
+def main():
+    test = AMILoginACLTest()
+    reactor.run()
+    if test.passed:
+        return 0
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79

@@ -4,5 +4,6 @@ tests:
     - test: 'action-events-response'
     - test: 'authlimit'
     - test: 'authtimeout'
+    - test: 'acl-login'
     # Temporarily disabled while failures are debugged
     #- test: 'response-time'

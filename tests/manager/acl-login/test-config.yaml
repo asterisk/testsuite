@@ -1,0 +1,15 @@
+testinfo:
+    summary:     'Test logins to the Asterisk Manager Interface when ACLs are provided'
+    description: |
+        'This test will attempt login on a number of ACL users set to accept certain addresses and reject others.
+         Primary purpose is to verify proper behavior of ACL configuration and named ACLs.'
+
+properties:
+    minversion: '11.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - AMI
+        - ACL
+
