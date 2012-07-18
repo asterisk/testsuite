@@ -1,0 +1,16 @@
+testinfo:
+    summary: 'Test chan_sip usage of ACLs'
+    description: |
+        This tests SIP calls originating from different addresses against
+        SIP peers with varying means of specifying Access Control Lists.
+        This test is used to verify proper behavior of ACL and Named ACL
+        usage by the chan_sip driver.
+
+properties:
+    minversion: '11.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - SIP
+        - ACL
