@@ -47,16 +47,7 @@ class CDRModule(object):
                 dict_record = dict((k, None) for k in AsteriskCSVCDRLine.fields)
                 dict_record.update(csv_line)
 
-                self.cdr_records[file_name].append(AsteriskCSVCDRLine(
-                    accountcode=dict_record['accountcode'], source=dict_record['source'],
-                    destination=dict_record['destination'], dcontext=dict_record['dcontext'],
-                    callerid=dict_record['callerid'], channel=dict_record['channel'],
-                    dchannel=dict_record['dchannel'], lastapp=dict_record['lastapp'],
-                    lastarg=dict_record['lastarg'], start=dict_record['start'],
-                    answer=dict_record['answer'], end=dict_record['end'],
-                    duration=dict_record['duration'], billsec=dict_record['billsec'],
-                    disposition=dict_record['disposition'], amaflags=dict_record['amaflags'],
-                    uniqueid=dict_record['uniqueid'], userfield=dict_record['userfield']))
+                self.cdr_records[file_name].append(AsteriskCSVCDRLine(**dict_record))
 
         # Hook ourselves onto the test object
         test_object.register_stop_observer(self._check_cdr_records)

@@ -18,7 +18,70 @@ import re
 import logging
 import time
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
+
+class CELModule(object):
+    ''' A module that checks a test for expected CEL results '''
+
+
+    def __init__(self, module_config, test_object):
+        ''' Constructor
+
+        Parameters:
+        module_config The yaml loaded configuration for the CEL Module
+        test_object A concrete implementation of TestClass
+        '''
+        self.test_object = test_object
+
+        # Build our expected CEL records
+        self.cel_records = {}
+        for record in module_config:
+            file_name = record['file']
+            if file_name not in self.cel_records:
+                self.cel_records[file_name] = []
+            for csv_line in record['lines']:
+                # Set the record to the default fields, then update with what
+                # was passed in to us
+                dict_record = dict((k, None) for k in AsteriskCSVCELLine.fields)
+                dict_record.update(csv_line)
+
+                self.cel_records[file_name].append(AsteriskCSVCELLine(**dict_record))
+
+        # Hook ourselves onto the test object
+        test_object.register_stop_observer(self._check_cel_records)
+
+    def _check_cel_records(self, callback_param):
+        ''' A deferred callback method that is called by the TestCase
+        derived object when all Asterisk instances have stopped
+
+        Parameters:
+        callback_param
+        '''
+        LOGGER.debug("Checking CEL records...")
+        self.match_cels()
+        return callback_param
+
+
+    def match_cels(self):
+        ''' Called when all instances of Asterisk have exited.  Derived
+        classes can override this to provide their own behavior for CEL
+        matching.
+        '''
+        expectations_met = True
+        for key in self.cel_records:
+            cel_expect = AsteriskCSVCEL(records=self.cel_records[key])
+            cel_file = AsteriskCSVCEL(fn="%s/%s/cel-custom/%s.csv" %
+                (self.test_object.ast[0].base,
+                 self.test_object.ast[0].directories['astlogdir'],
+                 key))
+            if cel_expect.match(cel_file):
+                LOGGER.debug("%s.csv - CEL results met expectations" % key)
+            else:
+                LOGGER.error("%s.csv - CEL results did not meet expectations.  Test Failed." % key)
+                expectations_met = False
+
+        self.test_object.set_passed(expectations_met)
+
 
 class AsteriskCSVCELLine(astcsv.AsteriskCSVLine):
     "A single Asterisk Call Event Log record"
