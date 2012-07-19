@@ -47,6 +47,46 @@ ami-config:
         # must occur 3 or more times.
         count: '>3'
     -
+        # The "orderedheadermatch" type indicates that when a condition match is
+        # made, there is a list of ordered requirements. The first time the match
+        # occurs, the first requirement in the list is expected and if it doesn't
+        # match, then the test is failed. If it succeeded, it will expect the
+        # second requirement in the requirements list and it will continue until
+        # either a mismatch occurs and the test fails or the list or requirements
+        # is exhausted.
+        type: 'orderedheadermatch'
+
+        # Conditions are handled exactly the same as for "headermatch" types.
+        conditions:
+            match:
+                Event: 'Bridge'
+                BridgeState: 'Link'
+            nomatch:
+                CallerID1: 'Bob.*'
+
+        # If the parameters in the "conditions" section match, then
+        # the first item in the list in the "requirements" section will be checked.
+        # If any of the requirements should fail, then the test has failed. If they
+        # all succeed, the next time the event is handled the next requirement list
+        # item will be used instead. If a condition matches and the requirements
+        # list is already exhausted, then the event will be allowed without
+        # affecting success or failure of the test.
+        requirements:
+            -
+                match:
+                    uniqueid1: '1234.*'
+                    BridgeType: 'core'
+            -
+                match:
+                    uniqueid1: '5678.*'
+                    BridgeType: 'core'
+
+        # The number of times this event is expected. If just a number is
+        # provided, then the event must happen exactly that number of times.
+        # Normally, this should probably be the number of requirements specified
+        # above.
+        count: '2'
+    -
         # The "callback" type indicates that when event conditions are fulfilled
         # A callback should be called into. This is useful if pass/fail conditions
         # depend on more than just having specific headers match what is expected.

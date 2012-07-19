@@ -8,7 +8,7 @@ import re
 logger = logging.getLogger(__name__)
 
 class AMIEventInstance(object):
-    ''' 
+    '''
     Base class for specific instances of AMI event observers
 
     This handles common elements for both headermatch and callback
@@ -149,6 +149,57 @@ class AMIHeaderMatchInstance(AMIEventInstance):
         self.test_object.set_passed(self.passed)
         return callback_param
 
+class AMIOrderedHeaderMatchInstance(AMIEventInstance):
+    '''
+    A subclass of AMIEventInstance that operates by matching headers of
+    AMI events to expected values. If a header does not match its expected
+    value, then the test will fail. This differs from AMIHeaderMatchInstance
+    in that the order of specification is used to define an expected order
+    for the events to arrive in which must be matched in order for the test
+    to pass.
+    '''
+    def __init__(self, instance_config, test_object):
+        super(AMIOrderedHeaderMatchInstance, self).__init__(instance_config, test_object)
+        logger.debug("Initializing an AMIOrderedHeaderMatchInstance")
+        self.match_index = 0
+        self.match_requirements = []
+        self.nonmatch_requirements = []
+        for instance in instance_config['requirements']:
+            self.match_requirements.append(
+                    instance.get('match', {}))
+            self.nonmatch_requirements.append(
+                    instance.get('nomatch', {}))
+
+    def event_callback(self, ami, event):
+        if self.match_index >= len(self.match_requirements):
+            logger.debug("Event received and not defined: %s" % event)
+            return
+
+        for k,v in self.match_requirements[self.match_index].items():
+            if not re.match(v, event.get(k.lower())):
+                logger.warning("Requirement %s: %s does not match %s: %s in event" %
+                        (k, v, k, event.get(k.lower())))
+                self.passed = False
+            else:
+                logger.debug("Requirement %s: %s matches %s: %s in event" %
+                        (k, v, k, event.get(k.lower())))
+
+        for k,v in self.nonmatch_requirements[self.match_index].items():
+            if re.match(v, event.get(k.lower(), '')):
+                logger.warning("Requirement %s: %s matches %s: %s in event" %
+                        (k, v, k, event.get(k.lower(), '')))
+                self.passed = False
+            else:
+                logger.debug("Requirement %s: %s does not match %s: %s in event" %
+                        (k, v, k, event.get(k.lower(), '')))
+
+        self.match_index += 1
+        return (ami, event)
+
+    def check_result(self, callback_param):
+        self.test_object.set_passed(self.passed)
+        return callback_param
+
 class AMICallbackInstance(AMIEventInstance):
     '''
     Subclass of AMIEventInstance that operates by calling a user-defined
@@ -178,6 +229,9 @@ class AMIEventInstanceFactory:
         if instance_type == "headermatch":
             logger.debug("instance type is 'headermatch'")
             return AMIHeaderMatchInstance(instance_config, test_object)
+        elif instance_type == "orderedheadermatch":
+            logger.debug("instance type is 'orderedheadermatch'")
+            return AMIOrderedHeaderMatchInstance(instance_config, test_object)
         elif instance_type == "callback":
             logger.debug("instance type is 'callback'")
             return AMICallbackInstance(instance_config, test_object)

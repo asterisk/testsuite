@@ -12,6 +12,7 @@ import logging
 
 sys.path.append("lib/python")
 from cdr import CDRModule
+from cdr import AsteriskCSVCDR
 
 logger = logging.getLogger(__name__)
 

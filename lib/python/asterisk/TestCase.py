@@ -331,6 +331,7 @@ class TestCase(object):
                 except twisted.internet.error.ReactorNotRunning:
                     # Something stopped it between our checks - at least we're stopped
                     pass
+            return result
         if not self._stopping:
             self._stopping = True
             df = self.__stop_asterisk()
