@@ -76,9 +76,10 @@ class Resubscribe(TestCase):
         # Third one is when the subscription is re-established.
         # Fourth one is when the subscription is re-terminated.
         # The first two and last two should have the same values present.
-        self.num_notifies = self.num_notifies + 1
         if event.get("state") != "DIGIUM_PRESENCE_SENT":
             return
+
+        self.num_notifies = self.num_notifies + 1
 
         if self.num_notifies > 4:
             logger.error("Too many NOTIFYs!")

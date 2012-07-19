@@ -51,9 +51,10 @@ class NominalStateChange(TestCase):
         # First one is when the presence is changed.
         # Second one is when the subscribption is terminated.
         # Both should have the same values present.
-        self.num_notifies = self.num_notifies + 1
         if event.get("state") != "DIGIUM_PRESENCE_SENT":
             return
+
+        self.num_notifies = self.num_notifies + 1
 
         if self.num_notifies > 2:
             logger.error("Too many NOTIFYs!")

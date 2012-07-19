@@ -56,7 +56,7 @@ class NominalStateChange(TestCase):
     def inspectPresence(self, ami, event):
         # For this test, we expect none of these events.
         # If we get any, we fail.
-        if event.get("state") == "DIGIUM_PRESENCE_SENT":
+        if event.get("state") != "DIGIUM_PRESENCE_SENT":
             return
 
         logger.error("Unexpected Digium Presence NOTIFY received")

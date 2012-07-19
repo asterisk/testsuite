@@ -58,9 +58,10 @@ class MultipleStateChange(TestCase):
         # Second one is when the presence is changed to "available"
         # Third one is when the subscribption is terminated.
         # The final two  should have the same values present.
-        self.num_notifies = self.num_notifies + 1
         if event.get("state") != "DIGIUM_PRESENCE_SENT":
             return
+
+        self.num_notifies = self.num_notifies + 1
 
         if self.num_notifies > 3:
             logger.error("Too many NOTIFYs!")
