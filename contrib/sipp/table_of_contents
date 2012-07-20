@@ -1,0 +1,102 @@
+Included here are common SIPp scenarios used for testing
+Asterisk. The scenarios are grouped based on their nature.
+
+Each scenario's name starts with either "uas" or "uac" to
+indicate the role the scenario plays.
+
+Below are descriptions of each of the scenarios.
+
+=========================================================
+|                         CALLS                         |
+=========================================================
+
+* uac-hangup.xml
+	This scenario closely mirrors the default UAC scenario
+	that SIPp uses. The only modification that has been
+	made is to optionally accept a 181 response during
+	call setup. The scenario calls a destination, waits
+	a set amount of time and then sends a BYE. The
+	destination can be specified with the -s option, and
+	the waiting period can be specified with the -d option.
+
+* uac-no-hangup.xml
+	This scenario is identical to uac-hangup.xml except
+	that it does not initiate the hangup. Instead, it waits
+	for a BYE to be sent to it, therefore the -d option
+	will have no effect when this scenario runs.
+
+* uac-blind-transfer.xml
+	This scenario establishes a dialog, waits a period of
+	time and then sends a REFER to blind transfer the call.
+	The scenario expects to receive a 202 response to the
+	REFER. After this, it expects two NOTIFY requests, to
+	which it responds with 200 OKs. After this, the
+	scenario sends a BYE. The -s option can be used to
+	control the destination of the original INVITE. The
+	-d option can be used to control the waiting period.
+	Use the -key option to set the "transfer_target"
+	to the destination of the transfer.
+
+* uas-no-hangup.xml
+	This scenario is the default SIPp UAS sceanrio. It
+	answers and incoming INVITE with a 200 OK, awaits an
+	ACK, and then awaits a BYE.
+
+* uas-hangup.xml
+	This scenario is identical to uas-no-hangup.xml except
+	that it sends a BYE instead of waiting for one. After
+	the initial INVITE transaction completes, the scenario
+	will wait and then transmit a BYE. The waiting period
+	can be adjusted with the -d option.
+
+* uas-redirect.xml
+	This scenario awaits an INVITE and then redirects the
+	incoming call to a new target using a 302 response.
+	The target of the redirect is controlled using
+	the -key option to set the "redir_target".
+
+* uas-blind-transfer.xml
+	This scenario completes an INVITE transaction, waits
+	a period of time and then sends a REFER to blind
+	transfer the call. The scenario expects to receive
+	a 202 response to the REFER. After this, it expects
+	two NOTIFY requests, to which it responds with 200
+	OKs. After this, the scenario sends a BYE. The -d
+	option can be used to control the waiting period.
+	Use the -key option to set the "transfer_target"
+	to the destination of the transfer.
+
+=========================================================
+|                     SUBSCRIPTION                      |
+=========================================================
+
+* uac-subscribe-unsubscribe.xml
+	This scenario establishes a subscription. There is
+	a commented out portion where the user of this
+	scenario may insert any NOTIFY transactions required
+	for the scenario. After any NOTIFYs transactions are
+	completed, the scenario will unsubscribe by sending
+	a SUBSCRIBE with Expires header set to 0. Use the -s
+	option to set the resource to subscribe to. Use the
+	-key option to set the "event", "accept", and "expires"
+	for the initial SUBSCRIBE to appropriate values.
+
+* uac-subscribe-no-unsubscribe.xml
+	This scenario is the same as uac-subscribe-unsubscribe.xml
+	except that this scenario expects the server to
+	terminate the subscription by sending a NOTIFY.
+
+=========================================================
+|                     REGISTRATION                      |
+=========================================================
+
+* uac-register.xml
+	This scenario sends a REGISTER and expects a 200 OK in
+	return. Use the -s option to control the request URI of
+	the REGISTER. Use the -k option to set the "aor", the
+	"contact", and "expires" for the REGISTER. The "aor"
+	and "contact" must be SIP URIs.
+
+* uac-register-unregister.xml
+	This scenario is identical to uac-register.xml, except
+	that the Expires header is set to 0.
