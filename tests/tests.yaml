@@ -29,6 +29,7 @@ tests:
     - test: 'predial'
     - dir: 'fax'
     - dir: 'apps'
+    - dir: 'funcs'
     - dir: 'connected_line'
     - dir: 'redirecting'
     - test: 'func_presencestate'

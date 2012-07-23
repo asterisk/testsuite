@@ -1,0 +1,157 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+'''
+Copyright (C) 2012, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.TestCase import TestCase
+
+LOGGER = logging.getLogger(__name__)
+
+class JitterBufferTest(TestCase):
+    """ Execute tests against func_jitterbuffer
+    """
+
+    DEFAULT_MAX_SIZE = '200'
+    DEFAULT_TARGET_EXTRA = '40'
+    DEFAULT_RESYNC_THRESHOLD = '1000'
+
+    def __init__(self):
+        super(JitterBufferTest, self).__init__()
+        self.talk_audio = os.path.join(os.getcwd(), "tests/funcs/func_jitterbuffer/talking")
+
+        # Build the tests.  We check different combinations of jitter buffer
+        # types (fixed/adaptive) as well as varying parameters (resync,
+        # target_extra, etc.).
+        self._tests = []
+        for jb_type in ['adaptive', 'fixed']:
+            # Test JITTERBUFFER(type)=default
+            self._tests.append({'originate' : {'channel': 'Local/default@default',
+                                       'exten': 'stream_file',
+                                       'context': 'default',
+                                       'variable': {'JB_TYPE' : '%s,TALK_AUDIO=%s' %
+                                                    (jb_type, self.talk_audio)},},
+                        'maxsize': JitterBufferTest.DEFAULT_MAX_SIZE,
+                        'impl': jb_type,
+                        'resyncthreshold': JitterBufferTest.DEFAULT_RESYNC_THRESHOLD,
+                        'targetextra': JitterBufferTest.DEFAULT_TARGET_EXTRA})
+            for values in [{'maxsize': '1000', 'targetextra': '10', 'resyncthreshold': '2000'},
+                           {'maxsize': '2000', 'targetextra': '50', 'resyncthreshold': '500'}]:
+                # Test a variety of values
+                self._tests.append({'originate' : {'channel': 'Local/all_param@default',
+                                       'exten': 'stream_file',
+                                       'context': 'default',
+                                       'variable': {'JB_TYPE' : '%s,TALK_AUDIO=%s,MAX_SIZE=%s,TARGET_EXTRA=%s,RESYNC_THRESHOLD=%s' %
+                                                    (jb_type, self.talk_audio, values['maxsize'], values['targetextra'], values['resyncthreshold'])},},
+                        'maxsize': values['maxsize'],
+                        'impl': jb_type,
+                        'resyncthreshold': values['resyncthreshold'],
+                        'targetextra': values['targetextra']})
+
+        self._test_counter = 0
+        self._jitterbuffers_detected = 0
+
+        self.create_asterisk()
+
+
+    def run(self):
+        super(JitterBufferTest, self).run()
+        self.create_ami_factory()
+
+
+    def run_test(self, ami):
+        """ Run the next scheduled test """
+
+        test = self._tests[self._test_counter]
+        originate = test['originate']
+        LOGGER.info("Originating %s to %s@%s" %
+                (originate['channel'], originate['exten'], originate['context']))
+        ami.originate(channel=originate['channel'],
+                      context=originate['context'],
+                      exten=originate['exten'],
+                      priority='1',
+                      variable=originate['variable']).addErrback(
+                        self.handleOriginateFailure)
+
+
+    def ami_connect(self, ami):
+        ami.registerEvent('Newexten', self._newexten_event_handler)
+        ami.registerEvent('UserEvent', self._userevent_handler)
+        self.run_test(ami)
+
+
+    def _launch_talk_detect(self, ami):
+        """ When a voice jitter buffer was used, launch talk detect to make
+        sure the recorded file still has some voice in it """
+
+        ami.originate(channel='Local/detect_audio@default',
+                      context='default',
+                      exten='play_recording',
+                      priority='1').addErrback(
+                        self.handleOriginateFailure)
+
+
+    def _userevent_handler(self, ami, event):
+        if 'TestResult' in event['userevent']:
+            LOGGER.debug('Received TestResult event')
+            self._launch_talk_detect(ami)
+            return
+        elif 'TalkDetect' in event['userevent']:
+            LOGGER.debug('Received TalkDetect with result %s' % event['result'])
+            if (event['result'] == 'fail'):
+                LOGGER.error('Received talk detect failure, failing test')
+                self.stop_reactor()
+                return
+        else:
+            return
+
+        self._test_counter += 1
+        if (self._test_counter < len(self._tests)):
+            self.reset_timeout()
+            self.run_test(ami)
+        else:
+            # If we made it through all the tests, then we received all of
+            # the expected test events.  Set passed to true and stop the test.
+            LOGGER.info('All tests run; stopping reactor')
+            if (self._jitterbuffers_detected != len(self._tests)):
+                LOGGER.warning('Only %d jitter buffers were applied to ' \
+                               'channels; expected %d' %
+                               (self._jitterbuffers_detected, len(self._tests)))
+                self.passed = False
+            else:
+                self.passed = True
+            self.stop_reactor()
+
+    def _newexten_event_handler(self, ami, event):
+        if event['context'] != 'sippeer':
+            return
+        if event['extension'] != 's':
+            return
+        if 'JITTERBUFFER' in event['appdata']:
+            self._jitterbuffers_detected += 1
+            LOGGER.debug('Detected JITTERBUFFER %d' % (self._jitterbuffers_detected))
+
+
+def main():
+    test = JitterBufferTest()
+    reactor.run()
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+   sys.exit(main() or 0)
