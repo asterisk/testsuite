@@ -78,7 +78,7 @@ class AttTransferTest(TestCase):
             ext_c_cb.wait()
 
         except pj.Error, e:
-            print "Exception: " + str(e)
+            LOGGER.error("Exception: " + str(e))
             self.doCleanup()
             return
 
