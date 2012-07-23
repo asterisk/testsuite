@@ -16,7 +16,7 @@ sys.path.append("lib/python")
 from asterisk.TestCase import TestCase
 from starpy import manager
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 """
 This test case attempts to log in to AMI with various users from different addresses that are either accepted or rejected
@@ -81,7 +81,7 @@ class AMILoginACLTest(TestCase):
     # Callback for a successful AMI Connection. This evaluates whether the connection should have been successful or not.
     def ami_connect(self, ami):
         success_expected = False
-        logger.info("AMI %d: login authenticated" % ami.id)
+        LOGGER.info("AMI %d: login authenticated" % ami.id)
 
         for item in self.successes_expected:
             if item == ami.id:
@@ -89,11 +89,11 @@ class AMILoginACLTest(TestCase):
                 break
 
         if not success_expected:
-            logger.error("AMI %d: Login was allowed and it shouldn't have been." % ami.id)
+            LOGGER.error("AMI %d: Login was allowed and it shouldn't have been." % ami.id)
             self.got_bad_event = True
         else:
             #We no longer expect this entry since we already got it
-            logger.info("AMI %d: Login successful and expected." % ami.id)
+            LOGGER.info("AMI %d: Login successful and expected." % ami.id)
             self.successes_expected.remove(ami.id)
 
         self.components_received += 1
@@ -134,7 +134,7 @@ class AMILoginACLTest(TestCase):
     # Receives data about test components and attempts to login to AMI using that data
     def ami_factory_test_function(self, entry=0, username="user", secret="mysecret", port = 5038, address = "127.0.0.1"):
         self.ami.append(None)
-        logger.info("Creating AMI %d - %s / %s" % (entry, username, address))
+        LOGGER.info("Creating AMI %d - %s / %s" % (entry, username, address))
         self.ami_factory = manager.AMIFactory(username, secret, entry)
         self.ami_factory.login(address).addCallbacks(self.ami_connect, self.ami_login_error)
 
@@ -142,15 +142,15 @@ class AMILoginACLTest(TestCase):
     def evaluate_success(self):
         self.passed = True
         if self.components_received != self.components_expected:
-            logger.error("Did not receive expected number of login events. Received %d/%d." % (self.components_received % self.components_expected))
+            LOGGER.error("Did not receive expected number of login events. Received %d/%d." % (self.components_received % self.components_expected))
             self.passed = False
 
         if len(self.successes_expected) != 0:
-            logger.error("Not all logins that were expected to be allowed were completed. Missed: %s" % self.successes_expected)
+            LOGGER.error("Not all logins that were expected to be allowed were completed. Missed: %s" % self.successes_expected)
             self.passed = False
 
         if self.got_bad_event:
-            logger.error("An AMI login was allowed which was not expected.")
+            LOGGER.error("An AMI login was allowed which was not expected.")
             self.passed = False
 
 

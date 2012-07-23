@@ -1,0 +1,16 @@
+testinfo:
+    summary: 'Test chan_iax2 usage of ACLs'
+    description: |
+        This tests IAX2 calls originating from different addresses against
+        IAX2 peers with varying means of specifying Access Control Lists.
+        This test is used to verify proper behavior of ACL and Named ACL
+        usage by the chan_iax2 driver.
+
+properties:
+    minversion: '11.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - IAX2
+        - ACL

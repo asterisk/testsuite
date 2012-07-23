@@ -13,7 +13,7 @@ from asterisk.TestCase import TestCase
 
 LOGGER = logging.getLogger(__name__)
 
-class SIPACLTest(TestCase):
+class IAX2ACLTest(TestCase):
 
     # Preps test objects and configuration additions as well as copies TLS keys to test folder.
     def __init__(self):
@@ -24,34 +24,34 @@ class SIPACLTest(TestCase):
         self.test_index = 0
 
         #test1 - No named ACL, calling available only to 127.0.0.1
-        self.add_test_component("test1_1", "allow")
-        self.add_test_component("test1_2", "deny")
-        self.add_test_component("test1_3", "deny")
-        self.add_test_component("test1_4", "deny")
+        self.add_test_component("testiax1@127.0.0.1", "allow")
+        self.add_test_component("testiax1@127.0.0.2", "deny")
+        self.add_test_component("testiax1@127.0.0.3", "deny")
+        self.add_test_component("testiax1@127.0.0.4", "deny")
 
         #test2 - Same permissible addresses as test 1, but while using a named ACL from the local configuration
-        self.add_test_component("test2_1", "allow")
-        self.add_test_component("test2_2", "deny")
-        self.add_test_component("test2_3", "deny")
-        self.add_test_component("test2_4", "deny")
+        self.add_test_component("testiax2@127.0.0.1", "allow")
+        self.add_test_component("testiax2@127.0.0.2", "deny")
+        self.add_test_component("testiax2@127.0.0.3", "deny")
+        self.add_test_component("testiax2@127.0.0.4", "deny")
 
         #test3 - Multiple named ACL rules from local configuration. Only 127.0.0.2 should be allowed to call.
-        self.add_test_component("test3_1", "deny")
-        self.add_test_component("test3_2", "allow")
-        self.add_test_component("test3_3", "deny")
-        self.add_test_component("test3_4", "deny")
+        self.add_test_component("testiax3@127.0.0.1", "deny")
+        self.add_test_component("testiax3@127.0.0.2", "allow")
+        self.add_test_component("testiax3@127.0.0.3", "deny")
+        self.add_test_component("testiax3@127.0.0.4", "deny")
 
         #test4 - An undefined rule is used. All addresses should be rejected from calling.
-        self.add_test_component("test4_1", "deny")
-        self.add_test_component("test4_2", "deny")
-        self.add_test_component("test4_3", "deny")
-        self.add_test_component("test4_4", "deny")
+        self.add_test_component("testiax4@127.0.0.1", "deny")
+        self.add_test_component("testiax4@127.0.0.2", "deny")
+        self.add_test_component("testiax4@127.0.0.3", "deny")
+        self.add_test_component("testiax4@127.0.0.4", "deny")
 
         #test5 - A set of 3 named ACLs stored in realtime is used. Collectively only 127.0.0.3 should be allowed to call.
-        self.add_test_component("test5_1", "deny")
-        self.add_test_component("test5_2", "deny")
-        self.add_test_component("test5_3", "allow")
-        self.add_test_component("test5_4", "deny")
+        self.add_test_component("testiax5@127.0.0.1", "deny")
+        self.add_test_component("testiax5@127.0.0.2", "deny")
+        self.add_test_component("testiax5@127.0.0.3", "allow")
+        self.add_test_component("testiax5@127.0.0.4", "deny")
 
         self.create_asterisk()
 
@@ -79,7 +79,7 @@ class SIPACLTest(TestCase):
         # There are callbacks that would lose the AMI, so we need to hold onto it within the test object.
         self.last_active_ami = ami
 
-        ami.originate(channel = "SIP/%s/s" % self.test_components[self.test_index][0], application = "Echo").addErrback(self.evaluate_originate_error)
+        ami.originate(channel = "IAX2/%s/s" % self.test_components[self.test_index][0], application = "Echo").addErrback(self.evaluate_originate_error)
 
     def evaluate_hangup(self, ami, event):
         self.events_received += 1
@@ -89,7 +89,7 @@ class SIPACLTest(TestCase):
         reason = event.get('cause-txt')
         if reason == "Normal Clearing":
             self.success_conditions += 1
-        elif reason == "Call Rejected":
+        elif reason == "Unknown":
             self.failure_conditions += 1
 
         # If we've got two events of any kind, the call is finished and we can move on to the evaluation
@@ -136,7 +136,7 @@ def main():
     DB_PATH = TEST_DIR + "/realtime.sqlite3"
     TMP_DB_PATH = "/tmp/realtime.sqlite3"
     shutil.copyfile(DB_PATH, TMP_DB_PATH)
-    test = SIPACLTest()
+    test = IAX2ACLTest()
     reactor.run()
     os.remove(TMP_DB_PATH)
 

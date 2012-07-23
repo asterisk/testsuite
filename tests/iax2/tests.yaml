@@ -2,3 +2,4 @@
 tests:
     - test: 'basic-call'
     - test: 'hangupcause'
+    - test: 'acl_call'
