@@ -8,3 +8,6 @@ tests:
     - dir: 'incomplete'
     - dir: 'confbridge'
     - test: 'page'
+    - dir: 'chanspy'
+    - dir: 'queues'
+    - test: 'directed_pickup'
