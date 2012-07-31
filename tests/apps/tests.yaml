@@ -11,3 +11,5 @@ tests:
     - dir: 'chanspy'
     - dir: 'queues'
     - test: 'directed_pickup'
+    - test: 'mixmonitor'
+    - test: 'mixmonitor_audiohook_inherit'
