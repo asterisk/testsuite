@@ -1,0 +1,36 @@
+# Configuration sample for the SIPpTestCase object, a test object derived from
+# TestCase that manages a single instance of Asterisk and SIPp scenarios
+# executed against that instance
+
+test-object-config:
+
+	# If set to True, then any SIPp scenario failure will automatically stop
+	# and fail the test.  Default is True.
+	fail-on-any: False
+
+	# The test iterations block define a sequence of sets of scenarios to run
+	# sequentially
+	test-iterations:
+		-
+			# The scenarios tag defines a set of scenario to run in parallel.
+			scenarios:
+				# Scenarios are a dictionary of key value pairs.  At least one
+				# entry in the dictionary must be the 'key-args' key/value
+				# pair, which defines the keyed arguments to pass to SIPp.
+				# 'ordered-args' is optional, and defines arguments whose
+				# order is maintained when passed to SIPp.
+				# By default, the following keyed arguments are always passed
+				# to the SIPp scenario, unless they are overridden here:
+				# -p <port>	-	Unless otherwise specified, the port number will
+				#				be 5060 + <scenario list index, starting at 1>.
+				#				So, the first SIPp sceario will use port 5061.
+				# -m 1		-	Stop the test after 1 'call' is processed.
+				# -i 127.0.0.1 - Use this as the local IP address for the Contact
+				#				headers, Via headers, etc.
+				# -timeout 20s - Set a global test timeout of 20 seconds.
+				- { 'key-args': { 'scenario': 'scenario_1.xml'} }
+				- { 'key-args': {'scenario': 'scenario_2.xml'},
+					'ordered-args': ['-keys', 'foo', 'bar'] }
+		-
+			scenarios:
+				- { 'key-args': {'scenario': 'scenario_3.xml'} }

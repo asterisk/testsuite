@@ -1,0 +1,29 @@
+testinfo:
+    summary: 'Test subscribing for MWI notifications from an external source'
+    description: |
+        'This tests subscribing for MWI notifications from an external source.
+        Asterisk, when it starts, should send a SUBSCRIBE request for MWI
+        notifications.  The SIPp scenario, upon processing the SUBSCRIBE
+        request, sends a single NOTIFY request.  Asterisk should, if it
+        processes the NOTIFY request properly, send a 200 OK.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uas_subscribe_mwi.xml'} }
+
+properties:
+    minversion: '1.8.14.0'
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+    tags:
+        - sip

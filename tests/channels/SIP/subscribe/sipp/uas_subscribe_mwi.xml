@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic Sipstone UAC">
+
+  <recv request="SUBSCRIBE" crlf="true">
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <pause/>
+
+  <send retrans="500">
+    <![CDATA[
+        NOTIFY sip:alice@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        Max-Forwards: 70
+        From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+        To: <sip:alice@[remote_ip]:[remote_port]>[peer_tag_param]
+        Contact: <sip:alice@[local_ip]:[local_port]>
+        Call-ID: [call_id]
+        CSeq: [cseq] NOTIFY
+        User-Agent: Alice
+        Event: message-summary
+        Content-Type: application/simple-message-summary
+        Content-Length: [len]
+
+        Messages-Waiting: yes
+        Message-Account: sip:alice@127.0.0.1:5061
+        Voice-Message: 1/2 (0/0)
+    ]]>
+  </send>
+
+  <recv response="200">
+    <action>
+        <exec int_cmd="stop_gracefully"/>
+    </action>
+  </recv>
+
+  <!-- definition of the response time repartition table (unit is ms)   -->
+  <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
+
+  <!-- definition of the call length repartition table (unit is ms)     -->
+  <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+
+</scenario>
+

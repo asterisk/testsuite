@@ -49,4 +49,6 @@ tests:
     - test: 'invite_no_totag'
     - test: 'sip2cause'
     - test: 'sip_outbound_proxy'
+    - test: 'subscribe'
     - test: 'rfc2833_dtmf_detect'
+
