@@ -16,7 +16,7 @@ from starpy import manager
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 
-workingdir = "mixmonitor"
+workingdir = "apps/mixmonitor"
 testdir = "tests/%s" % workingdir
 
 class MixMonitorTest:

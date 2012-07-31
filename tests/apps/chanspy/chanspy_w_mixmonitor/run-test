@@ -19,7 +19,7 @@ from starpy import fastagi
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 
-workingdir = "chanspy/chanspy_w_mixmonitor"
+workingdir = "apps/chanspy/chanspy_w_mixmonitor"
 testdir = "tests/%s" % workingdir
 
 
