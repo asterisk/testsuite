@@ -94,7 +94,7 @@ class SIPpTestCase(TestCase):
         self._scenario_started_observers.append(observer)
 
 
-    def register_scenario_started_observer(self, observer):
+    def register_scenario_stopped_observer(self, observer):
         ''' Register a function to be called when a SIPp scenario stops.
 
         Keywords:
