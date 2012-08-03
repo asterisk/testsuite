@@ -19,6 +19,7 @@ tests:
     - dir: 'agi'
     - dir: 'pbx'
     - test: 'predial'
+    - dir: 'hangup'
     - dir: 'fax'
     - dir: 'apps'
     - dir: 'funcs'

@@ -1,0 +1,408 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2012, Digium, Inc.
+Richard Mudgett <rmudgett@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import logging
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.TestCase import TestCase
+
+logger = logging.getLogger(__name__)
+
+
+class HHandlerTest(TestCase):
+    def __init__(self):
+        TestCase.__init__(self)
+
+        self.test_complete = False
+
+        # Total number of subtests run
+        self.test_count = 0
+        # Number of subtests that passed
+        self.pass_count = 0
+
+        self.tests = []
+        self.tests.append(self.series_no_call)
+        self.tests.append(self.series_no_call_w_h)
+        self.tests.append(self.series_test_pop)
+        self.tests.append(self.series_test_wipe)
+        self.tests.append(self.series_single_test)
+        self.tests.append(self.series_single_test_w_h)
+        self.tests.append(self.series_forked_test)
+        self.tests.append(self.series_forked_test_w_h)
+        self.tests.append(self.series_cdr_test)
+        self.tests.append(self.series_cdr_test_w_h)
+
+        self.subtests = []
+
+        # Create an Asterisk instance ...
+        self.create_asterisk()
+
+    def results_reset(self):
+        results = dict(hangup_count = 0,
+            hexten_count = 0,
+            hhandler_in_count = 0,
+            hhandler_out_count = 0,
+            connected_count = 0,
+            saw_failed = False)
+        return results
+
+    def subtest_default(self):
+        subtest = dict(name = "idiot",
+            hangup_count = 0,
+            hexten_count = 0,
+            hhandler_in_count = 0,
+            hhandler_out_count = 0,
+            connected_count = 0,
+            check_order = False)
+        return subtest
+
+    # Create no_call subtest series
+    def series_no_call(self):
+        series = []
+        test_number = 0
+        while test_number < 6:
+            subtest = self.subtest_default()
+            subtest['name'] = "no_call%d" % test_number
+            subtest['hangup_count'] = 2
+            subtest['hhandler_in_count'] = 1
+
+            series.append(subtest)
+            test_number += 1
+
+        return series
+
+    # Create no_call_w_h subtest series
+    def series_no_call_w_h(self):
+        series = []
+        test_number = 0
+        while test_number < 6:
+            subtest = self.subtest_default()
+            subtest['name'] = "no_call_w_h%d" % test_number
+            subtest['hangup_count'] = 2
+            subtest['hexten_count'] = 1
+            subtest['hhandler_in_count'] = 1
+
+            series.append(subtest)
+            test_number += 1
+
+        return series
+
+    # Create test_pop subtest series
+    def series_test_pop(self):
+        series = []
+        test_number = 0
+        while test_number < 2:
+            subtest = self.subtest_default()
+            subtest['name'] = "test_pop%d" % test_number
+            subtest['hangup_count'] = 2
+            subtest['hhandler_in_count'] = 2
+
+            subtest['check_order'] = True
+            subtest['order'] = subtest['hhandler_in_count']
+
+            series.append(subtest)
+            test_number += 1
+
+        return series
+
+    # Create test_wipe subtest series
+    def series_test_wipe(self):
+        series = []
+        test_number = 0
+        while test_number < 2:
+            subtest = self.subtest_default()
+            subtest['name'] = "test_wipe%d" % test_number
+            subtest['hangup_count'] = 2
+            subtest['hhandler_in_count'] = 2
+
+            subtest['check_order'] = True
+            subtest['order'] = subtest['hhandler_in_count']
+
+            series.append(subtest)
+            test_number += 1
+
+        return series
+
+    # Create single_test subtest series
+    def series_single_test(self):
+        series = []
+        test_number = 0
+        while test_number < 4:
+            subtest = self.subtest_default()
+            subtest['name'] = "single_test%d" % test_number
+            subtest['hangup_count'] = 4
+            if test_number & 0x02:
+                subtest['hhandler_in_count'] = 1
+            if test_number & 0x01:
+                subtest['hhandler_out_count'] = 1
+            subtest['connected_count'] = 1
+
+            series.append(subtest)
+            test_number += 1
+
+        return series
+
+    # Create single_test_w_h subtest series
+    def series_single_test_w_h(self):
+        series = []
+        test_number = 0
+        while test_number < 4:
+            subtest = self.subtest_default()
+            subtest['name'] = "single_test_w_h%d" % test_number
+            subtest['hangup_count'] = 4
+            subtest['hexten_count'] = 1
+            if test_number & 0x02:
+                subtest['hhandler_in_count'] = 1
+            if test_number & 0x01:
+                subtest['hhandler_out_count'] = 1
+            subtest['connected_count'] = 1
+
+            series.append(subtest)
+            test_number += 1
+
+        return series
+
+    # Create forked_test subtest series
+    def series_forked_test(self):
+        series = []
+        test_number = 0
+        while test_number < 4:
+            subtest = self.subtest_default()
+            subtest['name'] = "forked_test%d" % test_number
+            subtest['hangup_count'] = 6
+            if test_number & 0x02:
+                subtest['hhandler_in_count'] = 1
+            if test_number & 0x01:
+                subtest['hhandler_out_count'] = 2
+            subtest['connected_count'] = 1
+
+            series.append(subtest)
+            test_number += 1
+
+        return series
+
+    # Create forked_test_w_h subtest series
+    def series_forked_test_w_h(self):
+        series = []
+        test_number = 0
+        while test_number < 4:
+            subtest = self.subtest_default()
+            subtest['name'] = "forked_test_w_h%d" % test_number
+            subtest['hangup_count'] = 6
+            subtest['hexten_count'] = 1
+            if test_number & 0x02:
+                subtest['hhandler_in_count'] = 1
+            if test_number & 0x01:
+                subtest['hhandler_out_count'] = 2
+            subtest['connected_count'] = 1
+
+            series.append(subtest)
+            test_number += 1
+
+        return series
+
+    # Create cdr_test subtest series
+    def series_cdr_test(self):
+        series = []
+        test_number = 0
+        while test_number < 4:
+            subtest = self.subtest_default()
+            subtest['name'] = "cdr_test%d" % test_number
+            subtest['hangup_count'] = 4
+            if test_number & 0x02:
+                subtest['hhandler_in_count'] = 1
+            if test_number & 0x01:
+                subtest['hhandler_out_count'] = 1
+            subtest['connected_count'] = 1
+
+            series.append(subtest)
+            test_number += 1
+
+        return series
+
+    # Create cdr_test_w_h subtest series
+    def series_cdr_test_w_h(self):
+        series = []
+        test_number = 0
+        while test_number < 4:
+            subtest = self.subtest_default()
+            subtest['name'] = "cdr_test_w_h%d" % test_number
+            subtest['hangup_count'] = 4
+            subtest['hexten_count'] = 1
+            if test_number & 0x02:
+                subtest['hhandler_in_count'] = 1
+            if test_number & 0x01:
+                subtest['hhandler_out_count'] = 1
+            subtest['connected_count'] = 1
+
+            series.append(subtest)
+            test_number += 1
+
+        return series
+
+    # Initiate next test call.
+    def initiate_next_test(self, ami):
+        if not len(self.subtests):
+            # Current subtest series is complete.
+            if not len(self.tests):
+                # Evaluate overall test result and end test.
+                if self.test_count == self.pass_count:
+                    self.passed = True
+                self.stop_reactor()
+                return
+
+            # Generate the next series of subtests.
+            self.subtests = self.tests.pop(0)()
+
+        # Setup the next test to run.
+        self.expected = self.subtests.pop(0)
+
+        # Reset UserEvent counts and flags.
+        self.results = self.results_reset()
+
+        self.test_count += 1
+
+        # Originate the test call.
+        logger.info("Starting Test %s" % self.expected['name'])
+        df = ami.originate(channel = "Local/ans@caller_context", exten = self.expected['name'], context = "test_context", priority = 1)
+        df.addErrback(self.handleOriginateFailure)
+
+    # Called when got UserEvent event from the Asterisk instance
+    def evt_userevent(self, ami, event):
+        if self.test_complete:
+            return
+        # We want the AMI UserEvent header but the headers put
+        # in as dictionary keys are lowercased.
+        hdr_event = event.get("userevent")
+        hdr_test = event.get("test")
+
+        if hdr_test != self.expected['name']:
+            logger.debug("Stale Test: " + hdr_test + " UserEvent: " + hdr_event + " Expected-test: " + self.expected['name'])
+            return
+
+        if hdr_event == "U_HHandler":
+            hdr_which = event.get("which")
+            hdr_who = event.get("who")
+            hdr_exten = event.get("exten")
+            hdr_expected = event.get("expected")
+            hdr_order = event.get("order")
+            logger.debug("Test: " + hdr_test + " UserEvent: " + hdr_event \
+                + " which: " + hdr_which + " who: " + hdr_who + " exten: " + hdr_exten \
+                + " expected: " + hdr_expected + " order: " + hdr_order)
+            if hdr_exten != hdr_expected:
+                logger.warning("Test: " + hdr_test + " UserEvent: " + hdr_event \
+                    + " exten: " + hdr_exten + " expected: " + hdr_expected +  " Does not match!")
+                return
+            if hdr_exten != "hhandler" and hdr_exten != "xtn" and hdr_exten != hdr_test:
+                logger.warning("Test: " + hdr_test + " UserEvent: " + hdr_event \
+                    + " exten: " + hdr_exten + " is unknown")
+                return
+            if hdr_which != hdr_who:
+                logger.warning("Test: " + hdr_test + " UserEvent: " + hdr_event \
+                    + " which: " + hdr_which + " who: " + hdr_who +  " Does not match!")
+                return
+            if self.expected['check_order']:
+                if self.expected['order'] != int(hdr_order):
+                    logger.warning("Test: " + hdr_test + " UserEvent: " + hdr_event \
+                        + " order: " + hdr_order \
+                        +  " Expected order: " + str(self.expected['order']))
+                    return
+                self.expected['order'] -= 1
+            if hdr_which == "CALLER":
+                self.results['hhandler_in_count'] += 1
+            elif hdr_which == "callee":
+                self.results['hhandler_out_count'] += 1
+            else:
+                logger.warning("Test: " + hdr_test + " UserEvent: " + hdr_event + " which: " + hdr_which + " is unknown")
+            return
+        if hdr_event == "U_Connected":
+            hdr_to = event.get("to")
+            logger.debug("Test: " + hdr_test + " UserEvent: " + hdr_event + " to: " + hdr_to)
+            self.results['connected_count'] += 1
+            return
+        if hdr_event == "U_Failed":
+            hdr_status = event.get("status")
+            logger.warning("Test: " + hdr_test + " Fail status: " + hdr_status)
+            self.results['saw_failed'] = True
+            return
+        if hdr_event == "U_HExten":
+            hdr_channel = event.get("channel")
+            logger.debug("Test: " + hdr_test + " UserEvent: " + hdr_event + " channel: " + hdr_channel)
+            if self.results['hhandler_in_count'] != 0:
+                logger.warning("Test: " + hdr_test + " UserEvent: " + hdr_event + " h exten after hangup handler.")
+                return
+            self.results['hexten_count'] += 1
+            return
+        logger.debug("Test: " + hdr_test + " UserEvent: " + hdr_event + " Unknown UserEvent")
+
+    # Called when got Hangup event from the Asterisk instance
+    def evt_hangup(self, ami, event):
+        if self.test_complete:
+            return
+        self.results['hangup_count'] += 1
+        if self.results['hangup_count'] != self.expected['hangup_count']:
+            return
+
+        # Evaluate subtest result
+        if not self.results['saw_failed'] \
+            and self.results['connected_count'] == self.expected['connected_count'] \
+            and self.results['hexten_count'] == self.expected['hexten_count'] \
+            and self.results['hhandler_in_count'] == self.expected['hhandler_in_count'] \
+            and self.results['hhandler_out_count'] == self.expected['hhandler_out_count']:
+            self.pass_count += 1
+        else:
+            logger.warning("Test " + self.expected['name'] \
+                + " connected:" + str(self.results['connected_count']) \
+                + " h-exten:" + str(self.results['hexten_count']) \
+                + " hhandler in:" + str(self.results['hhandler_in_count']) \
+                + " out:" + str(self.results['hhandler_out_count']) \
+                )
+            logger.warning("Test " + self.expected['name'] + " failed")
+
+        # Give each subtest the full time
+        self.reset_timeout()
+
+        self.initiate_next_test(ami)
+
+    # This is called for each AMI connection established.
+    def ami_connect(self, ami):
+        # Add AMI event triggers
+        # Ast1 events to handle
+        self.ami[ami.id].registerEvent("UserEvent", self.evt_userevent)
+        self.ami[ami.id].registerEvent("Hangup", self.evt_hangup)
+        self.initiate_next_test(ami)
+
+    # This is called when the reactor has started running.
+    def run(self):
+        TestCase.run(self)
+        self.create_ami_factory()
+
+    # This is called when we stop the reactor.
+    def stop_reactor(self):
+        self.test_complete = True
+
+        TestCase.stop_reactor(self)
+
+
+def main():
+    # Run Hangup Handler Test
+    test = HHandlerTest()
+    reactor.run()
+    if test.passed:
+        logger.info("Test passed")
+        return 0
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
