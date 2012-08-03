@@ -1,0 +1,14 @@
+testinfo:
+    summary:     'Test hangup handler subroutines (endbeforehexten=yes)'
+    description: |
+        'When a call is terminated, the user has the option of running an h exten
+        and/or hangup handler dialplan subroutines.  This test verifies that the
+        expected dialplan hangup locations are executed.
+        Tests run with endbeforehexten=yes'
+
+properties:
+    minversion: '11.0.0'
+    dependencies:
+        - asterisk: 'app_dial'
+    tags:
+        - hangup
