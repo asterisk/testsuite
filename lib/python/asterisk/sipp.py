@@ -59,6 +59,7 @@ class SIPpTestCase(TestCase):
         self._final_observers = []
         self._test_config = test_config
         self._current_test = 0
+        self.scenarios = []
         if 'fail-on-any' in self._test_config:
             self._fail_on_any = self._test_config['fail-on-any']
         else:
@@ -75,6 +76,13 @@ class SIPpTestCase(TestCase):
         self.create_ami_factory()
 
         self.ast[0].cli_exec('sip set debug on')
+
+
+    def stop_asterisk(self):
+        ''' Kill any remaining SIPp scenarios '''
+        for scenario in self.scenarios:
+            if not scenario.exited:
+                scenario.kill()
 
 
     def ami_connect(self, ami):
@@ -156,7 +164,6 @@ class SIPpTestCase(TestCase):
             self.stop_reactor()
             return result
 
-        scenarios = []
         for defined_scenario_set in self._test_config['test-iterations']:
 
             scenario_set = defined_scenario_set['scenarios']
@@ -315,6 +322,68 @@ class SIPpScenarioSequence:
         dl.addCallback(__execute_next)
 
 
+class SIPpProtocol(protocol.ProcessProtocol):
+    ''' Class that manages a SIPp instance '''
+
+    def __init__(self, name, stop_deferred):
+        ''' Create a SIPp process
+
+        Keyword Arguments:
+        name - the name of the scenario
+        stop_deferred - a twisted Deferred object that will be called when the
+        process has exited
+        '''
+        self.__name = name
+        self.output = ""
+        self.exitcode = 0
+        self.exited = False
+        self.stderr = []
+        self.__stop_deferred = stop_deferred
+
+    def kill(self):
+        ''' Kill the SIPp scenario '''
+        if not self.exited:
+            LOGGER.warn("Killing SIPp Scenario %s" % self.__name)
+            self.transport.signalProcess('KILL')
+
+    def outReceived(self, data):
+        ''' Override of ProcessProtocol.outReceived '''
+        LOGGER.debug("Received from SIPp scenario %s: %s" % (self.__name, data))
+        self.output += data
+
+    def connectionMade(self):
+        ''' Override of ProcessProtocol.connectionMade '''
+        LOGGER.debug("Connection made to SIPp scenario %s" % (self.__name))
+
+    def errReceived(self, data):
+        ''' Override of ProcessProtocol.errReceived '''
+        # SIPp will send some 'normal' messages to stderr.  Buffer them so we
+        # can output them later if we want
+        self.stderr.append(data)
+
+    def processEnded(self, reason):
+        ''' Override of ProcessProtocol.processEnded '''
+        if self.exited:
+            return reason
+
+        self.exited = True
+        message = ""
+        if reason.value and reason.value.exitCode:
+            message = "SIPp scenario %s ended with code %d" % (self.__name, reason.value.exitCode,)
+            self.exitcode = reason.value.exitCode
+            for msg in self.stderr:
+                LOGGER.warn(msg)
+        else:
+            message = "SIPp scenario %s ended " % self.__name
+        try:
+            if not self.__stop_deferred.called:
+                self.__stop_deferred.callback(self)
+        except defer.AlreadyCalledError:
+            pass
+        LOGGER.info(message)
+        return reason
+
+
 class SIPpScenario:
     """
     A SIPp based scenario for the Asterisk testsuite.
@@ -359,6 +428,14 @@ class SIPpScenario:
         self.default_port = 5061
         self.sipp = TestSuiteUtils.which("sipp")
         self.passed = False
+        self.exited = False
+        self._process = None
+
+    def kill(self):
+        """ Kill the executing SIPp scenario """
+        if self._process:
+            self._process.kill()
+        return
 
     def run(self, test_case = None):
         """ Execute a SIPp scenario
@@ -375,31 +452,24 @@ class SIPpScenario:
         has exited.
         """
 
-        def __output_callback(result):
-            """ Callback from getProcessOutputAndValue """
-            out, err, code = result
-            LOGGER.debug("Launching SIPp Scenario %s exited %d"
-                % (self.scenario['scenario'], code))
-            if (code == 0):
+        def __scenario_callback(result):
+            self.exited = True
+            if (result.exitcode == 0):
                 self.passed = True
                 LOGGER.info("SIPp Scenario %s Exited" % (self.scenario['scenario']))
             else:
-                LOGGER.warning("SIPp Scenario %s Failed [%d, %s]" % (self.scenario['scenario'], code, err))
-            self.__exit_deferred.callback(self)
+                LOGGER.warning("SIPp Scenario %s Failed [%d]" % (self.scenario['scenario'], result.exitcode))
+            self._our_exit_deferred.callback(self)
+            return result
 
-        def __error_callback(result):
-            """ Errback from getProcessOutputAndValue """
-            out, err, code = result
-            LOGGER.warning("SIPp Scenario %s Failed [%d, %s]" % (self.scenario['scenario'], code, err))
-            self.__exit_deferred.callback(self)
-
-        def __evalute_scenario_results(result):
+        def __evaluate_scenario_results(result):
             """ Convenience function.  If the test case is injected into this method,
             then auto-fail the test if the scenario fails. """
             if not self.passed:
                 LOGGER.warning("SIPp Scenario %s Failed" % self.scenario['scenario'])
                 self.__test_case.passed = False
                 self.__test_case.stop_reactor()
+            return result
 
         sipp_args = [
                 self.sipp, '127.0.0.1',
@@ -425,15 +495,18 @@ class SIPpScenario:
         LOGGER.info("Executing SIPp scenario: %s" % self.scenario['scenario'])
         LOGGER.debug(sipp_args)
 
-        self.__exit_deferred = defer.Deferred()
+        self._our_exit_deferred = defer.Deferred()
 
-        df = utils.getProcessOutputAndValue(sipp_args[0], sipp_args, {"TERM" : "vt100",}, None, None)
-        df.addCallbacks(__output_callback, __error_callback)
+        exit_deferred = defer.Deferred()
+        exit_deferred.addCallback(__scenario_callback)
         if test_case:
             self.__test_case = test_case
-            df.addCallback(__evalute_scenario_results)
+            exit_deferred.addCallback(__evaluate_scenario_results)
 
-        return self.__exit_deferred
+        self._process = SIPpProtocol(self.scenario['scenario'], exit_deferred)
+        reactor.spawnProcess(self._process, sipp_args[0], sipp_args, {"TERM" : "vt100",}, None, None)
+
+        return self._our_exit_deferred
 
 class SIPpTest(TestCase):
     """
@@ -482,6 +555,16 @@ class SIPpTest(TestCase):
         self.scenarios = scenarios
         self.result = []
         self.create_asterisk()
+        self._scenario_objects = []
+
+
+    def stop_asterisk(self):
+        ''' Kill any scenarios still in existance '''
+        for scenario in self._scenario_objects:
+            if not scenario.exited:
+                LOGGER.warn("SIPp Scenario %s has not exited; killing" % scenario.name)
+                scenario.kill()
+
 
     def run(self):
         """
@@ -510,6 +593,7 @@ class SIPpTest(TestCase):
             if not '-p' in s:
                 s['-p'] = str(default_port)
             scenario = SIPpScenario(self.test_dir, s)
+            self._scenario_objects.append(scenario)
             df = scenario.run(self)
             df.addCallback(__check_result)
             deferds.append(df)

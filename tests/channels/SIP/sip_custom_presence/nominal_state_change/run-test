@@ -77,6 +77,11 @@ class NominalStateChange(TestCase):
         if self.num_notifies == 2:
             self.notifyPassed = True
 
+    def stop_asterisk(self):
+        ''' Kill the SIPp test if it didn't exit '''
+        if not self.sipTest.exited:
+            self.sipTest.kill()
+
     def ami_connect(self, ami):
         self.ast[ami.id].cli_exec("sip set debug on")
         ami.registerEvent("TestEvent", self.inspectPresence)

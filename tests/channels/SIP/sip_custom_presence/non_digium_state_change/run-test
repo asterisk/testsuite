@@ -68,6 +68,11 @@ class NominalStateChange(TestCase):
         ami.registerEvent("UserEvent", self.originateComplete)
         self.runSippTest()
 
+    def stop_asterisk(self):
+        ''' Kill the SIPp test if it didn't exit '''
+        if not self.sipTest.exited:
+            self.sipTest.kill()
+
     def run(self):
         TestCase.run(self)
         self.create_ami_factory()

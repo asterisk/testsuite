@@ -120,6 +120,13 @@ class Resubscribe(TestCase):
         ami.registerEvent("TestEvent", self.inspectPresence)
         self.runSippTest()
 
+    def stop_asterisk(self):
+        ''' Kill the SIPp test if it didn't exit '''
+        if not self.sipTestInitial.exited:
+            self.sipTestInitial.kill()
+        if not self.sipTestResubscribe.exited:
+            self.sipTestResubscribe.kill()
+
     def run(self):
         TestCase.run(self)
         self.create_ami_factory()
