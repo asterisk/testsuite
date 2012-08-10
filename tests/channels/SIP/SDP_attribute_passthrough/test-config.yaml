@@ -1,0 +1,18 @@
+testinfo:
+    summary: 'Test SDP codec attribute offer/answer and passthrough'
+    description: |
+        This tests SDP codec attribute offer/answer and passthrough. It ensures that attributes
+        that are offered are answered accordingly and that attributes are passed through to a called
+        party.
+
+properties:
+    minversion: '11.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+    testconditions:
+        - name: 'threads'
+          ignoredThreads:
+            - 'autoservice_run'
+    tags:
+        - SIP

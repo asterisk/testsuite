@@ -36,6 +36,7 @@ tests:
     - test: 'realtime_sipregs'
     - test: 'realtime_nosipregs'
     - test: 'SDP_offer_answer'
+    - test: 'SDP_attribute_passthrough'
     - test: 'nat_supertest'
     - test: 'pcap_demo'
     - test: 'sip_hold'
