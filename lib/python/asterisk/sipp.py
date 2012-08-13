@@ -81,8 +81,10 @@ class SIPpTestCase(TestCase):
     def stop_asterisk(self):
         ''' Kill any remaining SIPp scenarios '''
         for scenario in self.scenarios:
-            if not scenario.exited:
-                scenario.kill()
+            for instance in scenario:
+                if not instance.exited:
+                    LOGGER.info("Forcibly killing %s" % instance.name)
+                    instance.kill()
 
 
     def ami_connect(self, ami):
@@ -169,7 +171,7 @@ class SIPpTestCase(TestCase):
             scenario_set = defined_scenario_set['scenarios']
             # Build a list of SIPpScenario objects to run in parallel from
             # each set of scenarios in the YAML config
-            scenarios.append([SIPpScenario(self.test_name,
+            self.scenarios.append([SIPpScenario(self.test_name,
                                            scenario['key-args'],
                                            [] if 'ordered-args' not in scenario else scenario['ordered-args'])
                                            for scenario in scenario_set])
@@ -178,7 +180,7 @@ class SIPpTestCase(TestCase):
         final_deferred.addCallback(_final_deferred_callback)
         final_deferred.addCallback(_finish_test)
         sipp_sequence = SIPpScenarioSequence(self,
-                                             scenarios,
+                                             self.scenarios,
                                              self._fail_on_any,
                                              self._intermediate_callback_fn,
                                              final_deferred)
