@@ -75,7 +75,7 @@ class BlindTransfer(TestCase):
                 self.ami_check_bridge()
             else:
                 logger.warning("Unexpected bridge (%s and %s) received!" % (channel1, channel2))
-        else:
+        elif bridgetype != 'core' or bridgestate != 'unlink':
             logger.warning("Unexpected bridgetype %s or bridgestate %s received!" % (bridgetype, bridgestate))
 
     def transfer_event_handler(self, ami, event):
