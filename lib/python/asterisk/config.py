@@ -43,7 +43,7 @@ class Category:
             \s*                             # Leading whitespace
             (?P<name>[\w|,\.-]+)            # Option name
             \s*=>?\s*                       # Separator, = or =>
-            (?P<value>[\w\s=_()/@|,\.-]+)   # Option value
+            (?P<value>[\w\s=_()/@|,'"\.-]+) # Option value
             (?:;.*)?$                       # Optional comment before end of line
             """, re.VERBOSE)
 
