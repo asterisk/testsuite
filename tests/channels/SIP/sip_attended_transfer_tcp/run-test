@@ -11,143 +11,106 @@ import sys
 import os
 import signal
 import subprocess
-from twisted.application import service, internet
-from twisted.internet import reactor, defer
-from starpy import manager
+from twisted.internet import reactor
 
 sys.path.append("lib/python")
-from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+import logging
 
-workingdir = "sip_attended_transfer_tcp"
-testdir = "tests/%s" % workingdir
+LOGGER = logging.getLogger(__name__)
 
-class AttTransferTest:
+class AttTransferTestTcp(TestCase):
+    '''This class handles the testing of attended transfers when using
+       TCP transport for SIP.'''
     def __init__(self):
-        self.last_step = ""
-        self.passed = False
+        '''Handle initialization of members.'''
+        TestCase.__init__(self)
+        self.reactor_timeout = 20
+        self.create_asterisk()
+	self.chans = []
+        self.final_bridge = 0
 
-        reactor.callWhenRunning(self.run)
+        # start pjsua clients
+        self.pja = subprocess.Popen(['pjsua', '--local-port=5065',
+                            '--auto-answer=200', '--null-audio', '--no-udp'],
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE)
+        self.pjb = subprocess.Popen(['pjsua', '--local-port=5066',
+                            '--auto-answer=200', '--null-audio', '--no-udp'],
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE)
+        self.pjc = subprocess.Popen(['pjsua', '--local-port=5067',
+                            '--auto-answer=200', '--null-audio', '--no-udp'],
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE)
 
-        self.ast1 = Asterisk(base="workingdir")
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
+    def run(self):
+        '''Handle completion of Asterisk startup.'''
+        TestCase.run(self)
+        self.create_ami_factory()
 
-    def readResult(self):
-        self.logLastStep("Reading results")
-        self.ast1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
-        self.ast1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
-        self.stopProcesses()
+    def ami_connect(self, ami):
+        '''Handle successful AMI connection.'''
 
-        if self.passed == True:
-            print 'SIP Attended Transfer Test Passed!'
-        else:
-            print 'SIP Attended Transfer Test Failed'
+        # register callbacks required to handle call completion events
+        self.ami[0].registerEvent('Bridge', self.bridge_callback)
+        self.ami[0].registerEvent('VarSet', self.bridgepeer_callback)
 
-        if reactor.running:
-            print "Stopping Reactor ..."
-            reactor.stop()
+        # allow pjsua time to setup so that it can actually accept calls
+	reactor.callLater(5, self.callAToB)
 
-    def amiOnConnect(self, ami):
-        self.logLastStep("Connected to the AMI")
-        self.ami = ami
-
-    def amiLoginError(self, ami):
-        self.logLastStep("AMI login failed")
-        reactor.callLater(1, self.readResult)
-
-    def amiLogin(self):
-        self.logLastStep("Logging in to the AMI")
-        self.ami_factory = manager.AMIFactory("user", "mysecret")
-        self.ami_factory.login('127.0.0.1', 5038).addCallbacks(self.amiOnConnect, self.amiLoginError)
-
-    def checkBridgeResult(self, result):
-        print 'Result', result
-        if "bridgedchannel" not in result[0]:
-            print "bridgedchannel was not a valid key."
-        elif result[0]['bridgedchannel'] == 'SIP/end_b-00000001':
-            self.passed = True
-
-        if "link" not in result[0]:
-            print "'link' was not a valid key."
-        elif result[0]['link'] == 'SIP/end_b-00000001': # check link for older versions of asterisk
-            self.passed = True
-
-        if self.passed == True:
-            self.logLastStep("Found Bridge!!!")
-        else:
-            self.logLastStep("Detecting Bridge failed")
-
-    def checkBridgeError(self, reason):
-        print reason.getTraceback()
-        self.logLastStep("Checking Bridge failed.  Channel did not exist.")
-        reactor.callLater(1, self.readResult)
-
-    def amiCheckBridge(self):
-        self.logLastStep("Get AMI results")
-        self.ami.status('SIP/end_c-00000003').addCallbacks(self.checkBridgeResult, self.checkBridgeError)
-
-    def aCallB(self):
-        self.logLastStep("A Calling B")
+    def callAToB(self):
+        '''Kick off the A to B call.'''
+        LOGGER.info("Kicking off A-to-B call")
         self.pja.stdin.write("m\n")
         self.pja.stdin.write("sip:call_b@127.0.0.1:5060;transport=TCP\n")
 
-    def aCallC(self):
-        self.logLastStep("A Calling C")
-        self.pja.stdin.write("m\n")
-        self.pja.stdin.write("sip:call_c@127.0.0.1:5060;transport=TCP\n")
+    def bridge_callback(self, ami, event):
+        '''Handle Bridge events to catch.'''
+	self.chans.append(event['channel2'])
+        numchans = len(self.chans)
+        if numchans == 1:
+            LOGGER.info("Kicking off A-to-C call")
+            self.pja.stdin.write("m\n")
+            self.pja.stdin.write("sip:call_c@127.0.0.1:5060;transport=TCP\n")
+        elif numchans == 2:
+            LOGGER.info("Kicking off transfer")
+            self.pja.stdin.write("X\n")
+            self.pja.stdin.write("1\n")
 
-    def aTransferBToC(self):
-        self.logLastStep("A Transfering B to C")
-        self.pja.stdin.write("X\n")
-        self.pja.stdin.write("1\n")
+    def bridgepeer_callback(self, ami, event):
+        '''Handle BRIDGEPEER VarSet events to check for successful transfers.'''
+        if event['variable'] != "BRIDGEPEER" or len(self.chans) < 2:
+            return
 
-    def startProcesses(self):
-        self.logLastStep("Starting Processes")
-        self.ast1.start()
-        self.pja = subprocess.Popen(['pjsua', '--local-port=5065',
-                                     '--auto-answer=200', '--null-audio', '--no-udp'],
-                                     stdin=subprocess.PIPE,
-                                     stdout=subprocess.PIPE)
-        self.pjb = subprocess.Popen(['pjsua', '--local-port=5066',
-                                     '--auto-answer=200', '--null-audio', '--no-udp'],
-                                     stdin=subprocess.PIPE,
-                                     stdout=subprocess.PIPE)
-        self.pjc = subprocess.Popen(['pjsua', '--local-port=5067',
-                                     '--auto-answer=200', '--null-audio', '--no-udp'],
-                                     stdin=subprocess.PIPE,
-                                     stdout=subprocess.PIPE)
+        LOGGER.info("Inspecting BRIDGEPEER VarSet")
 
-    def stopProcesses(self):
-        self.logLastStep("Stopping Processes")
-        self.ast1.stop()
+        # we should get 2 bridgepeers with swapped channel and value headers indicating the bridged channels
+        if self.chans[:2] == [event['channel'], event['value']] or\
+            self.chans[:2] == [event['value'], event['channel']]:
+            LOGGER.info("Got expected VarSet")
+            self.final_bridge += 1
+            if self.final_bridge == 2:
+                LOGGER.info("Transfer successful!")
+                # success!
+                self.passed = True
+                self.doCleanup()
+
+    def doCleanup(self):
+        '''Do final cleanup, output debugging, kill off pjsua processes.'''
+        self.ast[0].cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+        self.ast[0].cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
         os.kill(self.pja.pid, signal.SIGKILL)
         os.kill(self.pjb.pid, signal.SIGKILL)
         os.kill(self.pjc.pid, signal.SIGKILL)
-
-    def logLastStep(self, step):
-        print step
-        self.lastStep = step
-
-    def run(self):
-
-        # start up the processes
-        self.startProcesses()
-
-        # call extensions
-        self.amiLogin()
-        reactor.callLater(5, self.aCallB)
-        reactor.callLater(10, self.aCallC)
-        reactor.callLater(15, self.aTransferBToC)
-        reactor.callLater(20, self.amiCheckBridge)
-
-        # stop and read results after timeout
-        reactor.callLater(25, self.readResult)
+        reactor.stop()
 
 def main():
+    '''Run SIP TCP attended transfer test.'''
     # Run Attended Transfer Test
-    att_transfer_test = AttTransferTest()
+    test = AttTransferTestTcp()
     reactor.run()
-    att_transfer_test.stopProcesses()
-    if att_transfer_test.passed != True:
+    if test.passed != True:
         return 1
     return 0
 

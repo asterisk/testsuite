@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Skip while failures are debugged'
     summary:     'Test SIP Attended Transfer using TCP endpoints'
     description: |
         'This test verifies the SIP_REFER with Replaces attended transfer routine using TCP endpoints'
