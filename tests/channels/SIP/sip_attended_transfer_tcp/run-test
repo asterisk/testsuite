@@ -98,12 +98,13 @@ class AttTransferTestTcp(TestCase):
 
     def doCleanup(self):
         '''Do final cleanup, output debugging, kill off pjsua processes.'''
+	self.ami[0].hangup(self.chans[1])
         self.ast[0].cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
         self.ast[0].cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
         os.kill(self.pja.pid, signal.SIGKILL)
         os.kill(self.pjb.pid, signal.SIGKILL)
         os.kill(self.pjc.pid, signal.SIGKILL)
-        reactor.stop()
+	self.stop_reactor()
 
 def main():
     '''Run SIP TCP attended transfer test.'''
