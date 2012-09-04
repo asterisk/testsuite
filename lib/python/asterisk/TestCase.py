@@ -393,9 +393,9 @@ class TestCase(object):
         logger.info("AMI Connect instance %s" % (ami.id + 1))
         self.ami[ami.id] = ami
         try:
-            self.ami_connect(ami)
             for callback in self._ami_callbacks:
                 callback(ami)
+            self.ami_connect(ami)
         except:
             logger.error("Exception raised in ami_connect:")
             logger.error(traceback.format_exc())

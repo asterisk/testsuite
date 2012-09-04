@@ -1,0 +1,38 @@
+testinfo:
+    summary: 'Test that device state change notifications are sent to a subscribed SIP channel'
+    description: |
+        'A SIP device subscribes to the state of a custom device state. The custom
+        device state is changed to several different states. For each state change,
+        a NOTIFY should be sent to the subscriber.
+
+        Note that the purpose of this test is not to detect state changes in SIP
+        devices but to ensure that all state changes result in a notification
+        being sent to SIP subscribers.'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'originator.Originator'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-subscribe-unsubscribe.xml', '-s': 'subscriber'},
+                    'ordered-args': ['-key', 'accept', 'application/pidf+xml',
+                                     '-key', 'expires', '3600',
+                                     '-key', 'event', 'presence'] }
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+    tags:
+        - sip
