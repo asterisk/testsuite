@@ -40,11 +40,11 @@ class Category:
         self.name = name
         self.template = template
         self.varval_re = re.compile("""
-            \s*                             # Leading whitespace
-            (?P<name>[\w|,\.-]+)            # Option name
-            \s*=>?\s*                       # Separator, = or =>
-            (?P<value>[\w\s=_()/@|,'"\.-]+) # Option value
-            (?:;.*)?$                       # Optional comment before end of line
+            \s*                                # Leading whitespace
+            (?P<name>[\w|,\.-]+)               # Option name
+            \s*=>?\s*                          # Separator, = or =>
+            (?P<value>[\w\s=_()/@|,'"\.<>:-]*) # Option value (can be zero-length)
+            (?:;.*)?$                          # Optional comment before end of line
             """, re.VERBOSE)
 
     def parse_line(self, line):
