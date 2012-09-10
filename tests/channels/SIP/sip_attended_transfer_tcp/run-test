@@ -31,15 +31,15 @@ class AttTransferTestTcp(TestCase):
         self.final_bridge = 0
 
         # start pjsua clients
-        self.pja = subprocess.Popen(['pjsua', '--local-port=5065',
+        self.pja = subprocess.Popen(['pjsua', '--local-port=5075',
                             '--auto-answer=200', '--null-audio', '--no-udp'],
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE)
-        self.pjb = subprocess.Popen(['pjsua', '--local-port=5066',
+        self.pjb = subprocess.Popen(['pjsua', '--local-port=5076',
                             '--auto-answer=200', '--null-audio', '--no-udp'],
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE)
-        self.pjc = subprocess.Popen(['pjsua', '--local-port=5067',
+        self.pjc = subprocess.Popen(['pjsua', '--local-port=5077',
                             '--auto-answer=200', '--null-audio', '--no-udp'],
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE)

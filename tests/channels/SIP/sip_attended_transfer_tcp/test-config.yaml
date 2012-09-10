@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Still causing problems.  See ASTERISK-19167'
     summary:     'Test SIP Attended Transfer using TCP endpoints'
     description: |
         'This test verifies the SIP_REFER with Replaces attended transfer routine using TCP endpoints'
