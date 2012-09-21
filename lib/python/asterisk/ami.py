@@ -208,8 +208,8 @@ class AMICallbackInstance(AMIEventInstance):
     '''
     def __init__(self, instance_config, test_object):
         super(AMICallbackInstance, self).__init__(instance_config, test_object)
-        self.callback_module = instance_config['callback_module']
-        self.callback_method = instance_config['callback_method']
+        self.callback_module = instance_config['callbackModule']
+        self.callback_method = instance_config['callbackMethod']
         if 'start' in instance_config:
             self.passed = True if instance_config['start'] == 'pass' else False
 
