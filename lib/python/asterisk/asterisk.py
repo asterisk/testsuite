@@ -445,7 +445,7 @@ class Asterisk:
             if os.path.isfile(target):
                 self.install_config(target)
 
-    def install_config(self, cfg_path):
+    def install_config(self, cfg_path, target_filename = None):
         """Install a custom configuration file for this instance of Asterisk.
 
         By default, the configuration used will be whatever is found in the
@@ -470,9 +470,14 @@ class Asterisk:
         Keyword Arguments:
         cfg_path -- This argument must be the path to the configuration file
         to be installed into the directory tree for this instance of Asterisk.
+        target_filename -- If this argument is specified, the config file
+        provided will be installed with this filename in the Asterisk etc
+        directory. Use this if the file for cfg_path doesn't match the name of
+        the configuration needed by Asterisk.
 
         Example Usage:
         asterisk.install_config("tests/my-cool-test/configs/manager.conf")
+        asterisk.install_config("tests/my-cool-test/replacement_manager_config.conf", target_filename = "manager.conf")
         """
 
         self.__make_directory_structure()
@@ -484,7 +489,12 @@ class Asterisk:
         tmp = "%s/%s/%s" % (os.path.dirname(cfg_path), self.ast_version.branch, os.path.basename(cfg_path))
         if os.path.exists(tmp):
             cfg_path = tmp
-        target_path = os.path.join(self.astetcdir, os.path.basename(cfg_path))
+
+        if (target_filename):
+            target_path = os.path.join(self.astetcdir, target_filename)
+        else:
+            target_path = os.path.join(self.astetcdir, os.path.basename(cfg_path))
+
         if os.path.exists(target_path):
             os.remove(target_path)
         try:

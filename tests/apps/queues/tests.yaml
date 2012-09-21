@@ -4,6 +4,7 @@ tests:
     - test: 'queue_transfer_callee'
     - test: 'position_priority_maxlen'
     - test: 'set_penalty'
+    - test: 'reload_queue_members'
     # Temporarily disabled while failures are debugged
     #- test: 'macro_gosub_test'
     # Temporarily disabled while failures are debugged

@@ -1,0 +1,14 @@
+testinfo:
+    summary:     'Test Queue Reload Members functionality'
+    description: |
+        'This replaces the configuration for queues with a new one which should contain different members
+         and then performs a QueueReload command from AMI. After reloading the queue, it then checks the
+         members in the queue to be sure they changed as expected.'
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - queues

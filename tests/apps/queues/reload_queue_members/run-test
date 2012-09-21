@@ -1,0 +1,109 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+'''
+Copyright (C) 2012, Digium, Inc.
+Jonathan Rose <jrose@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+from twisted.internet import reactor
+sys.path.append("lib/python")
+from asterisk.TestCase import TestCase
+LOGGER = logging.getLogger(__name__)
+
+class QueueReloadMembersTest(TestCase):
+    """
+    Creates an Asterisk instance with a couple premade queues. It then replaces
+    the queues.conf file with a new one and performs a reload. After the
+    reload, The AMI is issued a QueueStatus command and the test checks if all
+    of the expected members of the queues are named by the status.
+    """
+    def __init__(self):
+        super(QueueReloadMembersTest, self).__init__()
+
+        self.members_expected = [("queue1", "local/1@default"), ("queue1", "local/4@default"), ("queue1", "local/5@default"), ("queue1", "local/6@default"),\
+                                 ("queue2", "local/7@default"), ("queue2", "local/8@default")]
+
+        self.create_asterisk()
+
+    def run(self):
+        super(QueueReloadMembersTest, self).run()
+        self.create_ami_factory()
+
+    def ami_connect(self, ami):
+        src = "%s/tests/%s/queues.conf.replacement" % (os.getcwd(), self.base)
+        message = {'action': 'queuereload', 'members': 'yes'}
+
+        LOGGER.info( "Installing replacement configuration %s" % src)
+        self.ast[0].install_config(src, target_filename = "queues.conf")
+
+        ami.sendMessage(message, responseCallback = self.reload_finished)
+
+    def reload_finished(self, received):
+        message = {'action': 'QueueStatus'}
+
+        if (received['response'] != "Success"):
+            LOGGER.error("Failed to reload queue members. Test Failed.")
+            self.passed = False
+            self.stop_reactor()
+            return
+
+        LOGGER.info("Completed Reload, moving onto checking the results.")
+
+        self.ami[0].registerEvent("QueueMember", self.queue_member_event)
+        self.ami[0].registerEvent("QueueStatusComplete", self.queue_status_complete_event)
+        self.ami[0].sendMessage(message)
+
+        return 0
+
+    def queue_member_event(self, ami, event):
+        member = event.get("name")
+        queue = event.get("queue")
+        if member is None:
+            LOGGER.error("Received a QueueMember event with no name field.")
+            self.passed = False
+            self.stop_reactor()
+            return
+
+        if queue is None:
+            LOGGER.error("Received a QueueMember event with no queue field.")
+            self.passed = False
+            self.stop_reactor()
+            return
+
+        if (queue, member) not in self.members_expected:
+            LOGGER.error("Test Failed: Received Unexepcted member: %s" % member)
+            self.passed = False
+            self.stop_reactor()
+            return
+
+        LOGGER.info("Received Expected member: %s in %s" % (member, queue))
+        self.members_expected.remove((queue, member))
+
+        if len(self.members_expected) == 0:
+            LOGGER.info("All members that were expected are accounted for. Test will pass if no errors occur between now and when the QueueStatusComplete event is received.")
+            self.passed = True
+
+    def queue_status_complete_event(self, ami, event):
+        if len(self.members_expected) > 0:
+            LOGGER.error("Received QueueStatusComplete without receiving all expected new members of queues.")
+            self.passed = False
+        self.stop_reactor()
+
+def main():
+    test = QueueReloadMembersTest()
+    reactor.run()
+
+    if test.passed:
+        return 0
+    else:
+        return 1
+
+if __name__ == "__main__":
+   sys.exit(main() or 0)

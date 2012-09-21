@@ -1,0 +1,9 @@
+[queue1]
+member=>local/1@default
+member=>local/4@default
+member=>local/5@default
+member=>local/6@default
+
+[queue2]
+member=>local/7@default
+member=>local/8@default
