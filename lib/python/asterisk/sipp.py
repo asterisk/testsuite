@@ -173,7 +173,8 @@ class SIPpTestCase(TestCase):
             # each set of scenarios in the YAML config
             self.scenarios.append([SIPpScenario(self.test_name,
                                            scenario['key-args'],
-                                           [] if 'ordered-args' not in scenario else scenario['ordered-args'])
+                                           [] if 'ordered-args' not in scenario else scenario['ordered-args'],
+                                           target = ('127.0.0.1' if 'target' not in scenario else scenario['target']))
                                            for scenario in scenario_set])
 
         final_deferred = defer.Deferred()
@@ -396,7 +397,7 @@ class SIPpScenario:
     when a SIPp scenario must be integrated with a more complex test (using the TestCase
     class, for example)
     """
-    def __init__(self, test_dir, scenario, positional_args=()):
+    def __init__(self, test_dir, scenario, positional_args=(), target = '127.0.0.1'):
         """
         Arguments:
 
@@ -422,6 +423,8 @@ class SIPpScenario:
         The canonical example being -key:
             ('-key', 'extra_via_param', ';rport',
              '-key', 'user_addr', 'sip:myname@myhost')
+        target - overrides the default target address (127.0.0.1) of the SIPp scenario
+                 Be sure to specify IPv6 addresses in brackets ([::1])
         """
         self.scenario = scenario
         self.name = scenario['scenario']
@@ -432,6 +435,7 @@ class SIPpScenario:
         self.passed = False
         self.exited = False
         self._process = None
+        self.target = target
 
     def kill(self):
         """ Kill the executing SIPp scenario """
@@ -474,11 +478,12 @@ class SIPpScenario:
             return result
 
         sipp_args = [
-                self.sipp, '127.0.0.1',
+                self.sipp, self.target,
                 '-sf', '%s/sipp/%s' % (self.test_dir, self.scenario['scenario']),
                 '-nostdin',
                 '-skip_rlimit',
         ]
+
         default_args = {
             '-p' : str(self.default_port),
             '-m' : '1',
@@ -489,6 +494,10 @@ class SIPpScenario:
         # Override and extend defaults
         default_args.update(self.scenario)
         del default_args['scenario']
+
+        # correct the path specified by -slave_cfg
+        if '-slave_cfg' in default_args:
+            default_args['-slave_cfg'] = '%s/sipp/%s' % (self.test_dir, default_args['-slave_cfg'])
 
         for (key, val) in default_args.items():
             sipp_args.extend([ key, val ])
