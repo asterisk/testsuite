@@ -9,10 +9,13 @@ the GNU General Public License Version 2.
 
 import sys
 from twisted.internet import reactor
+import logging
+import logging.config
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.TestCase import TestCase
+LOGGER = logging.getLogger(__name__)
 
 class AMILoginTest(TestCase):
     def __init__(self):

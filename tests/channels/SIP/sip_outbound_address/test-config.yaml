@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Skip while failures are debugged'
     summary:     'Test explicit outbound host for SIP calls'
     description: |
         "This tests the ability to specify an explicit host to send
@@ -15,13 +14,41 @@ testinfo:
     issues:
         - jira : 'ABE-2153'
 
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'originator.Originator'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'uas.xml', '-p': '5061' } }
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'uas.xml', '-p': '5062' } }
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'uas.xml', '-p': '5062' } }
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'uas.xml', '-p': '5062' } }
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'uas.xml', '-p': '5062' } }
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'uas.xml', '-p': '5061' } }
+
 properties:
     minversion: '1.8.0.0'
     dependencies:
-        - app : 'bash'
-        - app : 'asttest'
+        - python: 'starpy'
         - sipp :
-            version : 'v3.0'
-            feature : 'PCAP'
+            version : 'v3.1'
     tags:
         - SIP
