@@ -43,7 +43,7 @@ class Originator(object):
             self.test_object.set_passed(False)
             return result
 
-        dest = DESTINATIONS[self.current_destinations]
+        dest = DESTINATIONS[self.current_destination]
 
         LOGGER.info("Originating call to %s" % dest)
 
