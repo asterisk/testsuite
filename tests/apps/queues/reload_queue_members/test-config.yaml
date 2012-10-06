@@ -6,7 +6,7 @@ testinfo:
          members in the queue to be sure they changed as expected.'
 
 properties:
-    minversion: '1.8.0.0'
+    minversion: '1.8.18.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
