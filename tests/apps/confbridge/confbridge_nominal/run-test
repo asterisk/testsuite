@@ -78,6 +78,7 @@ class StartConfBridgeState(ConfbridgeTestState):
     def __handle_pin(self, channel):
         """ Handles a user entering a pin to the ConfBridge """
         number_to_send = "1111#"
+        self.testCase.reset_timeout()
         if channel in self.calls:
             if "admin_profile" in self.calls[channel].profile:
                 number_to_send = "2222#"
@@ -90,6 +91,7 @@ class StartConfBridgeState(ConfbridgeTestState):
         """ Handles when the ConfBridge notifies the users that someone has joined """
 
         """ We'll hear this twice for each channel that joins """
+        self.testCase.reset_timeout()
         if channel == self.__bridge_channel:
             self.__joined_bridges += 1
             if (self.__joined_bridges == len(self.calls)):
