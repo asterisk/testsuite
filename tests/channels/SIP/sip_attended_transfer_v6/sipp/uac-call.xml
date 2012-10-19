@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="IPv6 Attended Transfer Slave">
+  <!-- wait for command from master to initiate call -->
+  <recvCmd src="startcall">
+    <action>
+      <ereg regexp="master-id: (.*)" search_in="msg" check_it="true" assign_to="1,remotecallid"/>
+      <strcmp assign_to="1" variable="1" value=""/>
+    </action>
+  </recvCmd>
+
+  <send>
+    <![CDATA[
+
+      INVITE sip:call_c@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/UDP [local_ip]:[local_port];rport;branch=z9hG4bKPjwCaFMEItTqvbbSHXiHoyHL.lpaZPFzeF
+      From: <sip:[local_ip]>;tag=WdXXeyLSHfy.tFproy3IQd2MNwJsezQW
+      To: sip:call_c@[remote_ip]
+      Contact: <sip:[remote_ip]:[local_port];ob>
+      Call-ID: [call_id]
+      CSeq: 18000 INVITE
+      Allow: INVITE, ACK, BYE, CANCEL, NOTIFY, REFER
+      User-Agent: SIPp
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=- 3556970359 3556970359 IN IP6 ::1
+      c=IN IP6 ::1
+      b=AS:84
+      t=0 0
+      a=X-nat:0
+      m=audio 40002 RTP/AVP 0
+      c=IN IP6 ::1
+      b=TIAS:64000
+      a=rtcp:40003 IN IP6 ::1
+      a=rtpmap:0 PCMU/8000
+
+    ]]>
+  </send>
+
+  <recv response="100"
+        optional="true"
+        rtd="true"
+        crlf="true">
+  </recv>
+
+  <recv response="180"
+        optional="true"
+        rtd="true"
+        crlf="true">
+  </recv>
+
+  <recv response="183"
+        optional="true"
+        rtd="true"
+        crlf="true">
+  </recv>
+
+  <recv response="200"
+        rtd="true"
+        crlf="true">
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      ACK sip:call_c@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/UDP [remote_ip]:[local_port];rport;branch=z9hG4bKPj9bTJ92liJq5dFYagMI6Fwb5t-580XGHQ
+      From: <sip:[local_ip]>;tag=WdXXeyLSHfy.tFproy3IQd2MNwJsezQW
+      To: sip:call_c@[remote_ip];tag=as1703baba
+      Call-ID: [call_id]
+      CSeq: 18000 ACK
+      Content-Length:  0
+
+    ]]>
+  </send>
+
+  <sendCmd dest="m">
+    <![CDATA[
+      Call-ID: [$remotecallid]
+      From: callstarted
+    ]]>
+  </sendCmd>
+
+  <recv request="BYE"
+        rtd="true"
+        crlf="true">
+  </recv>
+
+  <sendCmd dest="m">
+    <![CDATA[
+      Call-ID: [$remotecallid]
+      From: startbye
+    ]]>
+  </sendCmd>
+
+  <recvCmd src="finishbye"/>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      Via: SIP/2.0/UDP [remote_ip]:[remote_port];rport=[remote_port];received=[remote_ip];branch=z9hG4bK6e3aa094
+      Call-ID: [call_id]
+      From: <sip:call_c@[local_ip]>;tag=as1703baba
+      To: <sip:[remote_ip]>;tag=WdXXeyLSHfy.tFproy3IQd2MNwJsezQW
+      CSeq: 102 BYE
+      Content-Length:  0
+
+    ]]>
+  </send>
+
+  <timewait milliseconds="4000"/>
+
+  <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
+
+  <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+
+</scenario>
+
