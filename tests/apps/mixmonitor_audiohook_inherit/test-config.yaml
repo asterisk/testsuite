@@ -1,5 +1,4 @@
 testinfo:
-#    skip: 'Skip while failures are debugged'
     summary:     'Test MixMonitor with AUDIOHOOK_INHERIT'
     description: |
         'This test verifies basic functionality using MixMonitor with
