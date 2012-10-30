@@ -1,18 +1,24 @@
 testinfo:
-    skip: 'Skip while failures are debugged'
+#    skip: 'Skip while failures are debugged'
     summary:     'Test MixMonitor with AUDIOHOOK_INHERIT'
     description: |
-        'This test verifies basic functionality using MixMonitor with AUDIOHOOK_INHERIT.
-         To test this, an extension is called using the console channel driver. MixMonitor
-         and AUDIOHOOK_INHERIT are used on that channel and then the channel is transfered
-         to another extension.  After the transfer, audio is played back for a period of time. 
-         In order to verify AUDIOHOOK_INHERIT worked properly, the file size is checked to verify
-         it is the size we would expect.  If AUDIOHOOK_INHERIT did not work properly, the file 
-         size would be much smaller than what we expect since we play several seconds of audio after 
-         the transfer.'
+        'This test verifies basic functionality using MixMonitor with
+         AUDIOHOOK_INHERIT. To test this, an extension is called using the
+         Local channel driver. MixMonitor and AUDIOHOOK_INHERIT are used on
+         that channel and then the channel is transfered to another extension.
+         After the transfer, audio is played back for a period of time. In
+         order to verify AUDIOHOOK_INHERIT worked properly, the AMI listener
+         will check for a user event and a test event indicating that a
+         MixMonitor is ending. If the MixMonitor Ending event comes before the
+         user event, the test is failed since that indicates the audiohook
+         was not bound to the channel that sent the user event. If that
+         succeeds, the recording file size is checked to verify it is the size
+         we would expect.  If AUDIOHOOK_INHERIT did not work properly, the file
+         size would be much smaller than what we expect since we play several
+         seconds of audio after the transfer.'
 
 properties:
-    minversion: '1.8.0.0'
+    minversion: '1.8.19.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
