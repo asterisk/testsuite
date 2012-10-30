@@ -43,7 +43,8 @@ class CELModule(object):
                 # Set the record to the default fields, then update with what
                 # was passed in to us
                 dict_record = dict((k, None) for k in AsteriskCSVCELLine.fields)
-                dict_record.update(csv_line)
+                if csv_line is not None:
+                    dict_record.update(csv_line)
 
                 self.cel_records[file_name].append(AsteriskCSVCELLine(**dict_record))
 

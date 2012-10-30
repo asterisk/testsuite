@@ -1,0 +1,135 @@
+testinfo:
+    summary: Test behavior of app_queue when a caller enters a Queue and all
+        agents are paused
+    description: |
+        'This test verifies that when a caller enters a queue where all agents
+        are paused, none of the agents are rung and that the caller eventually
+        times out.  This test verifies the CDR and CEL entries created in
+        such a scenario.'
+
+test-modules:
+    add-to-search-path:
+        -
+            'tests/cdr'
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+        -
+            config-section: 'cel-config'
+            typename: 'cel.CELModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/pause_queue_member@default'
+            application: 'Echo'
+        -
+            channel: 'Local/caller@default'
+            application: 'Echo'
+
+cdr-config:
+    -
+        file: 'Master'
+        lines:
+            -
+                destination: 'pause_queue_member'
+                dcontext: 'default'
+                channel: 'Local/pause_queue_member@default-.*'
+                lastapp: 'Dial'
+                disposition: 'FAILED'
+            -
+                destination: 'pause_queue_member'
+                dcontext: 'default'
+                channel: 'Local/pause_queue_member@default-.*'
+                lastapp: 'PauseQueueMember'
+                disposition: 'NO ANSWER'
+            -
+                destination: 'caller'
+                dcontext: 'default'
+                channel: 'Local/caller@default-.*'
+                lastapp: 'Queue'
+                disposition: 'NO ANSWER'
+            -
+                destination: 'caller'
+                dcontext: 'default'
+                channel: 'Local/caller@default-.*'
+                lastapp: 'Dial'
+                disposition: 'FAILED'
+
+cel-config:
+    -
+        file: 'Master'
+        lines:
+            -
+                eventtype: 'CHAN_START'
+                exten: 'pause_queue_member'
+                context: 'default'
+                channel: 'Local/pause_queue_member@default-.*'
+            -
+                eventtype: 'CHAN_START'
+                exten: 'pause_queue_member'
+                context: 'default'
+                channel: 'Local/pause_queue_member@default-.*'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'pause_queue_member'
+                context: 'default'
+                channel: 'Local/pause_queue_member@default-.*'
+            -
+                eventtype: 'CHAN_START'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+            -
+                eventtype: 'CHAN_START'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+            -
+                eventtype: 'APP_START'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+                app: 'Queue'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'pause_queue_member'
+                context: 'default'
+                channel: 'Local/pause_queue_member@default-.*'
+            -
+                eventtype: 'APP_END'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+                app: 'Queue'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'cdr_csv'
+        - asterisk : 'cel_custom'
+        - asterisk : 'app_queue'
+    tags:
+        - queues
+        - CDR
+        - CEL
+        - chan_local

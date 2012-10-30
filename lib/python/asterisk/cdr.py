@@ -45,7 +45,8 @@ class CDRModule(object):
                 # Set the record to the default fields, then update with what
                 # was passed in to us
                 dict_record = dict((k, None) for k in AsteriskCSVCDRLine.fields)
-                dict_record.update(csv_line)
+                if csv_line is not None:
+                    dict_record.update(csv_line)
 
                 self.cdr_records[file_name].append(AsteriskCSVCDRLine(**dict_record))
 

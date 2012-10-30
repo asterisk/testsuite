@@ -1,0 +1,155 @@
+testinfo:
+    summary: Test behavior of app_queue when a caller enters a Queue and all
+        agents ignore the presence of the caller
+    description: |
+        'This test verifies that when a caller enters a queue where all agents
+        fail to answer the call, that eventually the caller times out and
+        leaves the queue.  This test verifies both the CDR and CEL entries
+        created in such a scenario.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+        -
+            config-section: 'cel-config'
+            typename: 'cel.CELModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/caller@default'
+            application: 'Echo'
+
+cdr-config:
+    -
+        file: 'Master'
+        lines:
+            -
+                destination: 'queue_member_.*'
+                dcontext: 'default'
+                channel: 'Local/queue_member_.*'
+                lastapp: 'Echo'
+                disposition: 'NO ANSWER'
+            -
+                destination: 'queue_member_.*'
+                dcontext: 'default'
+                channel: 'Local/queue_member_.*'
+                lastapp: 'Echo'
+                disposition: 'NO ANSWER'
+            -
+                destination: 'caller'
+                dcontext: 'default'
+                channel: 'Local/caller@default-.*'
+                lastapp: 'Queue'
+                disposition: 'NO ANSWER'
+            -
+                destination: 'caller'
+                dcontext: 'default'
+                channel: 'Local/caller@default-.*'
+                lastapp: 'Dial'
+                disposition: 'FAILED'
+
+cel-config:
+    -
+        file: 'Master'
+        lines:
+            -
+                eventtype: 'CHAN_START'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+            -
+                eventtype: 'CHAN_START'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+            -
+                eventtype: 'APP_START'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+                app: 'Queue'
+            -
+                eventtype: 'CHAN_START'
+                exten: 'queue_member_.*'
+                context: 'default'
+                channel: 'Local/queue_member_.*'
+            -
+                eventtype: 'CHAN_START'
+                exten: 'queue_member_.*'
+                context: 'default'
+                channel: 'Local/queue_member_.*'
+            -
+                eventtype: 'CHAN_START'
+                exten: 'queue_member_.*'
+                context: 'default'
+                channel: 'Local/queue_member_.*'
+            -
+                eventtype: 'CHAN_START'
+                exten: 'queue_member_.*'
+                context: 'default'
+                channel: 'Local/queue_member_.*'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'caller'
+                context: 'default'
+                cidnum: 'caller'
+                channel: 'Local/queue_member_.*'
+                app: 'AppQueue'
+                appdata: '\(Outgoing Line\)'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'caller'
+                context: 'default'
+                cidnum: 'caller'
+                channel: 'Local/queue_member_.*'
+                app: 'AppQueue'
+                appdata: '\(Outgoing Line\)'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'queue_member_.*'
+                context: 'default'
+                channel: 'Local/queue_member_.*'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'queue_member_.*'
+                context: 'default'
+                channel: 'Local/queue_member_.*'
+            -
+                eventtype: 'APP_END'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+                app: 'Queue'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'cdr_csv'
+        - asterisk : 'cel_custom'
+        - asterisk : 'app_queue'
+    tags:
+        - queues
+        - CDR
+        - CEL
+        - chan_local

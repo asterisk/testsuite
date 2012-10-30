@@ -1,0 +1,162 @@
+testinfo:
+    summary: Test behavior of app_queue when a caller enters a Queue and one
+        agent is paused, and the other agent fails to answer the call
+    description: |
+        'This test verifies that when a caller enters a queue where an agent
+        is paused, that only the single non-paused agent is rung.  This also
+        verifies that after a period of time in which the single non-paused
+        agent fails to answer the call, that the caller is hung up on.  This
+        verifies both the CDR and CEL entries.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+        -
+            config-section: 'cel-config'
+            typename: 'cel.CELModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/pause_queue_member@default'
+            application: 'Echo'
+        -
+            channel: 'Local/caller@default'
+            application: 'Echo'
+
+cdr-config:
+    -
+        file: 'Master'
+        lines:
+            -
+                destination: 'pause_queue_member'
+                dcontext: 'default'
+                channel: 'Local/pause_queue_member@default-.*'
+                lastapp: 'Dial'
+                disposition: 'FAILED'
+            -
+                destination: 'pause_queue_member'
+                dcontext: 'default'
+                channel: 'Local/pause_queue_member@default-.*'
+                lastapp: 'PauseQueueMember'
+                disposition: 'NO ANSWER'
+            -
+                destination: 'queue_member_two'
+                dcontext: 'default'
+                channel: 'Local/queue_member_two@default-.*'
+                lastapp: 'Echo'
+                disposition: 'NO ANSWER'
+            -
+                destination: 'caller'
+                dcontext: 'default'
+                channel: 'Local/caller@default-.*'
+                lastapp: 'Queue'
+                disposition: 'NO ANSWER'
+            -
+                destination: 'caller'
+                dcontext: 'default'
+                channel: 'Local/caller@default-.*'
+                lastapp: 'Dial'
+                disposition: 'FAILED'
+
+cel-config:
+    -
+        file: 'Master'
+        lines:
+            -
+                eventtype: 'CHAN_START'
+                exten: 'pause_queue_member'
+                context: 'default'
+                channel: 'Local/pause_queue_member@default-.*'
+            -
+                eventtype: 'CHAN_START'
+                exten: 'pause_queue_member'
+                context: 'default'
+                channel: 'Local/pause_queue_member@default-.*'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'pause_queue_member'
+                context: 'default'
+                channel: 'Local/pause_queue_member@default-.*'
+            -
+                eventtype: 'CHAN_START'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+            -
+                eventtype: 'CHAN_START'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+            -
+                eventtype: 'APP_START'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+                app: 'Queue'
+            -
+                eventtype: 'CHAN_START'
+                exten: 'queue_member_two'
+                context: 'default'
+                channel: 'Local/queue_member_two@default-.*'
+            -
+                eventtype: 'CHAN_START'
+                exten: 'queue_member_two'
+                context: 'default'
+                channel: 'Local/queue_member_two@default-.*'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'pause_queue_member'
+                context: 'default'
+                channel: 'Local/pause_queue_member@default-.*'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'caller'
+                context: 'default'
+                cidnum: 'caller'
+                channel: 'Local/queue_member_two@default-.*'
+                app: 'AppQueue'
+                appdata: '\(Outgoing Line\)'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'queue_member_two'
+                context: 'default'
+                channel: 'Local/queue_member_two@default-.*'
+            -
+                eventtype: 'APP_END'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+                app: 'Queue'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+            -
+                eventtype: 'CHAN_END'
+                exten: 'caller'
+                context: 'default'
+                channel: 'Local/caller@default-.*'
+
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'cdr_csv'
+        - asterisk : 'cel_custom'
+        - asterisk : 'app_queue'
+    tags:
+        - queues
+        - CDR
+        - CEL
+        - chan_local

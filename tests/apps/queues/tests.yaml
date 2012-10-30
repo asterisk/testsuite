@@ -5,6 +5,9 @@ tests:
     - test: 'position_priority_maxlen'
     - test: 'set_penalty'
     - test: 'reload_queue_members'
+    - test: 'queue_all_paused_no_answer'
+    - test: 'queue_no_answer'
+    - test: 'queue_one_paused_no_answer'
     # Temporarily disabled while failures are debugged
     #- test: 'macro_gosub_test'
     # Temporarily disabled while failures are debugged
