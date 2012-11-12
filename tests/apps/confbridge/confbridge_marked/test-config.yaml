@@ -1,0 +1,462 @@
+testinfo:
+    summary: 'Test marked users in a Conference'
+    description: |
+        This tests the behavior of ConfBridge with two Marked users.  It covers
+        checking that marked users receive the proper notifications when they
+        do not have the quiet flag; that they do not receive the notifications
+        when they have the quiet flag; that MOH is not played to marked users
+        at any time; and that the conference transitions appropriately between
+        its various states.  Two scenarios are used to cover this test - one
+        where a marked user enters first without the quiet flag, and one where a
+        marked user enters first with the quiet flag.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'ConfBridge'
+  scenarios:
+    -
+      # Scenario 1: Marked User One enters.  Verify that they are notified they
+      # are in conference.  Marked User Two enters (Quiet flag), verify no
+      # notifications are played.  Marked User Two leaves; Marked User One
+      # leaves.  Verify that conference transitions occur as expected.
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'SINGLE_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from EMPTY to SINGLE_MARKED'
+            -
+              action-type: 'start-call'
+              delay: 3
+              channel-id: 'Marked-2'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE_MARKED'
+              NewState: 'MULTI_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from SINGLE_MARKED to MULTI_MARKED'
+            -
+              action-type: 'hangup'
+              delay: 2
+              channel-id: 'Marked-2'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'MULTI_MARKED'
+              NewState: 'SINGLE_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from MULTI_MARKED to SINGLE_MARKED'
+            -
+              action-type: 'hangup'
+              delay: 2
+              channel-id: 'Marked-1'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE_MARKED'
+              NewState: 'EMPTY'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from SINGLE_MARKED to EMPTY'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'Marked-1'
+          channel-name: 'Local/marked_one@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/marked_one@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-1 Join Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/marked_one@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-1 Leave Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/marked_one@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-1 Heard Join Sound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/marked_one@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'conf-placeintoconf'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-1 Notified of Placed in Conference'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHold'
+                  Channel: 'Local/marked_one@confbridge-.*'
+                  State: 'Start'
+              actions:
+                -
+                  # No MOH should be played to a marked user, even if they are
+                  # the only one in the conference
+                  action-type: 'fail-test'
+                  message: 'MOH played to marked user!'
+        -
+          channel-id: 'Marked-2'
+          channel-name: 'Local/marked_two@confbridge'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/marked_two@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-2 Join Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/marked_two@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-2 Leave Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/marked_two@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  # Note that Marked 2 should not have a join sound played, as
+                  # they have the quiet flag
+                  action-type: 'fail-test'
+                  expected-result: 'Marked-2 heard join sound when they had the Quiet flag set'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/marked_two@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'conf-placeintoconf'
+              actions:
+                -
+                  # Note that Marked-2 should not be notified that they
+                  # were placed into the conference, as they have the
+                  # quiet flag
+                  action-type: 'fail-test'
+                  message: 'Marked-2 heard placedintoconf when they had the Quiet flag set'
+    -
+      # Scenario 2: Marked User Two (Quiet flag) enters.  Verify that they
+      # receive no notifications that they are in the conference.  Marked User
+      # One enters; verify notifications are played.  Marked User One leaves;
+      # Marked User Two leaves.  Verify that conference transitions occur as
+      # expected.
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'SINGLE_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from EMPTY to SINGLE_MARKED'
+            -
+              action-type: 'start-call'
+              delay: 3
+              channel-id: 'Marked-1'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE_MARKED'
+              NewState: 'MULTI_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from SINGLE_MARKED to MULTI_MARKED'
+            -
+              action-type: 'hangup'
+              delay: 2
+              channel-id: 'Marked-1'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'MULTI_MARKED'
+              NewState: 'SINGLE_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from MULTI_MARKED to SINGLE_MARKED'
+            -
+              action-type: 'hangup'
+              delay: 2
+              channel-id: 'Marked-2'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE_MARKED'
+              NewState: 'EMPTY'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from SINGLE_MARKED to EMPTY'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'Marked-1'
+          channel-name: 'Local/marked_one@confbridge'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/marked_one@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-1 Join Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/marked_one@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-1 Leave Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/marked_one@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-1 Heard Join Sound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/marked_one@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'conf-placeintoconf'
+              actions:
+                -
+                  # Marked-1 was second in conference; should not have this
+                  # sound file played
+                  action-type: 'fail-test'
+                  expected-result: 'Marked-1 Notified of Placed in Conference when they were not first participant'
+        -
+          channel-id: 'Marked-2'
+          channel-name: 'Local/marked_two@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/marked_two@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-2 Join Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/marked_two@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-2 Leave Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/marked_two@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  # Note that Marked 2 should not have a join sound played, as
+                  # they have the quiet flag
+                  action-type: 'fail-test'
+                  expected-result: 'Marked-2 heard join sound when they had the Quiet flag set'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/marked_two@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'conf-placeintoconf'
+              actions:
+                -
+                  # Note that Marked-2 should not be notified that they
+                  # were placed into the conference, as they have the
+                  # quiet flag
+                  action-type: 'fail-test'
+                  message: 'Marked-2 heard placedintoconf when they had the Quiet flag set'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHold'
+                  Channel: 'Local/marked_two@confbridge-.*'
+                  State: 'Start'
+              actions:
+                -
+                  # No MOH should be played to a marked user, even if they are
+                  # the only one in the conference
+                  action-type: 'fail-test'
+                  message: 'MOH played to marked user!'
+
+
+properties:
+    minversion: '10.10.0'
+    tags:
+      - confbridge
+      - apps
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_confbridge'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_playback'
+

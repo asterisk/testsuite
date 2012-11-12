@@ -1,0 +1,189 @@
+# Configuration object for the AppTest object and its subobjects.  AppTest
+# allows for long running tests to be orchestrated inside Asterisk applications,
+# wherein the channel in the application needs to be controlled by some
+# external mechanism.  These tests drop a channel into a specified application,
+# and then via configured AMI events, send DTMF, audio, or otherwise control
+# the channel in the application.
+#
+# These tests always use a Local channel for this operation, where one half of
+# the Local channel pair is put in the application to be tested, and the other
+# half is used in various portions of the dialplan to manipulate the application
+# under test.
+#
+# Note that these tests require certain dialplan configuration in order to work.
+# The dialplan must provide a context/extension that puts the Local channel half
+# into the application, and must provide context/extensions that:
+#    Hold the other local channel half indefinitely (wait)
+#    Send DTMF through the local channel half
+#    Stream some audio file through the local channel half
+#    Hangup the local channel
+#
+app-test-config:
+    app: 'ConfBridge'          # Required.  The application that this test will
+                               # exercise.
+    # An application test consists of some number of scenarios to execute.  Each
+    # scenario should be independent of the others.  The test passes if all
+    # scenarios complete successfully.
+    scenarios:
+      -
+      # Optional.  A scenario can have events associated with it that are not
+      # tied to a particular channel in an event.  These events would be things
+      # happening in the application that apply to all channels in the
+      # application.  These events use the same notation as the events/actions
+      # in the channels sequence.
+      events:
+
+      # Each scenario consists of a sequence of channels that will be created for
+      # that paricular scenario.  Any number of channels can be created.
+      channels:
+        -
+            channel-id: 'Caller-1'     # Required.  Used to uniquely identify a
+                                       # channel in the test.
+            channel-name: 'Local/s@default'  # Required.  The Local channel half
+                                             # that will be sent into the
+                                             # application under test.  This
+                                             # is typically referred to as the
+                                             # 'application channel'.
+            context: 'default'         # Optional.  The context to send the
+                                       # second half of the Local channel pair
+                                       # into (this is referred to as the
+                                       # 'controlling channel').  Defaults to
+                                       # 'default.'
+            exten: 'wait'              # Optional.  The extension to send the
+                                       # controlling channel into.  Default to
+                                       # 'wait'.
+            hangup-exten: 'hangup'     # Optional.  The name of the extension
+                                       # to redirect the controlling channel
+                                       # into to hangup the channel.  Defaults
+                                       # to 'hangup'
+            audio-exten: 'sendAudio'   # Optional.  The name of the extension
+                                       # to redirect the controlling channel
+                                       # into to send audio to the application.
+                                       # Defaults to 'sendAudio'.
+            dtmf-exten: 'sendDTMF'     # Optional.  The name of the extension
+                                       # to redirect the controlling channel
+                                       # into to send DTMF to the application.
+                                       # Defaults to 'sendDTMF'
+            wait-exten: 'wait'         # Optional.  The name of the extension
+                                       # to redirect the controlling channel
+                                       # into to wait indefinitely.  Defaults
+                                       # to 'wait'.
+            start-on-create: True      # Optional.  If specified and set to
+                                       # True, the channel will be created
+                                       # immediately.  Otherwise, an action
+                                       # from another channel must spawn
+                                       # this channel.  Note that at least
+                                       # one channel should have
+                                       # 'start-on-create' - otherwise no
+                                       # channels will start!  Default is False.
+            delay: 1                   # Optional. If start-on-create is set,
+                                       # the amount of time to wait before
+                                       # starting the call.
+            # In general, creating a channel doesn't do much other than just
+            # drop a channel into an application and send the controlling
+            # half into an indefinite wait.  Once the channel is in the
+            # application, something has to tell it what to do - this occurs
+            # by having the application respond to AMI events.  A reception
+            # of an AMI event can trigger some action.  The actions triggered
+            # are executed in the sequence that they are specified, and will
+            # cause the controlling channel to do something to the application
+            # channel.
+            #
+            # Any number of events can be specified for the channel.  All are
+            # evaluated for any event received, so a single event can spawn
+            # multiple chains of actions.  The order in which events are
+            # evaluated and their actions executed is unspecified.  Note that
+            # the AMI event matching using the same syntax as the ami-config
+            # module (and is in fact inherited from it) - however, no test
+            # is auto-failed if an event does not match or if match event
+            # do not occur.
+            events:
+              -
+                  type: 'headermatch'
+                  conditions:
+                      match:
+                          Event: 'TestEvent'
+                          # Note that channel name matching only has to be good
+                          # enough to cause this event to match on the channel
+                          # in the application - even if there are multiple
+                          # application channels in the test, this will still
+                          # only match on the channel in the application
+                          # corresponding to this channel's channel-id.
+                          Channel: 'Local/s@default-.*'
+                          State: 'PLAYBACK'
+                          Message: 'confbridge-join'
+                  # The actions to execute when this event is matched.  Each
+                  # action has its own configuration.  The following actions are
+                  # supported:
+                  #  set-expected-result    - set some requirement to passed.
+                  #                           Requirements are determined from
+                  #                           the set-expected-result actions
+                  #                           and, if any are not executed at
+                  #                           test end, the test fails
+                  #  stream-audio           - Send some audio through to the app
+                  #  send-dtmf              - Send DTMF through to the app
+                  #  hangup                 - Hangup the channel
+                  #  stream-audio-with-dtmf - Send some audio through followed
+                  #                         - by some DTMF
+                  #  start-call             - Spawn a new call into the app
+                  #  fail-test              - Auto fail the test.
+                  #  end-scenario           - Automatically end the scenario
+                  actions:
+                    -
+                      # Each action has an action-type, matching one of the
+                      # types listed previously
+                      action-type: 'set-expected-result'
+                      # A useful string message specifying the result that was
+                      # just met
+                      expected-result: 'Caller-1 In Conference'
+                    -
+                      action-type: 'stream-audio'
+                      # Optional.  The amount of time to wait from when the
+                      # previous action occurred to when we should execute this
+                      # action.
+                      delay: '3'
+                      # The sound file to stream to the application
+                      sound-file: './tests/apps/confbridge/sounds/talking.ulaw'
+                    -
+                      action-type: 'send-dtmf'
+                      # Optional.  The amount of time to wait from when the
+                      # previous action occurred to when we should execute this
+                      # action.
+                      delay: '1'
+                      # The dtmf to send
+                      dtmf: '1234#'
+                    -
+                      action-type: 'stream-audio-with-dtmf'
+                      # Optional.  The amount of time to wait from when the
+                      # previous action occurred to when we should execute this
+                      # action.
+                      sound-delay: '5'
+                      # Optional.  The amount of time to wait from when the
+                      # audio begins sending until when the DTMF should start.
+                      dtmf-delay: '5'
+                      sound-file: './tests/apps/cofnbridge/sounds/talking.ulaw'
+                      dtmf: '1234#'
+                    -
+                      action-type: 'start-call'
+                      # The ID of the channel to spawn
+                      channel-id: 'Caller-2'
+                    -
+                      action-type: 'hangup'
+                      # Optional.  The amount of time to wait from when the
+                      # previous action completed to when we should execute this
+                      # action.
+                      delay: '5'
+                      # Optional.  The channel to hang up.  If not specified,
+                      # hangs up the current channel.
+                      channel-id: 'Caller-1'
+                    -
+                      action-type: 'fail-test'
+                      # Optional.  Logs a message as to why the test failed.
+                      message: 'Ah snap'
+                    -
+                      # Note that every scenario should have an end scenario
+                      # action.
+                      action-type: 'end-scenario'
+                      # Optional.  Logs a message as to why the scenario ended.
+                      message: 'Conference end event received'
+

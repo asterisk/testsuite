@@ -21,6 +21,7 @@ class AMIEventInstance(object):
         self.nonmatch_conditions = instance_config['conditions'].get('nomatch', {})
         self.ids = instance_config['id'].split(',') if 'id' in instance_config else ['0']
         self.passed = True
+        self._registered = False
 
         if 'count' in instance_config:
             count = instance_config['count']
@@ -50,9 +51,27 @@ class AMIEventInstance(object):
         test_object.register_stop_observer(self.__check_result)
 
     def ami_connect(self, ami):
-        if str(ami.id) in self.ids:
+        self.register_handler(ami)
+
+    def register_handler(self, ami):
+        ''' Register for the AMI events.
+
+        Note:
+        In general, most objects won't need this method.  You would only call
+        this from a derived object when you create instances of the derived
+        object after AMI connect.
+        '''
+        if str(ami.id) in self.ids and not self._registered:
             logger.debug("Registering event %s" % self.match_conditions['Event'])
             ami.registerEvent(self.match_conditions['Event'], self.__event_callback)
+            self._registered = True
+
+    def dispose(self, ami):
+        ''' Dispose of this object's AMI event registrations '''
+        if str(ami.id) not in self.ids:
+            logger.warning("Unable to dispose of AMIEventInstance - unknown AMI object %d" % ami.id)
+            return
+        ami.deregisterEvent(self.match_conditions['Event'], self.__event_callback)
 
     def event_callback(self, ami, event):
         '''
@@ -68,6 +87,9 @@ class AMIEventInstance(object):
         '''
 
         for k,v in self.match_conditions.items():
+            if k.lower() not in event:
+                logger.debug("Condition %s not in event, returning" % (k))
+                return
             if not re.match(v, event.get(k.lower())):
                 logger.debug("Condition %s: %s does not match %s: %s in event" %
                         (k, v, k, event.get(k.lower())))
@@ -77,6 +99,9 @@ class AMIEventInstance(object):
                         (k, v, k, event.get(k.lower())))
 
         for k,v in self.nonmatch_conditions.items():
+            if k.lower() not in event:
+                logger.debug("Condition %s not in event, returning" % (k))
+                return
             if re.match(v, event.get(k.lower())):
                 logger.debug("Condition %s: %s matches %s: %s in event" %
                         (k, v, k, event.get(k.lower())))
