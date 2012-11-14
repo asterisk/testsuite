@@ -11,7 +11,6 @@ tests:
     - test: 'feature_blonde_transfer'
     - test: 'feature_attended_transfer'
     - test: 'blind-transfer-parkingtimeout'
-    - test: 'one-step-parking'
     - test: 'callparking'
     - test: 'callparking_retrieval'
     - test: 'masquerade'
