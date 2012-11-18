@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Skip until test event makes its way into the test suite'
     summary: 'Test marked users in a Conference'
     description: |
         This tests the behavior of ConfBridge with two Marked users.  It covers
