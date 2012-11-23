@@ -31,14 +31,15 @@ TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
 
 class TestRun:
-    def __init__(self, test_name, ast_version, options):
+
+    def __init__(self, test_name, ast_version, options, global_config=None):
         self.can_run = False
         self.did_run = False
         self.time = 0.0
         self.test_name = test_name
         self.ast_version = ast_version
         self.options = options
-        self.test_config = TestConfig(test_name)
+        self.test_config = TestConfig(test_name, global_config)
         self.failure_message = ""
         self.__check_can_run(ast_version)
         self.stdout = ""
@@ -171,8 +172,8 @@ class TestSuite:
         self.options = options
 
         self.tests = []
-        self.tests = self._parse_test_yaml("tests", ast_version)
         self.global_config = self._parse_global_config()
+        self.tests = self._parse_test_yaml("tests", ast_version)
         self.total_time = 0.0
         self.total_count = 0
         self.total_failures = 0
@@ -202,7 +203,7 @@ class TestSuite:
                     if self.options.test and not (path + '/').startswith(self.options.test):
                         continue
 
-                    tests.append(TestRun(path, ast_version, self.options))
+                    tests.append(TestRun(path, ast_version, self.options, self.global_config))
                 elif val == "dir":
                     tests += self._parse_test_yaml(path, ast_version)
 
@@ -266,6 +267,9 @@ class TestSuite:
                     print "--> %s ... skipped '%s'" % (t.test_name, t.test_config.skip)
                     continue
                 print "--> Cannot run test '%s'" % t.test_name
+                if t.test_config.forced_version is not None:
+                    print "--- --> Forced Asterisk Version: %s" % \
+                        (str(t.test_config.forced_version))
                 print "--- --> Minimum Version: %s (%s)" % \
                     (str(t.test_config.minversion), str(t.test_config.minversion_check))
                 if t.test_config.maxversion is not None:

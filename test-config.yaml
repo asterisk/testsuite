@@ -90,4 +90,10 @@ config-pessimistic:
             - name: 'file-descriptors'
             - name: 'channels'
 
+config-specific-version:
+    properties:
+        # Override the version of Asterisk under test to the specified version.
+        # This is particularly useful if the version under test is from a team
+        # branch not based on Asterisk trunk.
+        forced-version: 1.8.0.0
 

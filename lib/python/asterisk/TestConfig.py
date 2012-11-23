@@ -243,6 +243,7 @@ class TestConfig:
         self.maxversion_check = False
         self.minversion = None
         self.minversion_check = False
+        self.forced_version = None
         self.deps = []
         self.tags = []
         self.expectPass = True
@@ -261,6 +262,7 @@ class TestConfig:
         """
         if self.global_test_config != None:
             self.condition_definitions = self.global_test_config.condition_definitions
+            self.forced_version = self.global_test_config.forced_version
             return
 
         if "global-settings" in self.config:
@@ -330,6 +332,13 @@ class TestConfig:
             self.features.extend(properties["features"])
             for f in self.features:
                 self.feature_check[f] = False
+        if "forced-version" in properties:
+            try:
+                self.forced_version = AsteriskVersion(properties["forced-version"])
+            except:
+                self.can_run = False
+                print "ERROR: '%s' is not a valid Asterisk version" % \
+                    properties["forced-version"]
 
     def __parse_config(self):
         test_config = "%s/test-config.yaml" % self.test_name
@@ -401,6 +410,9 @@ class TestConfig:
             Dependency(d)
                 for d in self.config["properties"].get("dependencies") or []
         ]
+
+        if self.forced_version is not None:
+            ast_version = self.forced_version
 
         self.minversion_check = True
         if ast_version < self.minversion:
