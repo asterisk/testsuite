@@ -53,4 +53,6 @@ tests:
     - test: 'subscribe'
     - test: 'rfc2833_dtmf_detect'
     - test: 'device_state_notification'
+    - test: 'directrtpsetup'
     - test: 'session_timers_require'
+
