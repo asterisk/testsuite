@@ -1,0 +1,6 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'basic_uac_teardown'
+    - test: 'basic_uac_refresh'
+    - test: 'basic_uas_refresh'
+    - test: 'basic_uas_teardown'

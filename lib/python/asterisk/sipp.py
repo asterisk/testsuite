@@ -48,7 +48,7 @@ class SIPpTestCase(TestCase):
         test_path path to the location of the test directory
         test_config yaml loaded object containing config information
         '''
-        super(SIPpTestCase, self).__init__(test_path)
+        super(SIPpTestCase, self).__init__(test_path, test_config=test_config)
 
         if not test_config:
             raise ValueError('SIPpTestObject requires a test config')

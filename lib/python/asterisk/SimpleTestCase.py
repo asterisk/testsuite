@@ -34,7 +34,7 @@ class SimpleTestCase(TestCase):
         test_path Optional path to the location of the test directory
         test_config Optional yaml loaded object containing config information
         '''
-        TestCase.__init__(self, test_path)
+        TestCase.__init__(self, test_path, test_config=test_config)
         self.create_asterisk()
 
         self._test_runs = []

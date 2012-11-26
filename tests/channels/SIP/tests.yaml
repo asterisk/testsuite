@@ -55,4 +55,4 @@ tests:
     - test: 'device_state_notification'
     - test: 'directrtpsetup'
     - test: 'session_timers_require'
-
+    - dir: 'session_timers'

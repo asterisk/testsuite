@@ -1,0 +1,33 @@
+testinfo:
+    summary:     'Basic SIP timers test (outbound UAC refresh)'
+    description: |
+        "This test verifies that timers function properly by ensuring that Asterisk refreshes properly as a UAC when requested to on outbound calls."
+
+properties:
+    minversion: '1.8.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - custom : 'ipv6'
+        - app : 'sipp'
+    tags:
+        - SIP
+        - timers
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'originator.Originator'
+
+sipp-config:
+    reactor-timeout: 70
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uas-no-hangup.xml', '-p': '5066', '-send_timeout': '50000', '-recv_timeout': '50000', '-timeout': '60000'},
+                    'ordered-args': ['-timeout_error'] }

@@ -40,7 +40,7 @@ class TestCase(object):
     other utilities.
     """
 
-    def __init__(self, test_path = ''):
+    def __init__(self, test_path = '', test_config=None):
         """
         Create a new instance of a TestCase.  Must be called by inheriting
         classes.
@@ -48,6 +48,7 @@ class TestCase(object):
         Parameters:
         test_path Optional parameter that specifies the path where this test
             resides
+        test_config Loaded YAML test configuration
         """
 
         if not len(test_path):
@@ -73,6 +74,10 @@ class TestCase(object):
         self.ast_version = AsteriskVersion()
         self._stop_callbacks = []
         self._ami_callbacks = []
+
+        """ Pull additional configuration from YAML config if possible """
+        if test_config and 'reactor-timeout' in test_config:
+            self.reactor_timeout = test_config['reactor-timeout']
 
         os.makedirs(self.testlogdir)
 
