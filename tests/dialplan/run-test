@@ -9,7 +9,6 @@ the GNU General Public License Version 2.
 
 import sys
 import logging
-
 from twisted.internet import reactor
 
 sys.path.append("lib/python")
@@ -17,8 +16,8 @@ from asterisk.TestCase import TestCase
 
 logger = logging.getLogger(__name__)
 
-class DialPlanTest(TestCase):
 
+class DialPlanTest(TestCase):
     def __init__(self):
         super(DialPlanTest, self).__init__()
         self.create_asterisk()
@@ -28,15 +27,12 @@ class DialPlanTest(TestCase):
         self.create_ami_factory()
 
     def ami_connect(self, ami):
-        super(DialPlanTest, self).ami_connect(ami)
-
         ami.registerEvent("UserEvent", self.ami_UserEvent)
         ami.originate(
-                channel = "Local/s@DialContext",
-                exten = "s",
-                priority = "1",
-                context = "test"
-        )
+            channel = "Local/s@DialContext",
+            exten = "s",
+            priority = "1",
+            context = "test")
 
     def ami_UserEvent(self, ami, event):
         event_type = event.get("userevent")
@@ -45,25 +41,23 @@ class DialPlanTest(TestCase):
 
         if event_type == "TestResult":
             result = event.get("result")
-            if result  == "True":
+            if result == "Success":
                 self.passed = True
-                logger.info('Test passed!')
             else:
-                self.passed = False
-                logger.warn('Test failed!')
+                message = event.get("message")
+                logger.warning("Failure: " + str(message))
             self.stop_reactor()
         elif event_type == "TestStatus":
             message = event.get("message")
             logger.debug(message)
         else:
-            logger.warn("Unknown event type %s received" % event_type)
+            logger.warning("Unknown event type %s received" % event_type)
 
-def main(argv=None):
+def main():
     test = DialPlanTest()
-    test.start_asterisk()
     reactor.run()
-    test.stop_asterisk()
     if test.passed:
+        logger.info("Test passed")
         return 0
     return 1
 
