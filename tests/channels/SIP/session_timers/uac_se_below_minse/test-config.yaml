@@ -1,7 +1,7 @@
 testinfo:
-    summary:     'Basic SIP timers test (outbound UAC refresh)'
+    summary:     'Min-SE enforcement (outbound UAC refresh)'
     description: |
-        "This test verifies that timers function properly by ensuring that Asterisk refreshes properly as a UAC when requested to on outbound calls."
+        "This test verifies that outbound calls with a Session-Expires value less than the local Min-SE is torn down immediately."
 
 properties:
     minversion: '1.8.0'
@@ -23,10 +23,9 @@ test-modules:
             typename: 'originator.Originator'
 
 sipp-config:
-    reactor-timeout: 70
+    reactor-timeout: 20
     fail-on-any: True
     test-iterations:
         -
             scenarios:
-                - { 'key-args': {'scenario': 'uas-no-hangup.xml', '-p': '5066', '-send_timeout': '50000', '-recv_timeout': '50000', '-timeout': '60000'},
-                    'ordered-args': ['-timeout_error'] }
+                - { 'key-args': {'scenario': 'uas-no-hangup.xml', '-p': '5066'} }

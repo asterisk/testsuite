@@ -5,3 +5,4 @@ tests:
     - test: 'basic_uas_refresh'
     - test: 'basic_uas_teardown'
     - test: 'uas_minimum_se'
+    - test: 'uac_se_below_minse'

@@ -8,7 +8,6 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-        - custom : 'ipv6'
         - app : 'sipp'
     tags:
         - SIP
