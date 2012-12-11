@@ -31,7 +31,10 @@ uninstall:
 update:
 	@if [ -d starpy ]; then \
 		cd starpy; \
+		if [ `git config --get remote.origin.url` = git://github.com/asterisk-org/starpy.git ]; then \
+			git remote set-url origin git://github.com/asterisk/starpy.git git://github.com/asterisk-org/starpy.git; \
+		fi; \
 		git pull; \
 	else \
-		git clone git://github.com/asterisk-org/starpy.git; \
+		git clone git://github.com/asterisk/starpy.git; \
 	fi
