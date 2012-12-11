@@ -153,7 +153,7 @@ Optional (needed by specific tests):
               $ cp pjsip-apps/bin/pjsua-x86_64-unknown-linux-gnu /usr/local/bin/pjsua
         - pjsua python bindings
             - Go to pjsip-apps/src/python directory
-            - Run 'sudo python ./setup.py install' or just 'sudo make'
+            - Run 'sudo python ./setup.py install' or just 'sudo make install'
         - libpcap and yappcap
             - Install the libpcap development library package for your system
               (libpcap-dev for Debian-based distros, pcap-devel for Red Hat)
