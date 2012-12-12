@@ -440,6 +440,9 @@ class Asterisk:
             self.install_configs("%s/configs" % os.getcwd())
             self.__configs_installed = True
 
+        if not os.access(cfg_path, os.F_OK):
+            return
+
         for f in os.listdir(cfg_path):
             target = "%s/%s" % (cfg_path, f)
             if os.path.isfile(target):

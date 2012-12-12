@@ -25,3 +25,4 @@ tests:
     - dir: 'connected_line'
     - dir: 'redirecting'
     - test: 'cause_answered_elsewhere'
+    - dir: 'bridge'

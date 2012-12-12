@@ -1,0 +1,8 @@
+tests:
+    - test: 'simple_bridge'
+    - test: 'disconnect'
+    - test: 'atxfer'
+    - test: 'blindxfer'
+    - test: 'automon'
+    - test: 'automixmon'
+    - test: 'dial_L_option'

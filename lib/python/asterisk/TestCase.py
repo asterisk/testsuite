@@ -138,7 +138,7 @@ class TestCase(object):
                     logger.warning("Unsupported type [%s] with related condition %s" % (c[1], c[2]))
         self.testConditionController.register_observer(self.handle_condition_failure, 'Failed')
 
-    def create_asterisk(self, count=1):
+    def create_asterisk(self, count=1, base_configs_path=None):
         """
         Create n instances of Asterisk
 
@@ -147,11 +147,20 @@ class TestCase(object):
         will be hosted on 127.0.0.x, where x is the 1-based index of the instance
         created
 
+        base_configs_path -- provides common configuration for Asterisk
+        instances to use. This is useful for certain test types that use the
+        same configuration all the time. This configuration can be overwritten
+        by individual tests, however.
+
         """
         for c in range(count):
             logger.info("Creating Asterisk instance %d" % (c + 1))
             host = "127.0.0.%d" % (c + 1)
             self.ast.append(Asterisk(base=self.base, host=host))
+            """ If a base configuration for this Asterisk instance has been
+            provided, install it first"""
+            if base_configs_path:
+                self.ast[c].install_configs("%s/ast%d" % (base_configs_path, c + 1))
             """ Copy test specific config files """
             self.ast[c].install_configs("%s/configs/ast%d" %
                     (self.test_name, c + 1))

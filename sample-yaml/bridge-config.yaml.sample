@@ -1,0 +1,86 @@
+#Same configuration for the bridge test object
+
+# Configuration for the bridging test object works
+# the same as for any other. In the test-modules section,
+# specify where its configuration is found and the name of
+# the test object.
+test-modules:
+    test-object:
+        config-section: bridge-config
+        typename: 'BridgeTestCase.BridgeTestCase'
+
+# The bridging test object works by using three Asterisk
+# instances.
+#
+# Asterisk instance 0: The UUT. This is where the actual
+# bridge will be.
+#
+# Asterisk instance 1: "Alice". This is the originator of
+# calls that go through the UUT.
+#
+# Asterisk instance 2: "Bob". This is the receiver of calls
+# that go through the UUT.
+#
+# The configuration for the UUT, Alice, and Bob is located in configs/bridge/ast1,
+# configs/bridge/ast2, and configs/bridge/ast3 respectively. This way every test
+# that uses the bridge test object can rely on the same configuration being
+# used. Configuration for individual tests can be specified within the test
+# directory. It will be common to write a custom extensions.conf file for the UUT
+# for every test.
+bridge-config:
+
+	# Each item in the bridge configuration indicates a call
+	# from Alice to Bob.
+    -
+		# The test operates by originating a call within Alice. This is the
+		# 'channel' argument for the origination. It is intended that this should
+		# be directed toward the UUT. If the call is not directed to the UUT, do
+		# not expect your test to succeed.
+        originate_channel: 'SIP/alice_atxfer@uut'
+
+		# Once the call has been established, what features should be
+		# executed? Each item in this list represents a feature to be
+		# executed.
+        features:
+            -
+				# Who should be the originator of the feature? This must
+				# be either "alice" or "bob"
+                who: 'bob'
+
+				# What feature should be executed? This must be either
+				# - atxfer
+				# - blindxfer
+				# - disconnect
+				# - automon
+				# - automixmon
+				# - parkcall
+                what: 'atxfer'
+
+				# Whether we expect the feature to succeed. "Success" in this
+				# case simply means that the feature is detected by the bridge
+				# and farmed off to a handler function. For the purposes of bridge
+				# testing, we do not check if the feature actually works. The most
+				# common cause for a feature not to succeed is because the party
+				# attempting to use the feature does not have permission to do so.
+                success: 'false'
+            -
+                who: 'alice'
+                what: 'atxfer'
+                success: 'true'
+
+		# Which party should hang up the call? This option can be omitted if
+		# the hangup should originate from an external source or if one of the
+		# listed features should result in a hangup.
+        hangup: 'alice'
+    -
+        extension: 'bob_atxfer'
+        hangup: 'alice'
+        features:
+            -
+                who: 'alice'
+                what: 'atxfer'
+                success: 'false'
+            -
+                who: 'bob'
+                what: 'atxfer'
+                success: 'true'
