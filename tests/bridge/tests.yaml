@@ -5,4 +5,4 @@ tests:
     - test: 'blindxfer'
     - test: 'automon'
     - test: 'automixmon'
-    - test: 'dial_L_option'
+    - test: 'dial_LS_options'
