@@ -117,6 +117,7 @@ class BridgeTestCase(TestCase):
         self.uut_bob_hungup = False
         self.current_feature = 0
         self.infeatures = False
+        self.issue_hangups_on_bridged = False
 
         # Step 1: Initiate a call from Alice to Bob
         LOGGER.info("Originating call")
@@ -176,6 +177,8 @@ class BridgeTestCase(TestCase):
             LOGGER.debug("Bridge is up")
             LOGGER.debug("Type of bridge is %s" % event.get('bridgetype'))
             self.bridged = True
+            if self.issue_hangups_on_bridged:
+                self.send_hangup()
         else:
             LOGGER.debug("Bridge is down")
             self.bridged = False
@@ -287,6 +290,11 @@ class BridgeTestCase(TestCase):
     def send_hangup(self):
         if not self.hangup:
             LOGGER.info("No hangup set. Hang up will happen externally")
+            return
+
+        if not self.bridged:
+            LOGGER.info("Delaying hangup until call is re-bridged")
+            self.issue_hangups_on_bridged = True
             return
 
         LOGGER.info("Sending a hangup to %s" % self.hangup)
