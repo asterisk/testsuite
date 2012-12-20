@@ -22,7 +22,16 @@ bridge-config:
         originate_channel: 'SIP/alice_automixmon@uut'
         hangup: 'alice'
         features:
+            -   # mixmonitor start
+                who: 'bob'
+                what: 'automixmon'
+                success: 'false'
             -
+                who: 'alice'
+                what: 'automixmon'
+                success: 'true'
+
+            -   # mixmonitor stop
                 who: 'bob'
                 what: 'automixmon'
                 success: 'false'
@@ -34,7 +43,7 @@ bridge-config:
         originate_channel: 'SIP/bob_automixmon@uut'
         hangup: 'alice'
         features:
-            -
+            -   # mixmonitor start
                 who: 'alice'
                 what: 'automixmon'
                 success: 'false'
@@ -43,6 +52,56 @@ bridge-config:
                 what: 'automixmon'
                 success: 'true'
 
+            -   # mixmonitor stop
+                who: 'alice'
+                what: 'automixmon'
+                success: 'false'
+            -
+                who: 'bob'
+                what: 'automixmon'
+                success: 'true'
+    -
+        originate_channel: 'SIP/alice_automixmon2@uut'
+        hangup: 'alice'
+        features:
+            -   # mixmonitor start
+                who: 'bob'
+                what: 'automixmon'
+                success: 'false'
+            -
+                who: 'alice'
+                what: 'automixmon'
+                success: 'true'
+
+            -   # mixmonitor stop
+                who: 'bob'
+                what: 'automixmon'
+                success: 'false'
+            -
+                who: 'alice'
+                what: 'automixmon'
+                success: 'true'
+    -
+        originate_channel: 'SIP/bob_automixmon2@uut'
+        hangup: 'alice'
+        features:
+            -   # mixmonitor start
+                who: 'alice'
+                what: 'automixmon'
+                success: 'false'
+            -
+                who: 'bob'
+                what: 'automixmon'
+                success: 'true'
+
+            -   # mixmonitor stop
+                who: 'alice'
+                what: 'automixmon'
+                success: 'false'
+            -
+                who: 'bob'
+                what: 'automixmon'
+                success: 'true'
 cdr-config:
 -
     file: 'Master'
@@ -67,11 +126,32 @@ cdr-config:
             lastapp: 'Dial'
             disposition: 'ANSWERED'
             amaflags: 'DOCUMENTATION'
+        -
+            source: '1234'
+            destination: 'alice_automixmon2'
+            dcontext: 'default'
+            callerid: '"Alice" <1234>'
+            channel: '.*/alice-.*'
+            dchannel: '.*/bob-.*'
+            lastapp: 'Dial'
+            disposition: 'ANSWERED'
+            amaflags: 'DOCUMENTATION'
+        -
+            source: '1234'
+            destination: 'bob_automixmon2'
+            dcontext: 'default'
+            callerid: '"Alice" <1234>'
+            channel: '.*/alice-.*'
+            dchannel: '.*/bob-.*'
+            lastapp: 'Dial'
+            disposition: 'ANSWERED'
+            amaflags: 'DOCUMENTATION'
 
 cel-config:
     -
         file: 'Master'
         lines:
+            # Test 1: alice_automixmon
             -
                 eventtype: 'CHAN_START'
                 cidname: 'Alice'
@@ -178,6 +258,8 @@ cel-config:
                 exten: 'alice_automixmon'
                 context: 'default'
                 channel: '.*/alice-.*'
+
+            # Test 2: bob_automixmon
             -
                 eventtype: 'CHAN_START'
                 cidname: 'Alice'
@@ -284,6 +366,224 @@ cel-config:
                 exten: 'bob_automixmon'
                 context: 'default'
                 channel: '.*/alice-.*'
+
+            # Test 3: alice_automixmon2
+            -
+                eventtype: 'CHAN_START'
+                cidname: 'Alice'
+                cidnum: '1234'
+                exten: 'alice_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+            -
+                eventtype: 'APP_START'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'alice_automixmon2'
+                exten: 'alice_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+                app: 'Dial'
+            -
+                eventtype: 'CHAN_START'
+                cidname: 'Bob'
+                cidnum: '4321'
+                channel: '.*/bob-.*'
+            -
+                eventtype: 'ANSWER'
+                cidname: 'Bob'
+                cidnum: '4321'
+                channel: '.*/bob-.*'
+                app: 'AppDial'
+                appdata: '\(Outgoing Line\)'
+            -
+                eventtype: 'ANSWER'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'alice_automixmon2'
+                exten: 'alice_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+                app: 'Dial'
+            -
+                eventtype: 'BRIDGE_START'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'alice_automixmon2'
+                exten: 'alice_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+                app: 'Dial'
+                bridgepeer: '.*/bob-.*'
+            -
+                eventtype: 'BRIDGE_END'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'alice_automixmon2'
+                exten: 'alice_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+                app: 'Dial'
+                bridgepeer: '.*/bob-.*'
+            -
+                eventtype: 'HANGUP'
+                cidname: 'Bob'
+                cidnum: '4321'
+                channel: '.*/bob-.*'
+                app: 'AppDial'
+                appdata: '\(Outgoing Line\)'
+                eventextra: '16,.*/alice-.*'
+            -
+                eventtype: 'CHAN_END'
+                cidname: 'Bob'
+                cidnum: '4321'
+                channel: '.*/bob-.*'
+                app: 'AppDial'
+                appdata: '\(Outgoing Line\)'
+            -
+                eventtype: 'APP_END'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'alice_automixmon2'
+                exten: 'alice_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+                app: 'Dial'
+            -
+                eventtype: 'HANGUP'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'alice_automixmon2'
+                exten: 'alice_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+                eventextra: '16,.*/alice-.*,ANSWER'
+            -
+                eventtype: 'CHAN_END'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'alice_automixmon2'
+                exten: 'alice_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+            -
+                eventtype: 'LINKEDID_END'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'alice_automixmon2'
+                exten: 'alice_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+
+            # Test 4: bob_automixmon2
+            -
+                eventtype: 'CHAN_START'
+                cidname: 'Alice'
+                cidnum: '1234'
+                exten: 'bob_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+            -
+                eventtype: 'APP_START'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'bob_automixmon2'
+                exten: 'bob_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+                app: 'Dial'
+            -
+                eventtype: 'CHAN_START'
+                cidname: 'Bob'
+                cidnum: '4321'
+                channel: '.*/bob-.*'
+            -
+                eventtype: 'ANSWER'
+                cidname: 'Bob'
+                cidnum: '4321'
+                channel: '.*/bob-.*'
+                app: 'AppDial'
+                appdata: '\(Outgoing Line\)'
+            -
+                eventtype: 'ANSWER'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'bob_automixmon2'
+                exten: 'bob_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+                app: 'Dial'
+            -
+                eventtype: 'BRIDGE_START'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'bob_automixmon2'
+                exten: 'bob_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+                app: 'Dial'
+                bridgepeer: '.*/bob-.*'
+            -
+                eventtype: 'BRIDGE_END'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'bob_automixmon2'
+                exten: 'bob_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+                app: 'Dial'
+                bridgepeer: '.*/bob-.*'
+            -
+                eventtype: 'HANGUP'
+                cidname: 'Bob'
+                cidnum: '4321'
+                channel: '.*/bob-.*'
+                app: 'AppDial'
+                appdata: '\(Outgoing Line\)'
+                eventextra: '16,.*/alice-.*'
+            -
+                eventtype: 'CHAN_END'
+                cidname: 'Bob'
+                cidnum: '4321'
+                channel: '.*/bob-.*'
+                app: 'AppDial'
+                appdata: '\(Outgoing Line\)'
+            -
+                eventtype: 'APP_END'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'bob_automixmon2'
+                exten: 'bob_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+                app: 'Dial'
+            -
+                eventtype: 'HANGUP'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'bob_automixmon2'
+                exten: 'bob_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+                eventextra: '16,.*/alice-.*,ANSWER'
+            -
+                eventtype: 'CHAN_END'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'bob_automixmon2'
+                exten: 'bob_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+            -
+                eventtype: 'LINKEDID_END'
+                cidname: 'Alice'
+                cidnum: '1234'
+                dnid: 'bob_automixmon2'
+                exten: 'bob_automixmon2'
+                context: 'default'
+                channel: '.*/alice-.*'
+
+
 
 properties:
     minversion: '12.0.0'
