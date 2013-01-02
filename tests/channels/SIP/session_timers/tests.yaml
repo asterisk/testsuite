@@ -6,3 +6,6 @@ tests:
     - test: 'basic_uas_teardown'
     - test: 'uas_minimum_se'
     - test: 'uac_se_below_minse'
+    - test: 'uac_multiple_422_accept'
+    - test: 'uac_multiple_422_originate'
+    - test: 'check_require'

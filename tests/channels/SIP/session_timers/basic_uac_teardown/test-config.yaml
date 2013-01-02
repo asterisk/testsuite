@@ -11,16 +11,15 @@ properties:
         - app : 'sipp'
     tags:
         - SIP
-        - timers
+        - SIP_session_timers
 
 test-modules:
-    add-test-to-search-path: 'True'
     test-object:
         config-section: sipp-config
         typename: 'sipp.SIPpTestCase'
     modules:
         -
-            typename: 'originator.Originator'
+            typename: 'PluggableModules.Originator'
 
 sipp-config:
     reactor-timeout: 120

@@ -33,4 +33,5 @@ properties:
         - sipp:
             version: 'v3.1'
     tags:
-        - sip
+        - SIP
+	- SIP_session_timers

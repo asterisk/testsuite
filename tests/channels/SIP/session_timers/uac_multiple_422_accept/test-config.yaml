@@ -1,10 +1,10 @@
 testinfo:
-    summary:     'Min-SE enforcement (outbound UAC refresh)'
+    summary:     '422 Min-SE accept mode memory test (outbound UAS multiple 422)'
     description: |
-        "This test verifies that outbound calls with a Session-Expires value less than the local Min-SE is torn down immediately."
+        "This test verifies that Asterisk remembers the Min-SE values in 422 across transactions within a dialog when in 'accept' mode."
 
 properties:
-    minversion: '1.8.0'
+    minversion: '1.8.21'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
@@ -22,7 +22,7 @@ test-modules:
             typename: 'PluggableModules.Originator'
 
 sipp-config:
-    reactor-timeout: 20
+    reactor-timeout: 40
     fail-on-any: True
     test-iterations:
         -

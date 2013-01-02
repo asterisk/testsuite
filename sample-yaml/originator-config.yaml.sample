@@ -1,0 +1,26 @@
+# Configuration sample for the pluggable channel origination module
+
+originator-config:
+    # The ID of the AMI instance on which to originate the call. (default: 0)
+    id: 0
+
+    # The channel to originate. (default: 'Local/s@default')
+    channel: 'Local/s@default'
+
+    # The application to start once the channel is answered. (default: 'Echo')
+    application: 'Echo'
+
+    # The data to provide to the application.
+    data: ''
+
+    # Alternatively, a context/exten/priority set can be provided which overrides the application setting.
+    context: 'default'
+    exten: '1234'
+    priority: '1'
+
+    # Whether to ignore failure of the origination. (default: 'no')
+    ignore-originate-failure: 'no'
+
+    # This determines what triggers the origination.  The available options are 'scenario_start' (default) and 'ami_connect'.
+    trigger: 'scenario_start'
+
