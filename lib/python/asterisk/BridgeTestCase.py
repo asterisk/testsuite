@@ -230,6 +230,7 @@ class BridgeTestCase(TestCase):
             self.execute_feature(self.features[self.current_feature])
         else:
             LOGGER.info("All features executed")
+            self.ami_uut.userEvent("features_executed")
             self.send_hangup()
 
     def execute_feature(self, feature):

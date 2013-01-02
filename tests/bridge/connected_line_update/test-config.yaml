@@ -1,0 +1,79 @@
+testinfo:
+    summary: 'Connected line update propagation across a bridge'
+    description: |
+        'Set up a bridge between two endpoints and ensure that the initial connected line update moves across the bridge as well as subsequent updates.'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: bridge-config
+        typename: 'BridgeTestCase.BridgeTestCase'
+    modules:
+        -
+            # for orchestration of the test
+            typename: 'Tester.Tester'
+        -
+            # for checking events
+            typename: 'ami.AMIEventModule'
+            config-section: ami-uut
+
+bridge-config:
+    -
+        originate_channel: 'SIP/uut/simple_bridge'
+
+ami-uut:
+    -
+        type: 'orderedheadermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'CLInfo'
+        requirements:
+            -
+                match:
+                    CLInfo: 'Bob <4321>'
+            -
+                match:
+                    CLInfo: 'Bob <4321>'
+            -
+                match:
+                    CLInfo: 'Bob <4321>'
+            -
+                match:
+                    CLInfo: 'newbob <2345>'
+            -
+                match:
+                    CLInfo: 'newalice <5432>'
+        count: '5'
+    -
+        type: 'headermatch'
+        id: '1'
+        conditions:
+            match:
+                Event: 'NewCallerid'
+                CallerIDNum: '5432'
+        requirements:
+            match:
+                CallerIDName: 'newalice'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '2'
+        conditions:
+            match:
+                Event: 'NewCallerid'
+                CallerIDNum: '2345'
+        requirements:
+            match:
+                CallerIDName: 'newbob'
+        count: '1'
+
+
+properties:
+    minversion: '11.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - bridge
