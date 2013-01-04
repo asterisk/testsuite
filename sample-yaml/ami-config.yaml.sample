@@ -86,7 +86,7 @@ ami-config:
         # Normally, this should probably be the number of requirements specified
         # above.
         count: '2'
-	-
+    -
         # The "callback" type indicates that when event conditions are fulfilled
         # A callback should be called into. This is useful if pass/fail conditions
         # depend on more than just having specific headers match what is expected.

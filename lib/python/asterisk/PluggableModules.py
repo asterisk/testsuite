@@ -31,7 +31,7 @@ class Originator(object):
             'priority': '',
             'ignore-originate-failure': 'no',
             'trigger': 'scenario_start',
-            'id': 0
+            'id': '0'
         }
 
         # process config
@@ -45,7 +45,7 @@ class Originator(object):
     def ami_connect(self, ami):
         '''Handle new AMI connections.'''
         LOGGER.info("AMI %s connected" % (str(ami.id)))
-        if ami.id == self.config['id']:
+        if str(ami.id) == self.config['id']:
             self.ami = ami
             if self.config['trigger'] == 'ami_connect':
                 self.originate_call()
