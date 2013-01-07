@@ -144,10 +144,14 @@ class AMIHeaderMatchInstance(AMIEventInstance):
     def __init__(self, instance_config, test_object):
         super(AMIHeaderMatchInstance, self).__init__(instance_config, test_object)
         logger.debug("Initializing an AMIHeaderMatchInstance")
-        self.match_requirements = (
-                instance_config['requirements'].get('match', {}))
-        self.nonmatch_requirements = (
-                instance_config['requirements'].get('nomatch', {}))
+        if 'requirements' in instance_config:
+            self.match_requirements = (
+                    instance_config['requirements'].get('match', {}))
+            self.nonmatch_requirements = (
+                    instance_config['requirements'].get('nomatch', {}))
+        else:
+            self.match_requirements = {}
+            self.nonmatch_requirements = {}
 
     def event_callback(self, ami, event):
         for k,v in self.match_requirements.items():
