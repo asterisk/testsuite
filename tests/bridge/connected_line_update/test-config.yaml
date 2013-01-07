@@ -52,10 +52,8 @@ ami-uut:
         conditions:
             match:
                 Event: 'NewCallerid'
-                CallerIDNum: '5432'
-        requirements:
-            match:
                 CallerIDName: 'newalice'
+                CallerIDNum: '5432'
         count: '1'
     -
         type: 'headermatch'
@@ -63,10 +61,8 @@ ami-uut:
         conditions:
             match:
                 Event: 'NewCallerid'
-                CallerIDNum: '2345'
-        requirements:
-            match:
                 CallerIDName: 'newbob'
+                CallerIDNum: '2345'
         count: '1'
 
 
