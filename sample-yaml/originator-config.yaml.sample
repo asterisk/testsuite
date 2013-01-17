@@ -21,6 +21,13 @@ originator-config:
     # Whether to ignore failure of the origination. (default: 'no')
     ignore-originate-failure: 'no'
 
-    # This determines what triggers the origination.  The available options are 'scenario_start' (default) and 'ami_connect'.
+    # This determines what triggers the origination.  The available options are 'scenario_start' (default), 'ami_connect', and 'event'.
     trigger: 'scenario_start'
 
+    # if 'event' is specified as the trigger, an event definition needs to be specified.
+    # This is similar to the event definition used for the callback variant of the AMIEventModule.
+    event:
+        id: '0'
+        conditions:
+            match:
+                Event: TestEvent
