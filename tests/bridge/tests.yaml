@@ -5,5 +5,6 @@ tests:
     - test: 'blindxfer'
     - test: 'automon'
     - test: 'automixmon'
+    - test: 'parkcall'
     - test: 'dial_LS_options'
     - test: 'connected_line_update'
