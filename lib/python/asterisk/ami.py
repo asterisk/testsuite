@@ -20,6 +20,7 @@ class AMIEventInstance(object):
         self.match_conditions = instance_config['conditions']['match']
         self.nonmatch_conditions = instance_config['conditions'].get('nomatch', {})
         self.ids = instance_config['id'].split(',') if 'id' in instance_config else ['0']
+        self.config = instance_config
         self.passed = True
         self._registered = False
 
@@ -131,6 +132,7 @@ class AMIEventInstance(object):
                 or self.event_count < self.count_min):
             logger.warning("Event occurred %d times, which is out of the"
                     " allowable range" % self.event_count)
+            logger.warning("Event description: %s" % (str(self.config)))
             self.test_object.set_passed(False)
             return callback_param
         return self.check_result(callback_param)
