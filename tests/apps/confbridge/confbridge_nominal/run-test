@@ -55,7 +55,7 @@ class StartConfBridgeState(ConfbridgeTestState):
             if "Bridge" in channel:
                 self.__bridge_channel = channel
         if state == 'PLAYBACK' and channel != "":
-            playfile = event['message']
+            playfile = event.get('message')
             if playfile == 'conf-getpin':
                 self.__handle_pin(channel)
             elif playfile == 'vm-rec-name':
@@ -158,10 +158,10 @@ class ActiveConfBridgeState(ConfbridgeTestState):
         if 'channel' in event:
             channel = event['channel']
         if state == 'CONF_MUTE':
-            if channel == self.__admin_channel and "unmuted" in event['message']:
+            if channel == self.__admin_channel and "unmuted" in event.get('message'):
                 self.testCase.expectedEvents['adminunmuted'] = True
         elif state == 'PLAYBACK' and channel != "":
-            playfile = event['message']
+            playfile = event.get('message')
             if playfile == 'conf-hasleft':
                 self.__left_notifications += 1
                 if (self.__left_notifications == 2):

@@ -42,7 +42,7 @@ class StartVoiceMailState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
             if message == 'vm-password':
                 self.voiceMailTest.sendDTMF(self.userPassword)
         elif state == 'AUTHENTICATED':
@@ -69,7 +69,7 @@ class AuthenticatedTestState(VoiceMailState):
             logger.error("received two authenticated events?")
             self.changeState(FailureTestState(self.controller))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             """ We should not be a new user """
             if message == 'new user':
@@ -99,7 +99,7 @@ class IntroTestState(VoiceMailState):
         if state == 'BROWSE':
             self.changeState(BrowseMessageTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Play the message """
@@ -146,7 +146,7 @@ class AdvancedOptionsTestState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'vm-tocallback':
                 """ Dial 2 to call back """
@@ -178,7 +178,7 @@ class PlayVoiceMailTestState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Instruct the server to goto the advanced options """

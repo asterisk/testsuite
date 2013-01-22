@@ -42,7 +42,7 @@ class StartVoiceMailState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'vm-password':
                 self.voiceMailTest.sendDTMF(self.userPassword)
@@ -72,7 +72,7 @@ class AuthenticatedTestState(VoiceMailState):
         elif state == 'INTRO':
             self.changeState(IntroTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
             if message == 'new user':
                 logger.error("New user played; user credentials must have failed")
                 self.changeState(FailureTestState(self.controller))
@@ -98,7 +98,7 @@ class IntroTestState(VoiceMailState):
         if state == 'BROWSE':
             self.changeState(BrowseMessageTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Play the first message """
@@ -124,7 +124,7 @@ class BrowseMessageTestState(VoiceMailState):
         if state == 'PLAYVOICE':
             self.changeState(PlayVoiceMailTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Exit voicemail """
@@ -161,7 +161,7 @@ class PlayVoiceMailTestState(VoiceMailState):
         if state == 'SAVEMSG':
             self.changeState(SaveMessageTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Instruct the server to save the voicemail """
@@ -185,7 +185,7 @@ class SaveMessageTestState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Tell it to save the message """
@@ -216,7 +216,7 @@ class PlayNextMessageTestState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Tell it to play the next the message """

@@ -73,7 +73,7 @@ class PlayMsg(TestCase):
     def test_event_handler(self, ami, event):
         if 'state' in event and 'message' in event:
             if event['state'] == 'PLAYBACK':
-                logger.debug("Playing back %s" % event['message'])
+                logger.debug("Playing back %s" % event.get('message'))
 
     def user_event_handler(self, ami, event):
         if 'userevent' not in event or 'result' not in event or 'status' not in event:

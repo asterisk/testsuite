@@ -45,7 +45,7 @@ class StartVoiceMailState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
             if message == 'vm-login':
                 self.voiceMailTest.sendDTMF(self.userMailbox)
             elif message == 'vm-password':
@@ -98,7 +98,7 @@ class IntroTestState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 if (self.voiceMailTest.getTestCondition("passwordChanged")):
@@ -135,13 +135,13 @@ class VoicemailOptionsTestState(VoiceMailState):
         elif state == 'INTRO':
             self.changeState(IntroTestState(self.controller, self.voiceMailTest))
         elif state == 'PASSWORDCHANGED':
-            message = event['message']
+            message = event.get('message')
             if "voicemail.conf" in message:
                 self.voiceMailTest.setTestCondition("passwordChanged", True)
             elif "external script" in message:
                 self.voiceMailTest.setTestCondition("externNotifyReceived", True)
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'vm-options':
                 if (self.voiceMailTest.getTestCondition("passwordChanged")):

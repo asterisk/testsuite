@@ -45,7 +45,7 @@ class StartVoiceMailState(VoiceMailState):
 
         if state == 'PLAYBACK':
 
-            message = event['message']
+            message = event.get('message')
             if message == 'vm-login':
                 self.voiceMailTest.sendDTMF(self.userMailbox)
             elif message == 'vm-password':
@@ -97,7 +97,7 @@ class IntroTestState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Tell it to go to the voicemail options """
@@ -133,7 +133,7 @@ class VoicemailOptionsTestState(VoiceMailState):
         elif state == 'TEMPGREETING':
             self.changeState(TempGreetingTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'vm-options':
                 if not self.voiceMailTest.getTestCondition('recordTemp'):
@@ -181,7 +181,7 @@ class TempGreetingTestState(VoiceMailState):
         elif state == 'VMOPTIONS':
             self.changeState(VoicemailOptionsTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
             if message == 'vm-tmpexists':
                 """ Go back into the temp menu """
                 if self.voiceMailTest.getTestCondition("recordTemp") and not self.voiceMailTest.getTestCondition("deletedTemp"):

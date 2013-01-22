@@ -44,7 +44,7 @@ class StartVoiceMailState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
             if message == 'vm-login':
                 self.voiceMailTest.sendDTMF(self.userMailbox)
             elif message == 'vm-password':
@@ -97,7 +97,7 @@ class IntroTestState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Tell it to go to the voicemail options """
@@ -131,7 +131,7 @@ class VoicemailOptionsTestState(VoiceMailState):
         elif state == 'INTRO':
             self.changeState(IntroTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'vm-options':
                 if not self.voiceMailTest.getTestCondition('recordUnavailble'):

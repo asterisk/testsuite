@@ -44,7 +44,7 @@ class StartVoiceMailState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
             if message == 'vm-login':
                 self.voiceMailTest.sendDTMF(self.userMailbox)
             elif message == 'vm-password':
@@ -75,7 +75,7 @@ class AuthenticatedTestState(VoiceMailState):
         elif state == 'INTRO':
             self.changeState(IntroTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
             if message == 'new user':
                 logger.error("New user played; user credentials must have failed")
                 self.changeState(FailureTestState(self.controller))
@@ -101,7 +101,7 @@ class IntroTestState(VoiceMailState):
         if state == 'BROWSE':
             self.changeState(BrowseMessageTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ In this pass, tell it to play the message """
@@ -148,7 +148,7 @@ class AdvancedOptionsTestState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'vm-toreply':
                 """ Dial 1 to reply """
@@ -189,7 +189,7 @@ class PlayVoiceMailTestState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Instruct the server to goto the advanced options """

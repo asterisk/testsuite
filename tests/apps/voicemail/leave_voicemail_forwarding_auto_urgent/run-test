@@ -36,7 +36,7 @@ class StartVoiceMailState(VoiceMailState):
     def handleStateChange(self, ami, event):
         state = event['state']
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'vm-intro':
                 self.changeState(IntroVoiceMailState(self.controller, self.voiceMailTest))
@@ -61,7 +61,7 @@ class IntroVoiceMailState(VoiceMailState):
     def handleStateChange(self, ami, event):
         state = event['state']
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'beep':
                 """ A beep indicates we need to stream some sound file over - use the same sound file for everything """

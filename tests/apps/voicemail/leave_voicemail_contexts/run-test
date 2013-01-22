@@ -39,7 +39,7 @@ class StartVoiceMailState(VoiceMailState):
     def handleStateChange(self, ami, event):
         state = event['state']
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'vm-intro':
                 dtmf = self.voiceMailTest.get_dtmf_to_send()

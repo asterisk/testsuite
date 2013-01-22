@@ -46,7 +46,7 @@ class StartVoiceMailState(VoiceMailState):
             While we're in the START state, we have to authenticate the user.  If we see the login or password
             prompts, send in our login / password
             """
-            message = event['message']
+            message = event.get('message')
             if message == 'vm-password':
                 self.voiceMailTest.sendDTMF(self.userPassword)
         elif state == 'AUTHENTICATED':
@@ -77,7 +77,7 @@ class AuthenticatedTestState(VoiceMailState):
         elif state == 'INTRO':
             self.changeState(IntroTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             """
             The only prompt that we care about in this state is if we get a notification that we are a new user.
@@ -110,7 +110,7 @@ class IntroTestState(VoiceMailState):
         if state == 'BROWSE':
             self.changeState(BrowseMessageTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """
@@ -141,7 +141,7 @@ class BrowseMessageTestState(VoiceMailState):
         if state == 'PLAYVOICE':
             self.changeState(PlayVoiceMailTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Exit voicemail """
@@ -183,7 +183,7 @@ class PlayVoiceMailTestState(VoiceMailState):
         if state == 'SAVEMSG':
             self.changeState(SaveMessageTestState(self.controller, self.voiceMailTest))
         elif state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Instruct the server to save the voicemail """
@@ -209,7 +209,7 @@ class SaveMessageTestState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Tell it to save the message """
@@ -243,7 +243,7 @@ class PlayNextMessageTestState(VoiceMailState):
         state = event['state']
 
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
 
             if message == 'instructions':
                 """ Tell it to play the next the message """

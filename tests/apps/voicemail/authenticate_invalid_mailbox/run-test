@@ -33,7 +33,7 @@ class StartVoiceMailState(VoiceMailState):
     def handleStateChange(self, ami, event):
         state = event['state']
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
             if message == 'vm-login' or message == 'vm-incorrect-mailbox':
                 self.voiceMailTest.sendDTMF("5555")
                 self.voiceMailTest.reset_timeout()

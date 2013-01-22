@@ -34,7 +34,7 @@ class LoginWithMailbox(VoiceMailState):
     def handleStateChange(self, ami, event):
         state = event['state']
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
             if message == 'vm-login':
                 self.voiceMailTest.sendDTMF(self.mailbox)
             elif message == 'vm-password':
@@ -70,7 +70,7 @@ class LoginWithoutMailbox(VoiceMailState):
     def handleStateChange(self, ami, event):
         state = event['state']
         if state == 'PLAYBACK':
-            message = event['message']
+            message = event.get('message')
             if message == 'vm-password':
                 self.voiceMailTest.sendDTMF(self.password)
                 self.voiceMailTest.reset_timeout()
