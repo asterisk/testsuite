@@ -1,0 +1,176 @@
+testinfo:
+    summary: 'Test ControlPlayback with Stop'
+    description: |
+        'This tests two scenarios:
+          1. In the first scenario, a user with parameters passed to the
+             application attempts to stop playback.
+          2. In the second scenario, a remote connection stops the playback.
+
+          In all cases, the tests check that Asterisk sends a test event
+          indicating that the stream has stopped, and that at the end of the
+          test, the file was not entirely played back to the user and we
+          correctly report how the playback was stopped.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'ControlPlayback'
+  scenarios:
+    -
+      # Scenario 1: Verify user can control a playback
+      channels:
+        -
+          channel-id: 'Test-User'
+          channel-name: 'Local/test_user@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Context: 'default'
+                  Extension: 'wait'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  dtmf: '0'
+                  delay: '2'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Control: 'Stop'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Asterisk confirms user stopped playback'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'pass_eof'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Matched expected user EOF'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'pass_user'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Detected user stopped playback'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'pass_stopkey'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Detected user stop key'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/test_user@default-00000000;2'
+              actions:
+                -
+                  action-type: 'end-scenario'
+    -
+      # Scenario 2: Verify an AMI connection can control a playback
+      channels:
+        -
+          channel-id: 'Test-Remote'
+          channel-name: 'Local/test_remote@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Context: 'default'
+                  Extension: 'wait'
+              actions:
+                -
+                  action-type: 'send-ami-message'
+                  add-app-channel: True
+                  fields:
+                      action: 'ControlPlayback'
+                      control: 'Stop'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Control: 'Stop'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Asterisk confirms user stopped playback'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'pass_remote_eof'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Matched expected remote EOF'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'pass_remote'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Detected remote stopped playback'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/test_remote@default-00000001;2'
+              actions:
+                -
+                  action-type: 'end-scenario'
+
+
+properties:
+    minversion: '12.0.0'
+    tags:
+      - playback
+      - apps
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_controlplayback'
+

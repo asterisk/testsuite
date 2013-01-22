@@ -13,3 +13,5 @@ tests:
     - test: 'directed_pickup'
     - test: 'mixmonitor'
     - test: 'mixmonitor_audiohook_inherit'
+    - dir: 'control_playback'
+    - dir: 'playback'

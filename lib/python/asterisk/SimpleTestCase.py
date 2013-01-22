@@ -172,7 +172,8 @@ class SimpleTestCase(TestCase):
                 self.passed = True
                 LOGGER.info("Test ending, hanging up current channels")
                 for chan in self._tracking_channels:
-                    self.ami[0].hangup(chan['channel']).addCallbacks(self.hangup)
+                    self.ami[0].hangup(chan['channel']).addCallbacks(self.hangup,
+                                                                     self.hangup_error)
             else:
                 self._current_run += 1
                 self.__start_new_call(ami)
@@ -184,6 +185,11 @@ class SimpleTestCase(TestCase):
         LOGGER.info("Hangup complete, stopping reactor")
         self.stop_reactor()
 
+    def hangup_error(self, result):
+        ''' Called when an error occurs during a hangup '''
+        # Ignore the hangup error - in this case, the channel was disposed of
+        # prior to our hangup request, which is okay
+        self.stop_reactor()
 
     def verify_event(self, event):
         ''' Virtual method used to verify values in the event. '''

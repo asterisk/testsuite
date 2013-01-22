@@ -1,0 +1,236 @@
+testinfo:
+    summary: 'Test ControlPlayback with Rewind'
+    description: |
+        'This tests three scenarios:
+          1. In the first scenario, a user with parameters passed to the
+             application attempts to rewind 5 seconds.
+          2. In the second scenario, a user with no parameters attempts to
+             rewind. This uses the default DTMF key * and the skip ms
+             time of 3000.
+          3. In the third scenario, a remote connection rewinds the
+             playback.
+
+          In all cases, the tests check that Asterisk sends a test event
+          indicating that the stream has moved backward the expected time, and
+          that at the end of the test the entire file was played back to the
+          user.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'ControlPlayback'
+  scenarios:
+    -
+      # Scenario 1: Verify user can control a playback
+      channels:
+        -
+          channel-id: 'Test-User'
+          channel-name: 'Local/test_user@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Context: 'default'
+                  Extension: 'wait'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  dtmf: '1'
+                  delay: '7'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Control: 'Rewind'
+                  SkipMs: '5000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Asterisk confirms user rewound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'pass_eof'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Matched expected user EOF'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'pass_user'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Detected user played back successfully'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/test_user@default-00000000;2'
+              actions:
+                -
+                  action-type: 'end-scenario'
+    -
+      # Scenario 2: Verify default values
+      channels:
+        -
+          channel-id: 'Test-User'
+          channel-name: 'Local/test_default_user@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Context: 'default'
+                  Extension: 'wait'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  dtmf: '*'
+                  delay: '7'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Control: 'Rewind'
+                  SkipMs: '3000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Asterisk confirms default user rewound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'pass_default_eof'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Matched expected default user EOF'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'pass_default_user'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Detected default user played back successfully'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/test_default_user@default-00000001;2'
+              actions:
+                -
+                  action-type: 'end-scenario'
+    -
+      # Scenario 3: Verify an AMI connection can control a playback
+      channels:
+        -
+          channel-id: 'Test-Remote'
+          channel-name: 'Local/test_remote@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Context: 'default'
+                  Extension: 'wait'
+              actions:
+                -
+                  action-type: 'send-ami-message'
+                  add-app-channel: True
+                  fields:
+                      action: 'ControlPlayback'
+                      control: 'Reverse'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Control: 'Rewind'
+                  SkipMs: '3000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Asterisk confirms remote rewound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'pass_remote_eof'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Matched expected remote EOF'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'pass_remote'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Detected remote played back successfully'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/test_remote@default-00000002;2'
+              actions:
+                -
+                  action-type: 'end-scenario'
+
+
+properties:
+    minversion: '12.0.0'
+    tags:
+      - playback
+      - apps
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_controlplayback'
+

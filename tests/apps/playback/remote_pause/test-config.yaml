@@ -1,0 +1,81 @@
+testinfo:
+    summary: 'Test Playback with Remote Pause'
+    description: |
+        'This tests attempting a pause on a playback. This has the effect of
+        breaking the playback.'
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'Playback'
+  scenarios:
+    -
+      # Scenario: Verify an AMI connection can control a playback
+      channels:
+        -
+          channel-id: 'Test-Remote'
+          channel-name: 'Local/test_remote@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Context: 'default'
+                  Extension: 'wait'
+              actions:
+                -
+                  action-type: 'send-ami-message'
+                  add-app-channel: True
+                  fields:
+                      action: 'ControlPlayback'
+                      control: 'Pause'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Control: 'Break'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Asterisk confirms playback was broken'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'pass_remote'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Detected remote finished playback.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/test_remote@default-00000000;2'
+              actions:
+                -
+                  action-type: 'end-scenario'
+
+
+properties:
+    minversion: '12.0.0'
+    tags:
+      - playback
+      - apps
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_playback'
+

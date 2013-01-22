@@ -1,0 +1,8 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'nominal'
+    - test: 'control_forward'
+    - test: 'control_pause'
+    - test: 'control_restart'
+    - test: 'control_reverse'
+    - test: 'control_stop'

@@ -16,6 +16,7 @@ tests:
     - test: 'masquerade'
     - dir: 'fastagi'
     - dir: 'agi'
+    - dir: 'asyncagi'
     - dir: 'pbx'
     - test: 'predial'
     - dir: 'hangup'

@@ -61,7 +61,7 @@ class AppTest(TestCase):
         self._scenarios = self.test_config['scenarios']
 
         self.register_ami_observer(self.__ami_connect_handler)
-
+        self.register_stop_observer(self.end_scenario)
         self.create_asterisk()
 
         # Created successfully - set the singleton instance to this object
@@ -143,7 +143,7 @@ class AppTest(TestCase):
                 self.set_passed(True)
 
 
-    def end_scenario(self):
+    def end_scenario(self, result=None):
         ''' End the current scenario '''
         self.__evaluate_expected_results()
         if len(self._scenarios) == 0:
@@ -250,12 +250,12 @@ class ChannelObject(object):
         else:
             delay = 0
 
-        self._ami = ami
-        self._ami.registerEvent('Hangup', self.__hangup_event_handler)
-        self._ami.registerEvent('VarSet', self.__varset_event_handler)
-        self._ami.registerEvent('TestEvent', self.__test_event_handler)
-        self._ami.registerEvent('Newexten', self.__new_exten_handler)
-        self._ami.registerEvent('Newchannel', self.__new_channel_handler)
+        self.ami = ami
+        self.ami.registerEvent('Hangup', self.__hangup_event_handler)
+        self.ami.registerEvent('VarSet', self.__varset_event_handler)
+        self.ami.registerEvent('TestEvent', self.__test_event_handler)
+        self.ami.registerEvent('Newexten', self.__new_exten_handler)
+        self.ami.registerEvent('Newchannel', self.__new_channel_handler)
         self._all_channels = []         # All channels we've detected
         self._candidate_channels = []   # The local pair that are ours
         self.app_channel = ''           # The local half in the application
@@ -273,7 +273,7 @@ class ChannelObject(object):
     def spawn_call(self, delay=0):
         ''' Spawn the call! '''
         def __spawn_call_callback(spawn_call_deferred):
-            self._ami.originate(channel=self._channel_name,
+            self.ami.originate(channel=self._channel_name,
                     context=self._controller_context,
                     exten=self._controller_initial_exten,
                     priority='1',
@@ -304,7 +304,7 @@ class ChannelObject(object):
             LOGGER.debug("Ignoring redirect to %s; channel %s is hungup" %
                          (extension, self.controller_channel))
             return
-        self._ami.redirect(self.controller_channel,
+        self.ami.redirect(self.controller_channel,
                            self._controller_context,
                            extension,
                            1).addErrback(self.__handle_redirect_failure)
@@ -367,11 +367,11 @@ class ChannelObject(object):
         The callback parameter will be this object.
         '''
 
-        def __send_dtmf_initial(dtmf, __dtmf_deferred):
+        def __send_dtmf_initial(dtmf):
             ''' Initial callback called by the reactor.  This sets the dialplan
             variable DTMF_TO_SEND to the dtmf value to stream '''
             if (self._previous_dtmf != dtmf):
-                self._ami.setVar(channel=self.controller_channel,
+                self.ami.setVar(channel=self.controller_channel,
                                  variable='DTMF_TO_SEND',
                                  value=dtmf).addCallback(__send_dtmf_redirect)
                 self._previous_dtmf = dtmf
@@ -409,7 +409,7 @@ class ChannelObject(object):
             ''' Initial callback called by the reactor.  This sets the dialplan
             variable TALK_AUDIO to the file to stream '''
             if (self._previous_sound_file != sound_file):
-                self._ami.setVar(channel=self.controller_channel,
+                self.ami.setVar(channel=self.controller_channel,
                                  variable="TALK_AUDIO",
                                  value=sound_file).addCallback(
                                                         __stream_audio_redirect)
@@ -780,6 +780,26 @@ class ActionEndScenario(object):
         return None
 
 
+class ActionSendMessage(object):
+    ''' Functor that sends some AMI message '''
+
+    def __init__(self, action_config):
+        self.add_app_channel = False if 'add-app-channel' not in action_config \
+            else action_config['add-app-channel']
+        self.add_control_channel = False if 'add-control-channel' not in action_config \
+            else action_config['add-control-channel']
+        if (self.add_app_channel and self.add_control_channel):
+            raise Exception('Only one channel can be added to the message!')
+        self.message_fields = action_config['fields']
+
+    def __call__(self, channel_object):
+        if self.add_app_channel:
+            self.message_fields['Channel'] = channel_object.app_channel
+        elif self.add_control_channel:
+            self.message_fields['Channel'] = channel_object.controller_channel
+        LOGGER.debug('Sending message: %s' % str(self.message_fields))
+        channel_object.ami.sendMessage(self.message_fields)
+
 class ActionFactory(object):
     ''' A static class factory that maps action objects to text descriptions of
     those objects, and provides a factory method for creating them '''
@@ -791,7 +811,8 @@ class ActionFactory(object):
                             'set-expected-result': ActionSetExpectedResult,
                             'hangup': ActionHangup,
                             'fail-test': ActionFailTest,
-                            'end-scenario': ActionEndScenario,}
+                            'end-scenario': ActionEndScenario,
+                            'send-ami-message': ActionSendMessage,}
 
     @staticmethod
     def create_action(action_def):

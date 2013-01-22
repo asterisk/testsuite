@@ -1,0 +1,54 @@
+testinfo:
+    summary: 'Test very nominal execution of ControlPlayback'
+    description: |
+      'This tests the simplest case of ControlPlayback: playing back a file
+      with no manipulation from the user or external source'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    expected_events: 2
+    test-iterations:
+        -
+            channel: 'Local/test@default'
+            application: 'Echo'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'Offset'
+        requirements:
+            match:
+                Result: 'offset_pass'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'Status'
+        requirements:
+            match:
+                Result: 'status_pass'
+        count: '1'
+
+properties:
+    minversion: '1.8.0.0'
+    tags:
+      - playback
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_userevent'
+        - asterisk : 'app_controlplayback'

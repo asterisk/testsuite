@@ -1,0 +1,44 @@
+testinfo:
+    summary: 'Test very nominal execution of Playback'
+    description: |
+      'This tests the simplest case of Playback: playing back a file
+      with no manipulation from the user or external source. It tests both
+      single file playback, as well as multiple files.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    expected_events: 2
+    test-iterations:
+        -
+            channel: 'Local/test@default'
+            application: 'Echo'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+        requirements:
+            match:
+                Result: 'pass'
+        count: '2'
+
+properties:
+    minversion: '1.8.0.0'
+    tags:
+      - playback
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_userevent'
+        - asterisk : 'app_playback'

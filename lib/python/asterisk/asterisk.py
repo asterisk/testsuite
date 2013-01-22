@@ -60,7 +60,6 @@ class AsteriskCliCommand():
             """ Callback from getProcessOutputAndValue """
             self.__set_properties(result)
             logger.debug("Asterisk CLI %s exited %d" % (self.host, self.exitcode))
-            logger.debug(self.output)
             if self.err:
                 logger.debug(self.err)
             if self.exitcode:
@@ -72,7 +71,6 @@ class AsteriskCliCommand():
             """ Errback from getProcessOutputAndValue """
             self.__set_properties(result)
             logger.warning("Asterisk CLI %s exited %d with error: %s" % (self.host, self.exitcode, self.err))
-            logger.debug(self.output)
             if self.err:
                 logger.debug(self.err)
             self.__deferred.errback(self)
@@ -115,7 +113,6 @@ class AsteriskProtocol(protocol.ProcessProtocol):
 
     def outReceived(self, data):
         """ Override of ProcessProtocol.outReceived """
-        logger.debug("Asterisk %s received: %s" % (self.__host, data))
         self.output += data
 
     def connectionMade(self):
