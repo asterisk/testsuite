@@ -1,8 +1,10 @@
 tests:
     - test: 'simple_bridge'
     - test: 'disconnect'
-    - test: 'atxfer'
-    - test: 'blindxfer'
+    - test: 'atxfer_setup'
+    - test: 'atxfer_nominal'
+    - test: 'blindxfer_setup'
+    - test: 'blindxfer_nominal'
     - test: 'automon'
     - test: 'automixmon'
     - test: 'parkcall'
