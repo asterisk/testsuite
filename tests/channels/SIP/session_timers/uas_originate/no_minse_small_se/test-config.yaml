@@ -1,0 +1,26 @@
+testinfo:
+    summary:     'No Min-SE, Small Session-Expires'
+    description: |
+        "UAS session timer testing, with session-timers=originate, no Min-SE, and Session-Expires is less than session-minse."
+
+properties:
+    minversion: '1.8.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - app : 'sipp'
+    tags:
+        - SIP
+        - SIP_session_timers
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-session-timer.xml', '-p': '5066'} }

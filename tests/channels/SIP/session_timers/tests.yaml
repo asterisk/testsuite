@@ -9,3 +9,4 @@ tests:
     - test: 'uac_multiple_422_accept'
     - test: 'uac_multiple_422_originate'
     - test: 'check_require'
+    - dir: 'uas_originate'
