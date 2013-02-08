@@ -6,5 +6,6 @@ tests:
     - test: 'automon'
     - test: 'automixmon'
     - test: 'parkcall'
+    - dir: 'parkcall_timeout'
     - test: 'dial_LS_options'
     - test: 'connected_line_update'

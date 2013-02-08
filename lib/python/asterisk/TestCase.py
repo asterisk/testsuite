@@ -14,6 +14,7 @@ import os
 import datetime
 import time
 import traceback
+import uuid
 from twisted.internet import reactor, defer
 from twisted.python import failure
 from starpy import manager, fastagi
@@ -61,6 +62,7 @@ class TestCase(object):
         self.fastagi = []
         self.reactor_timeout = 30
         self.passed = None
+        self.fail_tokens = []
         self.defaultLogLevel = "WARN"
         self.defaultLogFileName = "logger.conf"
         self.timeoutId = None
@@ -461,6 +463,11 @@ class TestCase(object):
 
     def evaluate_results(self):
         """ Return whether or not the test has passed """
+        while len(self.fail_tokens):
+            fail_token = self.fail_tokens.pop(0)
+            logger.error("Fail token present: %s" % fail_token['message'])
+            self.passed = False
+
         return self.passed
 
     def register_stop_observer(self, callback):
@@ -483,6 +490,21 @@ class TestCase(object):
         callback The deferred callback function to be called when AMI connects
         '''
         self._ami_callbacks.append(callback)
+
+    def create_fail_token(self, message):
+        fail_token = {'uuid' : uuid.uuid4(), 'message' : message}
+        self.fail_tokens.append(fail_token)
+        return fail_token
+
+    def remove_fail_token(self, fail_token):
+        if not fail_token in self.fail_tokens:
+            logger.error("Attempted to remove a fail token that isn't in the fail tokens list\n"
+                         "    => '%s'\n"
+                         "    This fail token was probably already removed." % fail_token['message'])
+            self.passed = False
+            return
+
+        self.fail_tokens.remove(fail_token)
 
     def set_passed(self, value):
         '''Accumulate pass/fail value. If a test module has already

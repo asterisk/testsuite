@@ -1,0 +1,116 @@
+testinfo:
+    summary: 'Test call parking timeouts for comebacktoorigin off'
+    description: |
+        'This test builds on the more generic parkcall test. With comebacktoorigin enabled,
+         we are checking to make sure that the call is placed into the correct extension in
+         park-dial as well as where the call ends up after the call is over whether it ends
+         in hangup after being answered or if it is ignored or given a busy signal'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: bridge-config
+        typename: 'BridgeTestCase.BridgeTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+        -
+            typename: 'Executioner.Executioner'
+
+bridge-config:
+    -
+        originate_channel: 'SIP/test@uut'
+        features:
+            -
+                who: 'alice'
+                what: 'parkcall'
+                success: 'true'
+    -
+        originate_channel: 'SIP/test@uut'
+        features:
+            -
+                who: 'alice'
+                what: 'parkcall'
+                success: 'true'
+    -
+        originate_channel: 'SIP/test@uut'
+        features:
+            -
+                who: 'alice'
+                what: 'parkcall'
+                success: 'true'
+
+cdr-config:
+    -
+        file: 'Master'
+        lines:
+            -
+                source: '1234'
+                destination: 'test'
+                dcontext: 'default'
+                callerid: '"Alice" <1234>'
+                channel: '.*/alice-.*'
+                dchannel: '.*/bob-.*'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '4321'
+                destination: 'SIP_alice'
+                dcontext: 'park-dial'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                dchannel: '.*/alice-.*'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '1234'
+                destination: 'test'
+                dcontext: 'default'
+                callerid: '"Alice" <1234>'
+                channel: '.*/alice-.*'
+                dchannel: '.*/bob-.*'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '4321'
+                destination: 'SIP_alice'
+                dcontext: 'park-dial'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                dchannel: '.*/alice-.*'
+                lastapp: 'UserEvent'
+                disposition: 'NO ANSWER'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '1234'
+                destination: 'test'
+                dcontext: 'default'
+                callerid: '"Alice" <1234>'
+                channel: '.*/alice-.*'
+                dchannel: '.*/bob-.*'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '4321'
+                destination: 'SIP_alice'
+                dcontext: 'park-dial'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                dchannel: '.*/alice-.*'
+                lastapp: 'UserEvent'
+                disposition: 'BUSY'
+                amaflags: 'DOCUMENTATION'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - bridge
