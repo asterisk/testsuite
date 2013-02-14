@@ -11,5 +11,5 @@ properties:
         - sipp:
             version: 'v3.1'
     tags:
-        - sip
+        - SIP
         - sip_cause

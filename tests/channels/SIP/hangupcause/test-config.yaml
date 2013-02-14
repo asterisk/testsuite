@@ -8,5 +8,5 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
     tags:
-        - sip
+        - SIP
         - hangupcause

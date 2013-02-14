@@ -35,4 +35,4 @@ properties:
         - sipp:
             version: 'v3.1'
     tags:
-        - sip
+        - SIP

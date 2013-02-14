@@ -8,7 +8,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
     tags:
-        - sip
+        - SIP
         - ccss
         - macro
         - gosub
