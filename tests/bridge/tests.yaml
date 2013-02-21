@@ -9,3 +9,4 @@ tests:
     - dir: 'parkcall_timeout'
     - test: 'dial_LS_options'
     - test: 'connected_line_update'
+    - test: 'transfer_capabilities'

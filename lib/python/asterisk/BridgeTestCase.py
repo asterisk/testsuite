@@ -11,6 +11,7 @@ import sys
 import logging
 import uuid
 import os
+from time import sleep
 
 sys.path.append("lib/python")
 from TestCase import TestCase
@@ -46,6 +47,7 @@ class BridgeTestCase(TestCase):
         self.ami_alice = None
         self.ami_bob = None
         self.call_end_observers = []
+        self.bridge_fail_token = self.create_fail_token("BridgeTestCase hasn't raised the flag to indicate completion of all expected calls.")
 
         if test_config is None:
             LOGGER.error("No configuration provided. Bailing.")
@@ -100,6 +102,7 @@ class BridgeTestCase(TestCase):
             self.start_test(self.test_runs[self.current_run])
         else:
             LOGGER.info("All calls executed, stopping")
+            self.remove_fail_token(self.bridge_fail_token)
             self.set_passed(True)
             self.stop_reactor()
 
@@ -258,7 +261,11 @@ class BridgeTestCase(TestCase):
 
         LOGGER.info("Sending feature %s from %s" % (feature['what'],
             feature['who']))
+        # make sure to put a gap between DTMF digits to ensure that events
+        # headed to the UUT are not ignored because they occur too quickly
+        sleep(0.25)
         ami.playDTMF(channel, BridgeTestCase.FEATURE_MAP[feature['what']])
+        sleep(0.25)
 
     def test_callback(self, ami, event):
         if event.get('state') != 'FEATURE_DETECTION':
