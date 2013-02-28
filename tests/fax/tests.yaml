@@ -15,3 +15,4 @@ tests:
     - test: 'gateway_timeout3'
     - test: 'gateway_timeout4'
     - test: 'gateway_timeout5'
+    - test: 'voxfax_g711'
