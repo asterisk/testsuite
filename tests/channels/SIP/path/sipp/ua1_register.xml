@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<scenario name="UA1 Registers with Path">
+    <send retrans="500">
+        <![CDATA[
+
+        REGISTER sip:ua1@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        From: ua1 <sip:ua1@[local_ip]:[local_port]>;tag=[pid][call_number]
+        To: <sip:ua1@[remote_ip]:[remote_port]>
+        Call-ID: [call_id]
+        CSeq: 1 REGISTER
+        Contact: sip:ua1@[local_ip]:[local_port]
+        Max-Forwards: 70
+        Subject: Path Test
+        Expires: 3600
+        Supported: path
+        Path: <sip:P3.EXAMPLEHOME.COM;lr>,<sip:P1.EXAMPLEVISITED.COM;lr>
+        Content-Length: 0
+
+        ]]>
+    </send>
+
+    <recv response="200" rtd="true">
+         <action>
+            <ereg regexp=".*<sip:P3.EXAMPLEHOME.COM;lr>,<sip:P1.EXAMPLEVISITED.COM;lr>.*"
+                search_in="hdr" header="Path:" check_it="true" assign_to="1"/>
+            <ereg regexp=".*path.*"
+                search_in="hdr" header="Supported:" check_it="true" assign_to="2"/>
+         </action>
+    </recv>
+
+    <Reference variables="1,2"/>
+</scenario>

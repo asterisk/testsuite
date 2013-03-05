@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<scenario name="External Registrar">
+  <recv request="REGISTER" crlf="true">
+      <action>
+          <ereg regexp=".*path.*"
+              header="Supported:"
+              search_in="hdr"
+              check_it="true"
+              assign_to="1"/>
+      </action>
+  </recv>
+  <Reference variables="1" />
+
+  <send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Route: <sip:P3.EXAMPLEHOME.COM;lr>,<sip:P1.EXAMPLEVISITED.COM;lr>
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+    ]]>
+  </send>
+
+</scenario>
