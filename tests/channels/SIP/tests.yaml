@@ -40,6 +40,7 @@ tests:
     - test: 'nat_supertest'
     - test: 'pcap_demo'
     - test: 'sip_hold'
+    - test: 'sip_hold_no_moh'
     - test: 'header_parsing'
     - test: 'use_contact_from_200'
     - test: 'generic_ccss'
