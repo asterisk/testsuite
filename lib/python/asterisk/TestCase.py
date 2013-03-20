@@ -248,7 +248,7 @@ class TestCase(object):
             """ Make sure the instances started properly """
             for (success, value) in result:
                 if not success:
-                    logger.error(value)
+                    logger.error(value.getErrorMessage())
                     self.stop_reactor()
             return result
 
@@ -304,7 +304,7 @@ class TestCase(object):
             """ Make sure the instances stopped properly """
             for (success, value) in result:
                 if not success:
-                    logger.warning(value)
+                    logger.warning(value.getErrorMessage())
                     # This should already be called when the reactor is being terminated.
                     # If we couldn't stop the instance of Asterisk, there isn't much else to do
                     # here other then complain

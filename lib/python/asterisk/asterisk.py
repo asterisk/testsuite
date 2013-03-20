@@ -255,7 +255,7 @@ class Asterisk:
             """ Errback for CLI command waitfullybooted """
             if time.time() - self.__start_asterisk_time > 5:
                 logger.error("Asterisk core waitfullybooted for %s failed" % self.host)
-                self.__start_deferred.errback("Command core waitfullybooted failed")
+                self.__start_deferred.errback(Exception("Command core waitfullybooted failed"))
             else:
                 logger.debug("Asterisk core waitfullybooted failed, attempting again...")
                 reactor.callLater(0, __execute_wait_fully_booted)
