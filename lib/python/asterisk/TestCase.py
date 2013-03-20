@@ -15,6 +15,7 @@ import datetime
 import time
 import traceback
 import uuid
+from hashlib import md5
 from twisted.internet import reactor, defer
 from twisted.python import failure
 from starpy import manager, fastagi
@@ -56,7 +57,24 @@ class TestCase(object):
             self.test_name = os.path.dirname(sys.argv[0])
         else:
             self.test_name = test_path
-        self.base = self.test_name.replace("tests/", "", 1)
+
+        # We're not using /tmp//full//test//name because it gets so long that
+        # it doesn't fit in AF_UNIX paths (limited to around 108 chars) used
+        # for the rasterisk CLI connection. As a quick fix, we hash the path
+        # using md5, to make it unique enough.
+        self.realbase = self.test_name.replace("tests/", "", 1)
+        self.base = md5(self.realbase).hexdigest()
+        # We provide a symlink to it from a named path.
+        named_dir = os.path.join(Asterisk.test_suite_root, self.realbase)
+        try:
+            os.makedirs(os.path.dirname(named_dir))
+        except OSError:
+            pass
+        try:
+            os.symlink(os.path.join(Asterisk.test_suite_root, self.base), named_dir)
+        except OSError:
+            pass
+
         self.ast = []
         self.ami = []
         self.fastagi = []
