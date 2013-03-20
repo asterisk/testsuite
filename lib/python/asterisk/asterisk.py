@@ -696,7 +696,7 @@ class Asterisk:
             for filename in filenames:
                 target = "%s/%s" % (self.base, os.path.join(ast_dir_path,
                                     dirname, filename))
-                if os.path.exists(target) or filename in blacklist:
+                if os.path.lexists(target) or filename in blacklist:
                     continue
                 os.symlink(os.path.join(ast_dir_path, dirname, filename),
                            target)
