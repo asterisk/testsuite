@@ -621,8 +621,15 @@ class Asterisk:
             raise Exception("Unable to discover dir layout from asterisk.conf")
 
         self.__gen_ast_conf(self.__ast_conf, dir_cat, self.__ast_conf_options)
+
+        # Cache mirrored dirs to speed up creation. Generally you'll have
+        # /var/lib/asterisk for more than one dir_cat option, and that happens
+        # to be the largest dir too (with lots of sounds).
+        cache = set()
         for (var, val) in dir_cat.options:
-            self.__mirror_dir(var, val)
+            # We cannot simply skip ``val`` here if we already processed it.
+            # Some dirs are exempt from copying, based on ``var``.
+            self.__mirror_dir(var, val, cache)
 
         self.__directory_structure_made = True
 
@@ -686,12 +693,17 @@ class Asterisk:
 
         f.close()
 
-    def __mirror_dir(self, ast_dir_name, ast_dir_path):
+    def __mirror_dir(self, ast_dir_name, ast_dir_path, cache):
         self.__makedirs(ast_dir_path)
         dirs_only = [ "astrundir", "astlogdir", "astspooldir" ]
         if ast_dir_name in dirs_only:
             return
         blacklist = [ "astdb", "astdb.sqlite3" ]
+
+        if ast_dir_path in cache:
+            return
+        cache.add(ast_dir_path)
+
         for dirname, dirnames, filenames in os.walk(ast_dir_path):
             for filename in filenames:
                 target = "%s/%s" % (self.base, os.path.join(ast_dir_path,
