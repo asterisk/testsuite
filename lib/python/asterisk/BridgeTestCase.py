@@ -267,6 +267,13 @@ class BridgeTestCase(TestCase):
         ami.playDTMF(channel, BridgeTestCase.FEATURE_MAP[feature['what']])
         sleep(0.25)
 
+        if (feature['what'] == 'blindxfer' or feature['what'] == 'atxfer') and 'exten' in feature:
+            # playback the extension requested
+            for digit in list(feature['exten']):
+                sleep(0.25)
+                ami.playDTMF(channel, digit)
+                sleep(0.25)
+
     def test_callback(self, ami, event):
         if event.get('state') != 'FEATURE_DETECTION':
             return
