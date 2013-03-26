@@ -37,7 +37,7 @@ class QueueReloadMembersTest(TestCase):
         self.create_ami_factory()
 
     def ami_connect(self, ami):
-        src = "%s/tests/%s/queues.conf.replacement" % (os.getcwd(), self.base)
+        src = "%s/tests/%s/queues.conf.replacement" % (os.getcwd(), self.realbase)
         message = {'action': 'queuereload', 'members': 'yes'}
 
         LOGGER.info( "Installing replacement configuration %s" % src)
