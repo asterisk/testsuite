@@ -265,6 +265,7 @@ class ChannelObject(object):
         self._previous_sound_file = ''
         self._test_observers = []
         self._hangup_observers = []
+        self._candidate_prefix = ''
         self._unique_id = str(uuid.uuid1())
         if 'start-on-create' in channel_def and channel_def['start-on-create']:
             self.spawn_call(delay)
@@ -467,10 +468,21 @@ class ChannelObject(object):
         return self.__audio_dtmf_deferred
 
 
+    def __evaluate_candidates(self):
+        ''' Determine if we know who our candidate channel is '''
+        if len(self._candidate_prefix) == 0:
+            return
+        for channel in self._all_channels:
+            if self._candidate_prefix in channel:
+                LOGGER.debug('Adding candidate channel %s' % channel)
+                self._candidate_channels.append(channel)
+
+
     def __new_channel_handler(self, ami, event):
         ''' Handler for the Newchannel event '''
         if event['channel'] not in self._all_channels:
             self._all_channels.append(event['channel'])
+            self.__evaluate_candidates()
 
 
     def __hangup_event_handler(self, ami, event):
@@ -507,8 +519,9 @@ class ChannelObject(object):
             return
         channel_name = event['channel'][:len(event['channel'])-2]
         LOGGER.debug('Detected channel %s' % channel_name)
-        self._candidate_channels = [channel for channel in self._all_channels
-                                    if channel_name in channel]
+        self._candidate_prefix = channel_name
+        self.__evaluate_candidates()
+
 
     def __test_event_handler(self, ami, event):
         ''' Handler for test events '''
