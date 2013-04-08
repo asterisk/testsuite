@@ -1,0 +1,86 @@
+testinfo:
+    summary:     'Dial Unavailable'
+    description: |
+        'Dial an endpoint and get a response code that maps to an Unavailable status'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - app : 'sipp'
+    tags:
+        - SIP
+        - dial
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: originator-config
+            typename: 'PluggableModules.Originator'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'HangupCause'
+        requirements:
+            match:
+                HangupChannel: 'SIP/bob-.*'
+                TechCause: 'SIP 420 Bad Extension'
+                AsteriskCause: 'No route to destination'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialBegin'
+        requirements:
+            match:
+                Channel: 'Local/s@default-.*'
+                Uniqueid: '.*'
+                ChannelDest: 'SIP/bob-.*'
+                UniqueidDest: '.*'
+                CallerIDNum: '<unknown>'
+                CallerIDName: '<unknown>'
+                ConnectedLineNum: '<unknown>'
+                ConnectedLineName: '<unknown>'
+                Dialstring: 'bob'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialEnd'
+        requirements:
+            match:
+                Channel: 'Local/s@default-.*'
+                Uniqueid: '.*'
+                ChannelDest: 'SIP/bob-.*'
+                UniqueidDest: '.*'
+                CallerIDNum: '<unknown>'
+                CallerIDName: '<unknown>'
+                ConnectedLineNum: '<unknown>'
+                ConnectedLineName: '<unknown>'
+                DialStatus: 'CHANUNAVAIL'
+        count: '1'
+
+originator-config:
+    channel: 'Local/s@default'
+    application: 'Echo'
+    ignore-originate-failure: 'yes'
+    trigger: 'scenario_start'
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5066'} }

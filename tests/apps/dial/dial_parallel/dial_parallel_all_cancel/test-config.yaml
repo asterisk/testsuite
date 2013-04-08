@@ -1,0 +1,147 @@
+testinfo:
+    summary:     'Dial Parallel, Cancel All'
+    description: |
+        'Dial two endpoints. Simulate a DTMF keypress that hangs up the caller.
+        Verify that all dial operations are cancelled.'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - app : 'sipp'
+    tags:
+        - SIP
+        - dial
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: originator-config
+            typename: 'PluggableModules.Originator'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'HangupCause'
+                HangupChannel: 'SIP/bob-.*'
+        requirements:
+            match:
+                TechCause: 'SIP 180 Ringing'
+                AsteriskCause: 'Normal Clearing'
+        count: '1'
+    -
+        type: 'callback'
+        conditions:
+            match:
+                Event: 'DialBegin'
+                ChannelDest: 'SIP/bob-.*'
+        callbackModule: 'send_dtmf'
+        callbackMethod: 'send_dtmf'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialBegin'
+                ChannelDest: 'SIP/bob-.*'
+        requirements:
+            match:
+                Channel: 'Local/s@default-.*'
+                Uniqueid: '.*'
+                UniqueidDest: '.*'
+                CallerIDNum: '<unknown>'
+                CallerIDName: '<unknown>'
+                ConnectedLineNum: '<unknown>'
+                ConnectedLineName: '<unknown>'
+                Dialstring: 'bob'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialBegin'
+                ChannelDest: 'SIP/charlie-.*'
+        requirements:
+            match:
+                Channel: 'Local/s@default-.*'
+                Uniqueid: '.*'
+                UniqueidDest: '.*'
+                CallerIDNum: '<unknown>'
+                CallerIDName: '<unknown>'
+                ConnectedLineNum: '<unknown>'
+                ConnectedLineName: '<unknown>'
+                Dialstring: 'charlie'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'HangupCause'
+                HangupChannel: 'SIP/charlie-.*'
+        requirements:
+            match:
+                TechCause: 'SIP 180 Ringing'
+                AsteriskCause: 'Normal Clearing'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialEnd'
+                ChannelDest: 'SIP/bob-.*'
+        requirements:
+            match:
+                Channel: 'Local/s@default-.*'
+                Uniqueid: '.*'
+                UniqueidDest: '.*'
+                CallerIDNum: '<unknown>'
+                CallerIDName: '<unknown>'
+                ConnectedLineNum: '<unknown>'
+                ConnectedLineName: '<unknown>'
+                DialStatus: 'CANCEL'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialEnd'
+                ChannelDest: 'SIP/charlie-.*'
+        requirements:
+            match:
+                Channel: 'Local/s@default-.*'
+                Uniqueid: '.*'
+                UniqueidDest: '.*'
+                CallerIDNum: '<unknown>'
+                CallerIDName: '<unknown>'
+                ConnectedLineNum: '<unknown>'
+                ConnectedLineName: '<unknown>'
+                DialStatus: 'CANCEL'
+        count: '1'
+
+originator-config:
+    channel: 'Local/s@default'
+    context: 'default'
+    exten: 'echo_wait'
+    priority: '1'
+    async: 'True'
+    ignore-originate-failure: 'yes'
+    trigger: 'ami_connect'
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'ua_wait_cancel.xml', '-p': '5066'} }
+                - { 'key-args': {'scenario': 'ua_wait_cancel.xml', '-p': '5067'} }

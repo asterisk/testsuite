@@ -1,0 +1,11 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'dial_answer'
+    - test: 'dial_busy'
+    - test: 'dial_congestion'
+    - test: 'dial_hangup'
+    - test: 'dial_no_answer'
+    - test: 'dial_dtmf_hangup_cancel'
+    - test: 'dial_timeout'
+    - test: 'dial_unavail'
+    - dir: 'dial_parallel'

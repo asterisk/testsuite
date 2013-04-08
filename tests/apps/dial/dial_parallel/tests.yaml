@@ -1,0 +1,11 @@
+tests:
+    - test: 'dial_parallel_answer_cancel'
+    - test: 'dial_parallel_all_cancel'
+    - test: 'dial_parallel_all_busy'
+    - test: 'dial_parallel_all_congestion'
+    - test: 'dial_parallel_all_no_answer'
+    - test: 'dial_parallel_all_unavail'
+    - test: 'dial_parallel_single_busy'
+    - test: 'dial_parallel_single_congestion'
+    - test: 'dial_parallel_single_no_answer'
+    - test: 'dial_parallel_single_unavail'
