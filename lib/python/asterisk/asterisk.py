@@ -195,8 +195,8 @@ class Asterisk:
 
         """ Find the system installed asterisk.conf """
         ast_confs = [
-                "/etc/asterisk/asterisk.conf",
-                "/usr/local/etc/asterisk/asterisk.conf"
+            "/etc/asterisk/asterisk.conf",
+            "/usr/local/etc/asterisk/asterisk.conf",
         ]
         self.__ast_conf = None
         for c in ast_confs:
@@ -445,7 +445,7 @@ class Asterisk:
             if os.path.isfile(target):
                 self.install_config(target)
 
-    def install_config(self, cfg_path, target_filename = None):
+    def install_config(self, cfg_path, target_filename=None):
         """Install a custom configuration file for this instance of Asterisk.
 
         By default, the configuration used will be whatever is found in the
@@ -537,7 +537,7 @@ class Asterisk:
         used. If no extension is given, the 's' extension will be used.
 
         Keyword Arguments:
-        blocking -- This used to specify that we should block until the
+        blocking -- UNUSED. This used to specify that we should block until the
         CLI command finished executing.  When the Asterisk process was turned
         over to twisted, that's no longer the case.  The keyword argument
         was kept merely for backwards compliance; callers should *not* expect
@@ -562,22 +562,22 @@ class Asterisk:
             raise_error = True
             logger.error('Channel dial string must be in the form "tech/data".')
         if raise_error is True:
-            raise Exception, "Cannot originate call!\n\
-            Argument string must be in one of these forms:\n\
-            <tech/data> application <appname> appdata\n\
-            <tech/data> extension <exten>@<context>"
+            raise Exception("Cannot originate call!\n"
+                "Argument string must be in one of these forms:\n"
+                "<tech/data> application <appname> appdata\n"
+                "<tech/data> extension <exten>@<context>")
 
         if self.ast_version < AsteriskVersion("1.6.2"):
             return self.cli_exec("originate %s" % argstr, blocking=blocking)
         else:
             return self.cli_exec("channel originate %s" % argstr, blocking=blocking)
 
-    def cli_exec(self, cli_cmd, blocking=True, warn_on_fail=True):
+    def cli_exec(self, cli_cmd, blocking=True):
         """Execute a CLI command on this instance of Asterisk.
 
         Keyword Arguments:
         cli_cmd -- The command to execute.
-        blocking -- This used to specify that we should block until the
+        blocking -- UNUSED. This used to specify that we should block until the
         CLI command finished executing.  When the Asterisk process was turned
         over to twisted, that's no longer the case.  The keyword argument
         was kept merely for backwards compliance; callers should *not* expect
@@ -589,9 +589,6 @@ class Asterisk:
         Example Usage:
         asterisk.cli_exec("core set verbose 10")
         """
-        # Downplay warnings if the caller requests it
-        warn = (logger.debug, logger.warn)[bool(warn_on_fail)]
-
         cmd = [
             self.ast_binary,
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
@@ -632,7 +629,6 @@ class Asterisk:
             self.__mirror_dir(var, val, cache)
 
         self.__directory_structure_made = True
-
 
     def __setup_configs(self):
         """
@@ -695,10 +691,10 @@ class Asterisk:
 
     def __mirror_dir(self, ast_dir_name, ast_dir_path, cache):
         self.__makedirs(ast_dir_path)
-        dirs_only = [ "astrundir", "astlogdir", "astspooldir" ]
+        dirs_only = ["astrundir", "astlogdir", "astspooldir"]
         if ast_dir_name in dirs_only:
             return
-        blacklist = [ "astdb", "astdb.sqlite3" ]
+        blacklist = ["astdb", "astdb.sqlite3"]
 
         if ast_dir_path in cache:
             return
