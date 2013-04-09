@@ -480,10 +480,11 @@ class TestCase(object):
             logger.info("Test Condition %s failed but expected failure was set; test status not modified" % test_condition.getName())
 
     def evaluate_results(self):
-        """ Return whether or not the test has passed """
+        ''' Return whether or not the test has passed '''
+
         while len(self.fail_tokens):
             fail_token = self.fail_tokens.pop(0)
-            logger.error("Fail token present: %s" % fail_token['message'])
+            logger.error('Fail token present: %s' % fail_token['message'])
             self.passed = False
 
         return self.passed
@@ -510,18 +511,33 @@ class TestCase(object):
         self._ami_callbacks.append(callback)
 
     def create_fail_token(self, message):
+        '''
+        Add a fail token to the test. If any fail tokens exist at the end of
+        the test, the test will fail.
+
+        Keyword Arguments:
+        message A text message describing the failure
+
+        Returns:
+        A token that can be removed from the test at a later time, if the test
+        should pass
+        '''
         fail_token = {'uuid' : uuid.uuid4(), 'message' : message}
         self.fail_tokens.append(fail_token)
         return fail_token
 
     def remove_fail_token(self, fail_token):
+        '''
+        Remove a fail token from the test.
+
+        Keyword Arguments:
+        fail_token A previously created fail token to be removed from the test
+        '''
         if not fail_token in self.fail_tokens:
-            logger.error("Attempted to remove a fail token that isn't in the fail tokens list\n"
-                         "    => '%s'\n"
-                         "    This fail token was probably already removed." % fail_token['message'])
+            logger.warning('Attempted to remove an unknown fail token: %s'
+                % fail_token['message'])
             self.passed = False
             return
-
         self.fail_tokens.remove(fail_token)
 
     def set_passed(self, value):
