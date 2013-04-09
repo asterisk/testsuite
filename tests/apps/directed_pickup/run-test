@@ -18,15 +18,15 @@ from asterisk.asterisk import Asterisk
 from asterisk.version import AsteriskVersion
 from asterisk.TestCase import TestCase
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 class PickupTest(TestCase):
-    firstChannel = None
-    secondChannel = None
-    bridgeCount = 0
 
     def __init__(self):
         TestCase.__init__(self)
+        self.firstChannel = None
+        self.secondChannel = None
+        self.bridgeCount = 0
         self.create_asterisk()
 
     def hangup(self, ami):
@@ -42,11 +42,12 @@ class PickupTest(TestCase):
 
         if channel1 == self.firstChannel and channel2 == self.secondChannel:
             self.passed = True
-
+            LOGGER.info("Both first and second channel detected; passing test")
         self.ami[0].hangup(self.firstChannel).addCallback(self.hangup)
 
     def check_Pickup(self, ami, event):
         self.secondChannel = event.get('channel')
+        LOGGER.info("Detected second channel: %s" % self.secondChannel)
         self.ami[0].registerEvent('Bridge', self.check_Bridge)
 
     def check_UserEvent(self, ami, event):
@@ -58,25 +59,34 @@ class PickupTest(TestCase):
             return
 
         self.ami[0].registerEvent('Pickup', self.check_Pickup)
+        LOGGER.info("Originating Pickup attempt")
         self.ami[0].originate(
             channel = "Local/1002@pickuptest",
             application = "Echo",
-        )
+        ).addErrback(self.handleOriginateFailure)
 
     def check_Dial(self, ami, event):
         dialstring = event.get('dialstring')
         if dialstring != 'iax_pickup_b/ringing_exten':
             return
-
         self.firstChannel = event.get('channel')
+        LOGGER.info("Detected first channel %s" % self.firstChannel)
 
     def ami_connect(self, ami):
-        self.ami[0].registerEvent("Dial", self.check_Dial)
+        running_version = AsteriskVersion()
+        post_version = AsteriskVersion("12.0.0")
+        if running_version < post_version:
+            # Pre-Asterisk 12
+            self.ami[0].registerEvent("Dial", self.check_Dial)
+        else:
+            # Asterisk 12+
+            self.ami[0].registerEvent("DialBegin", self.check_Dial)
         self.ami[0].registerEvent("UserEvent", self.check_UserEvent)
+        LOGGER.info("Originating channel to be picked up")
         self.ami[0].originate(
             channel = "IAX2/iax_pickup_b/1001",
             application = "Echo",
-        )
+        ).addErrback(self.handleOriginateFailure)
 
     def run(self):
         TestCase.run(self)
