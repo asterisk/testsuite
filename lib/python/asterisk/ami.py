@@ -248,6 +248,10 @@ class AMICallbackInstance(AMIEventInstance):
         callback_module = __import__(self.callback_module)
         method = getattr(callback_module, self.callback_method)
         self.passed = method(ami, event)
+        if self.passed == None:
+            logger.error("Callback %s.%s returned None instead of a boolean" %
+                (self.callback_module, self.callback_method))
+            self.passed = False
 
     def check_result(self, callback_param):
         self.test_object.set_passed(self.passed)
