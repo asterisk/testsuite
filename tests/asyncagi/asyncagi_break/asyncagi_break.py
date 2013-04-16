@@ -33,3 +33,4 @@ def async_break(ami, event):
            'Channel': event['channel'],
            'Command': 'ASYNCAGI BREAK'}
     ami.sendMessage(msg)
+    return True
