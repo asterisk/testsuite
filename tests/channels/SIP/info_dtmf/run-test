@@ -17,6 +17,7 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 
+from asterisk.version import AsteriskVersion
 from asterisk.sipp import SIPpScenario, SIPpScenarioSequence
 from asterisk.TestCase import TestCase
 
