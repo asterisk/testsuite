@@ -21,10 +21,10 @@ from asterisk.sipp import SIPpScenario, SIPpScenarioSequence
 from asterisk.TestCase import TestCase
 
 """
-The TestCase class will initialize the python logger - creating a
-logger here will log under the '__main__' namespace
+The TestCase class will initialize the python LOGGER - creating a
+LOGGER here will log under the '__main__' namespace
 """
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -53,13 +53,32 @@ class InfoDTMF(TestCase):
         Keyword Arguments:
         ami    -    The StarPY manager object that connected
         """
-        ami.registerEvent('DTMF', self.handle_dtmf_event)
+        if (AsteriskVersion() > AsteriskVersion('11')):
+            ami.registerEvent('DTMFEnd', self.handle_dtmf_end_event)
+        else:
+            ami.registerEvent('DTMF', self.handle_dtmf_event)
         sipp_scenario_params = [{'scenario':'dtmf-relay.xml','-p':'5061'}, {'scenario':'dtmf.xml','-p':'5061'}]
         sequence = SIPpScenarioSequence(test_case = self)
         for scenario_param in sipp_scenario_params:
             sequence.register_scenario(SIPpScenario(TEST_DIR, scenario_param))
 
         sequence.execute()
+
+    def handle_dtmf_end_event(self, ami, event):
+        """
+        Callback handler for a DTMF End Event received over AMI.
+        This event is returned back in Asterisk 12+
+
+        Keyword Arguments:
+        ami    -    The instance of AMI that received this event
+        event    -    The AMI event object
+        """
+        digit = event['digit']
+        LOGGER.debug('Received end of DTMF digit %s' % digit)
+        self.received_events.append(digit)
+        if (len(self.received_events) == len(self.expected_events)):
+            LOGGER.info("Received all expected events, stopping test")
+            self.stop_reactor()
 
     def handle_dtmf_event(self, ami, event):
         """
@@ -72,10 +91,10 @@ class InfoDTMF(TestCase):
         digit = event["digit"]
         end = event["end"]
         if (end == "Yes"):
-            logger.debug("Received end of DTMF digit %s" % digit)
+            LOGGER.debug("Received end of DTMF digit %s" % digit)
             self.received_events.append(digit)
         if (len(self.received_events) == len(self.expected_events)):
-            logger.info("Received all expected events, stopping test")
+            LOGGER.info("Received all expected events, stopping test")
             self.stop_reactor()
 
 def main():
@@ -84,17 +103,15 @@ def main():
     """
 
     test = InfoDTMF()
-    test.start_asterisk()
     reactor.run()
-    test.stop_asterisk()
 
     if (len(test.expected_events) != len(test.received_events)):
-        logger.warn("Failed to receive %d expected events - received %d instead" % (len(test.expected_events), len(test.received_events)))
+        LOGGER.warn("Failed to receive %d expected events - received %d instead" % (len(test.expected_events), len(test.received_events)))
         test.passed = False
 
     for i in range(min(len(test.expected_events), len(test.received_events))):
         if (test.expected_events[i] != test.received_events[i]):
-            logger.warn("Failed to received expected DTMF event [%s], received [%s] instead" % (test.expected_events[i], test.received_events[i]))
+            LOGGER.warn("Failed to received expected DTMF event [%s], received [%s] instead" % (test.expected_events[i], test.received_events[i]))
             test.passed = False
 
     if not test.passed:
