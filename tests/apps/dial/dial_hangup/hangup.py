@@ -17,4 +17,5 @@ def send_hangup(ami, event):
     channel = event['channel']
     LOGGER.info('Hanging up channel %s' % channel)
     ami.hangup(channel)
+    return True
 

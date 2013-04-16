@@ -18,4 +18,4 @@ def send_dtmf(ami, event):
     channel += ';1'
     LOGGER.info('Sending DTMF to hangup channel %s' % channel)
     ami.redirect(channel, 'default', 'dtmf', '1')
-
+    return True
