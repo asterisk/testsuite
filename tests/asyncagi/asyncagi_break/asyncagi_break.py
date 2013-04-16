@@ -20,6 +20,7 @@ def async_start(ami, event):
            'Channel': event['channel'],
            'Command': 'STREAM FILE tt-monkeys ""',}
     ami.sendMessage(msg)
+    return True
 
 def async_break(ami, event):
     ''' Callback called when we notice that we've started the tt-monkeys
