@@ -23,6 +23,7 @@ test-modules:
             typename: 'Executioner.Executioner'
 
 bridge-config:
+  test-runs:
     -
         originate_channel: 'SIP/alice_parkcall@uut'
         features:

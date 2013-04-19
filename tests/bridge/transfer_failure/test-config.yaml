@@ -28,6 +28,7 @@ test-modules:
             typename: 'cdr.CDRModule'
 
 bridge-config:
+  test-runs:
     -
         originate_channel: 'SIP/alice_blind@uut'
         hangup: 'alice'

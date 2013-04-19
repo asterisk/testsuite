@@ -20,6 +20,7 @@ test-modules:
             typename: 'Executioner.Executioner'
 
 bridge-config:
+  test-runs:
     -
         originate_channel: 'SIP/test@uut'
         features:

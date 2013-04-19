@@ -15,6 +15,7 @@ test-modules:
             typename: 'Tester.Tester'
 
 bridge-config:
+  test-runs:
     -
         originate_channel: 'SIP/uut/no_warning'
     -

@@ -18,6 +18,7 @@ test-modules:
             typename: 'cel.CELModule'
 
 bridge-config:
+  test-runs:
     -
         originate_channel: 'SIP/alice_atxfer@uut'
         hangup: 'alice'

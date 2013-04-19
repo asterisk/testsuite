@@ -1,0 +1,67 @@
+testinfo:
+    summary: 'Test the blind transfer feature'
+    description: |
+        'Set up a bridge between two endpoints and check that the DTMF blind
+        transfer feature is detected and executed properly. Two transfers
+        are performed; one initiated by Alice, and the other by Bob. In both
+        cases, the destination of the transfer is Charlie.'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: bridge-config
+        typename: 'BridgeTestCase.BridgeTestCase'
+    modules:
+        -
+            config-section: 'transfer-config'
+            typename: 'transfer.Transfer'
+        -
+            config-section: 'ami-userevent-checker'
+            typename: 'ami.AMIEventModule'
+
+transfer-config:
+    -
+        transferer: 'alice'
+    -
+        transferer: 'bob'
+
+ami-userevent-checker:
+    -
+        type: 'callback'
+        id: '3'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'Transfer'
+                Result: 'Connected'
+        callbackModule: 'transfer'
+        callbackMethod: 'check_connected_line'
+
+
+bridge-config:
+    asterisk-instances: 4
+    test-runs:
+      -
+          originate_channel: 'SIP/alice_blindxfer@uut'
+          features:
+              -
+                  who: 'alice'
+                  what: 'blindxfer'
+                  success: 'true'
+                  exten: '123'
+      -
+          originate_channel: 'SIP/bob_blindxfer@uut'
+          features:
+              -
+                  who: 'bob'
+                  what: 'blindxfer'
+                  success: 'true'
+                  exten: '123'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - bridge

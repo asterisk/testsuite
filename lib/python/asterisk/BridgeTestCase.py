@@ -40,14 +40,17 @@ class BridgeTestCase(TestCase):
         2 : the unit where calls terminate, also known as "Bob"
         '''
         TestCase.__init__(self, test_path)
-        self.create_asterisk(3, "%s/configs/bridge" % os.getcwd())
         self.test_runs = []
         self.current_run = 0
         self.ami_uut = None
         self.ami_alice = None
         self.ami_bob = None
         self.call_end_observers = []
+        self.feature_start_observers = []
+        self.feature_end_observers = []
         self.bridge_fail_token = self.create_fail_token("BridgeTestCase hasn't raised the flag to indicate completion of all expected calls.")
+        self.instances = 3
+        self.connections = 0
 
         if test_config is None:
             LOGGER.error("No configuration provided. Bailing.")
@@ -55,20 +58,48 @@ class BridgeTestCase(TestCase):
 
         # Just a quick sanity check so we can die early if
         # the tests are badly misconfigured
-        for test_run in test_config:
+        for test_run in test_config['test-runs']:
             if not 'originate_channel' in test_run:
                 LOGGER.error("No configured originate channel in test run")
                 raise Exception
 
             self.test_runs.append(test_run)
 
+        if 'asterisk-instances' in test_config:
+            self.instances = test_config['asterisk-instances']
+        self.create_asterisk(self.instances, "%s/configs/bridge" % os.getcwd())
         LOGGER.info("Bridge test initialized")
 
     def run(self):
         TestCase.run(self)
-        self.create_ami_factory(3)
+        self.create_ami_factory(self.instances)
+
+    def register_feature_start_observer(self, observer):
+        '''
+        Register an observer to be notified when a feature is started
+
+        Keyword Arguments:
+        observer A callback function to be called when a feature occurs. The
+            callback should take two arguments. This first will be this object;
+            the second will be a dict object describing the feature that just
+            occurred
+        '''
+        self.feature_start_observers.append(observer)
+
+    def register_feature_end_observer(self, observer):
+        '''
+        Register an observer to be notified when a feature is completed
+
+        Keyword Arguments:
+        observer A callback function to be called when a feature occurs. The
+            callback should take two arguments. This first will be this object;
+            the second will be a dict object describing the feature that just
+            occurred
+        '''
+        self.feature_end_observers.append(observer)
 
     def ami_connect(self, ami):
+        self.connections += 1
         self.ast[ami.id].cli_exec("sip set debug on")
         self.ast[ami.id].cli_exec("iax2 set debug on")
         self.ast[ami.id].cli_exec("xmpp set debug on")
@@ -89,19 +120,22 @@ class BridgeTestCase(TestCase):
             self.ami_bob.registerEvent('Hangup', self.hangup_callback)
             LOGGER.info("Bob AMI connected")
         else:
-            LOGGER.warning("Unexpected AMI ID %d recieved" % ami.id)
+            LOGGER.info("Unmanaged AMI ID %d received" % ami.id)
 
-        if self.ami_uut and self.ami_alice and self.ami_bob:
+        if self.connections == self.instances:
             # We can get started with the test!
             LOGGER.info("Time to run tests!")
             self.run_tests()
 
     def run_tests(self):
         if self.current_run < len(self.test_runs):
+            LOGGER.info('Executing test %d' % self.current_run)
             self.reset_timeout()
+            self.uut_alice_channel = None
+            self.uut_bob_channel = None
             self.start_test(self.test_runs[self.current_run])
-        else:
-            LOGGER.info("All calls executed, stopping")
+        elif self.current_run == len(self.test_runs):
+            LOGGER.info('All calls executed, stopping')
             self.remove_fail_token(self.bridge_fail_token)
             self.set_passed(True)
             self.stop_reactor()
@@ -144,16 +178,19 @@ class BridgeTestCase(TestCase):
             if event.get('result') == 'pass':
                 LOGGER.info("Two way audio properly detected between Bob and Alice")
                 self.audio_detected = True
-                self.check_identities()
+                self.check_identities(alice_connected_line=BridgeTestCase.ALICE_CONNECTED,
+                                      bob_connected_line=BridgeTestCase.BOB_CONNECTED,
+                                      bob_bridge_peer=self.uut_alice_channel,
+                                      alice_bridge_peer=self.uut_bob_channel)
             else:
                 LOGGER.warning("Audio issues on bridged call")
                 self.stop_reactor()
 
     def hangup_callback(self, ami, event):
-        if ami is self.ami_bob:
+        if ami is self.ami_bob and event.get('channel') == self.bob_channel:
             LOGGER.info("Bob has hung up")
             self.bob_hungup = True
-        elif ami is self.ami_alice:
+        elif ami is self.ami_alice and event.get('channel') == self.alice_channel:
             LOGGER.info("Alice has hung up")
             self.alice_hungup = True
         elif ami is self.ami_uut:
@@ -173,11 +210,15 @@ class BridgeTestCase(TestCase):
             self.run_tests()
 
     def uut_bridge_callback(self, ami, event):
-        LOGGER.debug("Got bridge callback")
-        self.uut_alice_channel = event.get('channel1')
-        self.uut_bob_channel = event.get('channel2')
+        if self.uut_alice_channel is None:
+            self.uut_alice_channel = event.get('channel1')
+            LOGGER.info('UUT Alice Channel: %s' % self.uut_alice_channel)
+        if self.uut_bob_channel is None:
+            self.uut_bob_channel = event.get('channel2')
+            LOGGER.info('UUT Bob Channel: %s' % self.uut_bob_channel)
         if event.get('bridgestate') == 'Link':
-            LOGGER.debug("Bridge is up")
+            LOGGER.debug("Bridge is up between %s and %s"
+                         % (event.get('channel1'), event.get('channel2')))
             LOGGER.debug("Type of bridge is %s" % event.get('bridgetype'))
             self.bridged = True
             if self.issue_hangups_on_bridged:
@@ -186,44 +227,65 @@ class BridgeTestCase(TestCase):
             LOGGER.debug("Bridge is down")
             self.bridged = False
 
-    def check_identities(self):
-        def alice_connected(value):
+    def check_identities(self, alice_connected_line=None,
+                         bob_connected_line=None,
+                         alice_bridge_peer=None,
+                         bob_bridge_peer=None):
+        ''' Check the identities of Alice & Bob
+
+        Keyword Arguments:
+        alice_connected_line The expected connected line value for Alice.
+            Default is None
+        bob_connected_line The expected connected line value for Bob. Default is
+            None
+        alice_bridge_peer The expected bridge peer for Alice. Default is None
+        bob_bridge_peer The expected bridge peer for Bob. Default is None
+
+        Note: setting any parameter to None will cause it to not be checked
+        '''
+        def alice_connected(value, expected):
             LOGGER.info("Alice's Connected line is %s" % value)
-            if value != BridgeTestCase.ALICE_CONNECTED:
-                LOGGER.warning("Unexpected Connected line value for Alice: %s" %
-                        value)
+            if value != expected:
+                LOGGER.warning("Bad Connected line value for Alice: expected %s, actual %s" %
+                        (expected, value))
                 self.set_passed(False)
 
-        def bob_connected(value):
+        def bob_connected(value, expected):
             LOGGER.info("Bob's Connected line is %s" % value)
-            if value != BridgeTestCase.BOB_CONNECTED:
-                LOGGER.warning("Unexpected Connected line value for Bob: %s" %
-                        value)
+            if value != expected:
+                LOGGER.warning("Bad Connected line value for Bob: expected %s, actual %s" %
+                        (expected, value))
                 self.set_passed(False)
 
-        def alice_bridgepeer(value):
+        def alice_bridgepeer(value, expected):
             LOGGER.info("Alice's BRIDGEPEER is %s" % value)
-            if value != self.uut_bob_channel:
-                LOGGER.warning("Unexpected BRIDGEPEER value for Alice: %s" %
-                        value)
+            if value != expected:
+                LOGGER.warning("Bad BRIDGEPEER value for Alice: expected %s, actual %s" %
+                        (expected, value))
                 self.set_passed(False)
 
-        def bob_bridgepeer(value):
+        def bob_bridgepeer(value, expected):
             LOGGER.info("Bob's BRIDGEPEER is %s" % value)
-            if value != self.uut_alice_channel:
-                LOGGER.warning("Unexpected BRIDGEPEER value for Bob: %s" %
-                        value)
+            if value != expected:
+                LOGGER.warning("Bad BRIDGEPEER value for Bob: expected %s, actual %s" %
+                        (expected, value))
                 self.set_passed(False)
             self.execute_features()
 
-        self.ami_uut.getVar(self.uut_alice_channel,
-                'CONNECTEDLINE(all)').addCallback(alice_connected)
-        bob_connected = self.ami_uut.getVar(self.uut_bob_channel,
-                'CONNECTEDLINE(all)').addCallback(bob_connected)
-        alice_bridgepeer = self.ami_uut.getVar(self.uut_alice_channel,
-                'BRIDGEPEER').addCallback(alice_bridgepeer)
-        bob_bridgepeer = self.ami_uut.getVar(self.uut_bob_channel,
-                'BRIDGEPEER').addCallback(bob_bridgepeer)
+        if alice_connected_line is not None:
+            self.ami_uut.getVar(self.uut_alice_channel,
+                'CONNECTEDLINE(all)').addCallback(alice_connected,
+                                                  alice_connected_line)
+        if bob_connected_line is not None:
+            self.ami_uut.getVar(self.uut_bob_channel,
+                'CONNECTEDLINE(all)').addCallback(bob_connected,
+                                                  bob_connected_line)
+        if alice_bridge_peer is not None:
+            self.ami_uut.getVar(self.uut_alice_channel,
+                'BRIDGEPEER').addCallback(alice_bridgepeer, alice_bridge_peer)
+        if bob_bridge_peer is not None:
+            self.ami_uut.getVar(self.uut_bob_channel,
+                'BRIDGEPEER').addCallback(bob_bridgepeer, bob_bridge_peer)
 
     def execute_features(self):
         if self.current_feature < len(self.features):
@@ -258,6 +320,9 @@ class BridgeTestCase(TestCase):
             self.feature_success = True
         else:
             self.feature_success = False
+
+        for observer in self.feature_start_observers:
+            observer(self, self.features[self.current_feature])
 
         LOGGER.info("Sending feature %s from %s" % (feature['what'],
             feature['who']))
@@ -298,6 +363,8 @@ class BridgeTestCase(TestCase):
             if self.feature_success:
                 LOGGER.warning("Feature failed when success was expected")
                 self.set_passed(False)
+        for observer in self.feature_end_observers:
+            observer(self, self.features[self.current_feature])
         # Move onto the next feature!
         self.current_feature += 1
         self.execute_features()

@@ -17,6 +17,7 @@ test-modules:
             typename: 'cel.CELModule'
 
 bridge-config:
+  test-runs:
     -
         originate_channel: 'SIP/alice_disconnect@uut'
         features:
