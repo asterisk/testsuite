@@ -200,9 +200,10 @@ class BridgeTestCase(TestCase):
             elif event.get('channel') == self.uut_bob_channel:
                 LOGGER.info("UUT Bob hang up")
                 self.uut_bob_hungup = True
+        else:
+            LOGGER.debug('Passing on Hangup for %s' % event['channel'])
 
-        if (self.bob_hungup and self.alice_hungup and self.uut_alice_hungup and
-                self.uut_bob_hungup):
+        if (self.bob_hungup and self.alice_hungup and self.uut_alice_hungup and self.uut_bob_hungup):
             for callback in self.call_end_observers:
                 callback(self.ami_uut, self.ami_alice, self.ami_alice)
             # Test call has concluded move on!
