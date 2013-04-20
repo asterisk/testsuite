@@ -80,7 +80,7 @@ class SIPTLSCallTest(TestCase):
         # End of additional setup for config files and keys
 
     def ami_connect(self, ami):
-        if (AsteriskVersion() > AsteriskVersion('11')):
+        if (AsteriskVersion() >= AsteriskVersion('12')):
             ami.registerEvent('DTMFEnd', self.ami_test)
         else:
             ami.registerEvent('DTMF', self.ami_test)

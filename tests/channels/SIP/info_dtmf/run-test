@@ -54,7 +54,7 @@ class InfoDTMF(TestCase):
         Keyword Arguments:
         ami    -    The StarPY manager object that connected
         """
-        if (AsteriskVersion() > AsteriskVersion('11')):
+        if (AsteriskVersion() >= AsteriskVersion('12')):
             ami.registerEvent('DTMFEnd', self.handle_dtmf_end_event)
         else:
             ami.registerEvent('DTMF', self.handle_dtmf_event)
