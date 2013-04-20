@@ -27,7 +27,7 @@ class Tester(object):
         self.end_time = 0
         self.calls = []
         # First call is a timed call with no warning
-        self.calls.append({'timeout': 4.0, 'numwarnings': 0, 'hangup_style': 'HANGUP_TIME'})
+        self.calls.append({'timeout': 10.0, 'numwarnings': 0, 'hangup_style': 'HANGUP_TIME'})
         # Second call is a timed call with a single warning played to the caller
         self.calls.append({'timeout': 10.0, 'numwarnings': 1, 'hangup_style': 'BRIDGE_TIMELIMIT'})
         # Third call is a timed call with a single warning played to the callee
@@ -36,7 +36,7 @@ class Tester(object):
         # parties
         self.calls.append({'timeout': 10.0, 'numwarnings': 2, 'hangup_style': 'BRIDGE_TIMELIMIT'})
 	# Fifth call is a timed call with no warning using the S() option (uses the same mechanism as L with no warning)
-        self.calls.append({'timeout': 4.0, 'numwarnings': 0, 'hangup_style': 'HANGUP_TIME'})
+        self.calls.append({'timeout': 10.0, 'numwarnings': 0, 'hangup_style': 'HANGUP_TIME'})
         self.current_call = self.calls.pop(0)
         self.num_warnings = 0
         self.num_hangup_triggers = 0
