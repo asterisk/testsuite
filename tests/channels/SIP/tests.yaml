@@ -57,3 +57,4 @@ tests:
     - test: 'directrtpsetup'
     - dir: 'session_timers'
     - test: 'path'
+    - test: 'alwaysauthreject'

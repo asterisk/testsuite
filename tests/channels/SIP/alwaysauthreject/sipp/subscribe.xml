@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<!-- Derived from scenarios originally created by Walter Doekes -->
+<scenario name="Asterisk SUBSCRIBE username disclosure">
+  <send retrans="500" start_txn="invite">
+    <![CDATA[
+
+      SUBSCRIBE sip:321@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=z9hG4bK-[pid]-1
+      From: sip:[service]@[local_ip]:[local_port];tag=[pid]SIPpTag00[call_number]
+      To: sip:321@[remote_ip]:[remote_port]
+      Contact: sip:[service]@[local_ip]:[local_port]
+      Call-ID: [call_id]
+      CSeq: 1 INVITE
+      Max-Forwards: 70
+      Event: presence
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+    ]]>
+  </send>
+
+  <recv response="401" auth="true" response_txn="invite"/>
+
+  <send retrans="500" start_txn="invite">
+    <![CDATA[
+
+      SUBSCRIBE sip:321@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=z9hG4bK-[pid]-2
+      From: sip:[service]@[local_ip]:[local_port];tag=[pid]SIPpTag00[call_number]
+      To: sip:321@[remote_ip]:[remote_port]
+      Contact: sip:[service]@[local_ip]:[local_port]
+      [authentication]
+      Call-ID: [call_id]
+      CSeq: 2 INVITE
+      Max-Forwards: 70
+      Event: presence
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+    ]]>
+  </send>
+
+  <recv response="403" response_txn="invite"/>
+
+  <!-- Fake a retransmission -->
+  <send retrans="500" start_txn="invite">
+    <![CDATA[
+
+      SUBSCRIBE sip:321@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=z9hG4bK-[pid]-2
+      From: sip:[service]@[local_ip]:[local_port];tag=[pid]SIPpTag00[call_number]
+      To: sip:321@[remote_ip]:[remote_port]
+      Contact: sip:[service]@[local_ip]:[local_port]
+      [authentication]
+      Call-ID: [call_id]
+      CSeq: 2 INVITE
+      Max-Forwards: 70
+      Event: presence
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+    ]]>
+  </send>
+
+  <recv response="401" response_txn="invite"/>
+
+</scenario>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<!-- Derived from scenarios originally created by Walter Doekes -->
+<scenario name="Asterisk REGISTER username disclosure">
+  <send retrans="500">
+    <![CDATA[
+
+      REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:[service]@[remote_ip]:[remote_port]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:[service]@[remote_ip]:[remote_port]>
+      Contact: <sip:[service]@[local_ip]:[local_port];transport=[transport]>
+      Expires: 15
+      Call-ID: [call_id]
+      CSeq: 1 REGISTER
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="401" auth="true"/>
+
+  <send retrans="500">
+    <![CDATA[
+
+      REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:[service]@[remote_ip]:[remote_port]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:[service]@[remote_ip]:[remote_port]>
+      Contact: <sip:[service]@[local_ip]:[local_port];transport=[transport]>
+      Expires: 15
+      [authentication]
+      Call-ID: [call_id]
+      CSeq: 2 REGISTER
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="403"/>
+
+  <!-- Fake a retransmission -->
+  <send retrans="500">
+    <![CDATA[
+
+      REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:[service]@[remote_ip]:[remote_port]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:[service]@[remote_ip]:[remote_port]>
+      Contact: <sip:[service]@[local_ip]:[local_port];transport=[transport]>
+      Expires: 15
+      [authentication]
+      Call-ID: [call_id]
+      CSeq: 2 REGISTER
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="401"/>
+</scenario><!-- vim: set ts=8 sw=2 sts=2 et ai: -->
