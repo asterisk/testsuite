@@ -45,6 +45,12 @@ global-settings:
                     typename: 'asterisk.ChannelTestCondition.ChannelTestCondition'
                 post:
                     typename: 'asterisk.ChannelTestCondition.ChannelTestCondition'
+            -
+                name: 'sip-channels'
+                pre:
+                    typename: 'asterisk.SipChannelTestCondition.SipChannelTestCondition'
+                post:
+                    typename: 'asterisk.SipChannelTestCondition.SipChannelTestCondition'
 
 # Exclude all long-running tests (greater than one minute)
 config-fast:
@@ -89,6 +95,7 @@ config-pessimistic:
             - name: 'locks'
             - name: 'file-descriptors'
             - name: 'channels'
+            - name: 'sip-channels'
 
 config-specific-version:
     properties:
