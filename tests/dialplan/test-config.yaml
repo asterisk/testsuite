@@ -5,6 +5,37 @@ testinfo:
         but is not limited to, pattern matching, Goto, GotoIf, math functions, string functions,
         looping, etc.
 
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+      -
+        config-section: 'ami-config'
+        typename: 'ami.AMIEventModule'
+
+test-config:
+  spawn-after-hangup: True
+  expected_events: 0
+  test-iterations:
+    -
+      channel: 'Local/s@DialContext'
+      context: 'test'
+      exten: 's'
+      priority: '1'
+
+ami-config:
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+          Event: 'UserEvent'
+          UserEvent: 'TestResult'
+    requirements:
+      match:
+          Result: 'Success'
+    count: '>1'
+
 properties:
     minversion: '1.8.20.0'
     dependencies:
