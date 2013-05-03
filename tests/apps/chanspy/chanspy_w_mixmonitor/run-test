@@ -68,6 +68,7 @@ class ChanSpyMixMonitorTest:
 
     def chanspyEvent(self, ami, event):
         self.numSpyEvents += 1
+        self.logLastStep('Received ChanSpyStart event for %s' % event['spyeechannel'])
         if event['spyeechannel'].count('end_a') > 0:
             reactor.callLater(1, self.aHangup)
             reactor.callLater(3, self.bCall)
@@ -77,7 +78,6 @@ class ChanSpyMixMonitorTest:
         if event['spyeechannel'].count('end_c') > 0:
             reactor.callLater(2, self.cHangup)
             reactor.callLater(3, self.hangupChanSpy)
-        print event
 
     def amiOnConnect(self, ami):
         self.logLastStep("Connected to the AMI")
