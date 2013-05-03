@@ -76,11 +76,11 @@ class ChanSpyBarge:
         df.addCallback(__finish_stop)
 
     def chanspyEvent(self, ami, event):
+        self.logLastStep('Received ChanSpyStart event')
         self.numSpyEvents += 1
         if event['spyeechannel'].count('end_a') > 0:
             reactor.callLater(3, self.aHangup)
             reactor.callLater(4, self.bHangup)
-        print event
 
     def amiOnConnect(self, ami):
         self.logLastStep("Connected to the AMI")
