@@ -67,7 +67,8 @@ class SimpleTestCase(TestCase):
     def ami_connect(self, ami):
         ''' AMI connect handler '''
 
-        ami.registerEvent('UserEvent', self.__event_cb)
+        if self.expected_events != 0:
+            ami.registerEvent('UserEvent', self.__event_cb)
         ami.registerEvent('Hangup', self.__hangup_cb)
         ami.registerEvent('VarSet', self.__varset_cb)
 
