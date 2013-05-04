@@ -3,3 +3,4 @@ tests:
     - test: 'func_jitterbuffer'
     - test: 'func_srv'
     - test: 'func_presencestate'
+    - test: 'func_global'

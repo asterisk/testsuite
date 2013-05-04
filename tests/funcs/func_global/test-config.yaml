@@ -1,0 +1,58 @@
+testinfo:
+    summary:     'Tests for GLOBAL and SHARED functions'
+    description: |
+        'This test exercises the functions contained in the func_global module,
+        including the GLOBAL and SHARED functions. This includes setting and
+        retrieving global variables as well as variables shared between
+        channels.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: ami-object-config
+            typename: 'ami.AMIEventModule'
+
+
+test-object-config:
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/test@default'
+            application: 'Echo'
+
+ami-object-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'TestResult'
+        requirements:
+            match:
+                Status: 'pass'
+        count: '1'
+    -
+        type: 'orderedheadermatch'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: 'SHARED(foo)'
+        requirements:
+            -
+                match:
+                    Value: 'bar'
+            -
+                match:
+                    Value: 'baz'
+
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'func_global'
