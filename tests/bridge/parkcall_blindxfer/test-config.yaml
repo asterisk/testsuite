@@ -1,0 +1,199 @@
+testinfo:
+    summary: 'Test the blind transfer feature on a bridge to park channels'
+    description: |
+        'Set up a bridge between two endpoints and check that the DTMF blind
+        transfer feature is detected properly. This test checks that the
+        feature is detected with normal BridgeTestCase feature detection.
+        Additionally this test will park a channel in the default, a static,
+        and a dynamically created parking lot to ensure successfull parking. It
+        also ensures that when the static and dynamically created parking lots
+        are full, further parking attempts fail.'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: bridge-config
+        typename: 'BridgeTestCase.BridgeTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+bridge-config:
+    test-runs:
+        # Alice blind xfers Bob to the empty default lot.
+        -
+            originate_channel: 'SIP/bob@uut'
+            features:
+                -
+                    who: 'alice'
+                    what: 'blindxfer'
+                    exten: '700'
+                    success: 'true'
+
+        # Alice blind xfers Bob to an empty static custom lot.
+        -
+            originate_channel: 'SIP/bob-static@uut'
+            features:
+                -
+                    who: 'alice'
+                    what: 'blindxfer'
+                    exten: '800'
+                    success: 'true'
+
+        # Alice blind xfers Bob to a full static custom lot. The dialplan will
+        # create a local channel and park it to prevent bob's channel from being
+        # parked.
+        -
+            originate_channel: 'SIP/bob-static-full@uut'
+            features:
+                -
+                    who: 'alice'
+                    what: 'blindxfer'
+                    exten: '800'
+                    success: 'true'
+
+        # Alice blind xfers Bob to an empty dynamically created lot.
+        -
+            originate_channel: 'SIP/bob-dynamic@uut'
+            features:
+                -
+                    who: 'alice'
+                    what: 'blindxfer'
+                    exten: '900'
+                    success: 'true'
+
+        # Alice blind xfers Bob to a full dynamically created lot. The dialplan
+        # will create a local channel and park it to prevent bob's channel from
+        # being parked.
+        -
+            originate_channel: 'SIP/bob-dynamic-full@uut'
+            features:
+                -
+                    who: 'alice'
+                    what: 'blindxfer'
+                    exten: '900'
+                    success: 'true'
+
+ami-config:
+    # Ensure all of Alice's channels are hung up.
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'Hangup'
+                Channel: 'SIP/alice-0000000(0|2|4|6|8)'
+        requirements:
+            match:
+                Cause: '16'
+        count: '5'
+
+    # Ensure Alice successfully parked Bob to the empty default lot. Then hang
+    # up Bob's channel.
+    -
+        type: 'callback'
+        id: '0'
+        start: 'fail'
+        conditions:
+            match:
+                Event: 'ParkedCall'
+                Channel: 'SIP/bob-00000001'
+                Exten: '701'
+                Parkinglot: 'default'
+                From: 'SIP/alice-00000000'
+        callbackModule: 'Hangup'
+        callbackMethod: 'hangup_chan'
+        count: '1'
+
+    # Ensure Alice successfully parked Bob to the empty static lot. Then
+    # hangup Bob's channel.
+    -
+        type: 'callback'
+        id: '0'
+        start: 'fail'
+        conditions:
+            match:
+                Event: 'ParkedCall'
+                Channel: 'SIP/bob-00000003'
+                Exten: '801'
+                Parkinglot: 'parkinglot_static'
+                From: 'SIP/alice-00000002'
+        callbackModule: 'Hangup'
+        callbackMethod: 'hangup_chan'
+        count: '1'
+
+    # Ensure the Local channel is parked thus filling up all static lot slots.
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'ParkedCall'
+                Exten: '801'
+                Parkinglot: 'parkinglot_static'
+                From: 'Local/fill-park@default-00000000;2'
+        requirements:
+            match:
+                Channel: 'Local/fill-park@default-00000000;2'
+        count: '1'
+
+    # Ensure that the pbx-parkingfailed sound is played to alice-0000000(4|8)
+    # which indicates that the parking of the corresponding bob channels failed
+    # as we expect since the static lot is full.
+    -
+        type: 'callback'
+        id: '0'
+        start: 'fail'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                Type: 'StateChange'
+                State: 'PLAYBACK'
+                Message: 'pbx-parkingfailed'
+                Channel: 'SIP/alice-0000000(4|8)'
+        callbackModule: 'Hangup'
+        callbackMethod: 'hangup_chan'
+        count: '2'
+
+    # Ensure Alice successfully parked Bob to the empty dynamically created
+    # lot. Then hangup Bob's channel.
+    -
+        type: 'callback'
+        id: '0'
+        start: 'fail'
+        conditions:
+            match:
+                Event: 'ParkedCall'
+                Channel: 'SIP/bob-00000007'
+                Exten: '901'
+                Parkinglot: 'parkinglot_dynamic'
+                From: 'SIP/alice-00000006'
+        callbackModule: 'Hangup'
+        callbackMethod: 'hangup_chan'
+        count: '1'
+
+    # Ensure the Local channel is parked thus filling up all dynamicall created
+    # lot slots.
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'ParkedCall'
+                Exten: '901'
+                Parkinglot: 'parkinglot_dynamic'
+                From: 'Local/fill-park@default-00000001;2'
+        requirements:
+            match:
+                Channel: 'Local/fill-park@default-00000001;2'
+        count: '1'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - bridge
