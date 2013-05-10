@@ -10,7 +10,7 @@ diff -ruN a/config b/config
 +CFLAGS= $(WARN) $(LUA_CFLAGS)
  CC= gcc
  
- # $Id$
+ # $Id: config,v 1.21 2007/10/27 22:42:32 carregal Exp $
 diff -ruN a/src/lfs.c b/src/lfs.c
 --- a/src/lfs.c	2009-02-03 16:05:48.000000000 -0600
 +++ b/src/lfs.c	2010-06-22 15:27:15.000000000 -0500
