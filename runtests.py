@@ -59,6 +59,7 @@ class TestRun:
             msg = "Running %s ..." % cmd
             print msg
             self.stdout += msg + "\n"
+            cmd.append(str(self.ast_version).rstrip())
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
             self.pid = p.pid

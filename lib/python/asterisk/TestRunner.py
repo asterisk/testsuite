@@ -81,13 +81,14 @@ class TestModuleLoader(object):
 
 sys.path_hooks.append(TestModuleFinder)
 
-def load_test_modules(test_config, test_object, test_path):
+def load_test_modules(test_config, test_object, test_path, ast_version):
     ''' Load optional modules for a test
 
     Parameters:
     test_config The test configuration object
     test_object The test object that the modules will attach to
     test_path The path to the test
+    ast_version A string containing the Asterisk version
     '''
 
     if not test_object:
@@ -100,18 +101,44 @@ def load_test_modules(test_config, test_object, test_path):
         return
 
     for module_spec in test_config['test-modules']['modules']:
-        # If there's a specific portion of the config for this module, use it
-        if ('config-section' in module_spec
-            and module_spec['config-section'] in test_config):
-            module_config = test_config[module_spec['config-section']]
+        if check_module_version(module_spec, ast_version):
+            # If there's a specific portion of the config for this module, use it
+            if ('config-section' in module_spec
+                and module_spec['config-section'] in test_config):
+                module_config = test_config[module_spec['config-section']]
+            else:
+                module_config = test_config
+
+            module_type = load_and_parse_module(module_spec['typename'])
+            # Modules take in two parameters: the module configuration object,
+            # and the test object that they attach to
+            module_type(module_config, test_object)
         else:
-            module_config = test_config
+            LOGGER.debug("Skipping the loading of test module %s due to it's " \
+                "minversion and/or maxversion not being met." %
+                module_spec['typename'])
 
-        module_type = load_and_parse_module(module_spec['typename'])
-        # Modules take in two parameters: the module configuration object,
-        # and the test object that they attach to
-        module_type(module_config, test_object)
+def check_module_version(module_spec, ast_version):
+    ''' Check the module configuration for minversion and maxversion and check
+    if the Asterisk version meets the version(s) if found
 
+    Parameters:
+    module_spec A dictionary of a pluggable module configuration
+    ast_version A string containing the Asterisk version
+
+    Returns:
+    False if minversion or maxversion are found and do not meet the Asterisk
+    version, True otherwise
+    '''
+
+    modminversion = module_spec.get('minversion')
+    modmaxversion = module_spec.get('maxversion')
+    if modminversion is not None and ast_version < modminversion:
+        return False
+    if modmaxversion is not None and ast_version > modmaxversion:
+        return False
+
+    return True
 
 def load_and_parse_module(type_name):
     ''' Take a qualified module/object name, load the module, and return
@@ -265,6 +292,11 @@ def main(argv = None):
         return 1
     test_directory = args[1]
 
+    if (len(args) < 3):
+        LOGGER.error("TestRunner requires the Asterisk version to execute")
+        return 1
+    ast_version = args[2]
+
     LOGGER.info("Starting test run for %s" % test_directory)
     test_config = load_test_config(test_directory)
     if test_config is None:
@@ -277,7 +309,7 @@ def main(argv = None):
         return 1
 
     # Load other modules that may be specified
-    load_test_modules(test_config, test_object, test_directory)
+    load_test_modules(test_config, test_object, test_directory, ast_version)
 
     # Kick off the twisted reactor
     reactor.run()
