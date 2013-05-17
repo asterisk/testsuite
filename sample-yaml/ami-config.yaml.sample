@@ -87,6 +87,143 @@ ami-config:
         # above.
         count: '2'
     -
+        # The "cel" type allows for checking CEL events via AMI.
+        # This is based on the "orderedheadermatch" type but allows for partial
+        # ordering of the events as they are not always generated in the order
+        # expected. A condition match of "Event: 'CEL'" is always used for this
+        # type and can not be overridden. Like the "orderedheadermatch" type,
+        # when the condition match is made, the first requirement in the list
+        # is expected. A requirement consists of 'match' criteria and
+        # optionally a 'partialorder'. Here is a break down:
+        #
+        # * If the event does successfully meet the 'match' critera of the
+        #   requirement expected and...
+        #    * a 'partialorder' is not specified, then this requirement
+        #      passes. Therefore the second requirement in the
+        #      requirements list is then expected.
+        #    * a 'partialorder' is specified and...
+        #       * the criteria is also met, then the requirement
+        #         passes. Therefore the second requirement in the
+        #         requirements list is then expected.
+        #       * the criteria is not met, the test is failed.
+        # * If it does not meet the 'match' criteria of the requirement
+        #   expected and...
+        #    * a partial order is not specified, the test is failed.
+        #    * a partial order is specified, it will remember the
+        #      requirement it is on and check if the 'match' criteria of
+        #      the next requirement in the list is met. It will continue
+        #      with each requirement in the order listed (where all the
+        #      criteria hasn't previously been met) until the 'match'
+        #      criteria is met or the end of the requirements list has
+        #      been reached at which point the test is failed.
+        #        * If the 'match' critera is successfully met and a...
+        #           * partial order is not specified, the test is
+        #             failed as the event arrived to early.
+        #           * partial order is specified and it's criteria
+        #             is not met, the test is failed.
+        #           * partial order is specified and it's criteria
+        #             is met, it is considered a successful match. It will
+        #             then move on and expect the next requirement in the
+        #             list from the point of the remembered requirement.
+        #
+        #  A simple example is shown below.
+
+        type: 'cel'
+
+        # Conditions are handled exactly the same as for "headermatch" types.
+        conditions:
+            match:
+                Channel: 'SIP/alice-.*|SIP/bob-.*'
+
+        # If an event is received with an EventName that is not in the list of
+        # requirements, it is ignored. A unique 'id' string must be set for
+        # each requirement. If a partial order is used then it would reference
+        # the id's of other requirements.
+        requirements:
+            -
+                # The 'match' criteria of this requirement must be met
+                # since a partial order is not specified. If it's not
+                # met then the test fails.
+                id: 'zero'
+                match:
+                    EventName: 'CHAN_START'
+                    Channel: 'SIP/alice-.*'
+            -
+                # This requirement is then expected and the 'match' criteria
+                # must be met as a partial order isn't specified here either.
+                # If it's not met then the test fails.
+                id: 'one'
+                match:
+                    EventName: 'CHAN_START'
+                    Channel: 'SIP/bob-.*'
+            -
+                # This requirement is then expected. If the 'match' criteria is
+                # not met it will check if the 'match' critia of the next
+                # requirement in the list is met since a 'partialorder' is
+                # specified. If the 'match' criteria is met but the
+                # 'partialorder' criteria is not met, the test is failed. If
+                # both the 'match' and 'partialorder' criteria is met, the next
+                # requirement in the list is expected.
+                id: 'two'
+                # Here we allow for a partial match. As an example, it may
+                # not be known if the HANGUP CEL event for SIP/alice-.*
+                # will be received before or after the HANGUP CEL event for
+                # SIP/bob-.*. If all that is cared about is that it's been
+                # received for both channels then a partial order should be
+                # specified. If the 'match' criteria is met then the
+                # 'after' and 'before' partial order criteria will be
+                # checked. If both partialorder criteria is met, then this
+                # requirement passes and the next requirement in the list
+                # is expected. If any of the partialorder criteria fails,
+                # then the test fails. If the 'match' criteria is not met
+                # it will check if the 'match' critia of the next
+                # requirement in the list is met since a 'partialorder' is
+                # specified.
+                partialorder:
+                    # Here we specify that this requirement must arrive
+                    # after ID 'zero' and before ID 'four'. If the
+                    # EventName is 'HANGUP' and the Channel is bob's
+                    # instead of alice's, the next requirement is checked
+                    # and all the criteria will be met there in this case.
+                    # This requirement will still be expected upon the next
+                    # CEL event. So if the HANGUP arrives for alice's
+                    # channel it will meet all the criteria for this
+                    # requirement.
+                    after: 'zero'
+                    before: 'four'
+                match:
+                    EventName: 'HANGUP'
+                    Channel: 'SIP/alice-.*'
+            -
+                # The same as the previous requirement but with a slightly
+                # different partialorder.
+                id: 'three'
+                partialorder:
+                    # Here we specify that this requirement must arrive
+                    # after ID 'one' and before ID 'four'. The criteria for
+                    # bob's channel will be met here.
+                    after: 'one'
+                    before: 'four'
+                match:
+                    EventName: 'HANGUP'
+                    Channel: 'SIP/bob-.*'
+            -
+                # This is the last requirement that must be met for the test to
+                # be able to pass.
+                id: 'four'
+                partialorder:
+                    # We specify that this requirement can only be met if
+                    # the requirement for ID 'three' has already been met
+                    # (of course the 'match' criteria for this requirement
+                    # must also have been met).
+                    after: 'three'
+                match:
+                    # We specify that either alice's or bob's channel can
+                    # match here as it will depend on the order in which
+                    # they were hung up.
+                    EventName: 'LINKEDID_END'
+                    Channel: 'SIP/alice-.*|SIP/bob-.*'
+    -
         # The "callback" type indicates that when event conditions are fulfilled
         # A callback should be called into. This is useful if pass/fail conditions
         # depend on more than just having specific headers match what is expected.
