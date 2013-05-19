@@ -42,11 +42,11 @@ ami-config:
         conditions:
             match:
                 Event: 'DialBegin'
+                ChannelDest: 'SIP/bob-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
                 Uniqueid: '.*'
-                ChannelDest: 'SIP/bob-.*'
                 UniqueidDest: '.*'
                 CallerIDNum: '<unknown>'
                 CallerIDName: '<unknown>'
@@ -59,11 +59,11 @@ ami-config:
         conditions:
             match:
                 Event: 'DialEnd'
+                ChannelDest: 'SIP/bob-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
                 Uniqueid: '.*'
-                ChannelDest: 'SIP/bob-.*'
                 UniqueidDest: '.*'
                 CallerIDNum: '<unknown>'
                 CallerIDName: '<unknown>'
