@@ -18,8 +18,13 @@ test-modules:
         typename: 'BridgeTestCase.BridgeTestCase'
     modules:
         -
-            config-section: 'ami-config'
+            config-section: 'ami-config-11'
             typename: 'ami.AMIEventModule'
+            maxversion: '12'
+        -
+            config-section: 'ami-config-12'
+            typename: 'ami.AMIEventModule'
+            minversion: '12'
         -
             config-section: 'cel-config'
             typename: 'cel.CELModule'
@@ -66,7 +71,7 @@ bridge-config:
                 success: 'true'
                 exten: '77'
 
-ami-config:
+ami-config-11:
     -
         type: 'headermatch'
         conditions:
@@ -82,6 +87,23 @@ ami-config:
                 Digit: '7'
                 Direction: 'Received'
                 End: 'Yes'
+        count: '8'
+
+ami-config-12:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: 'BLINDTRANSFER'
+        count: '0'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DTMFEnd'
+                Digit: '7'
+                Direction: 'Received'
         count: '8'
 
 cel-config:
