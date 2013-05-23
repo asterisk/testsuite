@@ -12,10 +12,12 @@ test-modules:
         -
             config-section: 'cdr-config'
             typename: 'cdr.CDRModule'
-    modules:
         -
             config-section: 'cel-config'
             typename: 'cel.CELModule'
+        -
+            typename: 'ami.AMIEventModule'
+            config-section: ami-uut
 
 bridge-config:
   test-runs:
@@ -25,6 +27,115 @@ bridge-config:
     -
         originate_channel: 'SIP/test_call@uut'
         hangup: 'bob'
+
+ami-uut:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'BridgeCreate'
+        requirements:
+            match:
+                BridgeType: 'simple_bridge'
+        count: '2'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'BridgeEnter'
+                Channel: 'SIP/alice-.*'
+        requirements:
+            match:
+                BridgeUniqueid: '.*-.*-.*'
+                BridgeType: 'simple_bridge'
+                ChannelState: '6'
+                ChannelStateDesc: 'Up'
+                CallerIDNum: '1234'
+                CallerIDName: 'Alice'
+                ConnectedLineNum: '4321'
+                ConnectedLineName: 'Bob'
+                Context: 'default'
+                Exten: 'test_call'
+                Priority: '1'
+                Uniqueid: '.*'
+        count: '2'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'BridgeEnter'
+                Channel: 'SIP/bob-.*'
+        requirements:
+            match:
+                BridgeUniqueid: '.*-.*-.*'
+                BridgeType: 'simple_bridge'
+                ChannelState: '6'
+                ChannelStateDesc: 'Up'
+                ConnectedLineNum: '1234'
+                ConnectedLineName: 'Alice'
+                CallerIDNum: '4321'
+                CallerIDName: 'Bob'
+                Context: 'default'
+                Priority: '1'
+                Uniqueid: '.*'
+        count: '2'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'BridgeLeave'
+                Channel: 'SIP/alice-.*'
+        requirements:
+            match:
+                BridgeUniqueid: '.*-.*-.*'
+                BridgeType: 'simple_bridge'
+                ChannelState: '6'
+                ChannelStateDesc: 'Up'
+                CallerIDNum: '1234'
+                CallerIDName: 'Alice'
+                ConnectedLineNum: '4321'
+                ConnectedLineName: 'Bob'
+                Context: 'default'
+                Exten: 'test_call'
+                Priority: '1'
+                Uniqueid: '.*'
+        count: '2'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'BridgeLeave'
+                Channel: 'SIP/bob-.*'
+        requirements:
+            match:
+                BridgeUniqueid: '.*-.*-.*'
+                BridgeType: 'simple_bridge'
+                ChannelState: '6'
+                ChannelStateDesc: 'Up'
+                ConnectedLineNum: '1234'
+                ConnectedLineName: 'Alice'
+                CallerIDNum: '4321'
+                CallerIDName: 'Bob'
+                Context: 'default'
+                Priority: '1'
+                Uniqueid: '.*'
+        count: '2'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'BridgeDestroy'
+        requirements:
+            match:
+                BridgeUniqueid: '.*-.*-.*'
+                BridgeType: 'simple_bridge'
+        count: '2'
 
 cdr-config:
     -

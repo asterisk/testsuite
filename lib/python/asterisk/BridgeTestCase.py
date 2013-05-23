@@ -106,6 +106,9 @@ class BridgeTestCase(TestCase):
         if (ami.id == 0):
             self.ami_uut = ami
             self.ami_uut.registerEvent('Bridge', self.uut_bridge_callback)
+            self.ami_uut.registerEvent('BridgeCreate', self.uut_bridge_create_callback)
+            self.ami_uut.registerEvent('BridgeEnter', self.uut_bridge_enter_callback)
+            self.ami_uut.registerEvent('BridgeLeave', self.uut_bridge_leave_callback)
             self.ami_uut.registerEvent('TestEvent', self.test_callback)
             self.ami_uut.registerEvent('Hangup', self.hangup_callback)
             LOGGER.info("UUT AMI connected")
@@ -148,6 +151,7 @@ class BridgeTestCase(TestCase):
         self.bob_channel = None
         self.uut_alice_channel = None
         self.uut_bob_channel = None
+        self.uut_bridge_id = None
         self.alice_hungup = False
         self.bob_hungup = False
         self.uut_alice_hungup = False
@@ -155,6 +159,7 @@ class BridgeTestCase(TestCase):
         self.current_feature = 0
         self.infeatures = False
         self.issue_hangups_on_bridged = False
+        self.bridged = False
 
         # Step 1: Initiate a call from Alice to Bob
         LOGGER.info("Originating call")
@@ -210,6 +215,32 @@ class BridgeTestCase(TestCase):
             self.current_run += 1
             self.run_tests()
 
+    # Callbacks for new bridging architecture
+    def uut_bridge_create_callback(self, ami, event):
+        self.uut_bridge_id = event.get('bridgeuniqueid')
+
+    def uut_bridge_enter_callback(self, ami, event):
+        if self.uut_bridge_id != event.get('bridgeuniqueid'):
+            return
+
+        if self.uut_alice_channel is None:
+            self.uut_alice_channel = event.get('channel')
+            LOGGER.info('UUT Alice Channel: %s' % self.uut_alice_channel)
+        elif self.uut_bob_channel is None:
+            self.uut_bob_channel = event.get('channel')
+            LOGGER.info('UUT Bob Channel: %s' % self.uut_bob_channel)
+            LOGGER.debug("Bridge is up between %s and %s"
+                         % (self.uut_alice_channel, self.uut_bob_channel))
+            LOGGER.debug("Type of bridge is %s" % event.get('bridgetype'))
+            self.bridged = True
+            if self.issue_hangups_on_bridged:
+                self.send_hangup()
+
+    def uut_bridge_leave_callback(self, ami, event):
+        LOGGER.debug("Bridge is down")
+        self.bridged = False
+
+    # Callback for old bridging architecture
     def uut_bridge_callback(self, ami, event):
         if self.uut_alice_channel is None:
             self.uut_alice_channel = event.get('channel1')
