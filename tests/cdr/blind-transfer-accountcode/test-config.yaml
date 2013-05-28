@@ -1,4 +1,5 @@
 testinfo:
+# 'See ASTERISK-21381 - this needs to be executed on 12'
     summary:     'Test account code propagation for SIP blind transfers.'
     description: |
         "This test ensures that when a channel with an account code, dials a
@@ -11,6 +12,7 @@ testinfo:
 
 properties:
     minversion: '1.8.0.0'
+    maxversion: '11.99'
     dependencies:
         - app : 'bash'
         - app : 'asttest'
