@@ -45,7 +45,7 @@ ami-config:
         conditions:
             match:
                 Event: 'DialBegin'
-                ChannelDest: 'SIP/charlie-.*'
+                DestChannel: 'SIP/charlie-.*'
         callbackModule: 'hangup'
         callbackMethod: 'send_hangup'
     -
@@ -53,12 +53,12 @@ ami-config:
         conditions:
             match:
                 Event: 'DialEnd'
-                ChannelDest: 'SIP/charlie-.*'
+                DestChannel: 'SIP/charlie-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
                 Uniqueid: '.*'
-                UniqueidDest: '.*'
+                DestUniqueid: '.*'
                 CallerIDNum: '<unknown>'
                 CallerIDName: '<unknown>'
                 ConnectedLineNum: '<unknown>'

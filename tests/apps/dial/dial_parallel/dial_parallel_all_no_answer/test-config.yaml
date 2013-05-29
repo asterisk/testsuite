@@ -54,7 +54,7 @@ ami-config:
         conditions:
             match:
                 Event: 'DialBegin'
-                ChannelDest: 'SIP/bob-.*'
+                DestChannel: 'SIP/bob-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
@@ -69,7 +69,7 @@ ami-config:
         conditions:
             match:
                 Event: 'DialBegin'
-                ChannelDest: 'SIP/charlie-.*'
+                DestChannel: 'SIP/charlie-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
@@ -84,7 +84,7 @@ ami-config:
         conditions:
             match:
                 Event: 'DialEnd'
-                ChannelDest: 'SIP/bob-.*'
+                DestChannel: 'SIP/bob-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
@@ -99,7 +99,7 @@ ami-config:
         conditions:
             match:
                 Event: 'DialEnd'
-                ChannelDest: 'SIP/charlie-.*'
+                DestChannel: 'SIP/charlie-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'

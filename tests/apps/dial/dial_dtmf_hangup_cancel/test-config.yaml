@@ -52,12 +52,12 @@ ami-config:
         conditions:
             match:
                 Event: 'DialEnd'
+                DestChannel: 'SIP/bob-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
                 Uniqueid: '.*'
-                ChannelDest: 'SIP/bob-.*'
-                UniqueidDest: '.*'
+                DestUniqueid: '.*'
                 CallerIDNum: '<unknown>'
                 CallerIDName: '<unknown>'
                 ConnectedLineNum: '<unknown>'
