@@ -89,11 +89,13 @@ class TestCase(object):
         self.testStateController = None
         self.pcap = None
         self.pcapfilename = None
+        self.create_pcap = False
         self._stopping = False
         self.testlogdir = os.path.join(Asterisk.test_suite_root, self.base, str(os.getpid()))
         self.ast_version = AsteriskVersion()
         self._stop_callbacks = []
         self._ami_callbacks = []
+        self._pcap_callbacks = []
 
         """ Pull additional configuration from YAML config if possible """
         if test_config and 'reactor-timeout' in test_config:
@@ -113,7 +115,7 @@ class TestCase(object):
             print "WARNING: no logging.conf file found; using default configuration"
             logging.basicConfig(level=self.defaultLogLevel)
 
-        if PCAP_AVAILABLE:
+        if PCAP_AVAILABLE and self.create_pcap:
             self.pcapfilename = os.path.join(self.testlogdir, "dumpfile.pcap")
             self.pcap = self.create_pcap_listener(dumpfile=self.pcapfilename)
 
@@ -444,6 +446,8 @@ class TestCase(object):
 
     def __pcap_callback(self, packet):
         self.pcap_callback(packet)
+        for callback in self._pcap_callbacks:
+            callback(packet)
 
     def handleOriginateFailure(self, reason):
         """
@@ -488,6 +492,16 @@ class TestCase(object):
             self.passed = False
 
         return self.passed
+
+    def register_pcap_observer(self, callback):
+        ''' Register an observer that will be called when a packet is received
+        from a created pcap listener
+
+        Parameters:
+        callback The callback to receive the packet. The callback function
+        should take in a single parameter, which will be the packet received
+        '''
+        self._pcap_callbacks.append(callback)
 
     def register_stop_observer(self, callback):
         ''' Register an observer that will be called when Asterisk is stopped
