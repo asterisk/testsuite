@@ -19,8 +19,6 @@ class Originator(object):
     def __init__(self, module_config, test_object):
         '''Initialize config and register test_object callbacks.'''
         self.ami = None
-        test_object.register_ami_observer(self.ami_connect)
-        test_object.register_scenario_started_observer(self.scenario_started)
         self.test_object = test_object
         self.current_destination = 0
         self.ami_callback = None
@@ -44,8 +42,11 @@ class Originator(object):
             if k in self.config:
                 self.config[k] = module_config[k]
 
-        # create event callback if necessary
-        if self.config['trigger'] == 'event':
+        if self.config['trigger'] == 'ami_connect':
+            test_object.register_ami_observer(self.ami_connect)
+        elif self.config['trigger'] == 'scenario_start':
+            test_object.register_scenario_started_observer(self.scenario_started)
+        elif self.config['trigger'] == 'event':
             if not self.config['event']:
                 LOGGER.error("Event specifier for trigger type 'event' is missing")
                 raise Exception
@@ -62,8 +63,7 @@ class Originator(object):
         LOGGER.info("AMI %s connected" % (str(ami.id)))
         if str(ami.id) == self.config['id']:
             self.ami = ami
-            if self.config['trigger'] == 'ami_connect':
-                self.originate_call()
+            self.originate_call()
         return
 
     def failure(self, result):
@@ -94,9 +94,7 @@ class Originator(object):
     def scenario_started(self, result):
         '''Handle origination on scenario start if configured to do so.'''
         LOGGER.info("Scenario started")
-
-        if self.config['trigger'] == 'scenario_start':
-            self.originate_call()
+        self.originate_call()
         return result
 
 class AMIPrivateCallbackInstance(AMIEventInstance):
