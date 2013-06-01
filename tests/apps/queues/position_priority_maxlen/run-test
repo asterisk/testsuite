@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -e
 
-asttest -a / -s tests/apps/queues/position_priority_maxlen
+asttest -a /$AST_TEST_ROOT -s tests/apps/queues/position_priority_maxlen

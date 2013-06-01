@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -e
 
-asttest -a / -s tests/queues/wrapup_time
+asttest -a /$AST_TEST_ROOT -s tests/queues/wrapup_time

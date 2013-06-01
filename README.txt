@@ -202,6 +202,28 @@ Run the tests:
 For more syntax information:
     $ ./runtests.py --help
 
+
+
+As an alternative to the above, you can use run-local:
+
+Get the Asterisk source tree you want to test:
+    $ svn co http://svn.digium.com/svn/asterisk/trunk asterisk-trunk
+    $ cd asterisk-trunk
+
+Optionally configure and make it:
+    $ ./configure && make
+
+Check out the test suite inside of the Asterisk source tree.  In this case, we
+will have the testsuite directory inside of the asterisk-trunk directory.
+    $ svn co http://svn.digium.com/svn/testsuite/asterisk/trunk testsuite
+    $ cd testsuite
+
+Setup the test environment:
+    $ ./run-local setup
+
+Run tests:
+    $ ./run-local run # Add here any of runtests.py's parameters.
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 

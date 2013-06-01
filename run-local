@@ -1,0 +1,73 @@
+#!/bin/sh
+
+# run_local: run the test suite without changing the system
+
+set -e
+HERE="`(cd "\`dirname "$0"\`" >/dev/null; pwd; cd - >/dev/null)`"
+cd "$HERE"
+
+usage() {
+	echo >&2 "$0: Run the test suite locally:"
+	echo >&2 "$0 setup         # Initial setup"
+	echo >&2 "$0 run <params>  # A wrapper for ./runtests.py"
+}
+
+setup() {
+	(
+		cd asttest
+		make
+		make install DESTDIR="$HERE/root"
+	)
+	(
+		cd ..
+		# The user may have already run ./configure and make
+		if [ ! -f config.status ]; then
+			./configure
+		fi
+		make
+		make install samples DESTDIR="$HERE/astroot"
+	)
+}
+
+mktemp_symlink() {
+	template="$1"
+	target="$2"
+	for i in `seq 8`; do
+		link_name=`mktemp -u "$template"`
+		if ln -s "$HERE/astroot" "$link_name"; then
+			echo "$link_name"
+			return 0
+		fi
+	done
+
+	# We should get here. Normally symlinking should work at first shot.
+	# If it fails even once, it's pretty bad luck. Twice or more: a bug?
+	echo >&2 "$0: Failed generating temporary link. Aborting"
+	return 1
+}
+
+run() {
+	# Explicitly under /tmp as it has to be a short enough path:
+	# a unix socket name (asterisk.ctl) has to be no longer than
+	# UNIX_PATH_MAX (108) characters:
+	export AST_TEST_ROOT=`mktemp_symlink /tmp/ast_test_XXXXXX $HERE/astroot`
+	export PATH="$HERE/asttest/root/usr/local/bin:$HERE/astroot/usr/sbin:$PATH"
+        # Preprend ':' if LD_LIBRARY_PATH is not empty:
+	LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+	export LD_LIBRARY_PATH="$HERE/astroot/usr/lib${LD_LIBRARY_PATH}"
+	set +e
+	./runtests.py "$@"
+	status=$?
+	rm "$AST_TEST_ROOT"
+	set -e
+	return $status
+}
+
+cmd="$1"
+
+case "$cmd" in
+setup | run)
+	shift
+	"$cmd" "$@";;
+*) usage; exit 1;;
+esac

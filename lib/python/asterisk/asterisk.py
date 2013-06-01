@@ -76,7 +76,7 @@ class AsteriskCliCommand():
             self.__deferred.errback(self)
 
         self.__deferred = defer.Deferred()
-        df = utils.getProcessOutputAndValue(self.__cmd[0], self.__cmd)
+        df = utils.getProcessOutputAndValue(self.__cmd[0], self.__cmd, env=os.environ)
         df.addCallbacks(__cli_output_callback, __cli_error_callback)
 
         return self.__deferred
@@ -162,11 +162,35 @@ class Asterisk:
     asterisk.conf.
     """
 
-    """ The base location of the temporary files created by the testsuite """
-    test_suite_root = "/tmp/asterisk-testsuite"
+    """ If AST_TEST_ROOT is unset (the default):
 
-    """ The default etc directory for Asterisk """
-    asterisk_etc_directory = "/etc/asterisk"
+        BINARY = /usr/sbin/asterisk (or found in PATH)
+        SOURCE_ETC_DIR = /etc/asterisk
+        WORK_DIR = /tmp/asterisk-testsuite
+
+    If it is set:
+
+        BINARY = AST_TEST_ROOT/usr/sbin/asterisk
+        SOURCE_ETC_DIR = AST_TEST_ROOT/etc/asterisk
+        WORK_DIR = AST_TEST_ROOT/tmp
+
+    This allows you to run tests in a separate environment and without root
+    powers.
+
+    Note that AST_TEST_ROOT has to be reasonably short (symlinked in /tmp?) so
+    we're not running into the asterisk.ctl AF_UNIX limit.
+    """
+    localtest_root = os.getenv("AST_TEST_ROOT")
+    if localtest_root:
+        # Base location of the temporary files created by the testsuite
+        test_suite_root = os.path.join(localtest_root, "tmp")
+        # The default etc directory for Asterisk
+        default_etc_directory = os.path.join(localtest_root, "etc/asterisk")
+    else:
+        # Base location of the temporary files created by the testsuite
+        test_suite_root = "/tmp/asterisk-testsuite"
+        # The default etc directory for Asterisk
+        default_etc_directory = "/etc/asterisk"
 
     def __init__(self, base=None, ast_conf_options=None, host="127.0.0.1"):
         """Construct an Asterisk instance.
@@ -184,8 +208,10 @@ class Asterisk:
         self.base = Asterisk.test_suite_root
         if base is not None:
             self.base = "%s/%s" % (self.base, base)
-        self.astetcdir = Asterisk.asterisk_etc_directory
-        self.ast_binary = TestSuiteUtils.which("asterisk") or "/usr/sbin/asterisk"
+        if self.localtest_root:
+            self.ast_binary = self.localtest_root + "/usr/sbin/asterisk"
+        else:
+            self.ast_binary = TestSuiteUtils.which("asterisk") or "/usr/sbin/asterisk"
         self.host = host
 
         self.__ast_conf_options = ast_conf_options
@@ -195,7 +221,7 @@ class Asterisk:
 
         """ Find the system installed asterisk.conf """
         ast_confs = [
-            "/etc/asterisk/asterisk.conf",
+            os.path.join(self.default_etc_directory, "asterisk.conf"),
             "/usr/local/etc/asterisk/asterisk.conf",
         ]
         self.__ast_conf = None
@@ -238,7 +264,7 @@ class Asterisk:
             self.processProtocol = AsteriskProtocol(self.host, self.__stop_deferred)
             self.process = reactor.spawnProcess(self.processProtocol,
                                                 self.cmd[0],
-                                                self.cmd)
+                                                self.cmd, env=os.environ)
             # Begin the wait fully booted cycle
             self.__start_asterisk_time = time.time()
             reactor.callLater(0, __execute_wait_fully_booted)
@@ -700,19 +726,54 @@ class Asterisk:
             return
         cache.add(ast_dir_path)
 
-        for dirname, dirnames, filenames in os.walk(ast_dir_path):
+        # If we're running with a separate localroot, the paths in
+        # AST_TEST_ROOT/etc/asterisk/asterisk.conf are still short; e.g.
+        # /etc/asterisk. We suffix AST_TEST_ROOT here to get the real source
+        # dir.
+        if self.localtest_root:
+            ast_real_dir_path = self.localtest_root + ast_dir_path
+        else:
+            ast_real_dir_path = ast_dir_path
+
+        for dirname, dirnames, filenames in os.walk(ast_real_dir_path):
+            assert dirname[0] == "/"
+
             for filename in filenames:
-                target = "%s/%s" % (self.base, os.path.join(ast_dir_path,
-                                    dirname, filename))
+                # Shorten the dirname for inclusion into the new path.
+                short_dirname = dirname
+                if self.localtest_root:
+                    short_dirname = dirname[len(self.localtest_root):]
+
+                assert short_dirname[0] == "/"
+                target = "%s/%s/%s" % (self.base, short_dirname[1:], filename)
                 if os.path.lexists(target) or filename in blacklist:
                     continue
+
                 os.symlink(os.path.join(ast_dir_path, dirname, filename),
                            target)
 
     def __makedirs(self, ast_dir_path):
+        # If we're running with a separate localroot, the paths in
+        # AST_TEST_ROOT/etc/asterisk/asterisk.conf are still short; e.g.
+        # /etc/asterisk. We suffix AST_TEST_ROOT here to get the real source
+        # dir.
+        if self.localtest_root:
+            ast_real_dir_path = self.localtest_root + ast_dir_path
+        else:
+            ast_real_dir_path = ast_dir_path
+
         target_dir = "%s%s" % (self.base, ast_dir_path)
         if not os.path.exists(target_dir):
             os.makedirs(target_dir)
-        for dirname, dirnames, filenames in os.walk(ast_dir_path):
+
+        for dirname, dirnames, filenames in os.walk(ast_real_dir_path):
+            # Shorten the dirname for inclusion into the new path.
+            short_dirname = dirname
+            if self.localtest_root:
+                short_dirname = dirname[len(self.localtest_root):]
+
             for d in dirnames:
-                self.__makedirs(os.path.join(target_dir, dirname, d))
+                self.__makedirs(os.path.join(target_dir, short_dirname, d))
+
+
+# vim: set ts=8 sw=4 sts=4 et ai tw=79:

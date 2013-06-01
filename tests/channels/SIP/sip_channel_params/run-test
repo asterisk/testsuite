@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -e
 
-asttest -a / -s `dirname $0` $@
+asttest -a /$AST_TEST_ROOT -s `dirname $0` $@
