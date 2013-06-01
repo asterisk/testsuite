@@ -18,7 +18,7 @@ properties:
         - app : 'asttest'
         - sipp :
             version : 'v3.0'
-            feature : 'TLS'
+            feature : 'TLS'  # "Authentication requires OpenSSL support"
         - asterisk : 'cdr_csv'
     tags:
         - CDR

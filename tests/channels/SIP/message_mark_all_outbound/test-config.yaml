@@ -8,6 +8,6 @@ properties:
     dependencies:
         - sipp :
             version : 'v3.0'
-            feature : 'TLS'
+            feature : 'TLS'  # "Authentication requires OpenSSL support"
     tags:
         - SIP
