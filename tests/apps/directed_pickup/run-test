@@ -29,8 +29,41 @@ class PickupTest(TestCase):
         self.bridgeCount = 0
         self.create_asterisk()
 
+        self.bridgingModel12 = False
+        self.bridge = None
+        self.firstChannelBridged = False
+        self.secondChannelBridged = False
+
     def hangup(self, ami):
         self.stop_reactor()
+
+    def check_BridgeEnter(self, ami, event):
+        channel = event.get('channel')
+        bridge = event.get('bridgeuniqueid')
+        other_channel = None
+
+        if channel == self.firstChannel:
+            self.firstChannelBridged = True
+            other_channel = self.secondChannel
+        elif channel == self.secondChannel:
+            self.secondChannelBridged = True
+            other_channel = self.firstChannel
+        else:
+            LOGGER.error("Channel: '%s' entered bridge and is neither of the expected channels (%s, %s)" % (channel, self.firstChannel, self.secondChannel))
+            self.set_passed(False)
+            return
+
+        if self.bridge is not None:
+            if bridge != self.bridge:
+                LOGGER.error("Channel: '%s' entered bridge '%s', but was expected to enter the '%s' bridge with '%s'" % (channel, bridge, other_channel, self.bridge))
+                self.set_passed(False)
+        else:
+            self.bridge = bridge
+
+        if self.firstChannelBridged and self.secondChannelBridged:
+            self.set_passed(True)
+            self.ami[0].hangup(self.firstChannel).addCallback(self.hangup)
+            LOGGER.info("Both first and second channel detected; passing test")
 
     def check_Bridge(self, ami, event):
         if self.bridgeCount != 0:
@@ -48,7 +81,9 @@ class PickupTest(TestCase):
     def check_Pickup(self, ami, event):
         self.secondChannel = event.get('channel')
         LOGGER.info("Detected second channel: %s" % self.secondChannel)
-        self.ami[0].registerEvent('Bridge', self.check_Bridge)
+
+        if not self.bridgingModel12:
+            self.ami[0].registerEvent('Bridge', self.check_Bridge)
 
     def check_UserEvent(self, ami, event):
         if event.get("userevent") != "TestStatus":
@@ -59,6 +94,10 @@ class PickupTest(TestCase):
             return
 
         self.ami[0].registerEvent('Pickup', self.check_Pickup)
+
+        if self.bridgingModel12:
+            self.ami[0].registerEvent('BridgeEnter', self.check_BridgeEnter)
+
         LOGGER.info("Originating Pickup attempt")
         self.ami[0].originate(
             channel = "Local/1002@pickuptest",
@@ -80,6 +119,7 @@ class PickupTest(TestCase):
             self.ami[0].registerEvent("Dial", self.check_Dial)
         else:
             # Asterisk 12+
+            self.bridgingModel12 = True
             self.ami[0].registerEvent("DialBegin", self.check_Dial)
         self.ami[0].registerEvent("UserEvent", self.check_UserEvent)
         LOGGER.info("Originating channel to be picked up")
