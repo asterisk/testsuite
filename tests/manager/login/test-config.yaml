@@ -1,5 +1,5 @@
 testinfo:
-    summary:     'Test loggin in to the Asterisk Manager Interface'
+    summary:     'Test logging in to the Asterisk Manager Interface'
     description: |
         'This test provides a basic AMI sanity check.  It will log in,
         and log out.'
