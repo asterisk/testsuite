@@ -26,7 +26,11 @@ class AMIEventInstance(object):
 
         if 'count' in instance_config:
             count = instance_config['count']
-            if count[0] == '<':
+            if isinstance(count, int):
+                # Need exactly this many events
+                self.count_min = count
+                self.count_max = count
+            elif count[0] == '<':
                 # Need at most this many events
                 self.count_min = 0
                 self.count_max = int(count[1:])
