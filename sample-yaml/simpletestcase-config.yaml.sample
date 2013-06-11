@@ -1,0 +1,45 @@
+# Configuration sample for the SimpleTestCase object, a test object derived from
+# TestCase that manages a single instance of Asterisk. The SimpleTestCase will
+# Originate a sequence of Local channels into the dialplan. Each iteration of a
+# test can be initiated either by a UserEvent or by the Hangup of the previous
+# iteration.
+# This test case is useful for lots of simple tests where you simply need to
+# drive a channel into Asterisk.
+
+test-object-config:
+
+	# The number of expected UserEvents that should be received before ending
+	# the current test iteration. Note that this option only needs to be used
+	# when a test iteration is decided by the reception of UserEvents and not
+	# by the reception of a Hangup event for the Originated channel.
+	expected-events: 3
+
+	# Swallow any deferred exceptions that occur as the result of an error
+	# from an AMI Originate. If you expect your channel to not get
+	# Answered, then you probably should set this to True.
+	ignore-originate-failures: True
+
+	# Set this option to true if you want each test iteration to start when
+	# the previous iteration's channel has hung up.
+	spawn-after-hangup: True
+
+	# A path to a configuration directory other than this test's configuration
+	# directory. The configuration files from this common directory will be
+	# installed prior to this test's configuration files. This is useful for
+	# large sets of tests that cover the same functionality, and allows them
+	# to share config files.
+	config-path: 'tests/foo'
+
+	# The test iterations block define a sequence of sets of scenarios to run
+	# sequentially
+	test-iterations:
+		-
+			# The channel to create
+			channel: Local/foo@default
+			# The application to drop the ;1 side of the Local channel into
+			application: Echo
+		-
+			# The next channel to create
+			channel: Local/bar@default
+			# The application to drop the ;1 side of the Local channel into
+			application: Echo
