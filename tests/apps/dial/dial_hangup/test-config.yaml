@@ -23,6 +23,11 @@ test-modules:
         -
             minversion: '11.0.0'
             maxversion: '12.0.0'
+            config-section: cdr-config-11
+            typename: 'cdr.CDRModule'
+        -
+            minversion: '11.0.0'
+            maxversion: '12.0.0'
             config-section: ami-config-11
             typename: 'ami.AMIEventModule'
         -
@@ -32,6 +37,21 @@ test-modules:
         -
             config-section: originator-config
             typename: 'PluggableModules.Originator'
+
+cdr-config-11:
+    -
+        file: 'Master'
+        lines:
+            -
+                accountcode: ''
+                destination: 's'
+                dcontext: 'default'
+                callerid: ''
+                channel: 'Local/s@default-.{8};2'
+                dchannel: 'SIP/charlie-.{8}'
+                lastapp: 'Dial'
+                disposition: 'NO ANSWER'
+                amaflags: 'DOCUMENTATION'
 
 ami-config-11:
     -
