@@ -139,7 +139,7 @@ def check_module_version(module_spec, ast_version):
         AsteriskVersion(ast_version) < AsteriskVersion(modminversion):
         return False
     if modmaxversion is not None and \
-        AsteriskVersion(ast_version) > AsteriskVersion(modmaxversion):
+        AsteriskVersion(ast_version) >= AsteriskVersion(modmaxversion):
         return False
 
     return True

@@ -4,7 +4,7 @@ testinfo:
         'Dial an endpoint and get a response code that maps to a Busy status'
 
 properties:
-    minversion: '12.0.0'
+    minversion: '11.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
@@ -18,13 +18,14 @@ test-modules:
         typename: 'sipp.SIPpTestCase'
     modules:
         -
-            config-section: ami-config
+            minversion: '12.0.0'
+            config-section: ami-config-12
             typename: 'ami.AMIEventModule'
         -
             config-section: originator-config
             typename: 'PluggableModules.Originator'
 
-ami-config:
+ami-config-12:
     -
         type: 'headermatch'
         conditions:
