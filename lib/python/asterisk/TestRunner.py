@@ -24,6 +24,8 @@ LOGGER = logging.getLogger('TestRunner')
 
 sys.path.append('lib/python')
 
+from version import AsteriskVersion
+
 class TestModuleFinder(object):
     ''' Determines if a module is a test module that can be loaded '''
 
@@ -133,9 +135,11 @@ def check_module_version(module_spec, ast_version):
 
     modminversion = module_spec.get('minversion')
     modmaxversion = module_spec.get('maxversion')
-    if modminversion is not None and ast_version < modminversion:
+    if modminversion is not None and \
+        AsteriskVersion(ast_version) < AsteriskVersion(modminversion):
         return False
-    if modmaxversion is not None and ast_version > modmaxversion:
+    if modmaxversion is not None and \
+        AsteriskVersion(ast_version) > AsteriskVersion(modmaxversion):
         return False
 
     return True
