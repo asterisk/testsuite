@@ -24,6 +24,10 @@ test-modules:
             typename: 'cdr.CDRModule'
         -
             minversion: '12.0.0'
+            config-section: 'cdr-config-12'
+            typename: 'cdr.CDRModule'
+        -
+            minversion: '12.0.0'
             config-section: ami-config-12
             typename: 'ami.AMIEventModule'
         -
@@ -55,6 +59,30 @@ cdr-config-11:
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
 
+cdr-config-12:
+    -
+        file: 'Master'
+        lines:
+            -
+                accountcode: ''
+                destination: 's'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/s@default-.{8};1'
+                dchannel: ''
+                lastapp: 'Echo'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 's'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/s@default-.{8};2'
+                dchannel: 'SIP/charlie-.{8}'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
 
 ami-config-12:
     -
