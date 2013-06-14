@@ -171,7 +171,11 @@ class AMIHeaderMatchInstance(AMIEventInstance):
 
     def event_callback(self, ami, event):
         for k,v in self.match_requirements.items():
-            if not re.match(v, event.get(k.lower())):
+            if k.lower() not in event:
+                logger.warning("Requirement %s does not exist in event %s" %
+                                (k, event['event']))
+                self.passed = False
+            elif not re.match(v, event.get(k.lower())):
                 logger.warning("Requirement %s: %s does not match %s: %s in event" %
                         (k, v, k, event.get(k.lower())))
                 self.passed = False
@@ -180,7 +184,11 @@ class AMIHeaderMatchInstance(AMIEventInstance):
                         (k, v, k, event.get(k.lower())))
 
         for k,v in self.nonmatch_requirements.items():
-            if re.match(v, event.get(k.lower(), '')):
+            if k.lower() not in event:
+                logger.warning("Requirement %s does not exist in event %s" %
+                                (k, event['event']))
+                self.passed = False
+            elif re.match(v, event.get(k.lower(), '')):
                 logger.warning("Requirement %s: %s matches %s: %s in event" %
                         (k, v, k, event.get(k.lower(), '')))
                 self.passed = False
@@ -221,7 +229,11 @@ class AMIOrderedHeaderMatchInstance(AMIEventInstance):
             return
 
         for k,v in self.match_requirements[self.match_index].items():
-            if not re.match(v, event.get(k.lower())):
+            if k.lower() not in event:
+                logger.warning("Requirement %s does not exist in event %s" %
+                                (k, event['event']))
+                self.passed = False
+            elif not re.match(v, event.get(k.lower())):
                 logger.warning("Requirement %s: %s does not match %s: %s in event" %
                         (k, v, k, event.get(k.lower())))
                 self.passed = False
@@ -230,7 +242,11 @@ class AMIOrderedHeaderMatchInstance(AMIEventInstance):
                         (k, v, k, event.get(k.lower())))
 
         for k,v in self.nonmatch_requirements[self.match_index].items():
-            if re.match(v, event.get(k.lower(), '')):
+            if k.lower() not in event:
+                logger.warning("Requirement %s does not exist in event %s" %
+                                (k, event['event']))
+                self.passed = False
+            elif re.match(v, event.get(k.lower(), '')):
                 logger.warning("Requirement %s: %s matches %s: %s in event" %
                         (k, v, k, event.get(k.lower(), '')))
                 self.passed = False
