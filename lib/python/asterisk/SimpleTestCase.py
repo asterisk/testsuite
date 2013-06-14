@@ -35,7 +35,6 @@ class SimpleTestCase(TestCase):
         test_config Optional yaml loaded object containing config information
         '''
         TestCase.__init__(self, test_path, test_config=test_config)
-        self.create_asterisk()
 
         self._test_runs = []
         self._current_run = 0
@@ -44,6 +43,7 @@ class SimpleTestCase(TestCase):
         self._tracking_channels = []
         self._ignore_originate_failures = False
         self._spawn_after_hangup = False
+        self._config_path = None
 
         if test_config is None or 'test-iterations' not in test_config:
             # No special test configuration defined, use defaults
@@ -62,7 +62,9 @@ class SimpleTestCase(TestCase):
                 self._ignore_originate_failures = test_config['ignore-originate-failures']
             if 'spawn-after-hangup' in test_config:
                 self._spawn_after_hangup = test_config['spawn-after-hangup']
-
+            if 'config-path' in test_config:
+                self._config_path = test_config['config-path']
+        self.create_asterisk(count=1, base_configs_path=self._config_path)
 
     def ami_connect(self, ami):
         ''' AMI connect handler '''
