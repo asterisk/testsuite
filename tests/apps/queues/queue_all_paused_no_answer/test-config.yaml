@@ -41,26 +41,26 @@ cdr-config:
                 destination: 'pause_queue_member'
                 dcontext: 'default'
                 channel: 'Local/pause_queue_member@default-.*'
-                lastapp: 'Dial'
-                disposition: 'FAILED'
+                lastapp: 'AppDial2'
+                disposition: 'NO ANSWER'
             -
                 destination: 'pause_queue_member'
                 dcontext: 'default'
                 channel: 'Local/pause_queue_member@default-.*'
                 lastapp: 'PauseQueueMember'
-                disposition: 'NO ANSWER'
+                disposition: 'FAILED'
             -
                 destination: 'caller'
                 dcontext: 'default'
                 channel: 'Local/caller@default-.*'
                 lastapp: 'Queue'
-                disposition: 'NO ANSWER'
+                disposition: 'FAILED'
             -
                 destination: 'caller'
                 dcontext: 'default'
                 channel: 'Local/caller@default-.*'
-                lastapp: 'Dial'
-                disposition: 'FAILED'
+                lastapp: 'AppDial2'
+                disposition: 'NO ANSWER'
 
 cel-config:
     -

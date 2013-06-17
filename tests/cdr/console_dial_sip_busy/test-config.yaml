@@ -14,6 +14,7 @@ test-modules:
             typename: 'cdr.CDRModule'
 
 test-object-config:
+    config-path: 'tests/cdr/configs/unanswered'
     spawn-after-hangup: True
     ignore-originate-failures: True
     test-iterations:

@@ -13,7 +13,8 @@ LOGGER = logging.getLogger(__name__)
 def send_dtmf(ami, event):
     ''' Callback called when we detect dial has started.
     '''
-
+    if 'channel' not in event:
+        return True
     channel = event['channel'][:len(event['channel']) - 2]
     channel += ';1'
     LOGGER.info('Sending DTMF to hangup channel %s' % channel)

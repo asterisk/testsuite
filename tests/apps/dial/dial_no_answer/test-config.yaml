@@ -61,7 +61,7 @@ cdr-config-12:
                 channel: 'Local/s@default-.{8};2'
                 dchannel: 'SIP/bob-.{8}'
                 lastapp: 'Dial'
-                disposition: 'NO ANSWER'
+                disposition: 'BUSY'
                 amaflags: 'DOCUMENTATION'
 
 ami-config-12:
@@ -109,7 +109,7 @@ ami-config-12:
                 CallerIDName: '<unknown>'
                 ConnectedLineNum: '<unknown>'
                 ConnectedLineName: '<unknown>'
-                DialStatus: 'NOANSWER'
+                DialStatus: 'BUSY'
         count: '1'
 
 originator-config:

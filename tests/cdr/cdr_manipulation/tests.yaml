@@ -1,0 +1,6 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'console_fork_after_busy_forward'
+    - test: 'console_fork_before_dial'
+    - test: 'cdr_fork_end_time'
+    - test: 'nocdr'

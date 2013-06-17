@@ -39,20 +39,20 @@ cdr-config:
                 destination: 'pause_queue_member'
                 dcontext: 'default'
                 channel: 'Local/pause_queue_member@default-.*'
-                lastapp: 'Dial'
+                lastapp: 'PauseQueueMember'
                 disposition: 'FAILED'
             -
                 destination: 'pause_queue_member'
                 dcontext: 'default'
                 channel: 'Local/pause_queue_member@default-.*'
-                lastapp: 'PauseQueueMember'
+                lastapp: 'AppDial2'
                 disposition: 'NO ANSWER'
             -
                 destination: 'queue_member_two'
                 dcontext: 'default'
                 channel: 'Local/queue_member_two@default-.*'
                 lastapp: 'Echo'
-                disposition: 'NO ANSWER'
+                disposition: 'FAILED'
             -
                 destination: 'caller'
                 dcontext: 'default'
@@ -63,8 +63,8 @@ cdr-config:
                 destination: 'caller'
                 dcontext: 'default'
                 channel: 'Local/caller@default-.*'
-                lastapp: 'Dial'
-                disposition: 'FAILED'
+                lastapp: 'AppDial2'
+                disposition: 'NO ANSWER'
 
 cel-config:
     -

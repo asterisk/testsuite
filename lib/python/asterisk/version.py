@@ -209,7 +209,7 @@ class AsteriskVersion:
         return 100
 
     def has_feature(self, feature):
-        if (self.name or self.major == 11):
+        if (self.name or self.major >= 11):
             # Assume that 11 or trunk has all the features
             return True
         if feature == self.feature:
@@ -523,17 +523,17 @@ class AsteriskVersionTests(unittest.TestCase):
         v2 = AsteriskVersion("1.8.12.0")
         self.assertTrue(v1 < v2)
 
-    def test_cmp26(self):
+    def test_cmp27(self):
         v1 = AsteriskVersion("SVN-branch-1.8.11-r363674")
         v2 = AsteriskVersion("SVN-branch-1.8.15-r363674")
         self.assertTrue(v1 < v2)
 
-    def test_cmp27(self):
+    def test_cmp28(self):
         v1 = AsteriskVersion("SVN-branch-1.8.11-r363674")
         v2 = AsteriskVersion("SVN-branch-1.8-r369138M")
         self.assertTrue(v1 < v2)
 
-    def test_cmp28(self):
+    def test_cmp29(self):
         v1 = AsteriskVersion("1.8.11-cert1")
         v2 = AsteriskVersion("Asterisk SVN-branch-1.8.11-cert-r368608")
         self.assertTrue(v1 < v2)

@@ -10,7 +10,12 @@ test-modules:
         typename: 'SimpleTestCase.SimpleTestCase'
     modules:
         -
-            config-section: 'cdr-config'
+            maxversion: '12.0.0'
+            config-section: 'cdr-config-pre-12'
+            typename: 'cdr.CDRModule'
+        -
+            minversion: '12.0.0'
+            config-section: 'cdr-config-12'
             typename: 'cdr.CDRModule'
 
 test-object-config:
@@ -21,7 +26,29 @@ test-object-config:
             channel: 'Local/1@default'
             application: 'Echo'
 
-cdr-config:
+cdr-config-pre-12:
+    -
+        file: 'cdrtest_sip'
+        lines:
+            -
+                accountcode: 'cdrtest_sip'
+                source: 'Anonymous'
+                destination: '2'
+                dcontext: 'default'
+                callerid: '"Anonymous" <Anonymous>'
+                channel: 'SIP/test-00000001'
+                disposition: 'CONGESTION'
+                amaflags: 'DOCUMENTATION'
+    -
+        file: 'cdrtest_local'
+        lines:
+            -
+                destination: '1'
+                dcontext: 'default'
+                disposition: 'CONGESTION'
+                amaflags: 'DOCUMENTATION'
+
+cdr-config-12:
     -
         file: 'cdrtest_sip'
         lines:

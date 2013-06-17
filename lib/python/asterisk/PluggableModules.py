@@ -33,6 +33,7 @@ class Originator(object):
             'ignore-originate-failure': 'no',
             'trigger': 'scenario_start',
             'id': '0',
+            'async': 'False',
             'event': None
         }
 
@@ -85,11 +86,16 @@ class Originator(object):
         LOGGER.info("Originating call")
 
         if len(self.config['context']) > 0:
-            self.ami.originate(channel = self.config['channel'], context = self.config['context'],
-                exten = self.config['exten'], priority = self.config['priority']).addErrback(self.failure)
+            self.ami.originate(channel=self.config['channel'],
+                               context=self.config['context'],
+                               exten=self.config['exten'],
+                               priority=self.config['priority'],
+                               async=self.config['async']).addErrback(self.failure)
         else:
-            self.ami.originate(channel = self.config['channel'], application = self.config['application'],
-                data = self.config['data']).addErrback(self.failure)
+            self.ami.originate(channel=self.config['channel'],
+                               application=self.config['application'],
+                               data=self.config['data'],
+                               async=self.config['async']).addErrback(self.failure)
 
     def scenario_started(self, result):
         '''Handle origination on scenario start if configured to do so.'''

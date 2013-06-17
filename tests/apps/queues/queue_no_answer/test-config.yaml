@@ -36,12 +36,18 @@ cdr-config:
                 dcontext: 'default'
                 channel: 'Local/queue_member_.*'
                 lastapp: 'Echo'
-                disposition: 'NO ANSWER'
+                disposition: 'FAILED'
             -
                 destination: 'queue_member_.*'
                 dcontext: 'default'
                 channel: 'Local/queue_member_.*'
                 lastapp: 'Echo'
+                disposition: 'FAILED'
+            -
+                destination: 'caller'
+                dcontext: 'default'
+                channel: 'Local/caller@default-.*'
+                lastapp: 'Queue'
                 disposition: 'NO ANSWER'
             -
                 destination: 'caller'
@@ -53,8 +59,8 @@ cdr-config:
                 destination: 'caller'
                 dcontext: 'default'
                 channel: 'Local/caller@default-.*'
-                lastapp: 'Dial'
-                disposition: 'FAILED'
+                lastapp: 'AppDial2'
+                disposition: 'NO ANSWER'
 
 cel-config:
     -

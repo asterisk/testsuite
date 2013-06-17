@@ -18,12 +18,112 @@ test-modules:
         typename: 'sipp.SIPpTestCase'
     modules:
         -
+            minversion: '11.0.0'
+            maxversion: '12.0.0'
+            config-section: cdr-config-11
+            typename: 'cdr.CDRModule'
+        -
+            minversion: '12.0.0'
+            config-section: cdr-config-12
+            typename: 'cdr.CDRModule'
+        -
+            minversion: '11.0.0'
+            maxversion: '12.0.0'
+            config-section: ami-config-11
+            typename: 'ami.AMIEventModule'
+        -
             minversion: '12.0.0'
             config-section: ami-config-12
             typename: 'ami.AMIEventModule'
         -
             config-section: originator-config
             typename: 'PluggableModules.Originator'
+
+cdr-config-12:
+    -
+        file: 'Master'
+        lines:
+            -
+                accountcode: ''
+                destination: 's'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/s@default-.{8};1'
+                dchannel: ''
+                lastapp: 'Echo'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 's'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/s@default-.{8};2'
+                dchannel: 'SIP/bob-.{8}'
+                lastapp: 'Dial'
+                disposition: 'FAILED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 's'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/s@default-.{8};2'
+                dchannel: 'SIP/charlie-.{8}'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+cdr-config-11:
+    -
+        file: 'Master'
+        lines:
+            -
+                accountcode: ''
+                destination: 's'
+                dcontext: 'default'
+                callerid: ''
+                channel: 'Local/s@default-.{8};2'
+                dchannel: 'SIP/charlie-.{8}'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 's'
+                dcontext: 'default'
+                callerid: ''
+                channel: 'Local/s@default-.{8};1'
+                dchannel: ''
+                lastapp: 'Echo'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+ami-config-11:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'HangupCause'
+                HangupChannel: 'SIP/bob-.*'
+        requirements:
+            match:
+                TechCause: 'SIP 503 Service Unavailable'
+                AsteriskCause: 'Circuit/channel congestion'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'HangupCause'
+                HangupChannel: 'SIP/charlie-.*'
+        requirements:
+            match:
+                TechCause: 'SIP 200 OK'
+                AsteriskCause: 'Normal Clearing'
+        count: '1'
 
 ami-config-12:
     -
