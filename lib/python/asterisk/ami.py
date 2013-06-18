@@ -23,6 +23,7 @@ class AMIEventInstance(object):
         self.config = instance_config
         self.passed = True
         self._registered = False
+        self._event_observers = []
 
         if 'count' in instance_config:
             count = instance_config['count']
@@ -47,8 +48,7 @@ class AMIEventInstance(object):
             self.count_max = float("inf")
 
         self.event_count = 0
-
-        if instance_config['type'] == 'cel':
+        if 'type' in instance_config and instance_config['type'] == 'cel':
             # If the type is 'cel' and no condition matches are defined in the
             # test's yaml then create the dict with setting the Event to 'CEL'.
             # Otherwise set Event to 'CEL' since it's the only Event we want.
@@ -80,6 +80,10 @@ class AMIEventInstance(object):
             logger.debug("Registering event %s" % self.match_conditions['Event'])
             ami.registerEvent(self.match_conditions['Event'], self.__event_callback)
             self._registered = True
+
+    def register_event_observer(self, observer):
+        ''' Register an observer to be called when a matched event is received '''
+        self._event_observers.append(observer)
 
     def dispose(self, ami):
         ''' Dispose of this object's AMI event registrations '''
@@ -130,7 +134,8 @@ class AMIEventInstance(object):
         #Conditions have matched up as expected
         #so leave it to the individual types to determine
         #how to proceed
-
+        for observer in self._event_observers:
+            observer(ami, event)
         return self.event_callback(ami, event)
 
     def check_result(self, callback_param):

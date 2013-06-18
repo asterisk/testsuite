@@ -103,6 +103,7 @@ class Originator(object):
         self.originate_call()
         return result
 
+
 class AMIPrivateCallbackInstance(AMIEventInstance):
     '''
     Subclass of AMIEventInstance that operates by calling a user-defined
@@ -121,3 +122,59 @@ class AMIPrivateCallbackInstance(AMIEventInstance):
     def check_result(self, callback_param):
         self.test_object.set_passed(self.passed)
         return callback_param
+
+
+class AMIChannelHangup(AMIEventInstance):
+    ''' An AMIEventInstance derived class that hangs up a channel when an
+    event is matched. '''
+
+    def __init__(self, instance_config, test_object):
+        ''' Constructor for pluggable modules '''
+        super(AMIChannelHangup, self).__init__(instance_config, test_object)
+        self.hungup_channel = False
+
+    def event_callback(self, ami, event):
+        ''' Override of the event callback '''
+        if self.hungup_channel:
+            return
+        if 'channel' not in event:
+            return
+        LOGGER.info('Hanging up channel %s' % event['channel'])
+        self.hungup_channel = True
+        ami.hangup(event['channel'])
+
+
+class AMIChannelHangupAll(AMIEventInstance):
+    ''' An AMIEventInstance derived class that hangs up all the channels when
+    an event is matched. '''
+
+    def __init__(self, instance_config, test_object):
+        ''' Constructor for pluggable modules '''
+        super(AMIChannelHangupAll, self).__init__(instance_config, test_object)
+        test_object.register_ami_observer(self.__ami_connect)
+        self.channels = []
+
+    def __ami_connect(self, ami):
+        if str(ami.id) in self.ids:
+            ami.registerEvent('Newchannel', self.__new_channel_handler)
+            ami.registerEvent('Hangup', self.__hangup_handler)
+
+    def __new_channel_handler(self, ami, event):
+        self.channels.append({'id': ami.id, 'channel': event['channel']})
+
+    def __hangup_handler(self, ami, event):
+        objects = [x for x in self.channels if x['id'] == ami.id and x['channel'] == event['channel']]
+        for obj in objects:
+            self.channels.remove(obj)
+
+    def event_callback(self, ami, event):
+        ''' Override of the event callback '''
+        def __hangup_ignore(result):
+            # Ignore hangup errors - if the channel is gone, we don't care
+            return
+
+        objects = [x for x in self.channels if x['id'] == ami.id]
+        for obj in objects:
+            LOGGER.info('Hanging up channel %s' % obj['channel'])
+            ami.hangup(obj['channel']).addErrback(__hangup_ignore)
+            self.channels.remove(obj)
