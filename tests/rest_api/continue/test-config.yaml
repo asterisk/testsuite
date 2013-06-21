@@ -1,0 +1,64 @@
+testinfo:
+    summary: Test continuing on from the RESTful API back to the dialplan
+    description: |
+        This test simply waits for a call via the WebSocket, then hits the
+        continue controller to send it back to the dialplan.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: SimpleTestCase.SimpleTestCase
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -   channel: Local/s@default
+            application: Echo
+
+ari-config:
+    apps: continue-test
+    events:
+        -   conditions:
+                match:
+                    application: continue-test
+                    stasis_start:
+                        args: []
+            count: 1
+            callback:
+                module: rest_continue
+                method: on_start
+        -   conditions:
+                match:
+                    application: continue-test
+                    stasis_end:
+            count: 2
+            callback:
+                module: rest_continue
+                method: on_end
+        -   conditions:
+                match:
+                    application: continue-test
+                    stasis_start:
+                        args: [fin]
+            count: 1
+            callback:
+                module: rest_continue
+                method: on_second_start
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_stasis_http_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
+
+

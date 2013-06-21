@@ -27,3 +27,4 @@ tests:
     - dir: 'redirecting'
     - test: 'cause_answered_elsewhere'
     - dir: 'bridge'
+    - dir: 'rest_api'

@@ -1,0 +1,74 @@
+# -*- yaml -*-
+# Configuration sample for the Generic ARI module
+
+ari-config:
+    # ARI always attempts to connect to the /ari/events WebSocket.
+    # This is a comma seperated list of applications to connect for.
+    apps: foo-test
+    # List of events to monitor for. Every event received on the WebSocket
+    # is compared against the 'conditions' clause. If the conditions match,
+    # then the further specified processing is evaluated.
+    events:
+        -
+            # Conditions that must be met in order to consider performing the
+            # match.
+            conditions:
+                # Specifies a pattern that must match the received JSON object
+                # for performing the match.
+                #
+                #  * object - Specifies fields must match JSON. JSON is allowed
+                #             to have unspecified fields.
+                #  * string - A regular expression that must match JSON.
+                #  * int    - Literal integer that must match.
+                #  * array  - Contents must match JSON
+                match:
+                    application: foo-test
+                    stasis_start:
+                        # in-line flow style may be used for arrays
+                        args: ['bar.*']
+                # Specified a pattern that must NOT match the received JSON
+                # object. The pattern is evaluated identically to a match
+                # clause
+                nomatch:
+                    stasis_start:
+                        # block sequences can also be used for arrays
+                        args:
+                            - 'barman.*'
+
+
+            # The above example would match the following:
+            #  { 'application': 'foo-test', 'args': [ 'bar' ] }
+            #   * simple match
+            #  { 'application': 'foo-test', 'args': [ 'bardoll' ] }
+            #   * bardoll matches the bar.* regex
+            #  { 'application': 'foo-test', 'args': [ 'bar' ], 'whatever': 1 }
+            #   * extra fields in the JSON are ignored
+            #
+            # But not these:
+            #  { 'application': 'foo-test', 'args': [] }
+            #   * array contents do not match
+            #  { 'application': 'foo-test', 'args': [ 'bar', 'bam' ] }
+            #   * array contents do not match
+            #  { 'application': 'foo-test', 'args': [ 'barman' ] }
+            #   * matches the nomatch clause
+
+            # Specifies how many times the event is expected to occur. If
+            # unspecified, will match for at least one.
+            #  * Bare number - exact count
+            #  * >number - at least count
+            #  * <number - at most count
+            count: 1
+
+            # If specified, lists the module and callback function to which the
+            # event is passed. The event is passed in as a parsed JSON object
+            # (so it's a dict with string keys that contains strings, ints,
+            # arrays and other dictionaries). The callback is also given an
+            # ARI object, on which it may invoke ARI HTTP calls.
+            # If the callback returns a falsey value, or raises an exception,
+            # the test will fail.
+            #
+            # In this example, the rest_foo.py file will contain:
+            # def on_start(ari, event):
+            callback:
+                module: rest_foo
+                method: on_start
