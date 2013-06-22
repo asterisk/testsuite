@@ -50,7 +50,7 @@ class TestModuleFinder(object):
         for path in search_paths:
             if os.path.exists('%s/%s.py' % (path, fullname)):
                 return TestModuleLoader(path)
-        LOGGER.debug("Unable to find module '%s'" % fullname)
+        LOGGER.warn("Unable to find module '%s'" % fullname)
         return None
 
 class TestModuleLoader(object):

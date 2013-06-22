@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Call using wrong username, password, and realm">
+  <!--
+  Get and store what we are testing for this call in a variable and test
+  the variable. The $wrongauthresult will be set to either true or false.
+  -->
+  <nop>
+     <action>
+       <assignstr assign_to="wrongauthtype" value="[field0]" />
+       <strcmp variable="wrongauthtype" value="realm" assign_to="res" />
+       <test variable="res" compare="equal" value="0" assign_to="wrongauthtyperesult" />
+     </action>
+  </nop>
+
+  <send retrans="500">
+    <![CDATA[
+
+      INVITE sip:playback@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: test1 <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 INVITE
+      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Max-Forwards: 70
+      Subject: Test
+      User-Agent: Test
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=phoneA 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio 6000 RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+
+    ]]>
+  </send>
+
+  <recv response="401" auth="true">
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      ACK sip:playback@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: test1 <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 1 ACK
+      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Max-Forwards: 70
+      Subject: Test
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- If $wrongauthtyperesult is true then go to label ID "1". Otherwise continue below -->
+  <nop next="1" test="wrongauthtyperesult">
+     <action>
+     </action>
+  </nop>
+
+  <!-- Go to label ID "100" since we're not using a wrong realm for this execution. -->
+  <nop next="100">
+     <action>
+     </action>
+  </nop>
+
+  <label id="1"/>
+
+  <!-- Store the Authentication header in a variable -->
+  <nop>
+     <action>
+       <assignstr assign_to="origauthrsphdr" value="[authentication]" />
+     </action>
+  </nop>
+
+  <!-- ====================================================== -->
+  <!-- START: Change realm in the authorization that we send. -->
+  <!--        This does NOT re-calculate the response digest  -->
+  <!--	      for the new realm we specify due to SIPp        -->
+  <!--	      limitations!                                    -->
+  <!-- ====================================================== -->
+
+  <!-- Store the Authorization line starting at the beginning of the line to the realm -->
+  <nop>
+     <action>
+       <!--
+            SIPp does not like XML escapes such as '&quot;' or surrounding
+            things in single quotes. However it will accept and properly
+            process things escaped with a '\'. So to match a double quote in
+            the regex a '.' is used.
+       -->
+       <ereg regexp="Authorization:.*realm=." search_in="var" variable="origauthrsphdr" assign_to="beforerealm" />
+     </action>
+  </nop>
+
+  <!-- Store the Authorization line starting at the end of the realm to the end of the line -->
+  <nop>
+     <action>
+       <ereg regexp=".,cnonce=.*" search_in="var" variable="origauthrsphdr" assign_to="afterrealm" />
+     </action>
+  </nop>
+
+  <!-- Construct our new Authorization header containing the wrong realm read in from the injection file -->
+  <nop>
+     <action>
+       <assignstr assign_to="ourauthrsphdr" value="[$beforerealm][field1][$afterrealm]" />
+     </action>
+  </nop>
+
+  <!-- Send INVITE using the wrong realm. Then go to label ID "2". -->
+  <send retrans="500" next="2">
+    <![CDATA[
+
+      INVITE sip:playback@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: test1 <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 2 INVITE
+      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Max-Forwards: 70
+      [$ourauthrsphdr]
+      Subject: Test
+      User-Agent: Test
+      Content-Length: 0
+      X-Test-Original-Auth: [$origauthrsphdr]
+      X-Test-Credential-Info: Using the wrong [$wrongauthtype]
+    ]]>
+  </send>
+
+  <!-- =================================================== -->
+  <!-- END: Change realm in the authorization that we send -->
+  <!-- =================================================== -->
+
+  <!-- If either the username or password were wrong then execution continues here -->
+  <label id="100"/>
+
+  <send retrans="500">
+    <![CDATA[
+
+      INVITE sip:playback@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: test1 <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 2 INVITE
+      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Max-Forwards: 70
+      [authentication]
+      Subject: Test
+      User-Agent: Test
+      Content-Length: 0
+      X-Test-Credential-Info: Using the wrong [$wrongauthtype]
+    ]]>
+  </send>
+
+  <!-- If the realm was changed then we continue here. -->
+  <label id="2"/>
+
+  <recv response="401">
+  </recv>
+
+  <!-- definition of the response time repartition table (unit is ms)   -->
+  <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
+
+  <!-- definition of the call length repartition table (unit is ms)     -->
+  <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+
+</scenario>
+

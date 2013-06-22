@@ -2,3 +2,4 @@
 tests:
     - dir: 'SIP'
     - dir: 'iax2'
+    - dir: 'gulp'

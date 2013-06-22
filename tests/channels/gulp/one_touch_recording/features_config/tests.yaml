@@ -1,0 +1,3 @@
+tests:
+    - test: 'features_configured'
+    - test: 'features_not_configured'

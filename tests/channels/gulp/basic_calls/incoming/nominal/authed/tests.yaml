@@ -1,0 +1,3 @@
+tests:
+    - dir: 'userpass'
+    - dir: 'md5'

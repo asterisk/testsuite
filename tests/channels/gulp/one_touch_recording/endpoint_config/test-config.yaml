@@ -1,0 +1,29 @@
+testinfo:
+    summary:     'Tests One Touch Recording endpoint configuration.'
+    description: |
+        'Run several SIPp scenarios that test the one_touch_recording endpoint
+        configuration options.  The scenarios test endpoints that use the
+        default configuration, explicitly enabled configuration, and explicitly
+        disabled configuration.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'config_default.xml', '-i': '127.0.0.1', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'config_enabled.xml', '-i': '127.0.0.1', '-p': '5062'} }
+                - { 'key-args': {'scenario': 'config_disabled.xml', '-i': '127.0.0.1', '-p': '5063'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_sip'
+    tags:
+        - gulp

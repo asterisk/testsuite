@@ -1,0 +1,3 @@
+tests:
+    - dir: 'unauthed'
+    - dir: 'authed'

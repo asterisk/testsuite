@@ -1,0 +1,3 @@
+tests:
+    - dir: 'nominal'
+    - dir: 'off-nominal'

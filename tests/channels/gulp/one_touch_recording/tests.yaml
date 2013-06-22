@@ -1,0 +1,3 @@
+tests:
+    - dir: 'features_config'
+    - test: 'endpoint_config'

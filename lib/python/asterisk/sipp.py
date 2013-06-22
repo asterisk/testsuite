@@ -499,6 +499,9 @@ class SIPpScenario:
         if '-slave_cfg' in default_args:
             default_args['-slave_cfg'] = '%s/sipp/%s' % (self.test_dir, default_args['-slave_cfg'])
 
+        if '-inf' in default_args:
+            default_args['-inf'] = '%s/sipp/%s' % (self.test_dir, default_args['-inf'])
+
         for (key, val) in default_args.items():
             sipp_args.extend([ key, val ])
         sipp_args.extend(self.positional_args)

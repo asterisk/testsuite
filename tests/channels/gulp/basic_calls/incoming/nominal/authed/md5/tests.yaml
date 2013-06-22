@@ -1,0 +1,3 @@
+tests:
+    - test: 'ident_by_user'
+    - test: 'ident_by_host'
