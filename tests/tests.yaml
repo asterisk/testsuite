@@ -8,6 +8,7 @@ tests:
     - dir: 'channels'
     - test: 'udptl'
     - test: 'udptl_v6'
+    - test: 'feature_call_pickup'
     - test: 'feature_blonde_transfer'
     - test: 'feature_attended_transfer'
     - test: 'blind-transfer-parkingtimeout'

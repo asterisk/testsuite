@@ -1,0 +1,13 @@
+testinfo:
+    summary:     'Test Call Pickup'
+    description: |
+        'This test verifies that a channel can use the call pickup extension to
+        Answer a call to a channel that is assigned to its pickupgroup.'
+
+properties:
+    minversion: '11.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - pickup

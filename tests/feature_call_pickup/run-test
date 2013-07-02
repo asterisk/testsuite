@@ -1,0 +1,168 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2013, Digium, Inc.
+Jonathan Rose <jrose@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+import re
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.version import AsteriskVersion
+from asterisk.TestCase import TestCase
+
+LOGGER = logging.getLogger(__name__)
+
+class CallPickupTest(TestCase):
+
+    def __init__(self):
+        TestCase.__init__(self)
+
+        self.pickeeChannel = "Local/dial_faker@pickuptest-"
+        self.pickerChannel = "SIP/sip_receive-"
+        self.targetChannel = "SIP/faker-"
+
+        self.bridge = None
+        self.bridgingModel12 = False
+
+        self.bridgeComplete = False
+        self.pickupComplete = False
+
+        self.pickerJoined = False
+        self.pickeeJoined = False
+
+        self.connectionsEstablished = 0
+
+        self.create_asterisk(count=2)
+
+    def hangup(self, ami):
+        self.stop_reactor()
+
+    def check_bridge_enter(self, ami, event):
+        channel = event.get('channel')
+        bridge = event.get('bridgeuniqueid')
+
+        if not self.bridge:
+            self.bridge = bridge
+        elif self.bridge != bridge:
+            LOGGER.error("The bridge ID mismatch - got %s - expected %s - FAIL" % (bridge, self.bridge))
+            self.set_passed(False)
+            self.stop_reactor()
+
+        patternPicker = re.compile(self.pickerChannel)
+        patternPickee = re.compile(self.pickeeChannel)
+
+        if patternPicker.match(channel):
+            self.pickerJoined = True
+        elif patternPickee.match(channel):
+            self.pickeeJoined = True
+        else:
+            LOGGER.error("Unexpected Channel %s joined the bridge - FAIL" % channel)
+            self.set_passed(False)
+            self.stop_reactor()
+
+        if self.pickerJoined and self.pickeeJoined:
+            if self.pickupComplete:
+                self.set_passed(True)
+                self.ami[0].hangup(channel2).addCallback(self.hangup)
+            else:
+                self.bridgeComplete = True
+
+    def check_bridge(self, ami, event):
+        if event.get("bridgestate") != "Link":
+            return
+
+        channel1 = event.get("channel1")
+        channel2 = event.get("channel2")
+
+        pattern1 = re.compile(self.pickeeChannel)
+        pattern2 = re.compile(self.pickerChannel)
+
+        if pattern1.match(channel1) and pattern2.match(channel2):
+            if self.pickupComplete:
+                self.set_passed(True)
+                self.ami[0].hangup(channel2).addCallback(self.hangup)
+            else:
+                self.bridgeComplete = True
+
+    def check_pickup(self, ami, event):
+        picker = event.get("channel")
+        target = event.get("targetchannel")
+
+        pattern1 = re.compile(self.pickerChannel)
+        pattern2 = re.compile(self.targetChannel)
+
+        if pattern1.match(picker) and pattern2.match(target):
+            if self.bridgeComplete:
+                self.set_passed(True)
+                self.ami[0].hangup(picker).addCallback(self.hangup)
+            else:
+                self.pickupComplete = True
+
+    def check_dial(self, ami, event):
+        dialstring = event.get('dialstring')
+        if dialstring != 'faker':
+            return
+
+        self.ami[0].registerEvent('Pickup', self.check_pickup)
+
+        if self.bridgingModel12:
+            self.ami[0].registerEvent('BridgeEnter', self.check_bridge_enter)
+        else:
+            self.ami[0].registerEvent('Bridge', self.check_bridge)
+
+        LOGGER.info("Originating Pickup attempt")
+
+        self.ami[1].originate(
+            channel = "Local/test_out@pickuptest",
+            exten = "pickup_exten",
+            context = "pickuptest",
+            priority = "1"
+        ).addErrback(self.handleOriginateFailure)
+
+    def ami_connect(self, ami):
+        self.connectionsEstablished += 1
+
+        if self.connectionsEstablished != 2:
+            return
+
+        running_version = AsteriskVersion()
+        post_version = AsteriskVersion("12.0.0")
+        if running_version < post_version:
+            #Pre-Asterisk 12
+            self.ami[0].registerEvent("Dial", self.check_dial)
+        else:
+            self.bridgingModel12 = True
+            self.ami[0].registerEvent("DialBegin", self.check_dial)
+
+        LOGGER.info("Originating channel to be picked up")
+        self.ami[0].originate(
+            channel = "LOCAL/dial_faker@pickuptest",
+            exten = "test_fuzz",
+            context = "pickuptest",
+            priority = 1
+        ).addErrback(self.handleOriginateFailure)
+
+    def run(self):
+        TestCase.run(self)
+        self.create_ami_factory(2)
+
+def main():
+    test = CallPickupTest()
+    reactor.run()
+    if test.passed != True:
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
