@@ -38,18 +38,22 @@ class WebSocketEventModule(object):
         self.host = '127.0.0.1'
         self.port = DEFAULT_PORT
         self.test_object = test_object
+        username = module_config.get('username') or 'testsuite'
+        password = module_config.get('password') or 'testsuite'
+        userpass = (username, password)
         #: ARI interface object
-        self.ari = ARI(self.host, self.port)
+        self.ari = ARI(self.host, port=self.port, userpass=userpass)
         #: Matchers for incoming events
         self.event_matchers = [
             EventMatcher(self.ari, e, test_object)
             for e in module_config['events']]
-        apps = module_config['apps']
+        apps = module_config.get('apps') or 'testsuite'
         if isinstance(apps, list):
             apps = ','.join(apps)
         #: Twisted protocol factory for ARI WebSockets
         self.factory = AriClientFactory(host=self.host, port=self.port,
-                                        apps=apps, on_event=self.on_event)
+                                        apps=apps, on_event=self.on_event,
+                                        userpass=userpass)
 
     def on_event(self, event):
         '''Handle incoming events from the WebSocket.
@@ -63,7 +67,7 @@ class WebSocketEventModule(object):
 class AriClientFactory(WebSocketClientFactory):
     '''Twisted protocol factory for building ARI WebSocket clients.
     '''
-    def __init__(self, host, apps, on_event, port=DEFAULT_PORT,
+    def __init__(self, host, apps, on_event, userpass, port=DEFAULT_PORT,
                  timeout_secs=60):
         '''Constructor
 
@@ -74,7 +78,8 @@ class AriClientFactory(WebSocketClientFactory):
         :param timeout_secs: Maximum time to try to connect to Asterisk.
         '''
         url = "ws://%s:%d/ws?%s" % \
-              (host, port, urllib.urlencode({'app': apps}))
+              (host, port,
+               urllib.urlencode({'app': apps, 'api_key': '%s:%s' % userpass}))
         WebSocketClientFactory.__init__(self, url, protocols=["stasis"])
         self.on_event = on_event
         self.timeout_secs = timeout_secs
@@ -148,14 +153,14 @@ class ARI(object):
     '''Bare bones object for an ARI interface.
     '''
 
-    def __init__(self, host, port=DEFAULT_PORT):
+    def __init__(self, host, userpass, port=DEFAULT_PORT):
         '''Constructor.
 
         :param host: Hostname of Asterisk.
         :param port: Port of the Asterisk webserver.
         '''
         self.base_url = "http://%s:%d/stasis" % (host, port)
-
+        self.userpass = userpass
 
     def build_url(self, *args):
         '''Build a URL from the given path.
@@ -177,9 +182,9 @@ class ARI(object):
         :returns: requests.models.Response
         :throws: requests.exceptions.HTTPError
         '''
-        url = self.build_url(*args, **kwargs)
+        url = self.build_url(*args)
         logger.info("GET %s %r" % (url, kwargs))
-        return raise_on_err(requests.get(url, params=kwargs))
+        return raise_on_err(requests.get(url, params=kwargs, auth=self.userpass))
 
     def post(self, *args, **kwargs):
         '''Send a POST request to ARI.
@@ -191,7 +196,7 @@ class ARI(object):
         '''
         url = self.build_url(*args, **kwargs)
         logger.info("POST %s %r" % (url, kwargs))
-        return raise_on_err(requests.post(url, params=kwargs))
+        return raise_on_err(requests.post(url, params=kwargs, auth=self.userpass))
 
     def delete(self, *args, **kwargs):
         '''Send a DELETE request to ARI.
@@ -203,7 +208,7 @@ class ARI(object):
         '''
         url = self.build_url(*args, **kwargs)
         logger.info("DELETE %s %r" % (url, kwargs))
-        return raise_on_err(requests.delete(url, params=kwargs))
+        return raise_on_err(requests.delete(url, params=kwargs, auth=self.userpass))
 
 
 def raise_on_err(resp):

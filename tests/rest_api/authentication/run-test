@@ -1,0 +1,117 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2013, Digium, Inc.
+David M. Lee, II <dlee@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import logging
+import requests
+import sys
+
+from requests import codes
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+
+LOGGER = logging.getLogger(__name__)
+
+HOST='localhost'
+PORT=8088
+
+def build_url(*args):
+    return "http://%s:%d/%s" %\
+           (HOST, PORT, '/'.join([str(arg) for arg in args]))
+
+class Scenario(object):
+    def __init__(self, userpass, method, expected_response):
+        self.userpass = userpass
+        self.method = method
+        self.expected_response = expected_response
+
+    def __repr__(self):
+        return '{ userpass=%s, method=%s, expected=%d }' % (
+            self.userpass, self.method.__name__, self.expected_response)
+
+    def eval(self, str, test, resp):
+        if self.expected_response != resp.status_code:
+            LOGGER.error("Expected %d, got %d (%s). %s - %s" % (
+                self.expected_response, resp.status_code, resp.text, self, str))
+            test.passed = False
+
+    def run(self, test):
+        LOGGER.debug("Running %s" % self)
+        if self.userpass is None:
+            # Test no authentication
+            resp = self.method(build_url('stasis', 'channels'))
+            self.eval('Unauthenticated', test, resp)
+            return
+
+        # Test basic auth
+        resp = self.method(build_url('stasis', 'channels'),
+                           auth=self.userpass)
+        self.eval('Basic', test, resp)
+
+        # Test api_key auth
+        resp = self.method(build_url('stasis', 'channels'),
+                           params={'api_key': "%s:%s" % self.userpass})
+        self.eval('api_key', test, resp)
+
+
+SCENARIOS=[
+    # Unauthenticated requests
+    Scenario(None, requests.get,  codes.unauthorized),
+    Scenario(None, requests.post, codes.unauthorized),
+    Scenario(('ro', 'not-a-password'), requests.get, codes.unauthorized),
+    Scenario(('notauser', 'password'), requests.get, codes.unauthorized),
+
+    # Read only requests
+    Scenario(('ro', 'ro-pass'), requests.options, codes.no_content),
+    Scenario(('ro', 'ro-pass'), requests.get,     codes.okay),
+    Scenario(('ro', 'ro-pass'), requests.post,    codes.forbidden),
+    Scenario(('ro', 'ro-pass'), requests.put,     codes.forbidden),
+    Scenario(('ro', 'ro-pass'), requests.patch,   codes.forbidden),
+    Scenario(('ro', 'ro-pass'), requests.delete,  codes.forbidden),
+
+    # Read-write requests
+    Scenario(('rw', 'rw-pass'), requests.options, codes.no_content),
+    Scenario(('rw', 'rw-pass'), requests.get,     codes.okay),
+    Scenario(('rw', 'rw-pass'), requests.post,    codes.bad_request),
+    Scenario(('rw', 'rw-pass'), requests.put,     codes.method_not_allowed),
+    Scenario(('rw', 'rw-pass'), requests.patch,   codes.method_not_allowed),
+    Scenario(('rw', 'rw-pass'), requests.delete,  codes.method_not_allowed),
+
+    # crypted password
+    Scenario(('crypt', 'q'), requests.get, codes.okay),
+    Scenario(('crypt', 'Q'), requests.get, codes.unauthorized),
+]
+
+class ARIAuthenticationTest(TestCase):
+    def __init__(self):
+        TestCase.__init__(self)
+        self.passed = True
+        self.create_asterisk()
+
+    def run(self):
+        try:
+            for scenario in SCENARIOS:
+                scenario.run(self)
+        except:
+            logging.exception("Exception caught during test")
+            self.passed = False
+        finally:
+            self.stop_reactor()
+
+def main():
+    test = ARIAuthenticationTest()
+    reactor.run()
+    if test.passed:
+        return 0
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
