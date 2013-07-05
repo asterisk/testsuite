@@ -34,7 +34,7 @@ class WebSocketEventModule(object):
         :param module_config: Configuration dict parse from test-config.yaml.
         :param test_object: Test control object.
         '''
-        logger.info("WebSocketEventModule ctor")
+        logger.debug("WebSocketEventModule(%r)", test_object)
         self.host = '127.0.0.1'
         self.port = DEFAULT_PORT
         self.test_object = test_object
@@ -60,6 +60,7 @@ class WebSocketEventModule(object):
 
         :param event: Dictionary parsed from incoming JSON event.
         '''
+        logger.error('%r' % event)
         for matcher in self.event_matchers:
             matcher.on_event(event)
 
@@ -77,10 +78,11 @@ class AriClientFactory(WebSocketClientFactory):
         :param port: Port of Asterisk web server.
         :param timeout_secs: Maximum time to try to connect to Asterisk.
         '''
-        url = "ws://%s:%d/ws?%s" % \
+        url = "ws://%s:%d/ari/events?%s" % \
               (host, port,
                urllib.urlencode({'app': apps, 'api_key': '%s:%s' % userpass}))
-        WebSocketClientFactory.__init__(self, url, protocols=["stasis"])
+        logger.info("WebSocketClientFactory(url=%s)" % url)
+        WebSocketClientFactory.__init__(self, url)
         self.on_event = on_event
         self.timeout_secs = timeout_secs
         self.protocol = self.__build_protocol
@@ -146,6 +148,7 @@ class AriClientProtocol(WebSocketClientProtocol):
 
         :param msg: Received text message.
         '''
+        logger.info("rxed: %s" % msg)
         self.on_event(json.loads(msg))
 
 
@@ -159,7 +162,7 @@ class ARI(object):
         :param host: Hostname of Asterisk.
         :param port: Port of the Asterisk webserver.
         '''
-        self.base_url = "http://%s:%d/stasis" % (host, port)
+        self.base_url = "http://%s:%d/ari" % (host, port)
         self.userpass = userpass
 
     def build_url(self, *args):

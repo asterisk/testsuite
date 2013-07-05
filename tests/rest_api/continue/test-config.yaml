@@ -24,26 +24,26 @@ ari-config:
     events:
         -   conditions:
                 match:
+                    type: StasisStart
                     application: continue-test
-                    stasis_start:
-                        args: []
+                    args: []
             count: 1
             callback:
                 module: rest_continue
                 method: on_start
         -   conditions:
                 match:
+                    type: StasisEnd
                     application: continue-test
-                    stasis_end:
             count: 2
             callback:
                 module: rest_continue
                 method: on_end
         -   conditions:
                 match:
+                    type: StasisStart
                     application: continue-test
-                    stasis_start:
-                        args: [fin]
+                    args: [fin]
             count: 1
             callback:
                 module: rest_continue
