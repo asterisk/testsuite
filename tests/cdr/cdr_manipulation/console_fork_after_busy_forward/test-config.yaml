@@ -1,0 +1,104 @@
+testinfo:
+    summary: CLI exec console dial busy forward with ForkCDR
+    description: |
+        'An Asterisk instance originates a local channel on an extension. This
+        extension dials another which responds with busy, then we call ForkCDR and
+        dial another number which answers. Afterwards, the CDRs are tested for
+        expected behavior.'
+
+test-modules:
+    add-to-search-path:
+        -
+            'tests/cdr'
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            maxversion: '12.0.0'
+            config-section: 'cdr-config-pre-12'
+            typename: 'cdr-tests.ForkCdrModuleBasic'
+        -
+            minversion: '12.0.0'
+            config-section: 'cdr-config-12'
+            typename: 'cdr-tests.ForkCdrModuleBasic'
+
+
+test-object-config:
+    config-path: 'tests/cdr/configs/basic'
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/1@default'
+            application: 'Echo'
+
+cdr-config-12:
+    -
+        file: 'cdrtest_local'
+        lines:
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'Dial'
+                lastarg: 'SIP/test/2'
+                dcontext: 'default'
+                channel: 'Local/1@default-.*'
+                dchannel: 'SIP/test-.*'
+                disposition: 'BUSY'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'Dial'
+                lastarg: 'SIP/test/3'
+                dcontext: 'default'
+                channel: 'Local/1@default-.*'
+                dchannel: 'SIP/test-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'Dial'
+                lastarg: 'SIP/test/3'
+                dcontext: 'default'
+                dchannel: 'SIP/test-.*'
+                channel: 'Local/1@default-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+cdr-config-pre-12:
+    -
+        file: 'cdrtest_local'
+        lines:
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'Dial'
+                lastarg: 'SIP/test/3'
+                dcontext: 'default'
+                channel: 'Local/1@default-.*'
+                dchannel: 'SIP/test-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'Dial'
+                lastarg: 'SIP/test/3'
+                dcontext: 'default'
+                dchannel: 'SIP/test-.*'
+                channel: 'Local/1@default-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'cdr_csv'
+    tags:
+        - CDR
+        - chan_local

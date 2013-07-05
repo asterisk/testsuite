@@ -1,0 +1,104 @@
+testinfo:
+    summary: Test ForkCDR option for ending the original CDR log before starting new one
+    description: |
+        'This is a normal CDRTestCase test which originates a call to an extension which
+         plays some silence, calls ForkCDR with the e option, and then plays more silence
+         before hanging up. Afterwards, both CDR records are checked to see that they
+         match expected fields and that the duration of both call records is above a
+         minimum threshold (both should have noticeable durations). Then the end time of
+         the first record is checked to see if it came reasonably close to the beginning
+         time of the second (<=1 second to accomodate potential timing differences).'
+
+test-modules:
+    add-to-search-path:
+        -
+            'tests/cdr'
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            maxversion: '12.0.0'
+            config-section: 'cdr-config-pre-12'
+            typename: 'cdr-tests.ForkCdrModuleEndTime'
+        -
+            minversion: '12.0.0'
+            config-section: 'cdr-config-12'
+            typename: 'cdr-tests.ForkCdrModuleEndTime'
+
+
+test-object-config:
+    config-path: 'tests/cdr/configs/basic'
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    test-iterations:
+        -
+            channel: 'Local/1@default'
+            application: 'Echo'
+
+cdr-config-pre-12:
+    -
+        check-entries: [0, 1]
+        file: 'cdrtest_local'
+        lines:
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'ForkCDR'
+                dcontext: 'default'
+                channel: 'Local/1@default-.*'
+                dchannel: 'SIP/test-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'Hangup'
+                dcontext: 'default'
+                dchannel: 'SIP/test-.*'
+                channel: 'Local/1@default-.*'
+                disposition: 'NO ANSWER'
+                amaflags: 'DOCUMENTATION'
+
+cdr-config-12:
+    -
+        check-entries: [1, 2]
+        file: 'cdrtest_local'
+        lines:
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'Dial'
+                dcontext: 'default'
+                channel: 'Local/1@default-.*'
+                dchannel: 'SIP/test-.*'
+                disposition: 'NO ANSWER'
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'ForkCDR'
+                dcontext: 'default'
+                channel: 'Local/1@default-.*'
+                dchannel: ''
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: 'cdrtest_local'
+                destination: '1'
+                lastapp: 'Hangup'
+                dcontext: 'default'
+                dchannel: ''
+                channel: 'Local/1@default-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+
+properties:
+    minversion: '1.8.13.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'cdr_csv'
+    tags:
+        - CDR
+        - chan_local
