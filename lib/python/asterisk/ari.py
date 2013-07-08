@@ -24,6 +24,18 @@ logger = logging.getLogger(__name__)
 DEFAULT_PORT = 8088
 
 
+#: Default matcher to ensure we don't have any validation failures on the
+#  WebSocket
+ValidationMatcher = {
+    'conditions': {
+        'match': {
+            'error': "^InvalidMessage$"
+        }
+    },
+    'count': 0
+}
+
+
 class WebSocketEventModule(object):
     '''Module for capturing events from the ARI WebSocket
     '''
@@ -47,6 +59,8 @@ class WebSocketEventModule(object):
         self.event_matchers = [
             EventMatcher(self.ari, e, test_object)
             for e in module_config['events']]
+        self.event_matchers.append(EventMatcher(self.ari, ValidationMatcher,
+                                                test_object))
         apps = module_config.get('apps') or 'testsuite'
         if isinstance(apps, list):
             apps = ','.join(apps)
@@ -187,7 +201,8 @@ class ARI(object):
         '''
         url = self.build_url(*args)
         logger.info("GET %s %r" % (url, kwargs))
-        return raise_on_err(requests.get(url, params=kwargs, auth=self.userpass))
+        return raise_on_err(requests.get(url, params=kwargs,
+                                         auth=self.userpass))
 
     def post(self, *args, **kwargs):
         '''Send a POST request to ARI.
@@ -199,7 +214,8 @@ class ARI(object):
         '''
         url = self.build_url(*args, **kwargs)
         logger.info("POST %s %r" % (url, kwargs))
-        return raise_on_err(requests.post(url, params=kwargs, auth=self.userpass))
+        return raise_on_err(requests.post(url, params=kwargs,
+                                          auth=self.userpass))
 
     def delete(self, *args, **kwargs):
         '''Send a DELETE request to ARI.
@@ -211,7 +227,8 @@ class ARI(object):
         '''
         url = self.build_url(*args, **kwargs)
         logger.info("DELETE %s %r" % (url, kwargs))
-        return raise_on_err(requests.delete(url, params=kwargs, auth=self.userpass))
+        return raise_on_err(requests.delete(url, params=kwargs,
+                                            auth=self.userpass))
 
 
 def raise_on_err(resp):
