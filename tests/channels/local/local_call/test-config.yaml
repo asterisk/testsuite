@@ -1,0 +1,98 @@
+testinfo:
+    summary: 'Test Local channel operation between two real channels'
+    description: |
+        This test puts a Local channel between two SIP channels:
+        SIP/foo <---> Local/1 <-> Local/2 <---> SIP/bar
+                 B0           LB           B1
+        In the first iteration, the Local channel should optimize itself away,
+        resulting in a bridge of SIP/foo and SIP/bar. In the second iteration,
+        the n flag should keep the Local channel from optimizing, resulting
+        in the original bridge(s) being maintained.
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - chan_local
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            minversion: '12.0.0'
+            config-section: ami-config-12
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -
+            channel: 'Local/dial_bar@default'
+            exten: 'dial_foo'
+            context: 'default'
+            priority: '1'
+        -
+            channel: 'Local/dial_bar@default/n'
+            exten: 'dial_foo'
+            context: 'default'
+            priority: '1'
+
+ami-config-12:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'LocalBridge'
+                LocalOneChannel: 'Local/dial_bar@default-.{7}0;1'
+                LocalTwoChannel: 'Local/dial_bar@default-.{7}0;2'
+        requirements:
+            match:
+                LocalOptimization: 'Yes'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'LocalOptimizationBegin'
+                LocalOneChannel: 'Local/dial_bar@default-.{7}0;1'
+                LocalTwoChannel: 'Local/dial_bar@default-.{7}0;2'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'LocalOptimizationEnd'
+                LocalOneChannel: 'Local/dial_bar@default-.{7}0;1'
+                LocalTwoChannel: 'Local/dial_bar@default-.{7}0;2'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'LocalBridge'
+                LocalOneChannel: 'Local/dial_bar@default-.{7}1;1'
+                LocalTwoChannel: 'Local/dial_bar@default-.{7}1;2'
+        requirements:
+            match:
+                LocalOptimization: 'No'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'LocalOptimizationBegin'
+                LocalOneChannel: 'Local/dial_bar@default-.{7}1;1'
+                LocalTwoChannel: 'Local/dial_bar@default-.{7}1;2'
+        count: '0'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'LocalOptimizationEnd'
+                LocalOneChannel: 'Local/dial_bar@default-.{7}1;1'
+                LocalTwoChannel: 'Local/dial_bar@default-.{7}1;2'
+        count: '0'
