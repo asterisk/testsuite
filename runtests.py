@@ -91,7 +91,7 @@ class TestRun:
         contents = os.listdir('.')
         core_files = []
         for item in contents:
-            if item.startswith('core.'):
+            if item.startswith('core'):
                 core_files.append(item)
         return core_files
 
