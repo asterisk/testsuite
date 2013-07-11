@@ -47,17 +47,17 @@ class Scenario(object):
         LOGGER.debug("Running %s" % self)
         if self.userpass is None:
             # Test no authentication
-            resp = self.method(build_url('stasis', 'channels'))
+            resp = self.method(build_url('ari', 'channels'))
             self.eval('Unauthenticated', test, resp)
             return
 
         # Test basic auth
-        resp = self.method(build_url('stasis', 'channels'),
+        resp = self.method(build_url('ari', 'channels'),
                            auth=self.userpass)
         self.eval('Basic', test, resp)
 
         # Test api_key auth
-        resp = self.method(build_url('stasis', 'channels'),
+        resp = self.method(build_url('ari', 'channels'),
                            params={'api_key': "%s:%s" % self.userpass})
         self.eval('api_key', test, resp)
 
