@@ -145,7 +145,7 @@ class SimpleTestCase(TestCase):
         next new call '''
 
         candidate_channel = [chan for chan in self._tracking_channels
-                             if chan['channel'] == event['channel']]
+                             if chan['channel'] in event['channel']]
         if (len(candidate_channel)):
             LOGGER.debug("Channel %s hung up; removing" % event['channel'])
             self._tracking_channels.remove(candidate_channel[0])
