@@ -19,14 +19,14 @@ from asterisk.sipp import SIPpScenario
 from twisted.internet import reactor
 
 logger = logging.getLogger(__name__)
-TEST_DIR = os.path.dirname(os.path.realpath(__file__))
-INJECT_FILE_BYPASS = TEST_DIR + "/sipp/inject_bypass.csv"
-INJECT_FILE_BRIDGE = TEST_DIR + "/sipp/inject_bridge.csv"
+INJECT_FILE_BYPASS = "inject_bypass.csv"
+INJECT_FILE_BRIDGE = "inject_bridge.csv"
 
 class SIPHold(TestCase):
     def __init__(self):
         TestCase.__init__(self)
         self.create_asterisk()
+
         self.sipp_phone_a_scenarios = [{'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BYPASS},
             {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BYPASS},
             {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BYPASS},
@@ -73,8 +73,8 @@ class SIPHold(TestCase):
             logger.info("All scenarios executed")
             return
 
-        sipp_a = SIPpScenario(TEST_DIR, self.sipp_phone_a_scenarios[self.__test_counter])
-        sipp_b = SIPpScenario(TEST_DIR, self.sipp_phone_b_scenarios[self.__test_counter])
+        sipp_a = SIPpScenario(self.test_name, self.sipp_phone_a_scenarios[self.__test_counter])
+        sipp_b = SIPpScenario(self.test_name, self.sipp_phone_b_scenarios[self.__test_counter])
 
         # Start up the listener first - Phone A calls Phone B
         self.__a_finished = False
