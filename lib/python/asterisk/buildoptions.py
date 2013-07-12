@@ -41,7 +41,7 @@ class AsteriskBuildOptions:
         for p in buildopts_hdr_paths:
             if (self.__parse_buildopts_file(p)):
                 return
-        print "Failed to open any build options files"
+        raise Exception("Failed to open any build options files")
 
 
     def __parse_buildopts_file(self, path):

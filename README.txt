@@ -183,8 +183,7 @@ Build and install it.
     $ ./configure && make
     $ make install
 
-Check out the test suite inside of the Asterisk source tree.  In this case, we
-will have the testsuite directory inside of the asterisk-trunk directory.
+Check out the test suite:
     $ svn co http://svn.digium.com/svn/testsuite/asterisk/trunk testsuite
     $ cd testsuite
 
@@ -202,8 +201,6 @@ Run the tests:
 For more syntax information:
     $ ./runtests.py --help
 
-
-
 As an alternative to the above, you can use run-local:
 
 Get the Asterisk source tree you want to test:
@@ -213,8 +210,7 @@ Get the Asterisk source tree you want to test:
 Optionally configure and make it:
     $ ./configure && make
 
-Check out the test suite inside of the Asterisk source tree.  In this case, we
-will have the testsuite directory inside of the asterisk-trunk directory.
+Check out the test suite:
     $ svn co http://svn.digium.com/svn/testsuite/asterisk/trunk testsuite
     $ cd testsuite
 

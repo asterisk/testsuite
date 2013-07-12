@@ -398,19 +398,6 @@ def main(argv=None):
             help="List available tags")
     (options, args) = parser.parse_args(argv)
 
-    # Check to see if this has been executed within a sub directory of an
-    # Asterisk source tree.  This is required so that we can execute
-    # install and uninstall targets of the Asterisk Makefile in between
-    # tests.
-    if os.path.exists("../main/asterisk.c") is False:
-        print "***  ERROR  ***\n" \
-              "runtests has not been executed from within a\n" \
-              "subdirectory of an Asterisk source tree.  This\n" \
-              "is required for being able to uninstall and install\n" \
-              "Asterisk in between tests.\n" \
-              "***************\n"
-        return 1
-
     ast_version = AsteriskVersion(options.version)
 
     # Ensure that there's a trailing '/' in the test specified with -t
