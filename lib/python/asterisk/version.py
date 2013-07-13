@@ -29,7 +29,7 @@ class AsteriskVersion:
     This class handles Asterisk version strings.
     """
 
-    supported_features = [ 'cert', 'digiumphones' ]
+    supported_features = [ 'cert', 'digiumphones', 'dfsg' ]
 
     supported_modifiers = [ 'rc', 'beta' ]
 
@@ -104,7 +104,7 @@ class AsteriskVersion:
 
         raw_version = raw_version.replace('Asterisk ', '')
 
-        tokens = raw_version.split('-')
+        tokens = re.split('[-~]', raw_version)
         count = 0
         while (count < len(tokens)):
             token = tokens[count]
