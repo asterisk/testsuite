@@ -2,7 +2,7 @@ testinfo:
     summary:     'Test account code propagation for SIP blind transfers.'
     description: |
         "This test ensures that when a channel with an account code, dials a
-        channel without and account code, then transfers the dialed channel to
+        channel without an account code, then transfers the dialed channel to
         another channel, the calling (and transferring) channel's account code
         is copied to the called channel and stored in the CDR record for the
         transfer."
@@ -12,8 +12,6 @@ testinfo:
 properties:
     minversion: '1.8.0.0'
     dependencies:
-        - app : 'bash'
-        - app : 'asttest'
         - sipp :
             version : 'v3.0'
             feature : 'TLS'
@@ -22,3 +20,134 @@ properties:
         - CDR
         - SIP
         - transfer
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+test-object-config:
+    test-iterations:
+        -
+            # Register all 3 peers; names test1, -2, -3
+            scenarios:
+                - { 'key-args': {'scenario': 'register.xml', '-p': '5060',
+                    '-i': '127.0.0.2', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test1',
+                        '-set', 'file', 'data.csv'] }
+                - { 'key-args': {'scenario': 'register.xml', '-p': '5060',
+                    '-i': '127.0.0.3', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test2',
+                        '-set', 'file', 'data.csv'] }
+                - { 'key-args': {'scenario': 'register.xml', '-p': '5060',
+                    '-i': '127.0.0.4', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test3',
+                        '-set', 'file', 'data.csv'] }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'wait-for-call.xml', '-p': '5060',
+                    '-i': '127.0.0.2', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test1',
+                        '-set', 'file', 'data.csv'] }
+                - { 'key-args': {'scenario': 'wait-for-call-do-hangup.xml', '-p': '5060',
+                    '-i': '127.0.0.3', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test2',
+                        '-set', 'file', 'data.csv'] }
+                - { 'key-args': {'scenario': 'call-then-blind-transfer.xml', '-p': '5060',
+                    '-i': '127.0.0.4', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test3',
+                        '-set', 'file', 'data.csv'] }
+            # Re-Register all 3 peers; names test3, -2, -1
+            scenarios:
+                - { 'key-args': {'scenario': 'register.xml', '-p': '5060',
+                    '-i': '127.0.0.2', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test3',
+                        '-set', 'file', 'data.csv'] }
+                - { 'key-args': {'scenario': 'register.xml', '-p': '5060',
+                    '-i': '127.0.0.3', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test2',
+                        '-set', 'file', 'data.csv'] }
+                - { 'key-args': {'scenario': 'register.xml', '-p': '5060',
+                    '-i': '127.0.0.4', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test1',
+                        '-set', 'file', 'data.csv'] }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'wait-for-call.xml', '-p': '5060',
+                    '-i': '127.0.0.2', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test3',
+                        '-set', 'file', 'data.csv'] }
+                - { 'key-args': {'scenario': 'wait-for-call-do-hangup.xml', '-p': '5060',
+                    '-i': '127.0.0.3', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test2',
+                        '-set', 'file', 'data.csv'] }
+                - { 'key-args': {'scenario': 'call-then-blind-transfer.xml', '-p': '5060',
+                    '-i': '127.0.0.4', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test1',
+                        '-set', 'file', 'data.csv'] }
+
+cdr-config:
+    -
+        file: 'Master'
+        lines:
+            -
+                source: 'test1'
+                destination: 'test3'
+                accountcode: 'account1'
+                disposition: 'ANSWERED'
+                channel: 'SIP/test1-.*'
+                dchannel: 'SIP/test3-.*'
+            -
+                source: 'test3'
+                destination: 'test2'
+                accountcode: 'account1'
+                disposition: 'ANSWERED'
+                channel: 'SIP/test3-.*'
+                dchannel: 'SIP/test2-.*'
+    -
+        file: 'account1'
+        lines:
+            -
+                source: 'test1'
+                destination: 'test3'
+                accountcode: 'account1'
+                disposition: 'ANSWERED'
+                channel: 'SIP/test1-.*'
+                dchannel: 'SIP/test3-.*'
+            -
+                source: 'test3'
+                destination: 'test2'
+                accountcode: 'account1'
+                disposition: 'ANSWERED'
+                channel: 'SIP/test3-.*'
+                dchannel: 'SIP/test2-.*'
+
+

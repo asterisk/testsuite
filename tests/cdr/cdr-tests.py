@@ -10,12 +10,61 @@ the GNU General Public License Version 2.
 
 import sys
 import logging
+import time
 
 sys.path.append("lib/python")
 from cdr import CDRModule
 from cdr import AsteriskCSVCDR
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
+
+class SequenceOriginator(object):
+    ''' A class that performs an origination on each iteration of a SIPp
+    scenario.
+
+    Right now this is only used by the originate-cdr-disposition test; if it happens to
+    be more generically useful it can be relocated into another module.
+    '''
+
+    def __init__(self, module_config, test_object):
+        ''' Constructor '''
+
+        self.module_config = module_config
+        test_object.register_scenario_started_observer(self.scenario_started)
+        test_object.register_ami_observer(self.ami_connect)
+        self.ami = None
+        self.test_counter = 0
+
+    def ami_connect(self, ami):
+        ''' Callback for when AMI connects '''
+        self.ami = ami
+
+    def scenario_started(self, result):
+        ''' Handle origination on SIPp scenario start '''
+        LOGGER.info("Scenario started; originating new call")
+        self.originate_call()
+        self.test_counter += 1
+        return result
+
+    def originate_call(self):
+        ''' Originate a new call '''
+
+        def failure_absorber(reason):
+            ''' Absorb an exception thrown by an Originate failure '''
+            LOGGER.debug('Ignoring originate failure...')
+            return reason
+
+        if self.test_counter > (len(self.module_config) - 1):
+            LOGGER.debug('Ignoring scenario start; no more calls to originate')
+            return
+        originate_obj = self.module_config[self.test_counter]
+        defered = self.ami.originate(**originate_obj['parameters'])
+        ignore_failures = originate_obj.get('ignore-originate-failure') or False
+        if ignore_failures:
+            defered.addErrback(failure_absorber)
+
+
+
 
 class ForkCdrModuleBasic(CDRModule):
     ''' A class that adds some additional CDR checking on top of CDRModule
@@ -37,7 +86,7 @@ class ForkCdrModuleBasic(CDRModule):
              self.test_object.ast[0].directories['astlogdir'], "cdrtest_local"))
 
         if int(cdr1[0].duration) < int(cdr1[1].duration):
-            logger.error("Fail: Original CDR duration shorter than forked")
+            LOGGER.error("Fail: Original CDR duration shorter than forked")
             self.test_object.set_passed(False)
         return
 
@@ -65,12 +114,12 @@ class ForkCdrModuleEndTime(CDRModule):
                  self.test_object.ast[0].directories['astlogdir'],
                  "cdrtest_local"))
 
-        logger.debug('Checking for missing fields')
+        LOGGER.debug('Checking for missing fields')
         for cdritem in cdr1:
             if (cdritem.duration is None or
                 cdritem.start is None or
                 cdritem.end is None):
-                logger.error("EPIC FAILURE: CDR record %s is missing one or " \
+                LOGGER.error("EPIC FAILURE: CDR record %s is missing one or " \
                              "more key fields. This should never be able to " \
                              "happen." % cdritem)
                 self.test_object.set_passed(False)
@@ -79,27 +128,29 @@ class ForkCdrModuleEndTime(CDRModule):
         # The dialplan is set up so that these two CDRs should each last at
         # least 4 seconds. Giving it wiggle room, we'll just say we want it to
         # be greater than 1 second.
-        logger.debug('Checking durations')
+        LOGGER.debug('Checking durations')
         for entry in self.entries_to_check:
             if (int(cdr1[entry].duration) <= 1):
-                logger.error("CDR at %d has duration less than one second" %
+                LOGGER.error("CDR at %d has duration less than one second" %
                              entry)
                 self.test_object.set_passed(False)
                 return
 
-        logger.debug('Checking start/end times for forked entries')
+        LOGGER.debug('Checking start/end times for forked entries')
         for i in range(len(self.entries_to_check) - 1):
-            end = time.strptime(cdr1[self.entries_to_check[i]].end, "%Y-%m-%d %H:%M:%S")
-            beg = time.strptime(cdr1[self.entries_to_check[i + 1]].start, "%Y-%m-%d %H:%M:%S")
+            end = time.strptime(cdr1[self.entries_to_check[i]].end,
+                "%Y-%m-%d %H:%M:%S")
+            beg = time.strptime(cdr1[self.entries_to_check[i + 1]].start,
+                "%Y-%m-%d %H:%M:%S")
 
             #check that the end of the first CDR occurred within 1 second of
             # the beginning of the second CDR
             if (abs(time.mktime(end) - time.mktime(beg)) > 1):
-                logger.error("Time discrepancy between end1 and start2: must " \
+                LOGGER.error("Time discrepancy between end1 and start2: must " \
                              "be one second or less.\n")
-                logger.error("Actual times: end cdr1 = %s   begin cdr2 = %s" %
+                LOGGER.error("Actual times: end cdr1 = %s   begin cdr2 = %s" %
                              (cdr1[self.entries_to_check[i]].end,
-                              cdr1[self_entries_to_check[i + 1]].start))
+                              cdr1[self.entries_to_check[i + 1]].start))
                 self.test_object.set_passed(False)
                 return
 

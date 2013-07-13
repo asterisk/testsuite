@@ -70,30 +70,12 @@
         Max-Forwards: 70
         Content-Length: 0
         Refer-To: <sip:[field3 line="[$line]"]@[remote_ip]:[remote_port]>
-        Reffered-By: <sip:[field0 line="[$line]"]@[local_ip]:[local_port]>
+        Referred-By: <sip:[field0 line="[$line]"]@[local_ip]:[local_port]>
 
         ]]>
     </send>
 
     <recv response="202" optional="false" />
-    <recv request="NOTIFY" optional="false" />
-
-    <send>
-        <![CDATA[
-
-        SIP/2.0 200 OK
-        [last_Via:]
-        [last_From:]
-        [last_To:]
-        [last_Call-ID:]
-        [last_CSeq:]
-        [last_Record-Route:]
-        Contact: sip:[field0 line="[$line]"]@[local_ip]:[local_port]
-        Content-Length: 0
-
-        ]]>
-    </send>
-
     <recv request="NOTIFY" optional="false" />
 
     <send>

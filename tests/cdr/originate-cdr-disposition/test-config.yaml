@@ -12,11 +12,117 @@ testinfo:
 properties:
     minversion: '1.8.0.0'
     dependencies:
-        - app : 'bash'
-        - app : 'asttest'
         - sipp :
             version : 'v3.0'
         - asterisk : 'cdr_csv'
     tags:
         - SIP
         - CDR
+
+test-modules:
+    add-to-search-path:
+        -
+            'tests/cdr'
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'sequence-originator'
+            typename: 'cdr-tests.SequenceOriginator'
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+cdr-config:
+    -
+        file: 'Master'
+        lines:
+            -
+                disposition: 'ANSWERED'
+                channel: 'SIP/test1-.*'
+                dchannel: ''
+            -
+                disposition: 'BUSY'
+                channel: 'SIP/test1-.*'
+                dchannel: ''
+            -
+                disposition: 'FAILED'
+                channel: 'SIP/test1-.*'
+                dchannel: ''
+            -
+                disposition: 'NO ANSWER'
+                channel: 'SIP/test1-.*'
+                dchannel: ''
+            -
+                disposition: 'NO ANSWER'
+                channel: 'SIP/test1-.*'
+                dchannel: 'SIP/test2-.*'
+
+sequence-originator:
+    -
+        parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1' }
+        ignore-originate-failure: 'no'
+    -
+        parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1' }
+        ignore-originate-failure: 'no'
+    -
+        parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1' }
+        ignore-originate-failure: 'no'
+    -
+        parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1', timeout: 1 }
+        ignore-originate-failure: 'yes'
+    -
+        parameters: { channel: 'sip/test1', context: 'default', exten: 'dial', priority: '1' }
+        ignore-originate-failure: 'yes'
+
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'wait-for-call.xml', '-p': '5060',
+                    '-i': '127.0.0.2', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test1',
+                        '-set', 'file', 'data.csv'] }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'wait-for-call-busy.xml', '-p': '5060',
+                    '-i': '127.0.0.2', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test1',
+                        '-set', 'file', 'data.csv'] }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'wait-for-call-congestion.xml', '-p': '5060',
+                    '-i': '127.0.0.2', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test1',
+                        '-set', 'file', 'data.csv'] }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'wait-for-call-timeout.xml', '-p': '5060',
+                    '-i': '127.0.0.2', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test1',
+                        '-set', 'file', 'data.csv'] }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'wait-for-call.xml', '-p': '5060',
+                    '-i': '127.0.0.2', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test1',
+                        '-set', 'file', 'data.csv'] }
+                - { 'key-args': {'scenario': 'wait-for-call-timeout.xml', '-p': '5060',
+                    '-i': '127.0.0.3', '-inf': 'data.csv' },
+                    'ordered-args': [
+                        '-infindex', 'data.csv', '0',
+                        '-set', 'user', 'test2',
+                        '-set', 'file', 'data.csv'] }
+
