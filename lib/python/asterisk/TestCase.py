@@ -93,6 +93,7 @@ class TestCase(object):
         self._stopping = False
         self.testlogdir = os.path.join(Asterisk.test_suite_root, self.base, str(os.getpid()))
         self.ast_version = AsteriskVersion()
+        self._start_callbacks = []
         self._stop_callbacks = []
         self._ami_callbacks = []
         self._pcap_callbacks = []
@@ -282,6 +283,8 @@ class TestCase(object):
 
         def __run_callback(result):
             """ Notify the test that we are running """
+            for callback in self._start_callbacks:
+                callback(self)
             self.run()
             return result
 
@@ -502,6 +505,16 @@ class TestCase(object):
         should take in a single parameter, which will be the packet received
         '''
         self._pcap_callbacks.append(callback)
+
+    def register_start_observer(self, callback):
+        ''' Register an observer that will be called when all Asterisk instances have
+        started
+
+        Parameters:
+        callback The deferred callback function to be called when all instances of
+        Asterisk have started. This will be passed this object as a parameter.
+        '''
+        self._start_callbacks.append(callback)
 
     def register_stop_observer(self, callback):
         ''' Register an observer that will be called when Asterisk is stopped
