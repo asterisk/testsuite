@@ -96,7 +96,7 @@ class AriClientFactory(WebSocketClientFactory):
               (host, port,
                urllib.urlencode({'app': apps, 'api_key': '%s:%s' % userpass}))
         logger.info("WebSocketClientFactory(url=%s)" % url)
-        WebSocketClientFactory.__init__(self, url)
+        WebSocketClientFactory.__init__(self, url, debug = True, protocols=['ari'])
         self.on_event = on_event
         self.timeout_secs = timeout_secs
         self.protocol = self.__build_protocol
