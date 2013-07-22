@@ -374,9 +374,9 @@ class TestCase(object):
         if not self._stopping:
             self._stopping = True
             df = self.__stop_asterisk()
-            df.addCallback(__stop_reactor)
             for callback in self._stop_callbacks:
                 df.addCallback(callback)
+            df.addCallback(__stop_reactor)
 
     def __reactor_timeout(self):
         """
