@@ -44,17 +44,17 @@ class StartConfBridgeState(ConfbridgeTestState):
 
         self._ami = ami
         ami.registerEvent('ConfbridgeJoin', self.handle_confbridge_join_event)
-        ami.registerEvent('VarSet', self.handle_varset_event)
+        ami.registerEvent('TestEvent', self.handle_testevent_event)
 
-    def handle_varset_event(self, ami, event):
-        """ VarSet event handler """
+    def handle_testevent_event(self, ami, event):
+        """ TestEvent event handler """
 
-        if 'variable' not in event or 'value' not in event:
+        if event['state'] != "MIXMONITOR_END":
             return
-        if event['variable'] != 'MIXMONITOR_FILENAME':
+        if 'file' not in event:
             return
-        logger.debug("Detected variable MIXMONITOR_FILENAME: %s" % event['value'])
-        self.testCase.set_recording_file(event['value'])
+        logger.debug("Detected variable MIXMONITOR_FILENAME: %s" % event['file'])
+        self.testCase.set_recording_file("%s.wav" % event['file'])
 
     def handle_confbridge_join_event(self, ami, event):
         """ ConfBridgeJoin event handler """
