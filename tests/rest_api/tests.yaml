@@ -2,3 +2,4 @@
 tests:
     - test: 'continue'
     - test: 'authentication'
+    - test: 'CORS'
