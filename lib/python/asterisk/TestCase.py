@@ -284,7 +284,7 @@ class TestCase(object):
         def __run_callback(result):
             """ Notify the test that we are running """
             for callback in self._start_callbacks:
-                callback(self)
+                callback()
             self.run()
             return result
 
@@ -507,12 +507,12 @@ class TestCase(object):
         self._pcap_callbacks.append(callback)
 
     def register_start_observer(self, callback):
-        ''' Register an observer that will be called when all Asterisk instances have
-        started
+        ''' Register an observer that will be called when all Asterisk instances
+        have started
 
         Parameters:
         callback The deferred callback function to be called when all instances of
-        Asterisk have started. This will be passed this object as a parameter.
+        Asterisk have started. The callback should take no parameters.
         '''
         self._start_callbacks.append(callback)
 
