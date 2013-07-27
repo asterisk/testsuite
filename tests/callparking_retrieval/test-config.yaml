@@ -8,4 +8,4 @@ properties:
     minversion: '1.8.0.0'
     tags:
         - parking
-        - IAX
+        - iax2

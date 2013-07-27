@@ -7,10 +7,10 @@ testinfo:
         usage by the chan_iax2 driver.
 
 properties:
-    minversion: '11.0'
+    minversion: '11.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
     tags:
-        - IAX2
+        - iax2
         - ACL
