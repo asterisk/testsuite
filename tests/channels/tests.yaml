@@ -3,4 +3,4 @@ tests:
     - dir: 'SIP'
     - dir: 'iax2'
     - dir: 'local'
-    - dir: 'gulp'
+    - dir: 'pjsip'
