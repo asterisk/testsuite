@@ -1,0 +1,46 @@
+testinfo:
+    summary:     'Tests SRTP key negotiation.'
+    description: |
+        'Run a SIPp scenario that tests SRTP key negotiation scenarios including:
+         * nominal scenario with a single crypto offer
+         * nominal scenario with multiple crypto offers with varying crypto suites, first suite unsupported
+         * nominal scenario with unencrypted media with extraneous crypto attribute
+         * off-nominal call rejection via missing crypto attribute
+         * off-nominal call rejection via no encryption offered (enabled on endpoint)
+         * off-nominal call rejection via encryption offered (not enabled on endpoint)
+         * off-nominal call rejection via unknown cryptographic suite in crypto offer
+         * off-nominal call rejection via missing suite
+         * off-nominal call rejection via missing tag
+         * off-nominal call rejection via missing key
+         * off-nominal call rejection via lifetime specified (unsupported)
+        '
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'accept_nominal.xml', '-i': '127.0.0.1', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'accept_multiple_attrib_first_bad.xml', '-i': '127.0.0.1', '-p': '5062'} }
+                - { 'key-args': {'scenario': 'accept_disabled_with_attrib.xml', '-i': '127.0.0.1', '-p': '5063'} }
+                - { 'key-args': {'scenario': 'decline_no_attrib.xml', '-i': '127.0.0.1', '-p': '5064'} }
+                - { 'key-args': {'scenario': 'decline_not_enabled.xml', '-i': '127.0.0.1', '-p': '5065'} }
+                - { 'key-args': {'scenario': 'decline_enabled.xml', '-i': '127.0.0.1', '-p': '5066'} }
+                - { 'key-args': {'scenario': 'decline_unknown_suite.xml', '-i': '127.0.0.1', '-p': '5067'} }
+                - { 'key-args': {'scenario': 'decline_no_suite.xml', '-i': '127.0.0.1', '-p': '5068'} }
+                - { 'key-args': {'scenario': 'decline_no_tag.xml', '-i': '127.0.0.1', '-p': '5069'} }
+                - { 'key-args': {'scenario': 'decline_no_key.xml', '-i': '127.0.0.1', '-p': '5070'} }
+                - { 'key-args': {'scenario': 'decline_with_lifetime.xml', '-i': '127.0.0.1', '-p': '5071'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
