@@ -34,7 +34,8 @@ class Originator(object):
             'trigger': 'scenario_start',
             'id': '0',
             'async': 'False',
-            'event': None
+            'event': None,
+            'timeout': None,
         }
 
         # process config
@@ -90,11 +91,13 @@ class Originator(object):
                                context=self.config['context'],
                                exten=self.config['exten'],
                                priority=self.config['priority'],
+                               timeout=self.config['timeout'],
                                async=self.config['async']).addErrback(self.failure)
         else:
             self.ami.originate(channel=self.config['channel'],
                                application=self.config['application'],
                                data=self.config['data'],
+                               timeout=self.config['timeout'],
                                async=self.config['async']).addErrback(self.failure)
 
     def scenario_started(self, result):
