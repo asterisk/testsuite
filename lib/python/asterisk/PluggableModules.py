@@ -12,6 +12,7 @@ import logging
 
 sys.path.append("lib/python")
 from ami import AMIEventInstance
+from twisted.internet import reactor
 
 LOGGER = logging.getLogger(__name__)
 
@@ -135,6 +136,7 @@ class AMIChannelHangup(AMIEventInstance):
         ''' Constructor for pluggable modules '''
         super(AMIChannelHangup, self).__init__(instance_config, test_object)
         self.hungup_channel = False
+        self.delay = instance_config.get('delay') or 0
 
     def event_callback(self, ami, event):
         ''' Override of the event callback '''
@@ -144,7 +146,7 @@ class AMIChannelHangup(AMIEventInstance):
             return
         LOGGER.info('Hanging up channel %s' % event['channel'])
         self.hungup_channel = True
-        ami.hangup(event['channel'])
+        reactor.callLater(self.delay, ami.hangup, event['channel'])
 
 
 class AMIChannelHangupAll(AMIEventInstance):
