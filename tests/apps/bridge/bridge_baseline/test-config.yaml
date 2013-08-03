@@ -1,10 +1,7 @@
 testinfo:
     summary:     'Get a baseline for Bridge operations'
     description: |
-        'This tests the bridging of two local channels using the Bridge application.
-         If successful, a BridgeExec event is sent which the test checks for the
-         expected results.  The test passes if the event indicates a successful bridge
-         and if the channels is the bridge are the expected channels.'
+        'This tests the bridging of two local channels using the Bridge application.'
 
 test-modules:
     test-object:
@@ -84,7 +81,9 @@ ami-config-pre-12:
         type: 'headermatch'
         conditions:
             match:
-                Event: 'Unlink'
+                Event: 'Bridge'
+                Bridgestate: 'Unlink'
+                Bridgetype: 'core'
         count: '1'
 
 cdr-config-pre-12:
@@ -114,10 +113,11 @@ cdr-config-pre-12:
 
 hangup-config-12:
     type: 'headermatch'
+    delay: 2
     conditions:
         match:
             Event: 'BridgeEnter'
-            BridgeType: simple_bridge
+            BridgeType: basic
             Channel: Local/local@call1-.{8};1
 
 ami-config-12:
@@ -126,7 +126,8 @@ ami-config-12:
         conditions:
             match:
                 Event: 'BridgeEnter'
-                BridgeType: simple_bridge
+                BridgeType: basic
+                BridgeTechnology: simple_bridge
                 Channel: Local/local@call1-.{8};1
         count: '1'
     -
@@ -134,7 +135,8 @@ ami-config-12:
         conditions:
             match:
                 Event: 'BridgeEnter'
-                BridgeType: simple_bridge
+                BridgeType: basic
+                BridgeTechnology: simple_bridge
                 Channel: Local/local@call2-.{8};1
         count: '1'
     -
@@ -142,7 +144,8 @@ ami-config-12:
         conditions:
             match:
                 Event: 'BridgeLeave'
-                BridgeType: simple_bridge
+                BridgeType: basic
+                BridgeTechnology: simple_bridge
                 Channel: Local/local@call1-.{8};1
         count: '1'
     -
@@ -150,7 +153,8 @@ ami-config-12:
         conditions:
             match:
                 Event: 'BridgeLeave'
-                BridgeType: simple_bridge
+                BridgeType: basic
+                BridgeTechnology: simple_bridge
                 Channel: Local/local@call2-.{8};1
         count: '1'
 
@@ -158,6 +162,16 @@ cdr-config-12:
     -
         file: 'Master'
         lines:
+            -
+                accountcode: ''
+                destination: 'local'
+                dcontext: 'call.{1}'
+                callerid: '"" <>'
+                channel: 'Local/local@call.{1}-.{8};2'
+                dchannel: ''
+                lastapp: 'Echo'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
             -
                 accountcode: ''
                 destination: 'bridge'
@@ -185,17 +199,7 @@ cdr-config-12:
                 callerid: '"" <>'
                 channel: 'Local/local@call.{1}-.{8};2'
                 dchannel: ''
-                lastapp: 'Answer'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-            -
-                accountcode: ''
-                destination: 'local'
-                dcontext: 'call.{1}'
-                callerid: '"" <>'
-                channel: 'Local/local@call.{1}-.{8};2'
-                dchannel: ''
-                lastapp: 'Answer'
+                lastapp: 'Echo'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
 
