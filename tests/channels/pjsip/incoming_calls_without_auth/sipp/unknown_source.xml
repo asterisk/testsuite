@@ -29,7 +29,7 @@
     ]]>
   </send>
 
-  <recv response="403">
+  <recv response="401">
   </recv>
 
   <!-- definition of the response time repartition table (unit is ms)   -->
