@@ -10,6 +10,6 @@ properties:
         - python : twisted
         - python : starpy
         - python : requests
-        - asterisk : res_stasis_http_channels
+        - asterisk : res_ari_channels
     tags:
         - ARI

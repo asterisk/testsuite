@@ -56,7 +56,7 @@ properties:
         - python : requests
         - python : twisted
         - python : starpy
-        - asterisk : res_stasis_http_channels
+        - asterisk : res_ari_channels
         - asterisk : app_echo
     tags:
         - ARI
