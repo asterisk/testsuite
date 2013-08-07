@@ -42,13 +42,10 @@ class CallParkingTest(TestCase):
 
     def check_result(self):
         if not self.got_AMI_UnParkedCall:
-            logger.info("Bailed 1")
             return
         if not self.ast1_event:
-            logger.info("Bailed 2")
             return
         if not self.ast2_event:
-            logger.info("Bailed 3")
             return
 
         # Parked call subtest completed successfully.
