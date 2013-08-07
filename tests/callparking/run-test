@@ -13,6 +13,7 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 from asterisk.TestCase import TestCase
+from asterisk.version import AsteriskVersion
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,10 @@ class CallParkingTest(TestCase):
         TestCase.__init__(self)
 
         self.ami_count = 0
+        self.parking_var = "exten"
+
+        if AsteriskVersion() >= AsteriskVersion('12'):
+            self.parking_var = "parkingspace"
 
         # Initial parked call subtest.
         self.expected_space = 701
@@ -37,10 +42,13 @@ class CallParkingTest(TestCase):
 
     def check_result(self):
         if not self.got_AMI_UnParkedCall:
+            logger.info("Bailed 1")
             return
         if not self.ast1_event:
+            logger.info("Bailed 2")
             return
         if not self.ast2_event:
+            logger.info("Bailed 3")
             return
 
         # Parked call subtest completed successfully.
@@ -64,6 +72,7 @@ class CallParkingTest(TestCase):
             return
 
         # All parked call subtests completed successfully.
+        logger.info("Test completed successfully")
         self.passed = True
         self.stop_reactor()
 
@@ -79,24 +88,24 @@ class CallParkingTest(TestCase):
 
     # Called when got UnParkedCall AMI event
     def ast1_unparkedcall(self, ami, event):
-        exten = event.get("exten").lower()
-        logger.info("Parked call retrieved from exten: " + str(exten))
-        if exten != str(self.expected_space):
+        exten = event.get(self.parking_var)
+        if not exten or exten != str(self.expected_space):
             logger.info("Call not retrieved from expected space " + str(self.expected_space))
             self.stop_reactor()
             return
+        logger.info("Parked call retrieved from exten: " + str(exten))
 
         self.got_AMI_UnParkedCall = True
         self.check_result()
 
     # Called when got ParkedCall AMI event
     def ast1_parkedcall(self, ami, event):
-        exten = event.get("exten").lower()
-        logger.info("Call parked at exten: " + str(exten))
-        if exten != str(self.expected_space):
+        exten = event.get(self.parking_var)
+        if not exten or exten != str(self.expected_space):
             logger.info("Call not parked in expected space " + str(self.expected_space))
             self.stop_reactor()
             return
+        logger.info("Call parked at exten: " + str(exten))
 
         self.get_parkedcall()
 
