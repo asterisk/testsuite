@@ -1,0 +1,38 @@
+testinfo:
+    summary:     'Test the Bridge AMI Action'
+    description: |
+        'This tests the bridge AMI action in the following manner:
+        * Five Local channels are spawned, all into an Echo application
+        * Two pairs of Local channels are chosen and Bridged. This will yank those
+          channels from the Echo application.
+        * Next, one of the pairs is chosen and a channel from it is Bridged with the
+          fifth channel still in the Echo application. This will yank the channel
+          from the Echo application and move the other channel into a newly
+          created Bridge.
+        * Finally, from the remaining original pair a channel is chosen and one of
+          the channels from the second round's Bridge is chosen. These are Bridged
+          as well. This moves the channels from existing bridges into a new
+          Bridge.
+        * If all BridgeEnter events are received, the test passes.'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-object-config
+        typename: 'TestCase.TestCaseModule'
+    modules:
+        -
+            config-section: bridge-action
+            typename: 'bridge_action.BridgeAction'
+
+test-object-config:
+    asterisk-instances: 1
+    connect-ami: True
+
+bridge-action:
+
+properties:
+    minversion: '12.0.0'
+    tags:
+        - bridge
+
