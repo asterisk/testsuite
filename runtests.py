@@ -82,6 +82,7 @@ class TestRun:
             if not self.passed:
                 self.__archive_ast_logs()
                 self.__archive_pcap_dump()
+            print 'Test %s %s' % (cmd, 'passed' if self.passed else 'failed')
 
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
