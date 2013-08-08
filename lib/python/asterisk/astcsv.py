@@ -95,11 +95,9 @@ class AsteriskCSV:
         try:
             csvreader = csv.DictReader(open(fn, "r"), fields, ",")
         except IOError as (errno, strerror):
-            logger.debug("IOError %d[%s] while opening file '%s'" % (errno, strerror, fn))
-            raise
+            logger.error("IOError %d[%s] while opening file '%s'" % (errno, strerror, fn))
         except:
-            logger.debug("Unexpected error: %s" % (sys.exc_info()[0]))
-            raise
+            logger.error("Unexpected error: %s" % (sys.exc_info()[0]))
 
         if not csvreader:
             logger.error("Unable to open file '%s'" % (fn))
