@@ -20,38 +20,43 @@ class SIPACLTest(TestCase):
         TestCase.__init__(self)
         self.test_components = []
 
-        #success evaluation stuff
+        #subtest evaluation
         self.test_index = 0
+        self.originate_error = False
+        self.phase_evaluation_reached = False
+        self.success_conditions = 0
+        self.failure_conditions = 0
+        self.events = []
 
         #test1 - No named ACL, calling available only to 127.0.0.1
-        self.add_test_component("test1_1", "allow")
-        self.add_test_component("test1_2", "deny")
-        self.add_test_component("test1_3", "deny")
-        self.add_test_component("test1_4", "deny")
+        self.add_test_component("test1_1", "allow")  # Phase 0
+        self.add_test_component("test1_2", "deny")   # Phase 1
+        self.add_test_component("test1_3", "deny")   # Phase 2
+        self.add_test_component("test1_4", "deny")   # Phase 3
 
         #test2 - Same permissible addresses as test 1, but while using a named ACL from the local configuration
-        self.add_test_component("test2_1", "allow")
-        self.add_test_component("test2_2", "deny")
-        self.add_test_component("test2_3", "deny")
-        self.add_test_component("test2_4", "deny")
+        self.add_test_component("test2_1", "allow")  # Phase 4
+        self.add_test_component("test2_2", "deny")   # Phase 5
+        self.add_test_component("test2_3", "deny")   # Phase 6
+        self.add_test_component("test2_4", "deny")   # Phase 7
 
         #test3 - Multiple named ACL rules from local configuration. Only 127.0.0.2 should be allowed to call.
-        self.add_test_component("test3_1", "deny")
-        self.add_test_component("test3_2", "allow")
-        self.add_test_component("test3_3", "deny")
-        self.add_test_component("test3_4", "deny")
+        self.add_test_component("test3_1", "deny")   # Phase 8
+        self.add_test_component("test3_2", "allow")  # Phase 9
+        self.add_test_component("test3_3", "deny")   # Phase 10
+        self.add_test_component("test3_4", "deny")   # Phase 11
 
         #test4 - An undefined rule is used. All addresses should be rejected from calling.
-        self.add_test_component("test4_1", "deny")
-        self.add_test_component("test4_2", "deny")
-        self.add_test_component("test4_3", "deny")
-        self.add_test_component("test4_4", "deny")
+        self.add_test_component("test4_1", "deny")   # Phase 12
+        self.add_test_component("test4_2", "deny")   # Phase 13
+        self.add_test_component("test4_3", "deny")   # Phase 14
+        self.add_test_component("test4_4", "deny")   # Phase 15
 
         #test5 - A set of 3 named ACLs stored in realtime is used. Collectively only 127.0.0.3 should be allowed to call.
-        self.add_test_component("test5_1", "deny")
-        self.add_test_component("test5_2", "deny")
-        self.add_test_component("test5_3", "allow")
-        self.add_test_component("test5_4", "deny")
+        self.add_test_component("test5_1", "deny")   # Phase 16
+        self.add_test_component("test5_2", "deny")   # Phase 17
+        self.add_test_component("test5_3", "allow")  # Phase 18
+        self.add_test_component("test5_4", "deny")   # Phase 19
 
         self.create_asterisk()
 
@@ -72,6 +77,8 @@ class SIPACLTest(TestCase):
         self.events_received = 0
         self.success_conditions = 0
         self.failure_conditions = 0
+        self.originate_error = False
+        self.phase_evaluation_reached = False
 
         # Storage for the events (failures and AMI hangups) that came in -- stored in case of something going wrong.
         self.events = []
@@ -97,6 +104,7 @@ class SIPACLTest(TestCase):
             self.evaluate_call()
 
     def evaluate_originate_error(self, reason):
+        self.originate_error = True
         self.events.append(reason)
         self.events_received += 1
         self.failure_conditions += 1
@@ -104,12 +112,15 @@ class SIPACLTest(TestCase):
             self.evaluate_call()
 
     def evaluate_call(self):
+        self.phase_evaluation_reached = True
+
         if self.test_components[self.test_index][1] == "allow" and self.success_conditions == 2:
-            LOGGER.info("Test %d - %s: Call Succeeded as Expected." % (self.test_index, self.test_components[self.test_index][0]))
+            LOGGER.info("Phase %d - %s: Call Succeeded as Expected." % (self.test_index, self.test_components[self.test_index][0]))
         elif self.test_components[self.test_index][1] == "deny" and self.failure_conditions == 2:
-            LOGGER.info("Test %d - %s: Call Failed as Expected." % (self.test_index, self.test_components[self.test_index][0]))
+            LOGGER.info("Phase %d - %s: Call Failed as Expected." % (self.test_index, self.test_components[self.test_index][0]))
         else:
-            LOGGER.error("Test %d - %s: Events received don't follow expectations. Test Failed." % (self.test_index, self.test_components[self.test_index][0]))
+            LOGGER.error("Phase %d - %s: Events received don't follow expectation of %s. Test Failed." % (self.test_index,
+                self.test_components[self.test_index][0], self.test_components[self.test_index][0]))
             LOGGER.error("Failure Triggering Events Received: %s" % self.events)
             self.passed = False
             self.stop_reactor()
@@ -125,6 +136,25 @@ class SIPACLTest(TestCase):
             self.stop_reactor()
             return
 
+    def report_timeout(self):
+        LOGGER.error("Phase %d - Test reached timeout without achieving evaluation conditions for this phase." % self.test_index)
+
+        LOGGER.error("Phase %d - Received the following manager events: %s" % (self.test_index, self.events))
+
+        if self.test_components[self.test_index][1] == "allow":
+            LOGGER.error("Phase %d - Two hangup events with cause-txt = 'Normal Clearing' were expected." % self.test_index)
+            if self.originate_error:
+                LOGGER.error("Phase %d - expected no error conditions and received originate error." % self.test_index)
+
+        elif self.test_components[self.test_index][1] == "deny":
+            LOGGER.error("Phase %d - A hangup event with cause-txt = 'Call Rejected' was expected." % self.test_index)
+            if not self.originate_error:
+                LOGGER.error("Phase %d - an originate error was expected and not received." % self.test_index)
+
+        else:
+            LOGGER.error("Phase %d - Bad test, expectation is '%s' but should be either 'allow' or 'deny'" % (self.test_index,
+                self.test_components[self.test_index][1]))
+
     # Sets up reactor and AMI connection
     def run(self):
         TestCase.run(self)
@@ -139,6 +169,9 @@ def main():
     test = SIPACLTest()
     reactor.run()
     os.remove(TMP_DB_PATH)
+
+    if not test.phase_evaluation_reached:
+        test.report_timeout()
 
     if test.passed:
         return 0

@@ -20,8 +20,13 @@ class IAX2ACLTest(TestCase):
         TestCase.__init__(self)
         self.test_components = []
 
-        #success evaluation stuff
+        #subtest evaluation
         self.test_index = 0
+        self.originate_error = False
+        self.phase_evaluation_reached = False
+        self.success_conditions = 0
+        self.failure_conditions = 0
+        self.events = []
 
         #test1 - No named ACL, calling available only to 127.0.0.1
         self.add_test_component("testiax1@127.0.0.1", "allow")
@@ -72,6 +77,8 @@ class IAX2ACLTest(TestCase):
         self.events_received = 0
         self.success_conditions = 0
         self.failure_conditions = 0
+        self.originate_error = False
+        self.phase_evaluation_reached = False
 
         # Storage for the events (failures and AMI hangups) that came in -- stored in case of something going wrong.
         self.events = []
@@ -97,6 +104,7 @@ class IAX2ACLTest(TestCase):
             self.evaluate_call()
 
     def evaluate_originate_error(self, reason):
+        self.originate_error = True
         self.events.append(reason)
         self.events_received += 1
         self.failure_conditions += 1
@@ -104,12 +112,14 @@ class IAX2ACLTest(TestCase):
             self.evaluate_call()
 
     def evaluate_call(self):
+        self.phase_evaluation_reached = True
+
         if self.test_components[self.test_index][1] == "allow" and self.success_conditions == 2:
-            LOGGER.info("Test %d - %s: Call Succeeded as Expected." % (self.test_index, self.test_components[self.test_index][0]))
+            LOGGER.info("Phase %d - %s: Call Succeeded as Expected." % (self.test_index, self.test_components[self.test_index][0]))
         elif self.test_components[self.test_index][1] == "deny" and self.failure_conditions == 2:
-            LOGGER.info("Test %d - %s: Call Failed as Expected." % (self.test_index, self.test_components[self.test_index][0]))
+            LOGGER.info("Phase %d - %s: Call Failed as Expected." % (self.test_index, self.test_components[self.test_index][0]))
         else:
-            LOGGER.error("Test %d - %s: Events received don't follow expectations. Test Failed." % (self.test_index, self.test_components[self.test_index][0]))
+            LOGGER.error("Phase %d - %s: Events received don't follow expectations. Test Failed." % (self.test_index, self.test_components[self.test_index][0]))
             LOGGER.error("Failure Triggering Events Received: %s" % self.events)
             self.passed = False
             self.stop_reactor()
@@ -125,6 +135,25 @@ class IAX2ACLTest(TestCase):
             self.stop_reactor()
             return
 
+    def report_timeout(self):
+        LOGGER.error("Phase %d - Test reached timeout without achieving evaluation conditions for this phase." % self.test_index)
+
+        LOGGER.error("Phase %d - Received the following manager events: %s" % (self.test_index, self.events))
+
+        if self.test_components[self.test_index][1] == "allow":
+            LOGGER.error("Phase %d - Two hangup events with cause-txt = 'Normal Clearing' were expected." % self.test_index)
+            if self.originate_error:
+                LOGGER.error("Phase %d - expected no error conditions and received originate error." % self.test_index)
+
+        elif self.test_components[self.test_index][1] == "deny":
+            LOGGER.error("Phase %d - A hangup event with cause-txt = 'Unknown' was expected." % self.test_index)
+            if not self.originate_error:
+                LOGGER.error("Phase %d - an originate error was expected and not received." % self.test_index)
+
+        else:
+            LOGGER.error("Phase %d - Bad test, expectation is '%s' but should be either 'allow' or 'deny'" % (self.test_index,
+                self.test_components[self.test_index][1]))
+
     # Sets up reactor and AMI connection
     def run(self):
         TestCase.run(self)
@@ -139,6 +168,9 @@ def main():
     test = IAX2ACLTest()
     reactor.run()
     os.remove(TMP_DB_PATH)
+
+    if not test.phase_evaluation_reached:
+        test.report_timeout()
 
     if test.passed:
         return 0
