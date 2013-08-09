@@ -284,7 +284,7 @@ class Asterisk:
                 self.__start_deferred.errback(Exception("Command core waitfullybooted failed"))
             else:
                 logger.debug("Asterisk core waitfullybooted failed, attempting again...")
-                reactor.callLater(0, __execute_wait_fully_booted)
+                reactor.callLater(1, __execute_wait_fully_booted)
 
         self.install_configs(os.getcwd() + "/configs")
         self.__setup_configs()
@@ -324,77 +324,50 @@ class Asterisk:
         asterisk.stop()
         """
 
+        def __cancel_stops(reason):
+            """ Cancel all stop actions - called when the process exits """
+            for token in self.__stop_cancel_tokens:
+                try:
+                    if token.active():
+                        token.cancel()
+                except error.AlreadyCalled:
+                    # Ignore if we already killed it
+                    pass
+            return reason
+
         def __send_stop_gracefully():
             """ Send a core stop gracefully CLI command """
+            logger.debug('sending stop gracefully')
             if self.ast_version < AsteriskVersion("1.6.0"):
                 cli_deferred = self.cli_exec("stop gracefully")
             else:
                 cli_deferred = self.cli_exec("core stop gracefully")
-            cli_deferred.addCallbacks(__stop_gracefully_callback, __stop_gracefully_error)
+            cli_deferred.addCallbacks(__stop_gracefully_callback,
+                __stop_gracefully_error)
 
         def __stop_gracefully_callback(cli_command):
             """ Callback handler for the core stop gracefully CLI command """
             logger.debug("Successfully stopped Asterisk %s" % self.host)
-            self.__stop_attempts = 0
+            reactor.callLater(0, __cancel_stops, None)
+            return cli_command
 
         def __stop_gracefully_error(cli_command):
             """ Errback for the core stop gracefully CLI command """
-            if self.__stop_attempts > 5:
-                self.__stop_attempts = 0
-                logger.warning("Asterisk graceful stop for %s failed" % self.host)
-            else:
-                logger.debug("Asterisk graceful stop failed, attempting again...")
-                self.__stop_attempts += 1
-                __send_stop_gracefully()
-
-        def __send_stop_now():
-            """ Send a core stop now CLI command """
-            if self.ast_version < AsteriskVersion("1.6.0"):
-                cli_deferred = self.cli_exec("stop now")
-            else:
-                cli_deferred = self.cli_exec("core stop now")
-            if cli_deferred:
-                cli_deferred.addCallbacks(__stop_now_callback, __stop_now_error)
-
-        def __stop_now_callback(cli_command):
-            """ Callback handler for the core stop now CLI command """
-            logger.debug("Successfully stopped Asterisk %s" % self.host)
-            self.__stop_attempts = 0
-
-        def __stop_now_error(cli_command):
-            """ Errback handler for the core stop now CLI command """
-            if self.__stop_attempts > 5:
-                self.__stop_attempts = 0
-                logger.warning("Asterisk graceful stop for %s failed" % self.host)
-            else:
-                logger.debug("Asterisk stop now failed, attempting again...")
-                self.__stop_attempts += 1
-                cli_deferred = __send_stop_now()
-                if cli_deferred:
-                    cli_deferred.addCallbacks(__stop_now_callback, __stop_now_error)
-
-        def __send_term():
-            """ Send a TERM signal to the Asterisk instance """
-            try:
-                logger.info("Sending TERM to Asterisk %s" % self.host)
-                self.process.signalProcess("TERM")
-            except error.ProcessExitedAlready:
-                # Probably that we sent a signal to a process that was already
-                # dead.  Just ignore it.
-                pass
+            logger.warning("Asterisk graceful stop for %s failed" % self.host)
+            return cli_command
 
         def __send_kill():
             """ Check to see if the process is running and kill it with fire """
             try:
                 if not self.processProtocol.exited:
-                    logger.info("Sending KILL to Asterisk %s" % self.host)
+                    logger.warning("Sending KILL to Asterisk %s" % self.host)
                     self.process.signalProcess("KILL")
             except error.ProcessExitedAlready:
                 # Pass on this
                 pass
-            # If you kill the process, the ProcessProtocol may never get the note
-            # that its dead.  Call the stop callback to notify everyone that we did
-            # indeed kill the Asterisk instance.
+            # If you kill the process, the ProcessProtocol may never get
+            # the note that its dead.  Call the stop callback to notify everyone
+            # that we did indeed kill the Asterisk instance.
             try:
                 # Attempt to signal the process object that it should lose its
                 # connection - it may already be gone however.
@@ -403,33 +376,37 @@ class Asterisk:
                 pass
             try:
                 if not self.__stop_deferred.called:
-                    self.__stop_deferred.callback("Asterisk %s KILLED" % self.host)
+                    self.__stop_deferred.callback("Asterisk %s KILLED" %
+                        self.host)
             except defer.AlreadyCalledError:
-                logger.warning("Asterisk %s stop deferred already called" % self.host)
+                logger.warning("Asterisk %s stop deferred already called" %
+                    self.host)
 
-        def __cancel_stops(reason):
-            """ Cancel all stop actions - called when the process exits """
-            for token in self.__stop_cancel_tokens:
-                try:
-                    if token.active():
-                        token.cancel()
-                except error.AlreadyCalled:
-                    # If we're canceling something that's already been called, move on
-                    pass
+        def __process_stopped(reason):
+            ''' Generic callback that raises the stopped deferred
+            subscribers use to know that the process has exited '''
+            self.__stop_deferred.callback(reason)
             return reason
 
-        self.__stop_cancel_tokens = []
-        self.__stop_attempts = 0
-        # Start by asking to stop gracefully.
-        __send_stop_gracefully()
+        if self.processProtocol.exited:
+            try:
+                if not self.__stop_deferred.called:
+                    self.__stop_deferred.callback(
+                        "Asterisk %s stopped prematurely" % self.host)
+            except defer.AlreadyCalledError:
+                logger.warning("Asterisk %s stop deferred already called" %
+                    self.host)
+        else:
+            self.__stop_cancel_tokens = []
 
-        # Schedule progressively more aggressive mechanisms of stopping Asterisk.  If any
-        # stop mechanism succeeds, all are canceled
-        self.__stop_cancel_tokens.append(reactor.callLater(5, __send_stop_now))
-        self.__stop_cancel_tokens.append(reactor.callLater(10, __send_term))
-        self.__stop_cancel_tokens.append(reactor.callLater(15, __send_kill))
+            # Schedule a kill. If we don't gracefully shut down Asterisk, this
+            # will ensure that the test is stopped.
+            self.__stop_cancel_tokens.append(reactor.callLater(10, __send_kill))
 
-        self.__stop_deferred.addCallback(__cancel_stops)
+            # Start by asking to stop gracefully.
+            __send_stop_gracefully()
+
+            self.__stop_deferred.addCallback(__cancel_stops)
 
         return self.__stop_deferred
 

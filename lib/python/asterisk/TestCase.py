@@ -345,7 +345,7 @@ class TestCase(object):
                 temp_defer = self.ast[index].stop()
                 stop_defers.append(temp_defer)
 
-            defer.DeferredList(stop_defers, consumeErrors=True).addCallback(
+            defer.DeferredList(stop_defers).addCallback(
                 __check_success_failure)
             return result
 
