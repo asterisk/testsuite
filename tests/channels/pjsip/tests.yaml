@@ -5,3 +5,4 @@ tests:
     - dir: 'basic_calls'
     - test: 'srtp_negotiation'
     - dir: 'one_touch_recording'
+    - dir: 'registration'

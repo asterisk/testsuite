@@ -1,0 +1,99 @@
+testinfo:
+    summary:     'Register a single contact per AOR with no authentication'
+    description: |
+        'Using all combinations of IPv4/IPv6 and UDP/TCP, run SIPp scenarios
+         that register a single contact per AOR.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    fail-on-any: False
+    reactor-timeout: 10
+    test-iterations:
+        -
+            scenarios:
+                # IPv4 & UDP - register with no authentication
+                - { 'key-args': {'scenario': 'register-noauth.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+                # IPv4 & TCP - register with no authentication
+                - { 'key-args': {'scenario': 'register-noauth.xml', '-i': '127.0.0.1', '-p': '5062', '-t': 't1', '-s': 'bob'} }
+
+                # IPv6 & UDP - register with no authentication
+                - { 'key-args': {'scenario': 'register-noauth.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5063', '-s': 'charlie'} }
+
+                # IPv6 & TCP - register with no authentication
+                - { 'key-args': {'scenario': 'register-noauth.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5064', '-t': 't1', '-s': 'carol'} }
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'alice'
+        requirements:
+            match:
+                Contact: 'sip:alice@127.0.0.1:5061'
+                Expiration: '30'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'bob'
+        requirements:
+            match:
+                Contact: 'sip:bob@127.0.0.1:5062'
+                Expiration: '30'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'charlie'
+        requirements:
+            match:
+                Contact: 'sip:charlie@\[::1\]:5063'
+                Expiration: '30'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'carol'
+        requirements:
+            match:
+                Contact: 'sip:carol@\[::1\]:5064'
+                Expiration: '30'
+        count: '1'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python: 'twisted'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.3'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+

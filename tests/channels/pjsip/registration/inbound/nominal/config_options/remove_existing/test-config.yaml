@@ -1,0 +1,261 @@
+testinfo:
+    summary:     'Register contacts to test the remove_existing option'
+    description: |
+        'Using all combinations of IPv4/IPv6 and UDP/TCP, run SIPp scenarios
+         that register two contacts per AOR. Then register two different
+         contacts for the same AORs. This ensures that with the remove_existing
+         pjsip.conf configuration option enabled, the first two contacts are
+         removed and the new contacts are added.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # IPv4 & UDP
+                - { 'key-args': {'scenario': 'register-noauth-ipv4.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+                # IPv4 & TCP
+                - { 'key-args': {'scenario': 'register-noauth-ipv4.xml', '-i': '127.0.0.1', '-p': '5061', '-t': 't1', '-s': 'bob'} }
+                # IPv6 & UDP
+                - { 'key-args': {'scenario': 'register-noauth-ipv6.xml',
+                                    'target': '[::1]', '-i': '[::1]', '-p': '5061', '-s': 'charlie'},
+                    'ordered-args': ['-key', 'customip1', '[::2]', '-key', 'customip2', '[::3]',
+                                        '-key', 'customip3', '[::4]', '-key', 'customip4', '[::5]'] }
+                # IPv6 & TCP
+                - { 'key-args': {'scenario': 'register-noauth-ipv6.xml',
+                                    'target': '[::1]', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'carol'},
+                    'ordered-args': ['-key', 'customip1', '[::2]', '-key', 'customip2', '[::3]',
+                                        '-key', 'customip3', '[::4]', '-key', 'customip4', '[::5]'] }
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'alice'
+                Contact: 'sip:alice-office@127.0.0.2:5062'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'alice'
+                Contact: 'sip:alice-home@127.0.0.3:5063'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'alice'
+                Contact: 'sip:alice-mobile@127.0.0.4:5064'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'alice'
+                Contact: 'sip:alice-pc@127.0.0.5:5065'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'bob'
+                Contact: 'sip:bob-office@127.0.0.2:5062'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'bob'
+                Contact: 'sip:bob-home@127.0.0.3:5063'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'bob'
+                Contact: 'sip:bob-mobile@127.0.0.4:5064'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'bob'
+                Contact: 'sip:bob-pc@127.0.0.5:5065'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'charlie'
+                Contact: 'sip:charlie-office@\[::2\]:5062'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'charlie'
+                Contact: 'sip:charlie-home@\[::3\]:5063'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'charlie'
+                Contact: 'sip:charlie-mobile@\[::4\]:5064'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'charlie'
+                Contact: 'sip:charlie-pc@\[::5\]:5065'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'carol'
+                Contact: 'sip:carol-office@\[::2\]:5062'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'carol'
+                Contact: 'sip:carol-home@\[::3\]:5063'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'carol'
+                Contact: 'sip:carol-mobile@\[::4\]:5064'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'carol'
+                Contact: 'sip:carol-pc@\[::5\]:5065'
+        requirements:
+            match:
+                Expiration: '60'
+        count: '1'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python: 'twisted'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.3'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+

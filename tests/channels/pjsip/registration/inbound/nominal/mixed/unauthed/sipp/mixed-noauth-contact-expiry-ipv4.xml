@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic Sipstone UAC">
+    <!--
+    Send REGISTER containing *one* contact with an 'Expires' header and *with*
+    an 'expires' parameter on the Contact header.
+    -->
+    <send retrans="500">
+        <![CDATA[
+
+        REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+        To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+        Call-ID: [call_id]
+        CSeq: 1 REGISTER
+        Max-Forwards: 70
+	Contact: "[service]" <sip:[service]-office@127.0.0.2:5062>;transport=[transport];expires=15
+        Subject: Performance Test
+	Expires: 10
+        Content-Length: 0
+
+        ]]>
+    </send>
+
+    <recv response="200" rtd="true">
+        <action>
+            <!--
+	     Ensure the received expires parameter is what was sent in the expires header with a 5 second tolerance
+            -->
+	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-office@127.0.0.2:5062>;expires=1[0-5]" search_in="msg" check_it="true" assign_to="1"/>
+        </action>
+    </recv>
+
+
+    <!-- Pause a moment -->
+    <pause milliseconds="1000"/>
+
+    <!-- Send REGISTER with an 'Expires' header and *with* an 'expires' parameter on the Contact headers -->
+    <!--
+    Send REGISTER containing *one* contact with an 'Expires' header and *with*
+    an 'expires' parameter on the Contact header.
+    -->
+    <send retrans="500">
+        <![CDATA[
+
+        REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+        To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+        Call-ID: [call_id]
+        CSeq: 1 REGISTER
+        Max-Forwards: 70
+	Contact: "[service]" <sip:[service]-office@127.0.0.2:5062>;transport=[transport];expires=0
+	Contact: "[service]" <sip:[service]-home@127.0.0.3:5063>;transport=[transport];expires=20
+        Subject: Performance Test
+	Expires: 10
+        Content-Length: 0
+
+        ]]>
+    </send>
+
+    <recv response="200" rtd="true">
+	<action>
+            <!--
+	     Ensure the received expires parameters are what was sent in the expires parameters with a 5 second tolerance
+            -->
+	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-home@127.0.0.3:5063>;expires=(20|1[5-9])" search_in="msg" check_it="true" assign_to="2" />
+        </action>
+    </recv>
+
+    <Reference variables="1" />
+    <Reference variables="2" />
+</scenario>

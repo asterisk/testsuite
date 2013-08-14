@@ -1,0 +1,39 @@
+testinfo:
+    summary:     'Send a REGISTER with more contacts than allowed'
+    description: |
+        'Using all combinations of IPv4/IPv6 and UDP/TCP, run SIPp scenarios
+         that send a REGISTER to Asterisk with two contacts. This ensures that
+         Asterisk responds with a 403 Forbidden since the config option
+         max_contacts is set to one.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # IPv4 & UDP - register with no contact header
+                - { 'key-args': {'scenario': 'register-too-many-contacts.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+                # IPv4 & TCP - register with no contact header
+                - { 'key-args': {'scenario': 'register-too-many-contacts.xml', '-i': '127.0.0.1', '-p': '5061', '-t': 't1', '-s': 'alice'} }
+
+                # IPv6 & UDP - register with no contact header
+                - { 'key-args': {'scenario': 'register-too-many-contacts.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-s': 'alice'} }
+
+                # IPv6 & TCP - register with no contact header
+                - { 'key-args': {'scenario': 'register-too-many-contacts.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'alice'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+

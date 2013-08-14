@@ -1,0 +1,5 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'minimum_expiration'
+    - test: 'maximum_expiration'
+    - test: 'remove_existing'

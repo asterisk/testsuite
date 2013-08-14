@@ -1,0 +1,6 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'no_contact_header'
+    - test: 'max_contacts'
+    - test: 'wrong_password'
+    - dir: 'unregister'

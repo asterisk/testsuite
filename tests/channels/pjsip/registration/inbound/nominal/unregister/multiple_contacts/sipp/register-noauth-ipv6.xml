@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic Sipstone UAC">
+    <!-- register -->
+    <send retrans="500">
+        <![CDATA[
+
+        REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+        To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+        Call-ID: [call_id]
+        CSeq: 1 REGISTER
+        Max-Forwards: 70
+        Contact: "[service]" <sip:[service]-office@[customip1]:5062>;transport=[transport]
+        Contact: "[service]" <sip:[service]-home@[customip2]:5063>;transport=[transport]
+        Subject: Performance Test
+        Expires: 60
+        Content-Length: 0
+
+        ]]>
+    </send>
+
+    <recv response="200" rtd="true">
+        <action>
+            <!--
+            Ensure the received expires parameters are what was sent in the Expires header with a 5 second tolerance
+            -->
+            <ereg regexp="Contact: <sip:(charlie|carol)-office@.::2.:5062>;expires=(60|5[5-9])" search_in="msg" check_it="true" assign_to="1"/>
+            <ereg regexp="Contact: <sip:(charlie|carol)-home@.::3.:5063>;expires=(60|5[5-9])" search_in="msg" check_it="true" assign_to="2" />
+	</action>
+    </recv>
+
+    <!-- unregister by setting the Expires header to 0 -->
+    <send retrans="500">
+        <![CDATA[
+
+        REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+        To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+        Call-ID: [call_id]
+        CSeq: 1 REGISTER
+        Max-Forwards: 70
+        Contact: "[service]" <sip:[service]-office@[customip1]:5062>;transport=[transport]
+        Contact: "[service]" <sip:[service]-home@[customip2]:5063>;transport=[transport]
+        Subject: Performance Test
+        Expires: 0
+        Content-Length: 0
+
+        ]]>
+    </send>
+
+    <recv response="200" rtd="true">
+        <action>
+            <!-- Ensure the contacts are *not* present -->
+	    <ereg regexp="Contact" search_in="msg" check_it_inverse="true" assign_to="3" />
+	</action>
+    </recv>
+
+    <!-- register again -->
+    <send retrans="500">
+        <![CDATA[
+
+        REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+        To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+        Call-ID: [call_id]
+        CSeq: 1 REGISTER
+        Max-Forwards: 70
+        Contact: "[service]" <sip:[service]-office@[customip1]:5062>;transport=[transport]
+        Contact: "[service]" <sip:[service]-home@[customip2]:5063>;transport=[transport]
+        Subject: Performance Test
+        Expires: 60
+        Content-Length: 0
+
+        ]]>
+    </send>
+
+    <recv response="200" rtd="true">
+        <action>
+            <!--
+            Ensure the received expires parameters are what was sent in the Expires header with a 5 second tolerance
+            -->
+            <ereg regexp="Contact: <sip:(charlie|carol)-office@.::2.:5062>;expires=(60|5[5-9])" search_in="msg" check_it="true" assign_to="4"/>
+            <ereg regexp="Contact: <sip:(charlie|carol)-home@.::3.:5063>;expires=(60|5[5-9])" search_in="msg" check_it="true" assign_to="5" />
+	</action>
+    </recv>
+
+    <!-- unregister again by setting the expires headers to 0 for each contact while the Expires header is none 0 -->
+    <send retrans="500">
+        <![CDATA[
+
+        REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+        To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+        Call-ID: [call_id]
+        CSeq: 1 REGISTER
+        Max-Forwards: 70
+        Contact: "[service]" <sip:[service]-office@[customip1]:5062>;transport=[transport];expires=0
+        Contact: "[service]" <sip:[service]-home@[customip2]:5063>;transport=[transport];expires=0
+        Subject: Performance Test
+        Expires: 55
+        Content-Length: 0
+
+        ]]>
+    </send>
+
+    <recv response="200" rtd="true">
+        <action>
+            <!-- Ensure the contacts are *not* present -->
+	    <ereg regexp="Contact" search_in="msg" check_it_inverse="true" assign_to="6" />
+	</action>
+    </recv>
+
+    <Reference variables="1" />
+    <Reference variables="2" />
+    <Reference variables="3" />
+    <Reference variables="4" />
+    <Reference variables="5" />
+    <Reference variables="6" />
+
+</scenario>

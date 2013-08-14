@@ -1,0 +1,39 @@
+testinfo:
+    summary:     'Attempt to register using a wrong password'
+    description: |
+        'Using all combinations of IPv4/IPv6 and UDP/TCP, run SIPp scenarios
+         that attempt to register to Asterisk using a wrong password. This
+         ensures that Asterisk rejects the registration attempt with a 401
+         Unauthorized.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # IPv4 & UDP - register attempt with wrong password
+                - { 'key-args': {'scenario': 'register-wrong-password.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice', '-au': 'alice', '-ap': 'wrong'} }
+
+                # IPv4 & TCP - register attempt with wrong password
+                - { 'key-args': {'scenario': 'register-wrong-password.xml', '-i': '127.0.0.1', '-p': '5061', '-t': 't1', '-s': 'alice', '-au': 'alice', '-ap': 'wrong'} }
+
+                # IPv6 & UDP - register attempt with wrong password
+                - { 'key-args': {'scenario': 'register-wrong-password.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-s': 'alice', '-au': 'alice', '-ap': 'wrong'} }
+
+                # IPv6 & TCP - register attempt with wrong password
+                - { 'key-args': {'scenario': 'register-wrong-password.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'alice', '-au': 'alice', '-ap': 'wrong'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+

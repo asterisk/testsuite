@@ -1,0 +1,40 @@
+testinfo:
+    summary:     'Send a REGISTER with no Contact header to Asterisk'
+    description: |
+        'Using all combinations of IPv4/IPv6 and UDP/TCP, run SIPp scenarios
+         that send a REGISTER to Asterisk which does not contain a Contact
+         header. Ensures that the 200 OK received from Asterisk does not
+         contain a Contact header.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    reactor-timeout: 10
+    test-iterations:
+        -
+            scenarios:
+                # IPv4 & UDP - register with no contact header
+                - { 'key-args': {'scenario': 'register-noauth-no-contact-header.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+                # IPv4 & TCP - register with no contact header
+                - { 'key-args': {'scenario': 'register-noauth-no-contact-header.xml', '-i': '127.0.0.1', '-p': '5061', '-t': 't1', '-s': 'alice'} }
+
+                # IPv6 & UDP - register with no contact header
+                - { 'key-args': {'scenario': 'register-noauth-no-contact-header.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-s': 'alice'} }
+
+                # IPv6 & TCP - register with no contact header
+                - { 'key-args': {'scenario': 'register-noauth-no-contact-header.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'alice'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+

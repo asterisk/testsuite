@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic Sipstone UAC">
+    <!-- register -->
+    <send retrans="500">
+        <![CDATA[
+
+        REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+        To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+        Call-ID: [call_id]
+        CSeq: 1 REGISTER
+        Max-Forwards: 70
+        Contact: <sip:[service]@[local_ip]:[local_port]>;transport=[transport]
+        Subject: Performance Test
+        Expires: 60
+        Content-Length: 0
+
+        ]]>
+    </send>
+
+    <recv response="200" rtd="true">
+        <action>
+            <!--
+	    Ensure the received expires parameter is ~60 as no expiration config options are set with a 5 second tolerance
+            -->
+            <ereg regexp="sip:((alice|bob)@127.0.0.1:506[1-2]>;expires=(60|5[5-9])|(charlie|carol)@.::1.:506[3-4]>;expires=(60|5[5-9]))" search_in="hdr" header="Contact:" check_it="true" assign_to="1" />
+	</action>
+    </recv>
+
+    <!-- attempt to unregister using '*' for the Contact header and without an Expires header -->
+    <send retrans="500">
+        <![CDATA[
+
+        REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+        From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+        To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+        Call-ID: [call_id]
+        CSeq: 1 REGISTER
+        Max-Forwards: 70
+        Contact: *
+        Subject: Performance Test
+        Content-Length: 0
+
+        ]]>
+    </send>
+
+    <!-- we expect a 400 Bad Request from Asterisk -->
+    <recv response="400" />
+
+    <Reference variables="1" />
+
+</scenario>

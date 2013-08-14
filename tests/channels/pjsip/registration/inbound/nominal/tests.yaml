@@ -1,0 +1,7 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - dir: 'config_options'
+    - dir: 'mixed'
+    - dir: 'multiple_contacts'
+    - dir: 'single_contact'
+    - dir: 'unregister'
