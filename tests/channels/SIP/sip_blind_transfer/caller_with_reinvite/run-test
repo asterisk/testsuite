@@ -20,6 +20,7 @@ from starpy import manager
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.TestCase import TestCase
+from asterisk.version import AsteriskVersion
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,8 @@ class BlindTransfer(TestCase):
     def __init__(self):
         TestCase.__init__(self)
         self.passed = False
+        self.channel1 = None
+        self.transfer_event_received = False
         self.create_asterisk()
 
     def read_result(self):
@@ -62,11 +65,35 @@ class BlindTransfer(TestCase):
 
         # start up the processes
         self.start_processes()
-        ami.registerEvent('Bridge', self.bridge_event_handler)
-        ami.registerEvent('Transfer', self.transfer_event_handler)
+        if AsteriskVersion() >= AsteriskVersion("12"):
+            ami.registerEvent('BridgeEnter', self.bridge_enter_event_handler)
+            ami.registerEvent('BlindTransfer', self.blind_transfer_event_handler)
+        else:
+            ami.registerEvent('Bridge', self.bridge_event_handler)
+            ami.registerEvent('Transfer', self.transfer_event_handler)
         ami.registerEvent('Hangup', self.hangup_event_handler)
 
         self.a_call_b()
+
+    def bridge_enter_event_handler(self, ami, event):
+        if not self.channel1:
+            self.channel1 = event['channel']
+            logger.debug("Received bridge enter for channel %s" % self.channel1)
+            return
+
+        channel2 = event['channel']
+        logger.debug("Received bridge enter for channel %s" % channel2)
+
+        if (self.channel1 == BlindTransfer.phone_a_channel and channel2 == BlindTransfer.phone_b_channel) or \
+            (self.channel1 == BlindTransfer.phone_b_channel and channel2 == BlindTransfer.phone_a_channel):
+            logger.debug("Starting transfer of Phone B to Phone C")
+            self.a_transfer_b_to_c()
+            self.channel1 = None
+        elif (self.channel1 == BlindTransfer.phone_b_channel and channel2 == BlindTransfer.phone_c_channel) or \
+            (self.channel1 == BlindTransfer.phone_c_channel and channel2 == BlindTransfer.phone_b_channel):
+            self.ami_check_bridge()
+        else:
+            logger.warning("Unexpected bridge (%s and %s) received!" % (self.channel1, channel2))
 
     def bridge_event_handler(self, ami, event):
         bridgetype = event['bridgetype'].lower()
@@ -84,6 +111,13 @@ class BlindTransfer(TestCase):
                 logger.warning("Unexpected bridge (%s and %s) received!" % (channel1, channel2))
         elif bridgetype != 'core' or bridgestate != 'unlink':
             logger.warning("Unexpected bridgetype %s or bridgestate %s received!" % (bridgetype, bridgestate))
+
+    def blind_transfer_event_handler(self, ami, event):
+        if event['isexternal'].lower() != 'yes':
+            logger.warn("Unexpected transfer type: Internal")
+        else:
+            logger.debug("Received blind external transfer initiated by %(transfererchannel)s to %(extension)s@%(context)s" % event)
+            self.transfer_event_received = True
 
     def transfer_event_handler(self, ami, event):
         transfertype = event['transfertype'].lower()
@@ -109,6 +143,12 @@ class BlindTransfer(TestCase):
             logger.warn("Transfer event failed or contained incorrect data; not checking bridge results")
             self.passed = False
             self.read_result()
+            return
+
+        if AsteriskVersion() >= AsteriskVersion('12'):
+            # the following has already been verified using bridgeenter messages so exit early
+            self.passed = True
+            self.hangup_channel_c()
             return
 
         logger.debug('Results %s' % str(results))
