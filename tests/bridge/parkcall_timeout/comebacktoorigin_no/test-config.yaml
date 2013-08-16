@@ -80,8 +80,9 @@ cdr-config:
                 amaflags: 'DOCUMENTATION'
 
 properties:
-    minversion: '12.0.0'
+    minversion: '11.0.0'
     dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'
         - python : 'starpy'
     tags:
