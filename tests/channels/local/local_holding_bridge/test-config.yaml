@@ -5,10 +5,10 @@ testinfo:
         Bridge:
         SIP/foo <---> Local/1 <-> Local/2 <---
                  B0           LB           HB
-        In the first iteration, the Local channel should optimize itself away,
-        resulting in SIP/foo being put directly into the Holding Bridge (HB).
-        In the second iteration, the n flag should keep the Local channel from
-        optimizing, resulting in the original bridge(s) being maintained.
+        In both iterations, regardless of the presence of the n flag, the Local
+        channel should not optimize away. Using the BridgeWait application
+        requires Local channels to not optimize, as it has the concept of
+        channel roles (which Local optimization typically destroys)
 
 properties:
     minversion: '12.0.0'
@@ -61,7 +61,7 @@ ami-config-12:
                 Event: 'LocalOptimizationBegin'
                 LocalOneChannel: 'Local/holdem@default-.{7}0;1'
                 LocalTwoChannel: 'Local/holdem@default-.{7}0;2'
-        count: '1'
+        count: '0'
     -
         type: 'headermatch'
         conditions:
@@ -69,7 +69,7 @@ ami-config-12:
                 Event: 'LocalOptimizationEnd'
                 LocalOneChannel: 'Local/holdem@default-.{7}0;1'
                 LocalTwoChannel: 'Local/holdem@default-.{7}0;2'
-        count: '1'
+        count: '0'
     -
         type: 'headermatch'
         conditions:
