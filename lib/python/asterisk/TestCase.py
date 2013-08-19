@@ -574,3 +574,33 @@ class TestCase(object):
         if self.passed == False:
             return
         self.passed = value
+
+
+class TestCaseModule(TestCase):
+    '''
+    The most basic of test objects for a pluggable module. This wraps the TestCase
+    class such that it can be used and configured from YAML.
+    '''
+
+    def __init__(self, test_path='', test_config=None):
+        ''' Constructor
+
+        :param test_path Full path to the test location
+        :param test_config The YAML provided test configuration for this object
+        '''
+        super(TestCaseModule, self).__init__(test_path, test_config)
+        self.asterisk_instances = test_config.get('asterisk-instances') or 1
+        self.connect_ami = test_config.get('connect-ami') or False
+        self.connect_agi = test_config.get('connect-agi') or False
+
+        self.create_asterisk(count=self.asterisk_instances)
+
+    def run(self):
+        ''' The reactor entry point '''
+        super(TestCaseModule, self).run()
+
+        if self.connect_ami:
+            self.create_ami_factory(count=self.asterisk_instances)
+        if self.connect_agi:
+            self.create_fastagi_factory(count=self.asterisk_instances)
+
