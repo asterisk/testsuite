@@ -20,7 +20,7 @@ test-modules:
         -
             maxversion: '12.0.0'
             config-section: 'cdr-config-pre-12'
-            typename: 'cdr-tests.ForkCdrModuleEndTime'
+            typename: 'cdr-tests.ForkCdrModuleEndResetTime'
         -
             minversion: '12.0.0'
             config-section: 'cdr-config-12'

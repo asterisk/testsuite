@@ -136,6 +136,34 @@ class ForkCdrModuleEndTime(CDRModule):
                 self.test_object.set_passed(False)
                 return
 
+        self.test_object.set_passed(True)
+
+
+
+class ForkCdrModuleEndResetTime(ForkCdrModuleEndTime):
+    ''' A class that adds some additional CDR checking of the end times on top
+    of CDRModule
+
+    In addition to checking the normal expectations, this class also checks
+    whether or not the end times of the CDRs are within some period of time
+    of each each other.
+
+    Note that this class assumes the CDRs are in cdrtest_local.
+    '''
+
+    def __init__(self, module_config, test_object):
+        super(ForkCdrModuleEndResetTime, self).__init__(module_config,
+            test_object)
+        self.entries_to_check = module_config[0]['check-entries']
+
+    def match_cdrs(self):
+        super(ForkCdrModuleEndResetTime, self).match_cdrs()
+
+        cdr1 = AsteriskCSVCDR(fn = "%s/%s/cdr-csv/%s.csv" %
+                (self.test_object.ast[0].base,
+                 self.test_object.ast[0].directories['astlogdir'],
+                 "cdrtest_local"))
+
         LOGGER.debug('Checking start/end times for forked entries')
         for i in range(len(self.entries_to_check) - 1):
             end = time.strptime(cdr1[self.entries_to_check[i]].end,
