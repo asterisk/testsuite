@@ -1,10 +1,39 @@
 # -*- yaml -*-
 # Configuration sample for the Generic ARI module
 
-ari-config:
+# Configuration for ari.AriTestObject
+#
+# A test object that creates an ARI connection and an AMI connection. The test object
+# creates a number of channels and, when all channels have been created/hungup, stops
+# the test.
+test-object-config:
+    # The host to connect to. Default is 127.0.0.1
+    host: 127.0.0.1
+
+    # The port to connect to. Default is 8088.
+    port: 8088
+
+    # The username to use for the connection. Default is testsuite
+    username: testsuite
+
+    # The password to use for the connection. Default is testsuite
+    password: testsuite
+
     # ARI always attempts to connect to the /ari/events WebSocket.
     # This is a comma seperated list of applications to connect for.
+    # If not provided, default is 'testsuite'
     apps: foo-test
+
+    # Define the channels to create for the test. If not specified, a single Local
+    # channel will be created to s@default, tied to the Echo application. Channels
+    # can be created in parallel for a single iteration if a list is provided.
+    test-iterations:
+        - { channel: Local/foo@bar, context: default, exten: yackity, priority: 1}
+        - [ { channel: Local/foo@bar, application: Echo, async: True},
+            { channel: Local/yackity@schmackity, application: Echo, async: True} ]
+
+# Pluggable module that listens for events over the ARI WebSocket
+ari-config:
     # List of events to monitor for. Every event received on the WebSocket
     # is compared against the 'conditions' clause. If the conditions match,
     # then the further specified processing is evaluated.
@@ -34,7 +63,6 @@ ari-config:
                         # block sequences can also be used for arrays
                         args:
                             - 'barman.*'
-
 
             # The above example would match the following:
             #  { 'application': 'foo-test', 'args': [ 'bar' ] }

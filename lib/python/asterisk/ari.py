@@ -11,22 +11,21 @@ import json
 import logging
 import re
 import requests
-import time
 import traceback
 import urllib
 
+from TestCase import TestCase
 from twisted.internet import reactor
 from autobahn.websocket import WebSocketClientFactory, \
     WebSocketClientProtocol, connectWS
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 8088
 
-
 #: Default matcher to ensure we don't have any validation failures on the
 #  WebSocket
-ValidationMatcher = {
+VALIDATION_MATCHER = {
     'conditions': {
         'match': {
             'error': "^InvalidMessage$"
@@ -34,6 +33,143 @@ ValidationMatcher = {
     },
     'count': 0
 }
+
+
+class AriTestObject(TestCase):
+    ''' Class that acts as a Test Object in the pluggable module framework '''
+
+    def __init__(self, test_path='', test_config=None):
+        ''' Constructor for a test object
+
+        Keyword Arguments:
+        test_path The full path to the test location
+        test_config The YAML test configuration
+        '''
+        super(AriTestObject, self).__init__(test_path, test_config)
+
+        if test_config is None:
+            # Meh, just use defaults
+            test_config = {}
+
+        self.apps = test_config.get('apps') or 'testsuite'
+        if isinstance(self.apps, list):
+            self.apps = ','.join(self.apps)
+        host = test_config.get('host') or '127.0.0.1'
+        port = test_config.get('port') or DEFAULT_PORT
+        userpass = (test_config.get('username') or 'testsuite',
+            test_config.get('password') or 'testsuite')
+
+        # Create the REST interface and the WebSocket Factory
+        self.ari = ARI(host, port=port, userpass=userpass)
+        self.ari_factory = AriClientFactory(receiver=self, host=host, port=port,
+                                        apps=self.apps,
+                                        userpass=userpass)
+        self.iterations = test_config.get('test-iterations')
+
+        self.test_iteration = 0
+        self.channels = []
+        self._ws_event_handlers = []
+
+        if self.iterations is None:
+            self.iterations = [{'channel': 'Local/s@default',
+                'application': 'Echo'}]
+
+        self.create_asterisk(count=1)
+
+    def run(self):
+        ''' Override of TestCase run
+
+        Called when reactor starts and after all instances of Asterisk have started
+        '''
+        super(AriTestObject, self).run()
+        self.ari_factory.connect()
+
+    def register_ws_event_handler(self, callback):
+        ''' Register a callback for when an event is received over the WS
+
+        :param callback The method to call when an event is received. This
+        will have a single parameter (the event) passed to it
+        '''
+        self._ws_event_handlers.append(callback)
+
+    def on_ws_event(self, message):
+        ''' Handler for WebSocket events
+
+        :param message The WS event payload
+        '''
+        for handler in self._ws_event_handlers:
+            handler(message)
+
+    def on_ws_open(self, protocol):
+        ''' Handler for WebSocket Client Protocol opened
+
+        :param protocol The WS Client protocol object
+        '''
+        reactor.callLater(0, self._create_ami_connection)
+
+    def on_ws_closed(self, protocol):
+        ''' Handler for WebSocket Client Protocol closed
+
+        :param protocol The WS Client protocol object
+        '''
+        LOGGER.debug('WebSocket connection closed...')
+
+    def _create_ami_connection(self):
+        ''' Create the AMI connection '''
+        self.create_ami_factory(count=1)
+
+    def ami_connect(self, ami):
+        ''' Override of TestCase ami_connect
+        Called when an AMI connection is made
+
+        :param ami The AMI factory
+        '''
+        ami.registerEvent('Newchannel', self._new_channel_handler)
+        ami.registerEvent('Hangup', self._hangup_handler)
+        self.execute_test()
+
+    def _new_channel_handler(self, ami, event):
+        ''' Handler for new channels
+
+        :param ami The AMI instance
+        :param event The Newchannl event
+        '''
+        LOGGER.debug('Tracking channel %s' % event['channel'])
+        self.channels.append(event['channel'])
+
+    def _hangup_handler(self, ami, event):
+        ''' Handler for channel hangup
+
+        :param ami The AMI instance
+        :param event Hangup event
+        '''
+        LOGGER.debug('Removing tracking for %s' % event['channel'])
+        self.channels.remove(event['channel'])
+        if len(self.channels) == 0:
+            self.test_iteration += 1
+            self.execute_test()
+
+    def execute_test(self):
+        ''' Execute the current iteration of the test '''
+
+        if (self.test_iteration == len(self.iterations)):
+            LOGGER.info('All iterations executed; stopping')
+            self.stop_reactor()
+            return
+
+        iteration = self.iterations[self.test_iteration]
+        if isinstance(iteration, list):
+            for channel in iteration:
+                self._spawn_channel(channel)
+        else:
+            self._spawn_channel(iteration)
+
+    def _spawn_channel(self, channel_def):
+        ''' Create a new channel '''
+
+        # There's only one Asterisk instance, so just use the first AMI factory
+        LOGGER.info('Creating channel %s' % channel_def['channel'])
+        self.ami[0].originate(**channel_def).addErrback(self.handleOriginateFailure)
 
 
 class WebSocketEventModule(object):
@@ -46,35 +182,20 @@ class WebSocketEventModule(object):
         :param module_config: Configuration dict parse from test-config.yaml.
         :param test_object: Test control object.
         '''
-        logger.debug("WebSocketEventModule(%r)", test_object)
-        self.host = '127.0.0.1'
-        self.port = DEFAULT_PORT
-        self.test_object = test_object
-        username = module_config.get('username') or 'testsuite'
-        password = module_config.get('password') or 'testsuite'
-        userpass = (username, password)
-        #: ARI interface object
-        self.ari = ARI(self.host, port=self.port, userpass=userpass)
-        #: Matchers for incoming events
+        self.ari = test_object.ari
         self.event_matchers = [
             EventMatcher(self.ari, e, test_object)
             for e in module_config['events']]
-        self.event_matchers.append(EventMatcher(self.ari, ValidationMatcher,
+        self.event_matchers.append(EventMatcher(self.ari, VALIDATION_MATCHER,
                                                 test_object))
-        apps = module_config.get('apps') or 'testsuite'
-        if isinstance(apps, list):
-            apps = ','.join(apps)
-        #: Twisted protocol factory for ARI WebSockets
-        self.factory = AriClientFactory(host=self.host, port=self.port,
-                                        apps=apps, on_event=self.on_event,
-                                        userpass=userpass)
+        test_object.register_ws_event_handler(self.on_event)
 
     def on_event(self, event):
         '''Handle incoming events from the WebSocket.
 
         :param event: Dictionary parsed from incoming JSON event.
         '''
-        logger.error('%r' % event)
+        LOGGER.debug('Received event: %r' % event.get('type'))
         for matcher in self.event_matchers:
             matcher.on_event(event)
 
@@ -82,42 +203,39 @@ class WebSocketEventModule(object):
 class AriClientFactory(WebSocketClientFactory):
     '''Twisted protocol factory for building ARI WebSocket clients.
     '''
-    def __init__(self, host, apps, on_event, userpass, port=DEFAULT_PORT,
-                 timeout_secs=60):
+    def __init__(self, receiver, host, apps, userpass, port=DEFAULT_PORT,
+        timeout_secs=60):
         '''Constructor
 
+        :param receiver The object that will receive events from the protocol
         :param host: Hostname of Asterisk.
         :param apps: App names to subscribe to.
-        :param on_event: Callback to invoke for all received events.
         :param port: Port of Asterisk web server.
         :param timeout_secs: Maximum time to try to connect to Asterisk.
         '''
         url = "ws://%s:%d/ari/events?%s" % \
               (host, port,
                urllib.urlencode({'app': apps, 'api_key': '%s:%s' % userpass}))
-        logger.info("WebSocketClientFactory(url=%s)" % url)
-        WebSocketClientFactory.__init__(self, url, debug = True, protocols=['ari'])
-        self.on_event = on_event
+        LOGGER.info("WebSocketClientFactory(url=%s)" % url)
+        WebSocketClientFactory.__init__(self, url, debug = True,
+            protocols=['ari'])
         self.timeout_secs = timeout_secs
-        self.protocol = self.__build_protocol
         self.attempts = 0
         self.start = None
+        self.receiver = receiver
 
-        self.reconnect()
-
-    def __build_protocol(self):
-        '''Build a client protocol instance
-        '''
-        return AriClientProtocol(self.on_event)
+    def buildProtocol(self, addr):
+        ''' Make the protocol '''
+        return AriClientProtocol(self.receiver, self)
 
     def clientConnectionFailed(self, connector, reason):
-        '''Callback when client connection failed to connect.
-
-        :param connector: Twisted connector.
-        :param reason: Failure reason.
-        '''
-        logger.info("clientConnectionFailed(%s)" % (reason))
+        ''' Doh, connection lost '''
+        LOGGER.debug('Connection lost; attempting again in 1 second')
         reactor.callLater(1, self.reconnect)
+
+    def connect(self):
+        ''' Start the connection '''
+        self.reconnect()
 
     def reconnect(self):
         '''Attempt to reconnect the ARI WebSocket.
@@ -125,13 +243,13 @@ class AriClientFactory(WebSocketClientFactory):
         This call will give up after timeout_secs has been exceeded.
         '''
         self.attempts += 1
-        logger.debug("WebSocket attempt #%d" % self.attempts)
+        LOGGER.debug("WebSocket attempt #%d" % self.attempts)
         if not self.start:
             self.start = datetime.datetime.now()
         runtime = (datetime.datetime.now() - self.start).seconds
         if runtime >= self.timeout_secs:
-            logger.error("  Giving up after %d seconds" % self.timeout_secs)
-            return
+            LOGGER.error("  Giving up after %d seconds" % self.timeout_secs)
+            raise Exception("Failed to connect after %d seconds" % self.timeout_secs)
 
         connectWS(self)
 
@@ -139,31 +257,35 @@ class AriClientFactory(WebSocketClientFactory):
 class AriClientProtocol(WebSocketClientProtocol):
     '''Twisted protocol for handling a ARI WebSocket connection.
     '''
-    def __init__(self, on_event):
+    def __init__(self, receiver, factory):
         '''Constructor.
 
-        :param on_event: Callback to invoke with each parsed event.
+        :param receiver The event receiver
         '''
-        self.on_event = on_event
+        LOGGER.debug('Made me a client protocol!')
+        self.receiver = receiver
+        self.factory = factory
 
     def onOpen(self):
         '''Called back when connection is open.
         '''
-        logger.debug("onOpen()")
+        LOGGER.debug('WebSocket Open')
+        self.receiver.on_ws_open(self)
 
     def onClose(self, wasClean, code, reason):
         '''Called back when connection is closed.
         '''
-        logger.debug("onClose(%r, %d, %s)" % (wasClean, code, reason))
-        reactor.callLater(1, self.factory.reconnect)
+        LOGGER.debug("WebSocket closed(%r, %d, %s)" % (wasClean, code, reason))
+        self.receiver.on_ws_closed(self)
 
     def onMessage(self, msg, binary):
         '''Called back when message is received.
 
         :param msg: Received text message.
         '''
-        logger.info("rxed: %s" % msg)
-        self.on_event(json.loads(msg))
+        LOGGER.debug("rxed: %s" % msg)
+        msg = json.loads(msg)
+        self.receiver.on_ws_event(msg)
 
 
 class ARI(object):
@@ -200,7 +322,7 @@ class ARI(object):
         :throws: requests.exceptions.HTTPError
         '''
         url = self.build_url(*args)
-        logger.info("GET %s %r" % (url, kwargs))
+        LOGGER.info("GET %s %r" % (url, kwargs))
         return raise_on_err(requests.get(url, params=kwargs,
                                          auth=self.userpass))
 
@@ -213,7 +335,7 @@ class ARI(object):
         :throws: requests.exceptions.HTTPError
         '''
         url = self.build_url(*args, **kwargs)
-        logger.info("POST %s %r" % (url, kwargs))
+        LOGGER.info("POST %s %r" % (url, kwargs))
         return raise_on_err(requests.post(url, params=kwargs,
                                           auth=self.userpass))
 
@@ -226,7 +348,7 @@ class ARI(object):
         :throws: requests.exceptions.HTTPError
         '''
         url = self.build_url(*args, **kwargs)
-        logger.info("DELETE %s %r" % (url, kwargs))
+        LOGGER.info("DELETE %s %r" % (url, kwargs))
         return raise_on_err(requests.delete(url, params=kwargs,
                                             auth=self.userpass))
 
@@ -273,11 +395,11 @@ class EventMatcher(object):
             try:
                 res = self.callback(self.ari, message)
                 if not res:
-                    logger.error("Callback failed: %r" %
+                    LOGGER.error("Callback failed: %r" %
                                  self.instance_config)
                     self.passed = False
             except:
-                logger.error("Exception in callback: %s" %
+                LOGGER.error("Exception in callback: %s" %
                              traceback.format_exc())
                 self.passed = False
 
@@ -287,7 +409,7 @@ class EventMatcher(object):
         :param args: Ignored arguments.
         '''
         if not self.count_range.contains(self.count):
-            logger.error("Expected %d <= count <= %d; was %d (%r)",
+            LOGGER.error("Expected %d <= count <= %d; was %d (%r)",
                          self.count_range.min, self.count_range.max,
                          self.count, self.conditions)
             self.passed = False
@@ -316,9 +438,9 @@ def all_match(pattern, message):
     :param message: Message to compare.
     :returns: True if message matches pattern; False otherwise.
     '''
-    #logger.debug("%r ?= %r" % (pattern, message))
-    #logger.debug("  %r" % type(pattern))
-    #logger.debug("  %r" % type(message))
+    #LOGGER.debug("%r ?= %r" % (pattern, message))
+    #LOGGER.debug("  %r" % type(pattern))
+    #LOGGER.debug("  %r" % type(message))
     if pattern is None:
         # Empty pattern always matches
         return True
@@ -345,7 +467,7 @@ def all_match(pattern, message):
         # Integers are literal matches
         return pattern == message
     else:
-        logger.error("Unhandled pattern type %s" % type(pattern)).__name__
+        LOGGER.error("Unhandled pattern type %s" % type(pattern)).__name__
 
 
 class Range(object):

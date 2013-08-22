@@ -16,7 +16,7 @@ id = None
 def on_start(ari, event):
     logger.debug("on_start(%r)" % event)
     global id
-    id = event['channel']['uniqueid']
+    id = event['channel']['id']
     ari.post('channels', id, 'continue')
     return True
 
@@ -24,11 +24,11 @@ def on_start(ari, event):
 def on_end(ari, event):
     global id
     logger.debug("on_end(%r)" % event)
-    return id == event['channel']['uniqueid']
+    return id == event['channel']['id']
 
 
 def on_second_start(ari, event):
     global id
     logger.debug("on_second_start(%r)" % event)
     ari.delete('channels', id)
-    return id == event['channel']['uniqueid']
+    return id == event['channel']['id']

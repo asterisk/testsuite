@@ -8,24 +8,20 @@ test-modules:
     add-test-to-search-path: True
     test-object:
         config-section: test-object-config
-        typename: SimpleTestCase.SimpleTestCase
+        typename: ari.AriTestObject
     modules:
         -   config-section: ari-config
             typename: ari.WebSocketEventModule
 
 test-object-config:
-    spawn-after-hangup: True
-    test-iterations:
-        -   channel: Local/s@default
-            application: Echo
+
 
 ari-config:
-    apps: continue-test
     events:
         -   conditions:
                 match:
                     type: StasisStart
-                    application: continue-test
+                    application: testsuite
                     args: []
             count: 1
             callback:
@@ -34,7 +30,7 @@ ari-config:
         -   conditions:
                 match:
                     type: StasisEnd
-                    application: continue-test
+                    application: testsuite
             count: 2
             callback:
                 module: rest_continue
@@ -42,7 +38,7 @@ ari-config:
         -   conditions:
                 match:
                     type: StasisStart
-                    application: continue-test
+                    application: testsuite
                     args: [fin]
             count: 1
             callback:
