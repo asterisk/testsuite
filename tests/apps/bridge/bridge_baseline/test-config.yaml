@@ -12,8 +12,14 @@ test-modules:
             config-section: originator-config
             typename: 'PluggableModules.Originator'
         -
+            minversion: '1.8.0.0'
+            maxversion: '10.0.0'
+            config-section: ami-config-1.8
+            typename: 'ami.AMIEventModule'
+        -
+            minversion: '11.0.0'
             maxversion: '12.0.0'
-            config-section: ami-config-pre-12
+            config-section: ami-config-11
             typename: 'ami.AMIEventModule'
         -
             maxversion: '12.0.0'
@@ -68,7 +74,23 @@ hangup-config-pre-12:
             Bridgestate: 'Link'
             Bridgetype: 'core'
 
-ami-config-pre-12:
+ami-config-1.8:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Bridge'
+                Bridgestate: 'Link'
+                Bridgetype: 'core'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Unlink'
+        count: '1'
+
+ami-config-11:
     -
         type: 'headermatch'
         conditions:
