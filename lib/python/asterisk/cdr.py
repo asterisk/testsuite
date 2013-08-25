@@ -64,7 +64,7 @@ class CDRModule(object):
         try:
             self.match_cdrs()
         except:
-            LOGGER.error("Excpetion while checking CDRs: %s" % sys.exc_info()[0])
+            LOGGER.error("Exception while checking CDRs: %s" % sys.exc_info()[0])
         return callback_param
 
 
