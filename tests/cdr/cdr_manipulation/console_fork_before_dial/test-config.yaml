@@ -24,6 +24,7 @@ test-object-config:
         -
             channel: 'Local/1@default'
             application: 'Echo'
+            async: True
 
 cdr-config:
     -
