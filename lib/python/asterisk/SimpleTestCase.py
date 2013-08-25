@@ -95,20 +95,24 @@ class SimpleTestCase(TestCase):
         # unique ID we've assigned, allowing us to associate the Asterisk
         # channel name with the channel we originated
         msg = "Originating call to %s" % call_details['channel']
+        if 'async' not in call_details:
+            call_details['async'] = False
         if 'application' in call_details:
             msg += " with application %s" % call_details['application']
-            df = ami.originate(channel = call_details['channel'],
-                          application = call_details['application'],
-                          variable = call_details['variable'])
+            df = ami.originate(channel=call_details['channel'],
+                          application=call_details['application'],
+                          variable=call_details['variable'],
+                          async=call_details['async'])
         else:
             msg += " to %s@%s at %s" % (call_details['exten'],
                                         call_details['context'],
                                         call_details['priority'],)
-            df = ami.originate(channel = call_details['channel'],
-                          context = call_details['context'],
-                          exten = call_details['exten'],
-                          priority = call_details['priority'],
-                          variable = call_details['variable'])
+            df = ami.originate(channel=call_details['channel'],
+                          context=call_details['context'],
+                          exten=call_details['exten'],
+                          priority=call_details['priority'],
+                          variable=call_details['variable'],
+                          async=call_details['async'])
         if self._ignore_originate_failures:
             df.addErrback(__swallow_originate_error)
         else:
