@@ -11,6 +11,8 @@ import sys
 import logging
 import uuid
 
+from twisted.internet import reactor
+
 sys.path.append("lib/python")
 from TestCase import TestCase
 
@@ -44,6 +46,7 @@ class SimpleTestCase(TestCase):
         self._ignore_originate_failures = False
         self._spawn_after_hangup = False
         self._config_path = None
+        self._end_test_delay = 0
 
         if test_config is None or 'test-iterations' not in test_config:
             # No special test configuration defined, use defaults
@@ -64,6 +67,8 @@ class SimpleTestCase(TestCase):
                 self._spawn_after_hangup = test_config['spawn-after-hangup']
             if 'config-path' in test_config:
                 self._config_path = test_config['config-path']
+            self._end_test_delay = test_config.get('end-test-delay') or 0
+
         self.create_asterisk(count=1, base_configs_path=self._config_path)
 
     def ami_connect(self, ami):
@@ -166,7 +171,7 @@ class SimpleTestCase(TestCase):
             self.__originate_call(ami, self._test_runs[self._current_run])
         else:
             LOGGER.info("All calls executed, stopping")
-            self.stop_reactor()
+            reactor.callLater(self._end_test_delay, self.stop_reactor)
 
 
     def __event_cb(self, ami, event):
@@ -196,7 +201,7 @@ class SimpleTestCase(TestCase):
         ''' Called when an error occurs during a hangup '''
         # Ignore the hangup error - in this case, the channel was disposed of
         # prior to our hangup request, which is okay
-        self.stop_reactor()
+        reactor.callLater(self._end_test_delay, self.stop_reactor)
 
     def verify_event(self, event):
         ''' Virtual method used to verify values in the event. '''

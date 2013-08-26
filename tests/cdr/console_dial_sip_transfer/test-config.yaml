@@ -23,6 +23,7 @@ test-object-config:
     config-path: 'tests/cdr/configs/basic'
     spawn-after-hangup: True
     ignore-originate-failures: True
+    end-test-delay: 2
     test-iterations:
         -
             channel: 'Local/1@default'
