@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'See ASTERISK-22392'
     summary:     'Make sure that we do not allow replacing our own call'
     description: |
         'Register two endpoints 6001 and 6002. Call from 6001 to 6002 and then
