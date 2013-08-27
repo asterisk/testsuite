@@ -13,6 +13,7 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 from asterisk.TestCase import TestCase
+from asterisk.version import AsteriskVersion
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,10 @@ class MasqueradeTest(TestCase):
 
         self.ami_count = 0
         self.test_complete = False
+
+        self.parking_space_hdr = "exten"
+        if AsteriskVersion() >= AsteriskVersion('12'):
+            self.parking_space_hdr = "parkingspace"
 
         # Set longer timeout than default.
         #
@@ -63,6 +68,7 @@ class MasqueradeTest(TestCase):
             return
 
         # Call chain completed successfully.
+        logger.info("Test completed successfully")
         self.passed = True
         self.stop_reactor()
 
@@ -70,7 +76,10 @@ class MasqueradeTest(TestCase):
     def initiate_call_chain(self):
         logger.info("Initiating test call for a chain length of " + str(self.chain_length))
         exten = 9000 + self.chain_length
-        self.ast[0].cli_originate("Local/" + str(exten) + "@outgoing/n extension parkme@parked")
+        if AsteriskVersion() < AsteriskVersion('12'):
+            self.ast[0].cli_originate("Local/" + str(exten) + "@outgoing/n extension parkme@parked")
+            return
+        self.ast[0].cli_originate("Local/" + str(exten) + "@outgoing/n extension parkme12@parked")
 
     # Initiate a call to retrieve the parked call.
     def get_parkedcall(self):
@@ -81,12 +90,12 @@ class MasqueradeTest(TestCase):
     def evt_parkedcall(self, ami, event):
         if self.test_complete:
             return
-        exten = event.get("exten").lower()
-        logger.info("Call parked at exten: " + str(exten))
-        if exten != str(self.expected_space):
+        exten = event.get(self.parking_space_hdr)
+        if not exten or exten != str(self.expected_space):
             logger.warning("Call not parked in expected space " + str(self.expected_space))
             self.stop_reactor()
             return
+        logger.info("Call parked at exten: " + str(exten))
 
         self.got_AMI_ParkedCall = True
         self.check_result()
@@ -95,12 +104,12 @@ class MasqueradeTest(TestCase):
     def evt_unparkedcall(self, ami, event):
         if self.test_complete:
             return
-        exten = event.get("exten").lower()
-        logger.info("Parked call retrieved from exten: " + str(exten))
-        if exten != str(self.expected_space):
+        exten = event.get(self.parking_space_hdr)
+        if not exten or exten != str(self.expected_space):
             logger.warning("Call not retrieved from expected space " + str(self.expected_space))
             self.stop_reactor()
             return
+        logger.info("Parked call retrieved from exten: " + str(exten))
 
         self.got_AMI_UnParkedCall = True
         self.check_result()
