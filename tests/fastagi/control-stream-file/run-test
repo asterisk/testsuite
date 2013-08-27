@@ -7,12 +7,16 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 '''
 
+import logging
 import sys
+
 from twisted.internet import reactor
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.TestCase import TestCase
+
+LOGGER = logging.getLogger(__name__)
 
 
 class FastAGIControlStreamFileTest(TestCase):
@@ -23,30 +27,29 @@ class FastAGIControlStreamFileTest(TestCase):
         self.create_fastagi_factory()
 
     def on_failure(self, reason):
-        print 'Could not run CONTROL STREAM FILE: ', reason.getTraceback()
+        LOGGER.error('Could not run CONTROL STREAM FILE: ', reason.getTraceback())
         self.agi.finish()
 
     # result of 0 indicates success
     def finish_test(self, result):
-        if result is "0":
-            self.passed = True
-
-        self.result_changed()
+        LOGGER.debug("Finished.")
+        try:
+            if result[0] == 0 and result[1] is None or result[1] == -1:
+                self.passed = True
+            else:
+                LOGGER.error("Unexpected result '%r'", result)
+        finally:
+            self.stop_reactor()
 
     def fastagi_connect(self, agi):
         self.agi = agi
-        print "Connection established."
+        LOGGER.debug("Connection established.")
         return agi.controlStreamFile("beep", "").addCallback(
             self.finish_test)
 
     def launch_test(self):
-        print "Originating call to begin test."
+        LOGGER.debug("Originating call to begin test.")
         self.ast[0].cli_originate("Local/504@agitest extension echo@agitest")
-
-    # Read result before timeout
-    def result_changed(self):
-        if self.passed is True:
-            self.stop_reactor()
 
     def run(self):
         TestCase.run(self)
