@@ -117,6 +117,7 @@ originator-config:
     application: 'Echo'
     ignore-originate-failure: 'yes'
     trigger: 'scenario_start'
+    async: True
 
 sipp-config:
     fail-on-any: True

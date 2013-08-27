@@ -54,31 +54,11 @@ cdr-config-11:
                 lastapp: 'Dial'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
-            -
-                accountcode: ''
-                destination: 's'
-                dcontext: 'default'
-                callerid: ''
-                channel: 'Local/s@default-.{8};1'
-                dchannel: ''
-                lastapp: 'Echo'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
 
 cdr-config-12:
     -
         file: 'Master'
         lines:
-            -
-                accountcode: ''
-                destination: 's'
-                dcontext: 'default'
-                callerid: '"" <>'
-                channel: 'Local/s@default-.{8};1'
-                dchannel: ''
-                lastapp: 'Echo'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
             -
                 accountcode: ''
                 destination: 's'
@@ -218,9 +198,12 @@ ami-config-12:
 
 originator-config:
     channel: 'Local/s@default'
-    application: 'Echo'
+    context: 'default'
+    exten: 'echo'
+    priority: 1
     ignore-originate-failure: 'yes'
     trigger: 'ami_connect'
+    async: True
 
 sipp-config:
     fail-on-any: True

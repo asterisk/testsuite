@@ -196,6 +196,7 @@ originator-config:
     application: 'Echo'
     ignore-originate-failure: 'yes'
     trigger: 'ami_connect'
+    async: True
 
 sipp-config:
     fail-on-any: True

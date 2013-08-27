@@ -78,7 +78,7 @@
         crlf="true">
   </recv>
 
-  <pause/>
+  <pause milliseconds="2000" />
 
   <send retrans="500">
     <![CDATA[

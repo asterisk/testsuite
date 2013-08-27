@@ -23,33 +23,43 @@ test-object-config:
         -
             channel: 'Local/dial_busy@default'
             application: 'Echo'
+            async: True
         -
             channel: 'Local/dial_busy@default'
             application: 'Echo'
+            async: True
         -
             channel: 'Local/dial_busy@default'
             application: 'Echo'
+            async: True
         -
             channel: 'Local/dial_busy@default'
             application: 'Echo'
+            async: True
         -
             channel: 'Local/dial_busy@default'
             application: 'Echo'
+            async: True
         -
             channel: 'Local/dial_busy@default'
             application: 'Echo'
+            async: True
         -
             channel: 'Local/dial_busy@default'
             application: 'Echo'
+            async: True
         -
             channel: 'Local/dial_busy@default'
             application: 'Echo'
+            async: True
         -
             channel: 'Local/dial_answer@default'
             application: 'Echo'
+            async: True
         -
             channel: 'Local/dial_answer@default'
             application: 'Echo'
+            async: True
 
 cdr-config:
     -

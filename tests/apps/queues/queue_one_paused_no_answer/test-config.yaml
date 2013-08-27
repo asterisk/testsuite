@@ -23,13 +23,16 @@ test-modules:
 test-object-config:
     spawn-after-hangup: True
     ignore-originate-failures: True
+    end-test-delay: 2
     test-iterations:
         -
             channel: 'Local/pause_queue_member@default'
             application: 'Echo'
+            async: True
         -
             channel: 'Local/caller@default'
             application: 'Echo'
+            async: True
 
 cdr-config:
     -
