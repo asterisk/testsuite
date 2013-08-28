@@ -8,6 +8,8 @@ the GNU General Public License Version 2.
 
 import logging
 
+from twisted.internet import reactor
+
 LOGGER = logging.getLogger(__name__)
 
 def send_hangup(ami, event):
@@ -16,6 +18,6 @@ def send_hangup(ami, event):
 
     channel = event['channel']
     LOGGER.info('Hanging up channel %s' % channel)
-    ami.hangup(channel)
+    reactor.callLater(2, ami.hangup, channel)
     return True
 
