@@ -19,8 +19,7 @@ from asterisk.sipp import SIPpScenario
 from twisted.internet import reactor
 from asterisk.version import AsteriskVersion
 
-logger = logging.getLogger(__name__)
-INJECT_FILE_BYPASS = "inject_bypass.csv"
+LOGGER = logging.getLogger(__name__)
 INJECT_FILE_BRIDGE = "inject_bridge.csv"
 
 class SIPHold(TestCase):
@@ -36,18 +35,16 @@ class SIPHold(TestCase):
         else:
             self.asterisk12Events = True
 
-        self.sipp_phone_a_scenarios = [{'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BYPASS},
-            {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BYPASS},
-            {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BYPASS},
+        self.sipp_phone_a_scenarios = [
             {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BRIDGE},
+            {'scenario':'phone_A_IP_restrict.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BRIDGE},
             {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BRIDGE},
-            {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BRIDGE},]
-        self.sipp_phone_b_scenarios = [{'scenario':'phone_B_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BYPASS},
-            {'scenario':'phone_B_IP_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BYPASS},
-            {'scenario':'phone_B_IP_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BYPASS},
+            ]
+        self.sipp_phone_b_scenarios = [
             {'scenario':'phone_B_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BRIDGE},
             {'scenario':'phone_B_IP_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BRIDGE},
-            {'scenario':'phone_B_IP_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BRIDGE},]
+            {'scenario':'phone_B_IP_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BRIDGE},
+            ]
 
         self.passed = True
         self.moh_start_events = 0
@@ -65,7 +62,7 @@ class SIPHold(TestCase):
         else:
             ami.registerEvent('MusicOnHold', self.moh_event_handler)
 
-        logger.info("Starting SIP scenario")
+        LOGGER.info("Starting SIP scenario")
         self.execute_scenarios()
 
     def execute_scenarios(self):
@@ -85,7 +82,7 @@ class SIPHold(TestCase):
             return result
 
         if self.__test_counter == len(self.sipp_phone_a_scenarios):
-            logger.info("All scenarios executed")
+            LOGGER.info("All scenarios executed")
             return
 
         sipp_a = SIPpScenario(self.test_name, self.sipp_phone_a_scenarios[self.__test_counter])
@@ -105,23 +102,23 @@ class SIPHold(TestCase):
     def user_event_handler(self, ami, event):
         self.user_events += 1
         if (self.user_events == len(self.sipp_phone_a_scenarios)):
-            logger.info("All user events received; stopping reactor")
+            LOGGER.info("All user events received; stopping reactor")
             self.stop_reactor()
 
     def moh_start_event_handler(self, ami, event):
-        logger.debug("Received MOH start event")
+        LOGGER.debug("Received MOH start event")
         self.moh_start_events += 1
 
     def moh_stop_event_handler(self, ami, event):
-        logger.debug("Received MOH stop event")
+        LOGGER.debug("Received MOH stop event")
         self.moh_stop_events += 1
 
     def moh_event_handler(self, ami, event):
         if event['state'] == "Start":
-            logger.debug("Received MOH start event")
+            LOGGER.debug("Received MOH start event")
             self.moh_start_events += 1
         elif event['state'] == "Stop":
-            logger.debug("Received MOH stop event")
+            LOGGER.debug("Received MOH stop event")
             self.moh_stop_events += 1
 
     def run(self):
@@ -136,13 +133,13 @@ def main():
     test.stop_asterisk()
 
     if (test.moh_start_events != len(test.sipp_phone_a_scenarios)):
-        logger.error("Failed to receive %d MOH start events (received %d)" % (len(test.sipp_phone_a_scenarios), test.moh_start_events))
+        LOGGER.error("Failed to receive %d MOH start events (received %d)" % (len(test.sipp_phone_a_scenarios), test.moh_start_events))
         test.passed = False
     if (test.moh_stop_events != len(test.sipp_phone_a_scenarios)):
-        logger.error("Failed to receive %d MOH stop events (received %d)" % (len(test.sipp_phone_a_scenarios), test.moh_stop_events))
+        LOGGER.error("Failed to receive %d MOH stop events (received %d)" % (len(test.sipp_phone_a_scenarios), test.moh_stop_events))
         test.passed = False
     if (test.user_events != len(test.sipp_phone_a_scenarios)):
-        logger.error("Failed to receive %d user test events (received %d)" % (len(test.sipp_phone_a_scenarios), test.user_events))
+        LOGGER.error("Failed to receive %d user test events (received %d)" % (len(test.sipp_phone_a_scenarios), test.user_events))
         test.passed = False
 
     if test.passed:
