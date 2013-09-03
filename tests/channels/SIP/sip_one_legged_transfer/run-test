@@ -12,37 +12,43 @@ import os
 import signal
 import subprocess
 import logging
-
-from twisted.application import service, internet
-from twisted.internet import reactor, defer
-from starpy import manager
+from twisted.internet import reactor
 
 sys.path.append("lib/python")
-from asterisk.asterisk import Asterisk
 from asterisk.TestCase import TestCase
+from asterisk.version import AsteriskVersion
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 class OneLeggedTransfer(TestCase):
+    a_channel = 'SIP/end_a-00000001'
+    c_channel = 'SIP/end_c-00000002'
+
     def __init__(self):
         TestCase.__init__(self)
         self.passed = False
         self.create_asterisk()
+        self.bridges = {}
 
     def readResult(self):
-        logger.debug("Reading results")
+        LOGGER.debug("Reading results")
         self.ast[0].cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
         self.ast[0].cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
         self.stopProcesses()
 
         if self.passed == True:
-            logger.info('SIP Transfer Test Passed!')
+            LOGGER.info('SIP Transfer Test Passed!')
         else:
-            logger.error('SIP Transfer Test Failed')
+            LOGGER.error('SIP Transfer Test Failed')
         self.stop_reactor()
 
     def ami_connect(self, ami):
         TestCase.ami_connect(self, ami)
+
+        # register for BridgeEnter and BridgeLeave events for later versions
+        if AsteriskVersion() >= AsteriskVersion('12'):
+            ami.registerEvent('BridgeEnter', self.handle_bridge_enter)
+            ami.registerEvent('BridgeLeave', self.handle_bridge_leave)
 
         # start up the processes
         self.startProcesses()
@@ -54,55 +60,81 @@ class OneLeggedTransfer(TestCase):
         # stop and read results after timeout
         reactor.callLater(25, self.readResult)
 
+    def handle_bridge_enter(self, ami, event):
+        '''Log bridge enter events to be checked later.'''
+        bridge = event['bridgeuniqueid']
+        channel = event['channel']
+
+        if bridge not in self.bridges:
+            self.bridges[bridge] = []
+
+        self.bridges[bridge].append(channel)
+
+    def handle_bridge_leave(self, ami, event):
+        '''Log bridge leave events to be checked later.'''
+        bridge = event['bridgeuniqueid']
+        channel = event['channel']
+        self.bridges[bridge].remove(channel)
 
     def checkBridgeResult(self, results):
-        logger.debug('Result %s' % str(results))
+        LOGGER.debug('Result %s' % str(results))
         for result in results:
             if "bridgedchannel" not in result:
-                logger.debug("bridgedchannel was not a valid key; checking for link")
+                LOGGER.debug("bridgedchannel was not a valid key; checking for link")
                 if "link" not in result:
-                    logger.warn("'link' and 'bridgedchannel' not found")
-                elif result['link'] == 'SIP/end_a-00000001': # check link for older versions of asterisk
+                    LOGGER.warn("'link' and 'bridgedchannel' not found")
+                elif result['link'] == OneLeggedTransfer.a_channel: # check link for older versions of asterisk
                     self.passed = True
-            elif result['bridgedchannel'] == 'SIP/end_a-00000001':
+            elif result['bridgedchannel'] == OneLeggedTransfer.a_channel:
                 self.passed = True
 
         if self.passed == True:
-            logger.debug("Found Bridge!!!")
+            LOGGER.debug("Found Bridge!!!")
         else:
-            logger.warn("Detecting Bridge failed")
+            LOGGER.warn("Detecting Bridge failed")
 
 
     def checkBridgeError(self, reason):
-        logger.error(reason.getTraceback())
-        logger.error("Checking Bridge failed.  Channel did not exist.")
+        LOGGER.error(reason.getTraceback())
+        LOGGER.error("Checking Bridge failed.  Channel did not exist.")
         reactor.callLater(1, self.readResult)
 
     def amiCheckBridge(self):
-        logger.debug("Get AMI results")
-        self.ami[0].status('SIP/end_c-00000002').addCallbacks(self.checkBridgeResult, self.checkBridgeError)
+        '''Check whether A and C are bridged.'''
+        LOGGER.debug("Get AMI results")
+        if AsteriskVersion() >= AsteriskVersion('12'):
+            for channels in self.bridges.values():
+                if OneLeggedTransfer.a_channel in channels and OneLeggedTransfer.c_channel in channels:
+                    self.passed = True
+
+            if self.passed == True:
+                LOGGER.debug("Found Bridge!!!")
+            else:
+                LOGGER.warn("Detecting Bridge failed")
+        else:
+            self.ami[0].status(OneLeggedTransfer.c_channel).addCallbacks(self.checkBridgeResult, self.checkBridgeError)
         self.reset_timeout()
 
     def cCallB(self):
-        logger.info("C Calling B")
+        LOGGER.info("C Calling B")
         self.pjc.stdin.write("m\n")
         self.pjc.stdin.write("sip:127.0.0.1:5066\n")
         self.reset_timeout()
 
     def bCallA(self):
-        logger.info("B Calling A")
+        LOGGER.info("B Calling A")
         self.pjb.stdin.write("m\n")
         self.pjb.stdin.write("sip:call_a@127.0.0.1:5060\n")
         self.reset_timeout()
 
     def bTransferAToC(self):
-        logger.info("B Transfering A to C")
+        LOGGER.info("B Transfering A to C")
         self.pjb.stdin.write("X\n")
         self.pjb.stdin.write("1\n")
         self.reset_timeout()
 
     def startProcesses(self):
-        logger.info("Starting Processes")
+        LOGGER.info("Starting Processes")
         self.pja = subprocess.Popen(['pjsua', '--local-port=5065',
                                      '--auto-answer=200', '--null-audio'],
                                      stdin=subprocess.PIPE,
@@ -117,7 +149,7 @@ class OneLeggedTransfer(TestCase):
                                      stdout=subprocess.PIPE)
 
     def stopProcesses(self):
-        logger.info("Stopping Processes")
+        LOGGER.info("Stopping Processes")
         os.kill(self.pja.pid, signal.SIGKILL)
         os.kill(self.pjb.pid, signal.SIGKILL)
         os.kill(self.pjc.pid, signal.SIGKILL)
