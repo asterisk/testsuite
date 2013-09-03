@@ -1,2 +1,4 @@
 tests:
     - dir: 'incoming'
+    - dir: 'outgoing'
+    - dir: 'two_parties'

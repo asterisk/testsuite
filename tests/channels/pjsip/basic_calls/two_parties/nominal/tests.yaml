@@ -1,0 +1,2 @@
+tests:
+    - dir: 'alice_initiated'

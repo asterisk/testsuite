@@ -1,0 +1,139 @@
+testinfo:
+    summary:     'Tests basic outgoing calls verifying audio in both directions'
+    description: |
+        'Run two instances of Asterisk, "uut" and "bob" to test outgoing calls
+         with audio using pjsip. Originate a call from the uut to bob with
+         directing the answered call to the Echo() application. Bob answers and
+         sends audio while listening for audio received from the uut. Bob then
+         hangs up. This ensures that bob receives the echoed audio from the
+         uut. This is performed using ipv4/ipv6 & udp/tcp.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'TestCase.TestCaseModule'
+    modules:
+        -
+            config-section: originator-config-ipv4-udp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: originator-config-ipv4-tcp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: originator-config-ipv6-udp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: originator-config-ipv6-tcp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    asterisk-instances: 2
+    connect-ami: True
+
+originator-config-ipv4-udp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/bob-ipv4-udp'
+    context: 'default'
+    exten: 'echo'
+    priority: '1'
+    async: 'True'
+
+originator-config-ipv4-tcp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/bob-ipv4-tcp'
+    context: 'default'
+    exten: 'echo'
+    priority: '1'
+    async: 'True'
+
+originator-config-ipv6-udp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/bob-ipv6-udp'
+    context: 'default'
+    exten: 'echo'
+    priority: '1'
+    async: 'True'
+
+originator-config-ipv6-tcp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/bob-ipv6-tcp'
+    context: 'default'
+    exten: 'echo'
+    priority: '1'
+    async: 'True'
+
+ami-config:
+    # Bob events
+    -
+        type: 'headermatch'
+        id: '1'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'TalkDetect'
+        requirements:
+            match:
+                result: 'pass'
+        count: '4'
+    -
+        type: 'headermatch'
+        id: '1'
+        conditions:
+            match:
+                Event: 'SoftHangupRequest'
+                Channel: 'PJSIP/uut-*'
+        requirements:
+            match:
+                Cause: '16'
+        count: '4'
+    -
+        type: 'headermatch'
+        id: '1'
+        conditions:
+            match:
+                Event: 'Hangup'
+                Channel: 'PJSIP/uut-*'
+        requirements:
+            match:
+                Cause: '16'
+        count: '4'
+    # UUT events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'HangupRequest'
+        requirements:
+            match:
+                Channel: 'PJSIP/bob-*'
+        count: '4'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'Hangup'
+                Channel: 'PJSIP/bob-*'
+        requirements:
+            match:
+                Cause: '16'
+        count: '4'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

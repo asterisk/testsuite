@@ -1,0 +1,149 @@
+testinfo:
+    summary:     'Tests basic two party calls initiated by Alice and hung up by Bob'
+    description: |
+        'Run three instances of Asterisk, "alice", "uut", and "bob" to test
+         two party calls. Both alice and bob send audio to each other while
+         both also listen for audio. Bob then initiates the hang. This ensures
+         that both alice and bob receive audio. This is performed using
+         ipv4/ipv6 & udp/tcp.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'TestCase.TestCaseModule'
+    modules:
+        -
+            config-section: originator-config-ipv4-udp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: originator-config-ipv4-tcp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: originator-config-ipv6-udp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: originator-config-ipv6-tcp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    asterisk-instances: 3
+    connect-ami: True
+
+originator-config-ipv4-udp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '1'
+    channel: 'PJSIP/bob-ipv4-udp@uut-ipv4-udp'
+    context: 'default'
+    exten: 'start'
+    priority: '1'
+    async: 'True'
+
+originator-config-ipv4-tcp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '1'
+    channel: 'PJSIP/bob-ipv4-tcp@uut-ipv4-tcp'
+    context: 'default'
+    exten: 'start'
+    priority: '1'
+    async: 'True'
+
+originator-config-ipv6-udp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '1'
+    channel: 'PJSIP/bob-ipv6-udp@uut-ipv6-udp'
+    context: 'default'
+    exten: 'start'
+    priority: '1'
+    async: 'True'
+
+originator-config-ipv6-tcp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '1'
+    channel: 'PJSIP/bob-ipv6-tcp@uut-ipv6-tcp'
+    context: 'default'
+    exten: 'start'
+    priority: '1'
+    async: 'True'
+
+ami-config:
+    # Alice events
+    -
+        type: 'headermatch'
+        id: '1'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'TalkDetect'
+        requirements:
+            match:
+                result: 'pass'
+        count: '4'
+    -
+        type: 'headermatch'
+        id: '1'
+        conditions:
+            match:
+                Event: 'HangupRequest'
+        requirements:
+            match:
+                Channel: 'PJSIP/uut-*'
+        count: '4'
+    -
+        type: 'headermatch'
+        id: '1'
+        conditions:
+            match:
+                Event: 'Hangup'
+                Channel: 'PJSIP/uut-*'
+        requirements:
+            match:
+                Cause: '16'
+        count: '4'
+    # Bob events
+    -
+        type: 'headermatch'
+        id: '2'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'TalkDetect'
+        requirements:
+            match:
+                result: 'pass'
+        count: '4'
+    -
+        type: 'headermatch'
+        id: '2'
+        conditions:
+            match:
+                Event: 'SoftHangupRequest'
+                Channel: 'PJSIP/alice-*'
+        requirements:
+            match:
+                Cause: '16'
+        count: '4'
+    -
+        type: 'headermatch'
+        id: '2'
+        conditions:
+            match:
+                Event: 'Hangup'
+                Channel: 'PJSIP/alice-*'
+        requirements:
+            match:
+                Cause: '16'
+        count: '4'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
