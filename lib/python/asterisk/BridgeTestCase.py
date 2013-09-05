@@ -223,11 +223,13 @@ class BridgeTestCase(TestCase):
         if self.uut_bridge_id != event.get('bridgeuniqueid'):
             return
 
-        if self.uut_alice_channel is None:
-            self.uut_alice_channel = event.get('channel')
+        channel = event.get('channel')
+
+        if 'alice' in channel and self.uut_alice_channel is None:
+            self.uut_alice_channel = channel
             LOGGER.info('UUT Alice Channel: %s' % self.uut_alice_channel)
-        elif self.uut_bob_channel is None:
-            self.uut_bob_channel = event.get('channel')
+        elif 'bob' in channel and self.uut_bob_channel is None:
+            self.uut_bob_channel = channel
             LOGGER.info('UUT Bob Channel: %s' % self.uut_bob_channel)
             LOGGER.debug("Bridge is up between %s and %s"
                          % (self.uut_alice_channel, self.uut_bob_channel))
