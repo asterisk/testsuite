@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Skip while failures are debugged'
     summary:     'Test Call Parking'
     description: |
         'This test verifies that retrieving a parked call does not hamper the ability to park it once again.'

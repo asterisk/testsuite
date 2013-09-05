@@ -1,42 +1,138 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python
+'''
+Copyright (C) 2013, Digium, Inc.
+Jonathan Rose <jrose@digium.com>
 
-. lib/sh/library.sh
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
 
-#debug=1
+import sys
+import logging
+from twisted.internet import reactor
 
-echo " >>> Starting callparking_retrieval test"
+sys.path.append("lib/python")
+from asterisk.TestCase import TestCase
+from asterisk.version import AsteriskVersion
 
-initialize userA userB userC
+LOGGER = logging.getLogger(__name__)
 
-echo " >>> User A is calling user B, who will park the call."
-$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/wait@parking extension callb@parking" &
-sleep 2
 
-# Verify that the call is up
-verify_call userA 3
+class ParkRetrieveTest(TestCase):
+    """This test checks event flow for a call being parked, then retrieved,
+    then finally parked once again without a hangup in between."""
+    def __init__(self):
+        """Prepare the test object"""
+        TestCase.__init__(self)
 
-sleep 5
+        self.mode_12 = False
 
-# Verify that the call is up on our bridge server
-verify_call userC 1
+        if AsteriskVersion() >= AsteriskVersion('12'):
+            self.mode_12 = True
 
-echo " >>> User B is retrieving user A from parking, then will attempt to repark it."
-$ASTERISK -C $userB_tmpdir/asterisk.conf -rx "$ORIGINATE IAX2/userc/701@parking extension parka@parking" &
-sleep 2
+        self.channel_parked = None
+        self.times_parked = 0
+        self.times_unparked = 0
+        self.connections_established = 0
 
-# Verify that the call is up
-verify_call userC 2
+        # Create three Asterisk instances ...
+        self.create_asterisk(count=3)
 
-# Have to wait for the announcement to complete
-sleep 5
+    def validate_event_counts(self):
+        """Verify that the number of events received was the expected number"""
+        if self.times_parked != 2:
+            return False
+        if self.times_unparked != 1:
+            return False
+        return True
 
-verify_call userC 1
+    def check_parkedcall(self, ami, event):
+        """Check the values of a ParkedCall event against expectations"""
+        self.times_parked += 1
+        if self.mode_12:
+            parkee = event.get('parkeechannel')
+        else:
+            parkee = event.get('channel')
+        LOGGER.info("Parkee: %s" % parkee)
 
-echo " *** Success!"
+        if not "IAX2/usera-" in parkee:
+            LOGGER.error("Parkee doesn't match expected user IAX2/usera-*, "
+                         "got %s instead. Test failed." % parkee)
+            self.set_passed(False)
+            self.stop_reactor()
 
-$ASTERISK -C $userB_tmpdir/asterisk.conf -rx "$ORIGINATE IAX2/userc/701@parking extension hangup@parking" &
+        if self.times_parked == 1:
+            LOGGER.info("Originating B to retrieve A and then repark A")
 
-cleanup
+            self.ami[1].originate(
+                channel="IAX2/userc/701@parking",
+                exten="parka",
+                context="parking",
+                priority=1
+            ).addErrback(self.handleOriginateFailure)
 
-exit 0
+        if self.times_parked == 2:
+            if not self.validate_event_counts:
+                LOGGER.error("Received second parking event, but the event "
+                             "counts don't match expectations. Test Failed.")
+                self.set_passed(False)
+                self.stop_reactor()
+                return
 
+            LOGGER.info("All events matched expectations. Test Passed.")
+            self.set_passed(True)
+            self.stop_reactor()
+
+    def check_unparkedcall(self, ami, event):
+        """Check the values of an UnParkedCall event against expectations"""
+        self.times_unparked += 1
+        if self.mode_12:
+            retriever = event.get('retrieverchannel')
+        else:
+            retriever = event.get('from')
+
+        LOGGER.info("Retriever: %s" % retriever)
+
+        #verify the retriever is user b with regular expressions
+        if not "IAX2/userb-" in retriever:
+            LOGGER.error("Retriever doesn't match expected user IAX2/userb-*, "
+                         "got %s instead. Test failed." % retriever)
+            self.set_passed(False)
+            self.stop_reactor()
+
+    def run(self):
+        """Run the test and create AMI for each instance of Asterisk"""
+        TestCase.run(self)
+        self.create_ami_factory(3)
+
+    def ami_connect(self, ami):
+        """Respond to a new AMI connection. Register events and start calls."""
+        self.connections_established += 1
+
+        if self.connections_established != 3:
+            return
+
+        self.ami[2].registerEvent("ParkedCall", self.check_parkedcall)
+        self.ami[2].registerEvent("UnParkedCall", self.check_unparkedcall)
+
+        LOGGER.info("Originating call from A to B")
+        self.ami[0].originate(
+            channel="Local/wait@parking",
+            exten="callb",
+            context="parking",
+            priority=1
+        ).addErrback(self.handleOriginateFailure)
+
+
+def main():
+    """Entry function"""
+    # Run ParkRetrieve Test
+    test = ParkRetrieveTest()
+    reactor.run()
+    if test.passed:
+        LOGGER.info("Test Passed")
+        return 0
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
