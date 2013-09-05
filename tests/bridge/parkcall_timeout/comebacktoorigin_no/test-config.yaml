@@ -14,9 +14,13 @@ test-modules:
         typename: 'BridgeTestCase.BridgeTestCase'
     modules:
         -
+            maxversion: '12.0.0'
             config-section: 'cdr-config'
             typename: 'cdr.CDRModule'
-
+        -
+            minversion: '12.0.0'
+            config-section: 'cdr-config-12'
+            typename: 'cdr.CDRModule'
         -
             typename: 'Executioner.Executioner'
 
@@ -76,6 +80,96 @@ cdr-config:
                 channel: '.*/alice-.*'
                 dchannel: '.*/bob-.*'
                 lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+cdr-config-12:
+    -
+        # In Asterisk 12, there are three phases to each call - Alice's call to bob is first, followed by Bob's time spent parked, and lastly Bob's period after leaving the parking bridge
+        file: 'Master'
+        lines:
+            -
+                source: '1234'
+                destination: 'test1'
+                dcontext: 'default'
+                callerid: '"Alice" <1234>'
+                channel: '.*/alice-.*'
+                dchannel: '.*/bob-.*'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '4321'
+                destination: 'SIP_alice'
+                dcontext: 'park_context1'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                lastapp: 'AppDial' # There is some expectation that these may later change to 'Park'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '4321'
+                destination: 'SIP_alice'
+                dcontext: 'park_context1'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                lastapp: 'UserEvent'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '1234'
+                destination: 'test2'
+                dcontext: 'default'
+                callerid: '"Alice" <1234>'
+                channel: '.*/alice-.*'
+                dchannel: '.*/bob-.*'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '4321'
+                destination: 's'
+                dcontext: 'park_context2'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                lastapp: 'AppDial' # There is some expectation that these may later change to 'Park'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '4321'
+                destination: 's'
+                dcontext: 'park_context2'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                lastapp: 'UserEvent'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '1234'
+                destination: 'test3'
+                dcontext: 'default'
+                callerid: '"Alice" <1234>'
+                channel: '.*/alice-.*'
+                dchannel: '.*/bob-.*'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '4321'
+                destination: 's'
+                dcontext: 'default'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                lastapp: 'AppDial' # There is some expectation that these may later change to 'Park'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '4321'
+                destination: 's'
+                dcontext: 'default'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                lastapp: 'UserEvent'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
 

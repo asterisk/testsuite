@@ -13,9 +13,13 @@ test-modules:
         typename: 'BridgeTestCase.BridgeTestCase'
     modules:
         -
+            maxversion: '12.0.0'
             config-section: 'cdr-config'
             typename: 'cdr.CDRModule'
-
+        -
+            minversion: '12.0.0'
+            config-section: 'cdr-config-12'
+            typename: 'cdr.CDRModule'
         -
             typename: 'Executioner.Executioner'
 
@@ -107,6 +111,132 @@ cdr-config:
                 lastapp: 'UserEvent'
                 disposition: 'BUSY'
                 amaflags: 'DOCUMENTATION'
+
+cdr-config-12:
+    -
+        file: 'Master'
+        lines:
+            -
+                source: '1234'
+                destination: 'test'
+                dcontext: 'default'
+                callerid: '"Alice" <1234>'
+                channel: '.*/alice-.*'
+                dchannel: '.*/bob-.*'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                # new in 12
+                source: '4321'
+                destination: 'SIP_alice'
+                dcontext: 'park-dial'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                lastapp: 'AppDial'  # May be changed to Park at some point.
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '4321'
+                destination: 'SIP_alice'
+                dcontext: 'park-dial'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                dchannel: '.*/alice-.*'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                # new in 12
+                source: '4321'
+                destination: 'h'
+                dcontext: 'park-dial'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                lastapp: 'UserEvent'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '1234'
+                destination: 'test'
+                dcontext: 'default'
+                callerid: '"Alice" <1234>'
+                channel: '.*/alice-.*'
+                dchannel: '.*/bob-.*'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                # new in 12
+                source: '4321'
+                destination: 'SIP_alice'
+                dcontext: 'park-dial'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                lastapp: 'AppDial'  # May be changed to Park at some point.
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '4321'
+                destination: 'SIP_alice'
+                dcontext: 'park-dial'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                dchannel: '.*/alice-.*'
+                lastapp: 'AppDial'
+                disposition: 'NO ANSWER'
+                amaflags: 'DOCUMENTATION'
+            -
+                # new in 12
+                source: '4321'
+                destination: 'h'
+                dcontext: 'park-dial'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                lastapp: 'UserEvent'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '1234'
+                destination: 'test'
+                dcontext: 'default'
+                callerid: '"Alice" <1234>'
+                channel: '.*/alice-.*'
+                dchannel: '.*/bob-.*'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                # new in 12
+                source: '4321'
+                destination: 'SIP_alice'
+                dcontext: 'park-dial'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                lastapp: 'AppDial'  # May be changed to Park at some point.
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '4321'
+                destination: 'SIP_alice'
+                dcontext: 'park-dial'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                dchannel: '.*/alice-.*'
+                lastapp: 'AppDial'
+                disposition: 'BUSY'
+                amaflags: 'DOCUMENTATION'
+            -
+                # new in 12
+                source: '4321'
+                destination: 'h'
+                dcontext: 'park-dial'
+                callerid: '"Bob" <4321>'
+                channel: '.*/bob-.*'
+                lastapp: 'UserEvent'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
 
 properties:
     minversion: '11.0.0'
