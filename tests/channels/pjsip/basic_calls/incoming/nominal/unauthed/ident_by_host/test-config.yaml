@@ -9,46 +9,64 @@ test-modules:
         typename: 'sipp.SIPpTestCase'
 
 test-object-config:
+    reactor-timeout: 80
     fail-on-any: False
     test-iterations:
+        # IPv4 & UDP
         -
             scenarios:
-                - { 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-ipv4-udp'} }
         -
             scenarios:
-                - { 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-d': '5000'} }
+                - { 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-d': '5000', '-s': 'alice-ipv4-udp'} }
         -
             scenarios:
-                - { 'key-args': {'scenario': 'playback_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'playback_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-ipv4-udp'} }
         -
             scenarios:
-                - { 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-d': '5000'} }
+                - { 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-d': '5000', '-s': 'alice-ipv4-udp'} }
 
-#        -
-#            scenarios:
-#                 - { 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-t': 't1'} }
-#        -
-#            scenarios:
-#                 - { 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5062', '-t': 't1', '-d': '5000'} }
-#        -
-#            scenarios:
-#                 - { 'key-args': {'scenario': 'playback_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5066', '-t': 't1'} }
-#        -
-#            scenarios:
-#                 - { 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5067', '-t': 't1', '-d': '5000'} }
-# 
-#        -
-#            scenarios:
-#                 - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '[::1]', '-p': '5061'} }
-#        -
-#            scenarios:
-#                 - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '[::1]', '-p': '5062'} }
-#        -
-#            scenarios:
-#                 - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5066'} }
-#        -
-#            scenarios:
-#                 - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5067'} }
+        # IPv4 & TCP
+        -
+            scenarios:
+                 - { 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-t': 't1', '-s': 'alice-ipv4-tcp'} }
+        -
+            scenarios:
+                 - { 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5062', '-t': 't1', '-d': '5000', '-s': 'alice-ipv4-tcp'} }
+        -
+            scenarios:
+                 - { 'key-args': {'scenario': 'playback_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5066', '-t': 't1', '-s': 'alice-ipv4-tcp'} }
+        -
+            scenarios:
+                 - { 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5067', '-t': 't1', '-d': '5000', '-s': 'alice-ipv4-tcp'} }
+
+        # IPv6 & UDP
+        -
+            scenarios:
+                 - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '[::1]', '-p': '5061', '-s': 'alice-ipv6-udp'} }
+        -
+            scenarios:
+                 - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '[::1]', '-p': '5062', '-d': '5000', '-s': 'alice-ipv6-udp'} }
+        -
+            scenarios:
+                 - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5066', '-s': 'alice-ipv6-udp'} }
+        -
+            scenarios:
+                 - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5067', '-d': '5000', '-s': 'alice-ipv6-udp'} }
+
+        # IPv6 & TCP
+        -
+            scenarios:
+                 - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'alice-ipv6-tcp'} }
+        -
+            scenarios:
+                 - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '[::1]', '-p': '5062', '-t': 't1', '-d': '5000', '-s': 'alice-ipv6-tcp'} }
+        -
+            scenarios:
+                 - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5066', '-t': 't1', '-s': 'alice-ipv6-tcp'} }
+        -
+            scenarios:
+                 - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5067', '-t': 't1', '-d': '5000', '-s': 'alice-ipv6-tcp'} }
 
 properties:
     minversion: '12.0.0'
