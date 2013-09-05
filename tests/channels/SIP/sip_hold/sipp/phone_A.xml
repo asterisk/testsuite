@@ -74,7 +74,18 @@
 			User-Agent: PolycomSoundPointIP-SPIP_430-UA/3.2.3.1734
 			Accept-Language: en
 			Content-Type: application/sdp
-			Content-Length: 0
+			Content-Length: [len]
+
+			v=0
+			o=- 1324901698 1324901698 IN IP4 [local_ip]
+			s=Polycom IP Phone
+			c=IN IP4 [local_ip]
+			t=0 0
+			a=sendrecv
+			m=audio 2226 RTP/AVP 0 101
+			a=sendrecv
+			a=rtpmap:0 PCMU/8000
+			a=rtpmap:101 telephone-event/8000
 		]]>
 	</send>
 
