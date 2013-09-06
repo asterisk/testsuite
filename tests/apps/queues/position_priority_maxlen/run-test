@@ -1,4 +1,116 @@
-#!/usr/bin/env bash
-set -e
+#!/usr/bin/env python
+'''
+Copyright (C) 2013, Digium, Inc.
+Mark Michelson <mmichelson@digium.com>
 
-asttest -a /$AST_TEST_ROOT -s tests/apps/queues/position_priority_maxlen
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+import sys
+import logging
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.TestCase import TestCase
+
+LOGGER = logging.getLogger(__name__)
+
+TEST_RUNS = [
+    # 1
+    {'Priority': None, 'Position': None, 'ExpectedPosition': 1},
+    # 1,2
+    {'Priority': None, 'Position': None, 'ExpectedPosition': 2},
+    # 3,1,2
+    {'Priority': 1, 'Position': None, 'ExpectedPosition': 1},
+    # 3,4,1,2
+    {'Priority': 1, 'Position': None, 'ExpectedPosition': 2},
+    # 5,3,4,1,2
+    {'Priority': 2, 'Position': None, 'ExpectedPosition': 1},
+    # 5,3,4,1,6,2
+    {'Priority': None, 'Position': 5, 'ExpectedPosition': 5},
+    # 5,3,4,1,6,2,7
+    {'Priority': None, 'Position': 200, 'ExpectedPosition': 7},
+    # 5,3,4,8,1,6,2,7
+    {'Priority': None, 'Position': 1, 'ExpectedPosition': 4},
+    # 9,5,3,4,8,1,6,2,7
+    {'Priority': 8, 'Position': 3, 'ExpectedPosition': 1},
+    # 9,5,3,4,10,8,1,6,2,7
+    {'Priority': 1, 'Position': 7, 'ExpectedPosition': 5},
+    # 9,5,3,11,4,10,8,1,6,2,7
+    {'Priority': 1, 'Position': 4, 'ExpectedPosition': 4},
+    # Unable to join due to maxlen
+    {'Priority': 2, 'Position': 5, 'ExpectedPosition': None},
+]
+
+
+class QueuePositionPriority(TestCase):
+    def __init__(self):
+        TestCase.__init__(self)
+        self.create_asterisk()
+        self.test_run = 0
+        self.passed = False
+
+    def check_position(self, ami, event):
+        position = int(event.get('position'))
+        if position != TEST_RUNS[self.test_run]['ExpectedPosition']:
+            LOGGER.error("Queue caller %d entered at unexpected position %d. \
+                    Expected %d" % (self.test_run, position,
+                                    TEST_RUNS[self.test_run]
+                                    ['ExpectedPosition']))
+            self.stop_reactor()
+        else:
+            self.test_run += 1
+            self.execute_call()
+
+    def check_full(self, ami, event):
+        if event.get('userevent') != 'FULL':
+            return
+
+        if TEST_RUNS[self.test_run]['ExpectedPosition'] is not None:
+            LOGGER.error("Queue caller %s was rejected when expected to enter \
+                    at position %d" % (self.test_run, TEST_RUNS[self.test_run]
+                                       ['ExpectedPosition']))
+        else:
+            # This just so happens to be the final caller, so we're done!
+            self.passed = True
+
+        self.stop_reactor()
+
+    def ami_connect(self, ami):
+        TestCase.ami_connect(self, ami)
+        # In Asterisk 12+, the event when a caller joins is "QueueCallerJoin"
+        ami.registerEvent("QueueCallerJoin", self.check_position)
+        # In Asterisk 11-, the event when a caller joins is "Join"
+        ami.registerEvent("Join", self.check_position)
+        ami.registerEvent("UserEvent", self.check_full)
+        self.execute_call()
+
+    def execute_call(self):
+        if self.test_run >= len(TEST_RUNS):
+            LOGGER.error("Too many callers have entered the queue")
+            self.stop_reactor()
+
+        variables = {}
+        prio = TEST_RUNS[self.test_run].get('Priority')
+        pos = TEST_RUNS[self.test_run].get('Position')
+        if prio:
+            variables['QUEUE_PRIO'] = prio
+        if pos:
+            variables['QUEUE_POS'] = pos
+        self.ami[0].originate(channel="Local/test@test_context/n",
+                              application="Echo", variable=variables)
+
+    def run(self):
+        TestCase.run(self)
+        self.create_ami_factory()
+
+
+def main():
+    test = QueuePositionPriority()
+    reactor.run()
+    if test.passed:
+        return 0
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
