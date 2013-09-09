@@ -1,0 +1,113 @@
+testinfo:
+    summary:     'Ensure that Asterisk responds with an ACK to a 486'
+    description: |
+        'Run one instance of Asterisk ("UUT") and originate an outgoing call to
+         SIPp ("Bob"). Bob responds with a 486 Busy Here. This ensures that
+         Asterisk responds with an ACK to the 486 and the hang up cause is
+         17 / User busy. This is performed using ipv4/ipv6 & udp/tcp.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator-config-ipv4-udp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: originator-config-ipv4-tcp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: originator-config-ipv6-udp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: originator-config-ipv6-tcp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+   fail-on-any: False
+   test-iterations:
+       -
+           scenarios:
+               - { 'key-args': {'scenario': 'receive.xml', '-i': '127.0.0.1', '-p': '5062'} }
+               - { 'key-args': {'scenario': 'receive.xml', '-i': '127.0.0.1', '-p': '5062', '-t': 't1'} }
+               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5062'} }
+               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5062', '-t': 't1'} }
+
+originator-config-ipv4-udp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'yes'
+    id: '0'
+    channel: 'PJSIP/bob-ipv4-udp'
+    context: 'default'
+    exten: 'playback'
+    priority: '1'
+    async: 'True'
+
+originator-config-ipv4-tcp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'yes'
+    id: '0'
+    channel: 'PJSIP/bob-ipv4-tcp'
+    context: 'default'
+    exten: 'playback'
+    priority: '1'
+    async: 'True'
+
+originator-config-ipv6-udp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'yes'
+    id: '0'
+    channel: 'PJSIP/bob-ipv6-udp'
+    context: 'default'
+    exten: 'playback'
+    priority: '1'
+    async: 'True'
+
+originator-config-ipv6-tcp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'yes'
+    id: '0'
+    channel: 'PJSIP/bob-ipv6-tcp'
+    context: 'default'
+    exten: 'playback'
+    priority: '1'
+    async: 'True'
+
+ami-config:
+    # UUT events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'HangupRequest'
+        requirements:
+            match:
+                Channel: 'PJSIP/bob-*'
+        count: '4'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'Hangup'
+                Channel: 'PJSIP/bob-*'
+        requirements:
+            match:
+                Cause: '17'
+                Cause-txt: 'User busy'
+        count: '4'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.3'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+

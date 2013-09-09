@@ -1,0 +1,102 @@
+testinfo:
+    summary:     'Ensure that calls are torn down after dial timeout is reached'
+    description: |
+        'Run one instance of Asterisk ("UUT") and originate an outgoing call to
+         SIPp ("Bob"). Bob responds with a 180 ringing but does not answer.
+         This ensures that Asterisk sends a CANCEL and sets the DIALSTATUS to
+         NOANSWER. This is performed using ipv4/ipv6 & udp/tcp.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator-config-ipv4-udp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: originator-config-ipv4-tcp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: originator-config-ipv6-udp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: originator-config-ipv6-tcp
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+   fail-on-any: False
+   test-iterations:
+       -
+           scenarios:
+               - { 'key-args': {'scenario': 'receive.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'bob-ipv4-udp'} }
+               - { 'key-args': {'scenario': 'receive.xml', '-i': '127.0.0.1', '-p': '5062', '-t': 't1', '-s': 'bob-ipv4-tcp'} }
+               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5062', '-s': 'bob-ipv6-udp'} }
+               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5062', '-t': 't1', '-s': 'bob-ipv6-tcp'} }
+
+originator-config-ipv4-udp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'yes'
+    id: '0'
+    channel: 'local/bob-ipv4-udp@default'
+    context: 'default'
+    exten: 'playback'
+    priority: '1'
+    async: 'True'
+
+originator-config-ipv4-tcp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'yes'
+    id: '0'
+    channel: 'local/bob-ipv4-tcp@default'
+    context: 'default'
+    exten: 'playback'
+    priority: '1'
+    async: 'True'
+
+originator-config-ipv6-udp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'yes'
+    id: '0'
+    channel: 'local/bob-ipv6-udp@default'
+    context: 'default'
+    exten: 'playback'
+    priority: '1'
+    async: 'True'
+
+originator-config-ipv6-tcp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'yes'
+    id: '0'
+    channel: 'local/bob-ipv6-tcp@default'
+    context: 'default'
+    exten: 'playback'
+    priority: '1'
+    async: 'True'
+
+ami-config:
+    # UUT events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'DIALSTATUS'
+        requirements:
+            match:
+                Result: 'NOANSWER'
+        count: '4'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.3'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+
