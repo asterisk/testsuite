@@ -7,7 +7,7 @@
 
       INVITE sip:playback@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: test1 <sip:[service]@[local_ip]:[local_port]>;tag=[call_number]
+      From: test1 <sip:unknown@[local_ip]:[local_port]>;tag=[call_number]
       To: test <sip:test@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: 1 INVITE
@@ -37,8 +37,8 @@
 
       ACK sip:playback@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: sipp <sip:[service]@[local_ip]:[local_port]>;tag=[call_number]
-      To: sut <sip:[service]@[remote_ip]:[remote_port]>[peer_tag_param]
+      From: sipp <sip:unknown@[local_ip]:[local_port]>;tag=[call_number]
+      To: sut <sip:unknown@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 1 ACK
       Contact: <sip:sipp@[local_ip]:[local_port];transport=[transport]>
@@ -54,7 +54,7 @@
 
       INVITE sip:playback@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: test1 <sip:[service]@[local_ip]:[local_port]>;tag=[call_number]
+      From: test1 <sip:unknown@[local_ip]:[local_port]>;tag=[call_number]
       To: test <sip:test@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: 2 INVITE
@@ -89,7 +89,7 @@
 
       ACK sip:playback@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: test1 <sip:[service]@[local_ip]:[local_port]>;tag=[call_number]
+      From: test1 <sip:unknown@[local_ip]:[local_port]>;tag=[call_number]
       To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 2 ACK
