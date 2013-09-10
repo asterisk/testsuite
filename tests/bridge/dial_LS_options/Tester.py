@@ -99,14 +99,18 @@ class Tester(object):
                     (self.current_call['numwarnings'], self.num_warnings))
             self.test_object.set_passed(False)
 
-        triggers = 1
+        max_triggers = 1
         if self.current_call['hangup_style'] == 'BRIDGE_TIMELIMIT' \
             and AsteriskVersion() >= AsteriskVersion('12'):
-            triggers = 2
+            max_triggers = 2
 
-        if triggers != self.num_hangup_triggers:
-            LOGGER.error("We expected %d hangup trigger(s) but got %d" %
-                    (triggers, self.num_hangup_triggers))
+        if 1 != self.num_hangup_triggers and max_triggers != self.num_hangup_triggers:
+            if max_triggers == 2:
+                LOGGER.error("We expected 1 or 2 hangup triggers but got %d" %
+                        (self.num_hangup_triggers))
+            else:
+                LOGGER.error("We expected 1 hangup trigger but got %d" %
+                        (self.num_hangup_triggers))
             self.test_object.set_passed(False)
 
         # Reset the variables for the next call
