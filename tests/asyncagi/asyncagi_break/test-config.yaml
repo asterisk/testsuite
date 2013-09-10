@@ -11,7 +11,12 @@ test-modules:
         typename: 'SimpleTestCase.SimpleTestCase'
     modules:
         -
-            config-section: ami-config
+            config-section: ami-config-11
+            maxversion: '11.0.0'
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: ami-config-12
+            minversion: '12.0.0'
             typename: 'ami.AMIEventModule'
 
 test-object-config:
@@ -21,7 +26,7 @@ test-object-config:
             channel: 'Local/s@default'
             application: 'Echo'
 
-ami-config:
+ami-config-11:
     -
         type: 'headermatch'
         conditions:
@@ -69,6 +74,57 @@ ami-config:
             match:
                 Event: 'AGIExec'
                 SubEvent: 'End'
+                Channel: 'Local/s@default-.*'
+                Command: 'ASYNCAGI BREAK'
+        requirements:
+            match:
+                ResultCode: '200'
+                Result: 'Success'
+
+ami-config-12:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+        requirements:
+            match:
+                Result: 'pass'
+        count: '1'
+    -
+        type: 'callback'
+        conditions:
+            match:
+                Event: 'AsyncAGIStart'
+                Channel: 'Local/s@default-.*'
+        callbackModule: 'asyncagi_break'
+        callbackMethod: 'async_start'
+    -
+        type: 'callback'
+        conditions:
+            match:
+                Event: 'AGIExecStart'
+                Channel: 'Local/s@default-.*'
+                Command: 'STREAM FILE tt-monkeys ""'
+        callbackModule: 'asyncagi_break'
+        callbackMethod: 'async_break'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'AGIExecEnd'
+                Channel: 'Local/s@default-.*'
+                Command: 'STREAM FILE tt-monkeys ""'
+        requirements:
+            match:
+                ResultCode: '200'
+                Result: 'Success'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'AGIExecEnd'
                 Channel: 'Local/s@default-.*'
                 Command: 'ASYNCAGI BREAK'
         requirements:
