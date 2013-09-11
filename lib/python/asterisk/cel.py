@@ -10,6 +10,7 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
 
+import yaml
 import unittest
 import sys
 import csv
@@ -19,6 +20,57 @@ import logging
 import time
 
 LOGGER = logging.getLogger(__name__)
+
+
+class CELSniffer(object):
+    '''
+    A pluggable module that sniffs AMI CEL events and dumps them into a YAML
+    file. Useful during test writing to create a baseline of expected CEL events
+    '''
+
+    def __init__(self, module_config, test_object):
+        ''' Constructor '''
+        test_object.register_ami_observer(self.ami_connect)
+        test_object.register_stop_observer(self.stop_handler)
+        self.events = []
+        if module_config is None:
+            self.filters = {}
+            self.display = []
+        else:
+            self.filters = module_config.get('filters') or {}
+            self.display = module_config.get('display') or []
+
+    def ami_connect(self, ami):
+        ''' AMI connection handler '''
+        ami.registerEvent('CEL', self.cel_handler)
+
+    def cel_handler(self, ami, event):
+        ''' Handle a CEL event '''
+        for filter_key, filter_value in self.filters.items():
+            if re.match(filter_value, event.get(filter_key.lower())) is None:
+                return
+        self.events.append(event)
+
+    def stop_handler(self, reason):
+        ''' Write out the file. Currently hard codd to cel_events.yaml '''
+        stream = file('cel_events.yaml', 'w')
+        if len(self.display) == 0:
+            yaml.dump(self.events, stream)
+        else:
+            items = []
+            for ev_item in self.events:
+                item = {}
+                for key in self.display:
+                    key = key.lower()
+                    if key not in ev_item:
+                        continue
+                    item[key] = ev_item[key]
+                items.append(item)
+            yaml.dump(items, stream)
+        stream.close()
+
+        return reason
+
 
 class CELModule(object):
     ''' A module that checks a test for expected CEL results '''

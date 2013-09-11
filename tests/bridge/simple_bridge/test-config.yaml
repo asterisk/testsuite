@@ -13,16 +13,17 @@ test-modules:
             config-section: 'cdr-config'
             typename: 'cdr.CDRModule'
         -
-            config-section: 'cel-config'
-            typename: 'cel.CELModule'
-        -
-            typename: 'ami.AMIEventModule'
-            config-section: 'ami-uut-v12'
-            minversion: '12.0.0'
-        -
-            typename: 'ami.AMIEventModule'
-            config-section: 'ami-uut-v11'
             maxversion: '12.0.0'
+            config-section: 'ami-uut-v11'
+            typename: 'ami.AMIEventModule'
+        -
+            minversion: '12.0.0'
+            config-section: 'cel-config'
+            typename: 'ami.AMIEventModule'
+        -
+            minversion: '12.0.0'
+            config-section: 'ami-uut-v12'
+            typename: 'ami.AMIEventModule'
 
 bridge-config:
   test-runs:
@@ -42,7 +43,8 @@ ami-uut-v12:
                 Event: 'BridgeCreate'
         requirements:
             match:
-                BridgeType: 'simple_bridge'
+                BridgeType: 'basic'
+                BridgeTechnology: 'simple_bridge'
         count: '2'
     -
         type: 'headermatch'
@@ -54,7 +56,8 @@ ami-uut-v12:
         requirements:
             match:
                 BridgeUniqueid: '.*-.*-.*'
-                BridgeType: 'simple_bridge'
+                BridgeType: 'basic'
+                BridgeTechnology: 'simple_bridge'
                 ChannelState: '6'
                 ChannelStateDesc: 'Up'
                 CallerIDNum: '1234'
@@ -76,7 +79,8 @@ ami-uut-v12:
         requirements:
             match:
                 BridgeUniqueid: '.*-.*-.*'
-                BridgeType: 'simple_bridge'
+                BridgeType: 'basic'
+                BridgeTechnology: 'simple_bridge'
                 ChannelState: '6'
                 ChannelStateDesc: 'Up'
                 ConnectedLineNum: '1234'
@@ -97,7 +101,8 @@ ami-uut-v12:
         requirements:
             match:
                 BridgeUniqueid: '.*-.*-.*'
-                BridgeType: 'simple_bridge'
+                BridgeType: 'basic'
+                BridgeTechnology: 'simple_bridge'
                 ChannelState: '6'
                 ChannelStateDesc: 'Up'
                 CallerIDNum: '1234'
@@ -119,7 +124,8 @@ ami-uut-v12:
         requirements:
             match:
                 BridgeUniqueid: '.*-.*-.*'
-                BridgeType: 'simple_bridge'
+                BridgeType: 'basic'
+                BridgeTechnology: 'simple_bridge'
                 ChannelState: '6'
                 ChannelStateDesc: 'Up'
                 ConnectedLineNum: '1234'
@@ -139,7 +145,8 @@ ami-uut-v12:
         requirements:
             match:
                 BridgeUniqueid: '.*-.*-.*'
-                BridgeType: 'simple_bridge'
+                BridgeType: 'basic'
+                BridgeTechnology: 'simple_bridge'
         count: '2'
 
 ami-uut-v11:
@@ -229,221 +236,136 @@ cdr-config:
 
 cel-config:
     -
-        file: 'Master'
-        lines:
+        type: 'cel'
+        conditions:
+            match:
+                Channel: '.*/bob-.*'
+        requirements:
+            # First iteration
             -
-                eventtype: 'CHAN_START'
-                cidname: 'Alice'
-                cidnum: '1234'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
+                id: 'bob-start-one'
+                partialorder:
+                    after: 'alice-app-start-one'
+                match:
+                    EventName: 'CHAN_START'
             -
-                eventtype: 'APP_START'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
+                id: 'bob-answer-one'
+                partialorder:
+                    before: 'alice-answer-one'
+                    before: 'alice-enter-bridge-one'
+                match:
+                    EventName: 'ANSWER'
             -
-                eventtype: 'CHAN_START'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
+                id: 'bob-enter-bridge-one'
+                match:
+                    EventName: 'BRIDGE_ENTER'
             -
-                eventtype: 'ANSWER'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
-                app: 'AppDial'
-                appdata: '\(Outgoing Line\)'
+                match:
+                    EventName: 'BRIDGE_EXIT'
             -
-                eventtype: 'ANSWER'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
+                match:
+                    EventName: 'HANGUP'
             -
-                eventtype: 'BRIDGE_START'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
-                bridgepeer: '.*/bob-.*'
+                match:
+                    EventName: 'CHAN_END'
+            # Second iteration
             -
-                eventtype: 'BRIDGE_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
-                bridgepeer: '.*/bob-.*'
+                id: 'bob-start-two'
+                partialorder:
+                    after: 'alice-app-start-two'
+                match:
+                    EventName: 'CHAN_START'
             -
-                eventtype: 'HANGUP'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
-                app: 'AppDial'
-                appdata: '\(Outgoing Line\)'
-                eventextra: '16,.*/alice-.*'
+                id: 'bob-answer-two'
+                partialorder:
+                    before: 'alice-answer-two'
+                    before: 'alice-bridge-enter-two'
+                match:
+                    EventName: 'ANSWER'
             -
-                eventtype: 'CHAN_END'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
-                app: 'AppDial'
-                appdata: '\(Outgoing Line\)'
+                match:
+                    EventName: 'BRIDGE_ENTER'
             -
-                eventtype: 'APP_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
+                match:
+                    EventName: 'BRIDGE_EXIT'
             -
-                eventtype: 'HANGUP'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
-                eventextra: '16,.*/alice-.*,ANSWER'
+                match:
+                    EventName: 'HANGUP'
             -
-                eventtype: 'CHAN_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
+                id: 'bob-end-two'
+                match:
+                    EventName: 'CHAN_END'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: '.*/alice-.*'
+        requirements:
+            # First iteration
             -
-                eventtype: 'LINKEDID_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
+                match:
+                    EventName: 'CHAN_START'
             -
-                eventtype: 'CHAN_START'
-                cidname: 'Alice'
-                cidnum: '1234'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
+                id: 'alice-app-start-one'
+                match:
+                    EventName: 'APP_START'
             -
-                eventtype: 'APP_START'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
+                id: 'alice-answer-one'
+                partialorder:
+                    after: 'bob-answer-one'
+                    before: 'bob-enter-bridge-one'
+                match:
+                    EventName: 'ANSWER'
             -
-                eventtype: 'CHAN_START'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
+                id: 'alice-enter-bridge-one'
+                match:
+                    EventName: 'BRIDGE_ENTER'
             -
-                eventtype: 'ANSWER'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
-                app: 'AppDial'
-                appdata: '\(Outgoing Line\)'
+                match:
+                    EventName: 'BRIDGE_EXIT'
             -
-                eventtype: 'ANSWER'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
+                match:
+                    EventName: 'APP_END'
             -
-                eventtype: 'BRIDGE_START'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
-                bridgepeer: '.*/bob-.*'
+                match:
+                    EventName: 'HANGUP'
             -
-                eventtype: 'BRIDGE_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
-                bridgepeer: '.*/bob-.*'
+                id: 'alice-end-one'
+                match:
+                    EventName: 'CHAN_END'
+            # Second iteration
             -
-                eventtype: 'HANGUP'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
-                app: 'AppDial'
-                appdata: '\(Outgoing Line\)'
-                eventextra: '16,.*/bob-.*'
+                id: 'alice-start-two'
+                partialorder:
+                    after: 'alice-end-one'
+                match:
+                    EventName: 'CHAN_START'
             -
-                eventtype: 'CHAN_END'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
-                app: 'AppDial'
-                appdata: '\(Outgoing Line\)'
+                id: 'alice-app-start-two'
+                match:
+                    EventName: 'APP_START'
             -
-                eventtype: 'APP_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
+                id: 'alice-answer-two'
+                partialorder:
+                    after: 'bob-answer-two'
+                match:
+                    EventName: 'ANSWER'
             -
-                eventtype: 'HANGUP'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
-                eventextra: '16,.*/bob-.*,ANSWER'
+                id: 'alice-bridge-enter-two'
+                match:
+                    EventName: 'BRIDGE_ENTER'
             -
-                eventtype: 'CHAN_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
+                match:
+                    EventName: 'BRIDGE_EXIT'
             -
-                eventtype: 'LINKEDID_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'test_call'
-                exten: 'test_call'
-                context: 'default'
-                channel: '.*/alice-.*'
-
+                match:
+                    EventName: 'APP_END'
+            -
+                match:
+                    EventName: 'HANGUP'
+            -
+                match:
+                    EventName: 'CHAN_END'
 properties:
     minversion: '11.0.0'
     dependencies:
