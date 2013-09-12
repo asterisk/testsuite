@@ -16,7 +16,12 @@ test-modules:
         typename: 'BridgeTestCase.BridgeTestCase'
     modules:
         -
+            maxversion: '12.0.0'
             config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+        -
+            minversion: '12.0.0'
+            config-section: 'ami-config-12'
             typename: 'ami.AMIEventModule'
 
 bridge-config:
@@ -103,7 +108,7 @@ ami-config:
                 Parkinglot: 'default'
                 From: 'SIP/alice-00000000'
         callbackModule: 'Hangup'
-        callbackMethod: 'hangup_chan'
+        callbackMethod: 'handle_parkedcall'
         count: '1'
 
     # Ensure Alice successfully parked Bob to the empty static lot. Then
@@ -120,7 +125,7 @@ ami-config:
                 Parkinglot: 'parkinglot_static'
                 From: 'SIP/alice-00000002'
         callbackModule: 'Hangup'
-        callbackMethod: 'hangup_chan'
+        callbackMethod: 'handle_parkedcall'
         count: '1'
 
     # Ensure the Local channel is parked thus filling up all static lot slots.
@@ -153,7 +158,7 @@ ami-config:
                 Message: 'pbx-parkingfailed'
                 Channel: 'SIP/alice-0000000(4|8)'
         callbackModule: 'Hangup'
-        callbackMethod: 'hangup_chan'
+        callbackMethod: 'handle_testevent'
         count: '2'
 
     # Ensure Alice successfully parked Bob to the empty dynamically created
@@ -170,7 +175,7 @@ ami-config:
                 Parkinglot: 'parkinglot_dynamic'
                 From: 'SIP/alice-00000006'
         callbackModule: 'Hangup'
-        callbackMethod: 'hangup_chan'
+        callbackMethod: 'handle_parkedcall'
         count: '1'
 
     # Ensure the Local channel is parked thus filling up all dynamicall created
@@ -187,6 +192,120 @@ ami-config:
         requirements:
             match:
                 Channel: 'Local/fill-park@default-00000001;2'
+        count: '1'
+
+ami-config-12:
+    # Ensure all of Alice's channels are hung up.
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'Hangup'
+                Channel: 'SIP/alice-0000000(0|2|4|6|8)'
+        requirements:
+            match:
+                Cause: '16'
+        count: '5'
+
+    # Ensure Alice successfully parked Bob to the empty default lot. Then hang
+    # up Bob's channel.
+    -
+        type: 'callback'
+        id: '0'
+        start: 'fail'
+        conditions:
+            match:
+                Event: 'ParkedCall'
+                ParkeeChannel: 'SIP/bob-00000001'
+                ParkingSpace: '701'
+                Parkinglot: 'default'
+                ParkerDialString: 'SIP/alice'
+        callbackModule: 'Hangup'
+        callbackMethod: 'handle_parkedcall'
+        count: '1'
+
+    # Ensure Alice successfully parked Bob to the empty static lot. Then
+    # hangup Bob's channel.
+    -
+        type: 'callback'
+        id: '0'
+        start: 'fail'
+        conditions:
+            match:
+                Event: 'ParkedCall'
+                ParkeeChannel: 'SIP/bob-00000003'
+                ParkingSpace: '801'
+                Parkinglot: 'parkinglot_static'
+                ParkerDialString: 'SIP/alice'
+        callbackModule: 'Hangup'
+        callbackMethod: 'handle_parkedcall'
+        count: '1'
+
+    # Ensure the Local channel is parked thus filling up all static lot slots.
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'ParkedCall'
+                ParkingSpace: '801'
+                Parkinglot: 'parkinglot_static'
+                ParkerDialString: 'Local/fill-park@default'
+        requirements:
+            match:
+                ParkeeChannel: 'Local/fill-park@default-00000000;2'
+        count: '1'
+
+    # Ensure that the pbx-parkingfailed sound is played to alice-0000000(4|8)
+    # which indicates that the parking of the corresponding bob channels failed
+    # as we expect since the static lot is full.
+    -
+        type: 'callback'
+        id: '0'
+        start: 'fail'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                Type: 'StateChange'
+                State: 'PLAYBACK'
+                Message: 'pbx-parkingfailed'
+                Channel: 'SIP/alice-0000000(4|8)'
+        callbackModule: 'Hangup'
+        callbackMethod: 'handle_testevent'
+        count: '2'
+
+    # Ensure Alice successfully parked Bob to the empty dynamically created
+    # lot. Then hangup Bob's channel.
+    -
+        type: 'callback'
+        id: '0'
+        start: 'fail'
+        conditions:
+            match:
+                Event: 'ParkedCall'
+                ParkeeChannel: 'SIP/bob-00000007'
+                ParkingSpace: '901'
+                Parkinglot: 'parkinglot_dynamic'
+                ParkerDialString: 'SIP/alice'
+        callbackModule: 'Hangup'
+        callbackMethod: 'handle_parkedcall'
+        count: '1'
+
+    # Ensure the Local channel is parked thus filling up all dynamicall created
+    # lot slots.
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'ParkedCall'
+                ParkingSpace: '901'
+                Parkinglot: 'parkinglot_dynamic'
+                ParkerDialString: 'Local/fill-park@default'
+        requirements:
+            match:
+                ParkeeChannel: 'Local/fill-park@default-00000001;2'
         count: '1'
 
 properties:
