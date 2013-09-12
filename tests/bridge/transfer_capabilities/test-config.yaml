@@ -3,10 +3,10 @@ testinfo:
     description: |
         'Test blind and attended transfers from Alice and Bob to ensure that
         the "T" and "t" options allow the correct parties to perform transfers
-        when used from the Dial application and from BRIDGE_FEATURES.'
+        when used from the Dial application'
 
 properties:
-    minversion: '12.0.0'
+    minversion: '11.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'
@@ -23,8 +23,13 @@ test-modules:
             config-section: 'ami-config'
             typename: 'ami.AMIEventModule'
         -
+            maxversion: '12.0.0'
             config-section: 'cel-config'
             typename: 'cel.CELModule'
+        -
+            minversion: '12.0.0'
+            config-section: 'cel-config-v12'
+            typename: 'ami.AMIEventModule'
         -
             config-section: 'cdr-config'
             typename: 'cdr.CDRModule'
@@ -52,47 +57,7 @@ bridge-config:
                 what: 'atxfer'
                 success: 'true'
     -
-        originate_channel: 'SIP/alice_bridge_features@uut'
-        hangup: 'alice'
-        features:
-            -
-                who: 'bob'
-                what: 'blindxfer'
-                success: 'false'
-            -
-                who: 'bob'
-                what: 'atxfer'
-                success: 'false'
-            -
-                who: 'alice'
-                what: 'blindxfer'
-                success: 'true'
-            -
-                who: 'alice'
-                what: 'atxfer'
-                success: 'true'
-    -
         originate_channel: 'SIP/bob_opt@uut'
-        hangup: 'alice'
-        features:
-            -
-                who: 'alice'
-                what: 'blindxfer'
-                success: 'false'
-            -
-                who: 'alice'
-                what: 'atxfer'
-                success: 'false'
-            -
-                who: 'bob'
-                what: 'blindxfer'
-                success: 'true'
-            -
-                who: 'bob'
-                what: 'atxfer'
-                success: 'true'
-    -
-        originate_channel: 'SIP/bob_bridge_features@uut'
         hangup: 'alice'
         features:
             -
@@ -235,112 +200,6 @@ cel-config:
                 eventtype: 'CHAN_START'
                 cidname: 'Alice'
                 cidnum: '1234'
-                exten: 'alice_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-            -
-                eventtype: 'APP_START'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'alice_bridge_features'
-                exten: 'alice_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
-            -
-                eventtype: 'CHAN_START'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
-            -
-                eventtype: 'ANSWER'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
-                app: 'AppDial'
-                appdata: '\(Outgoing Line\)'
-            -
-                eventtype: 'ANSWER'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'alice_bridge_features'
-                exten: 'alice_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
-            -
-                eventtype: 'BRIDGE_START'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'alice_bridge_features'
-                exten: 'alice_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
-                bridgepeer: '.*/bob-.*'
-            -
-                eventtype: 'BRIDGE_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'alice_bridge_features'
-                exten: 'alice_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
-                bridgepeer: '.*/bob-.*'
-            -
-                eventtype: 'HANGUP'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
-                app: 'AppDial'
-                appdata: '\(Outgoing Line\)'
-                eventextra: '16,.*/alice-.*,'
-            -
-                eventtype: 'CHAN_END'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
-                app: 'AppDial'
-                appdata: '\(Outgoing Line\)'
-            -
-                eventtype: 'APP_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'alice_bridge_features'
-                exten: 'alice_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
-            -
-                eventtype: 'HANGUP'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'alice_bridge_features'
-                exten: 'alice_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-                eventextra: '16,.*/alice-.*,ANSWER'
-            -
-                eventtype: 'CHAN_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'alice_bridge_features'
-                exten: 'alice_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-            -
-                eventtype: 'LINKEDID_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'alice_bridge_features'
-                exten: 'alice_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-            -
-                eventtype: 'CHAN_START'
-                cidname: 'Alice'
-                cidnum: '1234'
                 exten: 'bob_opt'
                 context: 'default'
                 channel: '.*/alice-.*'
@@ -443,112 +302,150 @@ cel-config:
                 exten: 'bob_opt'
                 context: 'default'
                 channel: '.*/alice-.*'
+
+cel-config-v12:
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: '.*/bob-.*'
+        requirements:
+            # First iteration
             -
-                eventtype: 'CHAN_START'
-                cidname: 'Alice'
-                cidnum: '1234'
-                exten: 'bob_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
+                id: 'bob-start-one'
+                partialorder:
+                    after: 'alice-app-start-one'
+                match:
+                    EventName: 'CHAN_START'
             -
-                eventtype: 'APP_START'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'bob_bridge_features'
-                exten: 'bob_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
+                id: 'bob-answer-one'
+                partialorder:
+                    before: 'alice-answer-one'
+                    before: 'alice-bridge-enter-one'
+                match:
+                    EventName: 'ANSWER'
             -
-                eventtype: 'CHAN_START'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
+                id: 'bob-bridge-enter-one'
+                match:
+                    EventName: 'BRIDGE_ENTER'
             -
-                eventtype: 'ANSWER'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
-                app: 'AppDial'
-                appdata: '\(Outgoing Line\)'
+                match:
+                    EventName: 'BRIDGE_EXIT'
             -
-                eventtype: 'ANSWER'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'bob_bridge_features'
-                exten: 'bob_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
+                match:
+                    EventName: 'HANGUP'
             -
-                eventtype: 'BRIDGE_START'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'bob_bridge_features'
-                exten: 'bob_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
-                bridgepeer: '.*/bob-.*'
+                match:
+                    EventName: 'CHAN_END'
+            # Second iteration
             -
-                eventtype: 'BRIDGE_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'bob_bridge_features'
-                exten: 'bob_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
-                bridgepeer: '.*/bob-.*'
+                id: 'bob-start-two'
+                partialorder:
+                    after: 'alice-app-start-two'
+                match:
+                    EventName: 'CHAN_START'
             -
-                eventtype: 'HANGUP'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
-                app: 'AppDial'
-                appdata: '\(Outgoing Line\)'
-                eventextra: '16,.*,'
+                id: 'bob-answer-two'
+                partialorder:
+                    before: 'alice-answer-two'
+                    before: 'alice-bridge-enter-two'
+                match:
+                    EventName: 'ANSWER'
             -
-                eventtype: 'CHAN_END'
-                cidname: 'Bob'
-                cidnum: '4321'
-                channel: '.*/bob-.*'
-                app: 'AppDial'
-                appdata: '\(Outgoing Line\)'
+                id: 'bob-bridge-enter-two'
+                match:
+                    EventName: 'BRIDGE_ENTER'
             -
-                eventtype: 'APP_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'bob_bridge_features'
-                exten: 'bob_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-                app: 'Dial'
+                match:
+                    EventName: 'BRIDGE_EXIT'
             -
-                eventtype: 'HANGUP'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'bob_bridge_features'
-                exten: 'bob_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
-                eventextra: '16,.*,ANSWER'
+                match:
+                    EventName: 'HANGUP'
             -
-                eventtype: 'CHAN_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'bob_bridge_features'
-                exten: 'bob_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
+                match:
+                    EventName: 'CHAN_END'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: '.*/alice-.*'
+        requirements:
+            # First iteration
             -
-                eventtype: 'LINKEDID_END'
-                cidname: 'Alice'
-                cidnum: '1234'
-                dnid: 'bob_bridge_features'
-                exten: 'bob_bridge_features'
-                context: 'default'
-                channel: '.*/alice-.*'
+                match:
+                    EventName: 'CHAN_START'
+            -
+                id: 'alice-app-start-one'
+                match:
+                    EventName: 'APP_START'
+            -
+                id: 'alice-answer-one'
+                match:
+                    EventName: 'ANSWER'
+            -
+                id: 'alice-bridge-enter-one'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+            -
+                match:
+                    EventName: 'APP_END'
+            -
+                match:
+                    EventName: 'HANGUP'
+            -
+                id: 'alice-end-one'
+                match:
+                    EventName: 'CHAN_END'
+            # Second iteration
+            -
+                id: 'alice-start-two'
+                partialorder:
+                    after: 'linkedid-end-one'
+                match:
+                    EventName: 'CHAN_START'
+            -
+                id: 'alice-app-start-two'
+                match:
+                    EventName: 'APP_START'
+            -
+                id: 'alice-answer-two'
+                partialorder:
+                    after: 'bob-answer-two'
+                match:
+                    EventName: 'ANSWER'
+            -
+                id: 'alice-bridge-enter-two'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+            -
+                match:
+                    EventName: 'APP_END'
+            -
+                match:
+                    EventName: 'HANGUP'
+            -
+                match:
+                    EventName: 'CHAN_END'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                EventName: 'LINKEDID_END'
+        requirements:
+            -
+                id: 'linkedid-end-one'
+                match:
+                    EventName: 'LINKEDID_END'
+            -
+                id: 'linkedid-end-two'
+                match:
+                    EventName: 'LINKEDID_END'
 
 cdr-config:
     -
@@ -566,26 +463,7 @@ cdr-config:
                 amaflags: 'DOCUMENTATION'
             -
                 source: '1234'
-                destination: 'alice_bridge_features'
-                dcontext: 'default'
-                callerid: '"Alice" <1234>'
-                channel: '.*/alice-.*'
-                dchannel: '.*/bob-.*'
-                lastapp: 'Dial'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-            -
-                source: '1234'
                 destination: 'bob_opt'
-                dcontext: 'default'
-                callerid: '"Alice" <1234>'
-                channel: '.*/alice-.*'
-                dchannel: '.*/bob-.*'
-                lastapp: 'Dial'
-                disposition: 'ANSWERED'
-            -
-                source: '1234'
-                destination: 'bob_bridge_features'
                 dcontext: 'default'
                 callerid: '"Alice" <1234>'
                 channel: '.*/alice-.*'

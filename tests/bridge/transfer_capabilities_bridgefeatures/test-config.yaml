@@ -1,0 +1,250 @@
+testinfo:
+    summary: 'Test blind and attended transfers via T dial option and BRIDGE_FEATURES'
+    description: |
+        'This test is the same as the transfer_capabilities test, only the'
+        'features are applied by the BRIDGE_FEATURES channel variable instead'
+        'of by using application arguments.'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - bridge
+
+test-modules:
+    test-object:
+        config-section: bridge-config
+        typename: 'BridgeTestCase.BridgeTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: 'cel-config'
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+bridge-config:
+  test-runs:
+    -
+        originate_channel: 'SIP/alice_bridge_features@uut'
+        hangup: 'alice'
+        features:
+            -
+                who: 'bob'
+                what: 'blindxfer'
+                success: 'false'
+            -
+                who: 'bob'
+                what: 'atxfer'
+                success: 'false'
+            -
+                who: 'alice'
+                what: 'blindxfer'
+                success: 'true'
+            -
+                who: 'alice'
+                what: 'atxfer'
+                success: 'true'
+    -
+        originate_channel: 'SIP/bob_bridge_features@uut'
+        hangup: 'alice'
+        features:
+            -
+                who: 'alice'
+                what: 'blindxfer'
+                success: 'false'
+            -
+                who: 'alice'
+                what: 'atxfer'
+                success: 'false'
+            -
+                who: 'bob'
+                what: 'blindxfer'
+                success: 'true'
+            -
+                who: 'bob'
+                what: 'atxfer'
+                success: 'true'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: 'BLINDTRANSFER'
+        count: '0'
+
+cel-config:
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: '.*/bob-.*'
+        requirements:
+            # First iteration
+            -
+                id: 'bob-start-one'
+                partialorder:
+                    after: 'alice-app-start-one'
+                match:
+                    EventName: 'CHAN_START'
+            -
+                id: 'bob-answer-one'
+                partialorder:
+                    before: 'alice-answer-one'
+                    before: 'alice-bridge-enter-one'
+                match:
+                    EventName: 'ANSWER'
+            -
+                id: 'bob-bridge-enter-one'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+            -
+                match:
+                    EventName: 'HANGUP'
+            -
+                match:
+                    EventName: 'CHAN_END'
+            # Second iteration
+            -
+                id: 'bob-start-two'
+                partialorder:
+                    after: 'alice-app-start-two'
+                match:
+                    EventName: 'CHAN_START'
+            -
+                id: 'bob-answer-two'
+                partialorder:
+                    before: 'alice-answer-two'
+                    before: 'alice-bridge-enter-two'
+                match:
+                    EventName: 'ANSWER'
+            -
+                id: 'bob-bridge-enter-two'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+            -
+                match:
+                    EventName: 'HANGUP'
+            -
+                match:
+                    EventName: 'CHAN_END'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: '.*/alice-.*'
+        requirements:
+            # First iteration
+            -
+                match:
+                    EventName: 'CHAN_START'
+            -
+                id: 'alice-app-start-one'
+                match:
+                    EventName: 'APP_START'
+            -
+                id: 'alice-answer-one'
+                match:
+                    EventName: 'ANSWER'
+            -
+                id: 'alice-bridge-enter-one'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+            -
+                match:
+                    EventName: 'APP_END'
+            -
+                match:
+                    EventName: 'HANGUP'
+            -
+                id: 'alice-end-one'
+                match:
+                    EventName: 'CHAN_END'
+            # Second iteration
+            -
+                id: 'alice-start-two'
+                partialorder:
+                    after: 'linkedid-end-one'
+                match:
+                    EventName: 'CHAN_START'
+            -
+                id: 'alice-app-start-two'
+                match:
+                    EventName: 'APP_START'
+            -
+                id: 'alice-answer-two'
+                partialorder:
+                    after: 'bob-answer-two'
+                match:
+                    EventName: 'ANSWER'
+            -
+                id: 'alice-bridge-enter-two'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+            -
+                match:
+                    EventName: 'APP_END'
+            -
+                match:
+                    EventName: 'HANGUP'
+            -
+                match:
+                    EventName: 'CHAN_END'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                EventName: 'LINKEDID_END'
+        requirements:
+            -
+                id: 'linkedid-end-one'
+                match:
+                    EventName: 'LINKEDID_END'
+            -
+                id: 'linkedid-end-two'
+                match:
+                    EventName: 'LINKEDID_END'
+
+cdr-config:
+    -
+        file: 'Master'
+        lines:
+            -
+                source: '1234'
+                destination: 'alice_bridge_features'
+                dcontext: 'default'
+                callerid: '"Alice" <1234>'
+                channel: '.*/alice-.*'
+                dchannel: '.*/bob-.*'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                source: '1234'
+                destination: 'bob_bridge_features'
+                dcontext: 'default'
+                callerid: '"Alice" <1234>'
+                channel: '.*/alice-.*'
+                dchannel: '.*/bob-.*'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
