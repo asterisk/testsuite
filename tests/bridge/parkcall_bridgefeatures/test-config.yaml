@@ -1,13 +1,9 @@
 testinfo:
-    summary: 'Test the call parking feature'
+    summary: 'Test the call parking feature set via BRIDGE_FEATURES'
     description: |
-        'Set up a bridge between two endpoints and check that the DTMF call parking
-        feature is detected properly. This test checks that the feature is detected
-        with normal BridgeTestCase feature detection and it also makes sure that
-        parking events are received on the expected channels. CEL log checks are
-        omitted in this test due to unpredictable hangup order for the parking channel
-        and the zombie of the channel that gets parked. This behavior makes CEL logs
-        have variability in both order and properties.'
+        'This is the same as the basic call parking test, only the'
+        'feature is applied by the BRIDGE_FEATURES channel variable'
+        'instead of with application arguments.'
 
 test-modules:
     add-test-to-search-path: 'True'
@@ -16,14 +12,7 @@ test-modules:
         typename: 'BridgeTestCase.BridgeTestCase'
     modules:
         -
-            minversion: '11.0.0'
-            maxversion: '12.0.0'
             config-section: 'cdr-config'
-            typename: 'cdr.CDRModule'
-
-        -
-            minversion: '12.0.0'
-            config-section: 'cdr-config-12plus'
             typename: 'cdr.CDRModule'
 
         -
@@ -70,31 +59,6 @@ cdr-config:
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
             -
-                source: '1234'
-                destination: 'bob_parkcall'
-                dcontext: 'default'
-                callerid: '"Alice" <1234>'
-                channel: '.*/alice-.*'
-                dchannel: '.*/bob-.*'
-                lastapp: 'Dial'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-
-cdr-config-12plus:
-    -
-        file: 'Master'
-        lines:
-            -
-                source: '1234'
-                destination: 'alice_parkcall'
-                dcontext: 'default'
-                callerid: '"Alice" <1234>'
-                channel: '.*/alice-.*'
-                dchannel: '.*/bob-.*'
-                lastapp: 'Dial'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-            -
                 source: '4321'
                 dcontext: 'default'
                 callerid: '"Bob" <4321>'
@@ -124,7 +88,7 @@ cdr-config-12plus:
                 amaflags: 'DOCUMENTATION'
 
 properties:
-    minversion: '11.0.0'
+    minversion: '12.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'

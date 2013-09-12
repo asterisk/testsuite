@@ -9,6 +9,7 @@ tests:
     - test: 'automon'
     - test: 'automixmon'
     - test: 'parkcall'
+    - test: 'parkcall_bridgefeatures'
     - dir: 'parkcall_timeout'
     - test: 'parkcall_blindxfer'
     - test: 'dial_LS_options'
