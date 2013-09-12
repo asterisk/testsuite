@@ -13,8 +13,13 @@ test-modules:
             config-section: 'cdr-config'
             typename: 'cdr.CDRModule'
         -
+            maxversion: '12.0.0'
             config-section: 'cel-config'
             typename: 'cel.CELModule'
+        -
+            minversion: '12.0.0'
+            config-section: 'cel-config-v12'
+            typename: 'ami.AMIEventModule'
 
 bridge-config:
   test-runs:
@@ -411,6 +416,212 @@ cel-config:
                 context: 'default'
                 channel: '.*/alice-.*'
 
+cel-config-v12:
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: '.*/bob-.*'
+        requirements:
+            # First iteration
+            -
+                id: 'bob-start-one'
+                partialorder:
+                    after: 'alice-app-start-one'
+                match:
+                    EventName: 'CHAN_START'
+            -
+                id: 'bob-answer-one'
+                partialorder:
+                    before: 'alice-answer-one'
+                    before: 'alice-bridge-enter-one'
+                match:
+                    EventName: 'ANSWER'
+            -
+                id: 'bob-bridge-enter-one'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+            -
+                match:
+                    EventName: 'HANGUP'
+            -
+                match:
+                    EventName: 'CHAN_END'
+            # Second iteration
+            -
+                id: 'bob-start-two'
+                partialorder:
+                    after: 'alice-app-start-two'
+                match:
+                    EventName: 'CHAN_START'
+            -
+                id: 'bob-answer-two'
+                partialorder:
+                    before: 'alice-answer-two'
+                    before: 'alice-bridge-enter-two'
+                match:
+                    EventName: 'ANSWER'
+            -
+                id: 'bob-bridge-enter-two'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+            -
+                match:
+                    EventName: 'HANGUP'
+            -
+                match:
+                    EventName: 'CHAN_END'
+            # Third iteration
+            -
+                id: 'bob-start-three'
+                partialorder:
+                    after: 'alice-app-start-three'
+                match:
+                    EventName: 'CHAN_START'
+            -
+                id: 'bob-answer-three'
+                partialorder:
+                    before: 'alice-answer-three'
+                    before: 'alice-bridge-enter-three'
+                match:
+                    EventName: 'ANSWER'
+            -
+                id: 'bob-bridge-enter-three'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+            -
+                match:
+                    EventName: 'HANGUP'
+            -
+                match:
+                    EventName: 'CHAN_END'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: '.*/alice-.*'
+        requirements:
+            # First iteration
+            -
+                match:
+                    EventName: 'CHAN_START'
+            -
+                id: 'alice-app-start-one'
+                match:
+                    EventName: 'APP_START'
+            -
+                id: 'alice-answer-one'
+                match:
+                    EventName: 'ANSWER'
+            -
+                id: 'alice-bridge-enter-one'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+            -
+                match:
+                    EventName: 'APP_END'
+            -
+                match:
+                    EventName: 'HANGUP'
+            -
+                id: 'alice-end-one'
+                match:
+                    EventName: 'CHAN_END'
+            # Second iteration
+            -
+                id: 'alice-start-two'
+                partialorder:
+                    after: 'linkedid-end-one'
+                match:
+                    EventName: 'CHAN_START'
+            -
+                id: 'alice-app-start-two'
+                match:
+                    EventName: 'APP_START'
+            -
+                id: 'alice-answer-two'
+                match:
+                    EventName: 'ANSWER'
+            -
+                id: 'alice-bridge-enter-two'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+            -
+                match:
+                    EventName: 'APP_END'
+            -
+                match:
+                    EventName: 'HANGUP'
+            -
+                id: 'alice-end-two'
+                match:
+                    EventName: 'CHAN_END'
+            # Third iteration
+            -
+                id: 'alice-start-three'
+                partialorder:
+                    after: 'linkedid-end-two'
+                match:
+                    EventName: 'CHAN_START'
+            -
+                id: 'alice-app-start-three'
+                match:
+                    EventName: 'APP_START'
+            -
+                id: 'alice-answer-three'
+                partialorder:
+                    after: 'bob-answer-three'
+                match:
+                    EventName: 'ANSWER'
+            -
+                id: 'alice-bridge-enter-three'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+            -
+                match:
+                    EventName: 'APP_END'
+            -
+                match:
+                    EventName: 'HANGUP'
+            -
+                match:
+                    EventName: 'CHAN_END'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                EventName: 'LINKEDID_END'
+        requirements:
+            -
+                id: 'linkedid-end-one'
+                match:
+                    EventName: 'LINKEDID_END'
+            -
+                id: 'linkedid-end-two'
+                match:
+                    EventName: 'LINKEDID_END'
+            -
+                id: 'linkedid-end-three'
+                match:
+                    EventName: 'LINKEDID_END'
 
 properties:
     minversion: '11.0.0'
