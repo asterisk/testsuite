@@ -197,9 +197,14 @@ class SIPpTestCase(TestCase):
 
 
     def _scenario_start_callback_fn(self, result):
-        for observer in self._scenario_started_observers:
-            observer(result)
-        return result
+        def __run_callback(result):
+            """ Notify others that the scenario has started """
+            for observer in self._scenario_started_observers:
+                observer(result)
+            return result
+
+        # Allow some time for the SIPp process to come up 
+        reactor.callLater(.25, __run_callback, result)
 
 
     def _scenario_stop_callback_fn(self, result):
