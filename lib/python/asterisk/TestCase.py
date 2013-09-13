@@ -384,7 +384,14 @@ class TestCase(object):
         has occurred.
         """
         logger.warning("Reactor timeout: '%s' seconds" % self.reactor_timeout)
+        self.on_reactor_timeout()
         self.stop_reactor()
+
+    def on_reactor_timeout(self):
+        """
+        Override to run when reactor times out
+        """
+        pass
 
     def __run(self):
         """

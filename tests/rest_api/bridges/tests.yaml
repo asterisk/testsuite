@@ -1,0 +1,5 @@
+tests:
+    - test: 'happy'
+    - test: 'unhappy'
+    - test: 'hangup'
+    - test: 'move'

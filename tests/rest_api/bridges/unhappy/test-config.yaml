@@ -1,8 +1,8 @@
 testinfo:
-    summary: Test continuing on from the RESTful API back to the dialplan
+    summary: Test failure codes for bridge operations.
     description: |
-        This test simply waits for a call via the WebSocket, then hits the
-        continue controller to send it back to the dialplan.
+        Create a couple of channels, and try to put them into bridges...
+        wrongly.
 
 test-modules:
     add-test-to-search-path: True
@@ -14,18 +14,25 @@ test-modules:
             typename: ari.WebSocketEventModule
 
 test-object-config:
-
+    reactor-timeout: 10
+    test-iterations:
+        -   # Spawn two channels for this test
+            -   channel: Local/s@default
+                application: Echo
+            -   channel: Local/s@default
+                application: Echo
 
 ari-config:
+    apps: testsuite
     events:
         -   conditions:
                 match:
                     type: StasisStart
                     application: testsuite
                     args: []
-            count: 1
+            count: 2
             callback:
-                module: rest_continue
+                module: bridge_unhappy
                 method: on_start
         -   conditions:
                 match:
@@ -33,17 +40,8 @@ ari-config:
                     application: testsuite
             count: 2
             callback:
-                module: rest_continue
+                module: bridge_unhappy
                 method: on_end
-        -   conditions:
-                match:
-                    type: StasisStart
-                    application: testsuite
-                    args: [fin]
-            count: 1
-            callback:
-                module: rest_continue
-                method: on_second_start
 
 properties:
     minversion: '12.0.0'
@@ -52,9 +50,7 @@ properties:
         - python : requests
         - python : twisted
         - python : starpy
-        - asterisk : res_stasis_http_channels
+        - asterisk : res_ari_channels
         - asterisk : app_echo
     tags:
         - ARI
-
-

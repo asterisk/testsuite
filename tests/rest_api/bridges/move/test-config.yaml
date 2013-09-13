@@ -1,8 +1,7 @@
 testinfo:
-    summary: Test continuing on from the RESTful API back to the dialplan
+    summary: Test expected events moving a channel from one bridge to another.
     description: |
-        This test simply waits for a call via the WebSocket, then hits the
-        continue controller to send it back to the dialplan.
+        Put a channel into a bridge, put it directly into another bridge.
 
 test-modules:
     add-test-to-search-path: True
@@ -13,10 +12,8 @@ test-modules:
         -   config-section: ari-config
             typename: ari.WebSocketEventModule
 
-test-object-config:
-
-
 ari-config:
+    apps: testsuite
     events:
         -   conditions:
                 match:
@@ -25,25 +22,29 @@ ari-config:
                     args: []
             count: 1
             callback:
-                module: rest_continue
+                module: bridge_move
                 method: on_start
+        -   conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    application: testsuite
+            count: 2
+            callback:
+                module: bridge_move
+                method: on_enter
+        -   conditions:
+                match:
+                    type: ChannelLeftBridge
+                    application: testsuite
+            count: 2
+            callback:
+                module: bridge_move
+                method: on_leave
         -   conditions:
                 match:
                     type: StasisEnd
                     application: testsuite
-            count: 2
-            callback:
-                module: rest_continue
-                method: on_end
-        -   conditions:
-                match:
-                    type: StasisStart
-                    application: testsuite
-                    args: [fin]
             count: 1
-            callback:
-                module: rest_continue
-                method: on_second_start
 
 properties:
     minversion: '12.0.0'
@@ -52,9 +53,7 @@ properties:
         - python : requests
         - python : twisted
         - python : starpy
-        - asterisk : res_stasis_http_channels
+        - asterisk : res_ari_channels
         - asterisk : app_echo
     tags:
         - ARI
-
-

@@ -69,6 +69,7 @@ class AriTestObject(TestCase):
         self.test_iteration = 0
         self.channels = []
         self._ws_event_handlers = []
+        self.timed_out = False
 
         if self.iterations is None:
             self.iterations = [{'channel': 'Local/s@default',
@@ -92,11 +93,21 @@ class AriTestObject(TestCase):
         '''
         self._ws_event_handlers.append(callback)
 
+    def on_reactor_timeout(self):
+        self.timed_out = True
+        # Fail the tests if we have timed out
+        self.set_passed(False)
+
     def on_ws_event(self, message):
         ''' Handler for WebSocket events
 
         :param message The WS event payload
         '''
+        if self.timed_out:
+            # Ignore messages received after timeout
+            LOGGER.debug("Ignoring message received after timeout")
+            return
+
         for handler in self._ws_event_handlers:
             handler(message)
 
@@ -300,6 +311,7 @@ class ARI(object):
         '''
         self.base_url = "http://%s:%d/ari" % (host, port)
         self.userpass = userpass
+        self.allow_errors = False
 
     def build_url(self, *args):
         '''Build a URL from the given path.
@@ -323,7 +335,7 @@ class ARI(object):
         '''
         url = self.build_url(*args)
         LOGGER.info("GET %s %r" % (url, kwargs))
-        return raise_on_err(requests.get(url, params=kwargs,
+        return self.raise_on_err(requests.get(url, params=kwargs,
                                          auth=self.userpass))
 
     def post(self, *args, **kwargs):
@@ -334,9 +346,9 @@ class ARI(object):
         :returns: requests.models.Response
         :throws: requests.exceptions.HTTPError
         '''
-        url = self.build_url(*args, **kwargs)
+        url = self.build_url(*args)
         LOGGER.info("POST %s %r" % (url, kwargs))
-        return raise_on_err(requests.post(url, params=kwargs,
+        return self.raise_on_err(requests.post(url, params=kwargs,
                                           auth=self.userpass))
 
     def delete(self, *args, **kwargs):
@@ -347,20 +359,32 @@ class ARI(object):
         :returns: requests.models.Response
         :throws: requests.exceptions.HTTPError
         '''
-        url = self.build_url(*args, **kwargs)
+        url = self.build_url(*args)
         LOGGER.info("DELETE %s %r" % (url, kwargs))
-        return raise_on_err(requests.delete(url, params=kwargs,
+        return self.raise_on_err(requests.delete(url, params=kwargs,
                                             auth=self.userpass))
 
+    def set_allow_errors(self, v):
+        '''Sets whether error responses returns exceptions.
 
-def raise_on_err(resp):
-    '''Helper to raise an exception when a response is a 4xx or 5xx error.
+        If True, then error responses are returned. Otherwise, methods throw
+        an exception on error.
 
-    :param resp: requests.models.Response object
-    :returns: resp
-    '''
-    resp.raise_for_status()
-    return resp
+        :param v True/False value for allow_errors.
+        '''
+        self.allow_errors = v
+
+    def raise_on_err(self, resp):
+        '''Helper to raise an exception when a response is a 4xx or 5xx error.
+
+        If allow_errors is True, then an exception is not raised.
+
+        :param resp: requests.models.Response object
+        :returns: resp
+        '''
+        if not self.allow_errors:
+            resp.raise_for_status()
+        return resp
 
 
 class EventMatcher(object):
@@ -380,7 +404,7 @@ class EventMatcher(object):
             self.callback = getattr(module, callback['method'])
         else:
             # No callback; just use a no-op
-            self.callback = lambda **kwargs: None
+            self.callback = lambda *args, **kwargs: True
 
         test_object.register_stop_observer(self.on_stop)
 

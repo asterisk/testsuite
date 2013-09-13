@@ -406,6 +406,9 @@ class TestConfig:
         if not self.config:
             return False
 
+        if not "properties" in self.config:
+            raise ValueError("%s: Missing properties section" % self.test_name)
+
         self.deps = [
             Dependency(d)
                 for d in self.config["properties"].get("dependencies") or []
