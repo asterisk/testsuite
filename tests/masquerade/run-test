@@ -38,6 +38,15 @@ class MasqueradeTest(TestCase):
         # Initial call chain parameters.
         self.chain_length = 200
         self.expected_space = 701
+        # Use IAX calls
+        #self.use_sip_calls = False
+        # Use SIP calls
+        self.use_sip_calls = True
+
+        if self.use_sip_calls:
+            self.base_exten = 8000
+        else:
+            self.base_exten = 9000
 
         # Clear test completion stage flags.
         self.removed_count = 0
@@ -75,16 +84,19 @@ class MasqueradeTest(TestCase):
     # Initiate test call chain.
     def initiate_call_chain(self):
         logger.info("Initiating test call for a chain length of " + str(self.chain_length))
-        exten = 9000 + self.chain_length
+        exten = self.base_exten + self.chain_length
         if AsteriskVersion() < AsteriskVersion('12'):
-            self.ast[0].cli_originate("Local/" + str(exten) + "@outgoing/n extension parkme@parked")
+            self.ast[0].cli_originate("Local/" + str(exten) + "@outgoing extension parkme@parked")
             return
-        self.ast[0].cli_originate("Local/" + str(exten) + "@outgoing/n extension parkme12@parked")
+        self.ast[0].cli_originate("Local/" + str(exten) + "@outgoing extension parkme12@parked")
 
     # Initiate a call to retrieve the parked call.
     def get_parkedcall(self):
         logger.info("Fetching parked call at " + str(self.expected_space))
-        self.ast[1].cli_originate("IAX2/ast1/" + str(self.expected_space) + " extension retrieve@getit")
+        tech_prefix = "IAX2/ast1/"
+        if self.use_sip_calls:
+            tech_prefix = "SIP/ast1/"
+        self.ast[1].cli_originate(tech_prefix + str(self.expected_space) + " extension retrieve@getit")
 
     # Called when got ParkedCall AMI event
     def evt_parkedcall(self, ami, event):
@@ -140,6 +152,13 @@ class MasqueradeTest(TestCase):
             self.reset_timeout()
             self.check_result()
             return
+        elif evt == "last_call":
+            if status == "HANGUP":
+                if self.park_retrieved:
+                    return
+                logger.warning("The last call in the chain disconnected too early.")
+            else:
+                logger.info("Unknown status")
         elif evt == "ast1":
             if status == "SUCCESS":
                 self.ast1_event = True
@@ -181,6 +200,8 @@ class MasqueradeTest(TestCase):
 
     # This is called when we stop the reactor.
     def stop_reactor(self):
+        self.test_complete = True
+
         # Get some useful output from the Asterisk instance
         # under test before tearing down in case of problems.
         self.ast[0].cli_exec("core show locks")
@@ -190,7 +211,6 @@ class MasqueradeTest(TestCase):
         #self.ast[0].cli_exec("core show channels concise")
         self.ast[0].cli_exec("core show channels")
 
-        self.test_complete = True
         TestCase.stop_reactor(self)
 
 

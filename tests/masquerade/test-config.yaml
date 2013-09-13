@@ -14,4 +14,5 @@ properties:
             - 'autoservice_run'
     tags:
         - parking
-        - iax2
+        # - iax2
+        - SIP
