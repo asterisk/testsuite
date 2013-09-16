@@ -27,8 +27,13 @@ test-modules:
             typename: 'ami.AMIEventModule'
             minversion: '12'
         -
-            config-section: 'cel-config'
+            config-section: 'cel-config-11'
             typename: 'cel.CELModule'
+            maxversion: '12'
+        -
+            config-section: 'ami-cel-config-12'
+            typename: 'ami.AMIEventModule'
+            minversion: '12'
         -
             config-section: 'cdr-config'
             typename: 'cdr.CDRModule'
@@ -107,7 +112,7 @@ ami-config-12:
                 Direction: 'Received'
         count: '8'
 
-cel-config:
+cel-config-11:
     -
         file: 'Master'
         lines:
@@ -535,6 +540,483 @@ cel-config:
                 exten: 'bob_attended'
                 context: 'default'
                 channel: '.*/alice-.*'
+
+ami-cel-config-12:
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'SIP/alice-.*'
+        requirements:
+            -
+                match:
+                    EventName: 'CHAN_START'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    Exten: 'alice_blind'
+                    Context: 'default'
+            -
+                partialorder:
+                    before: 'bob-start-one'
+                match:
+                    EventName: 'APP_START'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_blind'
+                    Exten: 'alice_blind'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                partialorder:
+                    after: 'bob-answer-one'
+                match:
+                    EventName: 'ANSWER'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_blind'
+                    Exten: 'alice_blind'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'BRIDGE_ENTER'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_blind'
+                    Exten: 'alice_blind'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_blind'
+                    Exten: 'alice_blind'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'APP_END'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_blind'
+                    Exten: 'alice_blind'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'HANGUP'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_blind'
+                    Exten: 'alice_blind'
+                    Context: 'default'
+                    Extra: '.*16.*ANSWER.*/alice-.*'
+            -
+                match:
+                    EventName: 'CHAN_END'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_blind'
+                    Exten: 'alice_blind'
+                    Context: 'default'
+            -
+                match:
+                    EventName: 'CHAN_START'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    Exten: 'alice_attended'
+                    Context: 'default'
+            -
+                partialorder:
+                    before: 'bob-start-two'
+                match:
+                    EventName: 'APP_START'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_attended'
+                    Exten: 'alice_attended'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                partialorder:
+                    after: 'bob-answer-two'
+                match:
+                    EventName: 'ANSWER'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_attended'
+                    Exten: 'alice_attended'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'BRIDGE_ENTER'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_attended'
+                    Exten: 'alice_attended'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_attended'
+                    Exten: 'alice_attended'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'APP_END'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_attended'
+                    Exten: 'alice_attended'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'HANGUP'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_attended'
+                    Exten: 'alice_attended'
+                    Context: 'default'
+                    Extra: '.*16.*ANSWER.*/alice-.*'
+            -
+                match:
+                    EventName: 'CHAN_END'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'alice_attended'
+                    Exten: 'alice_attended'
+                    Context: 'default'
+            -
+                match:
+                    EventName: 'CHAN_START'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    Exten: 'bob_blind'
+                    Context: 'default'
+            -
+                partialorder:
+                    before: 'bob-start-three'
+                match:
+                    EventName: 'APP_START'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_blind'
+                    Exten: 'bob_blind'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                partialorder:
+                    after: 'bob-answer-three'
+                match:
+                    EventName: 'ANSWER'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_blind'
+                    Exten: 'bob_blind'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'BRIDGE_ENTER'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_blind'
+                    Exten: 'bob_blind'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_blind'
+                    Exten: 'bob_blind'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'APP_END'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_blind'
+                    Exten: 'bob_blind'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'HANGUP'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_blind'
+                    Exten: 'bob_blind'
+                    Context: 'default'
+                    Extra: '.*16.*ANSWER.*'
+            -
+                match:
+                    EventName: 'CHAN_END'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_blind'
+                    Exten: 'bob_blind'
+                    Context: 'default'
+            -
+                match:
+                    EventName: 'CHAN_START'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    Exten: 'bob_attended'
+                    Context: 'default'
+            -
+                partialorder:
+                    before: 'bob-start-four'
+                match:
+                    EventName: 'APP_START'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_attended'
+                    Exten: 'bob_attended'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                partialorder:
+                    after: 'bob-answer-four'
+                match:
+                    EventName: 'ANSWER'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_attended'
+                    Exten: 'bob_attended'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'BRIDGE_ENTER'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_attended'
+                    Exten: 'bob_attended'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_attended'
+                    Exten: 'bob_attended'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'APP_END'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_attended'
+                    Exten: 'bob_attended'
+                    Context: 'default'
+                    Application: 'Dial'
+            -
+                match:
+                    EventName: 'HANGUP'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_attended'
+                    Exten: 'bob_attended'
+                    Context: 'default'
+                    Extra: '.*16.*ANSWER.*'
+            -
+                match:
+                    EventName: 'CHAN_END'
+                    CallerIDname: 'Alice'
+                    CallerIDnum: '1234'
+                    CallerIDdnid: 'bob_attended'
+                    Exten: 'bob_attended'
+                    Context: 'default'
+    -
+        type: 'cel'
+        conditions:
+            match:
+        requirements:
+            -
+                id: 'bob-start-one'
+                match:
+                    EventName: 'CHAN_START'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+            -
+                id: 'bob-answer-one'
+                match:
+                    EventName: 'ANSWER'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Application: 'AppDial'
+                    AppData: '\(Outgoing Line\)'
+            -
+                match:
+                    EventName: 'BRIDGE_ENTER'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Context: 'default'
+                    Application: 'AppDial'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Context: 'default'
+                    Application: 'AppDial'
+            -
+                match:
+                    EventName: 'HANGUP'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Application: 'AppDial'
+                    AppData: '\(Outgoing Line\)'
+                    Extra: '.*16.*/alice-.*'
+            -
+                match:
+                    EventName: 'CHAN_END'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Application: 'AppDial'
+                    AppData: '\(Outgoing Line\)'
+            -
+                id: 'bob-start-two'
+                match:
+                    EventName: 'CHAN_START'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+            -
+                id: 'bob-answer-two'
+                match:
+                    EventName: 'ANSWER'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Application: 'AppDial'
+                    AppData: '\(Outgoing Line\)'
+            -
+                match:
+                    EventName: 'BRIDGE_ENTER'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Context: 'default'
+                    Application: 'AppDial'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Context: 'default'
+                    Application: 'AppDial'
+            -
+                match:
+                    EventName: 'HANGUP'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Application: 'AppDial'
+                    AppData: '\(Outgoing Line\)'
+                    Extra: '.*16.*/alice-.*'
+            -
+                match:
+                    EventName: 'CHAN_END'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Application: 'AppDial'
+                    AppData: '\(Outgoing Line\)'
+            -
+                id: 'bob-start-three'
+                match:
+                    EventName: 'CHAN_START'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+            -
+                id: 'bob-answer-three'
+                match:
+                    EventName: 'ANSWER'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Application: 'AppDial'
+                    AppData: '\(Outgoing Line\)'
+            -
+                match:
+                    EventName: 'BRIDGE_ENTER'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Context: 'default'
+                    Application: 'AppDial'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Context: 'default'
+                    Application: 'AppDial'
+            -
+                match:
+                    EventName: 'HANGUP'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Application: 'AppDial'
+                    AppData: '\(Outgoing Line\)'
+                    Extra: '.*16.*'
+            -
+                match:
+                    EventName: 'CHAN_END'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Application: 'AppDial'
+                    AppData: '\(Outgoing Line\)'
+            -
+                id: 'bob-start-four'
+                match:
+                    EventName: 'CHAN_START'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+            -
+                id: 'bob-answer-four'
+                match:
+                    EventName: 'ANSWER'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Application: 'AppDial'
+                    AppData: '\(Outgoing Line\)'
+            -
+                match:
+                    EventName: 'BRIDGE_ENTER'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Context: 'default'
+                    Application: 'AppDial'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Context: 'default'
+                    Application: 'AppDial'
+            -
+                match:
+                    EventName: 'HANGUP'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Application: 'AppDial'
+                    AppData: '\(Outgoing Line\)'
+                    Extra: '.*16.*'
+            -
+                match:
+                    EventName: 'CHAN_END'
+                    CallerIDname: 'Bob'
+                    CallerIDnum: '4321'
+                    Application: 'AppDial'
+                    AppData: '\(Outgoing Line\)'
 
 cdr-config:
     -

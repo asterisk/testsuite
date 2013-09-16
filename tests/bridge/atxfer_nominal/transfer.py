@@ -11,6 +11,7 @@ import sys
 import logging
 
 sys.path.append("lib/python")
+from version import AsteriskVersion
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,10 +47,19 @@ class Transfer(object):
         self._current_feature = None
 
         self.test_object.register_feature_start_observer(self._handle_feature_start)
-        self.test_object.register_feature_end_observer(self._handle_feature_end)
+        if AsteriskVersion() >= AsteriskVersion('12'):
+            self.test_object.register_ami_observer(self._handle_ami_connect)
+        else:
+            self.test_object.register_feature_end_observer(self._handle_feature_end)
 
         if (Transfer.__singleton_instance == None):
             Transfer.__singleton_instance = self
+
+    def _handle_ami_connect(self, ami):
+        ''' Handle AMI connect events '''
+        if (ami.id != 0):
+            return
+        ami.registerEvent('AttendedTransfer', self._handle_attended_transfer)
 
     def _handle_feature_start(self, test_object, feature):
         ''' Callback for the BridgeTestCase feature detected event
@@ -80,6 +90,11 @@ class Transfer(object):
             raise Exception()
         LOGGER.info('Hanging up channel %s' % channel)
         ami.hangup(channel)
+
+    def _handle_attended_transfer(self, ami, event):
+        ''' Handle the AttendedTransfer event. Once the event has
+        triggered, the call can be torn down. '''
+        self._handle_feature_end(None, None)
 
     def complete_attended_transfer(self):
         '''

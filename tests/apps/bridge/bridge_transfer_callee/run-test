@@ -17,8 +17,9 @@ from twisted.internet import reactor
 sys.path.append("lib/python")
 
 from asterisk.TestCase import TestCase
+from asterisk.version import AsteriskVersion
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 class BridgeTransferTest(TestCase):
 
@@ -27,6 +28,7 @@ class BridgeTransferTest(TestCase):
         self.current_test = 0
         self.total_tests = 4
         self.create_asterisk()
+        self.channel1 = None
 
     def run(self):
         TestCase.run(self)
@@ -37,7 +39,10 @@ class BridgeTransferTest(TestCase):
         """ Register for all events we care about """
 
         ami.registerEvent("UserEvent", self.user_event)
-        ami.registerEvent("BridgeExec", self.bridge_event)
+        if AsteriskVersion() >= AsteriskVersion('12'):
+            ami.registerEvent("BridgeEnter", self.bridge_enter_event)
+        else:
+            ami.registerEvent("BridgeExec", self.bridge_event)
         #originate the bridgee
         df = ami.originate(channel = "Local/local@call1", exten = "call", context = "test_context", priority = 1)
         df.addErrback(self.handleOriginateFailure)
@@ -54,26 +59,26 @@ class BridgeTransferTest(TestCase):
 
     def process_test_event(self, ami, event):
         #evaluate pass/failure
-        logger.info("event: %s" % event)
+        LOGGER.info("event: %s" % event)
 
         if (event.get('test') != "%d" % self.current_test):
-            logger.error("test %d event didn't match expected test number. Test Failed." % self.current_test)
+            LOGGER.error("test %d event didn't match expected test number. Test Failed." % self.current_test)
             self.stop_reactor()
             return
 
         if (event.get('status') != "SUCCESS"):
-            logger.error("test %d event did not specify SUCCESS. Test Failed." % self.current_test)
+            LOGGER.error("test %d event did not specify SUCCESS. Test Failed." % self.current_test)
             self.stop_reactor()
             return
 
         channel = event.get('channel')
         if channel is None:
-            logger.error("test %d did not include a channel in test event.")
+            LOGGER.error("test %d did not include a channel in test event.")
             self.stop_reactor()
             return
 
         if not self.match_starts("Local/local@call1-", channel):
-            logger.error("test %d SUCCESS was placed on the wrong channel. Test Failed." % self.current_test)
+            LOGGER.error("test %d SUCCESS was placed on the wrong channel. Test Failed." % self.current_test)
             self.stop_reactor()
             return
 
@@ -83,7 +88,7 @@ class BridgeTransferTest(TestCase):
             df = ami.originate(channel = "Local/local@call1", exten = "call", context = "test_context", priority = 1)
             df.addErrback(self.handleOriginateFailure)
         else:
-            logger.info("All Bridge Transfer tests complete. Test Successful.")
+            LOGGER.info("All Bridge Transfer tests complete. Test Successful.")
             self.passed = True
             self.stop_reactor()
 
@@ -93,9 +98,20 @@ class BridgeTransferTest(TestCase):
             if channel is not None:
                 ami.hangup(channel)
             else:
-                logger.error("bridge event didn't include a channel1. That's not supposed to happen.")
+                LOGGER.error("bridge event didn't include a channel1. That's not supposed to happen.")
         else:
-            logger.error("A bridge failed. That's rather abnormal.")
+            LOGGER.error("A bridge failed. That's rather abnormal.")
+
+    def bridge_enter_event(self, ami, event):
+        if self.channel1 is None:
+            self.channel1 = event['channel']
+            LOGGER.info("Got first channel %s in bridge %s" % (self.channel1, event['bridgeuniqueid']))
+            return
+
+        LOGGER.info("Got second channel %s in bridge %s, hanging up %s" %
+            (event['channel'], event['bridgeuniqueid'], self.channel1))
+        ami.hangup(self.channel1)
+        self.channel1 = None
 
     def match_starts(self, string1, string2):
         pattern = re.compile(string1)
