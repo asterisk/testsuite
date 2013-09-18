@@ -1,0 +1,27 @@
+testinfo:
+    summary: 'Test to make sure a response containing a diversion header gets
+             propagated correctly.'
+
+    description: |
+        'user1 calls user2 which is set to forward calls to user3.  The 302
+         response coming from user2 contains a diversion header.'
+
+properties:
+    minversion: '12'
+    dependencies:
+         - app : 'sipp'
+    tags:
+        - SIP
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'user3.xml', '-p':'5063' } }
+                - { 'key-args': { 'scenario':'user2.xml', '-p':'5062' } }
+                - { 'key-args': { 'scenario':'user1.xml', '-p':'5061' } }

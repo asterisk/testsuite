@@ -6,3 +6,4 @@ tests:
     - test: 'srtp_negotiation'
     - dir: 'one_touch_recording'
     - dir: 'registration'
+    - dir: 'diversion'

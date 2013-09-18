@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<scenario name="send an invite to user2">
+	<send retrans="500">
+		<![CDATA[
+                        INVITE sip:user2@[remote_ip]:[remote_port] SIP/2.0
+                        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+                        From: user1 <sip:user1@[local_ip]:[local_port]>;tag=[call_number]
+                        To: user2 <sip:user2@[remote_ip]:[remote_port]>
+                        Call-ID: [call_id]
+                        CSeq: [cseq] INVITE
+                        Contact: sip:user1@[local_ip]:[local_port]
+                        Max-Forwards: 70
+			Diversion: <sip:amenhotep@127.0.0.1>;reason=unconditional
+                        Content-Type: application/sdp
+                        Content-Length: [len]
+
+			v=0
+			o=- 1324901698 1324901698 IN IP[local_ip_type] [local_ip]
+			s=-
+			c=IN IP[media_ip_type] [media_ip]
+			t=0 0
+			m=audio [media_port] RTP/AVP 0 101
+			a=sendrecv
+			a=rtpmap:0 PCMU/8000
+			a=rtpmap:101 telephone-event/8000
+
+		]]>
+	</send>
+
+	<recv response="100" optional="true" />
+
+	<recv response="181" optional="true" />
+
+	<recv response="180" optional="true" />
+
+	<recv response="183" optional="true" />
+
+	<recv response="200" />
+
+	<send>
+		<![CDATA[
+			ACK sip:user2@[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: <sip:user1@[local_ip]>;tag=[call_number]
+			To: <sip:user2@[remote_ip]:[remote_port]>[peer_tag_param]
+			CSeq: [cseq] ACK
+			Call-ID: [call_id]
+			Max-Forwards: 70
+			Content-Length: 0
+
+		]]>
+	</send>
+
+	<send retrans="500">
+		<![CDATA[
+			BYE sip:user2@[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: <sip:user1@[local_ip]>;tag=[call_number]
+			To: <sip:user2@[remote_ip]:[remote_port]>[peer_tag_param]
+			CSeq: [cseq] BYE
+			Call-ID: [call_id]
+			Max-Forwards: 70
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" crlf="true" />
+</scenario>
