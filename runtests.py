@@ -82,7 +82,7 @@ class TestRun:
             if not self.passed:
                 self.__archive_ast_logs()
                 self.__archive_pcap_dump()
-            print 'Test %s %s' % (cmd, 'passed' if self.passed else 'failed')
+            print 'Test %s %s\n' % (cmd, 'passed' if self.passed else 'failed')
 
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
@@ -293,11 +293,13 @@ class TestSuite:
                 if exclude:
                     continue
 
-            print "--> Running test '%s' ...\n" % t.test_name
+            print "--> Running test '%s' ..." % t.test_name
 
             # Establish Preconditions
             print "Making sure Asterisk isn't running ..."
             os.system("killall -9 asterisk > /dev/null 2>&1")
+            print "Making sure SIPp isn't running..."
+            os.system("killall -9 sipp > /dev/null 2>&1")
             # XXX TODO Hard coded path, gross.
             os.system("rm -f /var/run/asterisk/asterisk.ctl")
             os.system("rm -f /var/run/asterisk/asterisk.pid")
