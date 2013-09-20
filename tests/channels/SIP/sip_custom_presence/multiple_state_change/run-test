@@ -40,7 +40,7 @@ class MultipleStateChange(TestCase):
         LOGGER.info("SIPp scenario passed successfully. Raising sippPassed "
                     "flag.")
         self.sippPassed = True
-        reactor.stop()
+        self.stop_reactor()
 
     def originateComplete(self, result):
         LOGGER.info("Completed originated call for setting presence to "

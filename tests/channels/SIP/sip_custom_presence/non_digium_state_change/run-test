@@ -36,7 +36,7 @@ class NominalStateChange(TestCase):
 
     def testComplete(self, result):
         self.sippPassed = True
-        reactor.stop()
+        self.stop_reactor()
 
     def originateComplete(self, ami, event):
         # We successfully set presence, now let's change device state

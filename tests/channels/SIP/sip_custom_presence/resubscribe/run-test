@@ -52,7 +52,7 @@ class Resubscribe(TestCase):
 
     def sippResubscribeComplete(self, result):
         self.sippPassed = True
-        reactor.stop()
+        self.stop_reactor()
 
     def originateComplete(self, ami, event):
         if not event.get("userevent") == "Presence":

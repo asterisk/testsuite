@@ -37,7 +37,7 @@ class NominalStateChange(TestCase):
 
     def sippComplete(self, result):
         self.sippPassed = True
-        reactor.stop()
+        self.stop_reactor()
 
     def runSippTest(self):
         df = self.sipTest.run(self)
