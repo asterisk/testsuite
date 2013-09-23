@@ -1,6 +1,7 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 'local_channel_t38_queryoption'
+    - test: 'directmedia_reinvite_t38'
     - test: 'gateway_g711_t38'
     - test: 'gateway_t38_g711'
     - test: 'gateway_no_t38'

@@ -1,0 +1,30 @@
+testinfo:
+    summary: 'Test SIP reinvite from directmedia to T.38 FAX'
+    description: |
+        Two devices are in a normal Audio call using directmedia when one does
+        a reinvite to start a T.38 Fax session. This tests that the Fax
+        session reinvite is issued correctly and includes the necessary SDP
+        contact information for Asterisk to be in the path of the fax media.
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'endpoint_A.xml', '-i': '127.0.0.2', '-p': '5060', '-inf': 'inject_bridge.csv'} }
+                - { 'key-args': {'scenario': 'endpoint_B.xml', '-i': '127.0.0.3', '-p': '5060', '-inf': 'inject_bridge.csv'} }
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+    tags:
+        - SIP
+        - fax
