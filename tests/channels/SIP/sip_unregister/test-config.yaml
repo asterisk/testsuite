@@ -1,0 +1,71 @@
+testinfo:
+    summary:     'Tests the handling of a peer sending an un-REGISTER.'
+    description: |
+        'Tests having a peer register using IPv4 / IPv6 and then un-registering.  The
+         tests cover authenticated REGISTER and non-authenticated REGISTER.  They
+         also cover using Contact: * with Expires: 0 and Contact: <sip uri> and
+         Expires: 0.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # IPv4, Expire: 0, & Unregister Contact: *
+                - { 'key-args': {'scenario': 'registerv4.xml', '-i': '127.0.0.1',
+                                    '-p': '5061', '-s': 'ipv4'},
+                    'ordered-args': ['-key', 'contact1', '*'] }
+
+                # IPv4, Expire: 0, & Unregister Contact: <sip_uri>
+                - { 'key-args': {'scenario': 'registerv4.xml', '-i': '127.0.0.1',
+                                    '-p': '5062', '-s': 'ipv42'},
+                    'ordered-args': ['-key', 'contact1', '"ipv42" <sip:ipv42@127.0.0.2:5062>;transport=udp'] }
+
+                # IPv4 Auth, Expire: 0, Unregister Contact: *
+                - { 'key-args': {'scenario': 'registerv4-auth.xml', '-i': '127.0.0.1',
+                                    '-p': '5063', '-s': 'ipv4-auth1', '-ap': 'test1234'},
+                    'ordered-args': ['-key', 'contact1', '*'] }
+
+                # IPv4 Auth, Expire: 0, & Unregister Contact: <sip_uri>
+                - { 'key-args': {'scenario': 'registerv4-auth.xml', '-i': '127.0.0.1',
+                                    '-p': '5064', '-s': 'ipv4-auth2', '-ap': 'test1234'},
+                    'ordered-args': ['-key', 'contact1', '"ipv4-auth2" <sip:ipv4-auth2@127.0.0.2:5064>;transport=udp'] }
+
+                # IPv6, Expire: 0, & Unregister Contact: *
+                - { 'key-args': {'scenario': 'registerv6.xml', 'target': '[::1]',
+                                    '-i': '[::1]', '-p': '5061', '-s': 'ipv6'},
+                    'ordered-args': ['-key', 'customip1', '[::2]', '-key', 'contact1', '*'] }
+
+                # IPv6, Expire: 0, & Unregister Contact: <sip_uri>
+                - { 'key-args': {'scenario': 'registerv6.xml', 'target': '[::1]',
+                                    '-i': '[::1]', '-p': '5062', '-s': 'ipv62'},
+                    'ordered-args': ['-key', 'customip1', '[::2]',
+                                        '-key', 'contact1', '"ipv62" <sip:ipv62@[::2]:5062>;transport=udp'] }
+
+                # IPv6 Auth, Expire: 0, & Unregister Contact: *
+                - { 'key-args': {'scenario': 'registerv6-auth.xml', 'target': '[::1]',
+                                    '-i': '[::1]', '-p': '5063', '-s': 'ipv6-auth1', '-ap': 'test12345'},
+                    'ordered-args': ['-key', 'customip1', '[::2]', '-key', 'contact1', '*'] }
+
+                # IPv6 Auth, Expire: 0, & Unregister Contact: <sip_uri>
+                - { 'key-args': {'scenario': 'registerv6-auth.xml', 'target': '[::1]',
+                                    '-i': '[::1]', '-p': '5064', '-s': 'ipv6-auth2', '-ap': 'test12345'},
+                    'ordered-args': ['-key', 'customip1', '[::2]',
+                                        '-key', 'contact1', '"ipv6-auth2" <sip:ipv6-auth2@[::2]:5064>;transport=udp'] }
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python : 'twisted'
+        - python : 'starpy'
+        - sipp :
+            version : 'v3.3'
+        - asterisk: 'chan_sip'
+    tags:
+        - SIP
