@@ -16,6 +16,7 @@ import threading
 sys.path.append("lib/python")
 from asterisk.TestCase import TestCase
 import logging
+from asterisk.version import AsteriskVersion
 
 LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ class AttTransferTest(TestCase):
         TestCase.__init__(self)
         #self.reactor_timeout = 60
         self.create_asterisk()
-	self.chans = []
+        self.chans = []
         self.final_bridge = 0
         self.lib = None
         self.ext_a = None
@@ -82,17 +83,30 @@ class AttTransferTest(TestCase):
             self.doCleanup()
             return
 
-
         # register callbacks required to handle call completion events
-        self.ami[0].registerEvent('Bridge', self.bridge_callback)
-        self.ami[0].registerEvent('VarSet', self.bridgepeer_callback)
+        if AsteriskVersion() < AsteriskVersion('12'):
+            self.ami[0].registerEvent('Bridge', self.bridge_callback)
+            self.ami[0].registerEvent('VarSet', self.bridgepeer_callback)
+        else:
+            self.ami[0].registerEvent('BridgeEnter',
+                                      self.bridge_enter_callback)
+            self.ami[0].registerEvent('AttendedTransfer',
+                                      self.transfer_callback)
 
         # kick off first call from A to B
         LOGGER.info("Kicking off A-to-B call")
         self.callToB = self.ext_a.make_call("sip:call_b@127.0.0.1:5060")
 
     def bridge_callback(self, ami, event):
-	self.chans.append(event['channel2'])
+        '''
+        Pre-Asterisk 12 bridge callback.
+
+        This callback stores the channels that end_a is connected to in
+        self.chans. Once self.chans has two channels in it, then end_a
+        transfers end_b to end_c.
+        '''
+
+        self.chans.append(event['channel2'])
         numchans = len(self.chans)
         if numchans == 1:
             # kick off second call from A to C
@@ -104,6 +118,15 @@ class AttTransferTest(TestCase):
             self.callToC.transfer_to_call(self.callToB)
 
     def bridgepeer_callback(self, ami, event):
+        '''
+        Pre-Asterisk 12 bridge callback.
+
+        This callback checks that after the transfer has completed, that the
+        BRIDGEPEER variable setting for the two channels is what is expected.
+        end_b should have end_c as its BRIDGEPEER, and end_c should have end_b
+        as its BRDIGEPEER.
+        '''
+
         if event['variable'] != "BRIDGEPEER" or len(self.chans) < 2:
             return
 
@@ -119,6 +142,45 @@ class AttTransferTest(TestCase):
                 # success!
                 self.passed = True
                 self.doCleanup()
+
+    def bridge_enter_callback(self, ami, event):
+        '''
+        Asterisk 12+ bridge enter calback.
+
+        We expect this callback to be called a total of five times.
+        1. end_a enters bridge 1
+        2. end_b enters bridge 1
+        3. end_a enters bridge 2
+        4. end_c enters bridge 2
+        5. Either end_c enters bridge 1 or end_b enters bridge 2
+
+        After the end_a and end_b enter bridge 1, we initiate a call from end_a
+        to end_c. After end_a and end_c enter bridge2, we initiate an attended
+        transfer from end_a to transfer end_b to end_c.
+        '''
+        LOGGER.info("Channel '%s' entered bridge '%s'" % (event.get('channel'),
+                    event.get('bridgeuniqueid')))
+        self.chans.append(event.get('channel'))
+        if (len(self.chans) == 2):
+            self.callToC = self.ext_a.make_call("sip:call_c@127.0.0.1:5060")
+        elif (len(self.chans) == 4):
+            self.callToC.transfer_to_call(self.callToB)
+
+    def transfer_callback(self, ami, event):
+        '''
+        Asterisk 12+ attended transfer callback.
+
+        We expect this callback to be called exactly once. In this, we ensure
+        that the transfer was successful.
+        '''
+        LOGGER.info("Got attended transfer callback")
+        if event.get('result') == 'Success':
+            self.passed = True
+            LOGGER.info("Successful transfer")
+        else:
+            LOGGER.error("Unsuccessful transfer: %s" % event.get('result'))
+
+        self.doCleanup()
 
     def doCleanup(self):
         #self.ami[0].hangup(self.chans[0])
