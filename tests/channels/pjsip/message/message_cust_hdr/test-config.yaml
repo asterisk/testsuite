@@ -1,0 +1,27 @@
+testinfo:
+    summary: 'Test MessageSend with a custom header.'
+    description: |
+        'Tests Asterisk sending a SIP MESSAGE with a custom header.  Upon
+         receiving the message, the receiver will verify that the custom
+         header exists and it matches the one sent.'
+
+properties:
+    minversion: '12'
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_messaging'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+             scenarios:
+               - { 'key-args': { 'scenario':'message_recv.xml', '-p':'5062' } }
+               - { 'key-args': { 'scenario':'message.xml', '-p':'5061' } }

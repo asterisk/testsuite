@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="MESSAGE send and receive custom header">
+  <recv request="MESSAGE" crlf="true">
+    <action>
+      <!-- Check that the X-Custom-Header header is what we expect. -->
+      <ereg regexp=".*" search_in="hdr" header="X-Custom-Header:" check_it="true" assign_to="1" />
+      <log message="Received MESSAGE X-Custom-Header header: [$1]." />
+      <strcmp assign_to="result" variable="1" value=" Customized" />
+      <test assign_to="empty0" variable="result" compare="not_equal" value="" />
+    </action>
+  </recv>
+
+  <nop condexec="empty0">
+    <action>
+      <error message="Custom header did not match - expected 'Customized' but got [$1]" />
+    </action>
+  </nop>
+
+  <send>
+    <![CDATA[
+      SIP/2.0 202 Accepted
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Allow: MESSAGE
+      Content-Length: 0
+
+    ]]>
+  </send>
+</scenario>

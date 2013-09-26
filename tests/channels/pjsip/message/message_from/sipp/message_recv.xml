@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic MESSAGE send and receive">
+  <!-- "from" is assigned from the '-set' command line option -->
+  <Global variables="from" />
+
+  <recv request="MESSAGE" crlf="true">
+    <action>
+      <!-- Check that the From header is what we expect -->
+      <!-- note - from some reason the incoming header has leading spaces on it -->
+      <ereg regexp="\s*(.*>)" search_in="hdr" header="From:" assign_to="empty,from0" />
+      <log message="Comparing from=[$from] with from0=[$from0]"/>
+      <strcmp assign_to="result" variable="from" variable2="from0" />
+      <test assign_to="empty" variable="result" compare="not_equal" value="" />
+    </action>
+  </recv>
+
+  <nop condexec="empty">
+    <action>
+      <error message="From did not match - expected [$from] got [$from0]" />
+    </action>
+  </nop>
+
+  <send>
+    <![CDATA[
+      SIP/2.0 202 Accepted
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Allow: MESSAGE
+      Content-Length: 0
+
+    ]]>
+  </send>
+</scenario>

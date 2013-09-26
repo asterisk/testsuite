@@ -1,0 +1,21 @@
+testinfo:
+    summary: 'Test handling an AMI MessageSend action'
+    description: |
+        This tests the AMI action MessageSend to see if it sends a SIP MESSAGE.
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_messaging'
+    tags:
+        - pjsip
+
+    testconditions:
+        - name: 'threads'
+          ignoredThreads:
+            - 'autoservice_run'
+    tags:
+        - SIP

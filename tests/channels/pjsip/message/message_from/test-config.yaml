@@ -1,0 +1,30 @@
+testinfo:
+    summary: 'Test MessageSend with specified from parameter.'
+    description: |
+        'Send Asterisk a MESSAGE, once received, and using the dialplan application
+         MessageSend send several messages using a different "from" field for each
+         to a receiver.  The receiver will then validate the "from"'
+
+properties:
+    minversion: '12'
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_messaging'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'message_recv.xml', '-p':'5062' }, 'ordered-args': ['-set', 'from', '<sip:user@127.0.0.1>'] }
+                - { 'key-args': { 'scenario':'message_recv.xml', '-p':'5063' }, 'ordered-args': ['-set', 'from', '<sip:user@127.0.0.1>'] }
+                - { 'key-args': { 'scenario':'message_recv.xml', '-p':'5064' }, 'ordered-args': ['-set', 'from', '<sip:user@127.0.0.1>'] }
+                - { 'key-args': { 'scenario':'message_recv.xml', '-p':'5065' }, 'ordered-args': ['-set', 'from', '"user" <sip:user@127.0.0.1>'] }
+                - { 'key-args': { 'scenario':'message.xml', '-p':'5061' } }

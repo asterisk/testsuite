@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="In dialog MESSAGE send">
+	<send retrans="500">
+		<![CDATA[
+                        INVITE sip:user1@[remote_ip]:[remote_port] SIP/2.0
+                        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+                        From: user <sip:user@[local_ip]:[local_port]>;tag=[call_number]
+                        To: user1 <sip:user1@[remote_ip]:[remote_port]>
+                        Call-ID: [call_id]
+                        CSeq: [cseq] INVITE
+                        Contact: sip:user@[local_ip]:[local_port]
+                        Max-Forwards: 70
+                        Content-Type: application/sdp
+                        Content-Length: [len]
+
+			v=0
+			o=- 1324901698 1324901698 IN IP4 [local_ip]
+			s=-
+			c=IN IP4 [local_ip]
+			t=0 0
+			m=audio 2226 RTP/AVP 0 101
+			a=sendrecv
+			a=rtpmap:0 PCMU/8000
+			a=rtpmap:101 telephone-event/8000
+
+		]]>
+	</send>
+
+	<recv response="100" optional="true" />
+
+	<recv response="180" optional="true" />
+
+	<recv response="200" />
+
+	<send>
+		<![CDATA[
+			ACK sip:user1@[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: <sip:user@[local_ip]>;tag=[call_number]
+			To: <sip:user1@[remote_ip]:[remote_port]>[peer_tag_param]
+			CSeq: [cseq] ACK
+			Call-ID: [call_id]
+			Contact: <sip:user@[local_ip]>
+                        Allow: INVITE, ACK, MESSAGE, BYE
+			Max-Forwards: 70
+			Content-Length: 0
+
+		]]>
+	</send>
+
+	<send>
+                <![CDATA[
+                        MESSAGE sip:user1@[remote_ip]:[remote_port] SIP/2.0
+                        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+                        From: <sip:user@[local_ip]:[local_port]>;tag=[call_number]
+                        To: <sip:user1@[remote_ip]:[remote_port]>[peer_tag_param]
+                        Call-ID: [call_id]
+                        CSeq: [cseq] MESSAGE
+                        Contact: sip:user@[local_ip]:[local_port]
+			Allow: INVITE, ACK, MESSAGE, BYE
+                        Max-Forwards: 70
+                        Expires: 3600
+                        Content-Type: text/plain
+                        Content-Length: 18
+
+                        Watson, come here.
+
+                ]]>
+        </send>
+
+        <recv response="202" crlf="true" />
+
+	<!-- allow the time for the message to be propagated -->
+	<pause milliseconds="7000" />
+
+	<send retrans="500">
+		<![CDATA[
+			BYE sip:user1@[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: <sip:user@[local_ip]>;tag=[call_number]
+			To: <sip:user1@[remote_ip]:[remote_port]>[peer_tag_param]
+			CSeq: [cseq] BYE
+			Call-ID: [call_id]
+			Contact: <sip:user@[local_ip]>
+                        Allow: INVITE, ACK, MESSAGE, BYE
+			Max-Forwards: 70
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" crlf="true" />
+</scenario>

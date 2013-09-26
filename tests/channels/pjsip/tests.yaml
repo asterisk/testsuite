@@ -7,3 +7,4 @@ tests:
     - dir: 'one_touch_recording'
     - dir: 'registration'
     - dir: 'diversion'
+    - dir: 'message'
