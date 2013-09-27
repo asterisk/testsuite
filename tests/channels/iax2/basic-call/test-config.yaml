@@ -2,7 +2,9 @@ testinfo:
     summary:     'Test a basic IAX2 call'
     description: |
         'This test initiates an IAX2 call between 2 instances of Asterisk.
-        Both ends connect to a FastAGI server implemented in the test script.'
+        The test only verifies that an IAX2 call is actually instantiated
+        between the two Asterisk instances and that proper records are
+        generated.'
 
 properties:
     minversion: '1.8.0.0'
@@ -12,3 +14,154 @@ properties:
         - asterisk : 'cdr_csv'
     tags:
         - iax2
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'TestCase.TestCaseModule'
+    modules:
+        -
+            config-section: originator
+            typename: 'PluggableModules.Originator'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: hangup-monitor
+            typename: 'PluggableModules.HangupMonitor'
+        -
+            config-section: cdr-config
+            typename: 'cdr.CDRModule'
+        -
+            minversion: '12.0.0'
+            config-section: 'cel-config'
+            typename: 'ami.AMIEventModule'
+
+
+test-object-config:
+    asterisk-instances: 2
+    connect-ami: True
+
+originator:
+    trigger: 'ami_connect'
+    id: '0'
+    channel: 'IAX2/guest@127.0.0.1:4569/1000'
+    context: 'iaxtest'
+    exten: '1000'
+    priority: '1'
+    async: 'True'
+
+ami-config:
+    -
+        id: '0'
+        type: 'headermatch'
+        count: '1'
+        conditions:
+            match:
+                Event: 'Newchannel'
+        requirements:
+            match:
+                Channel: 'IAX2/127.0.0.1:4569-.*'
+    -
+        id: '1'
+        type: 'headermatch'
+        count: '1'
+        conditions:
+            match:
+                Event: 'Newchannel'
+        requirements:
+            match:
+                Channel: 'IAX2/127.0.0.1:4570-.*'
+    -
+        id: '0'
+        type: 'headermatch'
+        count: '1'
+        conditions:
+            match:
+                Event: 'Hangup'
+        requirements:
+            match:
+                Channel: 'IAX2/127.0.0.1:4569-.*'
+    -
+        id: '1'
+        type: 'headermatch'
+        count: '1'
+        conditions:
+            match:
+                Event: 'Hangup'
+        requirements:
+            match:
+                Channel: 'IAX2/127.0.0.1:4570-.*'
+
+hangup-monitor:
+    ids: '0'
+
+cdr-config:
+    -
+        id: 0
+        file: 'Master'
+        lines:
+            -
+                destination: '1000'
+                dcontext: 'iaxtest'
+                channel: 'IAX2/127.0.0.1:4569-.*'
+                lastapp: 'Echo'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+    -
+        id: 1
+        file: 'Master'
+        lines:
+            -
+                destination: '1000'
+                dcontext: 'iaxtest'
+                channel: 'IAX2/127.0.0.1:4570-.*'
+                lastapp: 'Hangup'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+cel-config:
+    -
+        id: '0'
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'IAX2/127.0.0.1:4569-.*'
+        requirements:
+            -
+                match:
+                    EventName: CHAN_START
+            -
+                match:
+                    EventName: ANSWER
+            -
+                match:
+                    EventName: HANGUP
+            -
+                match:
+                    EventName: CHAN_END
+            -
+                match:
+                    EventName: LINKEDID_END
+    -
+        id: '1'
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'IAX2/127.0.0.1:4570-.*'
+        requirements:
+            -
+                match:
+                    EventName: CHAN_START
+            -
+                match:
+                    EventName: ANSWER
+            -
+                match:
+                    EventName: HANGUP
+            -
+                match:
+                    EventName: CHAN_END
+            -
+                match:
+                    EventName: LINKEDID_END

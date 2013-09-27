@@ -39,8 +39,11 @@ class CDRModule(object):
         self.cdr_records = {}
         for record in module_config:
             file_name = record['file']
-            if file_name not in self.cdr_records:
-                self.cdr_records[file_name] = []
+            ast_id = record.get('id') or 0
+            if ast_id not in self.cdr_records:
+                self.cdr_records[ast_id] = {}
+            if file_name not in self.cdr_records[ast_id]:
+                self.cdr_records[ast_id][file_name] = []
             for csv_line in record['lines']:
                 # Set the record to the default fields, then update with what
                 # was passed in to us
@@ -48,7 +51,8 @@ class CDRModule(object):
                 if csv_line is not None:
                     dict_record.update(csv_line)
 
-                self.cdr_records[file_name].append(AsteriskCSVCDRLine(**dict_record))
+                self.cdr_records[ast_id][file_name].append(
+                    AsteriskCSVCDRLine(**dict_record))
 
         # Hook ourselves onto the test object
         test_object.register_stop_observer(self._check_cdr_records)
@@ -64,7 +68,8 @@ class CDRModule(object):
         try:
             self.match_cdrs()
         except:
-            LOGGER.error("Exception while checking CDRs: %s" % sys.exc_info()[0])
+            LOGGER.error("Exception while checking CDRs: %s" %
+                         sys.exc_info()[0])
         return callback_param
 
 
@@ -74,17 +79,22 @@ class CDRModule(object):
         matching.
         '''
         expectations_met = True
-        for key in self.cdr_records:
-            cdr_expect = AsteriskCSVCDR(records=self.cdr_records[key])
-            cdr_file = AsteriskCSVCDR(fn="%s/%s/cdr-csv/%s.csv" %
-                (self.test_object.ast[0].base,
-                 self.test_object.ast[0].directories['astlogdir'],
-                 key))
-            if cdr_expect.match(cdr_file):
-                LOGGER.debug("%s.csv - CDR results met expectations" % key)
-            else:
-                LOGGER.error("%s.csv - CDR results did not meet expectations.  Test Failed." % key)
-                expectations_met = False
+        for ast_id in self.cdr_records:
+            ast_instance = self.test_object.ast[ast_id]
+            for file_name in self.cdr_records[ast_id]:
+                records = self.cdr_records[ast_id][file_name]
+                cdr_expect = AsteriskCSVCDR(records=records)
+                cdr_file = AsteriskCSVCDR(fn="%s/%s/cdr-csv/%s.csv" %
+                    (ast_instance.base,
+                     ast_instance.directories['astlogdir'],
+                     file_name))
+                if cdr_expect.match(cdr_file):
+                    LOGGER.debug("%s.csv: CDR results met expectations" %
+                                 file_name)
+                else:
+                    LOGGER.error("%s.csv: actual did not match expected." %
+                                 file_name)
+                    expectations_met = False
 
         self.test_object.set_passed(expectations_met)
 

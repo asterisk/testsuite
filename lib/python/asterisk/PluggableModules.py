@@ -183,3 +183,40 @@ class AMIChannelHangupAll(AMIEventInstance):
             LOGGER.info('Hanging up channel %s' % obj['channel'])
             ami.hangup(obj['channel']).addErrback(__hangup_ignore)
             self.channels.remove(obj)
+
+
+class HangupMonitor(object):
+    ''' A class that monitors for new channels and hungup channels. When all
+    channels it has monitored for have hung up, it ends the test.
+
+    Essentially, as long as there are new channels it will keep the test
+    going; however, once channels start hanging up it will kill the test
+    on the last hung up channel.
+    '''
+
+    def __init__(self, instance_config, test_object):
+        ''' Constructor for pluggable modules '''
+        super(HangupMonitor, self).__init__()
+        self.__dict__.update(instance_config)
+        self.test_object = test_object
+        self.test_object.register_ami_observer(self.__ami_connect)
+        self.channels = []
+
+    def __ami_connect(self, ami):
+        ''' AMI connect handler '''
+        if str(ami.id) in self.ids:
+            ami.registerEvent('Newchannel', self.__new_channel_handler)
+            ami.registerEvent('Hangup', self.__hangup_handler)
+
+    def __new_channel_handler(self, ami, event):
+        ''' Handler for the Newchannel event '''
+        LOGGER.debug('Tracking channel %s' % event['channel'])
+        self.channels.append(event['channel'])
+
+    def __hangup_handler(self, ami, event):
+        ''' Handler for the Hangup event '''
+        LOGGER.debug('Channel %s hungup' % event['channel'])
+        self.channels.remove(event['channel'])
+        if len(self.channels) == 0:
+            LOGGER.info('All channels have hungup; stopping test')
+            self.test_object.stop_reactor()
