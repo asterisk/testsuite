@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Authenticating registrar">
+  <recv request="REGISTER" />
+  <send><![CDATA[
+
+      SIP/2.0 401 Authorization Required
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      WWW-Authenticate: Digest realm="test.example.com", nonce="47ebe028cda119c35d4877b383027d28da013815"
+      Content-Length: [len]
+
+    ]]>
+  </send>
+  <recv request="REGISTER" >
+        <action>
+                <ereg regexp="Digest .*username=.alice" search_in="hdr" header="Authorization:" check_it="true" assign_to="1" />
+                <ereg regexp="Digest .*response=.a61abc77793124a8186a867399e5fb21" search_in="hdr" header="Authorization:" check_it="true" assign_to="2" />
+                <ereg regexp="Digest .*nonce=.47ebe028cda119c35d4877b383027d28da013815" search_in="hdr" header="Authorization:" check_it="true" assign_to="3" />
+        </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 403 Forbidden
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: [len]
+
+    ]]>
+  </send>
+
+  <pause milliseconds="6000" />
+
+  <recv request="REGISTER">
+        <action>
+                <ereg regexp="Authorization:" search_in="msg" check_it_inverse="true" assign_to="4" />
+        </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: [len]
+
+    ]]>
+  </send>
+
+  <Reference variables="1,2,3,4" />
+
+  <!-- definition of the response time repartition table (unit is ms)   -->
+  <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
+
+  <!-- definition of the call length repartition table (unit is ms)     -->
+  <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+</scenario>

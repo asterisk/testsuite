@@ -60,3 +60,4 @@ tests:
     - dir: 'session_timers'
     - test: 'path'
     - test: 'alwaysauthreject'
+    - dir: 'register_forbidden_retry'
