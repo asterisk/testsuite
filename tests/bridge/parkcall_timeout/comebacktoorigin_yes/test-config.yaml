@@ -133,7 +133,8 @@ cdr-config-12:
                 dcontext: 'park-dial'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
-                lastapp: 'AppDial'  # May be changed to Park at some point.
+                lastapp: 'Park'
+                lastarg: 'parkinglot_test1:401'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
             -
@@ -173,7 +174,8 @@ cdr-config-12:
                 dcontext: 'park-dial'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
-                lastapp: 'AppDial'  # May be changed to Park at some point.
+                lastapp: 'Park'
+                lastarg: 'parkinglot_test1:402'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
             -
@@ -183,7 +185,8 @@ cdr-config-12:
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
                 dchannel: '.*/alice-.*'
-                lastapp: 'AppDial'
+                lastapp: 'Park'
+                lastarg: 'parkinglot_test1:402'
                 disposition: 'NO ANSWER'
                 amaflags: 'DOCUMENTATION'
             -
@@ -213,7 +216,8 @@ cdr-config-12:
                 dcontext: 'park-dial'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
-                lastapp: 'AppDial'  # May be changed to Park at some point.
+                lastapp: 'Park'
+                lastarg: 'parkinglot_test1:403'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
             -
@@ -223,7 +227,8 @@ cdr-config-12:
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
                 dchannel: '.*/alice-.*'
-                lastapp: 'AppDial'
+                lastapp: 'Park'
+                lastarg: 'parkinglot_test1:403'
                 disposition: 'BUSY'
                 amaflags: 'DOCUMENTATION'
             -
@@ -246,3 +251,4 @@ properties:
         - python : 'starpy'
     tags:
         - bridge
+        - parking

@@ -100,6 +100,8 @@ cdr-config-12plus:
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
                 dchannel: ''
+                lastapp: 'Park'
+                lastarg: 'default:701'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
             -
@@ -119,7 +121,8 @@ cdr-config-12plus:
                 callerid: '"Alice" <1234>'
                 channel: '.*/alice-.*'
                 dchannel: ''
-                lastapp: 'Dial'
+                lastapp: 'Park'
+                lastarg: 'default:701'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
 
@@ -131,3 +134,4 @@ properties:
         - python : 'starpy'
     tags:
         - bridge
+        - parking

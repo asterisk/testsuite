@@ -316,3 +316,4 @@ properties:
         - python : 'starpy'
     tags:
         - bridge
+        - parking

@@ -85,7 +85,9 @@ cdr-config:
 
 cdr-config-12:
     -
-        # In Asterisk 12, there are three phases to each call - Alice's call to bob is first, followed by Bob's time spent parked, and lastly Bob's period after leaving the parking bridge
+        # In Asterisk 12, there are three phases to each call - Alice's call to
+        # bob is first, followed by Bob's time spent parked, and lastly Bob's
+        # period after leaving the parking bridge
         file: 'Master'
         lines:
             -
@@ -104,7 +106,8 @@ cdr-config-12:
                 dcontext: 'park_context1'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
-                lastapp: 'AppDial' # There is some expectation that these may later change to 'Park'
+                lastapp: 'Park'
+                lastarg: 'parkinglot_test1:401'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
             -
@@ -132,7 +135,8 @@ cdr-config-12:
                 dcontext: 'park_context2'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
-                lastapp: 'AppDial' # There is some expectation that these may later change to 'Park'
+                lastapp: 'Park'
+                lastarg: 'parkinglot_test2:501'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
             -
@@ -160,7 +164,8 @@ cdr-config-12:
                 dcontext: 'default'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
-                lastapp: 'AppDial' # There is some expectation that these may later change to 'Park'
+                lastapp: 'Park'
+                lastarg: 'parkinglot_test3:601'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
             -
@@ -181,3 +186,4 @@ properties:
         - python : 'starpy'
     tags:
         - bridge
+        - parking
