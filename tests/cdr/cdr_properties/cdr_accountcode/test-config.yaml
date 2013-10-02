@@ -111,18 +111,6 @@ cdr-config-12:
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
             -
-            # caller with Echo app
-                accountcode: ''
-                destination: '1'
-                dcontext: 'default'
-                callerid: '"" <2>'
-                channel: 'Local/1@default-.*'
-                dchannel: ''
-                lastapp: 'Echo'
-                lastarg: ''
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-            -
             # 1@default -> 2@default
                 accountcode: 'initial'
                 destination: '1'
@@ -134,7 +122,18 @@ cdr-config-12:
                 lastarg: 'Local/2@default'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
-
+            -
+            # caller with Echo app
+                accountcode: ''
+                destination: '1'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/1@default-.*'
+                dchannel: ''
+                lastapp: 'Echo'
+                lastarg: ''
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
 
 properties:
     minversion: '1.8.12.0'
