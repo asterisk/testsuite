@@ -32,13 +32,14 @@ test-object-config:
    test-iterations:
        -
            scenarios:
-               - { 'key-args': {'scenario': 'receive.xml', '-i': '127.0.0.1', '-p': '5062'} }
-               - { 'key-args': {'scenario': 'receive.xml', '-i': '127.0.0.1', '-p': '5062', '-t': 't1'} }
-               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5062'} }
-               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5062', '-t': 't1'} }
+               - { 'key-args': {'scenario': 'receive-ipv4-udp.xml', '-i': '127.0.0.1', '-p': '5062'} }
+               - { 'key-args': {'scenario': 'receive-ipv4-tcp.xml', '-i': '127.0.0.1', '-p': '5062', '-t': 't1'} }
+               - { 'target': '[::1]', 'key-args': {'scenario': 'receive-ipv6-udp.xml', '-i': '[::1]', '-p': '5062'} }
+               - { 'target': '[::1]', 'key-args': {'scenario': 'receive-ipv6-tcp.xml', '-i': '[::1]', '-p': '5062', '-t': 't1'} }
 
 originator-config-ipv4-udp:
-    trigger: 'ami_connect'
+    trigger: 'scenario_start'
+    scenario-name: 'receive-ipv4-udp.xml'
     ignore-originate-failure: 'yes'
     id: '0'
     channel: 'PJSIP/bob-ipv4-udp'
@@ -48,7 +49,8 @@ originator-config-ipv4-udp:
     async: 'True'
 
 originator-config-ipv4-tcp:
-    trigger: 'ami_connect'
+    trigger: 'scenario_start'
+    scenario-name: 'receive-ipv4-tcp.xml'
     ignore-originate-failure: 'yes'
     id: '0'
     channel: 'PJSIP/bob-ipv4-tcp'
@@ -58,7 +60,8 @@ originator-config-ipv4-tcp:
     async: 'True'
 
 originator-config-ipv6-udp:
-    trigger: 'ami_connect'
+    trigger: 'scenario_start'
+    scenario-name: 'receive-ipv6-udp.xml'
     ignore-originate-failure: 'yes'
     id: '0'
     channel: 'PJSIP/bob-ipv6-udp'
@@ -68,7 +71,8 @@ originator-config-ipv6-udp:
     async: 'True'
 
 originator-config-ipv6-tcp:
-    trigger: 'ami_connect'
+    trigger: 'scenario_start'
+    scenario-name: 'receive-ipv6-tcp.xml'
     ignore-originate-failure: 'yes'
     id: '0'
     channel: 'PJSIP/bob-ipv6-tcp'

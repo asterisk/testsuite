@@ -24,6 +24,7 @@ class Originator(object):
         self.test_object = test_object
         self.current_destination = 0
         self.ami_callback = None
+        self.scenario_count = 0
         self.config = {
             'channel': 'Local/s@default',
             'application': 'Echo',
@@ -33,6 +34,8 @@ class Originator(object):
             'priority': '',
             'ignore-originate-failure': 'no',
             'trigger': 'scenario_start',
+            'scenario-trigger-after': None,
+            'scenario-name': None,
             'id': '0',
             'async': 'False',
             'event': None,
@@ -47,7 +50,13 @@ class Originator(object):
                 self.config[k] = module_config[k]
 
         if self.config['trigger'] == 'scenario_start':
-            test_object.register_scenario_started_observer(self.scenario_started)
+            if (self.config['scenario-trigger-after'] is not None and
+                    self.config['scenario-name'] is not None):
+                LOGGER.error("Conflict between 'scenario-trigger-after' and \
+                        'scenario-name'. Only one may be used.")
+                raise Exception
+            else:
+                test_object.register_scenario_started_observer(self.scenario_started)
         elif self.config['trigger'] == 'event':
             if not self.config['event']:
                 LOGGER.error("Event specifier for trigger type 'event' is missing")
@@ -103,8 +112,18 @@ class Originator(object):
 
     def scenario_started(self, result):
         '''Handle origination on scenario start if configured to do so.'''
-        LOGGER.info("Scenario started")
-        self.originate_call()
+        LOGGER.info("Scenario '%s' started" % result.name)
+        if self.config['scenario-name'] is not None:
+            if result.name == self.config['scenario-name']:
+                LOGGER.debug("Scenario name '%s' matched" % result.name)
+                self.originate_call()
+        elif self.config['scenario-trigger-after'] is not None:
+            self.scenario_count += 1
+            if self.scenario_count == int(self.config['scenario-trigger-after']):
+                LOGGER.debug("Scenario count has been met")
+                self.originate_call()
+        else:
+            self.originate_call()
         return result
 
 

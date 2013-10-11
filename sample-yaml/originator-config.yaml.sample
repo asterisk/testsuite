@@ -24,7 +24,19 @@ originator-config:
     # This determines what triggers the origination.  The available options are 'scenario_start' (default), 'ami_connect', and 'event'.
     trigger: 'scenario_start'
 
-    # if 'event' is specified as the trigger, an event definition needs to be specified.
+    # If 'scenario_start' is specified as the trigger, one of these optional
+    # parameters may be specified. These help control when the origination
+    # occurs, prevents multiple originations from occurring, and corresponds a
+    # scenario start to a specific scenario. This is useful for tests that load
+    # the Origination module multiple times and use multiple SIPp scenarios.
+    # Only one of the parameters may be specified per config section.
+    #
+    # Optional. Originate only after this number of scenario start triggers have occurred.
+    scenario-trigger-after: '4'
+    # Optional. Originate only when this scenario is started.
+    scenario-name: 'ipv4-tcp.xml'
+
+    # If 'event' is specified as the trigger, an event definition needs to be specified.
     # This is similar to the event definition used for the callback variant of the AMIEventModule.
     event:
         id: '0'
