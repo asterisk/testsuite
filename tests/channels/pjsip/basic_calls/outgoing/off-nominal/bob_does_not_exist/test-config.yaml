@@ -39,7 +39,8 @@ test-object-config:
                - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5062', '-t': 't1', '-s': 'bob-ipv6-tcp'} }
 
 originator-config-ipv4-udp:
-    trigger: 'ami_connect'
+    trigger: 'scenario_start'
+    scenario-trigger-after: '4'
     ignore-originate-failure: 'yes'
     id: '0'
     channel: 'local/bob-ipv4-udp@default'
@@ -49,7 +50,8 @@ originator-config-ipv4-udp:
     async: 'True'
 
 originator-config-ipv4-tcp:
-    trigger: 'ami_connect'
+    trigger: 'scenario_start'
+    scenario-trigger-after: '4'
     ignore-originate-failure: 'yes'
     id: '0'
     channel: 'local/bob-ipv4-tcp@default'
@@ -59,7 +61,8 @@ originator-config-ipv4-tcp:
     async: 'True'
 
 originator-config-ipv6-udp:
-    trigger: 'ami_connect'
+    trigger: 'scenario_start'
+    scenario-trigger-after: '4'
     ignore-originate-failure: 'yes'
     id: '0'
     channel: 'local/bob-ipv6-udp@default'
@@ -69,7 +72,8 @@ originator-config-ipv6-udp:
     async: 'True'
 
 originator-config-ipv6-tcp:
-    trigger: 'ami_connect'
+    trigger: 'scenario_start'
+    scenario-trigger-after: '4'
     ignore-originate-failure: 'yes'
     id: '0'
     channel: 'local/bob-ipv6-tcp@default'
