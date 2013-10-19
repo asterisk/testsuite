@@ -26,7 +26,7 @@ class PageTest(TestCase):
 
     def ami_connect(self, ami):
         self.ami[0].registerEvent("UserEvent", self.check_amd_status_result)
-        self.ami[0].originate(channel = "IAX2/localhost/1000",
+        self.ami[0].originate(channel = "IAX2/127.0.0.1/1000",
                               application = "Playback",
                               data = "demo-congrats")
 
