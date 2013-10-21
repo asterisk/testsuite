@@ -1,7 +1,7 @@
 ; Global asterisk.conf [options] settings.
 ;
-debug = 5
-verbose = 5
+debug = 4
+verbose = 4
 nocolor = yes
 dumpcore = yes
 execincludes = yes
