@@ -9,172 +9,133 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 
-from asterisk.TestCase import TestCase
+from asterisk.sipp import SIPpTest
 
-LOGGER = logging.getLogger(__name__)
+SIPP_SCENARIOS = [
+    # test1 - No named ACL, calling available only to 127.0.0.1
+    {
+        'scenario' : 'testsip1-success.xml',
+        '-i' : '127.0.0.1',
+        '-p' : '5061'
+    },
+    {
+        'scenario' : 'testsip1-failure.xml',
+        '-i' : '127.0.0.2',
+        '-p' : '5062'
+    },
+    {
+        'scenario' : 'testsip1-failure.xml',
+        '-i' : '127.0.0.3',
+        '-p' : '5063'
+    },
+    {
+        'scenario' : 'testsip1-failure.xml',
+        '-i' : '127.0.0.4',
+        '-p' : '5064'
+    },
 
-class SIPACLTest(TestCase):
+    # test2 - Same permissible addresses as test1, but while using a named ACL from the local configuration
+    {
+        'scenario' : 'testsip2-success.xml',
+        '-i' : '127.0.0.1',
+        '-p' : '5065'
+    },
+    {
+        'scenario' : 'testsip2-failure.xml',
+        '-i' : '127.0.0.2',
+        '-p' : '5066'
+    },
+    {
+        'scenario' : 'testsip2-failure.xml',
+        '-i' : '127.0.0.3',
+        '-p' : '5067'
+    },
+    {
+        'scenario' : 'testsip2-failure.xml',
+        '-i' : '127.0.0.4',
+        '-p' : '5068'
+    },
 
-    # Preps test objects and configuration additions as well as copies TLS keys to test folder.
-    def __init__(self):
-        TestCase.__init__(self)
-        self.test_components = []
+    # test3 - Multiple named ACL rules from local configuration. Only 127.0.0.2 should be allowed to call
+    {
+        'scenario' : 'testsip3-failure.xml',
+        '-i' : '127.0.0.1',
+        '-p' : '5069'
+    },
+    {
+        'scenario' : 'testsip3-success.xml',
+        '-i' : '127.0.0.2',
+        '-p' : '5070'
+    },
+    {
+        'scenario' : 'testsip3-failure.xml',
+        '-i' : '127.0.0.3',
+        '-p' : '5071'
+    },
+    {
+        'scenario' : 'testsip3-failure.xml',
+        '-i' : '127.0.0.4',
+        '-p' : '5072'
+    },
 
-        #subtest evaluation
-        self.test_index = 0
-        self.originate_error = False
-        self.phase_evaluation_reached = False
-        self.success_conditions = 0
-        self.failure_conditions = 0
-        self.events = []
+    # test4 - An undefined rule is used. All addresses should be rejected from calling
+    {
+        'scenario' : 'testsip4-failure.xml',
+        '-i' : '127.0.0.1',
+        '-p' : '5073'
+    },
+    {
+        'scenario' : 'testsip4-failure.xml',
+        '-i' : '127.0.0.2',
+        '-p' : '5074'
+    },
+    {
+        'scenario' : 'testsip4-failure.xml',
+        '-i' : '127.0.0.3',
+        '-p' : '5075'
+    },
+    {
+        'scenario' : 'testsip4-failure.xml',
+        '-i' : '127.0.0.4',
+        '-p' : '5076'
+    },
 
-        #test1 - No named ACL, calling available only to 127.0.0.1
-        self.add_test_component("test1_1", "allow")  # Phase 0
-        self.add_test_component("test1_2", "deny")   # Phase 1
-        self.add_test_component("test1_3", "deny")   # Phase 2
-        self.add_test_component("test1_4", "deny")   # Phase 3
-
-        #test2 - Same permissible addresses as test 1, but while using a named ACL from the local configuration
-        self.add_test_component("test2_1", "allow")  # Phase 4
-        self.add_test_component("test2_2", "deny")   # Phase 5
-        self.add_test_component("test2_3", "deny")   # Phase 6
-        self.add_test_component("test2_4", "deny")   # Phase 7
-
-        #test3 - Multiple named ACL rules from local configuration. Only 127.0.0.2 should be allowed to call.
-        self.add_test_component("test3_1", "deny")   # Phase 8
-        self.add_test_component("test3_2", "allow")  # Phase 9
-        self.add_test_component("test3_3", "deny")   # Phase 10
-        self.add_test_component("test3_4", "deny")   # Phase 11
-
-        #test4 - An undefined rule is used. All addresses should be rejected from calling.
-        self.add_test_component("test4_1", "deny")   # Phase 12
-        self.add_test_component("test4_2", "deny")   # Phase 13
-        self.add_test_component("test4_3", "deny")   # Phase 14
-        self.add_test_component("test4_4", "deny")   # Phase 15
-
-        #test5 - A set of 3 named ACLs stored in realtime is used. Collectively only 127.0.0.3 should be allowed to call.
-        self.add_test_component("test5_1", "deny")   # Phase 16
-        self.add_test_component("test5_2", "deny")   # Phase 17
-        self.add_test_component("test5_3", "allow")  # Phase 18
-        self.add_test_component("test5_4", "deny")   # Phase 19
-
-        self.create_asterisk()
-
-    def add_test_component(self, test, expectation):
-        this_tuple = test, expectation
-        self.test_components.append(this_tuple)
-
-    # Once the AMI Factory connects to the AMI, this function fires.
-    def ami_connect(self, ami):
-        ami.registerEvent('Hangup', self.evaluate_hangup)
-        self.test_start(ami)
-
-    def test_start(self, ami):
-        LOGGER.info("Starting test %d - %s:" % (self.test_index, self.test_components[self.test_index][0]))
-
-        # The following variable tracks events that occur as a result of the following originate. We expect two events in all cases.
-        # In the case of a successful call, we expect two hangups. If the call is unsuccessful, we expect a hangup and an AMI command error.
-        self.events_received = 0
-        self.success_conditions = 0
-        self.failure_conditions = 0
-        self.originate_error = False
-        self.phase_evaluation_reached = False
-
-        # Storage for the events (failures and AMI hangups) that came in -- stored in case of something going wrong.
-        self.events = []
-
-        # There are callbacks that would lose the AMI, so we need to hold onto it within the test object.
-        self.last_active_ami = ami
-
-        ami.originate(channel = "SIP/%s/s" % self.test_components[self.test_index][0], application = "Echo").addErrback(self.evaluate_originate_error)
-
-    def evaluate_hangup(self, ami, event):
-        self.events_received += 1
-        self.events.append(event)
-
-        # evaluate if whether the hangup indicates success or failure
-        reason = event.get('cause-txt')
-        if reason == "Normal Clearing":
-            self.success_conditions += 1
-        elif reason == "Call Rejected":
-            self.failure_conditions += 1
-
-        # If we've got two events of any kind, the call is finished and we can move on to the evaluation
-        if self.events_received == 2:
-            self.evaluate_call()
-
-    def evaluate_originate_error(self, reason):
-        self.originate_error = True
-        self.events.append(reason)
-        self.events_received += 1
-        self.failure_conditions += 1
-        if self.events_received == 2:
-            self.evaluate_call()
-
-    def evaluate_call(self):
-        self.phase_evaluation_reached = True
-
-        if self.test_components[self.test_index][1] == "allow" and self.success_conditions == 2:
-            LOGGER.info("Phase %d - %s: Call Succeeded as Expected." % (self.test_index, self.test_components[self.test_index][0]))
-        elif self.test_components[self.test_index][1] == "deny" and self.failure_conditions == 2:
-            LOGGER.info("Phase %d - %s: Call Failed as Expected." % (self.test_index, self.test_components[self.test_index][0]))
-        else:
-            LOGGER.error("Phase %d - %s: Events received don't follow expectation of %s. Test Failed." % (self.test_index,
-                self.test_components[self.test_index][0], self.test_components[self.test_index][0]))
-            LOGGER.error("Failure Triggering Events Received: %s" % self.events)
-            self.passed = False
-            self.stop_reactor()
-            return
-
-        # Go on to the next test.
-        self.test_index += 1
-        if self.test_index < len(self.test_components):
-            self.test_start(self.last_active_ami)
-        else:
-            LOGGER.info("All tests evaluated as expected. Test Successful.")
-            self.passed = True
-            self.stop_reactor()
-            return
-
-    def report_timeout(self):
-        LOGGER.error("Phase %d - Test reached timeout without achieving evaluation conditions for this phase." % self.test_index)
-
-        LOGGER.error("Phase %d - Received the following manager events: %s" % (self.test_index, self.events))
-
-        if self.test_components[self.test_index][1] == "allow":
-            LOGGER.error("Phase %d - Two hangup events with cause-txt = 'Normal Clearing' were expected." % self.test_index)
-            if self.originate_error:
-                LOGGER.error("Phase %d - expected no error conditions and received originate error." % self.test_index)
-
-        elif self.test_components[self.test_index][1] == "deny":
-            LOGGER.error("Phase %d - A hangup event with cause-txt = 'Call Rejected' was expected." % self.test_index)
-            if not self.originate_error:
-                LOGGER.error("Phase %d - an originate error was expected and not received." % self.test_index)
-
-        else:
-            LOGGER.error("Phase %d - Bad test, expectation is '%s' but should be either 'allow' or 'deny'" % (self.test_index,
-                self.test_components[self.test_index][1]))
-
-    # Sets up reactor and AMI connection
-    def run(self):
-        TestCase.run(self)
-        self.create_ami_factory()
-
+    # test5 - A set of 3 named ACLs stored in realtime is used. Collectively only 127.0.0.3 should be allowed to call
+    {
+        'scenario' : 'testsip5-failure.xml',
+        '-i' : '127.0.0.1',
+        '-p' : '5077'
+    },
+    {
+        'scenario' : 'testsip5-failure.xml',
+        '-i' : '127.0.0.2',
+        '-p' : '5078'
+    },
+    {
+        'scenario' : 'testsip5-success.xml',
+        '-i' : '127.0.0.3',
+        '-p' : '5079'
+    },
+    {
+        'scenario' : 'testsip5-failure.xml',
+        '-i' : '127.0.0.4',
+        '-p' : '5080'
+    },
+]
 
 def main():
+    WORKING_DIR = "channels/SIP/acl_call"
     TEST_DIR = os.path.dirname(os.path.realpath(__file__))
     DB_PATH = TEST_DIR + "/realtime.sqlite3"
     TMP_DB_PATH = "/tmp/realtime.sqlite3"
     shutil.copyfile(DB_PATH, TMP_DB_PATH)
-    test = SIPACLTest()
+    test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
     reactor.run()
     os.remove(TMP_DB_PATH)
 
-    if not test.phase_evaluation_reached:
-        test.report_timeout()
-
     if test.passed:
         return 0
+
     return 1
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
+        - app : 'sipp'
     tags:
         - SIP
         - ACL

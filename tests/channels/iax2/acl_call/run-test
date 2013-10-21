@@ -29,34 +29,34 @@ class IAX2ACLTest(TestCase):
         self.events = []
 
         #test1 - No named ACL, calling available only to 127.0.0.1
-        self.add_test_component("testiax1@127.0.0.1", "allow")
-        self.add_test_component("testiax1@127.0.0.2", "deny")
-        self.add_test_component("testiax1@127.0.0.3", "deny")
-        self.add_test_component("testiax1@127.0.0.4", "deny")
+        self.add_test_component("testiax1@local-1", "allow")
+        self.add_test_component("testiax1@local-2", "deny")
+        self.add_test_component("testiax1@local-3", "deny")
+        self.add_test_component("testiax1@local-4", "deny")
 
         #test2 - Same permissible addresses as test 1, but while using a named ACL from the local configuration
-        self.add_test_component("testiax2@127.0.0.1", "allow")
-        self.add_test_component("testiax2@127.0.0.2", "deny")
-        self.add_test_component("testiax2@127.0.0.3", "deny")
-        self.add_test_component("testiax2@127.0.0.4", "deny")
+        self.add_test_component("testiax2@local-1", "allow")
+        self.add_test_component("testiax2@local-2", "deny")
+        self.add_test_component("testiax2@local-3", "deny")
+        self.add_test_component("testiax2@local-4", "deny")
 
         #test3 - Multiple named ACL rules from local configuration. Only 127.0.0.2 should be allowed to call.
-        self.add_test_component("testiax3@127.0.0.1", "deny")
-        self.add_test_component("testiax3@127.0.0.2", "allow")
-        self.add_test_component("testiax3@127.0.0.3", "deny")
-        self.add_test_component("testiax3@127.0.0.4", "deny")
+        self.add_test_component("testiax3@local-1", "deny")
+        self.add_test_component("testiax3@local-2", "allow")
+        self.add_test_component("testiax3@local-3", "deny")
+        self.add_test_component("testiax3@local-4", "deny")
 
         #test4 - An undefined rule is used. All addresses should be rejected from calling.
-        self.add_test_component("testiax4@127.0.0.1", "deny")
-        self.add_test_component("testiax4@127.0.0.2", "deny")
-        self.add_test_component("testiax4@127.0.0.3", "deny")
-        self.add_test_component("testiax4@127.0.0.4", "deny")
+        self.add_test_component("testiax4@local-1", "deny")
+        self.add_test_component("testiax4@local-2", "deny")
+        self.add_test_component("testiax4@local-3", "deny")
+        self.add_test_component("testiax4@local-4", "deny")
 
         #test5 - A set of 3 named ACLs stored in realtime is used. Collectively only 127.0.0.3 should be allowed to call.
-        self.add_test_component("testiax5@127.0.0.1", "deny")
-        self.add_test_component("testiax5@127.0.0.2", "deny")
-        self.add_test_component("testiax5@127.0.0.3", "allow")
-        self.add_test_component("testiax5@127.0.0.4", "deny")
+        self.add_test_component("testiax5@local-1", "deny")
+        self.add_test_component("testiax5@local-2", "deny")
+        self.add_test_component("testiax5@local-3", "allow")
+        self.add_test_component("testiax5@local-4", "deny")
 
         self.create_asterisk()
 
