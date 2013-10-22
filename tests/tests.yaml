@@ -4,7 +4,6 @@ tests:
     - test: 'dynamic-modules'
     - dir: 'manager'
     - dir: 'cdr'
-    - test: 'dialplan'
     - dir: 'channels'
     - test: 'udptl'
     - test: 'udptl_v6'
