@@ -20,3 +20,4 @@ tests:
     - test: 'transfer_capabilities_bridgefeatures'
     - test: 'transfer_failure'
     - test: 'bridge_action'
+    - test: 'atxfer_threeway_nominal'

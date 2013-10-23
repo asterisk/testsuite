@@ -49,6 +49,7 @@ bridge-config:
 
 				# What feature should be executed? This must be either
 				# - atxfer
+				# - atxferthreeway
 				# - blindxfer
 				# - disconnect
 				# - automon

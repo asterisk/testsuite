@@ -28,7 +28,8 @@ class BridgeTestCase(TestCase):
             'disconnect' : 3,
             'automon' : 4,
             'automixmon' : 5,
-            'parkcall' : 6
+            'parkcall' : 6,
+            'atxferthreeway' : 7
             }
 
     def __init__(self, test_path = '', test_config = None):
@@ -217,12 +218,14 @@ class BridgeTestCase(TestCase):
 
     # Callbacks for new bridging architecture
     def uut_bridge_create_callback(self, ami, event):
+        LOGGER.debug('Bridge ID: %s' % event.get('bridgeuniqueid'))
         self.uut_bridge_id = event.get('bridgeuniqueid')
 
     def uut_bridge_enter_callback(self, ami, event):
         if self.uut_bridge_id != event.get('bridgeuniqueid'):
             return
 
+        LOGGER.debug('Bridge ID: %s' % event.get('bridgeuniqueid'))
         channel = event.get('channel')
 
         if 'alice' in channel and self.uut_alice_channel is None:
@@ -239,6 +242,7 @@ class BridgeTestCase(TestCase):
                 self.send_hangup()
 
     def uut_bridge_leave_callback(self, ami, event):
+        LOGGER.debug('Bridge ID: %s' % event.get('bridgeuniqueid'))
         LOGGER.debug("Bridge is down")
         self.bridged = False
 
