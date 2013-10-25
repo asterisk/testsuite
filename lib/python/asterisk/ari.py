@@ -422,7 +422,7 @@ class EventMatcher(object):
             self.count += 1
             # Split call and accumulation to always call the callback
             try:
-                res = self.callback(self.ari, message)
+                res = self.callback(self.ari, message, self.test_object)
                 if res:
                     return True
                 else:

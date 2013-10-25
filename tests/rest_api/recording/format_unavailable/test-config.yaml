@@ -1,8 +1,8 @@
 testinfo:
-    summary: Test continuing on from the RESTful API back to the dialplan
+    summary: Test expected events and responses for recording with known and unknown formats
     description: |
-        This test simply waits for a call via the WebSocket, then hits the
-        continue controller to send it back to the dialplan.
+        Put a channel in stasis then record a file from it with a format we should have. Stop the
+        recording and then start a new recording with a different format that we shouldn't have.
 
 test-modules:
     add-test-to-search-path: True
@@ -13,10 +13,8 @@ test-modules:
         -   config-section: ari-config
             typename: ari.WebSocketEventModule
 
-test-object-config:
-
-
 ari-config:
+    apps: testsuite
     events:
         -   conditions:
                 match:
@@ -25,25 +23,13 @@ ari-config:
                     args: []
             count: 1
             callback:
-                module: rest_continue
+                module: recording
                 method: on_start
         -   conditions:
                 match:
                     type: StasisEnd
                     application: testsuite
-            count: 2
-            callback:
-                module: rest_continue
-                method: on_end
-        -   conditions:
-                match:
-                    type: StasisStart
-                    application: testsuite
-                    args: [fin]
             count: 1
-            callback:
-                module: rest_continue
-                method: on_second_start
 
 properties:
     minversion: '12.0.0'
@@ -53,8 +39,8 @@ properties:
         - python : twisted
         - python : starpy
         - asterisk : res_ari_channels
+        - asterisk : res_ari_recordings
+        - asterisk : format_wav
         - asterisk : app_echo
     tags:
         - ARI
-
-

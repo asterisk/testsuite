@@ -156,14 +156,14 @@ class BridgeUnhappy(object):
 TEST = BridgeUnhappy()
 
 
-def on_start(ari, event):
+def on_start(ari, event, test_object):
     r = TEST.on_start(ari, event)
     if r:
         TEST.run_test(ari)
     return r
 
 
-def on_end(ari, event):
+def on_end(ari, event, test_object):
     r = TEST.on_end(ari, event)
     if r:
         TEST.run_test(ari)

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 id = None
 
 
-def on_start(ari, event):
+def on_start(ari, event, test_object):
     logger.debug("on_start(%r)" % event)
     global id
     id = event['channel']['id']
@@ -21,13 +21,13 @@ def on_start(ari, event):
     return True
 
 
-def on_end(ari, event):
+def on_end(ari, event, test_object):
     global id
     logger.debug("on_end(%r)" % event)
     return id == event['channel']['id']
 
 
-def on_second_start(ari, event):
+def on_second_start(ari, event, test_object):
     global id
     logger.debug("on_second_start(%r)" % event)
     ari.delete('channels', id)

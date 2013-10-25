@@ -21,7 +21,7 @@ class TestLogic(object):
 TEST = TestLogic()
 
 
-def on_start(ari, event):
+def on_start(ari, event, test_object):
     LOGGER.debug("on_start(%r)" % event)
     TEST.channel_id = event['channel']['id']
     TEST.bridge1_id = ari.post('bridges').json()['id']
@@ -31,7 +31,7 @@ def on_start(ari, event):
     return True
 
 
-def on_enter(ari, event):
+def on_enter(ari, event, test_object):
     channel_id = event['channel']['id']
     bridge_id = event['bridge']['id']
     assert TEST.channel_id == channel_id
@@ -47,7 +47,7 @@ def on_enter(ari, event):
     return True
 
 
-def on_leave(ari, event):
+def on_leave(ari, event, test_object):
     channel_id = event['channel']['id']
     bridge_id = event['bridge']['id']
     assert TEST.channel_id == channel_id
