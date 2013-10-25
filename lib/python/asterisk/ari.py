@@ -207,8 +207,12 @@ class WebSocketEventModule(object):
         :param event: Dictionary parsed from incoming JSON event.
         '''
         LOGGER.debug('Received event: %r' % event.get('type'))
+        matched = False
         for matcher in self.event_matchers:
-            matcher.on_event(event)
+            if matcher.on_event(event):
+                matched = True
+        if not matched:
+            LOGGER.info('Event had no matcher: %r' % event)
 
 
 class AriClientFactory(WebSocketClientFactory):
@@ -382,7 +386,8 @@ class ARI(object):
         :param resp: requests.models.Response object
         :returns: resp
         '''
-        if not self.allow_errors:
+        if not self.allow_errors and resp.status_code / 100 != 2:
+            LOGGER.error('%s (%d %s): %r' % (resp.url, resp.status_code, resp.reason, resp.text))
             resp.raise_for_status()
         return resp
 
@@ -418,7 +423,9 @@ class EventMatcher(object):
             # Split call and accumulation to always call the callback
             try:
                 res = self.callback(self.ari, message)
-                if not res:
+                if res:
+                    return True
+                else:
                     LOGGER.error("Callback failed: %r" %
                                  self.instance_config)
                     self.passed = False
@@ -426,6 +433,7 @@ class EventMatcher(object):
                 LOGGER.error("Exception in callback: %s" %
                              traceback.format_exc())
                 self.passed = False
+        return False
 
     def on_stop(self, *args):
         '''Callback for the end of the test.
@@ -433,7 +441,8 @@ class EventMatcher(object):
         :param args: Ignored arguments.
         '''
         if not self.count_range.contains(self.count):
-            LOGGER.error("Expected %d <= count <= %d; was %d (%r)",
+            # max could be int or float('inf'); format with %r
+            LOGGER.error("Expected %d <= count <= %r; was %d (%r)",
                          self.count_range.min, self.count_range.max,
                          self.count, self.conditions)
             self.passed = False

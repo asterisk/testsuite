@@ -1,0 +1,79 @@
+testinfo:
+    summary: Test continuing on from the RESTful API back to the dialplan
+    description: |
+        This test simply waits for a call via the WebSocket, then hits the
+        continue controller to send it back to the dialplan.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+apps: testsuite,bridge-watching-app
+
+ari-config:
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            callback:
+                module: subscribe_bridge
+                method: on_start
+        -   conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    application: testsuite
+                    bridge:
+                    channel:
+            count: 1
+            callback:
+                module: subscribe_bridge
+                method: on_enter_testsuite
+        -   conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    application: bridge-watching-app
+                    bridge:
+                    channel:
+            count: 1
+            callback:
+                module: subscribe_bridge
+                method: on_enter_watcher
+        -   conditions:
+                match:
+                    type: ChannelLeftBridge
+                    application: testsuite
+                    bridge:
+                    channel:
+            count: 0 # should not happen
+        -   conditions:
+                match:
+                    type: ChannelLeftBridge
+                    application: bridge-watching-app
+                    bridge:
+                    channel:
+            count: 1
+            callback:
+                module: subscribe_bridge
+                method: on_channel_left_bridge
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
+
+

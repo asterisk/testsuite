@@ -1,0 +1,50 @@
+testinfo:
+    summary: Test subscribing to a channel from an application.
+    description: |
+        Typical case of sending a channel to an application, application
+        subscribes to the channel, sends it back to the dialplan, continues
+        to receive events about the channel.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+test-object-config:
+
+
+ari-config:
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            callback:
+                module: errors
+                method: on_start
+        -   conditions:
+                match:
+                    type: ChannelUserevent
+                    eventname: CanYouSeeMe
+            count: 0
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+        - asterisk : app_userevent
+    tags:
+        - ARI
+
+
