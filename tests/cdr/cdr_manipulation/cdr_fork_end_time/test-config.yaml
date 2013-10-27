@@ -78,7 +78,6 @@ cdr-config-12:
             -
                 accountcode: 'cdrtest_local'
                 destination: '1'
-                lastapp: 'ForkCDR'
                 dcontext: 'default'
                 channel: 'Local/1@default-.*'
                 dchannel: ''
