@@ -8,15 +8,21 @@ the GNU General Public License Version 2.
 
 import logging
 
+from twisted.internet import reactor
+
 LOGGER = logging.getLogger(__name__)
 
 def send_dtmf(ami, event):
     ''' Callback called when we detect dial has started.
     '''
-    if 'channel' not in event:
-        return True
+
+    def actually_send_dtmf(ami, channel):
+        LOGGER.info('Sending DTMF to hangup channel %s' % channel)
+        ami.redirect(channel, 'default', 'dtmf', '1')
+
     channel = event['channel'][:len(event['channel']) - 2]
     channel += ';1'
-    LOGGER.info('Sending DTMF to hangup channel %s' % channel)
-    ami.redirect(channel, 'default', 'dtmf', '1')
+
+    reactor.callLater(2, actually_send_dtmf, ami, channel)
+
     return True
