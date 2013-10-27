@@ -136,8 +136,13 @@ class TestRun:
                 """ Only archive the logs if we havent archived it for this test run yet """
                 if not os.path.exists(dest_dir):
                     try:
-                        hardlink_or_copy(ast_dir + "/messages.txt", dest_dir + "/messages.txt")
-                        hardlink_or_copy(ast_dir + "/full.txt", dest_dir + "/full.txt")
+                        hardlink_or_copy(ast_dir + "/messages.txt",
+                            dest_dir + "/messages.txt")
+                        hardlink_or_copy(ast_dir + "/full.txt",
+                            dest_dir + "/full.txt")
+                        if os.path.exists(ast_dir + "/mmlog"):
+                            hardlink_or_copy(ast_dir + "/mmlog",
+                                dest_dir + "/mmlog")
                     except Exception, e:
                         print "Exception occurred while archiving logs from %s to %s: %s" % (
                             ast_dir, dest_dir, e
