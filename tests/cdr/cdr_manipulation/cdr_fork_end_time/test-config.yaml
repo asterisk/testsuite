@@ -70,7 +70,6 @@ cdr-config-12:
             -
                 accountcode: 'cdrtest_local'
                 destination: '1'
-                lastapp: 'Dial'
                 dcontext: 'default'
                 channel: 'Local/1@default-.*'
                 dchannel: 'SIP/test-.*'
@@ -86,7 +85,6 @@ cdr-config-12:
             -
                 accountcode: 'cdrtest_local'
                 destination: '1'
-                lastapp: 'Hangup'
                 dcontext: 'default'
                 dchannel: ''
                 channel: 'Local/1@default-.*'
