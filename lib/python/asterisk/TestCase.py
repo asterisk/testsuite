@@ -17,7 +17,7 @@ import traceback
 import uuid
 from hashlib import md5
 from twisted.internet import reactor, defer
-from twisted.python import failure
+from twisted.python import failure, log
 from starpy import manager, fastagi
 
 from asterisk import Asterisk
@@ -124,6 +124,11 @@ class TestCase(object):
         self.__setup_conditions()
 
         logger.info("Executing " + self.test_name)
+
+        # Enable twisted logging
+        observer = log.PythonLoggingObserver()
+        observer.start()
+
         reactor.callWhenRunning(self.__run)
 
     def __setup_conditions(self):
