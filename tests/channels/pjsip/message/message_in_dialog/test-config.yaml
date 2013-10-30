@@ -19,6 +19,7 @@ test-modules:
         typename: 'sipp.SIPpTestCase'
 
 test-object-config:
+    reactor-timeout: 10
     test-iterations:
         -
              scenarios:
