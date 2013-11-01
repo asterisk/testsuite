@@ -3,3 +3,4 @@ tests:
     - test: 'unhappy'
     - test: 'hangup'
     - test: 'move'
+    - test: 'delete'
