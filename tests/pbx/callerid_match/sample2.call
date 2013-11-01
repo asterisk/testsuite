@@ -1,0 +1,9 @@
+Channel: Local/agi2@test
+Codecs: alaw
+MaxRetries: 2
+RetryTime: 60
+WaitTime: 30
+CallerID: "Test2" <2565550202>
+Context: test
+Extension: wait
+Priority: 1

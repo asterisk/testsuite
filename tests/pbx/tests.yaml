@@ -2,6 +2,8 @@
 tests:
     - test: 'dialplan'
     - test: 'call-files'
+    - test: 'callerid_match'
+    - test: 'dialplan_reload'
     - test: 'pbx_lua_goto'
     - test: 'pbx_lua_background'
     # this test currently doesn't work due to a bug (ASTERISK-18230)

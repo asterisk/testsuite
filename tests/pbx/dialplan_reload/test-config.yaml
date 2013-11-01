@@ -1,0 +1,12 @@
+testinfo:
+    summary:     'Test dialplan reload with null length cidmatch'
+    description: |
+        'This test verifies that reloading the dialplan with two accidentally matching entries will not corrupt memory and cause crash.'
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - dialplan

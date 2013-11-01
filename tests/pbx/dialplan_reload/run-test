@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+Scott Griepentrog <sgriepentrog@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import logging
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.TestCase import TestCase
+LOGGER = logging.getLogger(__name__)
+
+workingdir = "dialplan-reload"
+testdir = "tests/%s" % workingdir
+
+class DialplanReloadTest(TestCase):
+    count = 0
+
+    def __init__(self):
+        TestCase.__init__(self)
+        # artificially high timeout as this can take a while
+        self.reactor_timeout = 300
+        self.create_asterisk(1)
+
+    def run(self):
+        TestCase.run(self)
+
+        def callback(defer):
+            LOGGER.info("DIALPLAN SHOW = " + defer.output);
+            print defer.output.strip()
+            if defer.output.find("CID match ''") == -1:
+                print "Dialplan did not load correctly"
+                reactor.callLater(1,self.failure)
+            else:
+                reactor.callLater(3,self.reload)
+
+        def errback(failure):
+            LOGGER.error("CLI dialplan show failed");
+            reactor.callLater(1,self.failure)
+
+        # log the trouble context just to be sure it was loaded
+        df = self.ast[0].cli_exec("dialplan show incoming_1")
+        df.addCallback(callback)
+        df.addErrback(errback)
+
+    def reload(self):
+
+        def callback(defer):
+            LOGGER.info("RESTART = " + defer.output)
+            print "Restart #" + str(self.count) + " = " + defer.output.strip()
+            self.count += 1
+            if self.count == 50:
+                reactor.callLater(3,self.success)
+            else:
+                reactor.callLater(3,self.reload)
+
+        def errback(failure):
+            LOGGER.error("CLI restart failed")
+            reactor.callLater(1,self.failure)
+
+        df = self.ast[0].cli_exec("core restart gracefully")
+        df.addCallback(callback)
+        df.addErrback(errback)
+
+        LOGGER.info("Restarted # " + str(self.count))
+
+    def success(self):
+        self.passed = True
+        self.stop_reactor()
+
+    def failure(self):
+        self.stop_reactor()
+
+def main():
+    test = DialplanReloadTest()
+    test.start_asterisk()
+    reactor.run()
+    test.stop_asterisk()
+    if not test.passed:
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+# vim:sw=4:ts=4:expandtab:textwidth=79

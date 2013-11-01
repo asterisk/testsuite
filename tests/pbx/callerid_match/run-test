@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010, Digium, Inc.
+Brett Bryant <bbryant@digium.com> (original call-files)
+Scott Griepentrog <sgriepentrog@digium.com> (adjusted for callerid_match)
+
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import logging
+
+from twisted.internet import reactor
+from shutil import move, copy
+
+sys.path.append("lib/python")
+from asterisk.TestCase import TestCase
+
+LOGGER = logging.getLogger(__name__)
+
+TESTDIR = os.path.dirname(os.path.realpath(__file__))
+
+class CallFilesTest(TestCase):
+
+    num_tests = 0
+
+    def __init__(self):
+        super(CallFilesTest, self).__init__()
+
+        self.test = 0
+        self.create_asterisk()
+
+        # set the number of tests based on the number of call files
+        for name in os.listdir(TESTDIR):
+            if name.startswith("sample"):
+                self.num_tests += 1
+                LOGGER.info("will run " + str(self.num_tests) + " tests for " + name)
+
+
+    def run(self):
+        super(CallFilesTest, self).run()
+
+        self.create_fastagi_factory()
+        self.launch_test()
+
+    def fastagi_connect(self, agi):
+        LOGGER.info("sample%s.call file executed." % (self.test))
+
+        if self.test < self.num_tests:
+            self.launch_test()
+        else: self.finalize()
+
+    def move_file(self, i):
+        LOGGER.info("Moving the sample%s.call file to the spool dir..." % (i))
+
+        copy("%s/sample%s.call" % (TESTDIR, i),
+             "%s/etc/sample%s.call" % (self.ast[0].base, i))
+
+        move("%s/etc/sample%s.call" % (self.ast[0].base, i), "%s%s/outgoing/" %
+             (self.ast[0].base, self.ast[0].directories["astspooldir"]))
+
+    def launch_test(self):
+        self.test += 1
+        self.move_file(self.test)
+
+    def finalize(self):
+        self.passed = True
+        self.stop_reactor()
+
+def main():
+    test = CallFilesTest()
+    reactor.run()
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
