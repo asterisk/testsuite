@@ -33,13 +33,13 @@ class bridge_info_callback_container:
 
     def failed(self, reason):
         self.send_error("BridgeInfo action failed: %s" % reason)
-        pass
 
     def send_error(self, message):
         LOGGER.error(message)
-        self.ami.userEvent('BridgeInfoFailure', message=message})
+        self.ami.userEvent('BridgeInfoFailure', message=message)
 
     def send_success(self):
+        LOGGER.info('Sending user event for info success')
         self.ami.userEvent('BridgeInfoSuccess')
 
 class bridge_list_callback_container:
@@ -78,9 +78,10 @@ class bridge_list_callback_container:
 
     def send_error(self, message):
         LOGGER.error(message)
-        self.ami.userEvent('BridgeListFailure', message=message})
+        self.ami.userEvent('BridgeListFailure', message=message)
 
     def send_success(self):
+        LOGGER.info('Sending user event for list success')
         self.ami.userEvent('BridgeListSuccess')
 
 def get_bridge_info(ami, event):
