@@ -5,4 +5,6 @@ tests:
     - test: 'CORS'
     - dir:  'applications'
     - dir:  'bridges'
+    - dir:  'channels'
     - dir:  'recording'
+

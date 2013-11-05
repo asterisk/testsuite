@@ -1,0 +1,47 @@
+testinfo:
+    summary: Test originating calls to a Stasis application using ARI.
+    description: |
+        Originate a specific number of calls using ARI and verify all enter Stasis.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            callback:
+                module: channel_originate
+                method: on_kickoff_start
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: ['blast']
+            count: 50
+            callback:
+                module: channel_originate
+                method: on_blast_start
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
