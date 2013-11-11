@@ -1,0 +1,46 @@
+testinfo:
+    summary: Test behavior of app_queue when a caller enters a Queue and the
+        only available member is outside the penalty limits.
+    description: |
+        'This test verifies that when a caller enters a queue where the only
+        available agents fall outside the penalty limits, that eventually the
+        caller times out and leaves the queue.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'member_answer'
+        count: '0'
+
+
+test-object-config:
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    end-test-delay: 2
+    test-iterations:
+        -
+            channel: 'Local/caller@default'
+            application: 'Echo'
+            async: True
+
+properties:
+    minversion: '1.8.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_queue'
+    tags:
+        - queues
+        - chan_local
