@@ -3,3 +3,4 @@ tests:
     - test: 'confbridge_marked'
     - test: 'confbridge_nominal'
     - test: 'confbridge_recording'
+    - test: 'confbridge_dynamic_menus'

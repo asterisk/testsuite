@@ -1,0 +1,391 @@
+testinfo:
+    summary: 'Basic functionality test for CONFBRIDGE dynamic menus.'
+    description: |
+        Uses the CONFBRIDGE dialplan function to test dynamic menu creation for
+        the following:
+        * That when a single option is applied, it gets applied and can be used
+        * That when multiple options are applied, each option gets applied and
+          can be used
+        * That when a template option is used it inherits options from the
+          template and replaces options from the template that were specified
+        * That when the application argument for using a menu profile is used,
+          the dynamic menu options are ignored
+        For each test, all of the expected menu actions are attempted and failure to hit
+        any of them will result in failure of the test.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'ConfBridge'
+  scenarios:
+    -
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Phase 0: Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Phase 0: Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'SingleOption'
+          channel-name: 'LOCAL/single_option@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/single_option@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 0: Single Option Join Event received'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '0'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'CONF_MENU_LEAVE'
+                  Channel: 'Local/single_option@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 0: Single Option Caller invoked menu action to leave conference.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/single_option@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 0: Single Option Leave Event received'
+
+    -
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Phase 1: Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Phase 1: Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'MultipleOptions'
+          channel-name: 'LOCAL/multiple_options@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/multiple_options@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1: Multiple Options Join Event received'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '0'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'CONF_MENU_PLAYBACK'
+                  Channel: 'Local/multiple_options@confbridge-.*'
+                  Message: 'tt-weasels'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1: Multiple Options DTMF option for "0" successfully executed playback of tt-weasels'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '1'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'CONF_MENU_LEAVE'
+                  Channel: 'Local/multiple_options@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1: Multiple Options Caller invoked menu action to leave conference.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/multiple_options@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1: Multiple Options Leave Event received'
+
+    -
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Phase 2: Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Phase 2: Conference Ended'
+            -
+              action-type: 'end-scenario'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'CONF_MENU_PLAYBACK'
+              Message: 'tt-somethingwrong'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'fail-test'
+              message: 'Phase 2: Any test that plays tt-somethingwrong has failed us!'
+      channels:
+        -
+          channel-id: 'MultipleOptions'
+          channel-name: 'LOCAL/template_override@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/template_override@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 2: Multiple Options Join Event received'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '0'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'CONF_MENU_PLAYBACK'
+                  Channel: 'Local/template_override@confbridge-.*'
+                  Message: 'hello-world'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 2: Multiple Options DTMF option for "0" successfully executed playback of hello-world'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '1'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'CONF_MENU_PLAYBACK'
+                  Channel: 'Local/template_override@confbridge-.*'
+                  Message: 'tt-weasels'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 2: Multiple Options DTMF option for "0" successfully executed playback of tt-weasels'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '2'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'CONF_MENU_LEAVE'
+                  Channel: 'Local/template_override@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 2: Multiple Options Caller invoked menu action to leave conference.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/template_override@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 2: Multiple Options Leave Event received'
+
+    -
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Phase 3: Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Phase 3: Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'MultipleOptions'
+          channel-name: 'LOCAL/profile_argument@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/profile_argument@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 3: Profile Specified Join Event received'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '0'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'CONF_MENU_PLAYBACK'
+                  Channel: 'Local/profile_argument@confbridge-.*'
+                  Message: 'hello-world'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 3: Profile Specified DTMF option for "0" successfully executed playback of tt-weasels'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '1'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'CONF_MENU_LEAVE'
+                  Channel: 'Local/profile_argument@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 3: Profile Specified Caller invoked menu action to leave conference.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/profile_argument@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 3: Profile Specified Leave Event received'
+
+properties:
+    minversion: '13.0.0'
+    tags:
+      - confbridge
+      - apps
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_confbridge'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_playback'
+
