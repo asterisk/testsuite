@@ -4,6 +4,7 @@ tests:
     - test: 'incoming_calls_without_auth'
     - dir: 'basic_calls'
     - test: 'srtp_negotiation'
+    - test: 'auth_security_events'
     - dir: 'one_touch_recording'
     - dir: 'registration'
     - dir: 'diversion'
