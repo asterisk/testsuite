@@ -9,7 +9,6 @@
       To: <sip:user1@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: 1 MESSAGE
-      Contact: sip:user@[local_ip]:[local_port]
       Max-Forwards: 70
       Expires: 3600
       X-Custom-Header: Hello World

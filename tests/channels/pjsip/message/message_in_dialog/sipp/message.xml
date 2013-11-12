@@ -60,7 +60,6 @@
                         To: <sip:user1@[remote_ip]:[remote_port]>[peer_tag_param]
                         Call-ID: [call_id]
                         CSeq: [cseq] MESSAGE
-                        Contact: sip:user@[local_ip]:[local_port]
 			Allow: INVITE, ACK, MESSAGE, BYE
                         Max-Forwards: 70
                         Expires: 3600
