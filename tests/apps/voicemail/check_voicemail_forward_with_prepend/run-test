@@ -206,7 +206,7 @@ class ForwardTestState(VoiceMailState):
                 audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.voiceMailTest.testParentDir))
                 df = self.voiceMailTest.astSender.cli_exec("dialplan set global TALK_AUDIO " + audioFile)
                 df.addCallback(__send_redirect)
-            elif message == 'vm-msgforwarded':
+            elif message == 'vm-msgforwarded' or message == 'vm-msgsaved':
                 self.voiceMailTest.setTestCondition("msgForwarded", True)
             elif message == 'pbx-invalid':
                 """ If this occurs, our extension didn't match - fail the test """

@@ -195,7 +195,7 @@ class ForwardTestState(VoiceMailState):
             elif message == 'vm-forwardoptions':
                 """ Press 2 to not prepend anything """
                 self.voiceMailTest.sendDTMF("2")
-            elif message == 'vm-msgforwarded':
+            elif message == 'vm-msgforwarded' or message == 'vm-msgsaved':
                 self.voiceMailTest.setTestCondition("msgForwarded", True)
             elif message == 'pbx-invalid':
                 """ If this occurs, our extension didn't match - fail the test """
