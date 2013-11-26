@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Registrar with authentication and From ;tag consistency check">
+
+	<!-- Store the tag of the first register -->
+	<recv request="REGISTER">
+		<action>
+			<ereg regexp="tag=.*" search_in="hdr" header="From:" assign_to="firsttag" />
+			<log message="Received First REGISTER [$firsttag]" />
+		</action>
+	</recv>
+
+	<!-- Loop here processing register requests -->
+	<label id="badauth" />
+	<recv request="REGISTER" />
+	<send><![CDATA[
+
+      SIP/2.0 401 Authorization Required
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      WWW-Authenticate: Digest realm="test.example.com", nonce="47ebe028cda119c35d4877b383027d28da013815"
+      Content-Length: [len]
+
+	]]>
+	</send>
+
+	<!-- Process second register with authorization string, also check tag -->
+	<recv request="REGISTER" >
+		<action>
+			<ereg regexp="tag=.*" search_in="hdr" header="From:" assign_to="fromtag" />
+			<log message="Received REGISTER [$fromtag]" />
+			<verifyauth assign_to="authvalid" username="test" password="secret" />
+		</action>
+	</recv>
+
+	<!-- Did tag match first one? -->
+	<nop hide="true">
+		<action>
+			<strcmp assign_to="match" variable="fromtag" variable2="firsttag" />
+			<test assign_to="wrongtag" compare="not_equal" variable="match" value="0" />
+		</action>
+	</nop>
+
+	<!-- Fail test if not the same -->
+	<nop hide="true" condexec="wrongtag">
+		<action>
+			<log message="From tag has changed - test has failed - aborting" />
+			<exec int_cmd="stop_now" />
+		</action>
+	</nop>
+
+
+	<!-- For valid authorization, send 200 OK, otherwise loop -->
+	<nop hide="true" test="authvalid" next="goodauth" />
+	<nop hide="true" next="badauth" />
+
+	<label id="goodauth" />
+	<send><![CDATA[
+ 
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip];transport=[transport]>
+      Content-Length: 0
+      Expires: 30
+ 
+	]]>
+	</send>
+	<nop hide="true" next="badauth" />
+
+
+	<!-- definition of the response time repartition table (unit is ms)   -->
+	<ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
+
+	<!-- definition of the call length repartition table (unit is ms)     -->
+	<CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+
+</scenario>

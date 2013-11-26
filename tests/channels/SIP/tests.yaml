@@ -61,3 +61,5 @@ tests:
     - test: 'path'
     - test: 'alwaysauthreject'
     - dir: 'register_forbidden_retry'
+    - test: 'outbound_register_from'
+    - test: 'outbound_reregister_from'
