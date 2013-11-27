@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2013, Digium, Inc.
+David M. Lee, II <dlee@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import logging
+import requests
+import sys
+import urllib
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.TestCase import TestCase
+
+LOGGER = logging.getLogger(__name__)
+
+HOST='localhost'
+PORT=8088
+
+def build_url(*args):
+    url = "http://%s:%d/%s" %\
+           (HOST, PORT, '/'.join([str(arg) for arg in args]))
+    params = urllib.urlencode({'api_key': 'testsuite:testsuite'})
+    return "%s?%s" % (url, params)
+
+
+class ARIRequestBodyTest(TestCase):
+    def __init__(self):
+        TestCase.__init__(self)
+        self.passed = True
+        self.create_asterisk()
+
+    def run(self):
+        try:
+            self.test_form_data()
+            self.test_json_data()
+            self.test_bad_json_data()
+        except:
+            logging.exception("Exception caught during test")
+            self.passed = False
+            raise
+        finally:
+            self.stop_reactor()
+
+    def test_form_data(self):
+        form = {"type": "holding"}
+        resp = requests.post(build_url('ari', 'bridges'), data=form)
+        resp.raise_for_status()
+        actual_bridge_type = resp.json()['bridge_type']
+        if 'holding' != actual_bridge_type:
+            LOGGER.error("Unexpected bridge type: %s" % actual_bridge_type)
+            self.passed = False
+
+    def test_json_data(self):
+        body = '{"type": "holding"}'
+        headers = {'Content-type': 'application/json'}
+        resp = requests.post(build_url('ari', 'bridges'), data=body,
+                             headers=headers)
+        resp.raise_for_status()
+        actual_bridge_type = resp.json()['bridge_type']
+        if 'holding' != actual_bridge_type:
+            LOGGER.error("Unexpected bridge type: %s" % actual_bridge_type)
+            self.passed = False
+
+    def test_bad_json_data(self):
+        body = '{"type": "holding", invalid json}'
+        headers = {'Content-type': 'application/json'}
+        resp = requests.post(build_url('ari', 'bridges'), data=body,
+                             headers=headers)
+        if 400 != resp.status_code:
+            LOGGER.error("Expected bad request error, got %d", resp.status_code)
+            self.passed = False
+
+
+def main():
+    test = ARIRequestBodyTest()
+    reactor.run()
+    if test.passed:
+        return 0
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)

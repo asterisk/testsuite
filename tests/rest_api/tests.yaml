@@ -7,4 +7,4 @@ tests:
     - dir:  'bridges'
     - dir:  'channels'
     - dir:  'recording'
-
+    - test: 'request-bodies'
