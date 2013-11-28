@@ -1,3 +1,4 @@
 tests:
     - test: 'originate'
-
+    - test: 'snoop_whisper'
+    - test: 'snoop_spy'

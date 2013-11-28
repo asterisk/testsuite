@@ -1,0 +1,81 @@
+testinfo:
+    summary: Test whispering calls using ARI.
+    description: |
+        Originate a call and whisper to it using ARI.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: ami-uut
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    test-iterations:
+        -
+            -   channel: Local/s@default
+                application: AMD
+
+ami-uut:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: 'AMDSTATUS'
+                Value: 'MACHINE'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'ChanSpyStart'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'ChanSpyStop'
+        count: '1'
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            callback:
+                module: channel_whisper
+                method: on_start
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: ['snoop']
+            count: 1
+            callback:
+                module: channel_whisper
+                method: on_snoop_start
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_amd
+    tags:
+        - ARI
