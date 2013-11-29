@@ -33,6 +33,4 @@ test-object-config:
             scenarios:
                 - { 'key-args': {'scenario': 'register.xml',
                                     '-i': '127.0.0.1',
-                                    '-p': '5062',
-                                    '-log_file': 'logs/chan_SIP_outbound_register_from-sipp.log',
-                                    '-trace_logs': '' }}
+                                    '-p': '5062', }}
