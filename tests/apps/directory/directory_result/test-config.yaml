@@ -1,0 +1,315 @@
+testinfo:
+    summary: 'Test DIRECTORY_RESULT for common routes through app_directory.'
+    description: |
+        Tests common usage of the directory app to make sure the correct value
+        for channel variable DIRECTORY_RESULT is set in each of the following
+        conditions
+        * User allows directory application to timeout from initial prompt
+        * User issues DTMF '0' for operator
+        * User issues DTMF '*' for assistant
+        * User selects item from the directory and issues DTMF '1' to connect
+        * User selects item from the directory and issues DTMF '#' to exit
+        * User hangs up the phone at at the initial prompt
+        * User selects item from the directory and issues DTMF '1' to connect,
+          but can not connect because the extension is not in the dialplan at
+          the requested context
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'Directory'
+  scenarios:
+    # Phase 0: Timeout
+    -
+      channels:
+        -
+          channel-id: 'timeoutchan'
+          channel-name: 'LOCAL/timeout@directory'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestStatus'
+                  Status: 'TIMEOUT'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 0: Success'
+                -
+                  action-type: 'end-scenario'
+    # Phase 1: Operator
+    -
+      channels:
+        -
+          channel-id: 'operatorchan'
+          channel-name: 'LOCAL/operator@directory'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'QueueOperator'
+                  Channel: 'Local/operator@directory-.*'
+              actions:
+                # select to go to operator
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '0'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1 - Send DTMF'
+
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestStatus'
+                  Status: 'OPERATOR'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1: Success'
+                -
+                  action-type: 'end-scenario'
+    # Phase 2: Assistant
+    -
+      channels:
+        -
+          channel-id: 'assistantchan'
+          channel-name: 'LOCAL/assistant@directory'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'QueueAssistant'
+                  Channel: 'Local/assistant@directory-.*'
+              actions:
+                # select to go to assistant
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '*'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 2 - Send DTMF'
+
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestStatus'
+                  Status: 'ASSISTANT'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 2: Success'
+                -
+                  action-type: 'end-scenario'
+    # Phase 3: Select
+    -
+      channels:
+        -
+          channel-id: 'selectchan'
+          channel-name: 'LOCAL/select@directory'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'QueueSelect'
+                  Channel: 'Local/select@directory-.*'
+              actions:
+                # select user 'dog'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '364'
+                # choose to direct to selected user
+                -
+                  action-type: 'send-dtmf'
+                  delay: '4'
+                  dtmf: '1'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 3 - Send DTMF'
+
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestStatus'
+                  Status: 'SELECTED'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 3: Success'
+                -
+                  action-type: 'end-scenario'
+    # Phase 4: Exit
+    -
+      channels:
+        -
+          channel-id: 'exitchan'
+          channel-name: 'LOCAL/exit@directory'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'QueueExit'
+                  Channel: 'Local/exit@directory-.*'
+              actions:
+                # select user 'dog'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '364'
+                # Exit with '#'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '4'
+                  dtmf: '#'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 4 - Send DTMF'
+
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestStatus'
+                  Status: 'USEREXIT'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 4: Success'
+                -
+                  action-type: 'end-scenario'
+    # Phase 5: Hangup
+    -
+      channels:
+        -
+          channel-id: 'hangupchan'
+          channel-name: 'LOCAL/hangup@directory'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'QueueHangup'
+                  Channel: 'Local/hangup@directory-.*'
+              actions:
+                # Hangup. Just Hangup.
+                -
+                  action-type: 'hangup'
+                  delay: '1'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 5 - Hang that Crap up.'
+
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestStatus'
+                  Status: 'HANGUP'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 5: Success'
+                -
+                  action-type: 'end-scenario'
+    # Phase 6: Fail due to extension not existing at the selected directory context
+    -
+      channels:
+        -
+          channel-id: 'failselectchan'
+          channel-name: 'LOCAL/failselect@directory'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'QueueSelect'
+                  Channel: 'Local/failselect@directory-.*'
+              actions:
+                # select user 'dog'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '364'
+                # choose to direct to selected user
+                -
+                  action-type: 'send-dtmf'
+                  delay: '4'
+                  dtmf: '1'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 6 - Send DTMF'
+
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestStatus'
+                  Status: 'FAILED'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 6: Success'
+                -
+                  action-type: 'end-scenario'
+
+properties:
+    minversion: '13.0.0'
+    tags:
+      - apps
+      - directory
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_directory'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_playback'
+
