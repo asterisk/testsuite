@@ -1,0 +1,85 @@
+testinfo:
+    summary: 'Test PJSIPShowRegistrations AMI command'
+    description: |
+        Tests the AMI command PJSIPShowRegistrationsOutbound in order to make
+        sure the events are appropriately raised.
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+
+    tags:
+        - pjsip
+
+test-modules:
+    # allow TestRunner to find and run the local test
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: object-config
+        typename: 'AMISendTest.AMISendTest'
+    modules:
+        -
+            minversion: '12.0.0'
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+object-config:
+    # the only way the test will stop is by timing out
+    # should be done within the specified value
+    reactor-timeout: 15
+
+ami-config:
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'OutboundRegistrationDetail'
+            requirements:
+                match:
+                    ObjectType: 'registration'
+                    ObjectName: 'user.*'
+                    OutboundAuth: 'reg-auth'
+                    AuthRejectionPermanent: 'true'
+                    MaxRetries: '10'
+                    ForbiddenRetryInterval: '0'
+                    RetryInterval: '60'
+                    Expiration: '3600'
+                    OutboundProxy: ''
+                    Transport: 'local'
+                    ContactUser: ''
+                    ClientUri: 'sip:user.*'
+                    ServerUri: 'sip:localhost'
+                    Status: 'Unregistered'
+                    NextReg: '0'
+            count: 5
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'AuthDetail'
+            requirements:
+                match:
+                    ObjectType: 'auth'
+                    ObjectName: 'reg-auth'
+                    AuthType: 'userpass'
+                    NonceLifetime: '32'
+                    Realm: ''
+                    Md5Cred: ''
+                    Password: 'xxx'
+                    Username: 'xxx'
+
+            count: 5
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'OutboundRegistrationDetailComplete'
+            requirements:
+                match:
+                    EventList: 'Complete'
+                    Registered: '0'
+                    NotRegistered: '5'
+            count: 1

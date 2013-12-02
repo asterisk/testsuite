@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Subscription">
+
+  <send retrans="500">
+    <![CDATA[
+
+      SUBSCRIBE sip:user1@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: user1 <sip:user1@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: user1 <sip:user1@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 SUBSCRIBE
+      Contact: sip:user1@[local_ip]:[local_port]
+      Event: message-summary
+      Accept: application/simple-message-summary
+      Expires: 3600
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" rtd="true" />
+  <recv request="NOTIFY" crlf="true" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SUBSCRIBE sip:user1@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: user1 <sip:user1@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: user1 <sip:user1@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 SUBSCRIBE
+      Contact: sip:user1@[local_ip]:[local_port]
+      Event: presence
+      Accept: application/pidf+xml
+      Expires: 3600
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" rtd="true" />
+</scenario>

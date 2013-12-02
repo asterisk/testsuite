@@ -9,3 +9,4 @@ tests:
     - dir: 'registration'
     - dir: 'diversion'
     - dir: 'message'
+    - dir: 'ami'

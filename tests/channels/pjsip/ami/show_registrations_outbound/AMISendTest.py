@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2013, Digium, Inc.
+Kevin Harwell <kharwell@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+
+sys.path.append("lib/python/asterisk")
+
+from TestCase import TestCase
+
+ACTION = {
+    "Action":"PJSIPShowRegistrationsOutbound"
+}
+
+class AMISendTest(TestCase):
+    def __init__(self, path=None, config=None):
+        super(AMISendTest, self).__init__(path, config)
+        self.create_asterisk()
+
+    def run(self):
+        super(AMISendTest, self).run()
+        self.create_ami_factory()
+
+    def ami_connect(self, ami):
+        ami.sendDeferred(ACTION).addCallback(ami.errorUnlessResponse)

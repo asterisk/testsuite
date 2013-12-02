@@ -1,0 +1,60 @@
+testinfo:
+    summary: 'Test PJSIPShowSubscriptions AMI command'
+    description: |
+        Tests the AMI command PJSIPShowSubscriptions in order to make sure the
+        events are appropriately raised.
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+
+    tags:
+        - pjsip
+
+test-modules:
+    # allow TestRunner to find and run the local test
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: object-config
+        typename: 'AMISendTest.AMISendTest'
+    modules:
+        -
+            minversion: '12.0.0'
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+object-config:
+    reactor-timeout: 15
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'subscribe.xml', '-p':'5061' } }
+
+ami-config:
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'InboundSubscriptionDetail'
+            requirements:
+                match:
+                    Role: Notifier
+                    Endpoint: 'user.*'
+                    Callid: '.*'
+                    State: 'ACTIVE'
+                    Callerid: 'Unknown'
+                    SubscriptionType: mwi|extension_state
+            count: 2
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'InboundSubscriptionDetailComplete'
+            requirements:
+                match:
+                    EventList: 'Complete'
+                    ListItems: '2'
+            count: 1

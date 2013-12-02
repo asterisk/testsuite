@@ -1,0 +1,65 @@
+testinfo:
+    summary: 'Test PJSIPShowRegistrationsInbound AMI command'
+    description: |
+        Tests the AMI command PJSIPShowRegistrationsInbound in order to make
+        sure the events are appropriately raised.
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+
+    tags:
+        - pjsip
+
+test-modules:
+    # allow TestRunner to find and run the local test
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: object-config
+        typename: 'AMISendTest.AMISendTest'
+    modules:
+        -
+            minversion: '12.0.0'
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+object-config:
+    # the only way the test will stop is by timing out
+    # should be done within the specified value
+    reactor-timeout: 15
+
+ami-config:
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'InboundRegistrationDetail'
+            requirements:
+                match:
+                    ObjectType: 'aor'
+                    ObjectName: 'user.*'
+                    Mailboxes: ''
+                    RemoveExisting: 'false'
+                    MaxContacts: '1'
+                    AuthenticateQualify: 'false'
+                    QualifyFrequency: '0'
+                    DefaultExpiration: '3600'
+                    MaximumExpiration: '7200'
+                    MinimumExpiration: '60'
+                    Contacts: user1/sip:user1@127.0.0.1:5062|user2/sip:user2@127.0.0.1:5063
+            count: 2
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'InboundRegistrationDetailComplete'
+            requirements:
+                match:
+                    EventList: 'Complete'
+                    ListItems: '2'
+            count: 1
+
+
