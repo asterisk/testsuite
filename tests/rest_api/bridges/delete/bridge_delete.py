@@ -23,7 +23,7 @@ class BridgeSimple(object):
 TEST = BridgeSimple()
 
 
-def on_start(ari, event):
+def on_start(ari, event, test_object):
     """
     Called when the channel enters the Stasis application. This function will
     create a bridge and add the channel to the bridge.
@@ -36,7 +36,7 @@ def on_start(ari, event):
     return True
 
 
-def on_enter(ari, event):
+def on_enter(ari, event, test_object):
     """
     Called when the channel enters the bridge. This function will remove the
     bridge from the system.
@@ -49,7 +49,7 @@ def on_enter(ari, event):
     return True
 
 
-def on_destroy(ari, event):
+def on_destroy(ari, event, test_object):
     """
     Called when the bridge is destroyed. This function checks that the bridge
     no longer exists in the system but that the channel that was in the bridge

@@ -19,7 +19,7 @@ class TestData(object):
 TEST = TestData()
 
 
-def on_start(ari, event):
+def on_start(ari, event, test_object):
     LOGGER.debug("on_start(%r)" % event)
     TEST.channel_id = event["channel"]["id"]
     ari.post("applications", "testsuite", "subscription",
@@ -28,13 +28,13 @@ def on_start(ari, event):
     return True
 
 
-def on_end(ari, event):
+def on_end(ari, event, test_object):
     LOGGER.debug("on_end(%r)" % event)
     TEST.has_ended = True
     return True
 
 
-def on_state_change(ari, event):
+def on_state_change(ari, event, test_object):
     LOGGER.debug("on_state_change(%r)" % event)
     assert TEST.has_ended, "Expected no state changes before StasisEnd"
     return True

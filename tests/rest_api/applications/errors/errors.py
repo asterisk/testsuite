@@ -21,7 +21,7 @@ def validate(expected, resp):
         raise ValueError('Test failed')
 
 
-def on_start(ari, event):
+def on_start(ari, event, test_object):
     LOGGER.debug('on_start(%r)' % event)
 
     channel_id = event["channel"]["id"]

@@ -19,7 +19,7 @@ class SubscribeBridge(object):
 TEST = SubscribeBridge()
 
 
-def on_start(ari, event):
+def on_start(ari, event, test_object):
     TEST.channel_id = event['channel']['id']
     TEST.bridge_id = ari.post('bridges').json()['id']
     ari.post('applications', 'bridge-watching-app', 'subscription',
@@ -29,7 +29,7 @@ def on_start(ari, event):
     return True
 
 
-def on_enter_testsuite(ari, event):
+def on_enter_testsuite(ari, event, test_object):
     assert TEST.bridge_id == event['bridge']['id']
     assert TEST.channel_id == event['channel']['id']
     # Unsubscribe testsuite from the bridge
@@ -38,7 +38,7 @@ def on_enter_testsuite(ari, event):
     return True
 
 
-def on_enter_watcher(ari, event):
+def on_enter_watcher(ari, event, test_object):
     assert TEST.bridge_id == event['bridge']['id']
     assert TEST.channel_id == event['channel']['id']
     ari.post('bridges', TEST.bridge_id, 'removeChannel',
@@ -46,7 +46,7 @@ def on_enter_watcher(ari, event):
     return True
 
 
-def on_channel_left_bridge(ari, event):
+def on_channel_left_bridge(ari, event, test_object):
     assert TEST.bridge_id == event['bridge']['id']
     assert TEST.channel_id == event['channel']['id']
     ari.delete('channels', TEST.channel_id);
