@@ -16,6 +16,7 @@ test-modules:
             typename: 'ami.AMIEventModule'
 
 test-object-config:
+    reactor-timeout: 60
     test-iterations:
         -
             -   channel: Local/s@default
