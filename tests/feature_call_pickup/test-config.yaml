@@ -11,3 +11,4 @@ properties:
         - python : 'starpy'
     tags:
         - pickup
+        - features
