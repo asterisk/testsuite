@@ -228,7 +228,7 @@ class ChannelObject(object):
         if 'exten' in channel_def:
             self._controller_initial_exten = channel_def['exten']
         else:
-            self.controller_initial_exten = ChannelObject.default_wait_exten
+            self._controller_initial_exten = ChannelObject.default_wait_exten
         if 'hangup-exten' in channel_def:
             self._controller_hangup_exten = channel_def['hangup-exten']
         else:
@@ -664,11 +664,20 @@ class ActionSendDtmf(object):
         self.dtmf = action_config['dtmf']
         self.delay = 0 if 'delay' not in action_config \
             else int(action_config['delay'])
-
+        if 'channel-id' in action_config:
+            self.channel_id = action_config['channel-id']
+        else:
+            self.channel_id = ''
 
     def __call__(self, channel_object):
-        return channel_object.send_dtmf(dtmf=self.dtmf,
-                                        delay=self.delay)
+        channel = channel_object
+        if (len(self.channel_id) > 0):
+            test_object = AppTest.get_instance()
+            channel = test_object.get_channel_object(self.channel_id)
+        LOGGER.debug("Sending DTMF %s over Controlling Channel %s" %
+                     (self.dtmf, channel))
+        return channel.send_dtmf(dtmf=self.dtmf,
+                                 delay=self.delay)
 
 
 class ActionStreamAudio(object):

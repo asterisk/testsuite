@@ -4,3 +4,4 @@ tests:
     - test: 'confbridge_nominal'
     - test: 'confbridge_recording'
     - test: 'confbridge_dynamic_menus'
+    - test: 'confbridge_result'

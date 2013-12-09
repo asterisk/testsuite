@@ -1,0 +1,424 @@
+testinfo:
+    summary: 'Basic tests of CONFBRIDGE_STATUS channel variable'
+    description: |
+        'Five channels are placed into a ConfBridge(). Each is removed from
+        the Confbridge in a way that results in their CONFBRIDGE_STATUS being
+        set to a different value. This ensures that the values are as expected.
+        Alice enters first. She has the endmarked option applied to him.
+        Bob attempts to enter next. He tries to use a non-existent user profile though.
+        Carol enters next. There is nothing special about her.
+        Darnell enters next. He is a marked user and an admin.
+        Egbert enters last. There is nothing special about him.
+        Darnell kicks Egbert from the conference.
+        Carol presses a DTMF sequence to exit the conference.
+        Darnell hangs up, causing Alice to be kicked from the conference.
+        In the end, their CONFBRIDGE_STATUS variables should be set as follows:
+        Alice: ENDMARKED
+        Bob: FAILED
+        Carol: DTMF
+        Darnell: HANGUP
+        Egbert: KICKED'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+    app: 'ConfBridge'
+    scenarios:
+        -
+            events:
+                -
+                    type: 'headermatch'
+                    conditions:
+                        match:
+                            Event: 'ConfbridgeStart'
+                            Conference: '1'
+                    actions:
+                        -
+                            action-type: 'set-expected-result'
+                            expected-result: 'Conference Started'
+                -
+                    type: 'headermatch'
+                    conditions:
+                        match:
+                            Event: 'ConfbridgeEnd'
+                            Conference: '1'
+                    actions:
+                        -
+                            action-type: 'set-expected-result'
+                            expected-result: 'Conference Ended'
+                        -
+                            action-type: 'end-scenario'
+            channels:
+                -
+                    channel-id: 'Alice'
+                    channel-name: 'Local/alice@default'
+                    start-on-create: True
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/alice@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Alice Joined'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/alice@default-.*'
+                                    ChanVariable: 'CONFBRIDGE_RESULT=ENDMARKED'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Alice Left (Endmarked)'
+                -
+                    channel-id: 'Bob'
+                    channel-name: 'Local/bob@default'
+                    start-on-create: True
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'Hangup'
+                                    Channel: 'Local/bob@default-.*'
+                                    ChanVariable: 'CONFBRIDGE_RESULT=FAILED'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Bob Failed to Join'
+
+                -
+                    channel-id: 'Carol'
+                    channel-name: 'Local/carol@default'
+                    start-on-create: True
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/carol@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Carol Joined'
+                                -
+                                    action-type: 'start-call'
+                                    channel-id: 'Darnell'
+                                -
+                                    action-type: 'send-dtmf'
+                                    delay: '1'
+                                    dtmf: '*'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/carol@default-.*'
+                                    ChanVariable: 'CONFBRIDGE_RESULT=DTMF'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Carol Left (DTMF)'
+                -
+                    channel-id: 'Darnell'
+                    channel-name: 'Local/darnell@default'
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/darnell@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Darnell Joined'
+                                -
+                                    action-type: 'start-call'
+                                    channel-id: 'Egbert'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/darnell@default-.*'
+                                    ChanVariable: 'CONFBRIDGE_RESULT=HANGUP'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Darnell Left (Hangup)'
+                -
+                    channel-id: 'Egbert'
+                    channel-name: 'Local/egbert@default'
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/egbert@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Egbert Joined'
+                                -
+                                    action-type: 'send-dtmf'
+                                    delay: '1'
+                                    dtmf: '*'
+                                    channel-id: 'Darnell'
+
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/egbert@default-.*'
+                                    ChanVariable: 'CONFBRIDGE_RESULT=KICKED'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Egbert Left (Kicked)'
+                                -
+                                    action-type: 'hangup'
+                                    channel-id: 'Darnell'
+
+
+properties:
+    minversion: '13.0.0'
+    tags:
+        - confbridge
+        - apps
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_confbridge'
+        - asterisk: 'app_senddtmf'
+testinfo:
+    summary: 'Basic tests of CONFBRIDGE_STATUS channel variable'
+    description: |
+        'Five channels are placed into a ConfBridge(). Each is removed from
+        the Confbridge in a way that results in their CONFBRIDGE_STATUS being
+        set to a different value. This ensures that the values are as expected.
+        Alice enters first. She has the endmarked option applied to him.
+        Bob attempts to enter next. He tries to use a non-existent user profile though.
+        Carol enters next. There is nothing special about her.
+        Darnell enters next. He is a marked user and an admin.
+        Egbert enters last. There is nothing special about him.
+        Darnell kicks Egbert from the conference.
+        Carol presses a DTMF sequence to exit the conference.
+        Darnell hangs up, causing Alice to be kicked from the conference.
+        In the end, their CONFBRIDGE_STATUS variables should be set as follows:
+        Alice: ENDMARKED
+        Bob: FAILED
+        Carol: DTMF
+        Darnell: HANGUP
+        Egbert: KICKED'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+    app: 'ConfBridge'
+    scenarios:
+        -
+            events:
+                -
+                    type: 'headermatch'
+                    conditions:
+                        match:
+                            Event: 'ConfbridgeStart'
+                            Conference: '1'
+                    actions:
+                        -
+                            action-type: 'set-expected-result'
+                            expected-result: 'Conference Started'
+                -
+                    type: 'headermatch'
+                    conditions:
+                        match:
+                            Event: 'ConfbridgeEnd'
+                            Conference: '1'
+                    actions:
+                        -
+                            action-type: 'set-expected-result'
+                            expected-result: 'Conference Ended'
+                        -
+                            action-type: 'end-scenario'
+            channels:
+                -
+                    channel-id: 'Alice'
+                    channel-name: 'Local/alice@default'
+                    start-on-create: True
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/alice@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Alice Joined'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/alice@default-.*'
+                                    ChanVariable: 'CONFBRIDGE_RESULT=ENDMARKED'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Alice Left (Endmarked)'
+                -
+                    channel-id: 'Bob'
+                    channel-name: 'Local/bob@default'
+                    start-on-create: True
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'Hangup'
+                                    Channel: 'Local/bob@default-.*'
+                                    ChanVariable: 'CONFBRIDGE_RESULT=FAILED'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Bob Failed to Join'
+
+                -
+                    channel-id: 'Carol'
+                    channel-name: 'Local/carol@default'
+                    start-on-create: True
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/carol@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Carol Joined'
+                                -
+                                    action-type: 'start-call'
+                                    channel-id: 'Darnell'
+                                -
+                                    action-type: 'send-dtmf'
+                                    delay: '1'
+                                    dtmf: '*'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/carol@default-.*'
+                                    ChanVariable: 'CONFBRIDGE_RESULT=DTMF'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Carol Left (DTMF)'
+                -
+                    channel-id: 'Darnell'
+                    channel-name: 'Local/darnell@default'
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/darnell@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Darnell Joined'
+                                -
+                                    action-type: 'start-call'
+                                    channel-id: 'Egbert'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/darnell@default-.*'
+                                    ChanVariable: 'CONFBRIDGE_RESULT=HANGUP'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Darnell Left (Hangup)'
+                -
+                    channel-id: 'Egbert'
+                    channel-name: 'Local/egbert@default'
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/egbert@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Egbert Joined'
+                                -
+                                    action-type: 'send-dtmf'
+                                    delay: '1'
+                                    dtmf: '*'
+                                    channel-id: 'Darnell'
+
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/egbert@default-.*'
+                                    ChanVariable: 'CONFBRIDGE_RESULT=KICKED'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Egbert Left (Kicked)'
+                                -
+                                    action-type: 'hangup'
+                                    channel-id: 'Darnell'
+
+
+properties:
+    minversion: '13.0.0'
+    tags:
+        - confbridge
+        - apps
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_confbridge'
+        - asterisk: 'app_senddtmf'
