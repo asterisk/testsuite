@@ -1,0 +1,18 @@
+testinfo:
+    summary: 'Test that the f option for MixMonitor() saves the filename to the appropriate place'
+    description: |
+        'A call is originated to an extension that calls MixMonitor with the f option
+        enabled. The call then checks that the variable name passed to the f option
+        has the expected filename set.'
+
+test-modules:
+    test-object:
+        typename: 'SimpleTestCase.SimpleTestCase'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+    tags:
+        - mixmonitor
