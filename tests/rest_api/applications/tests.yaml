@@ -5,3 +5,4 @@ tests:
 # Endpoint test requires an actual SIP endpoint in an ARI test
 #    - test: 'subscribe-endpoint'
     - test: 'subscribe-bridge'
+    - test: 'subscribe-device-state'

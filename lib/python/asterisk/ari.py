@@ -342,6 +342,19 @@ class ARI(object):
         return self.raise_on_err(requests.get(url, params=kwargs,
                                          auth=self.userpass))
 
+    def put(self, *args, **kwargs):
+        '''Send a PUT request to ARI.
+
+        :param args: Path segements.
+        :param kwargs: Query parameters.
+        :returns: requests.models.Response
+        :throws: requests.exceptions.HTTPError
+        '''
+        url = self.build_url(*args)
+        LOGGER.info("PUT %s %r" % (url, kwargs))
+        return self.raise_on_err(requests.put(url, params=kwargs,
+                                          auth=self.userpass))
+
     def post(self, *args, **kwargs):
         '''Send a POST request to ARI.
 

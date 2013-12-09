@@ -7,4 +7,5 @@ tests:
     - dir:  'bridges'
     - dir:  'channels'
     - dir:  'recording'
+    - dir:  'device_state'
     - test: 'request-bodies'

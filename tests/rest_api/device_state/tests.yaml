@@ -1,0 +1,6 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'add_remove'
+    - test: 'add_invalid'
+    - test: 'change'
+    - test: 'list'

@@ -1,0 +1,48 @@
+testinfo:
+    summary: Test subscribing to device state from an application.
+    description: |
+        Subscribe an application to a device state, watch for a change in
+        state and then unsubscribe.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            callback:
+                module: subscribe_device_state
+                method: on_start
+        -   conditions:
+                match:
+                    type: DeviceStateChanged
+                    application: testsuite
+            count: 1
+            callback:
+                module: subscribe_device_state
+                method: on_state_change
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_device_states
+        - asterisk : app_echo
+    tags:
+        - ARI
+
+
