@@ -6,7 +6,7 @@ tests:
     - dir: 'voicemail'
     - dir: 'incomplete'
     - dir: 'confbridge'
-    - test: 'page'
+    - dir: 'page'
     - dir: 'chanspy'
     - dir: 'queues'
     - test: 'directed_pickup'
