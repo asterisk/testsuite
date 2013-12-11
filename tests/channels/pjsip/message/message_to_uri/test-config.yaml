@@ -1,0 +1,27 @@
+testinfo:
+    summary: 'Test a MESSAGE using the default outbound endpoint'
+    description: |
+        'Send a SIP MESSAGE to Asterisk and once received use the dialplan
+         application MessageSend to send a MESSAGE to a receiver via a
+         direct URI.'
+
+properties:
+    minversion: '12'
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_messaging'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'message_recv.xml', '-p':'5062' } }
+                - { 'key-args': { 'scenario':'message.xml', '-p':'5061' } }
