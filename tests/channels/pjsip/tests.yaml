@@ -9,4 +9,5 @@ tests:
     - dir: 'registration'
     - dir: 'diversion'
     - dir: 'message'
+    - dir: 'dialplan_functions'
     - dir: 'ami'

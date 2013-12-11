@@ -1,0 +1,56 @@
+testinfo:
+    summary:     'Tests the PJSIP_ENDPOINT function'
+    description: |
+        'Extract values from pjsip endpoint configuration using the
+        PJSIP_ENDPOINT function. This tests all values for a single
+        endpoint (alice), and verifies that checking a different
+        endpoint (bob) also works. Off nominal endpoints/fields
+        are checked by verifying that the function handles such
+        calls gracefully.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'SimpleTestCase.SimpleTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -
+            channel: 'Local/s@default'
+            application: 'Echo'
+
+ami-config:
+    -
+        id: '0'
+        type: 'headermatch'
+        count: '1'
+        conditions:
+            match:
+                Event: 'UserEvent'
+        requirements:
+            match:
+                Status: 'passed'
+    -
+        id: '0'
+        type: 'headermatch'
+        count: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                Status: 'failed'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'func_pjsip_endpoint'
+    tags:
+        - pjsip

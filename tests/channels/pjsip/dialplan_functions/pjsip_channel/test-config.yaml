@@ -1,0 +1,54 @@
+testinfo:
+    summary:     'Tests the CHANNEL function for PJSIP'
+    description: |
+        'Extract values from a PJSIP channel using the CHANNEL
+        function. This checks all of the supported channel technology
+        specific values that the CHANNEL function exposes.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+
+test-object-config:
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario': 'uac-no-hangup.xml', '-p': '5062', '-i': '127.0.0.1', '-s': 'alice', '-rsa': '127.0.0.1:5061', '-s': 'alice'} }
+
+
+ami-config:
+    -
+        id: '0'
+        type: 'headermatch'
+        count: '1'
+        conditions:
+            match:
+                Event: 'UserEvent'
+        requirements:
+            match:
+                Status: 'passed'
+    -
+        id: '0'
+        type: 'headermatch'
+        count: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                Status: 'failed'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_session'
+        - asterisk : 'chan_pjsip'
+    tags:
+        - pjsip
