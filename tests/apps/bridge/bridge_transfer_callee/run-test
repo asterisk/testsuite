@@ -28,7 +28,7 @@ class BridgeTransferTest(TestCase):
         self.current_test = 0
         self.total_tests = 4
         self.create_asterisk()
-        self.channel1 = None
+        self.hangup_channel = None
 
     def run(self):
         TestCase.run(self)
@@ -103,15 +103,18 @@ class BridgeTransferTest(TestCase):
             LOGGER.error("A bridge failed. That's rather abnormal.")
 
     def bridge_enter_event(self, ami, event):
-        if self.channel1 is None:
-            self.channel1 = event['channel']
-            LOGGER.info("Got first channel %s in bridge %s" % (self.channel1, event['bridgeuniqueid']))
+        if self.hangup_channel is None:
+            self.hangup_channel = event['channel']
+            LOGGER.info("Got first channel %s in bridge %s" % (self.hangup_channel, event['bridgeuniqueid']))
             return
 
+        if self.hangup_channel.find("call2") == -1:
+            self.hangup_channel = event['channel']
+
         LOGGER.info("Got second channel %s in bridge %s, hanging up %s" %
-            (event['channel'], event['bridgeuniqueid'], self.channel1))
-        ami.hangup(self.channel1)
-        self.channel1 = None
+            (event['channel'], event['bridgeuniqueid'], self.hangup_channel))
+        ami.hangup(self.hangup_channel)
+        self.hangup_channel = None
 
     def match_starts(self, string1, string2):
         pattern = re.compile(string1)
