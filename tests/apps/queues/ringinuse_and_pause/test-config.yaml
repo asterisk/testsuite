@@ -6,7 +6,7 @@ testinfo:
         that autopause takes effect properly after a called member does not answer.
         Third, it makes sure that a paused member is not called, even if ringinuse
         is not set to 'no.'
-        
+
         The test also tests some subtle behavior aspects. For instance, we do not
         autopause a member UNLESS he gets called. So in the first test call run, we
         call a busy member who has ringinuse=no. This means that since we didn't even
@@ -19,5 +19,6 @@ properties:
         - app : 'asttest'
         - sipp :
             version : 'v3.0'
+        - asterisk : 'chan_sip'
     tags:
         - queues

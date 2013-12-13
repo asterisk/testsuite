@@ -8,5 +8,6 @@ properties:
         - python : 'twisted'
         - python : 'construct'
         - 'pcap'
+        - asterisk : 'chan_sip'
     tags:
         - SIP

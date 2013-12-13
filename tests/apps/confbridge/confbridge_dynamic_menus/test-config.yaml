@@ -388,4 +388,6 @@ properties:
       - asterisk : 'app_confbridge'
       - asterisk : 'app_senddtmf'
       - asterisk : 'app_playback'
+      - asterisk : 'chan_sip'
+
 

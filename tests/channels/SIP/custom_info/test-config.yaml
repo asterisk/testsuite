@@ -9,5 +9,6 @@ properties:
       - 'digiumphones'
     dependencies:
         - app : 'sipp'
+        - asterisk : 'chan_sip'
     tags:
         - SIP

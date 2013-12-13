@@ -20,6 +20,7 @@ properties:
         - python : 'starpy'
         - asterisk : 'app_senddtmf'
         - asterisk : 'app_voicemail'
+        - asterisk : 'chan_sip'
     tags:
         - voicemail
         - apps

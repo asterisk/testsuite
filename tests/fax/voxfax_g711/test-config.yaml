@@ -10,5 +10,6 @@ properties:
     minversion: '11.0.0'
     dependencies:
         - asterisk: 'app_dial'
+        - asterisk : 'chan_sip'
     tags:
         - hangup

@@ -77,6 +77,7 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk : 'chan_sip'
     tags:
         - SIP
         - CDR

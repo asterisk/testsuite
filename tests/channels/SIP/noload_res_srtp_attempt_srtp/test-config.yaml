@@ -9,5 +9,6 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'res_srtp'
+        - asterisk : 'chan_sip'
     tags:
         - SIP

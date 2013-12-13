@@ -8,5 +8,6 @@ properties:
     minversion: '1.8.9'
     dependencies:
         - app : 'sipp'
+        - asterisk : 'chan_sip'
     tags:
         - SIP

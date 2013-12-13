@@ -8,5 +8,6 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'res_config_sqlite'
+        - asterisk : 'chan_sip'
     tags:
         - SIP

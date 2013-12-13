@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 """ Asterisk Instances in Python.
 
@@ -247,7 +248,7 @@ class Asterisk:
                 for (var, val) in c.options:
                     self.directories[var] = val
 
-    def start(self):
+    def start(self, deps=None):
         """ Start this instance of Asterisk.
 
         Returns:
@@ -286,7 +287,7 @@ class Asterisk:
                 logger.debug("Asterisk core waitfullybooted failed, attempting again...")
                 reactor.callLater(1, __execute_wait_fully_booted)
 
-        self.install_configs(os.getcwd() + "/configs")
+        self.install_configs(os.getcwd() + "/configs", deps)
         self.__setup_configs()
 
         self.cmd = [
@@ -410,7 +411,7 @@ class Asterisk:
 
         return self.__stop_deferred
 
-    def install_configs(self, cfg_path):
+    def install_configs(self, cfg_path, deps=None):
         """Installs all files located in the configuration directory for this
         instance of Asterisk.
 
@@ -438,6 +439,9 @@ class Asterisk:
         if not self.__configs_installed and cfg_path != ("%s/configs" % os.getcwd()):
             """ Do a one-time installation of the base configs """
             self.install_configs("%s/configs" % os.getcwd())
+            # the default modules.conf should be installed now, so append conflicts
+            # this can be overriden of course by a test specific modules.conf
+            self.__append_modules_conf(deps)
             self.__configs_installed = True
 
         if not os.access(cfg_path, os.F_OK):
@@ -691,6 +695,44 @@ class Asterisk:
             f.write("\n")
 
         f.close()
+
+    def __get_module_conflicts(self, deps):
+        if not deps:
+            return []
+
+        conflicts = []
+        try:
+            with open(os.getcwd() + '/configs/' + 'conflicts.txt', 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line[0] == ';':
+                        continue
+
+                    key, val = line.split('=')
+                    if next((d for d in deps if key == d.name), None):
+                        for v in val.split(','):
+                            conflicts.append(v.strip())
+        except:
+            pass
+        return conflicts
+
+    def __append_modules_conf(self, deps):
+        conflicts = self.__get_module_conflicts(deps)
+
+        if not conflicts:
+            return
+
+        modules_conf = os.path.join(self.astetcdir, "modules.conf")
+        try:
+            with open(modules_conf, "a") as f:
+                for c in conflicts:
+                    f.write('noload => %s\n' % c)
+        except IOError:
+            logger.error("Failed to open %s" % modules_conf)
+            return
+        except:
+            logger.error("Unexpected error: %s" % sys.exc_info()[0])
+            return
 
     def __mirror_dir(self, ast_dir_name, ast_dir_path, cache):
         self.__makedirs(ast_dir_path)

@@ -12,6 +12,7 @@ properties:
         - python : 'starpy'
         - sipp :
             version : 'v3.0'
+        - asterisk : 'chan_sip'
     tags:
         - SIP
         - DTMF

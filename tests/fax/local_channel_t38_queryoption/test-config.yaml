@@ -16,6 +16,7 @@ properties:
         - app : 'bash'
         - app : 'asttest'
         - custom : 'fax'
+        - asterisk : 'chan_sip'
     tags:
         - fax
         - fax_passthrough

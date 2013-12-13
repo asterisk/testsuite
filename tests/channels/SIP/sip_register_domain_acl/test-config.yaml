@@ -9,5 +9,6 @@ properties:
         - sipp:
             version: 'v3.1'
             feature: 'TLS'  # "Authentication requires OpenSSL support"
+        - asterisk : 'chan_sip'
     tags:
         - SIP

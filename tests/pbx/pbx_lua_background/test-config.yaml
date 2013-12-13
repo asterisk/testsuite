@@ -9,6 +9,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'pbx_lua'
+        - asterisk : 'chan_sip'
     testconditions:
         - name: 'threads'
           ignoredThreads:

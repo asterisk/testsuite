@@ -21,6 +21,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - custom : 'fax'
+        - asterisk : 'chan_sip'
     tags:
         - fax
         - fax_gateway

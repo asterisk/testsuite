@@ -10,6 +10,7 @@ properties:
     minversion: '1.8.0.0'
     dependencies:
         - python : 'pjsua'
+        - asterisk : 'chan_sip'
     tags:
         - SIP
         - transfer

@@ -188,10 +188,11 @@ class TestCase(object):
             """ If a base configuration for this Asterisk instance has been
             provided, install it first"""
             if base_configs_path:
-                self.ast[c].install_configs("%s/ast%d" % (base_configs_path, c + 1))
+                self.ast[c].install_configs("%s/ast%d" % (base_configs_path, c + 1),
+                                            self.test_config.get_deps())
             """ Copy test specific config files """
             self.ast[c].install_configs("%s/configs/ast%d" %
-                    (self.test_name, c + 1))
+                    (self.test_name, c + 1), self.test_config.get_deps())
 
     def create_ami_factory(self, count=1, username="user", secret="mysecret", port=5038):
         """
@@ -301,7 +302,7 @@ class TestCase(object):
         start_defers = []
         for index, item in enumerate(self.ast):
             logger.info("Starting Asterisk instance %d" % (index + 1))
-            temp_defer = self.ast[index].start()
+            temp_defer = self.ast[index].start(self.test_config.get_deps())
             start_defers.append(temp_defer)
 
         d = defer.DeferredList(start_defers, consumeErrors=True)

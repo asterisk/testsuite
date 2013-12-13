@@ -10,6 +10,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - app : 'pjsua'
+        - asterisk : 'chan_sip'
     tags:
         - SIP
         - transfer

@@ -14,5 +14,6 @@ properties:
         - custom : 'ipv6'
         - sipp :
             version : 'v3.0'
+        - asterisk : 'chan_sip'
     tags:
         - SIP

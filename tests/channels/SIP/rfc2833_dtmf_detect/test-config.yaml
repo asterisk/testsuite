@@ -29,6 +29,7 @@ properties:
         - sipp :
             version : 'v3.0'
             feature : 'PCAP'
+        - asterisk : 'chan_sip'
     tags:
         - SIP
         - DTMF

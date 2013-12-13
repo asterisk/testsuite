@@ -16,6 +16,7 @@ properties:
         - python : 'starpy'
         - app : 'pjsua'
         - asterisk : 'app_talkdetect'
+        - asterisk : 'chan_sip'
     tags:
         - SIP
         - chanspy

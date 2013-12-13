@@ -14,6 +14,7 @@ properties:
         - app : 'asttest'
         - sipp :
             version : 'v3.0'
+        - asterisk : 'chan_sip'
     tags:
         - SIP
         - transfer

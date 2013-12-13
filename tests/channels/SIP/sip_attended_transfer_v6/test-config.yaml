@@ -11,6 +11,7 @@ properties:
         - python : 'starpy'
         - custom : 'ipv6'
         - app : 'sipp'
+        - asterisk : 'chan_sip'
     tags:
         - SIP
         - transfer

@@ -43,6 +43,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'cdr_csv'
+        - asterisk : 'chan_sip'
     tags:
         - dial
         - CDR

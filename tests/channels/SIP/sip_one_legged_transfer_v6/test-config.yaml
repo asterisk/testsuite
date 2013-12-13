@@ -12,6 +12,7 @@ properties:
         - app : 'pjsua'
         - custom: 'ipv6'
         - custom: 'pjsuav6'
+        - asterisk : 'chan_sip'
     tags:
         - SIP
         - transfer

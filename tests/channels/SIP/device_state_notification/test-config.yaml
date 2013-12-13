@@ -34,5 +34,6 @@ properties:
         - python: 'starpy'
         - sipp:
             version: 'v3.1'
+        - asterisk : 'chan_sip'
     tags:
         - SIP

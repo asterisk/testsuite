@@ -393,6 +393,21 @@ class TestConfig:
 
         return conditions
 
+    def get_deps(self):
+        if not self.config:
+            return []
+
+        if not "properties" in self.config:
+            raise ValueError("%s: Missing properties section" % self.test_name)
+
+        if not self.deps:
+            self.deps = [
+                Dependency(d)
+                for d in self.config["properties"].get("dependencies") or []
+            ]
+        return self.deps
+
+
     def check_deps(self, ast_version):
         """
         Check whether or not a test should execute based on its configured dependencies
@@ -405,14 +420,6 @@ class TestConfig:
 
         if not self.config:
             return False
-
-        if not "properties" in self.config:
-            raise ValueError("%s: Missing properties section" % self.test_name)
-
-        self.deps = [
-            Dependency(d)
-                for d in self.config["properties"].get("dependencies") or []
-        ]
 
         if self.forced_version is not None:
             ast_version = self.forced_version
@@ -434,7 +441,7 @@ class TestConfig:
             if not self.feature_check[f]:
                 self.can_run = False
 
-        for d in self.deps:
+        for d in self.get_deps():
             if d.met is False:
                 self.can_run = False
                 break

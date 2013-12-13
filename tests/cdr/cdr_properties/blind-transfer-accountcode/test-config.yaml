@@ -16,6 +16,7 @@ properties:
             version : 'v3.0'
             feature : 'TLS'
         - asterisk : 'cdr_csv'
+        - asterisk : 'chan_sip'
     tags:
         - CDR
         - SIP
