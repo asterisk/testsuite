@@ -1,4 +1,5 @@
 tests:
     - test: 'originate'
+    - test: 'originate_with_vars'
     - test: 'snoop_whisper'
     - test: 'snoop_spy'
