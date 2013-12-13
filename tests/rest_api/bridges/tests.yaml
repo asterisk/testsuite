@@ -4,3 +4,4 @@ tests:
     - test: 'hangup'
     - test: 'move'
     - test: 'delete'
+    - test: 'add_recording_channel'
