@@ -1,0 +1,293 @@
+testinfo:
+    summary: 'Say Application tests for SAY_DTMF_INTERRUPT'
+    description: |
+        Tests all core say applications for the ability to jump via DTMF
+        when the SAY_DTMF_INTERRUPT option is set and unset
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  # SayNumber needs to be the first application in a given test to ensure DTMF is sent
+  app: 'SayNumber'
+  scenarios:
+    # Phase 0: Without the SAY_DTMF_INTERRUPT variable set
+    -
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'UserEvent'
+              UserEvent: 'TestStatus'
+              Status: 'failure'
+          actions:
+            -
+              action-type: 'fail-test'
+              message: 'Phase 0: We jumped for some reason when we should not have jumped.'
+      channels:
+        -
+          channel-id: 'WithoutInterrupt'
+          channel-name: 'Local/test@say_without_interrupt'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestStatus'
+                  Status: 'success'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 0 - Test Reached Completion Event'
+                -
+                  action-type: 'end-scenario'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestDTMF'
+                  DTMF: '1'
+                  Channel: 'Local/test@say_without_interrupt-.*'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '1'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 0 - Test reached DTMF request 1/6'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestDTMF'
+                  DTMF: '2'
+                  Channel: 'Local/test@say_without_interrupt-.*'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '2'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 0 - Test reached DTMF request 2/6'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestDTMF'
+                  DTMF: '3'
+                  Channel: 'Local/test@say_without_interrupt-.*'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '3'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 0 - Test reached DTMF request 3/6'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestDTMF'
+                  DTMF: '4'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '4'
+                  Channel: 'Local/test@say_without_interrupt-.*'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 0 - Test reached DTMF request 4/6'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestDTMF'
+                  DTMF: '5'
+                  Channel: 'Local/test@say_without_interrupt-.*'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '5'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 0 - Test reached DTMF request 5/6'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestDTMF'
+                  DTMF: '6'
+                  Channel: 'Local/test@say_without_interrupt-.*'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '6'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 0 - Test reached DTMF request 6/6'
+
+    #Phase 1: With the SAY_DTMF_INTERRUPT variable set
+    -
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'UserEvent'
+              UserEvent: 'TestStatus'
+              Status: 'failure'
+          actions:
+            -
+              action-type: 'fail-test'
+              message: 'Phase 1: We did not jump and we should have.'
+      channels:
+        -
+          channel-id: 'WithInterrupt'
+          channel-name: 'Local/test@say_with_interrupt'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestStatus'
+                  Status: 'success'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1 - Test Reached Completion Event'
+                -
+                  action-type: 'end-scenario'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestDTMF'
+                  DTMF: '1'
+                  Channel: 'Local/test@say_with_interrupt-.*'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '1'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1 - Test reached DTMF request 1/6'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestDTMF'
+                  DTMF: '2'
+                  Channel: 'Local/test@say_with_interrupt-.*'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '2'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1 - Test reached DTMF request 2/6'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestDTMF'
+                  DTMF: '3'
+                  Channel: 'Local/test@say_with_interrupt-.*'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '3'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1 - Test reached DTMF request 3/6'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestDTMF'
+                  DTMF: '4'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '4'
+                  Channel: 'Local/test@say_with_interrupt-.*'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1 - Test reached DTMF request 4/6'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestDTMF'
+                  DTMF: '5'
+                  Channel: 'Local/test@say_with_interrupt-.*'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '5'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1 - Test reached DTMF request 5/6'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestDTMF'
+                  DTMF: '6'
+                  Channel: 'Local/test@say_with_interrupt-.*'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '6'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1 - Test reached DTMF request 6/6'
+
+
+properties:
+    minversion: '13.0.0'
+    tags:
+      - say
+      - apps
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_sayunixtime'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_playback'
+
