@@ -56,9 +56,9 @@ class AppTest(TestCase):
         self._expected_results = {}     # Expected results for all scenarios
         self._event_instances = []      # The ApplicationEventInstance objects
 
-        self.test_config = test_config
-        self._application = self.test_config['app']
-        self._scenarios = self.test_config['scenarios']
+        self.raw_test_config = test_config
+        self._application = self.raw_test_config['app']
+        self._scenarios = self.raw_test_config['scenarios']
 
         self.register_ami_observer(self.__ami_connect_handler)
         self.register_stop_observer(self.end_scenario)
