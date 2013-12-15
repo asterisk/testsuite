@@ -16,7 +16,11 @@ properties:
         - python : 'starpy'
         - app : 'pjsua'
         - asterisk : 'app_talkdetect'
+        - asterisk : 'res_musiconhold'
+        - asterisk : 'app_mixmonitor'
+        - asterisk : 'app_chanspy'
         - asterisk : 'chan_sip'
+
     tags:
         - SIP
         - chanspy
