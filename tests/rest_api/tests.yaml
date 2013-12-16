@@ -9,3 +9,4 @@ tests:
     - dir:  'recording'
     - dir:  'device_state'
     - test: 'request-bodies'
+    - dir:  'danger'

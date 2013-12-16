@@ -193,11 +193,11 @@ class TestSuite:
         try:
             f = open("%s/%s" % (test_dir, TESTS_CONFIG), "r")
         except IOError:
-            print "Failed to open %s" % TESTS_CONFIG
-            return
+            print "Failed to open %s/%s" % (test_dir, TESTS_CONFIG)
+            return tests
         except:
             print "Unexpected error: %s" % sys.exc_info()[0]
-            return
+            return tests
 
         config = yaml.load(f)
         f.close()

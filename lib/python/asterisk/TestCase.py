@@ -99,8 +99,13 @@ class TestCase(object):
         self._pcap_callbacks = []
 
         """ Pull additional configuration from YAML config if possible """
-        if test_config and 'reactor-timeout' in test_config:
-            self.reactor_timeout = test_config['reactor-timeout']
+        if test_config:
+            if 'reactor-timeout' in test_config:
+                self.reactor_timeout = test_config['reactor-timeout']
+            self.ast_conf_options = test_config.get('ast-config-options')
+        else:
+            self.ast_conf_options = None
+
 
         os.makedirs(self.testlogdir)
 
@@ -184,7 +189,8 @@ class TestCase(object):
         for c in range(count):
             logger.info("Creating Asterisk instance %d" % (c + 1))
             host = "127.0.0.%d" % (c + 1)
-            self.ast.append(Asterisk(base=self.base, host=host))
+            self.ast.append(Asterisk(base=self.base, host=host,
+                                     ast_conf_options=self.ast_conf_options))
             """ If a base configuration for this Asterisk instance has been
             provided, install it first"""
             if base_configs_path:

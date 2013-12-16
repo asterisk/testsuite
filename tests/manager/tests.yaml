@@ -6,5 +6,6 @@ tests:
     - test: 'authtimeout'
     - test: 'acl-login'
     - test: 'bridge_actions'
+    - dir:  'danger'
     # Temporarily disabled while failures are debugged
     #- test: 'response-time'

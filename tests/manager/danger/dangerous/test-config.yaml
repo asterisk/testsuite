@@ -1,0 +1,14 @@
+testinfo:
+    summary:     Test dangerous function execution from AMI.
+    description: |
+        Execute a global GetVar(SHELL(echo hi)), ensuring that the function
+        is executed.
+
+properties:
+    minversion: '1.8.23.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'func_shell'
+    tags:
+        - AMI

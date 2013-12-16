@@ -1,0 +1,49 @@
+testinfo:
+    summary: Test whether dangerous functions can be allowed from ARI
+    description: |
+        From Stasis, attempt to execute the SHELL() function. Since
+        live_dangerously is set in asterisk.conf, it should work.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ast-config-options:
+    live_dangerously: 'yes'
+
+ari-config:
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            callback:
+                module: dangerous
+                method: on_start
+        -   conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+            count: 1
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+        - asterisk : func_shell
+    tags:
+        - ARI
+
+
