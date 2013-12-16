@@ -304,14 +304,17 @@ class CelRequirement(object):
                     extra_item = item.get(extra_key.lower())
                     if extra_item is None:
                         continue
-                    if re.search(extra_item, str(extra_value)) is None:
+                    extra_match = re.match(extra_item, str(extra_value))
+                    if extra_match is None or extra_match.end() != len(str(extra_value)):
                         logger.debug('Skipping %s - %s does not equal %s for extra-subfield %s' %
                                      (event['eventname'], extra_item, str(extra_value), extra_key))
                         return False
-            elif re.search(item, value) is None:
-                logger.debug('Skipping %s - %s does not equal %s for field %s' %
-                             (event['eventname'], item, value, key))
-                return False
+            else:
+                match = re.match(item, value)
+                if match is None or match.end() != len(value):
+                    logger.debug('Skipping %s - %s does not equal %s for field %s' %
+                                 (event['eventname'], item, value, key))
+                    return False
         logger.debug('Matched CEL event %s' % event['eventname'])
         return True
 
