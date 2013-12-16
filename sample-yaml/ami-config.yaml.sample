@@ -194,6 +194,14 @@ ami-config:
                 match:
                     EventName: 'HANGUP'
                     Channel: 'SIP/alice-.*'
+                    # Extra is a special case that is relevant for hangups
+                    # and other events that provide additional data in the
+                    # CEL Extra field as a JSON blob. Individual fields can
+                    # be matched using regex or ignored via omission.
+                    Extra:
+                        HangupCause: '16'
+                        HangupSource: '.*/bob-.*'
+                        DialStatus: 'ANSWER'
             -
                 # The same as the previous requirement but with a slightly
                 # different partialorder.

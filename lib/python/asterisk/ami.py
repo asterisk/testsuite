@@ -4,6 +4,7 @@ import datetime
 import sys
 import logging
 import re
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -280,6 +281,8 @@ class CelRequirement(object):
         self.requirements = {}
         for key, value in requirements['match'].items():
             lower_key = key.lower()
+            if lower_key == "extra":
+                value = dict((k.lower(), v) for k,v in value.iteritems())
             self.requirements[lower_key] = value
         self.orderings = requirements.get('partialorder') or []
         self.named_id = requirements.get('id')
@@ -291,7 +294,21 @@ class CelRequirement(object):
             item = self.requirements.get(key)
             if item is None:
                 continue
-            if re.match(item, value) is None:
+
+            # test 'Extra' fields against the JSON blob
+            if key == "extra":
+                if not len(value):
+                    continue
+                extra_obj = json.loads(value)
+                for extra_key, extra_value in extra_obj.items():
+                    extra_item = item.get(extra_key.lower())
+                    if extra_item is None:
+                        continue
+                    if re.search(extra_item, str(extra_value)) is None:
+                        logger.debug('Skipping %s - %s does not equal %s for extra-subfield %s' %
+                                     (event['eventname'], extra_item, str(extra_value), extra_key))
+                        return False
+            elif re.search(item, value) is None:
                 logger.debug('Skipping %s - %s does not equal %s for field %s' %
                              (event['eventname'], item, value, key))
                 return False

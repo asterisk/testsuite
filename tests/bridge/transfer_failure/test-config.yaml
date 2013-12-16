@@ -612,7 +612,10 @@ ami-cel-config-12:
                     CallerIDdnid: 'alice_blind'
                     Exten: 'alice_blind'
                     Context: 'default'
-                    Extra: '.*16.*ANSWER.*/alice-.*'
+                    Extra:
+                        hangupcause: '16'
+                        dialstatus: 'ANSWER'
+                        hangupsource: '.*/alice-.*'
             -
                 match:
                     EventName: 'CHAN_END'
@@ -685,7 +688,10 @@ ami-cel-config-12:
                     CallerIDdnid: 'alice_attended'
                     Exten: 'alice_attended'
                     Context: 'default'
-                    Extra: '.*16.*ANSWER.*/alice-.*'
+                    Extra:
+                        hangupcause: '16'
+                        dialstatus: 'ANSWER'
+                        hangupsource: '.*/alice-.*'
             -
                 match:
                     EventName: 'CHAN_END'
@@ -758,7 +764,9 @@ ami-cel-config-12:
                     CallerIDdnid: 'bob_blind'
                     Exten: 'bob_blind'
                     Context: 'default'
-                    Extra: '.*16.*ANSWER.*'
+                    Extra:
+                        hangupcause: '16'
+                        dialstatus: 'ANSWER'
             -
                 match:
                     EventName: 'CHAN_END'
@@ -831,7 +839,9 @@ ami-cel-config-12:
                     CallerIDdnid: 'bob_attended'
                     Exten: 'bob_attended'
                     Context: 'default'
-                    Extra: '.*16.*ANSWER.*'
+                    Extra:
+                        hangupcause: '16'
+                        dialstatus: 'ANSWER'
             -
                 match:
                     EventName: 'CHAN_END'
@@ -880,7 +890,9 @@ ami-cel-config-12:
                     CallerIDnum: '4321'
                     Application: 'AppDial'
                     AppData: '\(Outgoing Line\)'
-                    Extra: '.*16.*/alice-.*'
+                    Extra:
+                        hangupcause: '16'
+                        hangupsource: '.*/alice-.*'
             -
                 match:
                     EventName: 'CHAN_END'
@@ -923,7 +935,9 @@ ami-cel-config-12:
                     CallerIDnum: '4321'
                     Application: 'AppDial'
                     AppData: '\(Outgoing Line\)'
-                    Extra: '.*16.*/alice-.*'
+                    Extra:
+                        hangupcause: '16'
+                        hangupsource: '.*/alice-.*'
             -
                 match:
                     EventName: 'CHAN_END'
@@ -966,7 +980,8 @@ ami-cel-config-12:
                     CallerIDnum: '4321'
                     Application: 'AppDial'
                     AppData: '\(Outgoing Line\)'
-                    Extra: '.*16.*'
+                    Extra:
+                        hangupcause: '16'
             -
                 match:
                     EventName: 'CHAN_END'
@@ -1009,7 +1024,8 @@ ami-cel-config-12:
                     CallerIDnum: '4321'
                     Application: 'AppDial'
                     AppData: '\(Outgoing Line\)'
-                    Extra: '.*16.*'
+                    Extra:
+                        hangupcause: '16'
             -
                 match:
                     EventName: 'CHAN_END'
