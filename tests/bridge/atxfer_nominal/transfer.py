@@ -78,6 +78,7 @@ class Transfer(object):
         test_object The BridgeTestCase object
         feature The specific feature that was executed
         '''
+        LOGGER.debug("current_feature: %s\n" % self._current_feature)
         if self._current_feature['who'] == 'alice':
             ami = self.test_object.ami_bob
             channel = self.test_object.bob_channel
@@ -94,6 +95,7 @@ class Transfer(object):
     def _handle_attended_transfer(self, ami, event):
         ''' Handle the AttendedTransfer event. Once the event has
         triggered, the call can be torn down. '''
+        LOGGER.debug('ami %d: received event %s' % (ami.id, event))
         self._handle_feature_end(None, None)
 
     def complete_attended_transfer(self):
@@ -124,6 +126,7 @@ def complete_attended_transfer(ami, event):
     transfer by hanging up the transferer.
     '''
 
+    LOGGER.debug('ami %d: received event %s' % (ami.id, event))
     transfer = Transfer.get_instance()
     transfer.complete_attended_transfer()
     return True
