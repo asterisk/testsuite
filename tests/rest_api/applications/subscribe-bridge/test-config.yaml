@@ -38,21 +38,12 @@ ari-config:
                 method: on_enter_testsuite
         -   conditions:
                 match:
-                    type: ChannelEnteredBridge
-                    application: bridge-watching-app
-                    bridge:
-                    channel:
-            count: 1
-            callback:
-                module: subscribe_bridge
-                method: on_enter_watcher
-        -   conditions:
-                match:
                     type: ChannelLeftBridge
                     application: testsuite
                     bridge:
                     channel:
-            count: 0 # should not happen
+            count: 0 # event should not happen since the 'testsuite'
+                     # application won't be subscribed by raise time
         -   conditions:
                 match:
                     type: ChannelLeftBridge
