@@ -276,7 +276,13 @@ class Asterisk:
 
         def __wait_fully_booted_callback(cli_command):
             """ Callback for CLI command waitfullybooted """
-            self.__start_deferred.callback("Successfully started Asterisk %s" % self.host)
+            if "Asterisk has fully booted" in cli_command.output:
+                self.__start_deferred.callback("Successfully started Asterisk %s" % self.host)
+            else:
+                logger.debug("Asterisk core waitfullybooted failed " +
+                             "with output '%s', attempting again..." %
+                             cli_command.output)
+                reactor.callLater(1, __execute_wait_fully_booted)
 
         def __wait_fully_booted_error(cli_command):
             """ Errback for CLI command waitfullybooted """
