@@ -32,10 +32,16 @@ test-modules:
         -
             config-section: 'ami-config'
             typename: 'ami.AMIEventModule'
+        -
+            config-section: 'hangup-monitor'
+            typename: 'PluggableModules.HangupMonitor'
 
 test-object-config:
     asterisk-instances: 2
     connect-ami: True
+
+hangup-monitor:
+    ids: [ '1', ]
 
 originator-realm:
     trigger: 'ami_connect'
