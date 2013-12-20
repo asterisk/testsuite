@@ -17,14 +17,14 @@ def on_start(ari, event, obj):
 
     # subscribe to device
     ari.post("applications", "testsuite", "subscription",
-             eventSource="device_state:%s" % DEVICE)
+             eventSource="deviceState:%s" % DEVICE)
 
     # change the device state
     ari.put(URL, DEVICE, deviceState=CHANGED_STATE)
 
     # unsubscribe from device
     ari.delete("applications", "testsuite", "subscription",
-             eventSource="device_state:%s" % DEVICE)
+             eventSource="deviceState:%s" % DEVICE)
 
     # remove device
     ari.delete(URL, DEVICE)
