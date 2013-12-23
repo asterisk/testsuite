@@ -27,8 +27,6 @@ test-modules:
             typename: 'ami.AMIEventModule'
 
 object-config:
-    # the only way the test will stop is by timing out
-    # should be done within the specified value
     reactor-timeout: 15
 
 ami-config:
@@ -49,7 +47,7 @@ ami-config:
                     DefaultExpiration: '3600'
                     MaximumExpiration: '7200'
                     MinimumExpiration: '60'
-                    Contacts: user1/sip:user1@127.0.0.1:5062|user2/sip:user2@127.0.0.1:5063
+                    Contacts: user1/sip:user1@127.0.0.1:5061|user2/sip:user2@127.0.0.1:5062
             count: 2
         -
             type: 'headermatch'

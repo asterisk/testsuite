@@ -27,4 +27,14 @@ class AMISendTest(TestCase):
         self.create_ami_factory()
 
     def ami_connect(self, ami):
-        ami.sendDeferred(ACTION).addCallback(ami.errorUnlessResponse)
+        # wait for asterisk to attempt registration
+        ami.registerEvent('Registry', self.__on_registry)
+
+    def __on_registry(self, ami, event):
+        # asterisk attempted registration, so check details
+        ami.deregisterEvent('Registry', None)
+        ami.sendDeferred(ACTION).addCallback(self.__on_response)
+
+    def __on_response(self, result):
+        # stop test since done
+        self.stop_reactor()

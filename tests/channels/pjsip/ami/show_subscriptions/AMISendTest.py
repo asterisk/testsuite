@@ -17,7 +17,7 @@ from TestCase import TestCase
 
 from twisted.internet import reactor
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 ACTION = {
     "Action":"PJSIPShowSubscriptionsInbound"
@@ -36,12 +36,12 @@ class AMISendTest(TestCase):
         super(AMISendTest, self).ami_connect(ami)
 
         def _send_show_subscriptions(obj):
-            logger.info('Getting inbound subscriptions...')
+            LOGGER.info('Getting inbound subscriptions...')
             ami.sendDeferred(ACTION).addCallback(ami.errorUnlessResponse)
             reactor.callLater(2, self.stop_reactor)
             return obj
 
-        logger.info('Starting subscription scenario')
+        LOGGER.info('Starting subscription scenario')
         sipp = SIPpScenario(self.test_name,
             {'scenario':'subscribe.xml', '-p':'5061' })
         sipp.run(self).addCallback(_send_show_subscriptions)

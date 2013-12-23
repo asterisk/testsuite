@@ -8,10 +8,14 @@ the GNU General Public License Version 2.
 '''
 
 import sys
+import logging
 
 sys.path.append("lib/python/asterisk")
 
+from sipp import SIPpScenario
 from TestCase import TestCase
+
+LOGGER = logging.getLogger(__name__)
 
 ACTION = {
     "Action":"PJSIPShowRegistrationsInbound"
@@ -27,4 +31,19 @@ class AMISendTest(TestCase):
         self.create_ami_factory()
 
     def ami_connect(self, ami):
-        ami.sendDeferred(ACTION).addCallback(ami.errorUnlessResponse)
+        super(AMISendTest, self).ami_connect(ami)
+
+        def _on_register(obj):
+            LOGGER.info('Getting inbound registrations...')
+            ami.sendDeferred(ACTION).addCallback(self.__on_response)
+            return obj
+
+        LOGGER.info('Starting inbound registration scenario')
+
+        sipp = SIPpScenario(self.test_name,
+            {'scenario':'register.xml', '-p':'5061' })
+        sipp.run(self).addCallback(_on_register)
+
+    def __on_response(self, result):
+        # stop test since done
+        self.stop_reactor()

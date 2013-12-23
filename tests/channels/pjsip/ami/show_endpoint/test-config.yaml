@@ -27,8 +27,6 @@ test-modules:
             typename: 'ami.AMIEventModule'
 
 object-config:
-    # the only way the test will stop is by timing out
-    # should be done within the specified value
     reactor-timeout: 15
 
 ami-config:
