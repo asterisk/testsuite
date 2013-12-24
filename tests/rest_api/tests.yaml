@@ -10,3 +10,4 @@ tests:
     - dir:  'device_state'
     - test: 'request-bodies'
     - dir:  'danger'
+    - test: 'content-type'

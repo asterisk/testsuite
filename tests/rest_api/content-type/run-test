@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2013, Digium, Inc.
+David M. Lee, II <dlee@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import logging
+import requests
+import sys
+
+from requests import codes
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+from asterisk.asterisk import Asterisk
+from asterisk.TestCase import TestCase
+
+LOGGER = logging.getLogger(__name__)
+
+HOST='localhost'
+PORT=8088
+USERNAME='testsuite'
+PASSWORD='testsuite'
+
+def build_url(*args):
+    return "http://%s:%d/%s" %\
+           (HOST, PORT, '/'.join([str(arg) for arg in args]))
+
+class ARIContentTypeTest(TestCase):
+    def __init__(self):
+        TestCase.__init__(self)
+        self.passed = True
+        self.create_asterisk()
+
+    def run(self):
+        try:
+            # Post with a content type that has a parameter. Requests should
+            # succeed.
+            res = requests.post(
+                build_url('ari', 'asterisk', 'variable'),
+                params={ 'api_key': "%s:%s" % (USERNAME, PASSWORD) },
+                data='{ "variable": "foo", "value": "bar" }',
+                headers={ 'Content-Type': 'application/json; param=ignored'})
+            res.raise_for_status()
+        except:
+            logging.exception("Exception caught during test")
+            self.passed = False
+        finally:
+            self.stop_reactor()
+
+def main():
+    test = ARIContentTypeTest()
+    reactor.run()
+    if test.passed:
+        return 0
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
