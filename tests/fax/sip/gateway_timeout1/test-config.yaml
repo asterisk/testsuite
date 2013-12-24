@@ -1,0 +1,24 @@
+testinfo:
+    summary: 'Test the fax gateway.'
+    description: |
+        This test verifies that the gateway times out and disables it self
+        when no actionable fax activity has taken place.
+
+        The call flow looks like this:
+         |send        |
+         |g711    g711|
+         |----------->|
+         |     gateway|
+         |g711     t38|
+         |<-----------|
+        \|receive     |/
+
+properties:
+    minversion: '10.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - custom : 'fax'
+    tags:
+        - fax
+        - fax_gateway

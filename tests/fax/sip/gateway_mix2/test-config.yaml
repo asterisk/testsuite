@@ -1,0 +1,25 @@
+testinfo:
+    summary: 'Test the fax gateway.'
+    description: |
+        This test verifies proper gateway functionality when a v21 triggered
+        t38 negotiation request fails and the receiving side does not support
+        t38. The gateway should detect the failed reinvite and disable itself.
+
+        The call flow looks like this:
+         |send        |
+         |g711     t38|
+         |----------->|
+         |     gateway|
+         |g711    g711|
+         |<-----------|
+        \|receive     |/
+
+properties:
+    minversion: '10.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - custom : 'fax'
+    tags:
+        - fax
+        - fax_gateway

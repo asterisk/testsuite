@@ -1,0 +1,27 @@
+testinfo:
+    summary: 'Test the fax gateway.'
+    description: |
+        This test verifies proper gateway functionality when both channels
+        involved demonstrate they are capable of native t38. The gateway
+        monitors as the two channels negotiate t38 and removes itself when
+        negotiation is successful.
+
+        The call flow looks like this:
+         |send        |
+         |t38      t38|
+         |----------->|
+         |     gateway|
+         |t38      t38|
+         |<-----------|
+        \|receive     |/
+
+properties:
+    minversion: '10.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - custom : 'fax'
+    tags:
+        - fax
+        - fax_gateway
+        - fax_passthrough
