@@ -19,5 +19,4 @@ def on_kickoff_start(ari, event, test_object):
 
 def on_blast_start(ari, event, test_object):
     LOGGER.debug("on_blast_start(%r)" % event)
-    ari.delete('channels', event['channel']['id'])
     return True
