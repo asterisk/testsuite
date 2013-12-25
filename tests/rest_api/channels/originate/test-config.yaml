@@ -29,7 +29,7 @@ ari-config:
                     type: StasisStart
                     application: testsuite
                     args: ['blast']
-            count: 50
+            count: 25
             callback:
                 module: channel_originate
                 method: on_blast_start

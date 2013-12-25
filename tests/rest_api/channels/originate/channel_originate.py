@@ -12,7 +12,7 @@ LOGGER = logging.getLogger(__name__)
 
 def on_kickoff_start(ari, event, test_object):
     LOGGER.debug("on_kickoff_start(%r)" % event)
-    for x in xrange(50):
+    for x in xrange(25):
         ari.post('channels', endpoint='Local/1000@default', app='testsuite', appArgs='blast')
     ari.delete('channels', event['channel']['id'])
     return True
