@@ -11,3 +11,4 @@ tests:
     - dir: 'message'
     - dir: 'dialplan_functions'
     - dir: 'ami'
+    - test: 'set_var'
