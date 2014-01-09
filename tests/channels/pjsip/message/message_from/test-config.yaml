@@ -24,7 +24,5 @@ test-object-config:
         -
              scenarios:
                 - { 'key-args': { 'scenario':'message_recv.xml', '-p':'5062' }, 'ordered-args': ['-set', 'from', '<sip:user@127.0.0.1>'] }
-                - { 'key-args': { 'scenario':'message_recv.xml', '-p':'5063' }, 'ordered-args': ['-set', 'from', '<sip:user@127.0.0.1>'] }
-                - { 'key-args': { 'scenario':'message_recv.xml', '-p':'5064' }, 'ordered-args': ['-set', 'from', '<sip:user@127.0.0.1>'] }
-                - { 'key-args': { 'scenario':'message_recv.xml', '-p':'5065' }, 'ordered-args': ['-set', 'from', '"user" <sip:user@127.0.0.1>'] }
+                - { 'key-args': { 'scenario':'message_recv.xml', '-p':'5063' }, 'ordered-args': ['-set', 'from', '"test" <sip:test@localhost>'] }
                 - { 'key-args': { 'scenario':'message.xml', '-p':'5061' } }
