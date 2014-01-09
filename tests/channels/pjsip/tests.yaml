@@ -12,3 +12,4 @@ tests:
     - dir: 'dialplan_functions'
     - dir: 'ami'
     - test: 'set_var'
+    - test: 'hold'
