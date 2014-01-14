@@ -24,8 +24,8 @@ sys.path.append("lib/python")
 
 from asterisk.version import AsteriskVersion
 from asterisk.asterisk import Asterisk
-from asterisk.TestConfig import Dependency, TestConfig
-from asterisk import TestSuiteUtils
+from asterisk.test_config import Dependency, TestConfig
+from asterisk import test_suite_utils
 
 TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
@@ -53,7 +53,7 @@ class TestRun:
         ]
 
         if not os.path.exists(cmd[0]):
-            cmd = ["./lib/python/asterisk/TestRunner.py",
+            cmd = ["./lib/python/asterisk/test_runner.py",
                    "%s" % self.test_name]
         if os.path.exists(cmd[0]) and os.access(cmd[0], os.X_OK):
             msg = "Running %s ..." % cmd
@@ -73,7 +73,7 @@ class TestRun:
 
             self.__parse_run_output(self.stdout)
 
-            self.passed = (p.returncode == 0 and self.test_config.expectPass) or (p.returncode and not self.test_config.expectPass)
+            self.passed = (p.returncode == 0 and self.test_config.expect_pass) or (p.returncode and not self.test_config.expect_pass)
             core_dumps = self.__check_for_core()
             if (len(core_dumps)):
                 print "Core dumps detected; failing test"
@@ -291,7 +291,7 @@ class TestSuite:
                 continue
             if self.global_config != None:
                 exclude = False
-                for excluded in self.global_config.excludedTests:
+                for excluded in self.global_config.excluded_tests:
                     if excluded in t.test_name:
                         print "--- ---> Excluded test: %s" % excluded
                         exclude = True

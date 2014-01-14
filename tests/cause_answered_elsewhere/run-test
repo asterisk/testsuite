@@ -11,7 +11,7 @@ import sys
 import logging
 
 sys.path.append("lib/python")
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 from twisted.internet import reactor
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class AnsweredElsewhereTest(TestCase):
         logger.info("Initiating call to local/100@test on Echo() for answered_elsewhere test")
 
         ami.registerEvent('Hangup', self.__hangup_cb)
-        ami.originate("local/100@test", application="Echo").addErrback(self.handleOriginateFailure)
+        ami.originate("local/100@test", application="Echo").addErrback(self.handle_originate_failure)
 
     def __hangup_cb(self, ami, event):
         logger.info("Got hangup event")

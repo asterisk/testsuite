@@ -17,8 +17,8 @@ from twisted.internet import reactor
 sys.path.append("lib/python")
 
 from asterisk.asterisk import Asterisk
-from asterisk.TestCase import TestCase
-from asterisk.TestState import TestStateController
+from asterisk.test_case import TestCase
+from asterisk.test_state import TestStateController
 from asterisk.confbridge import ConfbridgeTestState
 from asterisk.confbridge import ConfbridgeChannelObject
 
@@ -33,14 +33,14 @@ class StartConfBridgeState(ConfbridgeTestState):
     into the conference, the state transitions to the ActiveConfBridgeState.
     """
 
-    def __init__(self, controller, testCase, calls, ami):
+    def __init__(self, controller, test_case, calls, ami):
         """
         controller      The TestStateController managing the test
-        testCase        The main test object
+        test_case        The main test object
         calls           A dictionary (keyed by conf_bridge_channel ID) of ConfbridgeChannelObjects
         ami             AMI instance
         """
-        ConfbridgeTestState.__init__(self, controller, testCase, calls)
+        ConfbridgeTestState.__init__(self, controller, test_case, calls)
 
         self._ami = ami
         ami.registerEvent('ConfbridgeJoin', self.handle_confbridge_join_event)
@@ -54,7 +54,7 @@ class StartConfBridgeState(ConfbridgeTestState):
         if 'file' not in event:
             return
         logger.debug("Detected variable MIXMONITOR_FILENAME: %s" % event['file'])
-        self.testCase.set_recording_file("%s.wav" % event['file'])
+        self.test_case.set_recording_file("%s.wav" % event['file'])
 
     def handle_confbridge_join_event(self, ami, event):
         """ ConfBridgeJoin event handler """
@@ -69,20 +69,20 @@ class StartConfBridgeState(ConfbridgeTestState):
         self.conf_bridge_channel = self.calls.keys()[0]
 
         if event['channel'] == self.conf_bridge_channel:
-            self.testCase.expected_events['confbridgejoined'] = True
+            self.test_case.expected_events['confbridgejoined'] = True
             # Transition to the next state
             logger.debug("Joined ConfBridge, transitioning to next state")
-            self.changeState(ActiveConfBridgeState(self.controller, self.testCase, self.calls, self._ami))
+            self.change_state(ActiveConfBridgeState(self.controller, self.test_case, self.calls, self._ami))
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         """ TestEvent handler """
 
         state = event['state']
         if state == 'CONF_START_RECORD':
             logger.debug("Detected CONF_START_RECORD")
-            self.testCase.expected_events['recordingstarted'] = True
+            self.test_case.expected_events['recordingstarted'] = True
 
-    def getStateName(self):
+    def get_state_name(self):
         return "START"
 
 class ActiveConfBridgeState(ConfbridgeTestState):
@@ -94,15 +94,15 @@ class ActiveConfBridgeState(ConfbridgeTestState):
     appropriately.
     """
 
-    def __init__(self, controller, testCase, calls, ami):
+    def __init__(self, controller, test_case, calls, ami):
         """
         controller      The TestStateController managing the test
-        testCase        The main test object
+        test_case        The main test object
         calls           A dictionary (keyed by conf_bridge_channel ID) of ConfbridgeChannelObjects
         ami             The instance of AMI to subscribe for events on
         """
-        ConfbridgeTestState.__init__(self, controller, testCase, calls)
-        self.testCase.reset_timeout()
+        ConfbridgeTestState.__init__(self, controller, test_case, calls)
+        self.test_case.reset_timeout()
         self._ami = ami
         ami.registerEvent('ConfbridgeLeave', self.handle_confbridge_leave_event)
         ami.registerEvent('ConfbridgeEnd', self.handle_confbridge_end_event)
@@ -113,19 +113,19 @@ class ActiveConfBridgeState(ConfbridgeTestState):
 
         # Schedule actions to take place
         audio_file = os.path.join(os.getcwd(), "tests/apps/confbridge/sounds/talking")
-        self.scheduleSendSoundFile(1, self._bridge_channel, audio_file)
+        self.schedule_sound_file(1, self._bridge_channel, audio_file)
         reactor.callLater(5, self.send_hangup)
 
     def send_hangup(self):
         self.hangup(self._bridge_channel)
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         """ TestEvent handler.  Check for end of recording. """
 
         state = event['state']
         if state == 'CONF_STOP_RECORD':
             logger.debug("Detected CONF_STOP_RECORD")
-            self.testCase.expected_events['recordingstopped'] = True
+            self.test_case.expected_events['recordingstopped'] = True
 
     def handle_confbridge_leave_event(self, ami, event):
         """ ConfBridgeLeave event handler """
@@ -134,14 +134,14 @@ class ActiveConfBridgeState(ConfbridgeTestState):
             return
         if event['channel'] != self._bridge_channel:
             return
-        self.testCase.expected_events['confbridgeleave'] = True
+        self.test_case.expected_events['confbridgeleave'] = True
 
     def handle_confbridge_end_event(self, ami, event):
         """ ConfBridgeEndEvent handler """
 
-        self.testCase.expected_events['confbridgeend'] = True
+        self.test_case.expected_events['confbridgeend'] = True
 
-    def getStateName(self):
+    def get_state_name(self):
         return "ACTIVE"
 
 
@@ -205,7 +205,7 @@ class ConfBridgeRecording(TestCase):
         self.ami[0].originate(channel = "Local/detect_audio@talkdetect",
             context = 'talkdetect', exten='playback', priority='1',
             variable = {'TESTAUDIO': '"%s"' % (self._record_file[:len(self._record_file) - 4])}
-            ).addErrback(self.handleOriginateFailure)
+            ).addErrback(self.handle_originate_failure)
 
     def set_recording_file(self, filename):
         """ Called by the test states when the recorded file is known """
@@ -215,7 +215,7 @@ class ConfBridgeRecording(TestCase):
     def ami_connect(self, ami):
         super(ConfBridgeRecording, self).ami_connect(ami)
 
-        self.testStateController = TestStateController(self, ami)
+        self.test_state_controller = TestStateController(self, ami)
 
         ami.registerEvent('UserEvent', self.user_event_handler)
         ami.registerEvent('Newchannel', self.new_channel_handler)
@@ -230,8 +230,8 @@ class ConfBridgeRecording(TestCase):
         self._controlling_channel = ''
         self.record_file = ''
         self._candidate_channels = []
-        self._start_object = StartConfBridgeState(self.testStateController, self, {}, ami)
-        self.testStateController.changeState(self._start_object)
+        self._start_object = StartConfBridgeState(self.test_state_controller, self, {}, ami)
+        self.test_state_controller.change_state(self._start_object)
         for e in self.expected_events:
             self.expected_events[e] = False
 
@@ -248,7 +248,7 @@ class ConfBridgeRecording(TestCase):
         ami.originate(channel = channel,
             context = 'caller', exten='wait', priority='1',
             variable = variable
-            ).addErrback(self.handleOriginateFailure)
+            ).addErrback(self.handle_originate_failure)
 
     def new_exten_event_handler(self, ami, event):
         """ NewExten event handler.  We use this to determine which
@@ -272,7 +272,7 @@ class ConfBridgeRecording(TestCase):
             return
         self._controlling_channel = controlling_channels[0]
 
-        self._start_object.registerNewCaller(
+        self._start_object.register_new_caller(
             ConfbridgeChannelObject(self._confbridge_channel, self._controlling_channel, ami))
 
     def hangup_event_handler(self, ami, event):

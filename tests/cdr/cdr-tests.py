@@ -81,7 +81,7 @@ class ForkCdrModuleBasic(CDRModule):
     def match_cdrs(self):
         super(ForkCdrModuleBasic, self).match_cdrs()
 
-        cdr1 = AsteriskCSVCDR(fn="%s/%s/cdr-csv/%s.csv" %
+        cdr1 = AsteriskCSVCDR(filename="%s/%s/cdr-csv/%s.csv" %
             (self.test_object.ast[0].base,
              self.test_object.ast[0].directories['astlogdir'], "cdrtest_local"))
 
@@ -109,7 +109,7 @@ class ForkCdrModuleEndTime(CDRModule):
     def match_cdrs(self):
         super(ForkCdrModuleEndTime, self).match_cdrs()
 
-        cdr1 = AsteriskCSVCDR(fn = "%s/%s/cdr-csv/%s.csv" %
+        cdr1 = AsteriskCSVCDR(filename="%s/%s/cdr-csv/%s.csv" %
                 (self.test_object.ast[0].base,
                  self.test_object.ast[0].directories['astlogdir'],
                  "cdrtest_local"))
@@ -159,7 +159,7 @@ class ForkCdrModuleEndResetTime(ForkCdrModuleEndTime):
     def match_cdrs(self):
         super(ForkCdrModuleEndResetTime, self).match_cdrs()
 
-        cdr1 = AsteriskCSVCDR(fn = "%s/%s/cdr-csv/%s.csv" %
+        cdr1 = AsteriskCSVCDR(filename="%s/%s/cdr-csv/%s.csv" %
                 (self.test_object.ast[0].base,
                  self.test_object.ast[0].directories['astlogdir'],
                  "cdrtest_local"))

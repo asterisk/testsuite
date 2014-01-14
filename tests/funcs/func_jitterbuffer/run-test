@@ -16,7 +16,7 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ class JitterBufferTest(TestCase):
                       exten=originate['exten'],
                       priority='1',
                       variable=originate['variable']).addErrback(
-                        self.handleOriginateFailure)
+                        self.handle_originate_failure)
 
 
     def ami_connect(self, ami):
@@ -100,7 +100,7 @@ class JitterBufferTest(TestCase):
                       context='default',
                       exten='play_recording',
                       priority='1').addErrback(
-                        self.handleOriginateFailure)
+                        self.handle_originate_failure)
 
 
     def _userevent_handler(self, ami, event):

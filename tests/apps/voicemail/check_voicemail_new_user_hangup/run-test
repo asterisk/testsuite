@@ -17,10 +17,10 @@ from twisted.internet import reactor
 sys.path.append("lib/python")
 
 from asterisk.asterisk import Asterisk
-from asterisk.TestCase import TestCase
-from asterisk.TestState import TestStateController
-from asterisk.TestState import TestState
-from asterisk.TestState import FailureTestState
+from asterisk.test_case import TestCase
+from asterisk.test_state import TestStateController
+from asterisk.test_state import TestState
+from asterisk.test_state import FailureTestState
 from asterisk.voicemail import VoiceMailMailboxManagement
 from asterisk.voicemail import TestCondition
 from asterisk.voicemail import VoiceMailTest
@@ -40,21 +40,21 @@ class StartVoiceMailState(VoiceMailState):
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
 
         if state == 'PLAYBACK':
             message = event.get('message')
             if message == 'vm-login':
-                self.voiceMailTest.sendDTMF(self.userMailbox)
+                self.voice_mail_test.send_dtmf(self.userMailbox)
             elif message == 'vm-password':
-                self.voiceMailTest.sendDTMF(self.userPassword)
+                self.voice_mail_test.send_dtmf(self.userPassword)
         elif state == 'AUTHENTICATED':
-            self.changeState(AuthenticatedTestState(self.controller, self.voiceMailTest))
+            self.change_state(AuthenticatedTestState(self.controller, self.voice_mail_test))
         else:
-            self.handleDefaultState(event)
+            self.handle_default_state(event)
 
-    def getStateName(self):
+    def get_state_name(self):
         return "START"
 
 
@@ -66,25 +66,25 @@ class AuthenticatedTestState(VoiceMailState):
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
 
         if state == 'AUTHENTICATED':
             logger.error("Received two authenticated events?")
-            self.changeState(FailureTestState(self.controller))
+            self.change_state(FailureTestState(self.controller))
         elif state == 'NEWUSER':
-            self.changeState(NewUserTestState(self.controller, self.voiceMailTest))
+            self.change_state(NewUserTestState(self.controller, self.voice_mail_test))
         elif state == 'INTRO':
-            self.changeState(IntroTestState(self.controller, self.voiceMailTest))
+            self.change_state(IntroTestState(self.controller, self.voice_mail_test))
         elif state == 'PLAYBACK':
             message = event.get('message')
             if message == 'vm-newuser':
                 logger.debug("New user played")
-                self.voiceMailTest.setTestCondition("newUserPromptPlayed", True)
+                self.voice_mail_test.set_test_condition("newUserPromptPlayed", True)
         else:
-            self.handleDefaultState(event)
+            self.handle_default_state(event)
 
-    def getStateName(self):
+    def get_state_name(self):
         return "AUTHENTICATED"
 
 
@@ -95,61 +95,61 @@ class NewUserTestState(VoiceMailState):
 
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
-        self.voiceMailTest.setTestCondition("newUser", True)
+        self.voice_mail_test.set_test_condition("newUser", True)
 
         self.newPassword = "5555#"
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
 
         if state == 'AUTHENTICATED':
             logger.error("Received authentication event after NEWUSER?")
-            self.changeState(FailureTestState(self.controller))
+            self.change_state(FailureTestState(self.controller))
         elif state == 'NEWUSER':
             logger.error("Received two NEWUSER states?")
-            self.changeState(FailureTestState(self.controller))
+            self.change_state(FailureTestState(self.controller))
         elif state == 'INTRO':
-            self.changeState(IntroTestState(self.controller, self.voiceMailTest))
+            self.change_state(IntroTestState(self.controller, self.voice_mail_test))
         elif state == 'HANGUP':
             logger.info("Received hangup")
-            self.voiceMailTest.stop_reactor()
+            self.voice_mail_test.stop_reactor()
         elif state == 'PASSWORDCHANGED':
             source = event['passwordsource']
             if source == 'voicemail.conf':
-                self.voiceMailTest.setTestCondition('passwordChanged', True)
+                self.voice_mail_test.set_test_condition('passwordChanged', True)
             else:
                 logger.error("Unknown password source [" + source + "]")
-                self.changeState(FailureTestState(self.controller))
+                self.change_state(FailureTestState(self.controller))
         elif state == 'PLAYBACK':
             message = event.get('message')
 
             if message == 'vm-newpassword':
                 """ Change our password to something other than the default of 1234 """
-                self.voiceMailTest.sendDTMF(self.newPassword)
+                self.voice_mail_test.send_dtmf(self.newPassword)
             elif message == 'vm-reenterpassword':
-                self.voiceMailTest.hangup()
+                self.voice_mail_test.hangup()
             elif message == 'vm-review':
                 """ If we review a message, tell it to save the message """
-                self.voiceMailTest.sendDTMF("1")
+                self.voice_mail_test.send_dtmf("1")
             elif message == 'vm-rec-name':
-                self.voiceMailTest.reset_timeout()
-                self.voiceMailTest.setTestCondition('recordName', True)
+                self.voice_mail_test.reset_timeout()
+                self.voice_mail_test.set_test_condition('recordName', True)
             elif message == 'vm-rec-unv':
-                self.voiceMailTest.reset_timeout()
-                self.voiceMailTest.setTestCondition('recordUnavailable', True)
+                self.voice_mail_test.reset_timeout()
+                self.voice_mail_test.set_test_condition('recordUnavailable', True)
             elif message == 'vm-rec-busy':
-                self.voiceMailTest.reset_timeout()
-                self.voiceMailTest.setTestCondition('recordBusy', True)
+                self.voice_mail_test.reset_timeout()
+                self.voice_mail_test.set_test_condition('recordBusy', True)
             elif message == 'beep':
                 """ A beep indicates we need to stream some sound file over - use the same sound file for everything """
-                audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.voiceMailTest.testParentDir))
-                self.voiceMailTest.sendSoundFileWithDTMF(audioFile, "#")
+                audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.voice_mail_test.testParentDir))
+                self.voice_mail_test.send_sound_file_with_dtmf(audioFile, "#")
             else:
-                self.handleDefaultState(event)
+                self.handle_default_state(event)
         else:
-            self.handleDefaultState(event)
+            self.handle_default_state(event)
 
-    def getStateName(self):
+    def get_state_name(self):
         return "NEWUSER"
 
 
@@ -165,11 +165,11 @@ class IntroTestState(VoiceMailState):
         We should not have entered into this state without first having gone through the new user 
         prompts
         """
-        if ((not self.voiceMailTest.getTestCondition("newUserPromptPlayed")) or (not self.voiceMailTest.getTestCondition("newUser"))):
+        if ((not self.voice_mail_test.get_test_condition("newUserPromptPlayed")) or (not self.voice_mail_test.get_test_condition("newUser"))):
             logger.error("Entered into INTRO state without first having been prompted for new user checks")
-            self.changeState(FailureTestState(self.controller))
+            self.change_state(FailureTestState(self.controller))
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
 
         if state == 'PLAYBACK':
@@ -177,11 +177,11 @@ class IntroTestState(VoiceMailState):
 
             if message == 'instructions':
                 """ Tell it to exit out of voicemail """
-                self.voiceMailTest.sendDTMF("#")
+                self.voice_mail_test.send_dtmf("#")
         else:
-            self.handleDefaultState(event)
+            self.handle_default_state(event)
 
-    def getStateName(self):
+    def get_state_name(self):
         return "INTRO"
 
 
@@ -214,9 +214,9 @@ class CheckVoicemailNewUserHangup(VoiceMailTest):
         """
         def checkTrueCondition(value, testCondition):
             return value
-        self.addTestCondition("newUser", TestCondition(checkTrueCondition, False))
-        self.addTestCondition("newUserPromptPlayed", TestCondition(checkTrueCondition, False))
-        self.addTestCondition("initialHangup", TestCondition(checkTrueCondition, False))
+        self.add_test_condition("newUser", TestCondition(checkTrueCondition, False))
+        self.add_test_condition("newUserPromptPlayed", TestCondition(checkTrueCondition, False))
+        self.add_test_condition("initialHangup", TestCondition(checkTrueCondition, False))
 
         self.reactor_timeout = 120
         self.create_asterisk(2)
@@ -227,23 +227,23 @@ class CheckVoicemailNewUserHangup(VoiceMailTest):
 
         """ Record which AMI instance we've received and attempt to set up the test controller """
         if (ami.id == 0):
-            self.amiReceiver = ami
+            self.ami_receiver = ami
         elif (ami.id == 1):
-            self.amiSender = ami
-            self.astSender = self.ast[self.amiSender.id]
+            self.ami_sender = ami
+            self.ast_sender = self.ast[self.ami_sender.id]
 
-        self.createTestController()
-        if (self.testStateController != None):
-            startObject = StartVoiceMailState(self.testStateController, self)
-            self.testStateController.changeState(startObject)
-            self.testStateController.addAssertHandler(self.handleAssert)
+        self.create_test_controller()
+        if (self.test_state_controller != None):
+            startObject = StartVoiceMailState(self.test_state_controller, self)
+            self.test_state_controller.change_state(startObject)
+            self.test_state_controller.add_assert_handler(self.handleAssert)
 
         ami.registerEvent('UserEvent', self.user_event)
         """ Now do specific processing on the AMI instances """
         if (ami.id != 0):
             logger.debug("Originating call to " + self.channel)
             df = ami.originate(self.channel, "voicemailCaller", "wait", 1)
-            df.addErrback(self.handleOriginateFailure)
+            df.addErrback(self.handle_originate_failure)
 
     def handleAssert(self, event):
         self.passed = False
@@ -265,7 +265,7 @@ class CheckVoicemailNewUserHangup(VoiceMailTest):
                 logger.warn("error: %s" % (event['error'],))
         elif event['userevent'] == 'Hangup':
             logger.info("Expected Hangup detected from call")
-            self.setTestCondition('initialHangup', True)
+            self.set_test_condition('initialHangup', True)
             self.passed = True
         else:
             return
@@ -294,13 +294,13 @@ def main():
     """
     if test.passed:
 
-        if not test.checkTestConditions():
+        if not test.check_test_conditions():
             logger.warn("Test failed condition checks")
             test.passed = False
 
         formats = ["ulaw","wav","WAV"]
         """ Verify that the password wasn't changed """
-        userObject = voicemailManager.getUserObject("default","1234")
+        userObject = voicemailManager.get_user_object("default","1234")
         if not userObject.password == "1234":
             logger.warn("User password was changed to [" + userObject.password + "]; test failed")
             test.passed = False

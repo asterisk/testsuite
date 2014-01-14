@@ -21,13 +21,14 @@ import re
 import unittest
 import logging
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 def is_blank_line(line):
+    """Is this a blank line?"""
     return re.match("\s*(?:;.*)?$", line) is not None
 
 
-class Category:
+class Category(object):
     """A category in an Asterisk configuration file.
 
     This is a helper class used along with ConfigFile.  A category is section
@@ -48,21 +49,22 @@ class Category:
             """, re.VERBOSE)
 
     def parse_line(self, line):
+        """Parse a line in a category"""
         match = self.varval_re.match(line)
         if match is None:
             if not is_blank_line(line):
-                logger.warn("Invalid line: '%s'" % line.strip())
+                LOGGER.warn("Invalid line: '%s'" % line.strip())
             return
         self.options.append((match.group("name"), match.group("value").strip()))
 
 
-class ConfigFile:
+class ConfigFile(object):
     """An Asterisk Configuration File.
 
     Parse an Asterisk configuration file.
     """
 
-    def __init__(self, fn, config_str=None):
+    def __init__(self, filename, config_str=None):
         """Construct an Asterisk configuration file object
 
         The ConfigFile object will parse an Asterisk configuration file into a
@@ -78,14 +80,13 @@ class ConfigFile:
 
         if config_str is None:
             try:
-                f = open(fn, "r")
-                config_str = f.read()
-                f.close()
+                with open(filename, "r") as config_file:
+                    config_str = config_file.read()
             except IOError:
-                logger.error("Failed to open config file '%s'" % fn)
+                LOGGER.error("Failed to open config file '%s'" % filename)
                 return
             except:
-                logger.error("Unexpected error: %s" % sys.exc_info()[0])
+                LOGGER.error("Unexpected error: %s" % sys.exc_info()[0])
                 return
 
         config_str = self.strip_mline_comments(config_str)
@@ -94,9 +95,11 @@ class ConfigFile:
             self.parse_line(line)
 
     def strip_mline_comments(self, text):
+        """Strip multi-line comments"""
         return re.compile(";--.*?--;", re.DOTALL).sub("", text)
 
     def parse_line(self, line):
+        """Parse a line in the config file"""
         match = self.category_re.match(line)
         if match is not None:
             self.categories.append(
@@ -105,13 +108,16 @@ class ConfigFile:
             )
         elif len(self.categories) == 0:
             if not is_blank_line(line):
-                logger.warn("Invalid line: '%s'" % line.strip())
+                LOGGER.warn("Invalid line: '%s'" % line.strip())
         else:
             self.categories[-1].parse_line(line)
 
 
 class ConfigFileTests(unittest.TestCase):
+    """Unit tests for ConfigFile"""
+
     def test_conf(self):
+        """Test parsing a blob of config data"""
         test = \
             "; stuff\n" \
             "this line is invalid on purpose\n" \
@@ -174,15 +180,17 @@ class ConfigFileTests(unittest.TestCase):
 
 
 def main(argv=None):
+    """Read in and show a config file, or run unit tests"""
+
     if argv is None:
         argv = sys.argv
 
     if len(argv) == 2:
         conf = ConfigFile(argv[1])
-        for c in conf.categories:
-            logger.debug("[%s]" % c.name)
-            for (var, val) in c.options:
-                logger.debug("%s = %s" % (var, val))
+        for cat in conf.categories:
+            LOGGER.debug("[%s]" % cat.name)
+            for (var, val) in cat.options:
+                LOGGER.debug("%s = %s" % (var, val))
     else:
         return unittest.main()
 

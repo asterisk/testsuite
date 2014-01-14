@@ -20,7 +20,7 @@ test-modules:
         typename: 'sipp.SIPpTestCase'
     modules:
         -
-            typename: 'PluggableModules.Originator'
+            typename: 'pluggable_modules.Originator'
 
 sipp-config:
     reactor-timeout: 120

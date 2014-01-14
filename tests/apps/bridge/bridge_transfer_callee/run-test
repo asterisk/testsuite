@@ -16,7 +16,7 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 from asterisk.version import AsteriskVersion
 
 LOGGER = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class BridgeTransferTest(TestCase):
             ami.registerEvent("BridgeExec", self.bridge_event)
         #originate the bridgee
         df = ami.originate(channel = "Local/local@call1", exten = "call", context = "test_context", priority = 1)
-        df.addErrback(self.handleOriginateFailure)
+        df.addErrback(self.handle_originate_failure)
 
     def user_event(self, ami, event):
         if (event['userevent'] == 'StartBridge'):
@@ -55,7 +55,7 @@ class BridgeTransferTest(TestCase):
 
     def start_next_test(self, ami):
         df = ami.originate(channel = "Local/local@call2", exten = "bridge%d" % self.current_test, context = "test_context", priority = 1)
-        df.addErrback(self.handleOriginateFailure)
+        df.addErrback(self.handle_originate_failure)
 
     def process_test_event(self, ami, event):
         #evaluate pass/failure
@@ -86,7 +86,7 @@ class BridgeTransferTest(TestCase):
         self.current_test = self.current_test + 1
         if (self.current_test < self.total_tests):
             df = ami.originate(channel = "Local/local@call1", exten = "call", context = "test_context", priority = 1)
-            df.addErrback(self.handleOriginateFailure)
+            df.addErrback(self.handle_originate_failure)
         else:
             LOGGER.info("All Bridge Transfer tests complete. Test Successful.")
             self.passed = True

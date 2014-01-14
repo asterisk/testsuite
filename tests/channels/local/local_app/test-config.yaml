@@ -9,7 +9,7 @@ testinfo:
 test-modules:
     test-object:
         config-section: test-object-config
-        typename: 'SimpleTestCase.SimpleTestCase'
+        typename: 'test_case.SimpleTestCase'
     modules:
         -
             minversion: '1.8.0.0'

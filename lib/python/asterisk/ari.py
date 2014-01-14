@@ -1,10 +1,10 @@
-'''
+"""
 Copyright (C) 2013, Digium, Inc.
 David M. Lee, II <dlee@digium.com>
 
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
-'''
+"""
 
 import datetime
 import json
@@ -14,7 +14,7 @@ import requests
 import traceback
 import urllib
 
-from TestCase import TestCase
+from test_case import TestCase
 from twisted.internet import reactor
 from autobahn.websocket import WebSocketClientFactory, \
     WebSocketClientProtocol, connectWS
@@ -36,15 +36,14 @@ VALIDATION_MATCHER = {
 
 
 class AriTestObject(TestCase):
-    ''' Class that acts as a Test Object in the pluggable module framework '''
+    """Class that acts as a Test Object in the pluggable module framework"""
 
     def __init__(self, test_path='', test_config=None):
-        ''' Constructor for a test object
+        """Constructor for a test object
 
-        Keyword Arguments:
-        test_path The full path to the test location
-        test_config The YAML test configuration
-        '''
+        :param test_path The full path to the test location
+        :param test_config The YAML test configuration
+        """
         super(AriTestObject, self).__init__(test_path, test_config)
 
         if test_config is None:
@@ -78,31 +77,33 @@ class AriTestObject(TestCase):
         self.create_asterisk(count=1)
 
     def run(self):
-        ''' Override of TestCase run
+        """Override of TestCase run
 
-        Called when reactor starts and after all instances of Asterisk have started
-        '''
+        Called when reactor starts and after all instances of Asterisk have
+        started
+        """
         super(AriTestObject, self).run()
         self.ari_factory.connect()
 
     def register_ws_event_handler(self, callback):
-        ''' Register a callback for when an event is received over the WS
+        """Register a callback for when an event is received over the WS
 
         :param callback The method to call when an event is received. This
         will have a single parameter (the event) passed to it
-        '''
+        """
         self._ws_event_handlers.append(callback)
 
     def on_reactor_timeout(self):
+        """Called when the reactor times out"""
         self.timed_out = True
         # Fail the tests if we have timed out
         self.set_passed(False)
 
     def on_ws_event(self, message):
-        ''' Handler for WebSocket events
+        """Handler for WebSocket events
 
         :param message The WS event payload
-        '''
+        """
         if self.timed_out:
             # Ignore messages received after timeout
             LOGGER.debug("Ignoring message received after timeout")
@@ -112,59 +113,62 @@ class AriTestObject(TestCase):
             handler(message)
 
     def on_ws_open(self, protocol):
-        ''' Handler for WebSocket Client Protocol opened
+        """Handler for WebSocket Client Protocol opened
 
         :param protocol The WS Client protocol object
-        '''
+        """
         reactor.callLater(0, self._create_ami_connection)
 
     def on_ws_closed(self, protocol):
-        ''' Handler for WebSocket Client Protocol closed
+        """Handler for WebSocket Client Protocol closed
 
         :param protocol The WS Client protocol object
-        '''
-        LOGGER.debug('WebSocket connection closed...')
+        """
+        LOGGER.debug("WebSocket connection closed...")
 
     def _create_ami_connection(self):
-        ''' Create the AMI connection '''
+        """Create the AMI connection"""
         self.create_ami_factory(count=1)
 
     def ami_connect(self, ami):
-        ''' Override of TestCase ami_connect
+        """Override of TestCase ami_connect
         Called when an AMI connection is made
 
         :param ami The AMI factory
-        '''
+        """
         ami.registerEvent('Newchannel', self._new_channel_handler)
         ami.registerEvent('Hangup', self._hangup_handler)
         self.execute_test()
+        return ami
 
     def _new_channel_handler(self, ami, event):
-        ''' Handler for new channels
+        """Handler for new channels
 
         :param ami The AMI instance
         :param event The Newchannl event
-        '''
-        LOGGER.debug('Tracking channel %s' % event['channel'])
+        """
+        LOGGER.debug("Tracking channel %s" % event['channel'])
         self.channels.append(event['channel'])
+        return (ami, event)
 
     def _hangup_handler(self, ami, event):
-        ''' Handler for channel hangup
+        """Handler for channel hangup
 
         :param ami The AMI instance
         :param event Hangup event
-        '''
-        LOGGER.debug('Removing tracking for %s' % event['channel'])
+        """
+        LOGGER.debug("Removing tracking for %s" % event['channel'])
         self.channels.remove(event['channel'])
         if len(self.channels) == 0:
             self.test_iteration += 1
             self.execute_test()
+        return (ami, event)
 
     def execute_test(self):
-        ''' Execute the current iteration of the test '''
+        """Execute the current iteration of the test"""
 
         if (self.test_iteration == len(self.iterations)):
-            LOGGER.info('All iterations executed; stopping')
+            LOGGER.info("All iterations executed; stopping")
             self.stop_reactor()
             return
 
@@ -176,23 +180,23 @@ class AriTestObject(TestCase):
             self._spawn_channel(iteration)
 
     def _spawn_channel(self, channel_def):
-        ''' Create a new channel '''
+        """Create a new channel"""
 
         # There's only one Asterisk instance, so just use the first AMI factory
-        LOGGER.info('Creating channel %s' % channel_def['channel'])
-        self.ami[0].originate(**channel_def).addErrback(self.handleOriginateFailure)
+        LOGGER.info("Creating channel %s" % channel_def['channel'])
+        deferred = self.ami[0].originate(**channel_def)
+        deferred.addErrback(self.handle_originate_failure)
 
 
 class WebSocketEventModule(object):
-    '''Module for capturing events from the ARI WebSocket
-    '''
+    """Module for capturing events from the ARI WebSocket"""
 
     def __init__(self, module_config, test_object):
-        '''Constructor.
+        """Constructor.
 
         :param module_config: Configuration dict parse from test-config.yaml.
         :param test_object: Test control object.
-        '''
+        """
         self.ari = test_object.ari
         self.event_matchers = [
             EventMatcher(self.ari, e, test_object)
@@ -202,32 +206,32 @@ class WebSocketEventModule(object):
         test_object.register_ws_event_handler(self.on_event)
 
     def on_event(self, event):
-        '''Handle incoming events from the WebSocket.
+        """Handle incoming events from the WebSocket.
 
         :param event: Dictionary parsed from incoming JSON event.
-        '''
-        LOGGER.debug('Received event: %r' % event.get('type'))
+        """
+        LOGGER.debug("Received event: %r" % event.get('type'))
         matched = False
         for matcher in self.event_matchers:
             if matcher.on_event(event):
                 matched = True
         if not matched:
-            LOGGER.info('Event had no matcher: %r' % event)
+            LOGGER.info("Event had no matcher: %r" % event)
 
 
 class AriClientFactory(WebSocketClientFactory):
-    '''Twisted protocol factory for building ARI WebSocket clients.
-    '''
+    """Twisted protocol factory for building ARI WebSocket clients."""
+
     def __init__(self, receiver, host, apps, userpass, port=DEFAULT_PORT,
         timeout_secs=60):
-        '''Constructor
+        """Constructor
 
         :param receiver The object that will receive events from the protocol
         :param host: Hostname of Asterisk.
         :param apps: App names to subscribe to.
         :param port: Port of Asterisk web server.
         :param timeout_secs: Maximum time to try to connect to Asterisk.
-        '''
+        """
         url = "ws://%s:%d/ari/events?%s" % \
               (host, port,
                urllib.urlencode({'app': apps, 'api_key': '%s:%s' % userpass}))
@@ -240,23 +244,23 @@ class AriClientFactory(WebSocketClientFactory):
         self.receiver = receiver
 
     def buildProtocol(self, addr):
-        ''' Make the protocol '''
+        """Make the protocol"""
         return AriClientProtocol(self.receiver, self)
 
     def clientConnectionFailed(self, connector, reason):
-        ''' Doh, connection lost '''
-        LOGGER.debug('Connection lost; attempting again in 1 second')
+        """Doh, connection lost"""
+        LOGGER.debug("Connection lost; attempting again in 1 second")
         reactor.callLater(1, self.reconnect)
 
     def connect(self):
-        ''' Start the connection '''
+        """Start the connection"""
         self.reconnect()
 
     def reconnect(self):
-        '''Attempt to reconnect the ARI WebSocket.
+        """Attempt to reconnect the ARI WebSocket.
 
         This call will give up after timeout_secs has been exceeded.
-        '''
+        """
         self.attempts += 1
         LOGGER.debug("WebSocket attempt #%d" % self.attempts)
         if not self.start:
@@ -264,150 +268,149 @@ class AriClientFactory(WebSocketClientFactory):
         runtime = (datetime.datetime.now() - self.start).seconds
         if runtime >= self.timeout_secs:
             LOGGER.error("  Giving up after %d seconds" % self.timeout_secs)
-            raise Exception("Failed to connect after %d seconds" % self.timeout_secs)
+            raise Exception("Failed to connect after %d seconds" %
+                            self.timeout_secs)
 
         connectWS(self)
 
 
 class AriClientProtocol(WebSocketClientProtocol):
-    '''Twisted protocol for handling a ARI WebSocket connection.
-    '''
+    """Twisted protocol for handling a ARI WebSocket connection."""
+
     def __init__(self, receiver, factory):
-        '''Constructor.
+        """Constructor.
 
         :param receiver The event receiver
-        '''
-        LOGGER.debug('Made me a client protocol!')
+        """
+        LOGGER.debug("Made me a client protocol!")
         self.receiver = receiver
         self.factory = factory
 
     def onOpen(self):
-        '''Called back when connection is open.
-        '''
-        LOGGER.debug('WebSocket Open')
+        """Called back when connection is open."""
+        LOGGER.debug("WebSocket Open")
         self.receiver.on_ws_open(self)
 
     def onClose(self, wasClean, code, reason):
-        '''Called back when connection is closed.
-        '''
+        """Called back when connection is closed."""
         LOGGER.debug("WebSocket closed(%r, %d, %s)" % (wasClean, code, reason))
         self.receiver.on_ws_closed(self)
 
     def onMessage(self, msg, binary):
-        '''Called back when message is received.
+        """Called back when message is received.
 
         :param msg: Received text message.
-        '''
+        """
         LOGGER.debug("rxed: %s" % msg)
         msg = json.loads(msg)
         self.receiver.on_ws_event(msg)
 
 
 class ARI(object):
-    '''Bare bones object for an ARI interface.
-    '''
+    """Bare bones object for an ARI interface."""
 
     def __init__(self, host, userpass, port=DEFAULT_PORT):
-        '''Constructor.
+        """Constructor.
 
         :param host: Hostname of Asterisk.
         :param port: Port of the Asterisk webserver.
-        '''
+        """
         self.base_url = "http://%s:%d/ari" % (host, port)
         self.userpass = userpass
         self.allow_errors = False
 
     def build_url(self, *args):
-        '''Build a URL from the given path.
+        """Build a URL from the given path.
 
         For example::
             # Builds the URL for /channels/{channel_id}/answer
             ari.build_url('channels', channel_id, 'answer')
 
         :param args: Path segments.
-        '''
+        """
         path = [str(arg) for arg in args]
         return '/'.join([self.base_url] + path)
 
     def get(self, *args, **kwargs):
-        '''Send a GET request to ARI.
+        """Send a GET request to ARI.
 
         :param args: Path segements.
         :param kwargs: Query parameters.
         :returns: requests.models.Response
         :throws: requests.exceptions.HTTPError
-        '''
+        """
         url = self.build_url(*args)
         LOGGER.info("GET %s %r" % (url, kwargs))
         return self.raise_on_err(requests.get(url, params=kwargs,
                                          auth=self.userpass))
 
     def put(self, *args, **kwargs):
-        '''Send a PUT request to ARI.
+        """Send a PUT request to ARI.
 
         :param args: Path segements.
         :param kwargs: Query parameters.
         :returns: requests.models.Response
         :throws: requests.exceptions.HTTPError
-        '''
+        """
         url = self.build_url(*args)
         LOGGER.info("PUT %s %r" % (url, kwargs))
         return self.raise_on_err(requests.put(url, params=kwargs,
                                           auth=self.userpass))
 
     def post(self, *args, **kwargs):
-        '''Send a POST request to ARI.
+        """Send a POST request to ARI.
 
         :param args: Path segements.
         :param kwargs: Query parameters.
         :returns: requests.models.Response
         :throws: requests.exceptions.HTTPError
-        '''
+        """
         url = self.build_url(*args)
         LOGGER.info("POST %s %r" % (url, kwargs))
         return self.raise_on_err(requests.post(url, params=kwargs,
                                           auth=self.userpass))
 
     def delete(self, *args, **kwargs):
-        '''Send a DELETE request to ARI.
+        """Send a DELETE request to ARI.
 
         :param args: Path segements.
         :param kwargs: Query parameters.
         :returns: requests.models.Response
         :throws: requests.exceptions.HTTPError
-        '''
+        """
         url = self.build_url(*args)
         LOGGER.info("DELETE %s %r" % (url, kwargs))
         return self.raise_on_err(requests.delete(url, params=kwargs,
                                             auth=self.userpass))
 
-    def set_allow_errors(self, v):
-        '''Sets whether error responses returns exceptions.
+    def set_allow_errors(self, value):
+        """Sets whether error responses returns exceptions.
 
         If True, then error responses are returned. Otherwise, methods throw
         an exception on error.
 
-        :param v True/False value for allow_errors.
-        '''
-        self.allow_errors = v
+        :param value True/False value for allow_errors.
+        """
+        self.allow_errors = value
 
     def raise_on_err(self, resp):
-        '''Helper to raise an exception when a response is a 4xx or 5xx error.
+        """Helper to raise an exception when a response is a 4xx or 5xx error.
 
         If allow_errors is True, then an exception is not raised.
 
         :param resp: requests.models.Response object
         :returns: resp
-        '''
+        """
         if not self.allow_errors and resp.status_code / 100 != 2:
-            LOGGER.error('%s (%d %s): %r' % (resp.url, resp.status_code, resp.reason, resp.text))
+            LOGGER.error('%s (%d %s): %r' % (resp.url, resp.status_code,
+                                             resp.reason, resp.text))
             resp.raise_for_status()
         return resp
 
 
 class EventMatcher(object):
-    '''Object to observe incoming events and match them agains a configuration.
-    '''
+    """Object to observe incoming events and match them against a config"""
+
     def __init__(self, ari, instance_config, test_object):
         self.ari = ari
         self.instance_config = instance_config
@@ -427,10 +430,10 @@ class EventMatcher(object):
         test_object.register_stop_observer(self.on_stop)
 
     def on_event(self, message):
-        '''Callback for every received ARI event.
+        """Callback for every received ARI event.
 
         :param message: Parsed event from ARI WebSocket.
-        '''
+        """
         if self.matches(message):
             self.count += 1
             # Split call and accumulation to always call the callback
@@ -449,24 +452,24 @@ class EventMatcher(object):
         return False
 
     def on_stop(self, *args):
-        '''Callback for the end of the test.
+        """Callback for the end of the test.
 
         :param args: Ignored arguments.
-        '''
+        """
         if not self.count_range.contains(self.count):
             # max could be int or float('inf'); format with %r
             LOGGER.error("Expected %d <= count <= %r; was %d (%r)",
-                         self.count_range.min, self.count_range.max,
+                         self.count_range.min_value, self.count_range.max_value,
                          self.count, self.conditions)
             self.passed = False
         self.test_object.set_passed(self.passed)
 
     def matches(self, message):
-        '''Compares a message against the configured conditions.
+        """Compares a message against the configured conditions.
 
         :param message: Incoming ARI WebSocket event.
         :returns: True if message matches conditions; False otherwise.
-        '''
+        """
         match = self.conditions.get('match')
         res = all_match(match, message)
 
@@ -478,12 +481,12 @@ class EventMatcher(object):
 
 
 def all_match(pattern, message):
-    '''Match a pattern from the YAML config with a received message.
+    """Match a pattern from the YAML config with a received message.
 
     :param pattern: Configured pattern.
     :param message: Message to compare.
     :returns: True if message matches pattern; False otherwise.
-    '''
+    """
     #LOGGER.debug("%r ?= %r" % (pattern, message))
     #LOGGER.debug("  %r" % type(pattern))
     #LOGGER.debug("  %r" % type(message))
@@ -513,33 +516,33 @@ def all_match(pattern, message):
         # Integers are literal matches
         return pattern == message
     else:
-        LOGGER.error("Unhandled pattern type %s" % type(pattern)).__name__
+        LOGGER.error("Unhandled pattern type %s" % type(pattern))
 
 
 class Range(object):
-    '''Utility object to handle numeric ranges (inclusive).
-    '''
-    def __init__(self, min=0, max=float("inf")):
-        '''Constructor.
+    """Utility object to handle numeric ranges (inclusive)."""
+
+    def __init__(self, min_value=0, max_value=float("inf")):
+        """Constructor.
 
         :param min: Minimum value of the range.
         :param max: Maximum value of the range.
-        '''
-        self.min = min
-        self.max = max
+        """
+        self.min_value = min_value
+        self.max_value = max_value
 
-    def contains(self, v):
-        '''Checks if the given value is within this Range.
+    def contains(self, value):
+        """Checks if the given value is within this Range.
 
-        :param v: Value to check.
+        :param value: Value to check.
         :returns: True/False if v is/isn't in the Range.
-        '''
-        return self.min <= v <= self.max
+        """
+        return self.min_value <= value <= self.max_value
 
 
 def decode_range(yaml):
-    '''Parse a range from YAML specification.
-    '''
+    """Parse a range from YAML specification."""
+
     if yaml is None:
         # Unspecified; receive at least one
         return Range(1, float("inf"))

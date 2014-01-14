@@ -17,7 +17,7 @@ from twisted.internet import reactor
 sys.path.append("lib/python")
 
 from asterisk.asterisk import Asterisk
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 from asterisk.voicemail import VoiceMailMailboxManagement
 
 logger = logging.getLogger(__name__)
@@ -51,15 +51,15 @@ class FuncVmCount(TestCase):
         Create some dummy voicemails in a valid voicemailbox
         """
         self.voicemailManager = VoiceMailMailboxManagement(self.ast[0])
-        self.voicemailManager.createMailbox("default", "1234", True)
+        self.voicemailManager.create_mailbox("default", "1234", True)
 
         logger.debug("Creating dummy voicemails")
         for i in range(0, 10):
-            self.voicemailManager.createDummyVoicemail("default","1234", self.voicemailManager.inboxFolderName, i, self.formats)
+            self.voicemailManager.create_dummy_voicemail("default","1234", VoiceMailMailboxManagement.inbox_folder_name, i, self.formats)
         for i in range(0, 5):
-            self.voicemailManager.createDummyVoicemail("default", "1234", self.voicemailManager.urgentFolderName, i, self.formats)
+            self.voicemailManager.create_dummy_voicemail("default", "1234", VoiceMailMailboxManagement.urgent_folder_name, i, self.formats)
         for i in range(0, 15):
-            self.voicemailManager.createDummyVoicemail("default", "1234", self.voicemailManager.oldFolderName, i, self.formats)
+            self.voicemailManager.create_dummy_voicemail("default", "1234", VoiceMailMailboxManagement.old_folder_name, i, self.formats)
 
         ami.registerEvent('UserEvent', self.user_event)
         ami.setVar(channel = "", variable = "EXPECTED_NEW", value = "15")
@@ -67,7 +67,7 @@ class FuncVmCount(TestCase):
         ami.setVar(channel = "", variable = "EXPECTED_OLD", value = "15")
 
         df1 = ami.originate("Local/s@listener", "voicemail", "1234", 1)
-        df1.addErrback(self.handleOriginateFailure)
+        df1.addErrback(self.handle_originate_failure)
 
     def user_event(self, ami, event):
 
@@ -104,7 +104,7 @@ def main():
     Since this test creates a lot of files, go ahead and clean up the directory
     """
     if not test.voicemailManager == None:
-        test.voicemailManager.removeMailbox("default","1234")
+        test.voicemailManager.remove_mailbox("default","1234")
 
     if not test.passed:
         return 1

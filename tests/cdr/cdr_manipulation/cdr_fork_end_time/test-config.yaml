@@ -1,13 +1,13 @@
 testinfo:
     summary: Test ForkCDR option for ending the original CDR log before starting new one
     description: |
-        'This is a normal CDRTestCase test which originates a call to an extension which
-         plays some silence, calls ForkCDR with the e option, and then plays more silence
-         before hanging up. Afterwards, both CDR records are checked to see that they
-         match expected fields and that the duration of both call records is above a
-         minimum threshold (both should have noticeable durations). Then the end time of
-         the first record is checked to see if it came reasonably close to the beginning
-         time of the second (<=1 second to accomodate potential timing differences).'
+        'This test originates a call to an extension which plays some silence, calls
+         ForkCDR with the e option, and then plays more silence before hanging up.
+         Afterwards, both CDR records are checked to see that they match expected fields
+         and that the duration of both call records is above a minimum threshold (both
+         should have noticeable durations). Then the end time of the first record is
+         checked to see if it came reasonably close to the beginning time of the second
+         (<=1 second to accomodate potential timing differences).'
 
 test-modules:
     add-to-search-path:
@@ -15,7 +15,7 @@ test-modules:
             'tests/cdr'
     test-object:
         config-section: test-object-config
-        typename: 'SimpleTestCase.SimpleTestCase'
+        typename: 'test_case.SimpleTestCase'
     modules:
         -
             maxversion: '12.0.0'

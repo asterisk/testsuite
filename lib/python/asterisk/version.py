@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """Asterisk Version String Handling
 
 This module implements an Asterisk version string parser.  It can also compare
@@ -19,11 +18,133 @@ import logging
 import sys
 import subprocess
 
-import TestSuiteUtils
+import test_suite_utils
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
-class AsteriskVersion:
+def parse_branch_name(branch_tokens):
+    """Parse an Asterisk branch version"""
+    name = branch_tokens[0]
+    munched = 0
+    for i in range(1, len(branch_tokens)):
+        # Stop when we hit the revision
+        if branch_tokens[i][0] == 'r':
+            candidate = branch_tokens[i].replace('r','')
+            candidate = candidate.replace('M','').replace('m','')
+            if candidate.isdigit():
+                break
+        name += '-' + branch_tokens[i]
+        munched += 1
+    return (name, munched)
+
+def parse_version(version_string):
+    """Parse a 'standard' Asterisk version"""
+    parsed_numbers = [0, 0, 0]
+    version_tokens = version_string.split('.')
+    count = 0
+    if not version_tokens[0].isdigit():
+        return (parsed_numbers, False)
+    for token in version_tokens:
+        if count == 0 and int(token) == 1:
+            # Skip '1' in '1.8' branches - it adds no value
+            continue
+        parsed_numbers[count] = int(token)
+        count += 1
+    return (parsed_numbers, True)
+
+def parse_revision(revision_string):
+    """Parse a modified version of Asterisk"""
+    candidate = revision_string.replace('M', '')
+    candidate = candidate.replace('r','').replace('m','')
+    if candidate.isdigit():
+        return (int(candidate), True)
+    return (0, False)
+
+def parse_feature(feature_string):
+    """Parse a feature from a version"""
+    for feature in AsteriskVersion.supported_features:
+        if feature in feature_string:
+            feature_string = feature_string.replace(feature, '')
+            iteration = -1
+            if (len(feature_string) > 0):
+                iteration = int(feature_string)
+            return (feature, iteration, True)
+    return ('', -1, False)
+
+def parse_version_modifier(version_modifier):
+    """Parse a version modifier"""
+    for modifier in AsteriskVersion.supported_modifiers:
+        if modifier in version_modifier:
+            version_modifier = version_modifier.replace(modifier, '')
+            iteration = -1
+            if (len(version_modifier) > 0):
+                iteration = int(version_modifier)
+            return (modifier, iteration, True)
+    return ('', -1, False)
+
+def parse_parent_branch(parent_branch):
+    """Parse a parent branch out of a version branch"""
+    # Parent branch can be just about anything, so just accept it.
+    # This should be the last thing called.
+    return (parent_branch, True)
+
+def parse_version_string(raw_version):
+    """Parse a raw version string into its parts"""
+    branch = False
+    svn = False
+    feature = ''
+    parsed_numbers = [0, 0, 0]
+    name = ''
+    revision = 0
+    parent = ''
+    iteration = 0
+    modifier = ''
+
+    raw_version = raw_version.replace('Asterisk ', '')
+
+    tokens = re.split('[-~]', raw_version)
+    count = 0
+    while (count < len(tokens)):
+        token = tokens[count]
+        # Determine if we're a subversion branch
+        if 'SVN' == token:
+            svn = True
+        elif 'branch' == token:
+            branch = True
+        else:
+            if svn and not branch and not name:
+                # Team branch or trunk.  This will modify the current
+                # position based on the number of tokens consumed
+                (name, munched) = parse_branch_name(tokens[count:])
+                count += munched
+            else:
+                handled = False
+                if (len([num for num in parsed_numbers if num != 0]) == 0):
+                    (parsed_numbers, handled) = parse_version(token)
+                if not handled and revision == 0:
+                    (revision, handled) = parse_revision(token)
+                if not handled and not feature:
+                    # If a feature returns back a number, its actually the
+                    # 'patch' version number (e.g., 1.8.11-cert3)
+                    (feature, temp, handled) = parse_feature(token)
+                    if (temp > 0):
+                        parsed_numbers[2] = temp
+                if not handled and not modifier:
+                    (modifier,
+                     iteration,
+                     handled) = parse_version_modifier(token)
+                if not handled and not parent:
+                    (parent, handled) = parse_parent_branch(token)
+                if not handled:
+                    LOGGER.error("Unable to parse token '%s' in version " \
+                                 "string '%s'" % (token, raw_version))
+        count += 1
+    return (parsed_numbers[0], parsed_numbers[1], parsed_numbers[2],
+            iteration, revision, branch, svn, name, feature, modifier,
+            parent)
+
+
+class AsteriskVersion(object):
     """An Asterisk Version.
 
     This class handles Asterisk version strings.
@@ -41,7 +162,7 @@ class AsteriskVersion:
         """
 
         if not version:
-            version = AsteriskVersion.get_asterisk_version_from_binary()
+            version = AsteriskVersion.get_version_from_binary()
 
         self.raw_version = version
 
@@ -55,17 +176,19 @@ class AsteriskVersion:
          self.name,
          self.feature,
          self.modifier,
-         self.parent) = self._parse_version_string(self.raw_version)
+         self.parent) = parse_version_string(self.raw_version)
 
     def __str__(self):
+        """Return the raw Asterisk version as a string"""
         return self.raw_version
 
     def __int__(self):
+        """Convert the Asterisk version to an integer for comparisons"""
         if self.name:
             return sys.maxint
         elif (self.branch):
-            # Branches are a little odd.  The more you specify, the less your calculated
-            # value is.  This keeps the following relationships true:
+            # Branches are a little odd. The more you specify, the less your
+            # calculated value is. This keeps the following relationships true:
             # branch-1.8 > 1.8.12.0 > branch-1.8.11-cert
             value = self.major * 100000000
             if (self.minor == 0):
@@ -79,11 +202,11 @@ class AsteriskVersion:
             value += 999
             return value
         else:
-            return self._modifier_weight() + self.patch * 1000 + self.minor * 100000 + self.major * 100000000
+            return (self._modifier_weight() + self.patch * 1000 +
+                    self.minor * 100000 + self.major * 100000000)
 
     def __cmp__(self, other):
-        self_value = int(self)
-        other_value = int(other)
+        """Compare this AsteriskVersion instance to another"""
         res = cmp(int(self), int(other))
         if res == 0:
             if self.svn and other.svn:
@@ -91,116 +214,8 @@ class AsteriskVersion:
 
         return res
 
-    def _parse_version_string(self, raw_version):
-        branch = False
-        svn = False
-        feature = ''
-        parsed_numbers = [0, 0, 0]
-        name = ''
-        revision = 0
-        parent = ''
-        iteration = 0
-        modifier = ''
-
-        raw_version = raw_version.replace('Asterisk ', '')
-
-        tokens = re.split('[-~]', raw_version)
-        count = 0
-        while (count < len(tokens)):
-            token = tokens[count]
-            # Determine if we're a subversion branch
-            if 'SVN' == token:
-                svn = True
-            elif 'branch' == token:
-                branch = True
-            else:
-                if svn and not branch and not name:
-                    # Team branch or trunk.  This will modify the current position
-                    # based on the number of tokens consumed
-                    (name, munched) = self._parse_branch_name(tokens[count:])
-                    count += munched
-                else:
-                    handled = False
-                    if (len([num for num in parsed_numbers if num != 0]) == 0):
-                        (parsed_numbers, handled) = self._parse_version(token)
-                    if not handled and revision == 0:
-                        (revision, handled) = self._parse_revision(token)
-                    if not handled and not feature:
-                        # If a feature returns back a number, its actually the 'patch' version
-                        # number (e.g., 1.8.11-cert3)
-                        (feature, temp, handled) = self._parse_feature(token)
-                        if (temp > 0):
-                            parsed_numbers[2] = temp
-                    if not handled and not modifier:
-                        (modifier, iteration, handled) = self._parse_version_modifier(token)
-                    if not handled and not parent:
-                        (parent, handled) = self._parse_parent_branch(token)
-                    if not handled:
-                        logger.error("Unable to parse token '%s' in version string '%s'" %
-                                     (token, raw_version))
-            count += 1
-        return (parsed_numbers[0], parsed_numbers[1], parsed_numbers[2], iteration,
-                revision, branch, svn, name, feature, modifier, parent)
-
-    def _parse_branch_name(self, branch_tokens):
-        name = branch_tokens[0]
-        munched = 0
-        for i in range(1, len(branch_tokens)):
-            # Stop when we hit the revision
-            if branch_tokens[i][0] == 'r':
-                candidate = branch_tokens[i].replace('r','').replace('M','').replace('m','')
-                if candidate.isdigit():
-                    break
-            name += '-' + branch_tokens[i]
-            munched += 1
-        return (name, munched)
-
-    def _parse_version(self, version_string):
-        parsed_numbers = [0,0,0]
-        version_tokens = version_string.split('.')
-        count = 0
-        if not version_tokens[0].isdigit():
-            return (parsed_numbers, False)
-        for token in version_tokens:
-            if count == 0 and int(token) == 1:
-                # Skip '1' in '1.8' branches - it adds no value
-                continue
-            parsed_numbers[count] = int(token)
-            count += 1
-        return (parsed_numbers, True)
-
-    def _parse_revision(self, revision_string):
-        candidate = revision_string.replace('M', '').replace('r','').replace('m','')
-        if candidate.isdigit():
-            return (int(candidate), True)
-        return (0, False)
-
-    def _parse_feature(self, feature_string):
-        for f in AsteriskVersion.supported_features:
-            if f in feature_string:
-                feature_string = feature_string.replace(f, '')
-                iteration = -1
-                if (len(feature_string) > 0):
-                    iteration = int(feature_string)
-                return (f, iteration, True)
-        return ('', -1, False)
-
-    def _parse_version_modifier(self, version_modifier):
-        for m in AsteriskVersion.supported_modifiers:
-            if m in version_modifier:
-                version_modifier = version_modifier.replace(m, '')
-                iteration = -1
-                if (len(version_modifier) > 0):
-                    iteration = int(version_modifier)
-                return (m, iteration, True)
-        return ('', -1, False)
-
-    def _parse_parent_branch(self, parent_branch):
-        # Parent branch can be just about anything, so just accept it.
-        # This should be the last thing called.
-        return (parent_branch, True)
-
     def _modifier_weight(self):
+        """Determine the relative weight due to a modifier"""
         if self.modifier:
             if self.modifier == 'rc':
                 return self.iteration * 10
@@ -209,6 +224,10 @@ class AsteriskVersion:
         return 100
 
     def has_feature(self, feature):
+        """Returns:
+        True if this AsteriskVersion has a feature
+        False otherwise
+        """
         if (self.name or self.major >= 11):
             # Assume that 11 or trunk has all the features
             return True
@@ -220,13 +239,12 @@ class AsteriskVersion:
         return False
 
     @classmethod
-    def get_asterisk_version_from_binary(cls):
-        """
-        Obtain the version from Asterisk and return (a cached version of) it
-        """
+    def get_version_from_binary(cls):
+        """Obtain the version from Asterisk and return a cached version of it"""
         if not hasattr(cls, "_asterisk_version_from_binary"):
             version = ""
-            ast_binary = TestSuiteUtils.which("asterisk") or "/usr/sbin/asterisk"
+            ast_binary = (test_suite_utils.which("asterisk") or
+                          "/usr/sbin/asterisk")
             cmd = [
                 ast_binary,
                 "-V",
@@ -236,309 +254,351 @@ class AsteriskVersion:
                 process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                         stderr=None)
                 version = process.stdout.read()
-            except OSError as oe:
-                logger.error("OSError [%d]: %s" % (oe.errno, oe.strerror))
+            except OSError as o_excep:
+                LOGGER.error("OSError [%d]: %s" % (o_excep.errno,
+                                                   o_excep.strerror))
                 raise
-
             cls._asterisk_version_from_binary = version.replace("Asterisk ", "")
         return cls._asterisk_version_from_binary
 
 
 class AsteriskVersionTests(unittest.TestCase):
+    """Unit tests for AsteriskVersion"""
 
     def test_version_18_1(self):
-        v = AsteriskVersion("1.8.6.0")
-        self.assertFalse(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(str(v), "1.8.6.0")
-        self.assertEqual(v.major, 8)
-        self.assertEqual(v.minor, 6)
-        self.assertEqual(v.patch, 0)
+        """Test parsing 1.8 version string"""
+        version = AsteriskVersion("1.8.6.0")
+        self.assertFalse(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(str(version), "1.8.6.0")
+        self.assertEqual(version.major, 8)
+        self.assertEqual(version.minor, 6)
+        self.assertEqual(version.patch, 0)
 
     def test_version_18_2(self):
-        v = AsteriskVersion("Asterisk 1.8.13.1")
-        self.assertFalse(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(str(v), "Asterisk 1.8.13.1")
-        self.assertEqual(v.major, 8)
-        self.assertEqual(v.minor, 13)
-        self.assertEqual(v.patch, 1)
+        """Test parsing another 1.8 version string"""
+        version = AsteriskVersion("Asterisk 1.8.13.1")
+        self.assertFalse(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(str(version), "Asterisk 1.8.13.1")
+        self.assertEqual(version.major, 8)
+        self.assertEqual(version.minor, 13)
+        self.assertEqual(version.patch, 1)
 
     def test_version_10_1(self):
-        v = AsteriskVersion("10.0")
-        self.assertFalse(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(str(v), "10.0")
-        self.assertEqual(v.major, 10)
-        self.assertEqual(v.minor, 0)
-        self.assertEqual(v.patch, 0)
+        """Test parsing a 10 version string"""
+        version = AsteriskVersion("10.0")
+        self.assertFalse(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(str(version), "10.0")
+        self.assertEqual(version.major, 10)
+        self.assertEqual(version.minor, 0)
+        self.assertEqual(version.patch, 0)
 
     def test_version_10_2(self):
-        v = AsteriskVersion("Asterisk 10.5.1")
-        self.assertFalse(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(str(v), "Asterisk 10.5.1")
-        self.assertEqual(v.major, 10)
-        self.assertEqual(v.minor, 5)
-        self.assertEqual(v.patch, 1)
+        """Test parsing another 10 version string"""
+        version = AsteriskVersion("Asterisk 10.5.1")
+        self.assertFalse(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(str(version), "Asterisk 10.5.1")
+        self.assertEqual(version.major, 10)
+        self.assertEqual(version.minor, 5)
+        self.assertEqual(version.patch, 1)
 
     def test_version_11_1(self):
-        v = AsteriskVersion("11")
-        self.assertFalse(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(str(v), "11")
-        self.assertEqual(v.major, 11)
-        self.assertEqual(v.minor, 0)
-        self.assertEqual(v.patch, 0)
+        """Test parsing an 11 version string"""
+        version = AsteriskVersion("11")
+        self.assertFalse(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(str(version), "11")
+        self.assertEqual(version.major, 11)
+        self.assertEqual(version.minor, 0)
+        self.assertEqual(version.patch, 0)
 
     def test_version_11_2(self):
-        v = AsteriskVersion("11.1.9")
-        self.assertFalse(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(str(v), "11.1.9")
-        self.assertEqual(v.major, 11)
-        self.assertEqual(v.minor, 1)
-        self.assertEqual(v.patch, 9)
+        """Test parsing another 11 version string"""
+        version = AsteriskVersion("11.1.9")
+        self.assertFalse(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(str(version), "11.1.9")
+        self.assertEqual(version.major, 11)
+        self.assertEqual(version.minor, 1)
+        self.assertEqual(version.patch, 9)
 
     def test_version_11_3(self):
-        v = AsteriskVersion("Asterisk 11.0")
-        self.assertFalse(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(str(v), "Asterisk 11.0")
-        self.assertEqual(v.major, 11)
-        self.assertEqual(v.minor, 0)
-        self.assertEqual(v.patch, 0)
+        """Test parsing yet another 11 version string"""
+        version = AsteriskVersion("Asterisk 11.0")
+        self.assertFalse(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(str(version), "Asterisk 11.0")
+        self.assertEqual(version.major, 11)
+        self.assertEqual(version.minor, 0)
+        self.assertEqual(version.patch, 0)
 
     def test_svn_version_trunk_1(self):
-        v = AsteriskVersion("SVN-trunk-r252849")
-        self.assertTrue(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(str(v), "SVN-trunk-r252849")
-        self.assertEqual(v.name, "trunk")
-        self.assertEqual(v.revision, 252849)
+        """Test parsing a trunk version with revision"""
+        version = AsteriskVersion("SVN-trunk-r252849")
+        self.assertTrue(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(str(version), "SVN-trunk-r252849")
+        self.assertEqual(version.name, "trunk")
+        self.assertEqual(version.revision, 252849)
 
     def test_svn_version_trunk_2(self):
-        v = AsteriskVersion("Asterisk SVN-trunk-r252849M")
-        self.assertTrue(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(str(v), "Asterisk SVN-trunk-r252849M")
-        self.assertEqual(v.name, "trunk")
-        self.assertEqual(v.revision, 252849)
+        """Test parsing a modified trunk version with revision"""
+        version = AsteriskVersion("Asterisk SVN-trunk-r252849M")
+        self.assertTrue(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(str(version), "Asterisk SVN-trunk-r252849M")
+        self.assertEqual(version.name, "trunk")
+        self.assertEqual(version.revision, 252849)
 
     def test_svn_version_teambranch_1(self):
-        v = AsteriskVersion("SVN-russell-cdr-q-r249059M-/trunk")
-        self.assertTrue(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(str(v), "SVN-russell-cdr-q-r249059M-/trunk")
-        self.assertEqual(v.name, "russell-cdr-q")
-        self.assertEqual(v.revision, 249059)
-        self.assertEqual(v.parent, "/trunk")
+        """Test parsing a rather long team branch"""
+        version = AsteriskVersion("SVN-russell-cdr-q-r249059M-/trunk")
+        self.assertTrue(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(str(version), "SVN-russell-cdr-q-r249059M-/trunk")
+        self.assertEqual(version.name, "russell-cdr-q")
+        self.assertEqual(version.revision, 249059)
+        self.assertEqual(version.parent, "/trunk")
 
     def test_svn_version_teambranch_2(self):
-        v = AsteriskVersion("Asterisk SVN-russell-rest-r12345")
-        self.assertTrue(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(str(v), "Asterisk SVN-russell-rest-r12345")
-        self.assertEqual(v.name, "russell-rest")
-        self.assertEqual(v.revision, 12345)
+        """Test parsing a slightly shorter team branch"""
+        version = AsteriskVersion("Asterisk SVN-russell-rest-r12345")
+        self.assertTrue(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(str(version), "Asterisk SVN-russell-rest-r12345")
+        self.assertEqual(version.name, "russell-rest")
+        self.assertEqual(version.revision, 12345)
 
     def test_svn_branch_10_1(self):
-        v = AsteriskVersion("SVN-branch-10-r11111")
-        self.assertTrue(v.svn)
-        self.assertTrue(v.branch)
-        self.assertEqual(str(v), "SVN-branch-10-r11111")
-        self.assertEqual(v.major, 10)
-        self.assertEqual(v.minor, 0)
-        self.assertEqual(v.patch, 0)
-        self.assertEqual(v.revision, 11111)
+        """Test parsing an Asterisk 10 version branch"""
+        version = AsteriskVersion("SVN-branch-10-r11111")
+        self.assertTrue(version.svn)
+        self.assertTrue(version.branch)
+        self.assertEqual(str(version), "SVN-branch-10-r11111")
+        self.assertEqual(version.major, 10)
+        self.assertEqual(version.minor, 0)
+        self.assertEqual(version.patch, 0)
+        self.assertEqual(version.revision, 11111)
 
     def test_svn_branch_18_features_1(self):
-        v = AsteriskVersion("SVN-branch-1.8-digiumphones-r357808-/branches/1.8")
-        self.assertTrue(v.svn)
-        self.assertTrue(v.branch)
-        self.assertEqual(v.major, 8)
-        self.assertEqual(v.minor, 0)
-        self.assertEqual(v.patch, 0)
-        self.assertEqual(v.revision, 357808)
-        self.assertEqual(v.parent, '/branches/1.8')
-        self.assertTrue(v.feature, 'digiumphones')
+        """Test parsing a 1.8 branch with features"""
+        version = AsteriskVersion("SVN-branch-1.8-digiumphones-r357808-/branches/1.8")
+        self.assertTrue(version.svn)
+        self.assertTrue(version.branch)
+        self.assertEqual(version.major, 8)
+        self.assertEqual(version.minor, 0)
+        self.assertEqual(version.patch, 0)
+        self.assertEqual(version.revision, 357808)
+        self.assertEqual(version.parent, '/branches/1.8')
+        self.assertTrue(version.feature, 'digiumphones')
 
     def test_svn_branch_10_features_1(self):
-        v = AsteriskVersion("SVN-branch-10-digiumphones-r365402-/branches/10")
-        self.assertTrue(v.svn)
-        self.assertTrue(v.branch)
-        self.assertEqual(v.major, 10)
-        self.assertEqual(v.minor, 0)
-        self.assertEqual(v.patch, 0)
-        self.assertEqual(v.revision, 365402)
-        self.assertEqual(v.parent, '/branches/10')
-        self.assertEqual(v.feature, 'digiumphones')
+        """Test parsing a 10 branch with features"""
+        version = AsteriskVersion("SVN-branch-10-digiumphones-r365402-/branches/10")
+        self.assertTrue(version.svn)
+        self.assertTrue(version.branch)
+        self.assertEqual(version.major, 10)
+        self.assertEqual(version.minor, 0)
+        self.assertEqual(version.patch, 0)
+        self.assertEqual(version.revision, 365402)
+        self.assertEqual(version.parent, '/branches/10')
+        self.assertEqual(version.feature, 'digiumphones')
 
     def test_svn_branch_10_features_2(self):
-        v = AsteriskVersion("Asterisk SVN-branch-10-digiumphones-r365402")
-        self.assertTrue(v.svn)
-        self.assertTrue(v.branch)
-        self.assertEqual(v.major, 10)
-        self.assertEqual(v.minor, 0)
-        self.assertEqual(v.patch, 0)
-        self.assertEqual(v.revision, 365402)
-        self.assertEqual(v.feature, 'digiumphones')
+        """Test parsing another 10 feature branch"""
+        version = AsteriskVersion("Asterisk SVN-branch-10-digiumphones-r365402")
+        self.assertTrue(version.svn)
+        self.assertTrue(version.branch)
+        self.assertEqual(version.major, 10)
+        self.assertEqual(version.minor, 0)
+        self.assertEqual(version.patch, 0)
+        self.assertEqual(version.revision, 365402)
+        self.assertEqual(version.feature, 'digiumphones')
 
     def test_version_10_with_features_and_modifier(self):
-        v = AsteriskVersion("Asterisk 10.6.1-digiumphones-beta3")
-        self.assertFalse(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(v.major, 10)
-        self.assertEqual(v.minor, 6)
-        self.assertEqual(v.patch, 1)
-        self.assertEqual(v.feature, 'digiumphones')
-        self.assertEqual(v.modifier, 'beta')
-        self.assertEqual(v.iteration, 3)
+        """Test parsing a 10 feature branch with a modifier"""
+        version = AsteriskVersion("Asterisk 10.6.1-digiumphones-beta3")
+        self.assertFalse(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(version.major, 10)
+        self.assertEqual(version.minor, 6)
+        self.assertEqual(version.patch, 1)
+        self.assertEqual(version.feature, 'digiumphones')
+        self.assertEqual(version.modifier, 'beta')
+        self.assertEqual(version.iteration, 3)
 
     def test_svn_1811_certified_1(self):
-        v = AsteriskVersion("Asterisk 1.8.11-cert1")
-        self.assertFalse(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(v.major, 8)
-        self.assertEqual(v.minor, 11)
-        self.assertEqual(v.patch, 1)
-        self.assertEqual(v.feature, 'cert')
+        """Test a CA 1.8 version tag"""
+        version = AsteriskVersion("Asterisk 1.8.11-cert1")
+        self.assertFalse(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(version.major, 8)
+        self.assertEqual(version.minor, 11)
+        self.assertEqual(version.patch, 1)
+        self.assertEqual(version.feature, 'cert')
 
     def test_svn_1811_certified_2(self):
-        v = AsteriskVersion("1.8.11-cert2")
-        self.assertFalse(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(v.major, 8)
-        self.assertEqual(v.minor, 11)
-        self.assertEqual(v.patch, 2)
-        self.assertEqual(v.feature, 'cert')
+        """Test another CA 1.8 version tag"""
+        version = AsteriskVersion("1.8.11-cert2")
+        self.assertFalse(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(version.major, 8)
+        self.assertEqual(version.minor, 11)
+        self.assertEqual(version.patch, 2)
+        self.assertEqual(version.feature, 'cert')
 
     def test_svn_1811_certified_3(self):
-        v = AsteriskVersion("Asterisk 1.8.11-cert3-rc1")
-        self.assertFalse(v.svn)
-        self.assertFalse(v.branch)
-        self.assertEqual(v.major, 8)
-        self.assertEqual(v.minor, 11)
-        self.assertEqual(v.patch, 3)
-        self.assertEqual(v.feature, 'cert')
-        self.assertEqual(v.modifier, 'rc')
-        self.assertEqual(v.iteration, 1)
+        """Test a CA 1.8 version tag with modifier"""
+        version = AsteriskVersion("Asterisk 1.8.11-cert3-rc1")
+        self.assertFalse(version.svn)
+        self.assertFalse(version.branch)
+        self.assertEqual(version.major, 8)
+        self.assertEqual(version.minor, 11)
+        self.assertEqual(version.patch, 3)
+        self.assertEqual(version.feature, 'cert')
+        self.assertEqual(version.modifier, 'rc')
+        self.assertEqual(version.iteration, 1)
 
     def test_svn_1811_certified_branch(self):
-        v = AsteriskVersion("Asterisk SVN-branch-1.8.11-cert-r368608")
-        self.assertTrue(v.svn)
-        self.assertTrue(v.branch)
-        self.assertEqual(v.major, 8)
-        self.assertEqual(v.minor, 11)
-        self.assertEqual(v.patch, 0)
-        self.assertEqual(v.feature, 'cert')
-        self.assertEqual(v.revision, 368608)
+        """Test a CA 1.8 version branch"""
+        version = AsteriskVersion("Asterisk SVN-branch-1.8.11-cert-r368608")
+        self.assertTrue(version.svn)
+        self.assertTrue(version.branch)
+        self.assertEqual(version.major, 8)
+        self.assertEqual(version.minor, 11)
+        self.assertEqual(version.patch, 0)
+        self.assertEqual(version.feature, 'cert')
+        self.assertEqual(version.revision, 368608)
 
     def test_cmp1(self):
-        v1 = AsteriskVersion("SVN-trunk-r252849")
-        v2 = AsteriskVersion("SVN-branch-1.8-r245581M")
-        v3 = AsteriskVersion("Asterisk 11.0.1")
-        v4 = AsteriskVersion("SVN-trunk-r300000")
-        self.assertTrue(v1 > v2)
-        self.assertTrue(v1 > v3)
-        self.assertFalse(v1 > v4)
+        """Compare two trunk versions, an 11 tag, and a 1.8 branch"""
+        version1 = AsteriskVersion("SVN-trunk-r252849")
+        version2 = AsteriskVersion("SVN-branch-1.8-r245581M")
+        version3 = AsteriskVersion("Asterisk 11.0.1")
+        version4 = AsteriskVersion("SVN-trunk-r300000")
+        self.assertTrue(version1 > version2)
+        self.assertTrue(version1 > version3)
+        self.assertFalse(version1 > version4)
 
     def test_cmp2(self):
-        v1 = AsteriskVersion("SVN-trunk-r252849")
-        v2 = AsteriskVersion("SVN-russell-cdr-q-r249059M-/trunk")
-        self.assertTrue(v1 > v2)
+        """Compare trunk against a team branch"""
+        version1 = AsteriskVersion("SVN-trunk-r252849")
+        version2 = AsteriskVersion("SVN-russell-cdr-q-r249059M-/trunk")
+        self.assertTrue(version1 > version2)
 
     def test_cmp3(self):
-        v1 = AsteriskVersion("SVN-branch-10-r245581M")
-        v2 = AsteriskVersion("SVN-branch-1.8-r245581M")
-        self.assertTrue(v1 > v2)
+        """Compare 10 branch against 1.8 branch"""
+        version1 = AsteriskVersion("SVN-branch-10-r245581M")
+        version2 = AsteriskVersion("SVN-branch-1.8-r245581M")
+        self.assertTrue(version1 > version2)
 
     def test_cmp4(self):
-        v1 = AsteriskVersion("10.0")
-        v2 = AsteriskVersion("1.8")
-        self.assertTrue(v1 > v2)
+        """Compare two version tags"""
+        version1 = AsteriskVersion("10.0")
+        version2 = AsteriskVersion("1.8")
+        self.assertTrue(version1 > version2)
 
     def test_cmp5(self):
-        v1 = AsteriskVersion("10")
-        v2 = AsteriskVersion("1.8")
-        self.assertTrue(v1 > v2)
+        """Compare the simplest version tags"""
+        version1 = AsteriskVersion("10")
+        version2 = AsteriskVersion("1.8")
+        self.assertTrue(version1 > version2)
 
     def test_cmp6(self):
-        v1 = AsteriskVersion("SVN-trunk-r245581")
-        v2 = AsteriskVersion("SVN-branch-10-r251232")
-        self.assertTrue(v1 > v2)
+        """Compare trunk against 10 branch"""
+        version1 = AsteriskVersion("SVN-trunk-r245581")
+        version2 = AsteriskVersion("SVN-branch-10-r251232")
+        self.assertTrue(version1 > version2)
 
     def test_cmp16(self):
-        v1 = AsteriskVersion("1.8.6.0-rc1")
-        v2 = AsteriskVersion("1.8.6.0")
-        self.assertTrue(v1 < v2)
+        """Compare two versions, one with a modifier"""
+        version1 = AsteriskVersion("1.8.6.0-rc1")
+        version2 = AsteriskVersion("1.8.6.0")
+        self.assertTrue(version1 < version2)
 
     def test_cmp17(self):
-        v1 = AsteriskVersion("1.8.8.0-beta1")
-        v2 = AsteriskVersion("1.8.8.0-rc1")
-        self.assertTrue(v1 < v2)
+        """Compare two modifiers"""
+        version1 = AsteriskVersion("1.8.8.0-beta1")
+        version2 = AsteriskVersion("1.8.8.0-rc1")
+        self.assertTrue(version1 < version2)
 
     def test_cmp18(self):
-        v1 = AsteriskVersion("1.8.6.0-rc2")
-        v2 = AsteriskVersion("1.8.6.0-rc1")
-        self.assertTrue(v1 > v2)
+        """Compare two versions with the same modifier"""
+        version1 = AsteriskVersion("1.8.6.0-rc2")
+        version2 = AsteriskVersion("1.8.6.0-rc1")
+        self.assertTrue(version1 > version2)
 
     def test_cmp19(self):
-        v1 = AsteriskVersion("1.8.6.1")
-        v2 = AsteriskVersion("1.8.6.0-rc11")
-        self.assertTrue(v1 > v2)
+        """Compare a high modifier against the next higher version"""
+        version1 = AsteriskVersion("1.8.6.1")
+        version2 = AsteriskVersion("1.8.6.0-rc11")
+        self.assertTrue(version1 > version2)
 
     def test_cmp20(self):
-        v1 = AsteriskVersion("1.8.5.0")
-        v2 = AsteriskVersion("1.8.5.1")
-        self.assertTrue(v1 < v2)
+        """Compare two versions with a regression/security difference"""
+        version1 = AsteriskVersion("1.8.5.0")
+        version2 = AsteriskVersion("1.8.5.1")
+        self.assertTrue(version1 < version2)
 
     def test_cmp21(self):
-        v1 = AsteriskVersion("1.8.10")
-        v2 = AsteriskVersion("SVN-branch-1.8-r360138")
-        self.assertTrue(v1 < v2)
+        """Compare a tag against the same major version branch"""
+        version1 = AsteriskVersion("1.8.10")
+        version2 = AsteriskVersion("SVN-branch-1.8-r360138")
+        self.assertTrue(version1 < version2)
 
     def test_cmp22(self):
-        v1 = AsteriskVersion("1.8.10")
-        v2 = AsteriskVersion("SVN-branch-1.8-r360138M")
-        self.assertTrue(v1 < v2)
+        """Compare a tag against a modified same major version branch"""
+        version1 = AsteriskVersion("1.8.10")
+        version2 = AsteriskVersion("SVN-branch-1.8-r360138M")
+        self.assertTrue(version1 < version2)
 
     def test_cmp23(self):
-        v1 = AsteriskVersion("1.8.11-cert1")
-        v2 = AsteriskVersion("1.8.11-cert2")
-        self.assertTrue(v1 < v2)
+        """Compare the same CA version with a patch difference"""
+        version1 = AsteriskVersion("1.8.11-cert1")
+        version2 = AsteriskVersion("1.8.11-cert2")
+        self.assertTrue(version1 < version2)
 
     def test_cmp24(self):
-        v1 = AsteriskVersion("1.8.11-cert1")
-        v2 = AsteriskVersion("1.8.15-cert1")
-        self.assertTrue(v1 < v2)
+        """Compare two CA versions"""
+        version1 = AsteriskVersion("1.8.11-cert1")
+        version2 = AsteriskVersion("1.8.15-cert1")
+        self.assertTrue(version1 < version2)
 
     def test_cmp25(self):
-        v1 = AsteriskVersion("1.8.11-cert1")
-        v2 = AsteriskVersion("1.8.13.0")
-        self.assertTrue(v1 < v2)
+        """Compare a CA version against a standard release from the branch"""
+        version1 = AsteriskVersion("1.8.11-cert1")
+        version2 = AsteriskVersion("1.8.13.0")
+        self.assertTrue(version1 < version2)
 
     def test_cmp26(self):
-        v1 = AsteriskVersion("SVN-branch-1.8.11-cert-r363674")
-        v2 = AsteriskVersion("1.8.12.0")
-        self.assertTrue(v1 < v2)
+        """Compare a CA branch against a tagged version"""
+        version1 = AsteriskVersion("SVN-branch-1.8.11-cert-r363674")
+        version2 = AsteriskVersion("1.8.12.0")
+        self.assertTrue(version1 < version2)
 
     def test_cmp27(self):
-        v1 = AsteriskVersion("SVN-branch-1.8.11-r363674")
-        v2 = AsteriskVersion("SVN-branch-1.8.15-r363674")
-        self.assertTrue(v1 < v2)
+        """Compare two CA branches"""
+        version1 = AsteriskVersion("SVN-branch-1.8.11-r363674")
+        version2 = AsteriskVersion("SVN-branch-1.8.15-r363674")
+        self.assertTrue(version1 < version2)
 
     def test_cmp28(self):
-        v1 = AsteriskVersion("SVN-branch-1.8.11-r363674")
-        v2 = AsteriskVersion("SVN-branch-1.8-r369138M")
-        self.assertTrue(v1 < v2)
+        """Compare a CA branch against the standard branch"""
+        version1 = AsteriskVersion("SVN-branch-1.8.11-r363674")
+        version2 = AsteriskVersion("SVN-branch-1.8-r369138M")
+        self.assertTrue(version1 < version2)
 
     def test_cmp29(self):
-        v1 = AsteriskVersion("1.8.11-cert1")
-        v2 = AsteriskVersion("Asterisk SVN-branch-1.8.11-cert-r368608")
-        self.assertTrue(v1 < v2)
+        """Compare a CA version against a CA branch"""
+        version1 = AsteriskVersion("1.8.11-cert1")
+        version2 = AsteriskVersion("Asterisk SVN-branch-1.8.11-cert-r368608")
+        self.assertTrue(version1 < version2)
 
 def main():
+    """Run the unit tests"""
     unittest.main()
 
 

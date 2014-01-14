@@ -16,11 +16,10 @@ import sys
 import csv
 import re
 import logging
-import time
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
-class AsteriskCSVLine:
+class AsteriskCSVLine(object):
     "A single Asterisk call detail record"
 
     def __init__(self, fields, **kwargs):
@@ -48,40 +47,43 @@ class AsteriskCSVLine:
         """
 
         if exact == (False, False):
-            logger.error("Can't compare two regexes, that's silly")
+            LOGGER.error("Can't compare two regexes, that's silly")
             return False
         elif exact == (False, True):
-            cmp_fn = (lambda x,y: re.match(str(x).lower() + '$', str(y).lower()))
+            cmp_fn = (lambda x, y: re.match(str(x).lower() + '$', str(y).lower()))
         elif exact == (True, False):
-            cmp_fn = (lambda x,y: re.match(str(y).lower() + '$', str(x).lower()))
+            cmp_fn = (lambda x, y: re.match(str(y).lower() + '$', str(x).lower()))
         else:
-            cmp_fn = (lambda x,y: str(x).lower() == str(y).lower())
+            cmp_fn = (lambda x, y: str(x).lower() == str(y).lower())
 
-        for k, v in self.iteritems():
-            if None not in (v, other.get(k)):
-                if not cmp_fn(v, other.get(k)):
-                    if not silent:
-                        logger.warn("CSV MATCH FAILED, Expected: %s: '%s' Got: %s: '%s'" % (k, v, k, other.get(k)))
-                    return False
+        for key, value in self.iteritems():
+            if None not in (value, other.get(key)) and not cmp_fn(value, other.get(key)):
+                if not silent:
+                    LOGGER.warn("CSV MATCH FAILED, Expected: %s: '%s' " \
+                                "Got: %s: '%s'" % (key, value, key,
+                                                   other.get(key)))
+                return False
         return True
 
-    def get(self, k):
-        return self.__columns.get(k)
+    def get(self, key):
+        """Retrieve a value from the specified column key"""
+        return self.__columns.get(key)
 
     def iteritems(self):
+        """Iterate over the values in the columns"""
         return self.__columns.iteritems()
 
     def __str__(self):
         return ",".join(["\"%s\"" % (self.__dict__[x]) for x in self.__fields])
 
 
-class AsteriskCSV:
+class AsteriskCSV(object):
     """A representation of an Asterisk CSV file"""
 
-    def __init__(self, fn=None, records=None, fields=None, row_factory=None):
-        """Initialize CSV records from an Asterisk csv file"""
+    def __init__(self, fname=None, records=None, fields=None, row_factory=None):
+        """Initialize CSV records from an Asterisk CSV file"""
 
-        self.filename = fn
+        self.filename = fname
         self.row_factory = row_factory
 
         if records:
@@ -93,18 +95,19 @@ class AsteriskCSV:
         csvreader = None
 
         try:
-            csvreader = csv.DictReader(open(fn, "r"), fields, ",")
+            csvreader = csv.DictReader(open(self.filename, "r"), fields, ",")
         except IOError as (errno, strerror):
-            logger.error("IOError %d[%s] while opening file '%s'" % (errno, strerror, fn))
+            LOGGER.error("IOError %d[%s] while opening file '%s'" %
+                         (errno, strerror, self.filename))
         except:
-            logger.error("Unexpected error: %s" % (sys.exc_info()[0]))
+            LOGGER.error("Unexpected error: %s" % (sys.exc_info()[0]))
 
         if not csvreader:
-            logger.error("Unable to open file '%s'" % (fn))
+            LOGGER.error("Unable to open file '%s'" % (self.filename))
             return
 
-        for r in csvreader:
-            record = self.row_factory(**r)
+        for row in csvreader:
+            record = self.row_factory(**row)
             self.__records.append(record)
 
     def __len__(self):
@@ -121,7 +124,8 @@ class AsteriskCSV:
         each record"""
 
         if not partial and (len(self) != len(other)):
-            logger.warn("CSV MATCH FAILED, different number of records, self=%d and other=%d" % (len(self), len(other)))
+            LOGGER.warn("CSV MATCH FAILED, different number of records, " \
+                        "self=%d and other=%d" % (len(self), len(other)))
             return False
 
         def match_order(list_a, list_b, cmp_func):
@@ -142,16 +146,16 @@ class AsteriskCSV:
             size = len(list_a)
 
             # attempt two orderings: forward and reversed
-            guess_orders = (range(size), list(reversed(range(size)))) # both mutable
+            guess_orders = (range(size), list(reversed(range(size))))
             found_orders = []
 
             for guess_order in guess_orders:
                 found_order = []
-                for a in range(size):
-                    for b in guess_order:
-                        if cmp_func(list_a[a], list_b[b]):
-                            found_order.append(b)
-                            guess_order.remove(b)
+                for a_item in range(size):
+                    for b_item in guess_order:
+                        if cmp_func(list_a[a_item], list_b[b_item]):
+                            found_order.append(b_item)
+                            guess_order.remove(b_item)
                             break
                     else:
                         # no match at all..
@@ -173,14 +177,14 @@ class AsteriskCSV:
         # or (b) a single match or (c) several matches. In the latter case, the
         # regexes should probably be chosen more carefully.
         matches = match_order(self, other, (lambda x, y: x.match(y,
-            silent=True, exact=exactness)))
+                                            silent=True, exact=exactness)))
 
         if len(matches) == 0:
             # Bah.. no match. Loop over the records in the normal order and
             # have it complain immediately.
-            for i, x in enumerate(self):
-                if not x.match(other[i], exact=exactness):
-                    logger.warn("Failed to match entry %d" % (i,))
+            for i, item in enumerate(self):
+                if not item.match(other[i], exact=exactness):
+                    LOGGER.warn("Failed to match entry %d" % (i,))
                     return False
             assert False
 
@@ -188,18 +192,19 @@ class AsteriskCSV:
             pass # joy!
 
         elif len(matches) > 1:
-            logger.warn("More than one CSV permutation results in success")
+            LOGGER.warn("More than one CSV permutation results in success")
 
         return True
 
     def __str__(self):
-        return "\n".join([str(x) for x in self.__records])
+        return "\n".join([str(item) for item in self.__records])
 
     def empty(self):
+        """Empty out the records"""
         try:
             open(self.filename, "w").close()
         except:
-            logger.warn("Unable to empty CSV file %s" % (self.filename))
+            LOGGER.warn("Unable to empty CSV file %s" % (self.filename))
 
 if __name__ == '__main__':
     unittest.main()

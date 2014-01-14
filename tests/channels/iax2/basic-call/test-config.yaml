@@ -18,17 +18,17 @@ properties:
 test-modules:
     test-object:
         config-section: test-object-config
-        typename: 'TestCase.TestCaseModule'
+        typename: 'test_case.TestCaseModule'
     modules:
         -
             config-section: originator
-            typename: 'PluggableModules.Originator'
+            typename: 'pluggable_modules.Originator'
         -
             config-section: ami-config
             typename: 'ami.AMIEventModule'
         -
             config-section: hangup-monitor
-            typename: 'PluggableModules.HangupMonitor'
+            typename: 'pluggable_modules.HangupMonitor'
         -
             config-section: cdr-config
             typename: 'cdr.CDRModule'

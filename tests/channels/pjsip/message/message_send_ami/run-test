@@ -17,7 +17,7 @@ from twisted.internet import reactor
 sys.path.append("lib/python")
 
 from asterisk.sipp import SIPpScenario
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 
 """
 The TestCase class will initialize the python logger - creating a

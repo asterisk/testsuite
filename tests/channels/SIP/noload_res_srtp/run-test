@@ -13,7 +13,7 @@ import time
 from twisted.internet import reactor, defer
 
 sys.path.append("lib/python")
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 
 class SIPCallTest(TestCase):
     def __init__(self):

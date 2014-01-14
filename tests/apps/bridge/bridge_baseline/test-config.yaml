@@ -6,11 +6,11 @@ testinfo:
 test-modules:
     test-object:
         config-section: test-object-config
-        typename: 'SimpleTestCase.SimpleTestCase'
+        typename: 'test_case.SimpleTestCase'
     modules:
         -
             config-section: originator-config
-            typename: 'PluggableModules.Originator'
+            typename: 'pluggable_modules.Originator'
         -
             minversion: '1.8.0.0'
             maxversion: '10.0.0'
@@ -24,7 +24,7 @@ test-modules:
         -
             maxversion: '12.0.0'
             config-section: hangup-config-pre-12
-            typename: 'PluggableModules.AMIChannelHangupAll'
+            typename: 'pluggable_modules.AMIChannelHangupAll'
         -
             maxversion: '12.0.0'
             config-section: cdr-config-pre-12
@@ -36,7 +36,7 @@ test-modules:
         -
             minversion: '12.0.0'
             config-section: hangup-config-12
-            typename: 'PluggableModules.AMIChannelHangup'
+            typename: 'pluggable_modules.AMIChannelHangup'
         -
             minversion: '12.0.0'
             config-section: cdr-config-12

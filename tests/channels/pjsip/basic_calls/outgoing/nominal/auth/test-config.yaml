@@ -15,26 +15,26 @@ testinfo:
 test-modules:
     test-object:
         config-section: test-object-config
-        typename: 'TestCase.TestCaseModule'
+        typename: 'test_case.TestCaseModule'
     modules:
         -
             config-section: 'originator-realm'
-            typename: 'PluggableModules.Originator'
+            typename: 'pluggable_modules.Originator'
         -
             config-section: 'originator-norealm'
-            typename: 'PluggableModules.Originator'
+            typename: 'pluggable_modules.Originator'
         -
             config-section: 'originator-realm-md5'
-            typename: 'PluggableModules.Originator'
+            typename: 'pluggable_modules.Originator'
         -
             config-section: 'originator-norealm-md5'
-            typename: 'PluggableModules.Originator'
+            typename: 'pluggable_modules.Originator'
         -
             config-section: 'ami-config'
             typename: 'ami.AMIEventModule'
         -
             config-section: 'hangup-monitor'
-            typename: 'PluggableModules.HangupMonitor'
+            typename: 'pluggable_modules.HangupMonitor'
 
 test-object-config:
     asterisk-instances: 2

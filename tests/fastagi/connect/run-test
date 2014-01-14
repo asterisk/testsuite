@@ -12,7 +12,7 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 
 
 class FastAGIConnectTest(TestCase):

@@ -14,7 +14,7 @@ import pjsua as pj
 import threading
 
 sys.path.append("lib/python")
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 import logging
 from asterisk.version import AsteriskVersion
 

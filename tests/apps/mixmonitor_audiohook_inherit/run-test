@@ -13,7 +13,7 @@ import logging
 
 sys.path.append("lib/python")
 from twisted.internet import reactor
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ class MixMonitorAHookInheritTest(TestCase):
         """
         LOGGER.info("Starting call")
         ami.originate("Local/s@listener",exten = "101",\
-            context = "ast1",priority = 1).addErrback(self.handleOriginateFailure)
+            context = "ast1",priority = 1).addErrback(self.handle_originate_failure)
 
     def __read_result(self):
         """

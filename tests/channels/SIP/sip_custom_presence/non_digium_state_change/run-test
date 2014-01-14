@@ -13,7 +13,7 @@ import logging
 sys.path.append("lib/python")
 
 from asterisk.asterisk import Asterisk
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 from asterisk.sipp import SIPpScenario
 from twisted.internet import reactor
 
@@ -45,13 +45,13 @@ class NominalStateChange(TestCase):
             return
 
         ami.originate(channel = "Local/callbob@default", application
-                = "Echo").addErrback(self.handleOriginateFailure)
+                = "Echo").addErrback(self.handle_originate_failure)
 
     def runSippTest(self):
         self.sipTest.run(self).addCallback(self.testComplete)
 
         self.ami[0].originate(channel = "Local/away@default", application =
-                "Echo").addErrback(self.handleOriginateFailure)
+                "Echo").addErrback(self.handle_originate_failure)
 
     def inspectPresence(self, ami, event):
         # For this test, we expect none of these events.

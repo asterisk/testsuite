@@ -29,27 +29,27 @@ class LoginWithMailbox(VoiceMailState):
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
         if state == 'PLAYBACK':
             message = event.get('message')
             if message == 'vm-login' or message == 'vm-incorrect-mailbox':
-                self.voiceMailTest.sendDTMF("1234")
+                self.voice_mail_test.send_dtmf("1234")
             elif message == 'vm-password':
-                self.voiceMailTest.sendDTMF("5555")
-                self.voiceMailTest.reset_timeout()
+                self.voice_mail_test.send_dtmf("5555")
+                self.voice_mail_test.reset_timeout()
             elif message == 'vm-goodbye':
-                self.voiceMailTest.hangup()
+                self.voice_mail_test.hangup()
             else:
-                self.handleDefaultState(event)
+                self.handle_default_state(event)
         elif state == 'AUTHENTICATED':
             logger.warn("We authenticated with an invalid mailbox - failing the test")
-            self.voiceMailTest.passed = False
-            self.voiceMailTest.stop_reactor()
+            self.voice_mail_test.passed = False
+            self.voice_mail_test.stop_reactor()
         else:
-            self.handleDefaultState(event)
+            self.handle_default_state(event)
 
-    def getStateName(self):
+    def get_state_name(self):
         return "LOGIN WITH MAILBOX"
 
 """
@@ -60,25 +60,25 @@ class LoginWithoutMailbox(VoiceMailState):
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
         if state == 'PLAYBACK':
             message = event.get('message')
             if message == 'vm-password':
-                self.voiceMailTest.sendDTMF("5555")
-                self.voiceMailTest.reset_timeout()
+                self.voice_mail_test.send_dtmf("5555")
+                self.voice_mail_test.reset_timeout()
             elif message == 'vm-goodbye':
-                self.voiceMailTest.hangup()
+                self.voice_mail_test.hangup()
             else:
-                self.handleDefaultState(event)
+                self.handle_default_state(event)
         elif state == 'AUTHENTICATED':
             logger.warn("We authenticated with an invalid mailbox - failing the test")
-            self.voiceMailTest.passed = False
-            self.voiceMailTest.stop_reactor()
+            self.voice_mail_test.passed = False
+            self.voice_mail_test.stop_reactor()
         else:
-            self.handleDefaultState(event)
+            self.handle_default_state(event)
 
-    def getStateName(self):
+    def get_state_name(self):
         return "LOGIN WITHOUT MAILBOX"
 
 class AuthenticateInvalidPassword(VoiceMailTest):
@@ -93,16 +93,16 @@ class AuthenticateInvalidPassword(VoiceMailTest):
 
         """ Record which AMI instance we've received and attempt to set up the test controller """
         if (ami.id == 0):
-            self.amiReceiver = ami
+            self.ami_receiver = ami
             ami.registerEvent('UserEvent', self.user_event)
         elif (ami.id == 1):
-            self.amiSender = ami
-            self.astSender = self.ast[self.amiSender.id]
+            self.ami_sender = ami
+            self.ast_sender = self.ast[self.ami_sender.id]
             ami.registerEvent('Hangup', self.hangup_event_handler)
-        self.createTestController()
-        if (self.testStateController != None):
-            startObject = LoginWithMailbox(self.testStateController, self)
-            self.testStateController.changeState(startObject)
+        self.create_test_controller()
+        if (self.test_state_controller != None):
+            startObject = LoginWithMailbox(self.test_state_controller, self)
+            self.test_state_controller.change_state(startObject)
 
         if not (ami.id == 0):
             self.executeTest(ami)
@@ -121,14 +121,14 @@ class AuthenticateInvalidPassword(VoiceMailTest):
         if self.test_counter == 0:
             logger.debug("Originating call to sip/ast/9000")
             df = ami.originate("sip/ast1/9000", "voicemailCaller", "wait", 1)
-            df.addErrback(self.handleOriginateFailure)
+            df.addErrback(self.handle_originate_failure)
         else:
-            self.senderChannel = "SIP/ast1-00000001"
-            startObject = LoginWithoutMailbox(self.testStateController, self)
-            self.testStateController.changeState(startObject)
+            self.sender_channel = "SIP/ast1-00000001"
+            startObject = LoginWithoutMailbox(self.test_state_controller, self)
+            self.test_state_controller.change_state(startObject)
             logger.debug("Originating call to sip/ast/9001")
             df = ami.originate("sip/ast1/9001", "voicemailCaller", "wait", 1)
-            df.addErrback(self.handleOriginateFailure)
+            df.addErrback(self.handle_originate_failure)
 
     def user_event(self, ami, event):
         if event['userevent'] != 'TestResult':

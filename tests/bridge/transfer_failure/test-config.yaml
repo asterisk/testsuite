@@ -16,7 +16,7 @@ properties:
 test-modules:
     test-object:
         config-section: bridge-config
-        typename: 'BridgeTestCase.BridgeTestCase'
+        typename: 'bridge_test_case.BridgeTestCase'
     modules:
         -
             config-section: 'ami-config-11'

@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 # vim: sw=3 et:
-'''
+"""Module used for testing app_voicemail
+
+Note that this module has been superceded by the pluggable
+framework and the apptest module.
+
 Copyright (C) 2011, Digium, Inc.
 Matt Jordan <mjordan@digium.com>
 
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
-'''
+"""
 
 import sys
 import os
@@ -16,532 +20,605 @@ import logging
 import time
 import random
 
-from asterisk import Asterisk
-from config import Category
 from config import ConfigFile
-from TestCase import TestCase
-from TestState import TestState
-from TestState import TestStateController
+from test_case import TestCase
+from test_state import TestState, TestStateController, FailureTestState
 
 sys.path.append("lib/python")
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
-
-"""
-Class that holds the state of some test condition, and allows a callback function to be used to evaluate
-whether or not that test condition has passed
-"""
 class TestCondition(object):
+    """Class that holds the state of some test condition.
 
+    This class holds the state of a test condition and allows a callback
+    function to be used to evaluate whether or not that test condition has
+    passed
     """
-    evaluateFunc    function used to evaluate the condition
-    testConditionData    Some piece of data that will be passed to the evaluateFunc
 
-    Note that evaluteFunc should return True or False, and take in two parameters - a value being evaluated
-    and the member data testConditionData
-    """
-    def __init__(self, evaluateFunc = None, testConditionData = None):
-        self.__evaluateFunc = evaluateFunc
-        self.testConditionData = testConditionData
-        self.currentState = False
+    def __init__(self, evaluate_fn=None, test_condition_data=None):
+        """Constructor
 
-    """
-    Evaluate the test condition
+        Keyword Arguments:
+        evaluate_fn         Function used to evaluate the condition. This
+                            fuction should return True or False, and take in
+                            two parameters:
+                                - a value to be evaluated
+                                - the test_condition_data passed to this
+                                  constructor
+        test_condition_data Some piece of data that will be passed to the
+                            evaluate_fn
+        """
 
-    value    The value to evaluate
-    """
+        self._evaluate_fn = evaluate_fn
+        self.test_condition_data = test_condition_data
+        self.current_state = False
+
     def evaluate(self, value):
-        if self.__evaluateFunc != None:
-            self.currentState = self.__evaluateFunc(value, self)
+        """Evaluate the test condition
+
+        Keyword Arguments:
+        value    The value to evaluate
+        """
+        if self._evaluate_fn != None:
+            self.current_state = self._evaluate_fn(value, self)
         else:
-            logger.warn("no evaluate function defined, setting currentState to value")
-            self.currentState = value
+            LOGGER.warn("No evaluate function defined, setting " \
+                        "current_state to [%s]" % str(value))
+            self.current_state = value
         return
 
+def handle_redirect_failure(reason):
+    """Generic AMI redirect failure handler"""
 
-"""
-Base class for voice mail tests that use the TestCase AMI event and the TestStateController
-"""
+    LOGGER.warn("Error sending redirect - test may or may not fail:")
+    LOGGER.warn(reason.getTraceback())
+    return reason
+
+
 class VoiceMailTest(TestCase):
+    """Base class for voice mail tests that use TestStateController"""
 
-    """
-    The formats a message can be left in
-    """
-    formats = ["ulaw","wav","WAV"]
+    # The formats a message can be left in
+    formats = ["ulaw", "wav", "WAV"]
 
-    """
-    The default expected channel to be used to send info to the voicemail server
-    """
-    defaultSenderChannel = "SIP/ast1-00000000"
+    # The default expected channel to be used to send info to the voicemail
+    # server
+    default_sender_channel = "SIP/ast1-00000000"
 
     def __init__(self):
-        TestCase.__init__(self)
+        """Constructor"""
+        super(VoiceMailTest, self).__init__()
 
-        self.amiReceiver = None
-        self.amiSender = None
-        self.astSender = None
-        self.__testConditions = {}
-        self.__previous_audio = ""
-        self.__previous_dtmf = ""
-        self.senderChannel = VoiceMailTest.defaultSenderChannel
+        self.ami_receiver = None
+        self.ami_sender = None
+        self.ast_sender = None
+        self._test_conditions = {}
+        self._previous_audio = ""
+        self._previous_dtmf = ""
+        self.sender_channel = VoiceMailTest.default_sender_channel
+        self.test_state_controller = None
 
-    """
-    Create the test controller.  Should be called once amiReceiver and amiSender have both been set
-    """
-    def createTestController(self):
-        if (self.amiReceiver != None and self.amiSender != None):
-            self.testStateController = TestStateController(self, self.amiReceiver)
+    def create_test_controller(self):
+        """Create the test controller.
 
-    def __handleRedirectFailure__(self, reason):
-        logger.warn("Error sending redirect - test may or may not fail:")
-        logger.warn(reason.getTraceback())
-        return reason
+        This should be called once ami_receiver and ami_sender have both been
+        set by the test derived from this class.
+        """
+        if (self.ami_receiver != None and self.ami_sender != None):
+            self.test_state_controller = TestStateController(self,
+                                                             self.ami_receiver)
 
-    """
-    Hangs up the current call
-    """
     def hangup(self):
-        if self.astSender == None:
-            logger.error("Attempting to send hangup to non-existant Asterisk instance")
-            self.testStateController.changeState(FailureTestState(self.controller))
+        """Hang up the current call"""
+
+        if self.ast_sender == None:
+            msg = "Attempting to send hangup to non-existant Asterisk instance"
+            LOGGER.error(msg)
+            failure = FailureTestState(self.condition_controller)
+            self.test_state_controller.change_state(failure)
             return
 
-        df = self.amiSender.redirect(self.senderChannel, "voicemailCaller", "hangup", 1)
-        df.addErrback(self.__handleRedirectFailure__)
+        deferred = self.ami_sender.redirect(self.sender_channel,
+                                            "voicemailCaller",
+                                            "hangup",
+                                            1)
+        deferred.addErrback(handle_redirect_failure)
 
-    """
-    Send a DTMF signal to the voicemail server
-    dtmfToSend    The DTMF code to send
-    """
-    def sendDTMF(self, dtmfToSend):
-        logger.info("Attempting to send DTMF " + dtmfToSend)
-        if self.amiSender == None:
-            logger.error("Attempting to send DTMF to non-connected caller AMI")
-            self.testStateController.changeState(FailureTestState(self.controller))
+    def send_dtmf(self, dtmf_to_send):
+        """Send a DTMF signal to the voicemail server
+
+        Keyword Arguments:
+        dtmf_to_send    The DTMF code to send
+        """
+        LOGGER.info("Attempting to send DTMF " + dtmf_to_send)
+        if self.ami_sender == None:
+            LOGGER.error("Attempting to send DTMF to non-connected caller AMI")
+            failure = FailureTestState(self.condition_controller)
+            self.test_state_controller.change_state(failure)
             return
 
-        if (self.__previous_dtmf != dtmfToSend):
-            self.amiSender.setVar(channel = "", variable = "DTMF_TO_SEND", value = dtmfToSend)
-            self.__previous_dtmf = dtmfToSend
+        if (self._previous_dtmf != dtmf_to_send):
+            self.ami_sender.setVar(channel="", variable="DTMF_TO_SEND",
+                                   value=dtmf_to_send)
+            self._previous_dtmf = dtmf_to_send
 
-        """
-        Redirect to the DTMF extension - note that we assume that we only have one channel to
-        the other asterisk instance
-        """
-        df = self.amiSender.redirect(self.senderChannel, "voicemailCaller", "sendDTMF", 1)
-        df.addErrback(self.__handleRedirectFailure__)
+        # Redirect to the DTMF extension - note that we assume that we only have
+        # one channel to the other asterisk instance
+        deferred = self.ami_sender.redirect(self.sender_channel,
+                                            "voicemailCaller",
+                                            "sendDTMF",
+                                            1)
+        deferred.addErrback(handle_redirect_failure)
 
-    """
-    Send a sound file to the voicemail server
-    audioFile    The local path to the file to stream
-    """
-    def sendSoundFile(self, audioFile):
-        if self.amiSender == None:
-            logger.error("Attempting to send sound file to non-connected caller AMI")
-            self.testStateController.changeState(FailureTestState(self.controller))
+    def send_sound_file(self, audio_file):
+        """Send a sound file to the voicemail server
+
+        Keyword Arguments:
+        audio_file    The local path to the file to stream
+        """
+
+        if self.ami_sender == None:
+            msg = "Attempting to send sound file to non-connected caller AMI"
+            LOGGER.error(msg)
+            failure = FailureTestState(self.condition_controller)
+            self.test_state_controller.change_state(failure)
             return
 
-        if (self.__previous_audio != audioFile):
-            self.amiSender.setVar(channel = "", variable = "TALK_AUDIO", value = audioFile)
-            self.__previous_audio = audioFile
+        if (self._previous_audio != audio_file):
+            self.ami_sender.setVar(channel="", variable="TALK_AUDIO",
+                                   value=audio_file)
+            self._previous_audio = audio_file
 
+        # Redirect to the send sound file extension - note that we assume that
+        # we only have one channel to the other asterisk instance
+        deferred = self.ami_sender.redirect(self.sender_channel,
+                                            "voicemailCaller",
+                                            "sendAudio",
+                                            1)
+        deferred.addErrback(handle_redirect_failure)
+
+    def send_sound_file_with_dtmf(self, audio_file, dtmf_to_send):
+        """Send a sound file to the voicemail server, then send a DTMF signal
+
+        Keyword Arguments:
+        audio_file    The local path to the file to stream
+        dtmf_to_send   The DTMF signal to send
+
+        Note that this is necessary so that when the audio file is finished, we
+        close the audio recording cleanly; otherwise, Asterisk will detect the
+        end of file as a hangup
         """
-        Redirect to the send sound file extension - note that we assume that we only have one channel to
-        the other asterisk instance
-        """
-        df = self.amiSender.redirect(self.senderChannel, "voicemailCaller", "sendAudio", 1)
-        df.addErrback(self.__handleRedirectFailure__)
-
-    """
-    Send a sound file to the voicemail server, then send a DTMF signal
-    audioFile    The local path to the file to stream
-    dtmfToSend   The DTMF signal to send
-
-    Note that this is necessary so that when the audio file is finished, we close the audio recording cleanly;
-    otherwise, Asterisk will detect the end of file as a hangup
-    """
-    def sendSoundFileWithDTMF(self, audioFile, dtmfToSend):
-        if self.amiSender == None:
-            logger.error("Attempting to send sound file / DTMF to non-connected caller AMI")
-            TestCase.testStateController.changeState(FailureTestState(self.controller))
+        if self.ami_sender == None:
+            msg = "Attempting to send sound/DTMF to non-connected caller AMI"
+            LOGGER.error(msg)
+            failure = FailureTestState(self.condition_controller)
+            self.test_state_controller.change_state(failure)
             return
 
-        if (self.__previous_audio != audioFile):
-            self.amiSender.setVar(channel = "", variable = "TALK_AUDIO", value = audioFile)
-            self.__previous_audio = audioFile
-        if (self.__previous_dtmf != dtmfToSend):
-            self.amiSender.setVar(channel = "", variable = "DTMF_TO_SEND", value = dtmfToSend)
-            self.__previous_dtmf = dtmfToSend
+        if (self._previous_audio != audio_file):
+            self.ami_sender.setVar(channel="", variable="TALK_AUDIO",
+                                   value=audio_file)
+            self._previous_audio = audio_file
+        if (self._previous_dtmf != dtmf_to_send):
+            self.ami_sender.setVar(channel="", variable="DTMF_TO_SEND",
+                                   value=dtmf_to_send)
+            self._previous_dtmf = dtmf_to_send
 
+        # Redirect to the appropriate extension - note that we assume that
+        # we only have one channel to the other asterisk instance
+        deferred = self.ami_sender.redirect(self.sender_channel,
+                                            "voicemailCaller",
+                                            "sendAudioWithDTMF",
+                                            1)
+        deferred.addErrback(handle_redirect_failure)
+
+    def add_test_condition(self, condition_name, condition):
+        """Add a new test condition to track
+
+        Keyword Arguments:
+        condition_name   The unique name of the condition
+        condition        The TestCondition object
         """
-        Redirect to the send sound file extension - note that we assume that we only have one channel to
-        the other asterisk instance
+        self._test_conditions[condition_name] = condition
+
+    def set_test_condition(self, condition_name, value):
+        """Set a test condition to the specified value, and evalute whether or
+        not it has passed
+
+        Keyword Arguments:
+        condition_name   The unique name of the condition
+        value            The value to pass to the evaluation checker
         """
-        df = self.amiSender.redirect(self.senderChannel, "voicemailCaller", "sendAudioWithDTMF", 1)
-        df.addErrback(self.__handleRedirectFailure__)
+        if condition_name in self._test_conditions.keys():
+            self._test_conditions[condition_name].evaluate(value)
 
-    """
-    Add a new test condition to track
+    def get_test_condition(self, condition_name):
+        """Get the current state of a test condition
 
-    conditionName    The unique name of the condition
-    condition        The TestCondition object
-    """
-    def addTestCondition(self, conditionName, condition):
-        self.__testConditions[conditionName] = condition
+        Keyword Arguments:
+        condition_name    The unique name of the condition
 
-    """
-    Set a test condition to the specified value, and evalute whether or not it has passed
-
-    conditionName    The unique name of the condition
-    value            The value to pass to the evaluation checker
-    """
-    def setTestCondition(self, conditionName, value):
-        if conditionName in self.__testConditions.keys():
-            self.__testConditions[conditionName].evaluate(value)
-
-    """
-    Get the current state of a test condition
-
-    conditionName    The unique name of the condition
-    returns True if the condition has passed; False otherwise
-    """
-    def getTestCondition(self, conditionName):
-        if conditionName in self.__testConditions.keys():
-            return self.__testConditions[conditionName].currentState
+        Returns:
+        True if the condition has passed; False otherwise
+        """
+        if condition_name in self._test_conditions.keys():
+            return self._test_conditions[condition_name].current_state
         return False
 
-    """
-    Check all test conditions
+    def check_test_conditions(self):
+        """Check all test conditions
 
-    returns True if all have passed; False if any have not
-    """
-    def checkTestConditions(self):
-        retVal = True
-        for k, v in self.__testConditions.items():
-            if not v.currentState:
-                logger.warn("Test Condition [" + k + "] has not passed") 
-                retVal = False
+        Returns:
+        True if all have passed; False if any have not
+        """
+        ret_val = True
+        for key, value in self._test_conditions.items():
+            if not value.current_state:
+                LOGGER.warn("Test Condition [" + key + "] has not passed") 
+                ret_val = False
+        return ret_val
 
-        return retVal
-
-"""
-Base class for VoiceMail TestEvent state machine handling
-
-Note - this class exists mostly to share the VoiceMailTest object across the concrete class
-implementations
-"""
 class VoiceMailState(TestState):
+    """Base class for VoiceMail TestEvent state machine handling
 
+    This class exists mostly to share the VoiceMailTest object across the
+    concrete class implementations
     """
-    controller        The TestStateController managing the test
-    voiceMailTest     The main test object
-    """
-    def __init__(self, controller, voiceMailTest):
-        TestState.__init__(self, controller)
-        self.voiceMailTest = voiceMailTest
-        if self.voiceMailTest == None:
-            logger.error("Failed to set voicemail test object")
-            raise RuntimeError('Failed to set voicemail test object')
 
-        logger.debug(" Entering state [" + self.getStateName() + "]")
+    def __init__(self, controller, voice_mail_test):
+        """Constructor
 
-    """
-    Should be overriden by derived classes and return the name of the current state
-    """
-    def getStateName(self):
+        Keyword Arguments:
+        controller        The TestStateController managing the test
+        voice_mail_test   The main test object
+        """
+        super(VoiceMailState, self).__init__(controller)
+        self.voice_mail_test = voice_mail_test
+        if self.voice_mail_test == None:
+            msg = "Failed to set voicemail test object"
+            LOGGER.error(msg)
+            raise RuntimeError(msg)
+        LOGGER.debug("Entering state [" + self.get_state_name() + "]")
+
+    def get_state_name(self):
+        """The name of this state
+
+        Returns:
+        The name of the current state
+        """
         pass
 
-    """
-    Can be called by derived classes to output a state that is being ignored
-    """
-    def handleDefaultState(self, event):
-        logger.debug(" State [" + self.getStateName() + "] - ignoring state change " + event['state'])
+    def handle_default_state(self, event):
+        """Can be called by derived classes to output an ignored state"""
+        LOGGER.debug("State [" + self.get_state_name() +
+                     "] - ignoring state change " + event['state'])
 
 
-"""
-Class that manages creation of, verification of, and teardown of Asterisk mailboxes on the local filesystem
-"""
 class VoiceMailMailboxManagement(object):
+    """Class that manages creation of, verification of, and teardown of Asterisk
+    mailboxes on the local filesystem
+    """
 
-    """
-    Asterisk instance to track
-    """
-    __ast=None
+    # The parent directory that this test resides in
+    test_parent_dir = "tests/apps/voicemail"
 
-    """
-    Member variable that defines the base location for the voicemail folders
-    """
-    voicemailDirectory=""
+    # Name of the folder for new messages
+    inbox_folder_name = "INBOX"
 
-    """
-    The parent directory that this test resides in
-    """
-    testParentDir = "tests/apps/voicemail"
+    # Name of the folder for temporary messages
+    temp_folder_name = "tmp"
 
-    """
-    Name of the folder for new messages
-    """
-    inboxFolderName="INBOX"
+    # Name of the folder for old messages
+    old_folder_name = "Old"
 
-    """
-    Name of the folder for temporary messages
-    """
-    tempFolderName="tmp"
+    # Name of the folder for urgent messages
+    urgent_folder_name = "Urgent"
 
-    """
-    Name of the folder for old messages
-    """
-    oldFolderName="Old"
+    # Name of the folder for recorded greetings
+    greetings_folder_name = "greet"
 
-    """
-    Name of the folder for urgent messages
-    """
-    urgentFolderName="Urgent"
-
-    """
-    Name of the folder for recorded greetings
-    """
-    greetingsFolderName="greet"
-
-    """
-    Constructor
-    ast    The instance of Asterisk to track
-    """
     def __init__(self, ast):
+        """Constructor
+
+        Keyword Arguments:
+        ast    The instance of Asterisk to track
+        """
         self.__ast = ast
-        self.voicemailDirectory = self.__ast.directories['astspooldir'] + '/voicemail'
-        self.createdVoicemails = {}
+        self.voicemail_directory = (self.__ast.directories['astspooldir'] +
+                                    '/voicemail')
+        self.created_voicemails = {}
 
-    """
-    Creates the basic set of folders needed for a mailbox on the file system
-    context    The context that the mailbox will exist under
-    mailbox    The mailbox to create
-    createAllFolders    Optional parameter that will create all of the various folders.
+    def create_mailbox(self, context, mailbox, create_all_folders=False):
+        """Create the basic folders needed for a mailbox on the file system
 
-    In general, app_voicemail should be responsible for making the folders on the file system
-    as needed.  This method should only be needed when we want to bypass some of the standard applications
-    and create a known state of a voicemail mailbox
+        Keyword Arguments:
+        context             The context that the mailbox will exist under
+        mailbox             The mailbox to create
+        create_all_folders  Optional parameter that will create all of the
+                            various folders.
 
-    true on success, false on error
-    """
-    def createMailbox(self, context, mailbox, createAllFolders=False):
-        mailboxPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s" %{'vd': self.voicemailDirectory, 'c': context, 'm': mailbox}
+        In general, app_voicemail should be responsible for making the folders
+        on the file system as needed. This method should only be needed when we
+        want to bypass some of the standard applications and create a known
+        state of a voicemail mailbox
+
+        Returns:
+        True on success, False on error
+        """
+
+        mailbox_path = (self.__ast.base +
+                        "%(vd)s/%(c)s/%(m)s" % {'vd': self.voicemail_directory,
+                                                'c': context, 'm': mailbox})
 
         try:
-            if not os.path.isdir(mailboxPath):
-                os.makedirs(mailboxPath)
+            if not os.path.isdir(mailbox_path):
+                os.makedirs(mailbox_path)
 
-            if (createAllFolders):
+            if not create_all_folders:
+                return True
 
-                inboxPath = "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.inboxFolderName}
-                if not os.path.isdir(inboxPath):
-                    os.makedirs(inboxPath)
+            inbox_path = ("%(mp)s/%(f)s" % {'mp': mailbox_path,
+                'f': VoiceMailMailboxManagement.inbox_folder_name})
+            if not os.path.isdir(inbox_path):
+                os.makedirs(inbox_path)
 
-                tempPath = "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.tempFolderName}
-                if not os.path.isdir(tempPath):
-                    os.makedirs(tempPath)
+            temp_path = ("%(mp)s/%(f)s" % {'mp': mailbox_path,
+                'f': VoiceMailMailboxManagement.temp_folder_name})
+            if not os.path.isdir(temp_path):
+                os.makedirs(temp_path)
 
-                oldPath = "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.oldFolderName}
-                if not os.path.isdir(oldPath):
-                    os.makedirs(oldPath)
+            old_path = ("%(mp)s/%(f)s" % {'mp': mailbox_path,
+                'f': VoiceMailMailboxManagement.old_folder_name})
+            if not os.path.isdir(old_path):
+                os.makedirs(old_path)
 
-                urgentPath = "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.urgentFolderName}
-                if not os.path.isdir(urgentPath):
-                    os.makedirs(urgentPath)
+            urgent_path = ("%(mp)s/%(f)s" % {'mp': mailbox_path,
+                'f': VoiceMailMailboxManagement.urgent_folder_name})
+            if not os.path.isdir(urgent_path):
+                os.makedirs(urgent_path)
 
-                greetingsPath = "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.greetingsFolderName}
-                if not os.path.isdir(greetingsPath):
-                    os.makedirs(greetingsPath)
+            greetings_path = ("%(mp)s/%(f)s" % {'mp': mailbox_path,
+                'f': VoiceMailMailboxManagement.greetings_folder_name})
+            if not os.path.isdir(greetings_path):
+                os.makedirs(greetings_path)
 
-        except IOError as e:
-            if e.errno == errno.EACCESS:
-                logger.error( "You do not have sufficient permissions to perform the necessary directory manipulations")
+        except IOError as io_error:
+            if io_error.errno == errno.EACCESS:
+                LOGGER.error("You do not have sufficient permissions to " \
+                             "perform the necessary directory manipulations")
                 return False
 
         return True
 
-    """
-    Creates a dummy voicemail in the specified mailbox / folder
-    context    The context of the mailbox
-    mailbox    The mailbox
-    folder     The folder to create the voicemail in
-    msgnum     The message number
-    formats    The formats to create the sound file as
+    def create_dummy_voicemail(self, context, mailbox, folder, msgnum, formats):
+        """Creates a dummy voicemail in the specified mailbox / folder
 
-    The 'formats' merely append particular designators on the end of the sound file,
-    /voicemail/sounds/talking.  The actual sound file is not converted.
+        Keyword Arguments:
+        context    The context of the mailbox
+        mailbox    The mailbox
+        folder     The folder to create the voicemail in
+        msgnum     The message number
+        formats    The formats to create the sound file as
 
-    True if the voicemail was created successfully, false otherwise
-    """
-    def createDummyVoicemail(self, context, mailbox, folder, msgnum, formats):
-        if not self.checkFolderExists(context, mailbox, folder):
+        The 'formats' merely append particular designators on the end of the
+        sound file, /voicemail/sounds/talking.  The actual sound file is not
+        converted.
+
+        Returns:
+        True if the voicemail was created successfully
+        False otherwise
+        """
+
+        if not self.check_folder_exists(context, mailbox, folder):
             return False
 
-        msgName = 'msg%04d' % (msgnum)
-        msgEnvName = msgName + ".txt"
-        msgEnvPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':msgEnvName}
+        msg_name = 'msg%04d' % (msgnum)
+        msg_env_name = msg_name + ".txt"
+        msg_env_path = (self.__ast.base +
+            "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd': self.voicemail_directory,
+            'c': context, 'm': mailbox, 'f': folder, 'n': msg_env_name})
 
         random.seed()
-        msg_id = str(int(time.time())) + "-" + str(random.randrange(0, 1, sys.maxint - 1))
+        msg_id = (str(int(time.time())) + "-" +
+                  str(random.randrange(0, 1, sys.maxint - 1)))
 
-        f = open(msgEnvPath, 'w')
-        f.write(';\n')
-        f.write('; Message Information file\n')
-        f.write(';\n')
-        f.write('[message]\n')
-        f.write('origmailbox=' + mailbox + '\n')
-        f.write('context=' + context + '\n')
-        f.write('macrocontext=\n')
-        f.write('exten=' + mailbox + '\n')
-        f.write('rdnis=unknown\n')
-        f.write('priority=2\n')
-        f.write('callerchan=SIP/ast1-00000000\n')
-        f.write('callerid=\"Anonymous\"<555-5555>\n')
-        f.write('origdate=Tue Aug  9 10:05:13 PM UTC 2011\n')
-        f.write('origtime=1312927513\n')
-        f.write('msg_id=%s\n' % msg_id)
-        if (folder == self.urgentFolderName):
-            f.write('flag=Urgent\n')
-        else:
-            f.write('flag=\n')
-        f.write('category=tt-monkeys\n')
-        f.write('duration=6\n')
-        f.close()
+        with open(msg_env_path, 'w') as envelope_file:
+            envelope_file.write(';\n')
+            envelope_file.write('; Message Information file\n')
+            envelope_file.write(';\n')
+            envelope_file.write('[message]\n')
+            envelope_file.write('origmailbox=' + mailbox + '\n')
+            envelope_file.write('context=' + context + '\n')
+            envelope_file.write('macrocontext=\n')
+            envelope_file.write('exten=' + mailbox + '\n')
+            envelope_file.write('rdnis=unknown\n')
+            envelope_file.write('priority=2\n')
+            envelope_file.write('callerchan=SIP/ast1-00000000\n')
+            envelope_file.write('callerid=\"Anonymous\"<555-5555>\n')
+            envelope_file.write('origdate=Tue Aug  9 10:05:13 PM UTC 2011\n')
+            envelope_file.write('origtime=1312927513\n')
+            envelope_file.write('msg_id=%s\n' % msg_id)
+            if (folder == VoiceMailMailboxManagement.urgent_folder_name):
+                envelope_file.write('flag=Urgent\n')
+            else:
+                envelope_file.write('flag=\n')
+            envelope_file.write('category=tt-monkeys\n')
+            envelope_file.write('duration=6\n')
 
-        for format in formats:
-            msgFormatName = msgName + '.' + format
-            msgFormatPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':msgFormatName}
-            audioFile = os.path.join(os.getcwd(), "%s/sounds/talking.ulaw" % (self.testParentDir))
-            shutil.copy(audioFile, msgFormatPath)
+        for snd_format in formats:
+            msg_format_name = msg_name + '.' + snd_format
+            msg_format_path = (self.__ast.base +
+                "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {
+                    'vd': self.voicemail_directory,
+                    'c': context,
+                    'm': mailbox,
+                    'f': folder,
+                    'n': msg_format_name})
+            audio_file = os.path.join(os.getcwd(),
+                                      "%s/sounds/talking.ulaw" %
+                                        (self.test_parent_dir))
+            shutil.copy(audio_file, msg_format_path)
 
-        if folder not in self.createdVoicemails.keys():
-            self.createdVoicemails[folder] = []
-        self.createdVoicemails[folder].append((msgnum, msg_id))
-
+        if folder not in self.created_voicemails.keys():
+            self.created_voicemails[folder] = []
+        self.created_voicemails[folder].append((msgnum, msg_id))
         return True
 
-    """
-    Checks that a folder exists for a particular user
-    context    The context of the mailbox
-    mailbox    The mailbox
-    folder     The folder to check; defaults to the default inbox name
+    def check_folder_exists(self, context, mailbox,
+                            folder=inbox_folder_name):
+        """Checks that a folder exists for a particular user
 
-    true if the folder exists, false otherwise
-    """
-    def checkFolderExists(self, context, mailbox, folder=inboxFolderName):
-        mailboxPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s" %{'vd': self.voicemailDirectory, 'c': context, 'm': mailbox}
+        Keyword Arguments:
+        context    The context of the mailbox
+        mailbox    The mailbox
+        folder     The folder to check; defaults to the default inbox name
 
-        if not (os.path.exists(mailboxPath)):
+        Returns:
+        True if the folder exists
+        False otherwise
+        """
+
+        mailbox_path = (self.__ast.base + "%(vd)s/%(c)s/%(m)s" %
+                        {'vd': self.voicemail_directory,
+                         'c': context,
+                         'm': mailbox})
+
+        if not (os.path.exists(mailbox_path)):
             return False
 
-        folderPath = "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':folder}
+        folder_path = "%(mp)s/%(f)s" % {'mp': mailbox_path, 'f': folder}
+        return os.path.exists(folder_path)
 
-        return os.path.exists(folderPath)
+    def check_voicemail_exists(self, context, mailbox, msgnum, list_formats,
+                               folder=inbox_folder_name):
+        """Check if a voicemail exists on the filesystem
 
-    """
-    Check if a voicemail exists on the filesystem
-    context    The context of the mailbox
-    mailbox    The mailbox
-    msgnum     The 1-based index of the voicemail to check for
-    lstFormats The formats we expect to be recorded for us
-    folder     The folder to check under; default to the default inbox name
+        Keyword Arguments:
+        context         The context of the mailbox
+        mailbox         The mailbox
+        msgnum          The 1-based index of the voicemail to check for
+        list_formats    The formats we expect to be recorded for us
+        folder          The folder to check under; default to the default
+                        inbox name
 
-    true if the voicemail exists, false otherwise
-    """
-    def checkVoicemailExists(self, context, mailbox, msgnum, lstFormats, folder=inboxFolderName):
-        retVal = True
-
-        """ construct the expected base file name
+        Returns:
+        True if the voicemail exists
+        False otherwise
         """
-        msgName = 'msg%04d' % (msgnum)
 
-        for format in lstFormats:
-            fileName = msgName + "." + format
-            retVal = retVal & self.checkVoiceFileExists(context, mailbox, fileName, folder)
+        ret_val = True
+        msg_name = 'msg%04d' % (msgnum)
 
-        """ make sure we have the message envelope file
+        for snd_format in list_formats:
+            file_name = msg_name + "." + snd_format
+            ret_val = ret_val & self.check_voice_file_exists(context,
+                                                             mailbox,
+                                                             file_name,
+                                                             folder)
+
+        # make sure we have the message envelope file
+        file_name = msg_name + ".txt"
+        ret_val = ret_val & self.check_voice_file_exists(context,
+                                                         mailbox,
+                                                         file_name,
+                                                         folder)
+        return ret_val
+
+    def check_greeting_exists(self, context, mailbox, msg_name, list_formats):
+        """Check if a voicemail greeting exists on the filesystem
+
+        Keyword Arguments:
+        context      The context of the mailbox
+        mailbox      The mailbox
+        msg_name     The name of the greeting to find
+        list_formats The formats we expect to be recorded for us
+
+        Returns:
+        True if the greeting exists
+        False otherwise
         """
-        fileName = msgName + ".txt"
-        retVal = retVal & self.checkVoiceFileExists(context, mailbox, fileName, folder)
+        ret_val = True
 
-        return retVal
+        for snd_format in list_formats:
+            file_name = msg_name + "." + snd_format
+            ret_val = ret_val & self.check_voice_file_exists(context,
+                                                             mailbox,
+                                                             file_name,
+                                                             "")
+        return ret_val
 
-    """
-    Check if a voicemail greeting exists on the filesystem
-    context    The context of the mailbox
-    mailbox    The mailbox
-    msgname    The name of the greeting to find
-    lstFormats The formats we expect to be recorded for us
+    def check_voicemail_property(self, context, mailbox, msgnum,
+                        property_name, property_value,
+                        folder=inbox_folder_name):
+        """Check if a voicemail has the property specified
 
-    true if the greeting exists, false otherwise
-    """
-    def checkGreetingExists(self, context, mailbox, msgname, lstFormats):
-        retVal = True
+        Keyword Arguments:
+        context         The context of the mailbox
+        mailbox         The mailbox
+        msgnum          The 1-based index of the voicemail to check for
+        property_name   The name of the property to check
+        property_value  The value to check for
+        folder          The folder to check under; default to the default inbox
+                        name
 
-        for format in lstFormats:
-            fileName = msgname + "." + format
-            retVal = retVal & self.checkVoiceFileExists(context, mailbox, fileName, "")
-
-        return retVal
-
-    """
-    Check if a voicemail has the property specified
-    context    The context of the mailbox
-    mailbox    The mailbox
-    msgnum     The 1-based index of the voicemail to check for
-    propertyName    The name of the property to check
-    propertyValue    The value to check for
-    folder    The folder to check under; default to the default inbox name
-
-    true if the voicemail has the property and value specified; false otherwise
-    """
-    def checkVoicemailProperty(self, context, mailbox, msgnum, propertyName, propertyValue, folder=inboxFolderName):
-        lstFormats = []
-        if not self.checkVoicemailExists(context, mailbox, msgnum, lstFormats, folder):
+        Returns:
+        True if the voicemail has the property and value specified
+        False otherwise
+        """
+        list_formats = []
+        if not self.check_voicemail_exists(context, mailbox, msgnum,
+                                           list_formats, folder):
             return False
 
-        msgName = 'msg%(msgnum)04d' %{"msgnum":msgnum}
-        msgName = msgName + ".txt"
-        msgPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':msgName}
+        msg_name = 'msg%(msgnum)04d' % {"msgnum": msgnum}
+        msg_name = msg_name + ".txt"
+        msg_path = (self.__ast.base + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {
+                    'vd': self.voicemail_directory,
+                    'c': context,
+                    'm': mailbox,
+                    'f': folder,
+                    'n': msg_name})
 
-        configFile = ConfigFile(msgPath)
-        for cat in configFile.categories:
+        config_file = ConfigFile(msg_path)
+        for cat in config_file.categories:
             if cat.name == 'message':
                 for kvp in cat.options:
-                    if kvp[0] == propertyName and kvp[1] == propertyValue:
+                    if kvp[0] == property_name and kvp[1] == property_value:
                         return True
-
         return False
 
-    """
-    An object that holds voicemail user information
-    """
+
     class UserObject(object):
+        """An object that holds voicemail user information"""
+
         def __init__(self):
+            """Constructor"""
             self.password = ""
             self.fullname = ""
             self.emailaddress = ""
             self.pageraddress = ""
 
-    """
-    Gets user information from the voicemail configuration file
+    def get_user_object(self, context, mailbox, source_file="voicemail.conf"):
+        """Gets user information from the voicemail configuration file
 
-    context    The context of the mailbox
-    mailbox    The mailbox
-    sourceFile    The file containing the user information to pull from.  Defaults
-        to voicemail.conf
+        Keyword Arguments:
+        context     The context of the mailbox
+        mailbox     The mailbox
+        source_file The file containing the user information to pull from.
+                    Defaults to voicemail.conf
 
-    returns A VoiceMailMailboxManagement.UserObject object, populated with the user's values,
-        or an empty object
-    """
-    def getUserObject(self, context, mailbox, sourceFile="voicemail.conf"):
+        Returns:
+        A VoiceMailMailboxManagement.UserObject object, populated with the
+        user's values, or an empty object
+        """
 
-        filePath = self.__ast.base + self.__ast.directories['astetcdir'] + "/" + sourceFile
+        file_path = (self.__ast.base + self.__ast.directories['astetcdir'] +
+                     "/" + source_file)
 
-        configFile = ConfigFile(filePath)
-        userObject = VoiceMailMailboxManagement.UserObject()
-        for cat in configFile.categories:
+        config_file = ConfigFile(file_path)
+        user_object = VoiceMailMailboxManagement.UserObject()
+        for cat in config_file.categories:
             if cat.name == context:
                 for kvp in cat.options:
                     if kvp[0] == mailbox:
@@ -549,81 +626,112 @@ class VoiceMailMailboxManagement(object):
                         i = 0
                         for token in tokens:
                             if i == 0:
-                                userObject.password = token
+                                user_object.password = token
                             elif i == 1:
-                                userObject.fullname = token
+                                user_object.fullname = token
                             elif i == 2:
-                                userObject.emailaddress = token
+                                user_object.emailaddress = token
                             elif i == 3:
-                                userObject.pageraddress = token
+                                user_object.pageraddress = token
                             i += 1
-                        return userObject
+                        return user_object
+        return user_object
 
-        return userObject
+    def check_voice_file_exists(self, context, mailbox, name,
+                                folder=inbox_folder_name):
+        """Checks if a file exists under the voicemail file structure
 
-    """
-    Checks if a file exists under the voicemail file structure
-    context    The context of the mailbox
-    mailbox    The mailbox
-    msgnum     The name of the file to check for
-    folder     The folder to check under; default to the default inbox name
+        Keyword Arguments:
+        context    The context of the mailbox
+        mailbox    The mailbox
+        msgnum     The name of the file to check for
+        folder     The folder to check under; default to the default inbox name
 
-    true if the file exists, false otherwise
-    """
-    def checkVoiceFileExists(self, context, mailbox, name, folder=inboxFolderName):
-        if not (self.checkFolderExists(context, mailbox, folder)):
+        Returns:
+        True if the file exists
+        False otherwise
+        """
+        if not (self.check_folder_exists(context, mailbox, folder)):
             return False
 
-        msgPath = self.__ast.base + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd':self.voicemailDirectory, 'c':context, 'm':mailbox, 'f':folder, 'n':name}
+        msg_path = (self.__ast.base + "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {
+                    'vd': self.voicemail_directory,
+                    'c': context,
+                    'm': mailbox,
+                    'f': folder,
+                    'n': name})
 
-        if (os.path.exists(msgPath)):
+        if (os.path.exists(msg_path)):
             return True
         else:
             return False
 
-    def __removeItemsFromFolder__(self, mailboxPath, folder):
-        folderPath = os.path.join(self.__ast.base, "%(mp)s/%(f)s" % {'mp':mailboxPath, 'f':folder})
+    def _remove_items_from_folder(self, mailbox_path, folder):
+        """Remove items from the specified mailbox folder"""
 
-        if not (os.path.exists(folderPath)):
+        folder_path = os.path.join(self.__ast.base, "%(mp)s/%(f)s" % {
+                        'mp': mailbox_path, 'f': folder})
+        if not (os.path.exists(folder_path)):
             return
 
-        folderPath = folderPath + '/*'
-        for voicemailFile in glob.glob(folderPath):
-            if not os.path.isdir(voicemailFile):
-                os.remove(voicemailFile)
-
+        folder_path = folder_path + '/*'
+        for voicemail_file in glob.glob(folder_path):
+            if not os.path.isdir(voicemail_file):
+                os.remove(voicemail_file)
         return
 
-    """
-    Removes all items from a mailbox, and optionally removes the mailbox itself from the file system
-    context    The context the mailbox exists under
-    mailbox    The mailbox to remove
-    removeFolders    If true, the folders as well as their contents will be removed
+    def remove_mailbox(self, context, mailbox, remove_folders=False):
+        """Removes all items from a mailbox
 
-    This does not remove the context folder
+        Optionally removes the mailbox itself from the file system. This does
+        not remove the context folder
 
-    False if the mailbox does not exist, otherwise True
-    """
-    def removeMailbox(self, context, mailbox, removeFolders=False):
-        mailboxPath = self.__ast.base + "/%(vd)s/%(c)s/%(m)s" %{'vd': self.voicemailDirectory, 'c': context, 'm': mailbox}
+        Keyword Arguments:
+        context         The context the mailbox exists under
+        mailbox         The mailbox to remove
+        remove_folders  If true, the folders as well as their contents will be
+                        removed
 
-        if not (os.path.exists(mailboxPath)):
+        Returns:
+        True on successful removal of the messages/folders
+        False otherwise
+        """
+        mailbox_path = (self.__ast.base + "/%(vd)s/%(c)s/%(m)s" % {
+                        'vd': self.voicemail_directory,
+                        'c': context,
+                        'm': mailbox})
+
+        if not (os.path.exists(mailbox_path)):
             return False
 
-        self.__removeItemsFromFolder__(mailboxPath, self.inboxFolderName)
-        self.__removeItemsFromFolder__(mailboxPath, self.tempFolderName)
-        self.__removeItemsFromFolder__(mailboxPath, self.oldFolderName)
-        self.__removeItemsFromFolder__(mailboxPath, self.urgentFolderName)
-        self.__removeItemsFromFolder__(mailboxPath, self.greetingsFolderName)
+        self._remove_items_from_folder(mailbox_path,
+                VoiceMailMailboxManagement.inbox_folder_name)
+        self._remove_items_from_folder(mailbox_path,
+                VoiceMailMailboxManagement.temp_folder_name)
+        self._remove_items_from_folder(mailbox_path,
+                VoiceMailMailboxManagement.old_folder_name)
+        self._remove_items_from_folder(mailbox_path,
+                VoiceMailMailboxManagement.urgent_folder_name)
+        self._remove_items_from_folder(mailbox_path,
+                VoiceMailMailboxManagement.greetings_folder_name)
 
-        if (removeFolders):
-            rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.inboxFolderName}))
-            rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.tempFolderName}))
-            rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.oldFolderName}))
-            rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.urgentFolderName}))
-            rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" %{'mp':mailboxPath, 'f':self.greetingsFolderName}))
-
-            rmdir(mailboxPath)
+        if (remove_folders):
+            os.rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" % {
+                    'mp': mailbox_path,
+                    'f': VoiceMailMailboxManagement.inbox_folder_name}))
+            os.rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" % {
+                    'mp': mailbox_path,
+                    'f': VoiceMailMailboxManagement.temp_folder_name}))
+            os.rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" % {
+                    'mp': mailbox_path,
+                    'f': VoiceMailMailboxManagement.old_folder_name}))
+            os.rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" % {
+                    'mp': mailbox_path,
+                    'f': VoiceMailMailboxManagement.urgent_folder_name}))
+            os.rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" % {
+                    'mp': mailbox_path,
+                    'f': VoiceMailMailboxManagement.greetings_folder_name}))
+            os.rmdir(mailbox_path)
 
         return True
 

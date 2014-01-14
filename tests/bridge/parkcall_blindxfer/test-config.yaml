@@ -13,7 +13,7 @@ test-modules:
     add-test-to-search-path: 'True'
     test-object:
         config-section: bridge-config
-        typename: 'BridgeTestCase.BridgeTestCase'
+        typename: 'bridge_test_case.BridgeTestCase'
     modules:
         -
             maxversion: '12.0.0'

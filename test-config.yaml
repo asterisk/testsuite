@@ -16,41 +16,41 @@ global-settings:
             -
                 name: 'threads'
                 pre:
-                    typename: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+                    typename: 'asterisk.thread_test_condition.ThreadPreTestCondition'
                 post:
-                    typename: 'asterisk.ThreadTestCondition.ThreadPostTestCondition'
-                    related-type: 'asterisk.ThreadTestCondition.ThreadPreTestCondition'
+                    typename: 'asterisk.thread_test_condition.ThreadPostTestCondition'
+                    related-type: 'asterisk.thread_test_condition.ThreadPreTestCondition'
             -
                 name: 'sip-dialogs'
                 pre:
-                    typename: 'asterisk.SipDialogTestCondition.SipDialogPreTestCondition'
+                    typename: 'asterisk.sip_dialog_test_condition.SipDialogPreTestCondition'
                 post:
-                    typename: 'asterisk.SipDialogTestCondition.SipDialogPostTestCondition'
+                    typename: 'asterisk.sip_dialog_test_condition.SipDialogPostTestCondition'
             -
                 name: 'locks'
                 pre:
-                    typename: 'asterisk.LockTestCondition.LockTestCondition'
+                    typename: 'asterisk.lock_test_condition.LockTestCondition'
                 post:
-                    typename: 'asterisk.LockTestCondition.LockTestCondition'
+                    typename: 'asterisk.lock_test_condition.LockTestCondition'
             -
                 name: 'file-descriptors'
                 pre:
-                    typename: 'asterisk.FdTestCondition.FdPreTestCondition'
+                    typename: 'asterisk.fd_test_condition.FdPreTestCondition'
                 post:
-                    typename: 'asterisk.FdTestCondition.FdPostTestCondition'
-                    related-type: 'asterisk.FdTestCondition.FdPreTestCondition'
+                    typename: 'asterisk.fd_test_condition.FdPostTestCondition'
+                    related-type: 'asterisk.fd_test_condition.FdPreTestCondition'
             -
                 name: 'channels'
                 pre:
-                    typename: 'asterisk.ChannelTestCondition.ChannelTestCondition'
+                    typename: 'asterisk.channel_test_condition.ChannelTestCondition'
                 post:
-                    typename: 'asterisk.ChannelTestCondition.ChannelTestCondition'
+                    typename: 'asterisk.channel_test_condition.ChannelTestCondition'
             -
                 name: 'sip-channels'
                 pre:
-                    typename: 'asterisk.SipChannelTestCondition.SipChannelTestCondition'
+                    typename: 'asterisk.sip_channel_test_condition.SipChannelTestCondition'
                 post:
-                    typename: 'asterisk.SipChannelTestCondition.SipChannelTestCondition'
+                    typename: 'asterisk.sip_channel_test_condition.SipChannelTestCondition'
 
 # Exclude all long-running tests (greater than one minute)
 config-fast:

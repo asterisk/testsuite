@@ -12,7 +12,7 @@ import logging
 from twisted.internet import reactor
 
 sys.path.append("lib/python")
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 LOGGER = logging.getLogger(__name__)
 
 workingdir = "dialplan-reload"

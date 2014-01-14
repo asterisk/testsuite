@@ -7,7 +7,7 @@ import logging
 
 sys.path.append("lib/python")
 
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 from asterisk.syncami import SyncAMI
 from sip_message import SIPMessage, SIPMessageTest
 

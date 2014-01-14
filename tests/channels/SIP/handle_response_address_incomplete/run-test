@@ -14,7 +14,7 @@ import logging
 sys.path.append("lib/python")
 
 from asterisk.asterisk import Asterisk
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 from asterisk.sipp import SIPpScenario
 from twisted.internet import reactor
 
@@ -43,7 +43,7 @@ class HandleResponseAddressIncomplete(TestCase):
 
         logger.debug("Originating call from local channel to SIPp peer")
         df = ami.originate("Local/1234@default", "default", "1234", 1, None, "CallId", None, None, None, {}, True)
-        df.addErrback(self.handleOriginateFailure)
+        df.addErrback(self.handle_originate_failure)
 
     def user_event(self, ami, event):
         if event['userevent'] != 'TestResult':

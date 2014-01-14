@@ -11,7 +11,7 @@ import sys
 
 sys.path.append("lib/python/asterisk")
 
-from TestCase import TestCase
+from test_case import TestCase
 
 ACTION = {
     "Action":"PJSIPShowEndpoints"

@@ -12,8 +12,8 @@ import logging
 
 sys.path.append("lib/python/asterisk")
 
+from test_case import TestCase
 from sipp import SIPpScenario
-from TestCase import TestCase
 
 LOGGER = logging.getLogger(__name__)
 

@@ -19,7 +19,7 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class QueueTransfer(TestCase):
         if self.test < self.test_count:
             logger.info("Starting Test %d" % self.test)
             df = ami.originate(channel = "Local/test@test_context", exten = "queue%d" % self.test, context = "test_context", priority = 1)
-            df.addErrback(self.handleOriginateFailure)
+            df.addErrback(self.handle_originate_failure)
         else:
             self.stop_reactor()
 

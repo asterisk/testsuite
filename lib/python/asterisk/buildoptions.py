@@ -13,23 +13,18 @@ the GNU General Public License Version 2.
 """
 
 import sys
-import re
 import unittest
-import logging
 
-class AsteriskBuildOptions:
-    """
-    Tracks the build options for an instance of Asterisk
-    """
+class AsteriskBuildOptions(object):
+    """Tracks the build options for an instance of Asterisk"""
 
     def __init__(self, path=None):
-        """
-        Construct an instance of AsteriskBuildOptions
+        """Construct an instance of AsteriskBuildOptions
 
         Keyword Arguments:
-        path -- the path to locate the buildopts.h file under
+        path The path to locate the buildopts.h file under
         """
-        self.__flags = {}
+        self._flags = {}
 
         buildopts_hdr_paths = [
             "../include/asterisk/buildopts.h",
@@ -38,62 +33,76 @@ class AsteriskBuildOptions:
         ]
         if path:
             buildopts_hdr_paths.insert(0, path)
-        for p in buildopts_hdr_paths:
-            if (self.__parse_buildopts_file(p)):
+        for hdr_path in buildopts_hdr_paths:
+            if (self.__parse_buildopts_file(hdr_path)):
                 return
         raise Exception("Failed to open any build options files")
 
 
     def __parse_buildopts_file(self, path):
-        retVal = False
+        """Extract and parse the build options"""
+
+        ret_val = False
+        file_lines = []
         try:
-            f = open(path, "r")
-            fileLines = f.readlines()
-            f.close()
+            with open(path, "r") as build_opt_file:
+                file_lines = build_opt_file.readlines()
         except IOError:
-            return retVal
+            return ret_val
         except:
             print "Unexpected error: %s" % sys.exc_info()[0]
-            return retVal
-        for line in fileLines:
+            return ret_val
+        for line in file_lines:
             if "#define" in line:
-                defineTuple = line.partition(' ')[2].partition(' ')
-                if (defineTuple[0] == "" or defineTuple[2] == ""):
-                    print "Unable to parse build option line [%s] into compiler flag token and value" % line
+                define_tuple = line.partition(' ')[2].partition(' ')
+                if (define_tuple[0] == "" or define_tuple[2] == ""):
+                    msg = ("Unable to parse build option line [%s] into "
+                           "compiler flag token and value" % line)
+                    print msg
                 else:
-                    self.__flags[defineTuple[0].strip()] = defineTuple[2].strip()
-                    retVal = True
+                    flag = define_tuple[0].strip()
+                    allowed = define_tuple[2].strip()
+                    self._flags[flag] = allowed
+                    ret_val = True
 
-        return retVal
+        return ret_val
 
-    def checkOption(self, buildOption, expectedValue = "1"):
+    def check_option(self, build_option, expected_value="1"):
         """
         Checks if a build option has been set to an expected value
 
         Keyword Arguments:
-        buildOption -- the Asterisk build option set in buildopts.h to check for
-        expectedValue -- (optional) - the value the option should have.  Default is 1.
+        build_option   The Asterisk build option set in buildopts.h to check for
+        expected_value The value the option should have. Default is 1.
 
-        Note: if the buildOption's expectedValue is "0" (for not defined), then this method
-        will return True if either the buildOption does not exist OR if it exists and matches.
+        Note: if the buildOption's expectedValue is "0" (for not defined), then
+        this method will return True if either the buildOption does not exist OR
+        if it exists and matches.
 
-        returns True if the build option exists and the expected value matches; false otherwise
+        Returns:
+        True if the build option exists and the expected value matches;
+        false otherwise
         """
-        if buildOption in self.__flags.keys():
-            return expectedValue == self.__flags[buildOption]
-        elif expectedValue == "0":
+        if build_option in self._flags.keys():
+            return expected_value == self._flags[build_option]
+        elif expected_value == "0":
             return True
         return False
 
+
 class AsteriskBuildOptionsTests(unittest.TestCase):
+    """Unit tests for AsteriskBuildOptions"""
+
     def test_1(self):
-        b1 = AsteriskBuildOptions()
+        """Test the defaults paths"""
+        build_options = AsteriskBuildOptions()
         self.assertTrue(1)
 
 
 def main():
-    unittest.main()
+    """Main entry point for unit tests"""
 
+    unittest.main()
 
 if __name__ == "__main__":
     main()

@@ -17,10 +17,10 @@ from twisted.internet import reactor
 sys.path.append("lib/python")
 
 from asterisk.asterisk import Asterisk
-from asterisk.TestCase import TestCase
-from asterisk.TestState import TestStateController
-from asterisk.TestState import TestState
-from asterisk.TestState import FailureTestState
+from asterisk.test_case import TestCase
+from asterisk.test_state import TestStateController
+from asterisk.test_state import TestState
+from asterisk.test_state import FailureTestState
 from asterisk.confbridge import ConfbridgeTestState
 from asterisk.confbridge import ConfbridgeChannelObject
 
@@ -34,20 +34,20 @@ class StartConfBridgeState(ConfbridgeTestState):
     to the ActiveConfBridgeState
     """
 
-    def __init__(self, controller, testCase, calls):
+    def __init__(self, controller, test_case, calls):
         """
         controller      The TestStateController managing the test
-        testCase        The main test object
+        test_case        The main test object
         calls           A dictionary (keyed by conf_bridge_channel ID) of ConfbridgeChannelObjects
         """
-        ConfbridgeTestState.__init__(self, controller, testCase, calls)
+        ConfbridgeTestState.__init__(self, controller, test_case, calls)
         self.__bridge_channel = ""
         self.__joined_channels = 0
         self.__joined_bridges = 0
         self.__recorded_names = 0
         self.__played_names = 0
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
         channel = ""
         if 'channel' in event:
@@ -62,52 +62,52 @@ class StartConfBridgeState(ConfbridgeTestState):
             if playfile == 'conf-getpin':
                 self.__handle_pin(channel)
             elif playfile == 'vm-rec-name':
-                self.testCase.expectedEvents['recordname'] = True
+                self.test_case.expectedEvents['recordname'] = True
             elif playfile == 'beep':
                 audioFile = os.path.join(os.getcwd(), "tests/apps/confbridge/sounds/talking")
-                self.sendSoundFileWithDTMF(channel, audioFile, "#")
+                self.send_sound_file_with_dtmf(channel, audioFile, "#")
                 self.__recorded_names += 1
             elif playfile == 'conf-onlyperson':
-                self.testCase.expectedEvents['onlyperson'] = True
+                self.test_case.expectedEvents['onlyperson'] = True
             elif playfile == 'confbridge-join':
                 self.__handle_confbridge_join(channel)
             elif playfile == 'conf-placeintoconf':
-                self.testCase.expectedEvents['onlypersonplaced'] = True
+                self.test_case.expectedEvents['onlypersonplaced'] = True
             elif 'confbridge-name' in playfile:
                 self.__played_names += 1
                 if (self.__played_names == self.__recorded_names):
-                    self.testCase.expectedEvents['namesplayed'] = True
+                    self.test_case.expectedEvents['namesplayed'] = True
 
     def __handle_pin(self, channel):
         """ Handles a user entering a pin to the ConfBridge """
         number_to_send = "1111#"
-        self.testCase.reset_timeout()
+        self.test_case.reset_timeout()
         if channel in self.calls:
             if "admin_profile" in self.calls[channel].profile:
                 number_to_send = "2222#"
-                self.testCase.expectedEvents['adminpin'] = True
+                self.test_case.expectedEvents['adminpin'] = True
             else:
-                self.testCase.expectedEvents['userpin'] = True
-        self.sendDTMF(channel, number_to_send)
+                self.test_case.expectedEvents['userpin'] = True
+        self.send_dtmf(channel, number_to_send)
 
     def __handle_confbridge_join(self, channel):
         """ Handles when the ConfBridge notifies the users that someone has joined """
 
         """ We'll hear this twice for each channel that joins """
-        self.testCase.reset_timeout()
+        self.test_case.reset_timeout()
         if channel == self.__bridge_channel:
             self.__joined_bridges += 1
             if (self.__joined_bridges == len(self.calls)):
-                self.testCase.expectedEvents['joinannouncetoall'] = True
+                self.test_case.expectedEvents['joinannouncetoall'] = True
         else:
             self.__joined_channels += 1
             if (self.__joined_channels == len(self.calls)):
-                self.testCase.expectedEvents['joinannouncetochannel'] = True
+                self.test_case.expectedEvents['joinannouncetochannel'] = True
         if (self.__joined_bridges == len(self.calls) and self.__joined_channels == len(self.calls)):
             """ Everyone has joined the conference! """
-            self.changeState(ActiveConfBridgeState(self.controller, self.testCase, self.calls))
+            self.change_state(ActiveConfBridgeState(self.controller, self.test_case, self.calls))
 
-    def getStateName(self):
+    def get_state_name(self):
         return "START"
 
 class ActiveConfBridgeState(ConfbridgeTestState):
@@ -118,14 +118,14 @@ class ActiveConfBridgeState(ConfbridgeTestState):
     that the last unmarked user is notified that the leader has left.
     """
 
-    def __init__(self, controller, testCase, calls):
+    def __init__(self, controller, test_case, calls):
         """
         controller      The TestStateController managing the test
-        testCase        The main test object
+        test_case        The main test object
         calls           A dictionary (keyed by conf_bridge_channel ID) of ConfbridgeChannelObjects
         """
-        ConfbridgeTestState.__init__(self, controller, testCase, calls)
-        self.testCase.reset_timeout()
+        ConfbridgeTestState.__init__(self, controller, test_case, calls)
+        self.test_case.reset_timeout()
         self.__left_notifications = 0
         self.__admin_channel = ""
         """
@@ -143,26 +143,26 @@ class ActiveConfBridgeState(ConfbridgeTestState):
             if "admin_profile" in callObject.profile:
                 self.__admin_channel = callkey
                 if delay > 0:
-                    self.scheduleDTMF(delay, callkey, dtmf_key)
+                    self.schedule_dtmf(delay, callkey, dtmf_key)
                 else:
-                    self.sendDTMF(callkey, dtmf_key)
+                    self.send_dtmf(callkey, dtmf_key)
 
     def send_user_dtmf(self, delay, dtmf_key):
         for callkey, callObject in self.calls.items():
             if "user_profile" in callObject.profile:
                 if delay > 0:
-                    self.scheduleDTMF(delay, callkey, dtmf_key)
+                    self.schedule_dtmf(delay, callkey, dtmf_key)
                 else:
-                    self.sendDTMF(callkey, dtmf_key)
+                    self.send_dtmf(callkey, dtmf_key)
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
         channel = ""
         if 'channel' in event:
             channel = event['channel']
         if state == 'CONF_MUTE':
             if channel == self.__admin_channel and "unmuted" in event.get('message'):
-                self.testCase.expectedEvents['adminunmuted'] = True
+                self.test_case.expectedEvents['adminunmuted'] = True
         elif state == 'PLAYBACK' and channel != "":
             playfile = event.get('message')
             if playfile is None:
@@ -171,14 +171,14 @@ class ActiveConfBridgeState(ConfbridgeTestState):
             if playfile == 'conf-hasleft':
                 self.__left_notifications += 1
                 if (self.__left_notifications == 2):
-                    self.testCase.expectedEvents['userhasleft'] = True
+                    self.test_case.expectedEvents['userhasleft'] = True
             elif playfile == 'conf-leaderhasleft':
-                self.testCase.expectedEvents['leaderhasleft'] = True
+                self.test_case.expectedEvents['leaderhasleft'] = True
                 for callkey, callObject in self.calls.items():
                     if "parameterless" in callObject.profile:
                         self.hangup(callkey)
 
-    def getStateName(self):
+    def get_state_name(self):
         return "ACTIVE"
 
 """
@@ -234,10 +234,10 @@ class ConfBridgeNominal(TestCase):
         and originate the calls
         """
         if self.__amis_connected == ConfBridgeNominal.asterisk_instances:
-            self.testStateController = TestStateController(self, self.ami[0])
-            self.__startObject = StartConfBridgeState(self.testStateController, self, {})
-            self.testStateController.changeState(self.__startObject)
-            self.testStateController.addAssertHandler(self.handleAssert)
+            self.test_state_controller = TestStateController(self, self.ami[0])
+            self.__startObject = StartConfBridgeState(self.test_state_controller, self, {})
+            self.test_state_controller.change_state(self.__startObject)
+            self.test_state_controller.add_assert_handler(self.handleAssert)
 
             """ Originate the calls """
             self.originate_calls(1, self.ami_1_originates)
@@ -247,7 +247,7 @@ class ConfBridgeNominal(TestCase):
             logger.debug("Originating call to %s" % originate)
             self.__originate.append(originate)
             df = self.ami[ami_id].originate(originate, "caller", "wait", 1, None, "", None, None, None, {}, False)
-            df.addErrback(self.handleOriginateFailure)
+            df.addErrback(self.handle_originate_failure)
 
     def handleAssert(self, event):
         self.passed = False
@@ -295,7 +295,7 @@ class ConfBridgeNominal(TestCase):
                    self.__temp_conf_bridge_channel_name[self.__temp_current_index],
                    self.__temp_caller_ami[self.__temp_current_index].id,
                    self.__originate[self.__temp_current_index]))
-            self.__startObject.registerNewCaller(
+            self.__startObject.register_new_caller(
                     ConfbridgeChannelObject(
                         self.__temp_conf_bridge_channel_name[self.__temp_current_index],
                         self.__temp_caller_channel_name[self.__temp_current_index],

@@ -13,7 +13,7 @@ import sys
 import unittest
 sys.path.append("lib/python")
 
-import TestSuiteUtils
+import test_suite_utils
 
 class SIPpVersion:
     """A SIPp Version.
@@ -23,7 +23,7 @@ class SIPpVersion:
         """Construct a SIPp Version parser.
 
         Keyword Arguments:
-        version -- The SIPp version string to parse.
+        version The SIPp version string to parse.
         """
         self.version_str = None
         self.feature_str = None
@@ -34,7 +34,7 @@ class SIPpVersion:
         self.pcap = False
 
         if version is None and feature is None:
-            sipp = TestSuiteUtils.which("sipp")
+            sipp = test_suite_utils.which("sipp")
             if sipp is None:
                return
 
@@ -42,11 +42,11 @@ class SIPpVersion:
                 sipp, "-v"
             ]
             try:
-                p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                sipp_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT)
             except OSError:
                 return
-            for line in p.stdout:
+            for line in sipp_process.stdout:
                 if line.strip().startswith('SIPp'):
                     sipp = line.strip().lstrip('SIPp ')
                     sipp = sipp.split(',', 1)
@@ -61,6 +61,7 @@ class SIPpVersion:
             self.__parse_feature(feature)
 
     def __str__(self):
+        """String representation of the SIPp version"""
         res = ''
         if self.version_str is not None:
             res = self.version_str
@@ -70,6 +71,9 @@ class SIPpVersion:
         return res.strip('-')
 
     def __int__(self):
+        """Return the version as an integer value
+
+        This allows for comparisons between SIPp versions"""
         res = 0
         if self.concept is not None:
             res = int(self.concept.strip('v')) * 10000000
@@ -81,9 +85,11 @@ class SIPpVersion:
         return res
 
     def __cmp__(self, other):
+        """Compare two SIPpVersion instances against each other"""
         return cmp(int(self), int(other))
 
     def __ne__(self, other):
+        """Determine if this SIPpVersion instance is not equal to another"""
         res = self.__cmp__(other)
         if ((res == 0) and (self.tls or self.pcap or other.tls or other.pcap)):
             if (self.tls == other.pcap) or (self.pcap == other.tls):
@@ -92,12 +98,14 @@ class SIPpVersion:
         return res
 
     def __eq__(self, other):
+        """Determine if this SIPpVersion instance is equal to another"""
         res = self.__cmp__(other)
         if ((res == 0) and (self.tls == other.tls and self.pcap == other.pcap)):
                 return True
         return False
 
     def __parse_version(self, version):
+        """Parse the version string returned from SIPp"""
         self.version_str = version
         if version is not None:
             parts = self.version_str.split(".")
@@ -108,6 +116,7 @@ class SIPpVersion:
                 self.minor = parts[2]
 
     def __parse_feature(self, value):
+        """Parse the features supported by this SIPp install"""
         self.feature_str = value
         if value.find("TLS") > -1:
             self.tls = True

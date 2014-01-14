@@ -29,7 +29,7 @@ Imports from the TestSuite library.  While it is not needed, it is
 recommended to at least import and derive from the TestCase class,
 which provides common functionality to the various tests
 """ 
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 
 """
 The TestCase class will initialize the python logger - creating a
@@ -42,7 +42,7 @@ class YourTestName(TestCase):
     """
     A class that executes your test.
     
-    In general, this class should derive from TestCase.  This minimizes the amount
+    In general, this class should derive from test_case.  This minimizes the amount
     of code duplication and provides a significant amount of common functionality
     between tests, including:
       - Asterisk instance management
@@ -121,7 +121,7 @@ class YourTestName(TestCase):
         test.  If you don't expect the originate to fail, use this callback to catch issues in Asterisk
         that can occur when originates fail
         """
-        df.addErrback(self.handleOriginateFailure)
+        df.addErrback(self.handle_originate_failure)
 
     def user_event(self, ami, event):
         """

@@ -13,7 +13,7 @@ import logging
 sys.path.append("lib/python")
 
 from asterisk.asterisk import Asterisk
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 from asterisk.sipp import SIPpScenario
 from twisted.internet import reactor
 
@@ -48,7 +48,7 @@ class MultipleStateChange(TestCase):
                     "available.")
         df = self.ami[0].originate(channel = "Local/available@default",
                 application = "Echo")
-        df.addErrback(self.handleOriginateFailure)
+        df.addErrback(self.handle_originate_failure)
 
     def runSippTest(self):
         LOGGER.info("Running SIPp scenario")
@@ -57,7 +57,7 @@ class MultipleStateChange(TestCase):
 
         LOGGER.info("Originating call to set presence to custom away status.")
         df = self.ami[0].originate(channel = "Local/away@default", application = "Echo")
-        df.addErrback(self.handleOriginateFailure)
+        df.addErrback(self.handle_originate_failure)
         df.addCallback(self.originateComplete)
 
     def inspectPresence(self, ami, event):

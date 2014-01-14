@@ -53,7 +53,7 @@ class BridgeAction(object):
             context='default',
             exten='waiting_area',
             priority=1,
-            async=True).addErrback(self.test_object.handleOriginateFailure)
+            async=True).addErrback(self.test_object.handle_originate_failure)
 
     def _stop_handler(self, result):
         ''' A deferred callback called as a result of the test stopping

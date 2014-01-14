@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+"""AMI HTTP wrapper classes
+
+Copyright (C) 2011, Digium, Inc.
+Terry Wilson <twilson@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+"""
+
 from urllib import urlencode
 from email.parser import HeaderParser
 try:
@@ -15,7 +25,8 @@ class InvalidAMIResponse(Exception):
 
 
 class SyncAMI(object):
-    """ A class for synchronously handling AMI actions and responses over HTTP
+    """A class for synchronously handling AMI actions and responses over HTTP
+
     It currently only raises an error on non-200 responses from the server. It
     would be a good idea to offer built-in checking of the Response header for
     non-success results, but this behavior differs between different versions
@@ -23,7 +34,8 @@ class SyncAMI(object):
     the Response header outside of the library. A login is attempted during
     construction."""
 
-    def __init__(self, location="127.0.0.1:8088", path="/rawman", username="user", secret="mysecret"):
+    def __init__(self, location="127.0.0.1:8088", path="/rawman",
+                 username="user", secret="mysecret"):
         self.location = location
         self.path = path
         self.cookie = None
@@ -34,21 +46,35 @@ class SyncAMI(object):
             raise
 
     def login(self, username, secret):
-        return self.send({'action': 'login', 'username': username, 'secret': secret})
+        """Login to AMI
+
+        Keyword Arguments:
+        username The username to log into AMI with
+        secret   The password for the user
+        """
+        return self.send({'action': 'login', 'username': username,
+                          'secret': secret})
 
     def logoff(self):
+        """Log out of AMI"""
         return self.send({'action': 'logoff'})
 
     def send(self, args):
-        """ Send an AMI request "action" given a dict of header values
-        Returns an email.message.Message which we could wrap with our
-        own AMIMessage class if we were feeling industrious. You can get
+        """Send an AMI request "action" given a dict of header values
+
+        Keyword Arguments:
+        args    A dictionary of headers and values
+
+        Returns:
+        An email.message.Message which we could wrap with our own AMIMessage
+        class if we were feeling industrious. You can get
         access the  headers via:
             ami = SyncAMI()
             res = ami.send({'action': 'ping'})
             res.items() => [("header", "value"), ...]
             res.get("header") => "value"
-            res.get_all("header") => ["value", ...]"""
+            res.get_all("header") => ["value", ...]
+        """
 
         headers = {}
         params = "?" + urlencode(args)
@@ -60,8 +86,8 @@ class SyncAMI(object):
             raise InvalidAMIResponse(res)
         self.cookie = res.getheader('set-cookie', None)
         data = res.read()
-        p = HeaderParser()
+        parser = HeaderParser()
 
-        return p.parsestr(data)
+        return parser.parsestr(data)
 
 

@@ -17,7 +17,7 @@ from twisted.internet import reactor
 sys.path.append("lib/python")
 
 from asterisk.asterisk import Asterisk
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 from asterisk.voicemail import VoiceMailMailboxManagement
 from asterisk.voicemail import VoiceMailState
 from asterisk.voicemail import VoiceMailTest
@@ -36,21 +36,21 @@ class StartVoiceMailState(VoiceMailState):
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
         if state == 'PLAYBACK':
             message = event.get('message')
 
             if message == 'vm-intro':
-                dtmf = self.voiceMailTest.get_dtmf_to_send()
+                dtmf = self.voice_mail_test.get_dtmf_to_send()
                 if dtmf:
-                    self.voiceMailTest.sendDTMF(dtmf)
+                    self.voice_mail_test.send_dtmf(dtmf)
             else:
-                self.handleDefaultState(event)
+                self.handle_default_state(event)
         else:
-            self.handleDefaultState(event)
+            self.handle_default_state(event)
 
-    def getStateName(self):
+    def get_state_name(self):
         return "START"
 
 class LeaveVoicemailContexts(VoiceMailTest):
@@ -86,15 +86,15 @@ class LeaveVoicemailContexts(VoiceMailTest):
 
         # Record which AMI instance we've received and attempt to set up the test controller
         if (ami.id == 0):
-            self.amiReceiver = ami
+            self.ami_receiver = ami
             ami.registerEvent('UserEvent', self.user_event)
         elif (ami.id == 1):
-            self.amiSender = ami
-            self.amiSender.registerEvent('Newchannel', self.new_channel_handler)
-            self.astSender = self.ast[self.amiSender.id]
-        self.createTestController()
-        if (self.testStateController != None):
-            self.testStateController.changeState(StartVoiceMailState(self.testStateController, self))
+            self.ami_sender = ami
+            self.ami_sender.registerEvent('Newchannel', self.new_channel_handler)
+            self.ast_sender = self.ast[self.ami_sender.id]
+        self.create_test_controller()
+        if (self.test_state_controller != None):
+            self.test_state_controller.change_state(StartVoiceMailState(self.test_state_controller, self))
             self.execute_test()
 
     def new_channel_handler(self, ami, event):
@@ -102,7 +102,7 @@ class LeaveVoicemailContexts(VoiceMailTest):
             return
         channel = event['channel']
         logger.debug("Setting sender channel as %s" % channel)
-        self.senderChannel = channel
+        self.sender_channel = channel
 
     def get_dtmf_to_send(self):
         """
@@ -132,15 +132,15 @@ class LeaveVoicemailContexts(VoiceMailTest):
         self.reset_timeout()
         if self.testCounter < 5:
             # The first 5 tests start out in extension 9000
-            self.amiSender.originate(channel = "sip/ast1/9000",
+            self.ami_sender.originate(channel = "sip/ast1/9000",
                 context = "voicemailCaller",
                 exten = "wait",
-                priority= 1).addErrback(self.handleOriginateFailure)
+                priority= 1).addErrback(self.handle_originate_failure)
         elif self.testCounter < len(self.expectedValues):
-            self.amiSender.originate(channel = "sip/ast1/1234",
+            self.ami_sender.originate(channel = "sip/ast1/1234",
                 context = "voicemailCaller",
                 exten = "wait",
-                priority = 1).addErrback(self.handleOriginateFailure)
+                priority = 1).addErrback(self.handle_originate_failure)
         else:
             logger.warn("Test iterated [" + str(self.testCounter) + "] - expected less than %d"
                 % len(self.expectedValues))

@@ -22,7 +22,7 @@ properties:
 test-modules:
     test-object:
         config-section: test-object-config
-        typename: 'SimpleTestCase.SimpleTestCase'
+        typename: 'test_case.SimpleTestCase'
     modules:
         -
             minversion: '12.0.0'

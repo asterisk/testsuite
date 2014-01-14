@@ -10,20 +10,20 @@ testinfo:
 test-modules:
     test-object:
         config-section: test-object-config
-        typename: 'TestCase.TestCaseModule'
+        typename: 'test_case.TestCaseModule'
     modules:
         -
             config-section: originator-config-ipv4-udp
-            typename: 'PluggableModules.Originator'
+            typename: 'pluggable_modules.Originator'
         -
             config-section: originator-config-ipv4-tcp
-            typename: 'PluggableModules.Originator'
+            typename: 'pluggable_modules.Originator'
         -
             config-section: originator-config-ipv6-udp
-            typename: 'PluggableModules.Originator'
+            typename: 'pluggable_modules.Originator'
         -
             config-section: originator-config-ipv6-tcp
-            typename: 'PluggableModules.Originator'
+            typename: 'pluggable_modules.Originator'
         -
             config-section: 'ami-config'
             typename: 'ami.AMIEventModule'

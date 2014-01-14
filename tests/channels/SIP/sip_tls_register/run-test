@@ -14,8 +14,8 @@ import logging
 from twisted.internet import reactor, defer
 
 sys.path.append("lib/python")
-from asterisk.TestCase import TestCase
-from asterisk.TestSuiteUtils import FileReplaceString
+from asterisk.test_case import TestCase
+from asterisk.test_suite_utils import file_replace_string
 from asterisk.sipp import SIPpScenario
 from starpy import manager
 
@@ -50,7 +50,7 @@ class SIPTLS_Register_Test(TestCase):
             os.remove('%s/configs/ast1/sip_helper.inc' % (self.testdir))
         shutil.copy('%s/configs/sip_helper_template.inc' % (self.testdir), '%s/configs/ast1/sip_helper.inc' % (self.testdir))
 
-        FileReplaceString('%s/configs/ast1/sip_helper.inc' % (self.testdir), '<<path>>', '%s' % (self.keysdir))
+        file_replace_string('%s/configs/ast1/sip_helper.inc' % (self.testdir), '<<path>>', '%s' % (self.keysdir))
 
         #recopy sip_helper.inc since it's been changed. Remove first in case one already exists.
         if os.path.exists('%s/sip_helper.inc' % self.etcdir):

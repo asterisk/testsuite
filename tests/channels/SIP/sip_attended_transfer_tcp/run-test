@@ -14,7 +14,7 @@ import subprocess
 from twisted.internet import reactor
 
 sys.path.append("lib/python")
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 from asterisk.sipp import SIPpScenario
 import logging
 

@@ -1,11 +1,10 @@
-
 #!/usr/bin/env python
-""" Asterisk Instances in Python.
+"""Asterisk Instances in Python.
 
 This module provides an interface for creating instances of Asterisk
 from within python code.
 
-Copyright (C) 2010-2012, Digium, Inc.
+Copyright (C) 2010-2013, Digium, Inc.
 Russell Bryant <russell@digium.com>
 
 This program is free software, distributed under the terms of
@@ -18,22 +17,20 @@ import time
 import shutil
 import logging
 
-import TestSuiteUtils
+import test_suite_utils
 
 from config import ConfigFile
 from version import AsteriskVersion
 
 from twisted.internet import reactor, protocol, defer, utils, error
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
-class AsteriskCliCommand():
-    """
-    Class that manages an Asterisk CLI command.
-    """
+class AsteriskCliCommand(object):
+    """Class that manages an Asterisk CLI command."""
 
     def __init__(self, host, cmd):
-        """ Create a new Asterisk CLI Protocol instance
+        """Create a new Asterisk CLI Protocol instance
 
         This class wraps an Asterisk instance that executes a CLI command
         against another instance of Asterisk.
@@ -41,61 +38,65 @@ class AsteriskCliCommand():
         Keyword Arguments:
         host    The host this CLI instance will connect to
         cmd     List of command arguments to spawn.  The first argument must be
-        the location of the Asterisk executable; each subsequent argument should define
-        the CLI command to run and the instance of Asterisk to run it against.
+                the location of the Asterisk executable; each subsequent
+                argument should define the CLI command to run and the instance
+                of Asterisk to run it against.
         """
         self.host = host
-        self.__cmd = cmd
+        self._cmd = cmd
         self.cli_cmd = cmd[4]
         self.exitcode = -1
         self.output = ""
         self.err = ""
+        self._deferred = None
 
     def execute(self):
-        """ Execute the CLI command.
+        """Execute the CLI command.
 
-        Returns a deferred that will be called when the operation completes.  The
+        Returns a deferred that will be called when the operation completes. The
         parameter to the deferred is this object.
         """
         def __cli_output_callback(result):
-            """ Callback from getProcessOutputAndValue """
-            self.__set_properties(result)
-            logger.debug("Asterisk CLI %s exited %d" % (self.host, self.exitcode))
+            """Callback from getProcessOutputAndValue"""
+            self._set_properties(result)
+            LOGGER.debug("Asterisk CLI %s exited %d" %
+                         (self.host, self.exitcode))
             if self.err:
-                logger.debug(self.err)
+                LOGGER.debug(self.err)
             if self.exitcode:
-                self.__deferred.errback(self)
+                self._deferred.errback(self)
             else:
-                self.__deferred.callback(self)
+                self._deferred.callback(self)
 
         def __cli_error_callback(result):
-            """ Errback from getProcessOutputAndValue """
-            self.__set_properties(result)
-            logger.warning("Asterisk CLI %s exited %d with error: %s" % (self.host, self.exitcode, self.err))
+            """Errback from getProcessOutputAndValue"""
+            self._set_properties(result)
+            LOGGER.warning("Asterisk CLI %s exited %d with error: %s" %
+                           (self.host, self.exitcode, self.err))
             if self.err:
-                logger.debug(self.err)
-            self.__deferred.errback(self)
+                LOGGER.debug(self.err)
+            self._deferred.errback(self)
 
-        self.__deferred = defer.Deferred()
-        df = utils.getProcessOutputAndValue(self.__cmd[0], self.__cmd, env=os.environ)
-        df.addCallbacks(__cli_output_callback, __cli_error_callback)
+        self._deferred = defer.Deferred()
+        deferred = utils.getProcessOutputAndValue(self._cmd[0],
+                                                  self._cmd,
+                                                  env=os.environ)
+        deferred.addCallbacks(callback=__cli_output_callback,
+                              errback=__cli_error_callback,)
 
-        return self.__deferred
+        return self._deferred
 
-    def __set_properties(self, result):
-        """ Set the properties based on the result of the getProcessOutputAndValue call """
-        out, err, code = result
-        self.exitcode = code
-        self.output = out
-        self.err = err
+    def _set_properties(self, result):
+        """Set the properties based on the result of the
+        getProcessOutputAndValue call"""
+        self.output, self.err, self.exitcode = result
+
 
 class AsteriskProtocol(protocol.ProcessProtocol):
-    """
-    Class that manages an Asterisk instance
-    """
+    """Class that manages an Asterisk instance"""
 
     def __init__(self, host, stop_deferred):
-        """ Create an AsteriskProtocol object
+        """Create an AsteriskProtocol object
 
         Create an AsteriskProtocol object, which manages the interactions with
         the Asterisk process
@@ -107,43 +108,46 @@ class AsteriskProtocol(protocol.ProcessProtocol):
         """
 
         self.output = ""
-        self.__host = host
+        self._host = host
         self.exitcode = 0
         self.exited = False
-        self.__stop_deferred = stop_deferred
+        self._stop_deferred = stop_deferred
 
     def outReceived(self, data):
-        """ Override of ProcessProtocol.outReceived """
+        """Override of ProcessProtocol.outReceived"""
         self.output += data
 
     def connectionMade(self):
-        """ Override of ProcessProtocol.connectionMade """
-        logger.debug("Asterisk %s - connection made" % (self.__host))
+        """Override of ProcessProtocol.connectionMade"""
+        LOGGER.debug("Asterisk %s - connection made" % (self._host))
 
     def errReceived(self, data):
-        """ Override of ProcessProtocol.errReceived """
-        logger.warn("Asterisk %s received error: %s" % (self.__host, data))
+        """Override of ProcessProtocol.errReceived"""
+        LOGGER.warn("Asterisk %s received error: %s" % (self._host, data))
 
     def processEnded(self, reason):
-        """ Override of ProcessProtocol.processEnded """
+        """Override of ProcessProtocol.processEnded"""
         message = ""
         if reason.value and reason.value.exitCode:
-            message = "Asterisk %s ended with code %d" % (self.__host, reason.value.exitCode,)
+            message = "Asterisk %s ended with code %d" % \
+                      (self._host, reason.value.exitCode,)
             self.exitcode = reason.value.exitCode
         else:
-            message = "Asterisk %s ended " % self.__host
+            message = "Asterisk %s ended " % self._host
         try:
-            # When Asterisk gets itself terminated with a KILL signal, this may (or may not)
-            # ever get called, in which case the Asterisk object itself that is terminating
-            # this process will attempt to raise the stop deferred.  Prevent calling the
-            # object twice.
-            if not self.__stop_deferred.called:
-                self.__stop_deferred.callback(message)
+            # When Asterisk gets itself terminated with a KILL signal, this may
+            # (or may not) ever get called, in which case the Asterisk object
+            # itself that is terminating this process will attempt to raise the
+            # stop deferred.  Prevent calling the object twice.
+            if not self._stop_deferred.called:
+                self._stop_deferred.callback(message)
         except defer.AlreadyCalledError:
-            logger.warning("Asterisk %s stop deferred already called" % self.__host)
+            LOGGER.warning("Asterisk %s stop deferred already called" %
+                           self._host)
         self.exited = True
 
-class Asterisk:
+
+class Asterisk(object):
     """An instance of Asterisk.
 
     This class assumes that Asterisk has been installed on the system.  The
@@ -161,9 +165,8 @@ class Asterisk:
     dictionary to the ast_conf_options parameter.  The key should be the option
     name and the value is the option's value to be written out into
     asterisk.conf.
-    """
 
-    """ If AST_TEST_ROOT is unset (the default):
+    If AST_TEST_ROOT is unset (the default):
 
         BINARY = /usr/sbin/asterisk (or found in PATH)
         SOURCE_ETC_DIR = /etc/asterisk
@@ -204,37 +207,46 @@ class Asterisk:
         Example Usage:
         self.asterisk = Asterisk(base="manager/login")
         """
+        self._start_deferred = None
+        self._stop_deferred = None
+        self._stop_cancel_tokens = []
         self.directories = {}
         self.ast_version = AsteriskVersion()
         self.base = Asterisk.test_suite_root
+        self.process_protocol = None
+        self.process = None
+        self.astetcdir = ""
+
         if base is not None:
             self.base = "%s/%s" % (self.base, base)
         if self.localtest_root:
             self.ast_binary = self.localtest_root + "/usr/sbin/asterisk"
         else:
-            self.ast_binary = TestSuiteUtils.which("asterisk") or "/usr/sbin/asterisk"
+            ast_binary = test_suite_utils.which("asterisk")
+            self.ast_binary = ast_binary or "/usr/sbin/asterisk"
         self.host = host
 
-        self.__ast_conf_options = ast_conf_options
-        self.__directory_structure_made = False
-        self.__configs_installed = False
-        self.__configs_set_up = False
+        self._ast_conf_options = ast_conf_options
+        self._directory_structure_made = False
+        self._configs_installed = False
+        self._configs_set_up = False
 
-        """ Find the system installed asterisk.conf """
+        # Find the system installed asterisk.conf
         ast_confs = [
             os.path.join(self.default_etc_directory, "asterisk.conf"),
             "/usr/local/etc/asterisk/asterisk.conf",
         ]
-        self.__ast_conf = None
-        for c in ast_confs:
-            if os.path.exists(c):
-                self.__ast_conf = ConfigFile(c)
+        self._ast_conf = None
+        for config in ast_confs:
+            if os.path.exists(config):
+                self._ast_conf = ConfigFile(config)
                 break
-        if self.__ast_conf is None:
-            logger.error("Unable to locate asterisk.conf file in any known location")
-            raise Exception("Unable to locate asterisk.conf file in any known location")
+        if self._ast_conf is None:
+            msg = "Unable to locate asterisk.conf in any known location"
+            LOGGER.error(msg)
+            raise Exception(msg)
 
-        """ Set which astxxx this instance will be """
+        # Set which astxxx this instance will be
         i = 1
         while True:
             if not os.path.isdir("%s/ast%d" % (self.base, i)):
@@ -242,14 +254,14 @@ class Asterisk:
                 break
             i += 1
 
-        """ Get the Asterisk directories from the Asterisk config file """
-        for c in self.__ast_conf.categories:
-            if c.name == "directories":
-                for (var, val) in c.options:
+        # Get the Asterisk directories from the Asterisk config file
+        for cat in self._ast_conf.categories:
+            if cat.name == "directories":
+                for (var, val) in cat.options:
                     self.directories[var] = val
 
     def start(self, deps=None):
-        """ Start this instance of Asterisk.
+        """Start this instance of Asterisk.
 
         Returns:
         A deferred object that will be called when Asterisk is fully booted.
@@ -261,42 +273,55 @@ class Asterisk:
         config files, if they have not already been installed
         """
 
-        def __start_asterisk_callback():
-            self.processProtocol = AsteriskProtocol(self.host, self.__stop_deferred)
-            self.process = reactor.spawnProcess(self.processProtocol,
-                                                self.cmd[0],
-                                                self.cmd, env=os.environ)
+        def __start_asterisk_callback(cmd):
+            """Begin the Asterisk startup cycle"""
+
+            self.process_protocol = AsteriskProtocol(self.host,
+                                                     self._stop_deferred)
+            self.process = reactor.spawnProcess(self.process_protocol,
+                                                cmd[0],
+                                                cmd, env=os.environ)
             # Begin the wait fully booted cycle
             self.__start_asterisk_time = time.time()
-            reactor.callLater(0, __execute_wait_fully_booted)
+            reactor.callLater(1, __execute_wait_fully_booted)
 
         def __execute_wait_fully_booted():
+            """Send the CLI command waitfullybooted"""
+
             cli_deferred = self.cli_exec("core waitfullybooted")
-            cli_deferred.addCallbacks(__wait_fully_booted_callback, __wait_fully_booted_error)
+            cli_deferred.addCallbacks(__wait_fully_booted_callback,
+                                      __wait_fully_booted_error)
 
         def __wait_fully_booted_callback(cli_command):
-            """ Callback for CLI command waitfullybooted """
+            """Callback for CLI command waitfullybooted"""
+
             if "Asterisk has fully booted" in cli_command.output:
-                self.__start_deferred.callback("Successfully started Asterisk %s" % self.host)
+                msg = "Successfully started Asterisk %s" % self.host
+                self._start_deferred.callback(msg)
             else:
-                logger.debug("Asterisk core waitfullybooted failed " +
+                LOGGER.debug("Asterisk core waitfullybooted failed " +
                              "with output '%s', attempting again..." %
                              cli_command.output)
                 reactor.callLater(1, __execute_wait_fully_booted)
+            return cli_command
 
         def __wait_fully_booted_error(cli_command):
-            """ Errback for CLI command waitfullybooted """
+            """Errback for CLI command waitfullybooted"""
+
             if time.time() - self.__start_asterisk_time > 5:
-                logger.error("Asterisk core waitfullybooted for %s failed" % self.host)
-                self.__start_deferred.errback(Exception("Command core waitfullybooted failed"))
+                msg = "Asterisk core waitfullybooted for %s failed" % self.host 
+                LOGGER.error(msg)
+                self._start_deferred.errback(Exception(msg))
             else:
-                logger.debug("Asterisk core waitfullybooted failed, attempting again...")
+                msg = "Asterisk core waitfullybooted failed, attempting again"
+                LOGGER.debug(msg)
                 reactor.callLater(1, __execute_wait_fully_booted)
+            return cli_command
 
         self.install_configs(os.getcwd() + "/configs", deps)
-        self.__setup_configs()
+        self._setup_configs()
 
-        self.cmd = [
+        cmd = [
             self.ast_binary,
             "-f", "-g", "-q", "-m", "-n",
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
@@ -306,17 +331,17 @@ class Asterisk:
         # the start deferred, and pass the stop deferred to the AsteriskProtocol
         # object.  The stop deferred will be raised when the Asterisk process
         # exits
-        self.__start_deferred = defer.Deferred()
-        self.__stop_deferred = defer.Deferred()
+        self._start_deferred = defer.Deferred()
+        self._stop_deferred = defer.Deferred()
 
         # Asterisk will attempt to use built in configuration information if
         # it can't find the configuration files that are being installed - which
         # can happen due to the files being created due to a copy operation.
         # If that happens, the test will fail - wait a second to give
         # Asterisk time to come up fully
-        reactor.callLater(1, __start_asterisk_callback)
+        reactor.callLater(0, __start_asterisk_callback, cmd)
 
-        return self.__start_deferred
+        return self._start_deferred
 
     def stop(self):
         """Stop this instance of Asterisk.
@@ -332,8 +357,8 @@ class Asterisk:
         """
 
         def __cancel_stops(reason):
-            """ Cancel all stop actions - called when the process exits """
-            for token in self.__stop_cancel_tokens:
+            """Cancel all stop actions - called when the process exits"""
+            for token in self._stop_cancel_tokens:
                 try:
                     if token.active():
                         token.cancel()
@@ -343,8 +368,8 @@ class Asterisk:
             return reason
 
         def __send_stop_gracefully():
-            """ Send a core stop gracefully CLI command """
-            logger.debug('sending stop gracefully')
+            """Send a core stop gracefully CLI command"""
+            LOGGER.debug('sending stop gracefully')
             if self.ast_version < AsteriskVersion("1.6.0"):
                 cli_deferred = self.cli_exec("stop gracefully")
             else:
@@ -353,21 +378,21 @@ class Asterisk:
                 __stop_gracefully_error)
 
         def __stop_gracefully_callback(cli_command):
-            """ Callback handler for the core stop gracefully CLI command """
-            logger.debug("Successfully stopped Asterisk %s" % self.host)
+            """Callback handler for the core stop gracefully CLI command"""
+            LOGGER.debug("Successfully stopped Asterisk %s" % self.host)
             reactor.callLater(0, __cancel_stops, None)
             return cli_command
 
         def __stop_gracefully_error(cli_command):
-            """ Errback for the core stop gracefully CLI command """
-            logger.warning("Asterisk graceful stop for %s failed" % self.host)
+            """Errback for the core stop gracefully CLI command"""
+            LOGGER.warning("Asterisk graceful stop for %s failed" % self.host)
             return cli_command
 
         def __send_kill():
-            """ Check to see if the process is running and kill it with fire """
+            """Check to see if the process is running and kill it with fire"""
             try:
-                if not self.processProtocol.exited:
-                    logger.warning("Sending KILL to Asterisk %s" % self.host)
+                if not self.process_protocol.exited:
+                    LOGGER.warning("Sending KILL to Asterisk %s" % self.host)
                     self.process.signalProcess("KILL")
             except error.ProcessExitedAlready:
                 # Pass on this
@@ -382,40 +407,38 @@ class Asterisk:
             except:
                 pass
             try:
-                if not self.__stop_deferred.called:
-                    self.__stop_deferred.callback("Asterisk %s KILLED" %
+                if not self._stop_deferred.called:
+                    self._stop_deferred.callback("Asterisk %s KILLED" %
                         self.host)
             except defer.AlreadyCalledError:
-                logger.warning("Asterisk %s stop deferred already called" %
+                LOGGER.warning("Asterisk %s stop deferred already called" %
                     self.host)
 
         def __process_stopped(reason):
-            ''' Generic callback that raises the stopped deferred
-            subscribers use to know that the process has exited '''
-            self.__stop_deferred.callback(reason)
+            """Generic callback that raises the stopped deferred subscribers
+            use to know that the process has exited"""
+            self._stop_deferred.callback(reason)
             return reason
 
-        if self.processProtocol.exited:
+        if self.process_protocol.exited:
             try:
-                if not self.__stop_deferred.called:
-                    self.__stop_deferred.callback(
+                if not self._stop_deferred.called:
+                    self._stop_deferred.callback(
                         "Asterisk %s stopped prematurely" % self.host)
             except defer.AlreadyCalledError:
-                logger.warning("Asterisk %s stop deferred already called" %
+                LOGGER.warning("Asterisk %s stop deferred already called" %
                     self.host)
         else:
-            self.__stop_cancel_tokens = []
-
             # Schedule a kill. If we don't gracefully shut down Asterisk, this
             # will ensure that the test is stopped.
-            self.__stop_cancel_tokens.append(reactor.callLater(10, __send_kill))
+            self._stop_cancel_tokens.append(reactor.callLater(10, __send_kill))
 
             # Start by asking to stop gracefully.
             __send_stop_gracefully()
 
-            self.__stop_deferred.addCallback(__cancel_stops)
+            self._stop_deferred.addCallback(__cancel_stops)
 
-        return self.__stop_deferred
+        return self._stop_deferred
 
     def install_configs(self, cfg_path, deps=None):
         """Installs all files located in the configuration directory for this
@@ -426,9 +449,9 @@ class Asterisk:
         used only by this instance can be provided via this API call.
 
         Keyword Arguments:
-        cfg_path -- This argument must be the path to the configuration directory
-        to be installed into this instance of Asterisk. Only top-level files will
-        be installed, sub directories will be ignored.
+        cfg_path This argument must be the path to the configuration directory
+                 to be installed into this instance of Asterisk. Only top-level
+                 files will be installed, sub directories will be ignored.
 
         Example Usage:
         asterisk.install_configs("tests/my-cool-test/configs")
@@ -437,24 +460,25 @@ class Asterisk:
         if they have not already been installed.
         """
 
-        self.__make_directory_structure()
+        self._make_directory_structure()
 
-        if self.__configs_installed and cfg_path == ("%s/configs" % os.getcwd()):
+        cur_cfg_path = "%s/configs" % os.getcwd()
+        if self._configs_installed and cfg_path == cur_cfg_path:
             return
 
-        if not self.__configs_installed and cfg_path != ("%s/configs" % os.getcwd()):
-            """ Do a one-time installation of the base configs """
+        if not self._configs_installed and cfg_path != cur_cfg_path:
+            # Do a one-time installation of the base configs
             self.install_configs("%s/configs" % os.getcwd())
-            # the default modules.conf should be installed now, so append conflicts
-            # this can be overriden of course by a test specific modules.conf
-            self.__append_modules_conf(deps)
-            self.__configs_installed = True
+            # the default modules.conf should be installed now, so append
+            # conflicts this can be overriden by a test specific modules.conf
+            self._append_modules_conf(deps)
+            self._configs_installed = True
 
         if not os.access(cfg_path, os.F_OK):
             return
 
-        for f in os.listdir(cfg_path):
-            target = "%s/%s" % (cfg_path, f)
+        for fname in os.listdir(cfg_path):
+            target = "%s/%s" % (cfg_path, fname)
             if os.path.isfile(target):
                 self.install_config(target)
 
@@ -490,54 +514,65 @@ class Asterisk:
 
         Example Usage:
         asterisk.install_config("tests/my-cool-test/configs/manager.conf")
-        asterisk.install_config("tests/my-cool-test/replacement_manager_config.conf", target_filename = "manager.conf")
+        asterisk.install_config("tests/my-cool-test/replacement_manager.conf",
+                                target_filename="manager.conf")
         """
 
-        self.__make_directory_structure()
+        self._make_directory_structure()
 
         if not os.path.exists(cfg_path):
-            logger.error("Config file '%s' does not exist" % cfg_path)
+            LOGGER.error("Config file '%s' does not exist" % cfg_path)
             return
 
-        tmp = "%s/%s/%s" % (os.path.dirname(cfg_path), self.ast_version.branch, os.path.basename(cfg_path))
+        tmp = "%s/%s/%s" % (os.path.dirname(cfg_path),
+                            self.ast_version.branch,
+                            os.path.basename(cfg_path))
         if os.path.exists(tmp):
             cfg_path = tmp
 
         if (target_filename):
             target_path = os.path.join(self.astetcdir, target_filename)
         else:
-            target_path = os.path.join(self.astetcdir, os.path.basename(cfg_path))
+            target_path = os.path.join(self.astetcdir,
+                                       os.path.basename(cfg_path))
 
         if os.path.exists(target_path):
             os.remove(target_path)
         try:
             shutil.copyfile(cfg_path, target_path)
         except shutil.Error:
-            logger.warn("'%s' and '%s' are the same file" % (cfg_path, target_path))
+            LOGGER.warn("'%s' and '%s' are the same file" %
+                        (cfg_path, target_path))
         except IOError:
-            logger.warn("The destination is not writable '%s'" % target_path)
+            LOGGER.warn("The destination is not writable '%s'" % target_path)
 
-    def overwrite_file(self, path, filename, values):
+    def _overwrite_file(self, filename, values):
+        """Overwrite a particular config file
+
+        Keyword Arguments:
+        filename The name of the conf file to overwrite
+        values A list of key/value pair tuples to write to the file
+        """
         target_filename = os.path.join(self.astetcdir, filename)
 
         if not os.path.exists(target_filename):
-            logger.error("File '%s' does not exists" % filename)
+            LOGGER.error("File '%s' does not exists" % filename)
             return
         try:
-            f = open(target_filename, "w")
+            ofile = open(target_filename, "w")
         except IOError:
-            logger.error("Failed to open %s" % target_filename)
+            LOGGER.error("Failed to open %s" % target_filename)
             return
         except:
-            logger.error("Unexpected error: %s" % sys.exc_info()[0])
+            LOGGER.error("Unexpected error: %s" % sys.exc_info()[0])
             return
 
         for (var, val) in values:
-            f.write('%s = %s\n' % (var, val))
+            ofile.write('%s = %s\n' % (var, val))
 
-        f.close()
+        ofile.close()
 
-    def cli_originate(self, argstr, blocking=True):
+    def cli_originate(self, argstr):
         """Starts a call from the CLI and links it to an application or
         context.
 
@@ -550,11 +585,7 @@ class Asterisk:
         used. If no extension is given, the 's' extension will be used.
 
         Keyword Arguments:
-        blocking -- UNUSED. This used to specify that we should block until the
-        CLI command finished executing.  When the Asterisk process was turned
-        over to twisted, that's no longer the case.  The keyword argument
-        was kept merely for backwards compliance; callers should *not* expect
-        their calls to block.
+        argstr Arguments to be passed to the originate
 
         Returns:
         A deferred object that can be used to listen for command completion
@@ -567,13 +598,13 @@ class Asterisk:
         raise_error = False
         if len(args) != 3 and len(args) != 4:
             raise_error = True
-            logger.error("Wrong number of arguments.")
+            LOGGER.error("Wrong number of arguments.")
         if args[1] != "extension" and args[1] != "application":
             raise_error = True
-            logger.error('2nd argument must be "extension" or "application"')
+            LOGGER.error('2nd argument must be "extension" or "application"')
         if args[0].find("/") == -1:
             raise_error = True
-            logger.error('Channel dial string must be in the form "tech/data".')
+            LOGGER.error('Channel dial string must be in the form "tech/data".')
         if raise_error is True:
             raise Exception("Cannot originate call!\n"
                 "Argument string must be in one of these forms:\n"
@@ -581,20 +612,15 @@ class Asterisk:
                 "<tech/data> extension <exten>@<context>")
 
         if self.ast_version < AsteriskVersion("1.6.2"):
-            return self.cli_exec("originate %s" % argstr, blocking=blocking)
+            return self.cli_exec("originate %s" % argstr)
         else:
-            return self.cli_exec("channel originate %s" % argstr, blocking=blocking)
+            return self.cli_exec("channel originate %s" % argstr)
 
-    def cli_exec(self, cli_cmd, blocking=True):
+    def cli_exec(self, cli_cmd):
         """Execute a CLI command on this instance of Asterisk.
 
         Keyword Arguments:
-        cli_cmd -- The command to execute.
-        blocking -- UNUSED. This used to specify that we should block until the
-        CLI command finished executing.  When the Asterisk process was turned
-        over to twisted, that's no longer the case.  The keyword argument
-        was kept merely for backwards compliance; callers should *not* expect
-        their calls to block.
+        cli_cmd The command to execute.
 
         Returns:
         A deferred object that will be signaled when the process has exited
@@ -607,30 +633,30 @@ class Asterisk:
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
             "-rx", "%s" % cli_cmd
         ]
-        logger.debug("Executing %s ..." % cmd)
+        LOGGER.debug("Executing %s ..." % cmd)
 
-        cliProtocol = AsteriskCliCommand(self.host, cmd)
-        return cliProtocol.execute()
+        cli_protocol = AsteriskCliCommand(self.host, cmd)
+        return cli_protocol.execute()
 
-    def __make_directory_structure(self):
+    def _make_directory_structure(self):
         """ Mirror system directory structure """
 
-        if self.__directory_structure_made:
+        if self._directory_structure_made:
             return
 
-        """ Make the directory structure if not available """
+        # Make the directory structure if not available
         if not os.path.exists(self.base):
             os.makedirs(self.base)
 
         dir_cat = None
-        for c in self.__ast_conf.categories:
-            if c.name == "directories":
-                dir_cat = c
+        for cat in self._ast_conf.categories:
+            if cat.name == "directories":
+                dir_cat = cat
         if dir_cat is None:
-            logger.error("Unable to discover dir layout from asterisk.conf")
+            LOGGER.error("Unable to discover dir layout from asterisk.conf")
             raise Exception("Unable to discover dir layout from asterisk.conf")
 
-        self.__gen_ast_conf(self.__ast_conf, dir_cat, self.__ast_conf_options)
+        self._gen_ast_conf(dir_cat, self._ast_conf_options)
 
         # Cache mirrored dirs to speed up creation. Generally you'll have
         # /var/lib/asterisk for more than one dir_cat option, and that happens
@@ -641,30 +667,26 @@ class Asterisk:
             # Some dirs are exempt from copying, based on ``var``.
             self.__mirror_dir(var, val, cache)
 
-        self.__directory_structure_made = True
+        self._directory_structure_made = True
 
-    def __setup_configs(self):
-        """
-        Perform any post-installation manipulation of the config
-        files
-        """
-        if self.__configs_set_up:
+    def _setup_configs(self):
+        """Perform any post-installation manipulation of the config files"""
+
+        if self._configs_set_up:
             return
-        self.__setup_manager_conf()
-        self.__configs_set_up = True
+        self._setup_manager_conf()
+        self._configs_set_up = True
 
-    def __setup_manager_conf(self):
-        values = []
+    def _setup_manager_conf(self):
+        """Forcibly create a manger.general.conf.inc file for non-localhosts"""
 
         if self.host == '127.0.0.1':
             return
+        values = [('bindaddr', self.host), ]
+        self._overwrite_file("manager.general.conf.inc", values)
 
-        values.append(['bindaddr', self.host])
-
-        self.overwrite_file(self.directories['astetcdir'],
-            "manager.general.conf.inc", values)
-
-    def __gen_ast_conf(self, ast_conf, dir_cat, ast_conf_options):
+    def _gen_ast_conf(self, dir_cat, ast_conf_options):
+        """Generate a default asterisk.conf"""
         for (var, val) in dir_cat.options:
             if var == "astetcdir":
                 self.astetcdir = "%s%s" % (self.base, val)
@@ -673,75 +695,79 @@ class Asterisk:
         local_ast_conf_path = os.path.join(self.astetcdir, "asterisk.conf")
 
         try:
-            f = open(local_ast_conf_path, "w")
+            ast_file = open(local_ast_conf_path, "w")
         except IOError:
-            logger.error("Failed to open %s" % local_ast_conf_path)
+            LOGGER.error("Failed to open %s" % local_ast_conf_path)
             return
         except:
-            logger.error("Unexpected error: %s" % sys.exc_info()[0])
+            LOGGER.error("Unexpected error: %s" % sys.exc_info()[0])
             return
 
-        for c in self.__ast_conf.categories:
-            f.write("[%s]\n" % c.name)
-            if c.name == "directories":
-                for (var, val) in c.options:
-                    f.write("%s = %s%s\n" % (var, self.base, val))
-            elif c.name == "options":
-                f.write("#include \"%s/asterisk.options.conf.inc\"\n" %
+        for cat in self._ast_conf.categories:
+            ast_file.write("[%s]\n" % cat.name)
+            if cat.name == "directories":
+                for (var, val) in cat.options:
+                    ast_file.write("%s = %s%s\n" % (var, self.base, val))
+            elif cat.name == "options":
+                ast_file.write("#include \"%s/asterisk.options.conf.inc\"\n" %
                         (self.astetcdir))
                 if ast_conf_options:
                     for (var, val) in ast_conf_options.iteritems():
-                        f.write("%s = %s\n" % (var, val))
-                for (var, val) in c.options:
+                        ast_file.write("%s = %s\n" % (var, val))
+                for (var, val) in cat.options:
                     if not ast_conf_options or var not in ast_conf_options:
-                        f.write("%s = %s\n" % (var, val))
+                        ast_file.write("%s = %s\n" % (var, val))
             else:
-                for (var, val) in c.options:
-                    f.write("%s = %s\n" % (var, val))
-            f.write("\n")
+                for (var, val) in cat.options:
+                    ast_file.write("%s = %s\n" % (var, val))
+            ast_file.write("\n")
 
-        f.close()
+        ast_file.close()
 
-    def __get_module_conflicts(self, deps):
+    def _get_module_conflicts(self, deps):
+        """Attempt to get modules this test conflicts with"""
         if not deps:
             return []
 
         conflicts = []
+        conflict_file_name = os.getcwd() + '/configs/' + 'conflicts.txt'
         try:
-            with open(os.getcwd() + '/configs/' + 'conflicts.txt', 'r') as f:
-                for line in f:
+            with open(conflict_file_name, 'r') as conflict_file:
+                for line in conflict_file:
                     line = line.strip()
                     if not line or line[0] == ';':
                         continue
 
                     key, val = line.split('=')
-                    if next((d for d in deps if key == d.name), None):
-                        for v in val.split(','):
-                            conflicts.append(v.strip())
+                    if next((dep for dep in deps if key == dep.name), None):
+                        for value in val.split(','):
+                            conflicts.append(value.strip())
         except:
             pass
         return conflicts
 
-    def __append_modules_conf(self, deps):
-        conflicts = self.__get_module_conflicts(deps)
+    def _append_modules_conf(self, deps):
+        """Prevent modules from loading based on dependency conflicts"""
+        conflicts = self._get_module_conflicts(deps)
 
         if not conflicts:
             return
 
         modules_conf = os.path.join(self.astetcdir, "modules.conf")
         try:
-            with open(modules_conf, "a") as f:
-                for c in conflicts:
-                    f.write('noload => %s\n' % c)
+            with open(modules_conf, "a") as modules_file:
+                for conflict in conflicts:
+                    modules_file.write('noload => %s\n' % conflict)
         except IOError:
-            logger.error("Failed to open %s" % modules_conf)
+            LOGGER.error("Failed to open %s" % modules_conf)
             return
         except:
-            logger.error("Unexpected error: %s" % sys.exc_info()[0])
+            LOGGER.error("Unexpected error: %s" % sys.exc_info()[0])
             return
 
     def __mirror_dir(self, ast_dir_name, ast_dir_path, cache):
-        self.__makedirs(ast_dir_path)
+        """Mirror an Asterisk directory for a test run"""
+        self._makedirs(ast_dir_path)
         dirs_only = ["astrundir", "astlogdir", "astspooldir"]
         if ast_dir_name in dirs_only:
             return
@@ -777,7 +803,8 @@ class Asterisk:
                 os.symlink(os.path.join(ast_dir_path, dirname, filename),
                            target)
 
-    def __makedirs(self, ast_dir_path):
+    def _makedirs(self, ast_dir_path):
+        """Make the Asterisk directories"""
         # If we're running with a separate localroot, the paths in
         # AST_TEST_ROOT/etc/asterisk/asterisk.conf are still short; e.g.
         # /etc/asterisk. We suffix AST_TEST_ROOT here to get the real source
@@ -797,8 +824,8 @@ class Asterisk:
             if self.localtest_root:
                 short_dirname = dirname[len(self.localtest_root):]
 
-            for d in dirnames:
-                self.__makedirs(os.path.join(target_dir, short_dirname, d))
+            for dirname in dirnames:
+                self._makedirs(os.path.join(target_dir, short_dirname, dirname))
 
 
 # vim: set ts=8 sw=4 sts=4 et ai tw=79:

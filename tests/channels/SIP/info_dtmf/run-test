@@ -19,7 +19,7 @@ sys.path.append("lib/python")
 
 from asterisk.version import AsteriskVersion
 from asterisk.sipp import SIPpScenario, SIPpScenarioSequence
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 
 """
 The TestCase class will initialize the python LOGGER - creating a

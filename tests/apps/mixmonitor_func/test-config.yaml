@@ -7,7 +7,7 @@ testinfo:
 
 test-modules:
     test-object:
-        typename: 'SimpleTestCase.SimpleTestCase'
+        typename: 'test_case.SimpleTestCase'
 
 properties:
     minversion: '13.0.0'

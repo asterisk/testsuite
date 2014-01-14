@@ -17,10 +17,10 @@ from twisted.internet import reactor
 sys.path.append("lib/python")
 
 from asterisk.asterisk import Asterisk
-from asterisk.TestCase import TestCase
-from asterisk.TestState import TestStateController
-from asterisk.TestState import TestState
-from asterisk.TestState import FailureTestState
+from asterisk.test_case import TestCase
+from asterisk.test_state import TestStateController
+from asterisk.test_state import TestState
+from asterisk.test_state import FailureTestState
 from asterisk.voicemail import VoiceMailMailboxManagement
 from asterisk.voicemail import TestCondition
 from asterisk.voicemail import VoiceMailTest
@@ -40,21 +40,21 @@ class StartVoiceMailState(VoiceMailState):
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
 
         if state == 'PLAYBACK':
             message = event.get('message')
             if message == 'vm-login':
-                self.voiceMailTest.sendDTMF(self.userMailbox)
+                self.voice_mail_test.send_dtmf(self.userMailbox)
             elif message == 'vm-password':
-                self.voiceMailTest.sendDTMF(self.userPassword)
+                self.voice_mail_test.send_dtmf(self.userPassword)
         elif state == 'AUTHENTICATED':
-            self.changeState(AuthenticatedTestState(self.controller, self.voiceMailTest))
+            self.change_state(AuthenticatedTestState(self.controller, self.voice_mail_test))
         else:
-            self.handleDefaultState(event)
+            self.handle_default_state(event)
 
-    def getStateName(self):
+    def get_state_name(self):
         return "START"
 
 
@@ -66,23 +66,23 @@ class AuthenticatedTestState(VoiceMailState):
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
 
         if state == 'AUTHENTICATED':
             logger.error("Received two authenticated events?")
-            self.changeState(FailureTestState(self.controller))
+            self.change_state(FailureTestState(self.controller))
         elif state == 'INTRO':
-            self.changeState(IntroTestState(self.controller, self.voiceMailTest))
+            self.change_state(IntroTestState(self.controller, self.voice_mail_test))
         elif state == 'PLAYBACK':
             message = event.get('message')
             if message == 'new user':
                 logger.error("New user played; user credentials must have failed")
-                self.changeState(FailureTestState(self.controller))
+                self.change_state(FailureTestState(self.controller))
         else:
-            self.handleDefaultState(event)
+            self.handle_default_state(event)
 
-    def getStateName(self):
+    def get_state_name(self):
         return "AUTHENTICATED"
 
 
@@ -95,23 +95,23 @@ class IntroTestState(VoiceMailState):
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
 
         if state == 'BROWSE':
-            self.changeState(BrowseMessageTestState(self.controller, self.voiceMailTest))
+            self.change_state(BrowseMessageTestState(self.controller, self.voice_mail_test))
         elif state == 'PLAYBACK':
             message = event.get('message')
 
             if message == 'instructions':
                 """ In this pass, tell it to play the message """
-                self.voiceMailTest.sendDTMF("1")
+                self.voice_mail_test.send_dtmf("1")
         elif state == 'ADVOPTIONS':
-            self.changeState(AdvancedOptionsTestState(self.controller, self.voiceMailTest))
+            self.change_state(AdvancedOptionsTestState(self.controller, self.voice_mail_test))
         else:
-            self.handleDefaultState(event)
+            self.handle_default_state(event)
 
-    def getStateName(self):
+    def get_state_name(self):
         return "INTRO"
 
 
@@ -123,16 +123,16 @@ class BrowseMessageTestState(VoiceMailState):
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
 
         if state == 'PLAYVOICE':
             """ The actual voicemail is being played """
-            self.changeState(PlayVoiceMailTestState(self.controller, self.voiceMailTest))
+            self.change_state(PlayVoiceMailTestState(self.controller, self.voice_mail_test))
         else:
-            self.handleDefaultState(event)
+            self.handle_default_state(event)
 
-    def getStateName(self):
+    def get_state_name(self):
         return "BROWSE"
 
 
@@ -144,7 +144,7 @@ class AdvancedOptionsTestState(VoiceMailState):
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
 
         if state == 'PLAYBACK':
@@ -152,26 +152,26 @@ class AdvancedOptionsTestState(VoiceMailState):
 
             if message == 'vm-toreply':
                 """ Dial 1 to reply """
-                self.voiceMailTest.sendDTMF("1")
+                self.voice_mail_test.send_dtmf("1")
             elif message == 'instructions':
-                if self.voiceMailTest.getTestCondition("leftMessage"):
+                if self.voice_mail_test.get_test_condition("leftMessage"):
                     """ All done, exit out """
-                    self.voiceMailTest.sendDTMF("#")
+                    self.voice_mail_test.send_dtmf("#")
             elif message == 'beep':
                 """ Leaving a voicemail """
-                audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.voiceMailTest.testParentDir))
-                self.voiceMailTest.sendSoundFileWithDTMF(audioFile,"#")
-                self.voiceMailTest.setTestCondition("leftMessage", True)
+                audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.voice_mail_test.testParentDir))
+                self.voice_mail_test.send_sound_file_with_dtmf(audioFile,"#")
+                self.voice_mail_test.set_test_condition("leftMessage", True)
             elif message == 'vm-nonumber':
                 """ Test failure - in this case, it means the CID wasn't recognized """
                 logger.error("Failed to recognize caller ID number in message envelope")
-                self.changeState(FailureTestState(self.controller))
+                self.change_state(FailureTestState(self.controller))
             elif message == 'vm-nobox':
                 """ Test failure - in this case, it means the CID couldn't be mapped to a mailbox """
                 logger.error("Failed to find mailbox for caller ID number in message envelope")
-                self.changeState(FailureTestState(self.controller))
+                self.change_state(FailureTestState(self.controller))
 
-    def getStateName(self):
+    def get_state_name(self):
         return "ADVOPTIONS"
 
 
@@ -183,9 +183,9 @@ class PlayVoiceMailTestState(VoiceMailState):
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
         """ Notify the test that we heard a message """
-        self.voiceMailTest.setTestCondition("messagesHeard", 1)
+        self.voice_mail_test.set_test_condition("messagesHeard", 1)
 
-    def handleStateChange(self, ami, event):
+    def handle_state_change(self, ami, event):
         state = event['state']
 
         if state == 'PLAYBACK':
@@ -193,15 +193,15 @@ class PlayVoiceMailTestState(VoiceMailState):
 
             if message == 'instructions':
                 """ Instruct the server to goto the advanced options """
-                self.voiceMailTest.sendDTMF("3")
+                self.voice_mail_test.send_dtmf("3")
         elif state == 'BROWSE':
-            self.changeState(BrowseMessageTestState(self.controller, self.voiceMailTest))
+            self.change_state(BrowseMessageTestState(self.controller, self.voice_mail_test))
         elif state == 'ADVOPTIONS':
-            self.changeState(AdvancedOptionsTestState(self.controller, self.voiceMailTest))
+            self.change_state(AdvancedOptionsTestState(self.controller, self.voice_mail_test))
         else:
-            self.handleDefaultState(event)
+            self.handle_default_state(event)
 
-    def getStateName(self):
+    def get_state_name(self):
         return "PLAYVOICE"
 
 
@@ -233,15 +233,15 @@ class CheckVoicemailReply(VoiceMailTest):
         state changes whether or not we've passed or failed
         """
         def checkMessages(value, testCondition):
-            testCondition.testConditionData += value
-            if (testCondition.testConditionData == 1):
+            testCondition.test_condition_data += value
+            if (testCondition.test_condition_data == 1):
                 return True
             return False
-        self.addTestCondition("messagesHeard", TestCondition(checkMessages, 0))
+        self.add_test_condition("messagesHeard", TestCondition(checkMessages, 0))
 
         def passValue(value, testCondition):
             return value
-        self.addTestCondition("leftMessage", TestCondition(passValue, False))
+        self.add_test_condition("leftMessage", TestCondition(passValue, False))
 
         self.reactor_timeout = 120
         self.create_asterisk(2)
@@ -251,16 +251,16 @@ class CheckVoicemailReply(VoiceMailTest):
 
         """ Record which AMI instance we've received and attempt to set up the test controller """
         if (ami.id == 0):
-            self.amiReceiver = ami
+            self.ami_receiver = ami
         elif (ami.id == 1):
-            self.amiSender = ami
-            self.astSender = self.ast[self.amiSender.id]
+            self.ami_sender = ami
+            self.ast_sender = self.ast[self.ami_sender.id]
 
-        self.createTestController()
-        if (self.testStateController != None):
-            startObject = StartVoiceMailState(self.testStateController, self)
-            self.testStateController.changeState(startObject)
-            self.testStateController.addAssertHandler(self.handleAssert)
+        self.create_test_controller()
+        if (self.test_state_controller != None):
+            startObject = StartVoiceMailState(self.test_state_controller, self)
+            self.test_state_controller.change_state(startObject)
+            self.test_state_controller.add_assert_handler(self.handleAssert)
 
         """ Now do specific processing on the AMI instances """
         if (ami.id == 0):
@@ -269,18 +269,18 @@ class CheckVoicemailReply(VoiceMailTest):
 
             """ Create a dummy voicemail """
             self.voicemailManager = VoiceMailMailboxManagement(self.ast[0])
-            self.voicemailManager.createMailbox("default", "1234", True)
+            self.voicemailManager.create_mailbox("default", "1234", True)
 
             logger.debug("Creating dummy voicemail")
             for i in range(0, 1):
-                if not self.voicemailManager.createDummyVoicemail("default","1234", self.voicemailManager.inboxFolderName, i, self.formats):
-                    logger.error("Failed to create voicemails in folder " + self.voicemailManager.inboxFolderName)
+                if not self.voicemailManager.create_dummy_voicemail("default","1234", VoiceMailMailboxManagement.inbox_folder_name, i, self.formats):
+                    logger.error("Failed to create voicemails in folder " + VoiceMailMailboxManagement.inbox_folder_name)
                     self.stop_reactor()
 
         else:
             logger.debug("Originating call to " + self.channel)
             df = ami.originate(self.channel, "voicemailCaller", "wait", 1)
-            df.addErrback(self.handleOriginateFailure)
+            df.addErrback(self.handle_originate_failure)
 
     def handleAssert(self, event):
         self.passed = False
@@ -328,12 +328,12 @@ def main():
     """
     if test.passed:
 
-        if not test.checkTestConditions():
+        if not test.check_test_conditions():
             logger.warn("Test failed condition checks")
             test.passed = False
 
         formats = ["ulaw","wav","WAV"]
-        if voicemailManager.checkVoicemailExists("default","1234", 0, formats, "INBOX"):
+        if voicemailManager.check_voicemail_exists("default","1234", 0, formats, "INBOX"):
             logger.warn("Voicemail left in INBOX - should have been moved to old")
             test.passed = False
 

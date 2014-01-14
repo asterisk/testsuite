@@ -15,7 +15,7 @@ properties:
         - pjsip
 
 test-modules:
-    # allow TestRunner to find and run the local test
+    # allow test_runner to find and run the local test
     add-test-to-search-path: 'True'
     test-object:
         config-section: object-config

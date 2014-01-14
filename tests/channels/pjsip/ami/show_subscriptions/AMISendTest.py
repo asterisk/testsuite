@@ -13,7 +13,7 @@ import logging
 sys.path.append("lib/python/asterisk")
 
 from sipp import SIPpScenario
-from TestCase import TestCase
+from test_case import TestCase
 
 from twisted.internet import reactor
 

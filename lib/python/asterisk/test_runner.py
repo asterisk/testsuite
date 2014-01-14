@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-''' Test Runner
+"""Module that spawns and manages running a test
 
 This module provides an entry point, loading, and teardown of test
 runs for the Test Suite
@@ -9,7 +9,7 @@ Matt Jordan <mjordan@digium.com>
 
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
-'''
+"""
 
 import sys
 import imp
@@ -20,30 +20,34 @@ import yaml
 
 from twisted.internet import reactor
 
-LOGGER = logging.getLogger('TestRunner')
+LOGGER = logging.getLogger('test_runner')
 
 sys.path.append('lib/python')
 
 from version import AsteriskVersion
 
 class TestModuleFinder(object):
-    ''' Determines if a module is a test module that can be loaded '''
+    """Determines if a module is a test module that can be loaded"""
 
     supported_paths = []
 
     def __init__(self, path_entry):
+        """Constructor
+
+        path_entry The path to look for test modules in
+        """
         if not path_entry in TestModuleFinder.supported_paths:
             raise ImportError()
-        LOGGER.debug('TestModuleFinder supports path %s' % path_entry)
+        LOGGER.debug("TestModuleFinder supports path %s" % path_entry)
         return
 
-    def find_module(self, fullname, suggested_path = None):
-        ''' Attempts to find the specified module
+    def find_module(self, fullname, suggested_path=None):
+        """Attempts to find the specified module
 
-        Parameters:
-        fullname The full name of the module to load
+        Keyword Arguments:
+        fullname       The full name of the module to load
         suggested_path Optional path to find the module at
-        '''
+        """
         search_paths = TestModuleFinder.supported_paths
         if suggested_path:
             search_paths.append(suggested_path)
@@ -53,26 +57,28 @@ class TestModuleFinder(object):
         LOGGER.debug("Unable to find module '%s'" % fullname)
         return None
 
+
 class TestModuleLoader(object):
-    ''' Loads modules defined in the tests '''
+    """Loads modules defined in the tests"""
 
     def __init__(self, path_entry):
-        ''' Constructor
+        """Constructor
 
-        Parameters:
+        Keyword Arguments:
         path_entry The path the module is located at
-        '''
+        """
         self._path_entry = path_entry
 
     def _get_filename(self, fullname):
+        """Get the full path to the specified python file"""
         return '%s/%s.py' % (self._path_entry, fullname)
 
     def load_module(self, fullname):
-        ''' Load the module into memory
+        """Load the module into memory
 
-        Parameters:
+        Keyword Arguments:
         fullname The full name of the module to load
-        '''
+        """
         if fullname in sys.modules:
             mod = sys.modules[fullname]
         else:
@@ -83,15 +89,14 @@ class TestModuleLoader(object):
 
 sys.path_hooks.append(TestModuleFinder)
 
-def load_test_modules(test_config, test_object, test_path, ast_version):
-    ''' Load optional modules for a test
+def load_test_modules(test_config, test_object, ast_version):
+    """Load the pluggable modules for a test
 
-    Parameters:
+    Keyword Arguments:
     test_config The test configuration object
     test_object The test object that the modules will attach to
-    test_path The path to the test
     ast_version A string containing the Asterisk version
-    '''
+    """
 
     if not test_object:
         return
@@ -99,14 +104,15 @@ def load_test_modules(test_config, test_object, test_path, ast_version):
         LOGGER.error("No test-modules block in configuration")
         return
     if 'modules' not in test_config['test-modules']:
-        # Not an error - just no optional modules specified
+        # Not an error - just no pluggable modules specified
         return
 
     for module_spec in test_config['test-modules']['modules']:
         if check_module_version(module_spec, ast_version):
-            # If there's a specific portion of the config for this module, use it
-            if ('config-section' in module_spec
-                and module_spec['config-section'] in test_config):
+            # If there's a specific portion of the config for this module,
+            # use it
+            if ('config-section' in module_spec and
+                module_spec['config-section'] in test_config):
                 module_config = test_config[module_spec['config-section']]
             else:
                 module_config = test_config
@@ -121,40 +127,40 @@ def load_test_modules(test_config, test_object, test_path, ast_version):
                 module_spec['typename'])
 
 def check_module_version(module_spec, ast_version):
-    ''' Check the module configuration for minversion and maxversion and check
+    """Check the module configuration for minversion and maxversion and check
     if the Asterisk version meets the version(s) if found
 
-    Parameters:
+    Keyword Arguments:
     module_spec A dictionary of a pluggable module configuration
     ast_version A string containing the Asterisk version
 
     Returns:
     False if minversion or maxversion are found and do not meet the Asterisk
     version, True otherwise
-    '''
+    """
 
     modminversion = module_spec.get('minversion')
     modmaxversion = module_spec.get('maxversion')
-    if modminversion is not None and \
-        AsteriskVersion(ast_version) < AsteriskVersion(modminversion):
+    if (modminversion is not None and
+        AsteriskVersion(ast_version) < AsteriskVersion(modminversion)):
         return False
-    if modmaxversion is not None and \
-        AsteriskVersion(ast_version) >= AsteriskVersion(modmaxversion):
+    if (modmaxversion is not None and
+        AsteriskVersion(ast_version) >= AsteriskVersion(modmaxversion)):
         return False
 
     return True
 
 def load_and_parse_module(type_name):
-    ''' Take a qualified module/object name, load the module, and return
+    """Take a qualified module/object name, load the module, and return
     a typename specifying the object
 
-    Parameters:
+    Keyword Arguments:
     type_name A fully qualified module/object to load into memory
 
     Returns:
     An object type that to be instantiated
     None on error
-    '''
+    """
 
     LOGGER.debug("Importing %s" % type_name)
 
@@ -173,10 +179,10 @@ def load_and_parse_module(type_name):
     return module
 
 def create_test_object(test_path, test_config):
-    ''' Create the specified test object from the test configuration
+    """Create the specified test object from the test configuration
 
     Parameters:
-    test_path The path to the test directory
+    test_path   The path to the test directory
     test_config The test configuration object, read from the yaml file
 
     Returns:
@@ -185,7 +191,7 @@ def create_test_object(test_path, test_config):
             test directory
         - evaluate_results() - True if the test passed, False otherwise
     Or None if the object couldn't be created.
-    '''
+    """
     if not 'test-modules' in test_config:
         LOGGER.error("No test-modules block in configuration")
         return None
@@ -212,12 +218,11 @@ def create_test_object(test_path, test_config):
     test_obj = module_obj(test_path, test_object_config)
     return test_obj
 
-
 def load_test_config(test_directory):
-    ''' Load and parse the yaml test config specified by the test_directory
+    """Load and parse the yaml test config specified by the test_directory
 
     Note: this will throw exceptions if an error occurs while parsing the yaml
-    file.  This is expected: if you provide an invalid configuration, its far
+    file. This is expected: if you provide an invalid configuration, it's far
     easier to let this crash and fix the yaml then try and 'handle' a completely
     invalid configuration gracefully.
 
@@ -226,7 +231,7 @@ def load_test_config(test_directory):
 
     Returns:
     An object containing the yaml configuration, or None on error
-    '''
+    """
 
     test_config = None
 
@@ -236,19 +241,17 @@ def load_test_config(test_directory):
         LOGGER.error("No test-config.yaml file found in %s" % test_directory)
         return test_config
 
-    file_stream = open(test_config_path)
-    test_config = yaml.load(file_stream, )
-    file_stream.close()
+    with open(test_config_path) as file_stream:
+        test_config = yaml.load(file_stream, )
 
     return test_config
 
 def read_module_paths(test_config, test_path):
-    '''
-    Read additional paths required for loading modules for the test
+    """Read additional paths required for loading modules for the test
 
     Parameters:
     test_config The test configuration object
-    '''
+    """
 
     if not 'test-modules' in test_config:
         # Don't log anything. The test will complain later when
@@ -266,38 +269,38 @@ def read_module_paths(test_config, test_path):
             sys.path.append(path)
 
 def main(argv = None):
-    ''' Main entry point for the test run
+    """Main entry point for the test run
 
     Returns:
     0 on successful test run
     1 on any error
-    '''
+    """
 
     if argv is None:
         args = sys.argv
 
     # Set up logging - we're probably the first ones run!
-    logConfigFile = os.path.join(os.getcwd(), "%s" % 'logger.conf')
-    if os.path.exists(logConfigFile):
+    log_config_file = os.path.join(os.getcwd(), "%s" % 'logger.conf')
+    if os.path.exists(log_config_file):
         try:
-            logging.config.fileConfig(logConfigFile, None, False)
+            logging.config.fileConfig(log_config_file, None, False)
         except:
             print "WARNING: failed to preserve existing loggers - some " \
             "logging statements may be missing"
-            logging.config.fileConfig(logConfigFile)
+            logging.config.fileConfig(log_config_file)
     else:
         print "WARNING: no logging.conf file found at %s; using default " \
-        " configuration" % (logConfigFile)
+        " configuration" % (log_config_file)
         logging.basicConfig()
 
     if (len(args) < 2):
-        LOGGER.error("TestRunner requires the full path to the test directory" \
-                     " to execute")
+        LOGGER.error("test_runner requires the full path to the test " \
+                     "directory to execute")
         return 1
     test_directory = args[1]
 
     if (len(args) < 3):
-        LOGGER.error("TestRunner requires the Asterisk version to execute")
+        LOGGER.error("test_runner requires the Asterisk version to execute")
         return 1
     ast_version = args[2]
 
@@ -313,7 +316,7 @@ def main(argv = None):
         return 1
 
     # Load other modules that may be specified
-    load_test_modules(test_config, test_object, test_directory, ast_version)
+    load_test_modules(test_config, test_object, ast_version)
 
     # Kick off the twisted reactor
     reactor.run()

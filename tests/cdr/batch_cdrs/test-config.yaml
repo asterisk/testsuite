@@ -10,7 +10,7 @@ testinfo:
 test-modules:
     test-object:
         config-section: test-object-config
-        typename: 'SimpleTestCase.SimpleTestCase'
+        typename: 'test_case.SimpleTestCase'
     modules:
         -
             config-section: 'cdr-config'

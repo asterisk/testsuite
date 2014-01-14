@@ -12,27 +12,22 @@ the GNU General Public License Version 2.
 
 import unittest
 import sys
-import csv
 import astcsv
-import re
 import logging
-import time
-
-from collections import defaultdict
 
 LOGGER = logging.getLogger(__name__)
 
 class CDRModule(object):
-    ''' A module that checks a test for expected CDR results '''
+    """A module that checks a test for expected CDR results"""
 
 
     def __init__(self, module_config, test_object):
-        ''' Constructor
+        """Constructor
 
         Parameters:
         module_config The yaml loaded configuration for the CDR Module
         test_object A concrete implementation of TestClass
-        '''
+        """
         self.test_object = test_object
 
         # Build our expected CDR records
@@ -58,12 +53,12 @@ class CDRModule(object):
         test_object.register_stop_observer(self._check_cdr_records)
 
     def _check_cdr_records(self, callback_param):
-        ''' A deferred callback method that is called by the TestCase
+        """A deferred callback method that is called by the TestCase
         derived object when all Asterisk instances have stopped
 
         Parameters:
         callback_param
-        '''
+        """
         LOGGER.debug("Checking CDR records...")
         try:
             self.match_cdrs()
@@ -74,17 +69,17 @@ class CDRModule(object):
 
 
     def match_cdrs(self):
-        ''' Called when all instances of Asterisk have exited.  Derived
+        """Called when all instances of Asterisk have exited.  Derived
         classes can override this to provide their own behavior for CDR
         matching.
-        '''
+        """
         expectations_met = True
         for ast_id in self.cdr_records:
             ast_instance = self.test_object.ast[ast_id]
             for file_name in self.cdr_records[ast_id]:
                 records = self.cdr_records[ast_id][file_name]
                 cdr_expect = AsteriskCSVCDR(records=records)
-                cdr_file = AsteriskCSVCDR(fn="%s/%s/cdr-csv/%s.csv" %
+                cdr_file = AsteriskCSVCDR(filename="%s/%s/cdr-csv/%s.csv" %
                     (ast_instance.base,
                      ast_instance.directories['astlogdir'],
                      file_name))
@@ -100,7 +95,7 @@ class CDRModule(object):
 
 
 class AsteriskCSVCDRLine(astcsv.AsteriskCSVLine):
-    "A single Asterisk call detail record"
+    """A single Asterisk call detail record"""
 
     fields = ['accountcode', 'source', 'destination', 'dcontext', 'callerid',
     'channel', 'dchannel', 'lastapp', 'lastarg', 'start', 'answer', 'end',
@@ -119,41 +114,48 @@ class AsteriskCSVCDRLine(astcsv.AsteriskCSVLine):
         **dict.
         """
 
-        return astcsv.AsteriskCSVLine.__init__(self,
+        astcsv.AsteriskCSVLine.__init__(self,
             AsteriskCSVCDRLine.fields, accountcode=accountcode,
             source=source, destination=destination,
             dcontext=dcontext, callerid=callerid, channel=channel,
-            dchannel=dchannel, lastapp=lastapp, lastarg=lastarg, start=start, answer=answer,
-            end=end, duration=duration, billsec=billsec, disposition=disposition,
-            amaflags=amaflags, uniqueid=uniqueid, userfield=userfield)
+            dchannel=dchannel, lastapp=lastapp, lastarg=lastarg, start=start,
+            answer=answer, end=end, duration=duration, billsec=billsec,
+            disposition=disposition, amaflags=amaflags, uniqueid=uniqueid,
+            userfield=userfield)
 
 
 class AsteriskCSVCDR(astcsv.AsteriskCSV):
     """A representation of an Asterisk CSV CDR file"""
 
-    def __init__(self, fn=None, records=None):
+    def __init__(self, filename=None, records=None):
         """Initialize CDR records from an Asterisk cdr-csv file"""
 
-        return astcsv.AsteriskCSV.__init__(self, fn, records,
-                AsteriskCSVCDRLine.fields, AsteriskCSVCDRLine)
+        astcsv.AsteriskCSV.__init__(self, filename, records,
+            AsteriskCSVCDRLine.fields, AsteriskCSVCDRLine)
 
 
 class AsteriskCSVCDRTests(unittest.TestCase):
+    """Unit tests for AsteriskCSVCDR"""
+
     def test_cdr(self):
-        c = AsteriskCSVCDR("self_test/Master.csv")
-        self.assertEqual(len(c), 2)
-        self.assertTrue(AsteriskCSVCDRLine(duration=7,lastapp="hangup").match(c[0],
+        """Test the self_test/Master.csv record"""
+
+        cdr = AsteriskCSVCDR("self_test/Master.csv")
+        self.assertEqual(len(cdr), 2)
+        self.assertTrue(AsteriskCSVCDRLine(duration=7,
+            lastapp="hangup").match(cdr[0],
             exact=(True, True)))
-        self.assertTrue(c[0].match(AsteriskCSVCDRLine(duration=7,lastapp="hangup"),
+        self.assertTrue(cdr[0].match(AsteriskCSVCDRLine(duration=7,
+            lastapp="hangup"),
             exact=(True, True)))
 
-        self.assertFalse(c[1].match(c[0]))
-        self.assertFalse(c[0].match(c[1]))
-        self.assertEqual(c[0].billsec, "7")
+        self.assertFalse(cdr[1].match(cdr[0]))
+        self.assertFalse(cdr[0].match(cdr[1]))
+        self.assertEqual(cdr[0].billsec, "7")
 
-        self.assertTrue(c.match(c))
-        c2 = AsteriskCSVCDR("self_test/Master2.csv")
-        self.assertFalse(c.match(c2))
+        self.assertTrue(cdr.match(cdr))
+        cdr2 = AsteriskCSVCDR("self_test/Master2.csv")
+        self.assertFalse(cdr.match(cdr2))
 
 
 if __name__ == '__main__':

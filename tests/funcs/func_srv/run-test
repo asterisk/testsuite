@@ -13,7 +13,7 @@ sys.path.append("lib/python")
 from twisted.internet import reactor
 
 from asterisk.asterisk import Asterisk
-from asterisk.TestCase import TestCase
+from asterisk.test_case import TestCase
 
 class srv_record():
     def __init__(self, record_num, host, port, priority, weight):

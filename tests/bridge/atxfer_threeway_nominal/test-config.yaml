@@ -10,14 +10,14 @@ testinfo:
 test-modules:
     test-object:
         config-section: bridge-config
-        typename: 'BridgeTestCase.BridgeTestCase'
+        typename: 'bridge_test_case.BridgeTestCase'
     modules:
         -
             config-section: 'ami-config'
             typename: 'ami.AMIEventModule'
         -
             config-section: 'hangup-config'
-            typename: 'PluggableModules.AMIChannelHangupAll'
+            typename: 'pluggable_modules.AMIChannelHangupAll'
 
 bridge-config:
     asterisk-instances: 4

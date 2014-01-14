@@ -39,7 +39,7 @@ test-modules:
             typename: 'ami.AMIEventModule'
         -
             config-section: originator-config
-            typename: 'PluggableModules.Originator'
+            typename: 'pluggable_modules.Originator'
 
 cdr-config-11:
     -
