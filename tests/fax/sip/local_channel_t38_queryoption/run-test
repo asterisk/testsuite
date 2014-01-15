@@ -52,7 +52,7 @@ class FaxLocalQueryOptionTest(TestCase):
             exten="1234",
             context="local-sendfax",
             priority=1
-        ).addErrback(self.handleOriginateFailure)
+        ).addErrback(self.handle_originate_failure)
 
     def run(self):
         '''Setup debugging on the asterisk instances and create AMI

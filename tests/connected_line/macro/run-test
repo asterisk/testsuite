@@ -11,7 +11,7 @@ import sys
 import logging
 
 sys.path.append("lib/python")
-from asterisk.SimpleTestCase import SimpleTestCase
+from asterisk.test_case import SimpleTestCase
 from twisted.internet import reactor
 
 LOGGER = logging.getLogger(__name__)

@@ -48,7 +48,7 @@ class SIPCallTest(TestCase):
         self.ami[ami.id].registerEvent("VarSet", self.ami_test_varset)
 
         print "Initiating test call"
-        self.ast[0].cli_originate("SIP/2000/2000 extension 1000@siptest1", blocking=False)
+        self.ast[0].cli_originate("SIP/2000/2000 extension 1000@siptest1")
 
     # This is called whenever an AMI VarSet event occurs on Ast1.
     def ami_test_varset(self, ami, event):

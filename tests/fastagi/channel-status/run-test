@@ -70,7 +70,7 @@ class FastAGIChannelStatusTest(TestCase):
 
     def launch_test(self):
         print "Originating call to begin test."
-        self.ast[0].cli_originate("Local/no_answer@agitest extension echo@agitest", blocking=False)
+        self.ast[0].cli_originate("Local/no_answer@agitest extension echo@agitest")
 
     # Read result before timeout 
     def result_changed(self):
