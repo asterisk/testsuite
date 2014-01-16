@@ -44,7 +44,7 @@ ami-config:
                     Auths: 'user.*'
                     OutboundAuths: ''
                     Contacts: user1/sip:user1@127.0.0.1:5062|user2/sip:user2@127.0.0.1:5063
-                    DeviceState: 'Invalid'
+                    DeviceState: 'Invalid|Not in use|Unavailable'
                     ActiveChannels: ''
             count: 2
         -
