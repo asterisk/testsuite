@@ -11,3 +11,4 @@ tests:
     - test: 'request-bodies'
     - dir:  'danger'
     - test: 'content-type'
+    - test: 'chunked-transfer'
