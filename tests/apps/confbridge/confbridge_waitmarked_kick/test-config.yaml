@@ -1,0 +1,252 @@
+testinfo:
+    summary: 'Test ConfBridge behavior when Marked/WaitMarked users are kicked'
+    description: |
+        This tests the behavior of ConfBridge with a Marked user and WaitMarked
+        users when those users are kicked out of the conference. This test
+        ensures that having a large number of users with different roles that
+        are booted quickly does not perturb the ConfBridge state transitions.
+        In this test, three WaitMarked users enter into a ConfBridge, followed
+        by a Marked user. When the Marked user joins, they are immediately
+        kicked from the conference. When the Marked user leaves, the three
+        WaitMarked users are also kicked from the Conference.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'ConfBridge'
+  scenarios:
+    -
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'INACTIVE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from EMPTY to INACTIVE'
+            -
+              action-type: 'start-call'
+              delay: 3
+              channel-id: 'Marked'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'INACTIVE'
+              NewState: 'MULTI_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from INACTIVE to MULTI_MARKED'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'MULTI_MARKED'
+              NewState: 'INACTIVE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from MULTI_MARKED to INACTIVE'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'INACTIVE'
+              NewState: 'EMPTY'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from INACTIVE to EMPTY'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'Marked'
+          channel-name: 'Local/marked@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: False
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/marked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked Join Event received'
+                -
+                  action-type: 'send-ami-message'
+                  channel-id: 'Marked'
+                  fields:
+                    Action: 'ConfbridgeKick'
+                    Conference: '1'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/marked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked Leave Event received'
+                -
+                  action-type: 'send-ami-message'
+                  channel-id: 'WaitMarked-1'
+                  fields:
+                    Action: 'ConfbridgeKick'
+                    Conference: '1'
+                -
+                  action-type: 'send-ami-message'
+                  channel-id: 'WaitMarked-2'
+                  fields:
+                    Action: 'ConfbridgeKick'
+                    Conference: '1'
+                -
+                  action-type: 'send-ami-message'
+                  channel-id: 'WaitMarked-3'
+                  fields:
+                    Action: 'ConfbridgeKick'
+                    Conference: '1'
+        -
+          channel-id: 'WaitMarked-1'
+          channel-name: 'Local/waitmarked-1@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-1@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'WaitMarked-1 Join Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-1@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'WaitMarked-1 Leave Event received'
+        -
+          channel-id: 'WaitMarked-2'
+          channel-name: 'Local/waitmarked-2@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-2@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'WaitMarked-2 Join Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-2@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'WaitMarked-2 Leave Event received'
+        -
+          channel-id: 'WaitMarked-3'
+          channel-name: 'Local/waitmarked-3@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-3@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'WaitMarked-3 Join Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-3@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'WaitMarked-3 Leave Event received'
+
+
+properties:
+    minversion: '11.8.0'
+    tags:
+      - confbridge
+      - apps
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_confbridge'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_playback'
+

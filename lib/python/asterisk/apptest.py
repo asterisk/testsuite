@@ -563,8 +563,11 @@ class ApplicationEventInstance(AMIEventInstance):
 
         # create actions from the definitions
         for action_def in instance_config['actions']:
-            self.actions.append(
-                ActionFactory.create_action(action_def))
+            action = ActionFactory.create_action(action_def)
+            LOGGER.debug('Adding action %s, matching on %s' % (
+                action, self.match_conditions))
+            self.actions.append(action)
+
         self.__current_action = 0
         self.channel_obj = None
         self.test_object = test_object
@@ -782,11 +785,12 @@ class ActionSendMessage(object):
     """Functor that sends some AMI message"""
 
     def __init__(self, action_config):
-        self.add_app_channel = False if 'add-app-channel' not in action_config \
-            else action_config['add-app-channel']
-        self.add_control_channel = False if 'add-control-channel' not in action_config \
-            else action_config['add-control-channel']
-        if (self.add_app_channel and self.add_control_channel):
+        self.add_app_channel = action_config.get('add-app-channel') or False
+        self.add_control_channel = action_config.get('add-control-channel') or False
+        self.channel_id = action_config.get('channel-id') or None
+        if ((self.add_app_channel and self.add_control_channel) or
+            (self.add_app_channel and self.channel_id) or
+            (self.add_control_channel and self.channel_id)):
             raise Exception('Only one channel can be added to the message!')
         self.message_fields = action_config['fields']
 
@@ -795,7 +799,10 @@ class ActionSendMessage(object):
             self.message_fields['Channel'] = channel_object.app_channel
         elif self.add_control_channel:
             self.message_fields['Channel'] = channel_object.controller_channel
-        LOGGER.debug("Sending message: %s" % str(self.message_fields))
+        elif self.channel_id:
+            test_object = AppTest.get_instance()
+            self.message_fields['Channel'] = test_object.get_channel_object(self.channel_id).app_channel
+        LOGGER.debug('Sending message: %s' % str(self.message_fields))
         channel_object.ami.sendMessage(self.message_fields)
 
 
