@@ -1,0 +1,50 @@
+testinfo:
+    summary: Tests basic mailbox modification and retrieval in ARI.
+    description: |
+        Create a couple mailboxes through ARI and confirm they can
+        be retrieved individually as well as within a list with the
+        expected values. Modify one and delete the other and confirm
+        that when the list is generated again that the deleted
+        mailbox is not in the list and that the modified mailbox has
+        the new expected values in it.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            callback:
+                module: mailbox_baseline
+                method: on_start
+        -   conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+            count: 1
+
+properties:
+    minversion: '12.1.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_mailboxes
+        - asterisk : res_stasis_mailbox
+        - asterisk : res_mwi_external
+        - asterisk : app_echo
+    tags:
+        - ARI
