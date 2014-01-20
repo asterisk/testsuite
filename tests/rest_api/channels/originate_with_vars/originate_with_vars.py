@@ -17,7 +17,7 @@ def on_start(ari, event, obj):
         'app':'testsuite',
         'appArgs': 'with_vars'}
 
-    data = {'CALLERID(name)': 'foo'}
+    data = {'variables': {'CALLERID(name)': 'foo'}}
     headers = {'Content-type': 'application/json'}
 
     resp = requests.post(url, params=params, data=json.dumps(data),
