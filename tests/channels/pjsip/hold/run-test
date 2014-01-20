@@ -59,6 +59,9 @@ class SIPHold(TestCase):
         self.hold_events = 0
         self.unhold_events = 0
         self.user_events = 0
+        self.status_inuse_events = 0
+        self.status_onhold_events = 0
+        self.status_notinuse_events = 0
         self._test_counter = 0
         self._a_finished = False
         self._b_finished = False
@@ -73,6 +76,8 @@ class SIPHold(TestCase):
 
         ami.registerEvent('MusicOnHoldStart', self.moh_start_event_handler)
         ami.registerEvent('MusicOnHoldStop', self.moh_stop_event_handler)
+
+        ami.registerEvent('ExtensionStatus', self.extension_status_handler)
 
         ami.registerEvent('Hold', self.hold_event_handler)
         ami.registerEvent('Unhold', self.unhold_event_handler)
@@ -165,6 +170,15 @@ class SIPHold(TestCase):
         LOGGER.debug("Received MOH stop event")
         self.moh_stop_events += 1
 
+    def extension_status_handler(self, ami, event):
+        status = event.get('status')
+        if status == '1':
+            self.status_inuse_events += 1
+        elif status == '16':
+            self.status_onhold_events += 1
+        elif status == '0':
+            self.status_notinuse_events += 1
+
     def hold_event_handler(self, ami, event):
         ''' Reacts to hold events and tallies them.
 
@@ -215,6 +229,21 @@ def main():
     if (test.user_events != len(test.sipp_scn_phone_a)):
         LOGGER.error("Failed to receive %d user test events (received %d)" %
                      (len(test.sipp_scn_phone_a), test.user_events))
+        test.passed = False
+    if (test.status_inuse_events != len(test.sipp_scn_phone_a) * 2):
+        LOGGER.error("ExtensionStatus - InUse: %d / %d" %
+                     (len(test.sipp_scn_phone_a) * 2,
+                      test.status_inuse_events))
+        test.passed = False
+    if (test.status_onhold_events != len(test.sipp_scn_phone_a)):
+        LOGGER.error("ExtensionStatus - Hold: %d / %d" %
+                     (len(test.sipp_scn_phone_a),
+                      test.status_onhold_events))
+        test.passed = False
+    if (test.status_notinuse_events != len(test.sipp_scn_phone_a)):
+        LOGGER.error("ExtensionStatus - NotInUse: %d / %d" %
+                     (len(test.sipp_scn_phone_a),
+                      test.status_notinuse_events))
         test.passed = False
 
     if test.passed:
