@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Channel Test">
+  <send retrans="500">
+    <![CDATA[
+      INVITE sip:test@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 INVITE
+      Contact: sip:test@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Performance Test
+      User-Agent: Channel Param Test
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=guest1 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=image 27598 RTP/AVP t38
+      a=T38MaxBitRate:14400
+      a=T38FaxRateManagement:transferredTCF
+      a=T38FaxFillBitRemoval:0
+      a=T38FaxTranscodingMMR:0
+      a=T38FaxTranscodingJBIG:0
+      a=T38FaxVersion:0
+      a=T38FaxUdpEC:t38UDPRedundancy
+      a=sendrecv
+      m=image 34380 RTP/SAVP t38
+      a=T38MaxBitRate:14400
+      a=T38FaxRateManagement:transferredTCF
+      a=T38FaxFillBitRemoval:0
+      a=T38FaxTranscodingMMR:0
+      a=T38FaxTranscodingJBIG:0
+      a=T38FaxVersion:0
+      a=T38FaxUdpEC:t38UDPRedundancy
+      a=sendrecv
+      a=key-mgmt:mikey AQAVgPwtOloCAAAAAAAAAAAAAABZ+s2kAAAAAAUBAAVtaWtleQsA1kMaMwAAAAAKFPhiiuMYI6Rr/kmTTbCu0sR43a/HAQAA
+      ADYCAQEDBAAAAKAEBAAAAHALBAAAAFAAAQEBBAAAAIAJAQAGAQAFAQAIAQEKAQEHAQEMBAAAAAAAAAAkABAAENR6NqV530allXc23CkfQucADmG1yYfFo
+      +6Tw3+ofqCTAA==
+      a=crypto:1 AES_CM_128_HMAC_SHA1_80 inline:qa7LFKEFmfQF4exgJl2q78jJnxTGgsJGVjZqqg3u
+      m=image 34740 udptl t38
+      a=T38MaxBitRate:14400
+      a=T38FaxRateManagement:transferredTCF
+      a=T38FaxFillBitRemoval:0
+      a=T38FaxTranscodingMMR:0
+      a=T38FaxTranscodingJBIG:0
+      a=T38FaxVersion:0
+      a=T38FaxUdpEC:t38UDPRedundancy
+      a=sendrecv
+
+    ]]>
+  </send>
+
+  <recv response="100" optional="true" />
+
+  <recv response="180" optional="true" />
+
+  <recv response="183" optional="true" />
+
+  <recv response="200" rtd="true">
+    <action>
+      <ereg regexp="m=image [0-9]{1,5} udptl t38"
+            search_in="body" check_it="true" assign_to="1"/>
+      <ereg regexp="m=image 0 RTP/AVP t38"
+            search_in="body" check_it="true" assign_to="2"/>
+      <ereg regexp="m=image 0 RTP/SAVP t38"
+            search_in="body" check_it="true" assign_to="3"/>
+    </action>
+  </recv>
+  <Reference variables="1,2,3" />
+
+  <send>
+    <![CDATA[
+
+      ACK sip:test@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 1 ACK
+      Contact: sip:kartoffelsalat@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Performance Test
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <send retrans="500">
+    <![CDATA[
+
+      BYE sip:test@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: test1 <sip:guest1@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 2 BYE
+      Contact: sip:kartoffelsalat@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Performance Test
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <!-- definition of the response time repartition table (unit is ms)   -->
+  <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
+
+  <!-- definition of the call length repartition table (unit is ms)     -->
+  <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+
+</scenario>
+

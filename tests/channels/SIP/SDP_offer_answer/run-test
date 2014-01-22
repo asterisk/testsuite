@@ -31,6 +31,7 @@ SIPP_SCENARIOS = [
     {'scenario' : 'decline_incompat_text.xml',},
     {'scenario' : 'single_image.xml',},
     {'scenario' : 'single_image_inverse.xml',},
+    {'scenario' : 'decline_unsupported_image.xml',},
     {'scenario' : 'avt_streams.xml',},
     {'scenario' : 'multistream.xml',},
     {'scenario' : 'fax_sim.xml',},
@@ -42,6 +43,9 @@ SIPP_SCENARIOS = [
 def main():
     if AsteriskVersion() > AsteriskVersion("11"):
         SIPP_SCENARIOS.append({'scenario' : 'decline_multistream.xml'})
+        SIPP_SCENARIOS.append({'scenario' : 'decline_unsupported_image_multi.xml'})
+    else:
+        SIPP_SCENARIOS.append({'scenario' : 'decline_unsupported_image_multi_1.8.xml'})
     test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
     reactor.run()
     if not test.passed:
