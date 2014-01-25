@@ -705,7 +705,7 @@ class SimpleTestCase(TestCase):
 
         def __swallow_originate_error(result):
             """Nom nom nom"""
-            return result
+            return
 
         # Each originate call gets tagged with the channel variable
         # 'testuniqueid', which contains a UUID as the value.  When a VarSet
