@@ -1,0 +1,76 @@
+testinfo:
+    summary:     'Tests basic two party calls with incoming leg of g722 and outgoing leg of ulaw'
+    description: |
+        'Run three instances of Asterisk, "alice", "uut", and "bob" to test
+         two party calls. Both alice and bob send audio to each other while
+         both also listen for audio. Alice then initiates the hang. This
+         ensures that both alice and bob receive audio.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: originator-config-ipv4-udp
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    asterisk-instances: 3
+    connect-ami: True
+
+originator-config-ipv4-udp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '1'
+    channel: 'PJSIP/bob-ipv4-udp@uut-ipv4-udp'
+    context: 'default'
+    exten: 'start'
+    priority: '1'
+    async: 'True'
+
+ami-config:
+    # Alice events
+    -
+        type: 'headermatch'
+        id: '1'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'TalkDetect'
+        requirements:
+            match:
+                result: 'pass'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '1'
+        conditions:
+            match:
+                Event: 'SoftHangupRequest'
+                Channel: 'PJSIP/uut-*'
+        requirements:
+            match:
+                Cause: '16'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '1'
+        conditions:
+            match:
+                Event: 'Hangup'
+                Channel: 'PJSIP/uut-*'
+        requirements:
+            match:
+                Cause: '16'
+        count: '1'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

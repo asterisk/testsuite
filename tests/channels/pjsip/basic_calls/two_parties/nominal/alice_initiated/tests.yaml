@@ -1,3 +1,4 @@
 tests:
     - test: 'alice_hangs_up'
     - test: 'bob_hangs_up'
+    - test: 'requested_capabilities'
