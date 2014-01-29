@@ -8,11 +8,11 @@ testinfo:
 
 properties:
     minversion: '10.0.0'
-    buildoption: 'TEST_FRAMEWORK'
     tags:
         - confbridge
         - apps
     dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'app_confbridge'
