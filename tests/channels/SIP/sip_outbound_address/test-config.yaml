@@ -1,8 +1,7 @@
 testinfo:
-    skip: 'See ASTERISK-20615'
     summary:     'Test explicit outbound host for SIP calls'
     description: |
-        "This tests the ability to specify an explicit host to send
+        This tests the ability to specify an explicit host to send
         an outbound SIP INVITE to. The test works by having two SIPp
         UASs waiting for INVITEs. Each is set to answer an inbound INVITE
         and then send an RFC2833 DTMF digit. Asterisk will read this digit,
@@ -11,7 +10,7 @@ testinfo:
         expected.
 
         It is possible that this test could be done in a more straightforward
-        manner. Suggestions are certainly welcome."
+        manner. Suggestions are certainly welcome.
     issues:
         - jira : 'ABE-2153'
 
