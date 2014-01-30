@@ -5,3 +5,4 @@ tests:
     - dir: 'multiple_contacts'
     - dir: 'single_contact'
     - dir: 'unregister'
+    - test: 'path'

@@ -1,0 +1,45 @@
+testinfo:
+    summary:     'PJSIP Path Support'
+    description: |
+        'This test verifies SIP path support for chan_pjsip. It tests two scenarios:
+        1. It checks that the Path headers are parsed out of a REGISTER request
+           and sent back in the 200 Route header. It also checks that a
+           subsequent INVITE request sent to the UA contains the path
+           information in the Route headers.
+        2. If enabled globally, it verifies that an outbound REGISTER request
+           indicates support for Path so that intervening proxies can do their
+           magic.
+
+properties:
+    minversion: '12.1.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_path'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator-ua1_invite_recv
+            typename: 'PluggableModules.Originator'
+
+originator-ua1_invite_recv:
+    trigger: 'ami_connect'
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'ua1_register.xml', '-p': '5062',},}
+                - { 'key-args': {'scenario': 'registrar.xml', '-p': '5063',},}
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'ua1_invite_recv.xml', '-p': '5062',},}
