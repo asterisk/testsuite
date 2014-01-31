@@ -13,4 +13,5 @@ tests:
     - test: 'batch_cdrs'
     - dir: 'cdr_manipulation'
     - dir: 'cdr_properties'
+    - test: 'sqlite3'
 
