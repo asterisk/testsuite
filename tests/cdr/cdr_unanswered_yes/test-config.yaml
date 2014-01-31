@@ -55,7 +55,7 @@ cdr-config-12:
                 destination: '1'
                 dcontext: 'default'
                 callerid: '"" <>'
-                channel: 'Local/1@default-.*'
+                channel: 'Local/1@default-.{8};2'
                 dchannel: ''
                 lastapp: 'Hangup'
                 lastarg: ''
