@@ -1,0 +1,257 @@
+testinfo:
+    summary: 'Test mid-call Macro execution during a dial'
+    description: |
+        This test verifies mid-call Macro execution using the M option
+        on the calling channel during a dial. Execution occurs after the
+        called channel has answered but before bridging. The test verifies
+        that the result of the Macro affects the overall result of the Dial.
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+      -
+        config-section: 'ami-config'
+        typename: 'ami.AMIEventModule'
+      -
+        config-section: 'dial-events-12'
+        typename: 'ami.AMIEventModule'
+        minversion: '12.0.0'
+      -
+        minversion: '12.0.0'
+        config-section: cdr-config-12
+        typename: 'cdr.CDRModule'
+
+
+test-config:
+  spawn-after-hangup: True
+  expected_events: 0
+  ignore-originate-failures: True
+  test-iterations:
+    -
+      channel: 'Local/abort@default'
+      application: 'Echo'
+    -
+      channel: 'Local/busy@default'
+      application: 'Echo'
+    -
+      channel: 'Local/congestion@default'
+      application: 'Echo'
+    -
+      channel: 'Local/continue@default'
+      application: 'Echo'
+    -
+      channel: 'Local/goto@default'
+      application: 'Echo'
+    -
+      channel: 'Local/goto_full@default'
+      application: 'Echo'
+
+ami-config:
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+          Event: 'UserEvent'
+          UserEvent: 'MidCall'
+    count: '6'
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+          Event: 'UserEvent'
+          UserEvent: 'Jump'
+    requirements:
+      match:
+          result: 'pass'
+    count: '2'
+
+dial-events-12:
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+        Event: 'DialEnd'
+        Channel: 'Local/abort-.{8};2'
+    requirements:
+        DestChannel: 'Local/target-.{8};1'
+        DialStatus: 'ABORT'
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+        Event: 'DialEnd'
+        Channel: 'Local/busy-.{8};2'
+    requirements:
+        DestChannel: 'Local/target-.{8};1'
+        DialStatus: 'BUSY'
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+        Event: 'DialEnd'
+        Channel: 'Local/congestion-.{8};2'
+    requirements:
+        DestChannel: 'Local/target-.{8};1'
+        DialStatus: 'CONGESTION'
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+        Event: 'DialEnd'
+        Channel: 'Local/continue-.{8};2'
+    requirements:
+        DestChannel: 'Local/target-.{8};1'
+        DialStatus: 'CONTINUE'
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+        Event: 'DialEnd'
+        Channel: 'Local/goto-.{8};2'
+    requirements:
+        DestChannel: 'Local/target-.{8};1'
+        DialStatus: 'GOTO:jump'
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+        Event: 'DialEnd'
+        Channel: 'Local/goto_full-.{8};2'
+    requirements:
+        DestChannel: 'Local/target-.{8};1'
+        DialStatus: 'GOTO:goto_full_context,goto_full_jump,1'
+
+cdr-config-12:
+    -
+        file: 'Master'
+        lines:
+            -
+                accountcode: ''
+                destination: 'target'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/target@default-.{8};2'
+                dchannel: ''
+                lastapp: 'Answer'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'abort'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/abort@default-.{8};2'
+                dchannel: 'Local/target@default-.{8};1'
+                lastapp: 'Dial'
+                disposition: 'FAILED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'target'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/target@default-.{8};2'
+                dchannel: ''
+                lastapp: 'Answer'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'busy'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/busy@default-.{8};2'
+                dchannel: 'Local/target@default-.{8};1'
+                lastapp: 'Dial'
+                disposition: 'BUSY'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'target'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/target@default-.{8};2'
+                dchannel: ''
+                lastapp: 'Answer'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'congestion'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/congestion@default-.{8};2'
+                dchannel: 'Local/target@default-.{8};1'
+                lastapp: 'Dial'
+                disposition: 'FAILED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'target'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/target@default-.{8};2'
+                dchannel: ''
+                lastapp: 'Answer'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'continue'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/continue@default-.{8};2'
+                dchannel: 'Local/target@default-.{8};1'
+                lastapp: 'Dial'
+                disposition: 'FAILED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'target'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/target@default-.{8};2'
+                dchannel: ''
+                lastapp: 'Answer'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'goto'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/goto@default-.{8};2'
+                dchannel: 'Local/target@default-.{8};1'
+                lastapp: 'Dial'
+                disposition: 'FAILED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'target'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/target@default-.{8};2'
+                dchannel: ''
+                lastapp: 'Answer'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'goto_full_jump'
+                dcontext: 'goto_full_context'
+                callerid: '"" <>'
+                channel: 'Local/goto_full@default-.{8};2'
+                dchannel: 'Local/target@default-.{8};1'
+                lastapp: 'Dial'
+                disposition: 'FAILED'
+                amaflags: 'DOCUMENTATION'
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - dial

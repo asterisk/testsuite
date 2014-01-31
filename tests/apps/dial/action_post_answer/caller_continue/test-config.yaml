@@ -1,0 +1,78 @@
+testinfo:
+    summary: 'Test the g option for the Dial application (caller continue)'
+    description: |
+        This test verifies that providing the 'g' option to the Dial application
+        will result in the caller continuing on in the dialplan if the called
+        party hangs up.
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+      -
+        config-section: 'ami-config'
+        typename: 'ami.AMIEventModule'
+      -
+        minversion: '12.0.0'
+        config-section: cdr-config-12
+        typename: 'cdr.CDRModule'
+
+
+test-config:
+  spawn-after-hangup: True
+  expected_events: 0
+  ignore-originate-failures: True
+  test-iterations:
+    -
+      channel: 'Local/continue@default'
+      context: 'default'
+      exten: 'target'
+      priority: '1'
+
+ami-config:
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+          Event: 'UserEvent'
+          UserEvent: 'Continue'
+          Channel: 'Local/continue@default-.{8};2'
+    requirements:
+      match:
+          result: 'passed'
+    count: '1'
+
+cdr-config-12:
+    -
+        file: 'Master'
+        lines:
+            -
+                accountcode: ''
+                destination: 'continue'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/continue@default-.{8};2'
+                dchannel: 'Local/target@default-.{8};1'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'continue'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/continue@default-.{8};2'
+                dchannel: ''
+                lastapp: 'Hangup'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - dial

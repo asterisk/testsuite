@@ -1,0 +1,106 @@
+testinfo:
+    summary: 'Test the F option for the Dial application (called party continue)'
+    description: |
+        This test covers two scenarios:
+        (1) It verifies that if the F option is specified to the Dial application,
+            that the called party continues on in the dialplan at priority + 1 after
+            the caller hangs up.
+        (2) It verifies that if the F option is specified with a parseable goto
+            provided to it, that the called party is transferred to that extension
+            after the caller hangs up.
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+      -
+        config-section: 'ami-config'
+        typename: 'ami.AMIEventModule'
+      -
+        minversion: '12.0.0'
+        config-section: cdr-config-12
+        typename: 'cdr.CDRModule'
+
+test-config:
+  spawn-after-hangup: True
+  expected_events: 0
+  ignore-originate-failures: True
+  test-iterations:
+    -
+      channel: 'Local/priority@default'
+      context: 'default'
+      exten: 'target'
+      priority: '1'
+    -
+      channel: 'Local/transfer@default'
+      context: 'default'
+      exten: 'target'
+      priority: '1'
+
+ami-config:
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+          Event: 'UserEvent'
+          UserEvent: 'Continue'
+          Channel: 'Local/target@default-.{8};1'
+    requirements:
+      match:
+          result: 'passed'
+    count: '2'
+
+cdr-config-12:
+    -
+        file: 'Master'
+        lines:
+            -
+                accountcode: ''
+                destination: 'priority'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/priority@default-.{8};2'
+                dchannel: 'Local/target@default-.{8};1'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'priority'
+                dcontext: 'default'
+                callerid: '"" <priority>'
+                channel: 'Local/target@default-.{8};1'
+                dchannel: ''
+                lastapp: 'Hangup'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'transfer'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/transfer@default-.{8};2'
+                dchannel: 'Local/target@default-.{8};1'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'jump'
+                dcontext: 'other'
+                callerid: '"" <transfer>'
+                channel: 'Local/target@default-.{8};1'
+                dchannel: ''
+                lastapp: 'Hangup'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - dial

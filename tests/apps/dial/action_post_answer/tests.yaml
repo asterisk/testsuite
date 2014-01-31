@@ -1,0 +1,6 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'called_party_continue'
+    - test: 'caller_continue'
+    - test: 'party_transfer'
+

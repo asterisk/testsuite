@@ -1,0 +1,102 @@
+testinfo:
+    summary: 'Test the G option for the Dial application (party disperse)'
+    description: |
+        This test verifies what is probably the weirdest option in Dial:
+        the dreaded 'G' option. This option causes the caller/callee to not
+        be bridged, but instead transfers both parties to different locations
+        in the dialplan. In the case of the caller, it is transferred to the
+        parseable goto location provided with the G option; in the case of the
+        called party, it is transferred to the priority + 1 of the same location.
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+      -
+        config-section: 'ami-config'
+        typename: 'ami.AMIEventModule'
+      -
+        minversion: '12.0.0'
+        config-section: cdr-config-12
+        typename: 'cdr.CDRModule'
+
+test-config:
+  spawn-after-hangup: True
+  expected_events: 0
+  ignore-originate-failures: True
+  test-iterations:
+    -
+      channel: 'Local/transfer@default'
+      context: 'default'
+      exten: 'target'
+      priority: '1'
+
+ami-config:
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+          Event: 'UserEvent'
+          UserEvent: 'Jump'
+          Exten: 'jump_caller'
+    requirements:
+      match:
+          result: 'passed'
+    count: '1'
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+          Event: 'UserEvent'
+          UserEvent: 'Jump'
+          Exten: 'jump_callee'
+    requirements:
+      match:
+          result: 'passed'
+    count: '1'
+
+
+cdr-config-12:
+    -
+        file: 'Master'
+        lines:
+            -
+                accountcode: ''
+                destination: 'jump_callee'
+                dcontext: 'other'
+                callerid: '"" <transfer>'
+                channel: 'Local/target@default-.{8};1'
+                dchannel: ''
+                lastapp: 'Hangup'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'jump'
+                dcontext: 'other'
+                callerid: '"" <>'
+                channel: 'Local/transfer@default-.{8};2'
+                dchannel: 'Local/target@default-.{8};1'
+                lastapp: 'Dial'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+                accountcode: ''
+                destination: 'jump_caller'
+                dcontext: 'other'
+                callerid: '"" <>'
+                channel: 'Local/transfer@default-.{8};2'
+                dchannel: ''
+                lastapp: 'Hangup'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - dial
