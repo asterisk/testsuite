@@ -28,7 +28,7 @@ test-modules:
     modules:
         -
             config-section: originator-ua1_invite_recv
-            typename: 'PluggableModules.Originator'
+            typename: 'pluggable_modules.Originator'
 
 originator-ua1_invite_recv:
     trigger: 'ami_connect'
