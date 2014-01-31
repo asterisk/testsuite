@@ -72,6 +72,7 @@ class SIPpTestCase(TestCase):
         self.create_ami_factory()
 
         self.ast[0].cli_exec('sip set debug on')
+        self.ast[0].cli_exec('pjsip set logger on')
 
     def stop_asterisk(self):
         """Kill any remaining SIPp scenarios"""
