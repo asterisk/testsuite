@@ -16,8 +16,12 @@ import urllib
 
 from test_case import TestCase
 from twisted.internet import reactor
-from autobahn.websocket import WebSocketClientFactory, \
-    WebSocketClientProtocol, connectWS
+try:
+    from autobahn.websocket import WebSocketClientFactory, \
+        WebSocketClientProtocol, connectWS
+except:
+    from autobahn.twisted.websocket import WebSocketClientFactory, \
+        WebSocketClientProtocol, connectWS
 
 LOGGER = logging.getLogger(__name__)
 
