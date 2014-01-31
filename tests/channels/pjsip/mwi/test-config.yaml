@@ -1,0 +1,46 @@
+testinfo:
+    summary:     'Ensures MWI bodies consist of accurate information'
+    description: |
+        "Unsolicited MWI notifications are sent to an endpoint as mailbox state updates. PJSUA
+        accounts notify us when an MWI notification arrives. We check the body of these MWI
+        notifications to ensure that they contain the data we expect them to."
+
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - python: 'pjsua'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_mwi'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-case-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: 'pjsua-config'
+            typename: 'pluggable_modules.PJsua'
+
+test-case-config:
+    connect-ami: 'True'
+
+pjsua-config:
+    callback_module: 'mwi_check'
+    callback_method: 'mwi_callback'
+    transports:
+        -
+            name: 'local-ipv4'
+            bind: '127.0.0.1'
+            bindport: '5061'
+    accounts:
+        -
+            name: 'alice'
+            username: 'alice'
+            password: 'alice'
+            domain: '127.0.0.1'

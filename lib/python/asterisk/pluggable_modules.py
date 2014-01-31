@@ -10,10 +10,12 @@ the GNU General Public License Version 2.
 
 import sys
 import logging
+import socket
 
 sys.path.append("lib/python")
 from ami import AMIEventInstance
 from twisted.internet import reactor
+import pjsua as pj
 
 LOGGER = logging.getLogger(__name__)
 
@@ -261,3 +263,231 @@ class HangupMonitor(object):
             LOGGER.info("All channels have hungup; stopping test")
             self.test_object.stop_reactor()
         return (ami, event)
+
+
+class RegDetector(pj.AccountCallback):
+    """
+    Class that detects PJSUA account registration
+
+    This is a subclass of pj.AccountCallback and is set as the callback class
+    for PJSUA accounts by the pluggable module.
+
+    The only method that is overridden is the on_reg_state method, which is
+    called when the registration state of an account changes. When all
+    configured accounts have registered, then the configured callback method
+    for the test is called into.
+
+    This means that as written, all PJSUA tests require registration to be
+    performed.
+    """
+    def __init__(self, test_plugin):
+        self.test_plugin = test_plugin
+        pj.AccountCallback.__init__(self)
+
+    def on_reg_state(self):
+        """
+        Method that is called into when an account's registration state
+        changes.
+
+        If the registration status is in the 2XX range, then it means the
+        account has successfully registered with Asterisk. Once all configured
+        accounts have registered, this method will call the configured callback
+        method.
+
+        Since on_reg_state is called from PJSUA's thread, the ensuing callback
+        to the configured callback is pushed into the reactor thread.
+        """
+        status = self.account.info().reg_status
+        uri = self.account.info().uri
+
+        if status >= 200 and status < 300:
+            LOGGER.info("Detected successful registration from %s" % uri)
+            self.test_plugin.num_regs += 1
+
+        if self.test_plugin.num_regs == self.test_plugin.num_accts:
+            callback_module = __import__(self.test_plugin.callback_module)
+            callback_method = getattr(callback_module,
+                                      self.test_plugin.callback_method)
+            reactor.callFromThread(callback_method,
+                                   self.test_plugin.test_object,
+                                   self.test_plugin.pj_accounts)
+
+
+class PJsuaAccount(object):
+    """
+    Wrapper for pj.Account object
+
+    This object contains a reference to a pj.Account and a dictionary of the
+    account's buddies, keyed by buddy name
+    """
+    def __init__(self, account):
+        self.account = account
+        self.buddies = {}
+
+    def add_buddies(self, buddy_cfg):
+        """
+        Add configured buddies to the account.
+
+        All buddies are required to have a name and a URI set.
+        """
+        for buddy in buddy_cfg:
+            name = buddy.get('name')
+            if not name:
+                LOGGER.warning("Unable to add buddy with no name")
+                continue
+
+            uri = buddy.get('uri')
+            if not uri:
+                LOGGER.warning("Unable to add buddy %s. No URI", name)
+                continue
+
+            self.buddies[name] = self.account.add_buddy(uri)
+
+
+class PJsua(object):
+    """A class that takes care of the initialization and account creation for
+    PJSUA endpoints during a test.
+
+    This class will initiate PJLIB, create any configured accounts, and wait
+    for the accounts to register. Once registered, this will call into user
+    code so that manipulation of the endpoints may be performed.
+    """
+
+    def __init__(self, instance_config, test_object):
+        """Constructor for pluggable modules."""
+        super(PJsua, self).__init__()
+        self.test_object = test_object
+        self.test_object.register_ami_observer(self.__ami_connect)
+        self.config = instance_config
+        self.pj_transports = {}
+        self.pj_accounts = {}
+        self.lib = None
+        self.num_regs = 0
+        self.num_accts = 0
+        self.ami = None
+        self.acct_cb = RegDetector(self)
+        self.callback_module = instance_config['callback_module']
+        self.callback_method = instance_config['callback_method']
+
+    def __ami_connect(self, ami):
+        """
+        Handler for when AMI has started.
+
+        We use AMI connection as the signal to start creating PJSUA accounts
+        and starting PJLIB.
+        """
+        self.ami = ami
+        self.lib = pj.Lib()
+        try:
+            self.lib.init()
+            self.__create_transports()
+            self.lib.set_null_snd_dev()
+            self.__create_accounts()
+            self.lib.start()
+        except pj.Error, exception:
+            LOGGER.error("Exception: " + str(exception))
+            self.lib.destroy()
+            self.lib = None
+            self.test_object.stop_reactor()
+
+    def __create_transport(self, cfg):
+        """Create a PJSUA transport from a transport configuration."""
+        def __to_pjprotocol(prot_str, is_v6):
+            """
+            Translate a string protocol to an enumerated type for PJSUA.
+
+            PJSUA's enumerations require both the transport protocol to be used
+            and whether IPv6 is being used.
+            """
+            if prot_str == 'udp':
+                if is_v6:
+                    return pj.TransportType.UDP_IPV6
+                else:
+                    return pj.TransportType.UDP
+            elif prot_str == 'tcp':
+                if is_v6:
+                    return pj.TransportType.TCP_IPV6
+                else:
+                    return pj.TransportType.TCP
+            elif prot_str == 'tls':
+                if is_v6:
+                    LOGGER.error("PJSUA python bindings do not support IPv6"
+                                 "with TLS")
+                    self.test_object.stop_reactor()
+                else:
+                    return pj.TransportType.TLS
+            else:
+                return pj.TransportType.UNSPECIFIED
+
+        protocol = (cfg.get('protocol', 'udp')).lower()
+        bind = cfg.get('bind', '127.0.0.1')
+        bindport = cfg.get('bindport', '5060')
+        public_addr = cfg.get('public_addr', '')
+        is_v6 = False
+
+        try:
+            socket.inet_pton(socket.AF_INET6, bind)
+            is_v6 = True
+        except socket.error:
+            # Catching an exception just means the address is not IPv6
+            pass
+
+        pj_protocol = __to_pjprotocol(protocol, is_v6)
+        LOGGER.info("Creating transport config %s:%s" % (bind, bindport))
+        transport_cfg = pj.TransportConfig(int(bindport), bind, public_addr)
+        return self.lib.create_transport(pj_protocol, transport_cfg)
+
+    def __create_transports(self):
+        """
+        Create all configured transports
+
+        If no transports are configured, then a single transport, called
+        "default" will be created, using address 127.0.0.1, UDP port 5060.
+        """
+        if not self.config.get('transports'):
+            cfg = {
+                'name': 'default',
+            }
+            self.__create_transport(cfg)
+            return
+
+        for cfg in self.config['transports']:
+            if not cfg.get('name'):
+                LOGGER.error("No transport name specified")
+                self.test_object.stop_reactor()
+            self.pj_transports[cfg['name']] = self.__create_transport(cfg)
+
+    def __create_account(self, acct_cfg):
+        """Create a PJSuaAccount from configuration"""
+        name = acct_cfg['name']
+        username = acct_cfg.get('username', name)
+        domain = acct_cfg.get('domain', '127.0.0.1')
+        password = acct_cfg.get('password', '')
+
+        pj_acct_cfg = pj.AccountConfig(domain, username, password, name)
+
+        LOGGER.info("Creating PJSUA account %s@%s" % (username, domain))
+        account = PJsuaAccount(self.lib.create_account(pj_acct_cfg, False,
+                                                       self.acct_cb))
+        account.add_buddies(acct_cfg.get('buddies', []))
+        return account
+
+    def __create_accounts(self):
+        """
+        Create all configured PJSUA accounts.
+
+        All accounts must have a name specified. All other parameters will have
+        suitable defaults provided if not present. See the sample yaml file for
+        default values.
+        """
+        if not self.config.get('accounts'):
+            LOGGER.error("No accounts configured")
+            self.test_object.stop_reactor()
+
+        self.num_accts = len(self.config['accounts'])
+        for acct in self.config['accounts']:
+            name = acct.get('name')
+            if not name:
+                LOGGER.error("Account configuration has no name")
+                self.test_object.stop_reactor()
+            self.pj_accounts[name] = self.__create_account(acct)
