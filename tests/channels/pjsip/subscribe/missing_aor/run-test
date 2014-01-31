@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2014, Digium, Inc.
+Kevin Harwell <kharwell@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+
+sys.path.append("lib/python/asterisk")
+
+from twisted.internet import reactor
+from sipp import SIPpScenario
+from test_case import TestCase
+
+class MissingAor(TestCase):
+    """Test case for subscribing to MWI without an aor/name in the sip uri"""
+
+    def __init__(self):
+        """Create a new instance of the MissingAor test case."""
+
+        super(MissingAor, self).__init__()
+        self.create_asterisk()
+
+    def run(self):
+        """Test execution method.  Connect to AMI."""
+
+        super(MissingAor, self).run()
+        self.create_ami_factory()
+
+    def ami_connect(self, ami):
+        """Add a single message to two separate mailboxes via external MWI.
+        Once added subscribe to both mailboxes at once by issuing a subscribe
+        without an aor/name in the sip uri.
+        """
+        def _mwi_update(num):
+            """Create an external MWI update action."""
+            return {
+                'Action': 'MWIUpdate',
+                'Mailbox': 'alice' + str(num),
+                'NewMessages': 1,
+                'OldMessages': 0}
+
+        def _on_scenario(obj):
+            """Callback handler for when the sipp scenario runs successfully."""
+            # the scenario checks for the proper count
+            # so if we get here the test passed
+            self.set_passed(True)
+            self.stop_reactor()
+            return obj
+
+        def _on_alice1(dummy):
+            """Callback handler for when external MWI updated mailbox alice1."""
+            # the two separate mailboxes should now have
+            # messages waiting so subscribe to them
+            sipp = SIPpScenario(self.test_name,
+                                {'scenario':'subscribe.xml', '-p':'5061'})
+            sipp.run(self).addCallback(_on_scenario)
+
+        def _on_alice0(dummy):
+            """Callback handler for when external MWI updated mailbox alice0."""
+            # add a message to alice1 via external mwi
+            ami.sendDeferred(_mwi_update(1)).addCallback(_on_alice1)
+
+        # add a message to alice0 via external mwi
+        ami.sendDeferred(_mwi_update(0)).addCallback(_on_alice0)
+
+def main():
+    """Main entry point for test."""
+    test = MissingAor()
+    reactor.run()
+    return not test.passed
+
+if __name__ == "__main__":
+    sys.exit(main())

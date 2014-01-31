@@ -1,0 +1,16 @@
+testinfo:
+    summary:     'Test subscribe without a name in the URI'
+    description: |
+        'Some devices (Cisco SPA 504G) may send a subscribe request with a SIP
+         URI that does not contain a name.  In this case res_pjsip_mwi will
+         subscribe to all aors on the endpoint.  This tests that.'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_mwi'
+    tags:
+        - pjsip
