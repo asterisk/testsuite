@@ -1,0 +1,55 @@
+testinfo:
+    summary: Test originating calls to a Stasis application using ARI and then blind transferring.
+    description: |
+        Originate two external SIP calls into Stasis and then have one blind transfer the other.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            callback:
+                module: blind_transfer
+                method: on_kickoff_start
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: ['test']
+            count: 2
+            callback:
+                module: blind_transfer
+                method: on_test_start
+        -   conditions:
+                match:
+                    type: BridgeBlindTransfer
+                    application: testsuite
+            count: 1
+            callback:
+                module: blind_transfer
+                method: on_blind_transfer
+
+properties:
+    minversion: '12.1.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
