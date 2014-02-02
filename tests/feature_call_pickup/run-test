@@ -72,7 +72,7 @@ class CallPickupTest(TestCase):
         if self.pickerJoined and self.pickeeJoined:
             if self.pickupComplete:
                 self.set_passed(True)
-                self.ami[0].hangup(channel2).addCallback(self.hangup)
+                self.ami[0].hangup(channel).addCallback(self.hangup)
             else:
                 self.bridgeComplete = True
 
