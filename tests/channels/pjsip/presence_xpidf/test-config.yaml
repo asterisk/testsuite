@@ -24,7 +24,7 @@ test-modules:
     modules:
         -
             config-section: 'pjsua-config'
-            typename: 'pluggable_modules.PJsua'
+            typename: 'pjsua.PJsua'
 
 test-case-config:
     connect-ami: 'True'
