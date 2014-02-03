@@ -148,16 +148,6 @@ cdr-config-12:
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
             -
-                # new in 12
-                source: '4321'
-                destination: 'h'
-                dcontext: 'park-dial'
-                callerid: '"Bob" <4321>'
-                channel: '.*/bob-.*'
-                lastapp: 'UserEvent'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-            -
                 source: '1234'
                 destination: 'test'
                 dcontext: 'default'
@@ -185,14 +175,13 @@ cdr-config-12:
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
                 dchannel: '.*/alice-.*'
-                lastapp: 'Park'
-                lastarg: 'parkinglot_test1:402'
+                lastapp: 'Dial'
                 disposition: 'NO ANSWER'
                 amaflags: 'DOCUMENTATION'
             -
                 # new in 12
                 source: '4321'
-                destination: 'h'
+                destination: 'SIP_alice'
                 dcontext: 'park-dial'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
@@ -227,14 +216,13 @@ cdr-config-12:
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
                 dchannel: '.*/alice-.*'
-                lastapp: 'Park'
-                lastarg: 'parkinglot_test1:403'
+                lastapp: 'Dial'
                 disposition: 'BUSY'
                 amaflags: 'DOCUMENTATION'
             -
                 # new in 12
                 source: '4321'
-                destination: 'h'
+                destination: 'SIP_alice'
                 dcontext: 'park-dial'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
