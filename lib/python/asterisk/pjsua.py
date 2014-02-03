@@ -12,6 +12,8 @@ import sys
 import logging
 import socket
 
+import pjsua as pj
+
 sys.path.append("lib/python")
 
 from twisted.internet import reactor
