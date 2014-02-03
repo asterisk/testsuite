@@ -48,3 +48,4 @@ properties:
         - asterisk : app_echo
     tags:
         - ARI
+        - mwi_external

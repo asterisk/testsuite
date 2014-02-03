@@ -14,8 +14,11 @@ properties:
         - python: 'pjsua'
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_mwi'
+        - asterisk: 'res_mwi_external'
+        - asterisk: 'res_mwi_external_ami'
     tags:
         - pjsip
+        - mwi_external
 
 test-modules:
     add-test-to-search-path: 'True'
