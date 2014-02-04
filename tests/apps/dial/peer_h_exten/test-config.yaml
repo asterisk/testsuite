@@ -11,7 +11,12 @@ test-modules:
         typename: 'test_case.SimpleTestCase'
     modules:
       -
-        config-section: 'ami-config'
+        config-section: 'ami-config-pre-12'
+        maxversion: '12.0.0'
+        typename: 'ami.AMIEventModule'
+      -
+        config-section: 'ami-config-12'
+        minversion: '12.0.0'
         typename: 'ami.AMIEventModule'
       -
         minversion: '12.0.0'
@@ -29,7 +34,19 @@ test-config:
       exten: 'target'
       priority: '1'
 
-ami-config:
+ami-config-pre-12:
+  -
+    type: 'headermatch'
+    conditions:
+      match:
+          Event: 'UserEvent'
+          UserEvent: 'HangupCheck'
+    requirements:
+      match:
+          result: 'passed'
+    count: '4'
+
+ami-config-12:
   -
     type: 'headermatch'
     conditions:
