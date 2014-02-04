@@ -112,9 +112,6 @@ class PJsua(object):
         """Constructor for pluggable modules."""
         super(PJsua, self).__init__()
 
-        if not PJSUA_AVAILABLE:
-            raise ImportError
-
         self.test_object = test_object
         self.test_object.register_ami_observer(self.__ami_connect)
         self.config = instance_config

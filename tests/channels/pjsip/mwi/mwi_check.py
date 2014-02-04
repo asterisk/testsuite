@@ -1,5 +1,12 @@
+#!/usr/bin/env python
+
+import sys
 import logging
 import pjsua as pj
+
+sys.path.append("lib/python")
+
+from twisted.internet import reactor
 
 LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +76,7 @@ class AliceCallback(pj.AccountCallback):
             'NewMessages': self.mwis[self.pos]['new'],
             'OldMessages': self.mwis[self.pos]['old']
         }
-        self.ami.sendMessage(message)
+        reactor.callFromThread(self.ami.sendMessage, message)
 
     def delete_mwi(self):
         LOGGER.info("Deleting Mailbox")
@@ -77,7 +84,7 @@ class AliceCallback(pj.AccountCallback):
             'Action': 'MWIDelete',
             'Mailbox': 'alice',
         }
-        self.ami.sendMessage(message)
+        reactor.callFromThread(self.ami.sendMessage, message)
 
 
 def mwi_callback(test_object, accounts):

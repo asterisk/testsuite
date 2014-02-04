@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 
+import sys
 import logging
 import pjsua as pj
+
+sys.path.append("lib/python")
+
+from twisted.internet import reactor
 
 LOGGER = logging.getLogger(__name__)
 
@@ -56,8 +61,9 @@ class BobCallback(pj.BuddyCallback):
         if self.pos < len(states) and states[self.pos][0]:
             LOGGER.info("Setting device state to %s" % states[self.pos][0])
             self.check_status = True
-            self.ami.setVar(channel="", variable="DEVICE_STATE(Custom:bob)",
-                            value=states[self.pos][0])
+            reactor.callFromThread(self.ami.setVar, channel="",
+                                   variable="DEVICE_STATE(Custom:bob)",
+                                   value=states[self.pos][0])
         else:
             self.buddy.unsubscribe()
 
