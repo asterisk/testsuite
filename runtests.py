@@ -302,9 +302,15 @@ class TestSuite:
 
             # Establish Preconditions
             print "Making sure Asterisk isn't running ..."
-            os.system("killall -9 asterisk > /dev/null 2>&1")
+            if os.system("if pidof asterisk >/dev/null; then killall -9 asterisk >/dev/null 2>&1; "
+                         "sleep 1; ! pidof asterisk >/dev/null; fi"):
+                    print "Could not kill asterisk."
+                    sys.exit(1)
             print "Making sure SIPp isn't running..."
-            os.system("killall -9 sipp > /dev/null 2>&1")
+            if os.system("if pidof sipp >/dev/null; then killall -9 sipp >/dev/null 2>&1; "
+                         "sleep 1; ! pidof sipp >/dev/null; fi"):
+                    print "Could not kill sipp."
+                    sys.exit(1)
             # XXX TODO Hard coded path, gross.
             os.system("rm -f /var/run/asterisk/asterisk.ctl")
             os.system("rm -f /var/run/asterisk/asterisk.pid")
