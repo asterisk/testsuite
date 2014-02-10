@@ -71,8 +71,6 @@ class StartConfBridgeState(ConfbridgeTestState):
                 self.test_case.expectedEvents['onlyperson'] = True
             elif playfile == 'confbridge-join':
                 self.__handle_confbridge_join(channel)
-            elif playfile == 'conf-placeintoconf':
-                self.test_case.expectedEvents['onlypersonplaced'] = True
             elif 'confbridge-name' in playfile:
                 self.__played_names += 1
                 if (self.__played_names == self.__recorded_names):
@@ -208,7 +206,6 @@ class ConfBridgeNominal(TestCase):
 
         """ Add the events we expect to receive in order for the test to pass """
         self.expectedEvents['onlyperson'] = False               # User is told when they are the only person in conference
-        self.expectedEvents['onlypersonplaced'] = False         # User, when only person, is told when they are put into conference
         self.expectedEvents['userpin'] = False                  # User is prompted for a pin (when configured)
         self.expectedEvents['adminpin'] = False                 # Admin user is prompted for a pin (when configured)
         self.expectedEvents['recordname'] = False               # User is prompted to record name (when configured)
