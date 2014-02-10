@@ -25,7 +25,8 @@ class moduleLoadUnloadTest(TestCase):
         self.create_asterisk()
 
     def check_file(self, module):
-        module[1] = (os.path.isfile(self.ast[0].base + "/usr/lib/asterisk/modules/" + module[0]))
+        module[1] = (os.path.isfile("%s%s/%s" % (self.ast[0].base,
+            self.ast[0].directories["astmoddir"], module[0])))
         return module[1]
 
     def pre_load_next(self):

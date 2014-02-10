@@ -199,10 +199,10 @@ class Dependency(object):
 
     def _find_asterisk_module(self, name):
         """Determine if an Asterisk module exists"""
-        if "astmoddir" not in Dependency.ast.directories:
+        if Dependency.ast.original_astmoddir == "":
             return False
 
-        module = "%s/%s.so" % (Dependency.ast.directories["astmoddir"], name)
+        module = "%s/%s.so" % (Dependency.ast.original_astmoddir, name)
         if os.path.exists(module):
             return True
 

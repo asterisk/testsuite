@@ -22,7 +22,9 @@ setup() {
 		cd ..
 		# The user may have already run ./configure and make
 		if [ ! -f config.status ]; then
-			./configure
+			./configure --enable-dev-mode
+			make menuselect.makeopts
+			menuselect/menuselect --enable DONT_OPTIMIZE --enable TEST_FRAMEWORK
 		fi
 		make
 		make install samples DESTDIR="$HERE/astroot"

@@ -216,6 +216,7 @@ class Asterisk(object):
         self.process_protocol = None
         self.process = None
         self.astetcdir = ""
+        self.original_astmoddir = ""
 
         if base is not None:
             self.base = "%s/%s" % (self.base, base)
@@ -259,6 +260,14 @@ class Asterisk(object):
             if cat.name == "directories":
                 for (var, val) in cat.options:
                     self.directories[var] = val
+
+        # self.original_astmoddir is for dependency checking only
+        if "astmoddir" in self.directories:
+            if self.localtest_root:
+                self.original_astmoddir = "%s%s" % (
+                    self.localtest_root, self.directories["astmoddir"])
+            else:
+                self.original_astmoddir = self.directories["astmoddir"]
 
     def start(self, deps=None):
         """Start this instance of Asterisk.
