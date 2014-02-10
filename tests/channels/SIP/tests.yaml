@@ -60,6 +60,7 @@ tests:
     - dir: 'session_timers'
     - test: 'path'
     - test: 'alwaysauthreject'
+    - test: 'route'
     - dir: 'register_forbidden_retry'
     - test: 'outbound_register_from'
     - test: 'outbound_reregister_from'

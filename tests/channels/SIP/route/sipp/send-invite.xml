@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="iso-8859-2" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<!-- This program is free software; you can redistribute it and/or      -->
+<!-- modify it under the terms of the GNU General Public License as     -->
+<!-- published by the Free Software Foundation; either version 2 of the -->
+<!-- License, or (at your option) any later version.                    -->
+<!--                                                                    -->
+<!-- This program is distributed in the hope that it will be useful,    -->
+<!-- but WITHOUT ANY WARRANTY; without even the implied warranty of     -->
+<!-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the      -->
+<!-- GNU General Public License for more details.                       -->
+<!--                                                                    -->
+<!-- You should have received a copy of the GNU General Public License  -->
+<!-- along with this program; if not, write to the                      -->
+<!-- Free Software Foundation, Inc.,                                    -->
+<!-- 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA             -->
+
+<scenario name="send-invite">
+	<nop hide="true">
+		<action>
+			<assignstr assign_to="1" value="[call_number]" />
+			<strcmp assign_to="rr_type" variable="1" value="1" />
+		</action>
+	</nop>
+
+	<nop hide="true" next="4" test="rr_type">
+		<action>
+			<assignstr assign_to="rr_out" value="<strict1@[local_ip]:[local_port]>,<strict2@[local_ip]:[local_port]>" />
+			<assignstr assign_to="rr_rcv" value="[$rr_out]" />
+			<assignstr assign_to="bye_uri" value="strict1@[local_ip]:[local_port]" />
+			<assignstr assign_to="rr_bye" value="<strict2@[local_ip]:[local_port]>,<sip:51@[local_ip]:[local_port]>" />
+		</action>
+	</nop>
+
+	<nop hide="true">
+		<action>
+			<assignstr assign_to="rr_out" value="<loose1@[local_ip]:[local_port];lr>,<loose2@[local_ip]:[local_port];lr>" />
+			<assignstr assign_to="rr_rcv" value="[$rr_out]" />
+			<assignstr assign_to="bye_uri" value="sip:51@[local_ip]:[local_port]" />
+			<assignstr assign_to="rr_bye" value="<loose1@[local_ip]:[local_port];lr>,<loose2@[local_ip]:[local_port];lr>" />
+		</action>
+	</nop>
+
+	<label id="4"/>
+
+	<send retrans="500">
+		<![CDATA[
+			INVITE sip:52@[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: sipp <sip:51@[local_ip]:[local_port]>;tag=[call_number]
+			To: <sip:52@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: [cseq] INVITE
+			Contact: sip:51@[local_ip]:[local_port]
+			Record-Route: [$rr_out]
+			Max-Forwards: 100
+			Content-Type: application/sdp
+			Content-Length: [len]
+
+			v=0
+			o=user1 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+			s=-
+			c=IN IP[media_ip_type] [media_ip]
+			t=0 0
+			m=audio [media_port] RTP/AVP 8
+			a=rtpmap:8 PCMA/8000
+
+		]]>
+	</send>
+
+	<recv response="100">
+		<action>
+			<ereg regexp="\s*(.*)\s*" search_in="hdr" header="Record-Route:" assign_to="1,rr_got"/>
+			<strcmp assign_to="1" variable="rr_got" variable2="rr_rcv" />
+			<test assign_to="r_wrong" variable="1" compare="not_equal" value="" />
+		</action>
+	</recv>
+
+	<nop condexec="r_wrong">
+		<action>
+			<error message="100 RR expected '[$rr_rcv]' but got '[$rr_got]'" />
+		</action>
+	</nop>
+
+	<recv response="180">
+		<action>
+			<ereg regexp="\s*(.*)\s*" search_in="hdr" header="Record-Route:" assign_to="1,rr_got"/>
+			<strcmp assign_to="1" variable="rr_got" variable2="rr_rcv" />
+			<test assign_to="r_wrong" variable="1" compare="not_equal" value="" />
+		</action>
+	</recv>
+
+	<nop condexec="r_wrong">
+		<action>
+			<error message="180 RR expected '[$rr_rcv]' but got '[$rr_got]'" />
+		</action>
+	</nop>
+
+	<recv response="183" optional="true">
+		<action>
+			<ereg regexp="\s*(.*)\s*" search_in="hdr" header="Record-Route:" assign_to="1,rr_got"/>
+			<strcmp assign_to="1" variable="rr_got" variable2="rr_rcv" />
+			<test assign_to="r_wrong" variable="1" compare="not_equal" value="" check_it="true" />
+		</action>
+	</recv>
+
+	<recv response="200" rrs="true">
+		<action>
+			<ereg regexp="\s*(.*)\s*" search_in="hdr" header="Record-Route:" assign_to="1,rr_got"/>
+			<strcmp assign_to="1" variable="rr_got" variable2="rr_rcv" />
+			<test assign_to="r_wrong" variable="1" compare="not_equal" value="" />
+		</action>
+	</recv>
+
+	<nop condexec="r_wrong">
+		<action>
+			<error message="200 RR expected '[$rr_rcv]' but got '[$rr_got]'" />
+		</action>
+	</nop>
+
+	<send>
+		<![CDATA[
+			ACK [next_url] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: <sip:51@[local_ip]:[local_port]>;tag=[call_number]
+			[last_To:]
+			[routes]
+			Call-ID: [call_id]
+			CSeq: [cseq] ACK
+			Contact: sip:51@[local_ip]:[local_port]
+			Max-Forwards: 100
+			Content-Length: 0
+
+		]]>
+	</send>
+
+	<recv request="BYE">
+		<action>
+			<ereg regexp="BYE\s*([^ ]*) SIP/2.0" search_in="msg" assign_to="1,bye_got"/>
+			<strcmp assign_to="1" variable="bye_got" variable2="bye_uri" />
+			<test assign_to="url_wrong" variable="1" compare="not_equal" value="" />
+
+			<ereg regexp="\s*(.*)\s*" search_in="hdr" header="Route:" assign_to="1,rr_got"/>
+			<strcmp assign_to="1" variable="rr_got" variable2="rr_bye" />
+			<test assign_to="r_wrong" variable="1" compare="not_equal" value="" />
+		</action>
+	</recv>
+
+	<nop condexec="url_wrong">
+		<action>
+			<error message="BYE URI expected '[$bye_uri]' but got '[$bye_got]'" />
+		</action>
+	</nop>
+	<nop condexec="r_wrong">
+		<action>
+			<error message="BYE Route expected '[$rr_bye]' but got '[$rr_got]'" />
+		</action>
+	</nop>
+
+	<send>
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+			Content-Length: 0
+
+		]]>
+	</send>
+
+</scenario>
+
