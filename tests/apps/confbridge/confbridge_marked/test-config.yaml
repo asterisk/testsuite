@@ -152,18 +152,6 @@ test-object-config:
               type: 'headermatch'
               conditions:
                 match:
-                  Event: 'TestEvent'
-                  Channel: 'Local/marked_one@confbridge-.*'
-                  State: 'PLAYBACK'
-                  Message: 'conf-placeintoconf'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked-1 Notified of Placed in Conference'
-            -
-              type: 'headermatch'
-              conditions:
-                match:
                   Event: 'MusicOnHold'
                   Channel: 'Local/marked_one@confbridge-.*'
                   State: 'Start'
@@ -215,21 +203,6 @@ test-object-config:
                   # they have the quiet flag
                   action-type: 'fail-test'
                   expected-result: 'Marked-2 heard join sound when they had the Quiet flag set'
-            -
-              type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  Channel: 'Local/marked_two@confbridge-.*'
-                  State: 'PLAYBACK'
-                  Message: 'conf-placeintoconf'
-              actions:
-                -
-                  # Note that Marked-2 should not be notified that they
-                  # were placed into the conference, as they have the
-                  # quiet flag
-                  action-type: 'fail-test'
-                  message: 'Marked-2 heard placedintoconf when they had the Quiet flag set'
     -
       # Scenario 2: Marked User Two (Quiet flag) enters.  Verify that they
       # receive no notifications that they are in the conference.  Marked User
@@ -360,20 +333,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Marked-1 Heard Join Sound'
-            -
-              type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  Channel: 'Local/marked_one@confbridge-.*'
-                  State: 'PLAYBACK'
-                  Message: 'conf-placeintoconf'
-              actions:
-                -
-                  # Marked-1 was second in conference; should not have this
-                  # sound file played
-                  action-type: 'fail-test'
-                  expected-result: 'Marked-1 Notified of Placed in Conference when they were not first participant'
         -
           channel-id: 'Marked-2'
           channel-name: 'Local/marked_two@confbridge'
@@ -417,21 +376,6 @@ test-object-config:
                   # they have the quiet flag
                   action-type: 'fail-test'
                   expected-result: 'Marked-2 heard join sound when they had the Quiet flag set'
-            -
-              type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  Channel: 'Local/marked_two@confbridge-.*'
-                  State: 'PLAYBACK'
-                  Message: 'conf-placeintoconf'
-              actions:
-                -
-                  # Note that Marked-2 should not be notified that they
-                  # were placed into the conference, as they have the
-                  # quiet flag
-                  action-type: 'fail-test'
-                  message: 'Marked-2 heard placedintoconf when they had the Quiet flag set'
             -
               type: 'headermatch'
               conditions:
