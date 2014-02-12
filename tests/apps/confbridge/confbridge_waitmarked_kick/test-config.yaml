@@ -92,6 +92,16 @@ test-object-config:
             -
               action-type: 'set-expected-result'
               expected-result: 'Conference Ended'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'Newexten'
+              Application: 'Hangup'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Channels exited conference'
             -
               action-type: 'end-scenario'
       channels:
