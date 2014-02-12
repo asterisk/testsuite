@@ -2,3 +2,4 @@ tests:
     - test: 'playback'
     - test: 'echo'
     - test: 'auth'
+    - test: 'nat'

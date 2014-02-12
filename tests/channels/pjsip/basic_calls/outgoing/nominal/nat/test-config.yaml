@@ -1,0 +1,33 @@
+testinfo:
+    summary:     'Verify contact rewriting functions properly for chan_pjsip'
+    description: |
+        'This test verifies contact rewriting for chan_pjsip on outbound calls.'
+properties:
+    minversion: '12.1.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_nat'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator-ua1_invite_recv
+            typename: 'pluggable_modules.Originator'
+
+originator-ua1_invite_recv:
+    trigger: 'ami_connect'
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'ua1_invite_recv.xml', '-p': '5062', '-send_timeout': '20000', '-recv_timeout': '20000', '-timeout': '25000'},}
