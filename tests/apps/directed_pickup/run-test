@@ -33,9 +33,18 @@ class PickupTest(TestCase):
         self.bridge = None
         self.firstChannelBridged = False
         self.secondChannelBridged = False
+        self.picked_up = False
 
     def hangup(self, ami):
         self.stop_reactor()
+
+    def check_test_done(self):
+
+        if self.picked_up and (not self.bridgingModel12 or (self.firstChannelBridged and self.secondChannelBridged)):
+            self.set_passed(True)
+            self.ami[0].hangup(self.firstChannel).addCallback(self.hangup)
+            LOGGER.info("Both first and second channel detected; passing test")
+
 
     def check_BridgeEnter(self, ami, event):
         channel = event.get('channel')
@@ -44,14 +53,13 @@ class PickupTest(TestCase):
 
         if channel == self.firstChannel:
             self.firstChannelBridged = True
-            other_channel = self.secondChannel
-        elif channel == self.secondChannel:
+            if self.secondChannel:
+                other_channel = self.secondChannel
+        else:
+            if not self.secondChannel:
+                self.secondChannel = channel
             self.secondChannelBridged = True
             other_channel = self.firstChannel
-        else:
-            LOGGER.error("Channel: '%s' entered bridge and is neither of the expected channels (%s, %s)" % (channel, self.firstChannel, self.secondChannel))
-            self.set_passed(False)
-            return
 
         if self.bridge is not None:
             if bridge != self.bridge:
@@ -60,10 +68,7 @@ class PickupTest(TestCase):
         else:
             self.bridge = bridge
 
-        if self.firstChannelBridged and self.secondChannelBridged:
-            self.set_passed(True)
-            self.ami[0].hangup(self.firstChannel).addCallback(self.hangup)
-            LOGGER.info("Both first and second channel detected; passing test")
+        self.check_test_done()
 
     def check_Bridge(self, ami, event):
         if self.bridgeCount != 0:
@@ -73,17 +78,22 @@ class PickupTest(TestCase):
         channel1 = event.get('channel1')
         channel2 = event.get('channel2')
 
-        if channel1 == self.firstChannel and channel2 == self.secondChannel:
-            self.passed = True
-            LOGGER.info("Both first and second channel detected; passing test")
-        self.ami[0].hangup(self.firstChannel).addCallback(self.hangup)
+        self.check_test_done()
 
     def check_Pickup(self, ami, event):
-        self.secondChannel = event.get('channel')
-        LOGGER.info("Detected second channel: %s" % self.secondChannel)
+        if not self.secondChannel:
+            self.secondChannel = event.get('channel')
+        elif self.secondChannel != event.get('channel'):
+            LOGGER.error("Channel %s is in Pickup event but is not second channel %s" % (
+                event.get('channel'), self.secondChannel))
+            self.set_passed(False)
+            return
 
+        LOGGER.info("Detected second channel in Pickup: %s" % self.secondChannel)
+        self.picked_up = True
         if not self.bridgingModel12:
             self.ami[0].registerEvent('Bridge', self.check_Bridge)
+        self.check_test_done()
 
     def check_UserEvent(self, ami, event):
         if event.get("userevent") != "TestStatus":
