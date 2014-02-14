@@ -8,12 +8,15 @@ the GNU General Public License Version 2.
 '''
 
 import sys
+import logging
 
 sys.path.append("lib/python/asterisk")
 
 from twisted.internet import reactor
 from sipp import SIPpScenario
 from test_case import TestCase
+
+LOGGER = logging.getLogger(__name__)
 
 class MissingAor(TestCase):
     """Test case for subscribing to MWI without an aor/name in the sip uri"""
@@ -35,6 +38,7 @@ class MissingAor(TestCase):
         Once added subscribe to both mailboxes at once by issuing a subscribe
         without an aor/name in the sip uri.
         """
+
         def _mwi_update(num):
             """Create an external MWI update action."""
             return {
@@ -43,7 +47,7 @@ class MissingAor(TestCase):
                 'NewMessages': 1,
                 'OldMessages': 0}
 
-        def _on_scenario(obj):
+        def _on_scenario_complete(obj):
             """Callback handler for when the sipp scenario runs successfully."""
             # the scenario checks for the proper count
             # so if we get here the test passed
@@ -51,21 +55,35 @@ class MissingAor(TestCase):
             self.stop_reactor()
             return obj
 
-        def _on_alice1(dummy):
-            """Callback handler for when external MWI updated mailbox alice1."""
+        def _create_subscription():
+            """Create a subscription for the MWI"""
             # the two separate mailboxes should now have
             # messages waiting so subscribe to them
             sipp = SIPpScenario(self.test_name,
                                 {'scenario':'subscribe.xml', '-p':'5061'})
-            sipp.run(self).addCallback(_on_scenario)
+            sipp.run(self).addCallback(_on_scenario_complete)
 
-        def _on_alice0(dummy):
-            """Callback handler for when external MWI updated mailbox alice0."""
+        def _send_second_update():
+            """Send the second MWI update"""
             # add a message to alice1 via external mwi
-            ami.sendDeferred(_mwi_update(1)).addCallback(_on_alice1)
+            ami.sendDeferred(_mwi_update(1))
+
+        def _handle_mwi(ami, event):
+            """Callback handler for the MessageWaiting event"""
+
+            LOGGER.info("Received MWI event for %s" % event.get('mailbox'))
+
+            if event.get('mailbox') == 'alice0':
+                _send_second_update()
+            elif event.get('mailbox') == 'alice1':
+                _create_subscription()
+            else:
+                LOGGER.error("Unknown mailbox %s!" % event.get('mailbox'))
+                self.set_passed(False)
 
         # add a message to alice0 via external mwi
-        ami.sendDeferred(_mwi_update(0)).addCallback(_on_alice0)
+        ami.registerEvent('MessageWaiting', _handle_mwi)
+        ami.sendDeferred(_mwi_update(0))
 
 def main():
     """Main entry point for test."""
