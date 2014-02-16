@@ -149,7 +149,7 @@ test-object-config:
                   message: 'Channel entered bridge for invalid login.'
 
 properties:
-    minversion: '1.8.0.0'
+    minversion: '12.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
