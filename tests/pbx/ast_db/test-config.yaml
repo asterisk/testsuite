@@ -1,0 +1,76 @@
+testinfo:
+    summary: 'Tests multiple AstDB functions.'
+    description:
+        This test verifies that the following AstDB functions and variables work
+        as intended - DB, DB_RESULT, DB_EXISTS, DB_KEYS, DB_DELETE.
+        The first iteration tests input and output using DB(family/key) as well
+        as the DB_RESULT variable.
+        The second iteration tests DB_EXISTS(family/key) with a non-existant and
+        existant database, and also tests DB_KEYS(family) with a non-existant
+        database, a family with one key, and a family with multiple keys.
+        The last iteration tests DB_DELETE(family/key) on a non-existant database and
+        an existant database. If it is called when there is nothing to delete, it will
+        return an empty string.
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+      -
+        config-section: 'ami-config'
+        typename: 'ami.AMIEventModule'
+
+test-config:
+  spawn-after-hangup: True
+  expected_events: 14
+  test-iterations:
+    -
+      channel: 'Local/s1@test'
+      application: 'Echo'
+    -
+      channel: 'Local/s2@test'
+      application: 'Echo'
+    -
+      channel: 'Local/s3@test'
+      application: 'Echo'
+
+ami-config:
+  -
+    type: 'headermatch'
+    conditions:
+        match:
+            Event: 'UserEvent'
+            UserEvent: 'Test1'
+    requirements:
+        match:
+            Result: 'pass'
+    count: '5'
+  -
+    type: 'headermatch'
+    conditions:
+        match:
+            Event: 'UserEvent'
+            UserEvent: 'Test2'
+    requirements:
+        match:
+            Result: 'pass'
+    count: '6'
+  -
+    type: 'headermatch'
+    conditions:
+        match:
+            Event: 'UserEvent'
+            UserEvent: 'Test3'
+    requirements:
+        match:
+            Result: 'pass'
+    count: '3'
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - pbx
