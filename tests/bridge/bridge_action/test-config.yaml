@@ -13,7 +13,8 @@ testinfo:
           the channels from the second round's Bridge is chosen. These are Bridged
           as well. This moves the channels from existing bridges into a new
           Bridge.
-        * If all BridgeEnter events are received, the test passes.'
+        * If all BridgeEnter events are received, the test passes.
+        * Now also tests LinkedID Propgataion.'
 
 test-modules:
     add-test-to-search-path: 'True'
@@ -21,6 +22,8 @@ test-modules:
         config-section: test-object-config
         typename: 'test_case.TestCaseModule'
     modules:
+        -
+            typename: 'linkedid_check.LinkedIdCheck'
         -
             config-section: bridge-action
             typename: 'bridge_action.BridgeAction'

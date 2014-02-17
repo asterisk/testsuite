@@ -14,8 +14,8 @@ LOGGER = logging.getLogger(__name__)
 
 class BridgeAction(object):
     ''' Pluggable Module object that manipulates channels
-	using the Bridge AMI action
-	'''
+    using the Bridge AMI action
+    '''
 
     def __init__(self, module_config, test_object):
         ''' Constructor
@@ -27,6 +27,7 @@ class BridgeAction(object):
         self.test_object.register_ami_observer(self._ami_connected_handler)
         self.test_object.register_stop_observer(self._stop_handler)
         self.channels = []
+        self.originate = 1
         self.round = 1
         self.ami = None
         self.channel_state = {}
@@ -45,15 +46,34 @@ class BridgeAction(object):
         ami.registerEvent('Newexten', self._new_exten_handler)
         ami.registerEvent('BridgeEnter', self._bridge_enter_handler)
         ami.registerEvent('BridgeLeave', self._bridge_leave_handler)
+        ami.registerEvent('Newchannel', self._new_channel_handler)
 
         # Originate some channels
         LOGGER.debug('Originating channels')
-        for i in range(0, 5):
+        ami.originate(channel='Local/waiting_area@default',
+                      context='default',
+                      exten='waiting_area',
+                      priority=1,
+                      async=True).addErrback(self.test_object.
+                                             handle_originate_failure)
+
+    def _new_channel_handler(self, ami, event):
+        ''' AMI Newchannel event handler
+
+        :param ami The AMI instance that the event was received from
+        :param event The AMI Newchannel event
+
+        Wait until the new channel event has been received before
+        creating the next channel.
+        '''
+        if (';2' in event['channel'] and self.originate < 5):
+            self.originate += 1
             ami.originate(channel='Local/waiting_area@default',
-            context='default',
-            exten='waiting_area',
-            priority=1,
-            async=True).addErrback(self.test_object.handle_originate_failure)
+                          context='default',
+                          exten='waiting_area',
+                          priority=1,
+                          async=True).addErrback(self.test_object.
+                                                 handle_originate_failure)
 
     def _stop_handler(self, result):
         ''' A deferred callback called as a result of the test stopping
