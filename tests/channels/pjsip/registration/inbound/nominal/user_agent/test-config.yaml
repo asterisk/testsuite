@@ -1,0 +1,78 @@
+testinfo:
+    summary:     'Register a contact to an AOR and ensure the User-Agent header is properly read.'
+    description: |
+        'Alice sends a REGISTER that binds sip:alice@127.0.0.1:5061 to sip:alice@127.0.0.1.
+         The User-Agent header of this first REGISTER is set to "Type A". Alice later re-registers
+         the same contact but using User-Agent "Type B". We ensure after both REGISTERs that
+         the stored user agent matches our expecations. Alice then unregisters the contact with
+         User-Agent "Type C". Since this is removing a previously-established contact, we expect
+         that the contact being removed still has "Type B" set as the User-Agent.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice-register.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice', '-d': '3000'} }
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'alice'
+        requirements:
+            match:
+                Contact: 'sip:alice@127.0.0.1:5061'
+                Expiration: '60'
+                UserAgent: 'Type A'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_REFRESHED'
+                AOR: 'alice'
+        requirements:
+            match:
+                Contact: 'sip:alice@127.0.0.1:5061'
+                Expiration: '60'
+                UserAgent: 'Type B'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_REMOVED'
+                AOR: 'alice'
+        requirements:
+            match:
+                Contact: 'sip:alice@127.0.0.1:5061'
+                UserAgent: 'Type B'
+        count: '1'
+
+properties:
+    minversion: '12.2.0'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+

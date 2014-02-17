@@ -6,3 +6,4 @@ tests:
     - dir: 'single_contact'
     - dir: 'unregister'
     - test: 'path'
+    - test: 'user_agent'
