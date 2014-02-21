@@ -1,0 +1,614 @@
+testinfo:
+    summary: 'Tests interaction between marked and unmarked users in a Conference'
+    description: |
+        This tests the interaction of normal users and marked users in a conference. It
+        specifically goes into checking whether the Marked and Normal users received the
+        proper notifications; that MOH is played when the Normal user is the last or
+        first person in the conference; And that all of the transitions between states in
+        the conference are working appropriately. This test contains three scenarios -
+        the first in which the marked user enters first and hangs up last; the second
+        includes the marked user entering first and the normal user hanging up last;
+        lastly, the third tests when the normal user enters the conference first and
+        leaves last.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  reactor-timeout: '60'
+  app: 'ConfBridge'
+  scenarios:
+    -
+      # Scenario 1: The Marked user enters. Gets notifications of their presence in
+      # the conference. Normal(unmarked) user enters; gets notification that they have
+      # joined the conference, but should receive no notification of position in
+      # conference. Normal user leaves, followed by the Marked user. Checks to make sure
+      # all conference state transitions executed as planned.
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'SINGLE_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from EMPTY to SINGLE_MARKED'
+            -
+              action-type: 'start-call'
+              delay: 3
+              channel-id: 'Normal-user'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE_MARKED'
+              NewState: 'MULTI_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from SINGLE_MARKED to MULTI_MARKED'
+            -
+              action-type: 'hangup'
+              delay: 2
+              channel-id: 'Normal-user'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'MULTI_MARKED'
+              NewState: 'SINGLE_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from MULTI_MARKED to SINGLE_MARKED'
+            -
+              action-type: 'hangup'
+              delay: 2
+              channel-id: 'Marked-user'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE_MARKED'
+              NewState: 'EMPTY'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from SINGLE_MARKED to EMPTY'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'Marked-user'
+          channel-name: 'Local/marked@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/marked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-user Join Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/marked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-user Leave Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/marked@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-user Heard Join Sound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/marked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'MusicOnHoldStart played to marked user!'
+
+        -
+          channel-id: 'Normal-user'
+          channel-name: 'Local/normal@confbridge'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal-user Join Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal-user Leave Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/normal@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal-user Heard Join Sound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'MusicOnHoldStart played to normal user that is in conference alone!'
+    -
+      # Scenario 2: The Marked user enters. Gets notifications of their presence in
+      # the conference. Normal(unmarked) user enters; gets notification that they have
+      # joined the conference, but should receive no notification of position in
+      # conference. Marked user leaves, followed by the Normal user who has a MOH event
+      # taking place. Checks to make sure all conference state transitions executed as
+      # planned.
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'SINGLE_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from EMPTY to SINGLE_MARKED'
+            -
+              action-type: 'start-call'
+              delay: 3
+              channel-id: 'Normal-user'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE_MARKED'
+              NewState: 'MULTI_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from SINGLE_MARKED to MULTI_MARKED'
+            -
+              action-type: 'hangup'
+              delay: 2
+              channel-id: 'Marked-user'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'MULTI_MARKED'
+              NewState: 'SINGLE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from MULTI_MARKED to SINGLE'
+            -
+              action-type: 'hangup'
+              delay: 2
+              channel-id: 'Normal-user'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE'
+              NewState: 'EMPTY'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from SINGLE to EMPTY'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'Marked-user'
+          channel-name: 'Local/marked@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/marked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-user Join Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/marked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-user Leave Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/marked@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-user Heard Join Sound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/marked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'MusicOnHoldStart played to marked user!'
+
+        -
+          channel-id: 'Normal-user'
+          channel-name: 'Local/normal@confbridge'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal-user Join Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal-user Leave Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/normal@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal-user Heard Join Sound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHoldStart Event Received'
+    -
+      # Scenario 3: The Normal user enters and receives a MOH event. Gets notifications
+      # of their presence in the conference, but receives no notification of position in
+      # conference. Marked user enters, which stops the MOH; gets notifications of their
+      # presence in the conference. Marked user leaves, followed by the Normal user who
+      # has a MOH event taking place. Checks to make sure all conference state transitions
+      # executed as planned.
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'SINGLE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from EMPTY to SINGLE'
+            -
+              action-type: 'start-call'
+              delay: 3
+              channel-id: 'Marked-user'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE'
+              NewState: 'MULTI_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from SINGLE to MULTI_MARKED'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'MULTI_MARKED'
+              NewState: 'SINGLE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from MULTI_MARKED to SINGLE'
+            -
+              action-type: 'hangup'
+              delay: 2
+              channel-id: 'Normal-user'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE'
+              NewState: 'EMPTY'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from SINGLE to EMPTY'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'Marked-user'
+          channel-name: 'Local/marked@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: False
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/marked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-user Join Event received'
+                -
+                  action-type: 'hangup'
+                  delay: 2
+                  channel-id: 'Marked-user'
+
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/marked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-user Leave Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/marked@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-user Heard Join Sound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/marked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'MusicOnHoldStart played to marked user!'
+        -
+          channel-id: 'Normal-user'
+          channel-name: 'Local/normal@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal-user Join Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal-user Leave Event received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/normal@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal-user Heard Join Sound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHoldStart Event received'
+
+properties:
+    minversion: '12.0.0'
+    tags:
+      - confbridge
+      - apps
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_confbridge'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_playback'
