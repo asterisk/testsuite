@@ -13,7 +13,8 @@ usage() {
 }
 
 setup() {
-	(
+	# If getfenv fails the Lua version is >=5.2 and asttest won't compile
+	lua -e "getfenv()" 2>/dev/null && (
 		cd asttest
 		make
 		make install DESTDIR="$HERE/root"
