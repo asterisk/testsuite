@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+# Copyright (C) 2014, Fairview 5 Engineering, LLC
+# George Joseph <george.joseph@fairview5.com>
+#
+# This program is free software, distributed under the terms of
+# the GNU General Public License Version 2.
+#
+if [ -t 0 ] ; then
+	echo "pretty_print is a filter and needs the output of runtests.py piped to it."
+	echo "Try python -u ./runtests.py <options> | ./pretty_print"
+	echo "The 'python -u' is needed to use unbuffered output mode otherwise you'll only see output in big chunks."
+	exit 1
+fi
+
+declare -ix passed=0
+declare -ix failed=0
+declare -ix tests=0
+declare -a failures
+GREEN='\033[01;32m'
+RED='\033[01;31m'
+NORM='\033[m'
+
+col=$(( $(tput cols) - 28 ))
+
+trap break INT
+while read line ; do
+	if [[ $line =~ ^Running\ tests\ for.* ]] ; then
+		echo $line
+		printf "%-*.*s %4s/${GREEN}%4s${NORM}/${RED}%4s${NORM} ${COLOR} [ %s ]${NORM}\n" $col $col "Test" "Run" "Pass" "Fail" "Status"
+	fi
+	if [[ $line =~ ^Test.*(tests[^\']+)\',.*(passed|failed)$ ]] ; then
+		test=${BASH_REMATCH[1]}
+		status=${BASH_REMATCH[2]}
+		col=$(( $(tput cols) - 28 ))
+		(( tests++ ))
+		if [[ $status = passed ]] ; then
+			(( passed++ ))
+			COLOR=${GREEN}
+			label=Passed
+		fi
+		if [[ $status = failed ]] ; then
+			(( failed++ ))
+			COLOR=${RED}
+			label=Failed
+			failures+=("FAILED: $test")
+		fi
+		printf "%-*.*s %4d/${GREEN}%4d${NORM}/${RED}%4d${NORM} ${COLOR} [ %s ]${NORM}\n" $col $col $test $tests $passed $failed $label
+	fi
+done
+trap - INT
+echo -e "\tTests: $tests\t\t${GREEN}Passed: $passed\t\t${RED}Failed: $failed${NORM}"
+for fail in "${failures[@]}" ; do
+	echo -e "${RED}$fail${NORM}"
+done
+
