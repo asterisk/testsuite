@@ -193,6 +193,15 @@ class Dependency(object):
 
         return False
 
+    def depend_rawsocket(self):
+        """Check the raw socket custom dependency"""
+        try:
+            test_sock = socket.socket(socket.AF_PACKET, socket.SOCK_RAW)
+            test_sock.close()
+            return True
+        except:
+            return False
+
     def _find_build_flag(self, name):
         """Determine if the specified build option exists"""
         return (self.asterisk_build_options.check_option(name))

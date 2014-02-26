@@ -30,6 +30,7 @@ properties:
             version : 'v3.0'
             feature : 'PCAP'
         - asterisk : 'chan_sip'
+        - custom : 'rawsocket'
     tags:
         - SIP
         - DTMF
