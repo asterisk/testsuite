@@ -55,6 +55,7 @@ ami-config:
                 Context: 'default'
                 Extension: '1000'
                 Application: 'Echo'
+                Channel: 'PJSIP/bob-.*'
         callbackModule: 'attended_transfer'
         callbackMethod: 'on_third_leg'
 
