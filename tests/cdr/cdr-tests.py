@@ -32,6 +32,7 @@ class SequenceOriginator(object):
         self.module_config = module_config
         test_object.register_scenario_started_observer(self.scenario_started)
         test_object.register_ami_observer(self.ami_connect)
+        self.test_object = test_object
         self.ami = None
         self.test_counter = 0
 
@@ -46,13 +47,16 @@ class SequenceOriginator(object):
         self.test_counter += 1
         return result
 
+    def originate_response(self, reason, ignore):
+        ''' Absorb an exception thrown by an Originate failure '''
+        if ignore:
+            LOGGER.debug('Ignoring originate failure...')
+        else:
+            LOGGER.error("Unexpected originate failure...")
+            self.test_object.set_passed(False)
+
     def originate_call(self):
         ''' Originate a new call '''
-
-        def failure_absorber(reason):
-            ''' Absorb an exception thrown by an Originate failure '''
-            LOGGER.debug('Ignoring originate failure...')
-            return reason
 
         if self.test_counter > (len(self.module_config) - 1):
             LOGGER.debug('Ignoring scenario start; no more calls to originate')
@@ -60,8 +64,7 @@ class SequenceOriginator(object):
         originate_obj = self.module_config[self.test_counter]
         defered = self.ami.originate(**originate_obj['parameters'])
         ignore_failures = originate_obj.get('ignore-originate-failure') or False
-        if ignore_failures:
-            defered.addErrback(failure_absorber)
+        defered.addErrback(self.originate_response, ignore_failures)
 
 
 

@@ -63,19 +63,19 @@ cdr-config:
 sequence-originator:
     -
         parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1' }
-        ignore-originate-failure: 'no'
+        ignore-originate-failure: False
     -
         parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1' }
-        ignore-originate-failure: 'no'
+        ignore-originate-failure: False
     -
         parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1' }
-        ignore-originate-failure: 'no'
+        ignore-originate-failure: False
     -
         parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1', timeout: 1 }
-        ignore-originate-failure: 'yes'
+        ignore-originate-failure: True
     -
         parameters: { channel: 'sip/test1', context: 'default', exten: 'dial', priority: '1' }
-        ignore-originate-failure: 'yes'
+        ignore-originate-failure: True
 
 
 test-object-config:
