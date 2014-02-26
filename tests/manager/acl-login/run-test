@@ -136,7 +136,11 @@ class AMILoginACLTest(TestCase):
         self.ami.append(None)
         LOGGER.info("Creating AMI %d - %s / %s" % (entry, username, address))
         self.ami_factory = manager.AMIFactory(username, secret, entry)
-        self.ami_factory.login(address).addCallbacks(self.ami_connect, self.ami_login_error)
+        try:
+            self.ami_factory.login(address, bindAddress=(address, 0)).addCallbacks(self.ami_connect, self.ami_login_error)
+        except:
+            # old versions of starpy didn't support bindAddress for AMI
+            self.ami_factory.login(address).addCallbacks(self.ami_connect, self.ami_login_error)
 
     # Post test evaluation of success conditions
     def evaluate_success(self):
