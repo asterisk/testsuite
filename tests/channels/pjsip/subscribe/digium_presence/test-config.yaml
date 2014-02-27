@@ -1,0 +1,17 @@
+testinfo:
+    summary: 'Test subscribe to presence for a digium phone.'
+    description: |
+        'Digium phones contain a specialized tag and possibly extra presence
+         information in the body of a sip notify.  This tests to make sure
+         the appropriate information is received.'
+
+properties:
+    minversion: '12.1.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_exten_state'
+        - asterisk : 'res_pjsip_pidf_digium_body_supplement'
+    tags:
+        - pjsip
