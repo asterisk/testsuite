@@ -66,10 +66,10 @@ sequence-originator:
         ignore-originate-failure: False
     -
         parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1' }
-        ignore-originate-failure: False
+        ignore-originate-failure: True
     -
         parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1' }
-        ignore-originate-failure: False
+        ignore-originate-failure: True
     -
         parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1', timeout: 1 }
         ignore-originate-failure: True
