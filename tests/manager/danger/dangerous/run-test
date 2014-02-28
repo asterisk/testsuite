@@ -39,7 +39,7 @@ class AMILoginTest(TestCase):
             self.passed = False
         self.stop_reactor()
 
-    def on_failure(self):
+    def on_failure(self, reason):
         LOGGER.error("Failed to execute GetVar")
         self.passed = False
         self.stop_reactor()
