@@ -26,8 +26,12 @@ class DigiumPresence(TestCase):
 
     def run(self):
         """Test execution method.  Connect to AMI."""
-
         super(DigiumPresence, self).run()
+        self.create_ami_factory()
+
+    def ami_connect(self, ami):
+        """Wait for the presence state to change then issue a subscribe."""
+
         def _on_scenario_complete(obj):
             """Callback handler for when the sipp scenario runs successfully."""
             # the scenario checks for the appropriate body text
@@ -36,12 +40,17 @@ class DigiumPresence(TestCase):
             self.stop_reactor()
             return obj
 
+        def _subscribe(ami, event):
+            """Presence has changed so subscribe and check for changes
+            in the notify.
+            """
+            sipp = SIPpScenario(self.test_name,
+                                {'scenario':'subscribe.xml', '-p':'5061'})
+            sipp.run(self).addCallback(_on_scenario_complete)
+
+        ami.registerEvent('PresenceStatus', _subscribe)
         # make sure alice is available
         self.ast[0].cli_exec('presencestate change CustomPresence:alice "away,lunch,banana"')
-
-        sipp = SIPpScenario(self.test_name,
-                            {'scenario':'subscribe.xml', '-p':'5061'})
-        sipp.run(self).addCallback(_on_scenario_complete)
 
 def main():
     """Main entry point for test."""
