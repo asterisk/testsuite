@@ -1,0 +1,36 @@
+testinfo:
+    summary:     'Tests IPV4 UDP incoming ulaw calls with allow=all'
+    description: |
+        'Run a SIPp scenario that sends various calls to res_pjsip, to check that calls succeed
+        with allow=all configuration.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        # IPv4 & UDP
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-ipv4-udp'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-d': '5000', '-s': 'alice-ipv4-udp'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'playback_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-ipv4-udp'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-d': '5000', '-s': 'alice-ipv4-udp'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

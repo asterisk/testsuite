@@ -3,6 +3,7 @@ tests:
     - test: 'handle_options_request'
     - test: 'incoming_calls_without_auth'
     - dir: 'basic_calls'
+    - dir: 'sdp_offer_answer'
     - test: 'srtp_negotiation'
     - test: 'auth_security_events'
     - dir: 'one_touch_recording'

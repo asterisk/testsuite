@@ -1,0 +1,38 @@
+testinfo:
+    summary:     'Tests IPv6 UDP incoming calls with allow=all'
+    description: |
+        'Run a SIPp scenario that sends various calls to res_pjsip, to check that calls succeed
+        with allow=all configuration.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+
+        # IPv6 & UDP
+        -
+            scenarios:
+                 - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '[::1]', '-p': '5061', '-s': 'alice-ipv6-udp'} }
+        -
+            scenarios:
+                 - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '[::1]', '-p': '5062', '-d': '5000', '-s': 'alice-ipv6-udp'} }
+        -
+            scenarios:
+                 - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5066', '-s': 'alice-ipv6-udp'} }
+        -
+            scenarios:
+                 - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5067', '-d': '5000', '-s': 'alice-ipv6-udp'} }
+
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
