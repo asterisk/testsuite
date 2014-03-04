@@ -17,3 +17,4 @@ tests:
     - test: 'presence_pidf'
     - test: 'presence_xpidf'
     - test: 'mwi'
+    - test: 'refer_send_to_vm'
