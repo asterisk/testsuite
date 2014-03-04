@@ -258,6 +258,7 @@ class AsteriskVersion(object):
                 LOGGER.error("OSError [%d]: %s" % (o_excep.errno,
                                                    o_excep.strerror))
                 raise
+            process.wait()
             cls._asterisk_version_from_binary = version.replace("Asterisk ", "")
         return cls._asterisk_version_from_binary
 

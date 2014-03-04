@@ -54,6 +54,7 @@ class SIPpVersion:
                     version = sipp[0]
                     if len(sipp) > 1:
                         feature = sipp[1]
+            sipp_process.wait()
 
         if version is not None:
             self.__parse_version(version)
