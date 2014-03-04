@@ -158,10 +158,6 @@ class TestCase(object):
         global_conditions = self.global_config.get_conditions()
         conditions = self.test_config.get_conditions()
 
-        # If there are no global conditions return
-        if (len(global_conditions) == 0):
-            return
-
         # Get those global conditions that are not in the self conditions
         for g_cond in global_conditions:
             disallowed = [i for i in conditions \
@@ -214,6 +210,7 @@ class TestCase(object):
             host = "127.0.0.%d" % num
             self.ast.append(Asterisk(base=self.base, host=host,
                                      ast_conf_options=self.ast_conf_options))
+            self.condition_controller.register_asterisk_instance(self.ast[i])
             # If a base configuration for this Asterisk instance has been
             # provided, install it first
             if base_configs_path:

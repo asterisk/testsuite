@@ -11,10 +11,6 @@ testinfo:
 properties:
     minversion: '1.8.11-cert1'
     buildoption: 'TEST_FRAMEWORK'
-    testconditions:
-        - name: 'threads'
-          ignoredThreads:
-            - 'netconsole'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

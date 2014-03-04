@@ -15,10 +15,6 @@ properties:
         - sipp :
             version : 'v3.0'
         - asterisk : 'chan_sip'
-    testconditions:
-        - name: 'threads'
-          ignoredThreads:
-            - 'autoservice_run'
     tags:
         - SIP
         - apps

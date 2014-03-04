@@ -7,12 +7,6 @@ testinfo:
 
 properties:
     minversion: '1.8.0.0'
-    testconditions:
-        - name: 'threads'
-          ignoredThreads:
-            - 'netconsole'
-        - name: 'sip-dialogs'
-          enabled: 'False'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

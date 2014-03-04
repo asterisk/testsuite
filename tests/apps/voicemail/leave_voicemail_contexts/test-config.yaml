@@ -6,14 +6,6 @@ testinfo:
 
 properties:
     minversion: '1.8.14.0'
-    testconditions:
-        - name: 'threads'
-          ignoredThreads:
-            - 'netconsole'
-        - name: 'sip-dialogs'
-          sipHistoryRequirements:
-            - 'NewChan'
-            - 'Hangup'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

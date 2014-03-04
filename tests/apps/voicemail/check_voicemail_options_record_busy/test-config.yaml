@@ -13,14 +13,6 @@ properties:
         - asterisk : 'app_senddtmf'
         - asterisk : 'app_playback'
         - asterisk : 'chan_sip'
-    testconditions:
-        - name: 'threads'
-          ignoredThreads:
-            - 'netconsole'
-        - name: 'sip-dialogs'
-          sipHistoryRequirements:
-            - 'NewChan'
-            - 'Hangup'
     tags:
         - voicemail
         - apps

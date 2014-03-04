@@ -16,17 +16,6 @@ properties:
         - asterisk : 'app_senddtmf'
         - asterisk : 'app_playback'
         - asterisk : 'chan_sip'
-    testconditions:
-        - name: 'threads'
-          ignoredThreads:
-            - 'netconsole'
-            # Allow shaun_of_the_dead to exist after a run, as our external password check
-            # may still be going on
-            - 'shaun_of_the_dead'
-        - name: 'sip-dialogs'
-          sipHistoryRequirements:
-            - 'NewChan'
-            - 'Hangup'
     tags:
         - voicemail
         - apps

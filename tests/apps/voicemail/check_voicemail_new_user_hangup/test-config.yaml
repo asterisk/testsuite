@@ -8,13 +8,6 @@ testinfo:
 properties:
     minversion: '1.8.0.0'
     buildoption: 'TEST_FRAMEWORK'
-    testconditions:
-        - name: 'threads'
-          ignoredThreads:
-            - 'netconsole'
-        - name: 'sip-dialogs'
-          # Note: the abrupt hangup will leave the SIP dialog in flight
-          expectedResult: 'FAIL'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

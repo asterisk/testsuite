@@ -7,22 +7,6 @@ testinfo:
 properties:
     minversion: '1.8.0.0'
     buildoption: 'TEST_FRAMEWORK'
-    testconditions:
-        - name: 'threads'
-          ignoredThreads:
-            - 'netconsole'
-        - name: 'sip-dialogs'
-          # Note: the abrupt hangup will leave the SIP dialog in flight
-          expectedResult: 'FAIL'
-          sipHistoryRequirements:
-            - 'NewChan'
-            - 'Hangup'
-        - name: 'file-descriptors'
-          # This test will fail the FD check - for an unknown reason, some files are left
-          # open at the end of the run, probably due to the hangup in the middle of recording
-          # the prepend file.  This very well may be a bug in Asterisk, but requires more
-          # analysis at this time.
-          expectedResult: 'FAIL'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

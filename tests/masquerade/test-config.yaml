@@ -9,10 +9,6 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'chan_sip'
-    testconditions:
-        - name: 'threads'
-          ignoredThreads:
-            - 'autoservice_run'
     tags:
         - parking
         # - iax2

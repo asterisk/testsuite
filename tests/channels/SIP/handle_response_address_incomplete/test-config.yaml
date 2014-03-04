@@ -11,13 +11,5 @@ properties:
         - sipp :
             version : 'v3.0'
         - asterisk : 'chan_sip'
-    testconditions:
-        - name: 'sip-dialogs'
-          # SIP dialog will never be disposed of in this test
-          expectedResult: 'Fail'
-    testconditions:
-        - name: 'threads'
-          ignoredThreads:
-            - 'autoservice_run'
     tags:
         - SIP

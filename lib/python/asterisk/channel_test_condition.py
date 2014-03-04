@@ -58,10 +58,10 @@ class ChannelTestCondition(TestCondition):
                 super(ChannelTestCondition, self).fail_check(msg)
             return result
 
-        def _raise_finished(finish_deferred):
+        def _raise_finished(result, finish_deferred):
             """Raise the deferred callback"""
             finish_deferred.callback(self)
-            return finish_deferred
+            return result
 
         finish_deferred = defer.Deferred()
         # Set to pass and let a failure override

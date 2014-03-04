@@ -10,11 +10,3 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-    testconditions:
-        - name: 'threads'
-          # If the DNS manager is refreshed only once, it actually enables the DNS manager,
-          # creating this thread.  This thread would only be disposed of if the manager was
-          # 'refreshed' again, toggling its activation.  Hence, this thread should be present
-          # at the end of a test run in which the DNS manager is refreshed a single time.
-          ignoredThreads:
-            - 'do_refresh'

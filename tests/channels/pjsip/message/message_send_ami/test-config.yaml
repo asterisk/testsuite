@@ -13,9 +13,3 @@ properties:
     tags:
         - pjsip
 
-    testconditions:
-        - name: 'threads'
-          ignoredThreads:
-            - 'autoservice_run'
-    tags:
-        - SIP

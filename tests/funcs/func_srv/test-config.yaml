@@ -9,7 +9,3 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-    testconditions:
-        - name: 'threads'
-          ignoredThreads:
-            - 'autoservice_run'
