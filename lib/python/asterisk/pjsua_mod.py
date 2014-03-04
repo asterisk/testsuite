@@ -57,15 +57,7 @@ class RegDetector(pj.AccountCallback):
 
         if status >= 200 and status < 300:
             LOGGER.info("Detected successful registration from %s" % uri)
-            self.test_plugin.num_regs += 1
-
-        if self.test_plugin.num_regs == self.test_plugin.num_accts:
-            callback_module = __import__(self.test_plugin.callback_module)
-            callback_method = getattr(callback_module,
-                                      self.test_plugin.callback_method)
-            reactor.callFromThread(callback_method,
-                                   self.test_plugin.test_object,
-                                   self.test_plugin.pj_accounts)
+            reactor.callFromThread(self.test_plugin.reg_success)
 
 
 class PJsuaAccount(object):
@@ -121,7 +113,6 @@ class PJsua(object):
         self.num_regs = 0
         self.num_accts = 0
         self.ami = None
-        self.acct_cb = RegDetector(self)
         self.callback_module = instance_config['callback_module']
         self.callback_method = instance_config['callback_method']
 
@@ -224,7 +215,7 @@ class PJsua(object):
 
         LOGGER.info("Creating PJSUA account %s@%s" % (username, domain))
         account = PJsuaAccount(self.lib.create_account(pj_acct_cfg, False,
-                                                       self.acct_cb))
+                                                       RegDetector(self)))
         account.add_buddies(acct_cfg.get('buddies', []))
         return account
 
@@ -247,3 +238,10 @@ class PJsua(object):
                 LOGGER.error("Account configuration has no name")
                 self.test_object.stop_reactor()
             self.pj_accounts[name] = self.__create_account(acct)
+
+    def reg_success(self):
+        self.num_regs += 1
+        if self.num_regs == self.num_accts:
+            callback_module = __import__(self.callback_module)
+            callback_method = getattr(callback_module, self.callback_method)
+            callback_method(self.test_object, self.pj_accounts)
