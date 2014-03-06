@@ -14,62 +14,151 @@ testinfo:
 
 test-modules:
     test-object:
-        config-section: test-config
-        typename: 'test_case.SimpleTestCase'
-    modules:
-      -
-        config-section: 'ami-config'
-        typename: 'ami.AMIEventModule'
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
 
-test-config:
-  spawn-after-hangup: True
-  expected_events: 14
-  test-iterations:
+test-object-config:
+  app: 'DB'
+  scenarios:
     -
-      channel: 'Local/s1@test'
-      application: 'Echo'
-    -
-      channel: 'Local/s2@test'
-      application: 'Echo'
-    -
-      channel: 'Local/s3@test'
-      application: 'Echo'
-
-ami-config:
-  -
-    type: 'headermatch'
-    conditions:
-        match:
-            Event: 'UserEvent'
-            UserEvent: 'Test1'
-    requirements:
-        match:
-            Result: 'pass'
-    count: '5'
-  -
-    type: 'headermatch'
-    conditions:
-        match:
-            Event: 'UserEvent'
-            UserEvent: 'Test2'
-    requirements:
-        match:
-            Result: 'pass'
-    count: '6'
-  -
-    type: 'headermatch'
-    conditions:
-        match:
-            Event: 'UserEvent'
-            UserEvent: 'Test3'
-    requirements:
-        match:
-            Result: 'pass'
-    count: '3'
+      # Scenario 1
+      # Runs through the tests in the description. Once a channel hangs up,
+      # the next channel will be called.
+      channels:
+        -
+          channel-id: 'S1'
+          channel-name: 'Local/s1@test'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: 'True'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'Test1'
+              requirements:
+                match:
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'UserEvent Test1 passed'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'Test1'
+                  Result: 'fail'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'UserEvent Test1 came up with result fail'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/s1@test-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'S1 is hanging up'
+                -
+                  action-type: 'start-call'
+                  channel-id: 'S2'
+        -
+          channel-id: 'S2'
+          channel-name: 'Local/s2@test'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'Test2'
+              requirements:
+                match:
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'UserEvent Test2 passed'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'Test2'
+                  Result: 'fail'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'UserEvent Test2 came up with result fail'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/s2@test-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'S2 is hanging up'
+                -
+                  action-type: 'start-call'
+                  channel-id: 'S3'
+        -
+          channel-id: 'S3'
+          channel-name: 'Local/s3@test'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'Test3'
+              requirements:
+                match:
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'UserEvent Test3 passed'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'Test3'
+                  Result: 'fail'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'UserEvent Test3 came up with result fail'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/s3@test-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'S3 is hanging up'
+                -
+                  action-type: 'end-scenario'
 
 properties:
     minversion: '11.0.0'
     dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'
         - python : 'starpy'
     tags:
