@@ -14,6 +14,7 @@ import os
 import subprocess
 import yaml
 import socket
+import traceback
 
 sys.path.append("lib/python")
 
@@ -253,8 +254,12 @@ class TestConfig(object):
 
         try:
             self._parse_config()
+        except yaml.YAMLError as e:
+            print("YAML Parse Error: %s" % e)
+            print(traceback.format_exc())
+            self.can_run = False
         except:
-            print "Exception occurred while parsing config:", sys.exc_info()[0]
+            print("Exception occurred while parsing config:", sys.exc_info()[0])
             self.can_run = False
 
     def _process_global_settings(self):
