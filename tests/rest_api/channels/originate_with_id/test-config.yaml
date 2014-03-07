@@ -1,0 +1,322 @@
+
+testinfo:
+    summary: 'Test UniqueID on ARI Originate'
+    description: |
+        * Originate four calls:
+          1) Specifying both Unique IDs
+          2) Specifying a single Unique ID
+          3) Not specifying Unique ID
+          4) Stasis app with both Unique IDs
+        * Check that the AMI and CEL events all correctly match
+        * Check that the ARI events work correctly
+
+properties:
+    # change this correct minimum version that implements Originate with ID
+    minversion: '12.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: cel-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    test-iterations:
+        -
+            # test 1 - both id's creating local channel
+            endpoint: 'Local/one@default'
+            channelId: 'MyCustomId'
+            otherChannelId: 'MyOtherCustomId'
+            app: 'no-app'
+        -
+            # test 2 - just the first id, second should suffix ;2
+            endpoint: 'Local/two@default'
+            channelId: 'OnlyOneId'
+            app: 'no-app'
+        -
+            # test 3 - no id's specified, should revert to normal id pattern
+            endpoint: 'Local/three@default'
+            app: 'no-app'
+        -
+            # test 4 - create call to Stasis App and check websocket events
+            endpoint: 'Local/four@default'
+            channelId: 'MyStasisId'
+            otherChannelId: 'MyOtherStasisId'
+            app: 'testsuite'
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            # detect the first local channel
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'MyStasisId$'
+            count: 1
+            requests:
+                # delete the channel to end the test
+                method: 'delete'
+                uri: 'channels/MyStasisId'
+        -
+            # We should not see the other channel as it went to dialplan
+            # The fact that is has the correct ID is checked by AMI & CEL
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'MyOtherStasisId'
+            count: 0
+        -
+            conditions:
+                match:
+                    type: ChannelStateChange
+                    application: testsuite
+                    channel:
+                        id: 'MyStasisId$'
+            count: 1
+        -
+            conditions:
+                match:
+                    type: ChannelHangupRequest
+                    application: testsuite
+                    channel:
+                        id: 'MyStasisId$'
+            count: 1
+        -
+            conditions:
+                match:
+                    type: ChannelDestroyed
+                    application: testsuite
+                    channel:
+                        id: 'MyStasisId$'
+            count: 1
+        -
+            conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+                    channel:
+                        id: 'MyStasisId$'
+            count: 1
+
+
+ami-config:
+    # test 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/one@default-.{7}0;1'
+        requirements:
+            match:
+                Uniqueid: 'MyCustomId'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/one@default-.{7}0;2'
+        requirements:
+            match:
+                Uniqueid: 'MyOtherCustomId'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'LocalBridge'
+                LocalOneChannel: 'Local/one@default-.{7}0;1'
+                LocalTwoChannel: 'Local/one@default-.{7}0;2'
+        requirements:
+            match:
+                LocalOneUniqueid: 'MyCustomId'
+                LocalTwoUniqueid: 'MyOtherCustomId'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Hangup'
+                Channel: 'Local/one@default-.{7}0;1'
+        requirements:
+            match:
+                Uniqueid: 'MyCustomId'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Hangup'
+                Channel: 'Local/one@default-.{7}0;2'
+        requirements:
+            match:
+                Uniqueid: 'MyOtherCustomId'
+        count: '1'
+
+    # test 2
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/two@default-.{7}1;1'
+        requirements:
+            match:
+                Uniqueid: 'OnlyOneId$'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/two@default-.{7}1;2'
+        requirements:
+            match:
+                Uniqueid: 'OnlyOneId;2'
+        count: '1'
+    # test 3
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/three@default-.{7}2;1'
+        requirements:
+            match:
+                UniqueId: '[0-9]{10}\.[0-9]+'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/three@default-.{7}2;2'
+        requirements:
+            match:
+                UniqueId: '[0-9]{10}\.[0-9]+'
+        count: '1'
+
+    # test 4
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/four@default-.{7}3;1'
+        requirements:
+            match:
+                UniqueId: 'MyStasisId$'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/four@default-.{7}3;2'
+        requirements:
+            match:
+                UniqueId: 'MyOtherStasisId'
+        count: '1'
+
+cel-config:
+    # test 1
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/one@default-.{7}0;.'
+        requirements:
+            -
+                match:
+                    Channel: 'Local/one@default-.{7}0;1'
+                    EventName: 'CHAN_START'
+                    UniqueId: 'MyCustomId'
+                    LinkedId: 'MyCustomId'
+            -
+                match:
+                    Channel: 'Local/one@default-.{7}0;2'
+                    EventName: 'CHAN_START'
+                    UniqueId: 'MyOtherCustomId'
+                    LinkedId: 'MyCustomId'
+    # test 2
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/two@default-.{7}1;.'
+        requirements:
+            -
+                match:
+                    Channel: 'Local/two@default-.{7}1;1'
+                    EventName: 'CHAN_START'
+                    UniqueId: 'OnlyOneId$'
+                    LinkedId: 'OnlyOneId$'
+            -
+                match:
+                    Channel: 'Local/two@default-.{7}1;2'
+                    EventName: 'CHAN_START'
+                    UniqueId: 'OnlyOneId;2'
+                    LinkedId: 'OnlyOneId$'
+    # test 3
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/three@default-.{7}2;.'
+        requirements:
+            -
+                match:
+                    Channel: 'Local/three@default-.{7}2;1'
+                    EventName: 'CHAN_START'
+                    UniqueId: '[0-9]{10}\.[0-9]+'
+                    LinkedId: '[0-9]{10}\.[0-9]+'
+            -
+                match:
+                    Channel: 'Local/three@default-.{7}2;2'
+                    EventName: 'CHAN_START'
+                    UniqueId: '[0-9]{10}\.[0-9]+'
+                    LinkedId: '[0-9]{10}\.[0-9]+'
+
+    # test 4
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/four@default-.{7}3;.'
+        requirements:
+            -
+                match:
+                    Channel: 'Local/four@default-.{7}3;1'
+                    EventName: 'CHAN_START'
+                    UniqueId: 'MyStasisId$'
+                    LinkedId: 'MyStasisId$'
+            -
+                match:
+                    Channel: 'Local/four@default-.{7}3;2'
+                    EventName: 'CHAN_START'
+                    UniqueId: 'MyOtherStasisId'
+                    LinkedId: 'MyStasisId$'
+

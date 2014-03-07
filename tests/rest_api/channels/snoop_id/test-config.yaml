@@ -1,0 +1,115 @@
+
+testinfo:
+    summary: 'Test channel snoop using ID'
+    description: |
+        * Originate a channel
+        * Start a snoop channel
+        * Delete the snoop channel
+        * Delete the original channel
+        * Validate all the events
+
+properties:
+    # change this to correct minimum version that implements IDs
+    minversion: '12.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+test-object-config:
+    # using default origination:
+    #   endpoint: Local/s@default
+    #   channelId: testsuite-default-id
+    #   app: testsuite
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: 'ChannelStateChange'
+            count: '>1'
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'channels/testsuite-default-id/snoop/MySnoopyId'
+                params:
+                    spy: 'both'
+                    app: 'testsuite'
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'MySnoopyId'
+            count: 1
+            requests:
+                method: 'delete'
+                uri: 'channels/{channel.id}'
+        -
+            conditions:
+                match:
+                    type: ChannelHangupRequest
+                    application: testsuite
+                    channel:
+                        id: 'MySnoopyId'
+            count: 1
+        -
+            conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+                    channel:
+                        id: 'MySnoopyId'
+            count: 1
+            requests:
+                # kill the original channel to end the test
+                method: 'delete'
+                uri: 'channels/testsuite-default-id'
+        -
+            conditions:
+                match:
+                    type: ChannelHangupRequest
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+        -
+            conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+        -
+            conditions:
+                match:
+                    type: ChannelDestroyed
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+

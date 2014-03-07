@@ -1,0 +1,168 @@
+
+testinfo:
+    summary: 'Test bridge creation and manipulation using IDs'
+    description: |
+        * Originate a bridge and a channel
+        * Put the channel in the bridge
+        * Take the channel out of the bridge
+        * Delete both
+        * Validate all the events
+
+properties:
+    # change this to correct minimum version that implements IDs
+    minversion: '12.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+test-object-config:
+    # using default origination:
+    #   endpoint: Local/s@default
+    #   channelId: testsuite-default-id
+    #   app: testsuite
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: 'ChannelStateChange'
+            count: '>1'
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'bridges'
+                    params:
+                        bridgeId: 'MyFirstBridge'
+                    # note: creating bridge does not cause event
+                -
+                    method: 'post'
+                    uri: 'channels'
+                    params:
+                        endpoint: 'Local/s@default'
+                        channelId: 'MyFirstChannel'
+                        app: 'testsuite'
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'MyFirstChannel$'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'bridges/MyFirstBridge/addChannel'
+                params:
+                    channel: 'MyFirstChannel'
+        -
+            conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    application: testsuite
+                    channel:
+                        id: 'MyFirstChannel$'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'bridges/MyFirstBridge/removeChannel'
+                params:
+                    channel: 'MyFirstChannel'
+        -
+            conditions:
+                match:
+                    type: ChannelLeftBridge
+                    application: testsuite
+                    channel:
+                        id: 'MyFirstChannel$'
+            count: 1
+            requests:
+                method: 'delete'
+                uri: 'bridges/MyFirstBridge'
+        -
+            conditions:
+                match:
+                    type: BridgeDestroyed
+                    application: testsuite
+                    bridge:
+                        id: 'MyFirstBridge$'
+            count: 1
+            requests:
+                method: 'delete'
+                uri: 'channels/MyFirstChannel'
+        -
+            conditions:
+                match:
+                    type: ChannelHangupRequest
+                    application: testsuite
+                    channel:
+                        id: 'MyFirstChannel$'
+            count: 1
+        -
+            conditions:
+                match:
+                    type: ChannelDestroyed
+                    application: testsuite
+                    channel:
+                        id: 'MyFirstChannel$'
+            count: 1
+            requests:
+                # delete the first stasis channel to end the test
+                method: 'delete'
+                uri: 'channels/testsuite-default-id'
+        -
+            conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+                    channel:
+                        id: 'MyFirstChannel$'
+            count: 1
+        -
+            conditions:
+                match:
+                    type: ChannelHangupRequest
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+        -
+            conditions:
+                match:
+                    type: ChannelDestroyed
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+        -
+            conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+

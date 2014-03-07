@@ -192,6 +192,37 @@ class AriTestObject(TestCase):
         deferred.addErrback(self.handle_originate_failure)
 
 
+class AriOriginateTestObject(AriTestObject):
+    """Class that overrides AriTestObject origination to use ARI"""
+
+    def __init__(self, test_path='', test_config=None):
+        """Constructor for a test object
+
+        :param test_path The full path to the test location
+        :param test_config The YAML test configuration
+        """
+
+        if test_config is None:
+            test_config = {}
+
+        if not test_config.get('test-iterations'):
+            # preset the default test in ARI format to prevent post failure
+            test_config['test-iterations'] = [{
+                'endpoint': 'Local/s@default',
+                'channelId': 'testsuite-default-id',
+                'app': 'testsuite'
+            }]
+
+        super(AriOriginateTestObject, self).__init__(test_path, test_config)
+
+    def _spawn_channel(self, channel_def):
+        """Create a new channel"""
+
+        # Create a channel using ARI POST to channel instead
+        LOGGER.info("Creating channel %s" % channel_def['endpoint'])
+        self.ari.post('channels', **channel_def)
+
+
 class WebSocketEventModule(object):
     """Module for capturing events from the ARI WebSocket"""
 
@@ -387,6 +418,21 @@ class ARI(object):
         return self.raise_on_err(requests.delete(url, params=kwargs,
                                             auth=self.userpass))
 
+    def request(self, method, *args, **kwargs):
+        """ Send an arbitrary request to ARI.
+
+        :param method: Method (get, post, delete, etc).
+        :param args: Path segements.
+        :param kwargs: Query parameters.
+        :returns: requests.models.Response
+        :throws: requests.exceptions.HTTPError
+        """
+        url = self.build_url(*args)
+        LOGGER.info("%s %s %r" % (method, url, kwargs))
+        requests_method = getattr(requests, method)
+        return self.raise_on_err(requests_method(url, params=kwargs,
+                                auth=self.userpass))
+
     def set_allow_errors(self, value):
         """Sets whether error responses returns exceptions.
 
@@ -423,6 +469,7 @@ class EventMatcher(object):
         self.count_range = decode_range(self.instance_config.get('count'))
         self.count = 0
         self.passed = True
+
         callback = self.instance_config.get('callback')
         if callback:
             module = __import__(callback['module'])
@@ -431,7 +478,61 @@ class EventMatcher(object):
             # No callback; just use a no-op
             self.callback = lambda *args, **kwargs: True
 
+        self.requests = []
+        request_list = self.instance_config.get('requests')
+        if not request_list:
+            request_list = []
+        if isinstance(request_list, dict):
+            request_list = [request_list]
+        for request in request_list:
+            params = request['params'] if 'params' in request else {}
+            inst = request['instance'] if 'instance' in request else 0
+            delay = request['delay'] if 'delay' in request else 0
+            self.requests.append({
+                'method': request['method'],
+                'uri': request['uri'],
+                'params': params,
+                'instance': inst,
+                'delay': delay
+            })
+
         test_object.register_stop_observer(self.on_stop)
+
+    def var_replace(self, uri, values):
+        """ perform variable replacement on uri
+
+        This allows a uri to be written in the form:
+        playbacks/{playback.id}/control
+
+        :param uri: uri with optional {var} entries
+        :param values: nested dict of values to get replacement values from
+        """
+        for match in re.findall(r'{[^}]*}', uri):
+            value = values
+            for var in match[1:-1].split('.'):
+                if not var in value:
+                    LOGGER.error('Unable to replace variables in %s from %s' %
+                                 uri, values)
+                    return None
+                value = value[var]
+            uri = uri.replace(match, value)
+
+        return uri
+
+    def send_request(self, request, uri):
+        """ transmit an ari request
+
+        :param request: request parameters
+        :param uri: uri rewritten for this call
+        """
+        response = self.ari.request(request['method'],
+                                    uri,
+                                    **request['params'])
+
+        LOGGER.info('%s %s %s returned %s' % (request['method'],
+                                              uri,
+                                              request['params'],
+                                              response))
 
     def on_event(self, message):
         """Callback for every received ARI event.
@@ -440,6 +541,21 @@ class EventMatcher(object):
         """
         if self.matches(message):
             self.count += 1
+
+            # send any associated requests
+            for request in self.requests:
+                if request['instance'] and request['instance'] != self.count:
+                    continue
+                uri = self.var_replace(request['uri'], message)
+                if uri:
+                    if request['delay']:
+                        reactor.callLater(request['delay'],
+                                          self.send_request,
+                                          request,
+                                          uri)
+                    else:
+                        self.send_request(request, uri)
+
             # Split call and accumulation to always call the callback
             try:
                 res = self.callback(self.ari, message, self.test_object)
@@ -453,6 +569,7 @@ class EventMatcher(object):
                 LOGGER.error("Exception in callback: %s" %
                              traceback.format_exc())
                 self.passed = False
+
         return False
 
     def on_stop(self, *args):

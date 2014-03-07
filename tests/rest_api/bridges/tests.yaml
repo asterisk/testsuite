@@ -7,3 +7,4 @@ tests:
     - test: 'add_recording_channel'
     - test: 'blind_transfer'
     - test: 'attended_transfer'
+    - test: 'bridge_by_id'
