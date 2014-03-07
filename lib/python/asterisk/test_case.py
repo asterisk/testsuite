@@ -712,12 +712,18 @@ class SimpleTestCase(TestCase):
         msg = "Originating call to %s" % call_details['channel']
         if 'async' not in call_details:
             call_details['async'] = False
+        if 'channelid' not in call_details:
+            call_details['channelid'] = None
+        if 'otherchannelid' not in call_details:
+            call_details['otherchannelid'] = None
         if 'application' in call_details:
             msg += " with application %s" % call_details['application']
             deferred = ami.originate(channel=call_details['channel'],
                                      application=call_details['application'],
                                      variable=call_details['variable'],
-                                     async=call_details['async'])
+                                     async=call_details['async'],
+                                     channelid=call_details['channelid'],
+                                     otherchannelid=call_details['otherchannelid'])
         else:
             msg += " to %s@%s at %s" % (call_details['exten'],
                                         call_details['context'],
@@ -727,7 +733,9 @@ class SimpleTestCase(TestCase):
                                      exten=call_details['exten'],
                                      priority=call_details['priority'],
                                      variable=call_details['variable'],
-                                     async=call_details['async'])
+                                     async=call_details['async'],
+                                     channelid=call_details['channelid'],
+                                     otherchannelid=call_details['otherchannelid'])
         if self._ignore_originate_failures:
             deferred.addErrback(__swallow_originate_error)
         else:

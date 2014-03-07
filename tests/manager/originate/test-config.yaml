@@ -1,0 +1,212 @@
+testinfo:
+    summary: 'Test UniqueID on AMI Originate'
+    description: |
+        * Originate three calls:
+          1) Specifying both Unique ID's
+          2) Specifying a single Unique ID
+          3) Not specifying Unique ID
+        * Check that the AMI and CEL events all correctly match
+
+properties:
+    minversion: '12.2.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - manager
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: cel-config
+            typename: 'ami.AMIEventModule'
+
+test-config:
+    spawn-after-hangup: True
+    expected_events: 30
+    test-iterations:
+        -
+            # test 1 - both id's creating local channel
+            channel: 'Local/one@default'
+            channelid: 'MyCustomId'
+            otherchannelid: 'MyOtherCustomId'
+            context: 'default'
+            exten: 'one'
+            priority: '1'
+        -
+            # test 2 - just the first id, second should suffix ;2
+            channel: 'Local/two@default'
+            channelid: 'OnlyOneId'
+            context: 'default'
+            exten: 'two'
+            priority: '1'
+        -
+            # test 3 - no id's specified, should revert to normal id pattern
+            channel: 'Local/three@default'
+            context: 'default'
+            exten: 'three'
+            priority: '1'
+
+ami-config:
+    # test 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/one@default-.{7}0;1'
+        requirements:
+            match:
+                Uniqueid: 'MyCustomId'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/one@default-.{7}0;2'
+        requirements:
+            match:
+                Uniqueid: 'MyOtherCustomId'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'LocalBridge'
+                LocalOneChannel: 'Local/one@default-.{7}0;1'
+                LocalTwoChannel: 'Local/one@default-.{7}0;2'
+        requirements:
+            match:
+                LocalOneUniqueid: 'MyCustomId'
+                LocalTwoUniqueid: 'MyOtherCustomId'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Hangup'
+                Channel: 'Local/one@default-.{7}0;1'
+        requirements:
+            match:
+                Uniqueid: 'MyCustomId'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Hangup'
+                Channel: 'Local/one@default-.{7}0;2'
+        requirements:
+            match:
+                Uniqueid: 'MyOtherCustomId'
+        count: '1'
+
+    # test 2
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/two@default-.{7}1;1'
+        requirements:
+            match:
+                Uniqueid: 'OnlyOneId$'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/two@default-.{7}1;2'
+        requirements:
+            match:
+                Uniqueid: 'OnlyOneId;2'
+        count: '1'
+    # test 3
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/three@default-.{7}2;1'
+        requirements:
+            match:
+                UniqueId: '[0-9]{10}\.[0-9]+'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/three@default-.{7}2;2'
+        requirements:
+            match:
+                UniqueId: '[0-9]{10}\.[0-9]+'
+        count: '1'
+
+cel-config:
+    # test 1
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/one@default-.{7}0;.'
+        requirements:
+            -
+                match:
+                    Channel: 'Local/one@default-.{7}0;1'
+                    EventName: 'CHAN_START'
+                    UniqueId: 'MyCustomId'
+                    LinkedId: 'MyCustomId'
+            -
+                match:
+                    Channel: 'Local/one@default-.{7}0;2'
+                    EventName: 'CHAN_START'
+                    UniqueId: 'MyOtherCustomId'
+                    LinkedId: 'MyCustomId'
+    # test 2
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/two@default-.{7}1;.'
+        requirements:
+            -
+                match:
+                    Channel: 'Local/two@default-.{7}1;1'
+                    EventName: 'CHAN_START'
+                    UniqueId: 'OnlyOneId$'
+                    LinkedId: 'OnlyOneId$'
+            -
+                match:
+                    Channel: 'Local/two@default-.{7}1;2'
+                    EventName: 'CHAN_START'
+                    UniqueId: 'OnlyOneId;2'
+                    LinkedId: 'OnlyOneId$'
+    # test 3
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/three@default-.{7}2;.'
+        requirements:
+            -
+                match:
+                    Channel: 'Local/three@default-.{7}2;1'
+                    EventName: 'CHAN_START'
+                    UniqueId: '[0-9]{10}\.[0-9]+'
+                    LinkedId: '[0-9]{10}\.[0-9]+'
+            -
+                match:
+                    Channel: 'Local/three@default-.{7}2;2'
+                    EventName: 'CHAN_START'
+                    UniqueId: '[0-9]{10}\.[0-9]+'
+                    LinkedId: '[0-9]{10}\.[0-9]+'
+

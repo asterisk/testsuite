@@ -7,5 +7,6 @@ tests:
     - test: 'acl-login'
     - test: 'bridge_actions'
     - dir:  'danger'
+    - test: 'originate'
     # Temporarily disabled while failures are debugged
     #- test: 'response-time'
