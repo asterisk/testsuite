@@ -1,0 +1,180 @@
+#!/usr/bin/env python
+"""
+Copyright (C) 2014, Digium, Inc.
+Jonathan Rose <jrose@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+"""
+
+import sys
+import logging
+
+sys.path.append("lib/python")
+
+from asterisk.test_case import TestCase
+from asterisk.sipp import SIPpScenario
+from twisted.internet import reactor
+from asterisk.version import AsteriskVersion
+
+LOGGER = logging.getLogger(__name__)
+INJECT_FILE_BRIDGE = "inject_bridge.csv"
+
+
+class SIPHold(TestCase):
+    """TestCase to execute and evaluate SIP hold/unhold with ICE scenario """
+
+    def __init__(self):
+        """ Constructor """
+        TestCase.__init__(self)
+        self.create_asterisk()
+
+        running_version = AsteriskVersion()
+
+        if (running_version < AsteriskVersion("12.0.0")):
+            #Pre-12
+            self.asterisk12Events = False
+        else:
+            self.asterisk12Events = True
+
+        self.sipp_phone_a_scenario = {'scenario': 'phone_A.xml',
+                                      '-i': '127.0.0.2',
+                                      '-p': ' 6080',
+                                      '-inf': INJECT_FILE_BRIDGE}
+        self.sipp_phone_b_scenario = {'scenario': 'phone_B.xml',
+                                      '-i': '127.0.0.3',
+                                      '-p': '6081',
+                                      '-inf': INJECT_FILE_BRIDGE}
+
+        self.moh_start_event = False
+        self.moh_stop_event = False
+        self.check_list_success_events = 0
+
+    def ami_connect(self, ami):
+        """ Reaction to new AMI connection
+
+        :param ami: AMI connection that was established
+        """
+        TestCase.ami_connect(self, ami)
+
+        ami.registerEvent('TestEvent', self.test_event_handler)
+
+        if self.asterisk12Events:
+            ami.registerEvent('MusicOnHoldStart', self.moh_start_event_handler)
+            ami.registerEvent('MusicOnHoldStop', self.moh_stop_event_handler)
+        else:
+            ami.registerEvent('MusicOnHold', self.moh_event_handler)
+
+        LOGGER.info("Starting SIP scenario")
+        self.execute_scenario()
+
+    def execute_scenario(self):
+        """Execute sipp scenarios and check results for a single test phase
+        """
+        sipp_a = SIPpScenario(self.test_name, self.sipp_phone_a_scenario)
+        sipp_b = SIPpScenario(self.test_name, self.sipp_phone_b_scenario)
+
+        # Start up the listener first - Phone A calls Phone B
+        sipp_b.run(self)
+        sipp_a.run(self)
+
+    def handle_checklist_create(self, ami, event):
+        """ Reacts to ICECHECKLISTCREATE user events
+
+        :param ami AMI connection the event was received from
+        :param event Event that was received
+        """
+        if event.get('result') == 'SUCCESS':
+            self.check_list_success_events += 1
+            LOGGER.debug("Received create check list success")
+            if self.check_list_success_events == 2 and \
+                    self.moh_stop_event:
+                self.evaluate_success()
+                self.stop_reactor()
+        else:
+            LOGGER.error("Failed to create check list - test failed")
+            self.set_passed(False)
+            self.stop_reactor()
+
+    def test_event_handler(self, ami, event):
+        """ Reacts to User Events and routes them based on their State Value
+
+        :param ami AMI connection the event was received from
+        :param event Event that was received
+        """
+        if event.get('state') == 'ICECHECKLISTCREATE':
+            self.handle_checklist_create(ami, event)
+
+    def moh_start_event_handler(self, ami, event):
+        """ Reacts to music on hold start events and tallies them.
+
+        :param ami: AMI connection the event was received from
+        :param event: Event that was received
+        """
+        LOGGER.debug("Received MOH start event")
+        self.moh_start_event = True
+
+    def moh_stop_event_handler(self, ami, event):
+        """ Reacts to music on hold stop events and tallies them.
+
+        :param ami: AMI connection the event was received from
+        :param event: Event that was received
+        """
+        LOGGER.debug("Received MOH stop event")
+        self.moh_stop_event = True
+        if self.check_list_success_events == 2:
+            self.evaluate_success()
+            self.stop_reactor()
+
+    def moh_event_handler(self, ami, event):
+        """ Reacts to MusicOnHold events (legacy events from Asterisk <= 11)
+
+        :param ami: AMI connection the event was received from
+        :param event: Event that was received
+        """
+        if event.get('state') == "Start":
+            LOGGER.debug("Received MOH start event")
+            self.moh_start_event = True
+        elif event.get('state') == "Stop":
+            LOGGER.debug("Received MOH stop event")
+            self.moh_stop_event = True
+            if self.check_list_success_events == 2:
+                self.evaluate_success()
+                self.stop_reactor()
+
+    def run(self):
+        """ Run the test and create an AMI connection """
+        TestCase.run(self)
+        self.create_ami_factory()
+
+    def evaluate_success(self):
+        """ Determine whether all of the conditions for passing the test
+            have been met and raise passed flag accordingly.
+        """
+        if not self.moh_start_event:
+            LOGGER.error("Failed to receive MOH start event")
+            self.set_passed(False)
+        if not self.moh_stop_event:
+            LOGGER.error("Failed to receive MOH stop event")
+            self.set_passed(False)
+        if not self.check_list_success_events == 2:
+            LOGGER.error("Expected 2 check list creation events. Got %d\n" %
+                         self.check_list_success_events)
+            self.set_passed(False)
+
+        self.set_passed(True)
+
+
+def main():
+    test = SIPHold()
+    reactor.run()
+    if test.passed:
+        return 0
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79

@@ -1,0 +1,22 @@
+testinfo:
+    summary: 'Test SIP Hold with ICE'
+    description: |
+        This tests a PJSIP assertion crash in 11.7 detailed somewhat in
+        https://issues.asterisk.org/jira/browse/ASTERISK-23213 - A call
+        is started with ICE enabled. A call is started from A to B with
+        some ICE candidates listed that are known to cause a crash in
+        11.7. The call is then put on hold hold (which is the trigger
+        for the crash) and taken off hold. If both the hold and unhold
+        events are received and Asterisk doesn't crash, the test is
+        considered successful. Note that the direction of media is not
+        considered in this test.
+
+properties:
+    minversion: '11.8.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'chan_sip'
+    tags:
+        - SIP
+        - ICE

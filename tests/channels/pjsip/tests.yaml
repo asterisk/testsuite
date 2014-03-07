@@ -15,6 +15,7 @@ tests:
     - dir: 'ami'
     - test: 'set_var'
     - test: 'hold'
+    - test: 'hold_ice'
     - test: 'presence_pidf'
     - test: 'presence_xpidf'
     - test: 'mwi'

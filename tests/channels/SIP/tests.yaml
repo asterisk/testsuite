@@ -43,6 +43,7 @@ tests:
     - test: 'sip_hold'
     - test: 'sip_hold_direct_media'
     - test: 'sip_hold_no_moh'
+    - test: 'sip_hold_ice'
     - test: 'header_parsing'
     - test: 'use_contact_from_200'
     - test: 'generic_ccss'
