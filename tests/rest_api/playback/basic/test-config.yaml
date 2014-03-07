@@ -12,8 +12,7 @@ testinfo:
         * Validate all the events
 
 properties:
-    # change this to correct minimum version that implements IDs
-    minversion: '12.0.0'
+    minversion: '12.2.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests
