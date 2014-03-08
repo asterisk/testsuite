@@ -1,0 +1,587 @@
+testinfo:
+    summary: "Tests interaction between waitmarked and normal users"
+    description: |
+          This test is testing the interaction between waitmarked and normal
+          users. It is doing this through three scenarios.
+          (1) The waitmarked user joins the conference and hears MOH. Then the
+              Normal user joins the conference to change the state to SINGLE,
+              yet the waitmarked user continues to hear MOH.
+          (2) The Normal user joins the conference, then the waitmarked user
+              joins and is played conf-waitforleader and is listening to MOH.
+          (3) The Waitmarked user joins the conference followed by the Normal
+              user. Then the Normal user leaves the conference and the Waitmarked
+              user does not change state, until the channel is hung up.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  reactor-timeout: '60'
+  app: 'ConfBridge'
+  scenarios:
+    -
+      # Scenario 1: A Waitmarked user joins the conference, and hears
+      # the waiting for leader prompt as well as MOH. Then a Normal
+      # user joins the conference, and the waitmarked user continues
+      # to hear the MOH.
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'INACTIVE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Transitioned from EMPTY to INACTIVE'
+            -
+              action-type: 'start-call'
+              delay: 2
+              channel-id: 'Normal_user'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'INACTIVE'
+              NewState: 'SINGLE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Transitioned from INACTIVE to SINGLE'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE'
+              NewState: 'INACTIVE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Transitioned from SINGLE to INACTIVE'
+            -
+              action-type: 'hangup'
+              delay: 2
+              channel-id: 'Waitmarked_user'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'INACTIVE'
+              NewState: 'EMPTY'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Transitioned from INACTIVE to EMPTY'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'Normal_user'
+          channel-name: 'Local/normal@confbridge'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal_user Join Event Received'
+                -
+                  action-type: 'hangup'
+                  delay: 2
+                  channel-id: 'Normal_user'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal_user Leave Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/normal@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal_user Heard Join Sound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHold'
+                  Channel: 'Local/normal@confbridge-.*'
+                  State: 'Start'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHold Event Received for Normal_user'
+        -
+          channel-id: 'Waitmarked_user'
+          channel-name: 'Local/waitmarked@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked_user Join Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked_user Leave Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHold'
+                  Channel: 'Local/waitmarked@confbridge-.*'
+                  State: 'Start'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHold Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/waitmarked@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'conf-waitforleader'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked_user is waiting for Leader'
+    -
+      # Scenario 2: First, the Normal user joins the conference and ultimately
+      # hears MOH. Then the Waitmarked user joins the conference with the
+      # conf-waitforleader prompt and hears MOH until the Marked user shows up.
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'SINGLE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Transitioned from EMPTY to SINGLE'
+            -
+              action-type: 'start-call'
+              delay: 2
+              channel-id: 'Waitmarked_user'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE'
+              NewState: 'INACTIVE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Transitioned from SINGLE to INACTIVE'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'INACTIVE'
+              NewState: 'EMPTY'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Transitioned from INACTIVE to EMPTY'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'Normal_user'
+          channel-name: 'Local/normal@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal_user Join Event Receieved'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal_user Leave Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/normal@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal_user Heard Join Sound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHold'
+                  Channel: 'Local/normal@confbridge-.*'
+                  State: 'Start'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHold Event Received for Normal_user'
+        -
+          channel-id: 'Waitmarked_user'
+          channel-name: 'Local/waitmarked@confbridge'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked_user Join Event Received'
+                -
+                  action-type: 'hangup'
+                  delay: 2
+                  channel-id: 'Normal_user'
+                -
+                  action-type: 'hangup'
+                  delay: 4
+                  channel-id: 'Waitmarked_user'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked_user Leave Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHold'
+                  Channel: 'Local/waitmarked@confbridge-.*'
+                  State: 'Start'
+              actions:
+               -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHold Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/waitmarked@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'conf-waitforleader'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked_user is waiting for Leader'
+    -
+      # Scenario 3: The Waitmarked user joins the conference, and is serenaded
+      # by MOH. Then the Normal user joins the conference also to hear MOH. The
+      # Normal user then leaves the conference, which causes the Waitmarked
+      # user to stay in the INACTIVE state until the channel is finally hung up.
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'INACTIVE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Transitioned from EMPTY to INACTIVE'
+            -
+              action-type: 'start-call'
+              delay: 2
+              channel-id: 'Normal_user'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'INACTIVE'
+              NewState: 'SINGLE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Transitioned from INACTIVE to SINGLE'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE'
+              NewState: 'EMPTY'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Transitioned from SINGLE to EMPTY'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'Normal_user'
+          channel-name: 'Local/normal@confbridge'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal_user Join Event Received'
+                -
+                  action-type: 'hangup'
+                  delay: 2
+                  channel-id: 'Waitmarked_user'
+                -
+                  action-type: 'hangup'
+                  delay: 4
+                  channel-id: 'Normal_user'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/normal@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal_user Leave Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/normal@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Normal_user Heard Join Sound'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHold'
+                  Channel: 'Local/normal@confbridge-.*'
+                  State: 'Start'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHold Event Received for Normal_user'
+        -
+          channel-id: 'Waitmarked_user'
+          channel-name: 'Local/waitmarked@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked_user Join Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked_user Leave Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHold'
+                  Channel: 'Local/waitmarked@confbridge-.*'
+                  State: 'Start'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHold Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  Channel: 'Local/waitmarked@confbridge-.*'
+                  State: 'PLAYBACK'
+                  Message: 'conf-waitforleader'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked_user is waiting for Leader'
+
+properties:
+    minversion: '11.8.0'
+    tags:
+      - confbridge
+      - apps
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_confbridge'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_playback'
