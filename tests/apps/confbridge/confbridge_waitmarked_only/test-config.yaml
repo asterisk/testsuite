@@ -1,0 +1,208 @@
+testinfo:
+    summary: 'Test two waitmarked users in a Conference'
+    description:
+        This tests checks that when a waitmarked user joins a Conference, MusicOnHold
+        is played to that user, and when another waitmarked user joins the Conference,
+        the MusicOnHold should continue to play for the previous user as well as the
+        new user. No marked users or users of any other kind will join the Conference.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'ConfBridge'
+  scenarios:
+    -
+      # Scenario 1
+      # Two waitmarked users join a Conference. Both should hear music on hold,
+      # and should continue to hear it for the duration of the test. If either
+      # user stops hearing it when the other joins/leaves, the test should fail.
+      # No marked users will join, and the test will pass if both waitmarked users
+      # sit in the Conference for a duration without music on hold stopping.
+      # Both users will then hang up and the scenario will end.
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'INACTIVE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from EMPTY to INACTIVE'
+            -
+              action-type: 'start-call'
+              delay: 3
+              channel-id: 'Waitmarked2'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'INACTIVE'
+              NewState: 'EMPTY'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from INACTIVE to EMPTY'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              delay: 2
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              NewState: 'MULTI_MARKED'
+          actions:
+            -
+              action-type: 'fail-test'
+              message: 'Conference started with no marked users'
+      channels:
+        -
+          channel-id: 'Waitmarked1'
+          channel-name: 'Local/waitmarked-one@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-one@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked1 joined Conference'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-one@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked1 left Conference'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/waitmarked-one@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHold started for waitmarked1'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Channel: 'Local/waitmarked-one@confbridge-.*'
+                  Message: 'conf-waitforleader'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked1 heard conf-waitforleader.'
+        -
+          channel-id: 'Waitmarked2'
+          channel-name: 'Local/waitmarked-two@confbridge'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-two@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked2 joined Conference'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-two@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked2 left Conference'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/waitmarked-two@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHold started for waitmarked2'
+                -
+                  action-type: 'hangup'
+                  delay: 3
+                  channel-id: 'Waitmarked1'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Waitmarked2'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Channel: 'Local/waitmarked-two@confbridge-.*'
+                  Message: 'conf-waitforleader'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked2 heard conf-waitforleader.'
+
+properties:
+    minversion: '11.8.0'
+    tags:
+      - confbridge
+      - apps
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_confbridge'
+      - asterisk : 'app_playback'

@@ -3,6 +3,7 @@ tests:
     - test: 'confbridge_marked_unmarked'
     - test: 'confbridge_marked'
     - test: 'confbridge_waitmarked_single'
+    - test: 'confbridge_waitmarked_only'
     - test: 'confbridge_waitmarked_kick'
     - test: 'confbridge_nominal'
     - test: 'confbridge_recording'
