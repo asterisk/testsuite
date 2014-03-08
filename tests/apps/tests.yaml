@@ -17,3 +17,4 @@ tests:
     - dir: 'control_playback'
     - dir: 'playback'
     - test: 'say_interrupt'
+    - test: 'channel_redirect'

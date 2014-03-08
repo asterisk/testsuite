@@ -1,0 +1,155 @@
+test-info:
+    summary: 'Tests basic ChannelRedirect functionality.'
+    description:
+        The first scenario has a local channel send both ends into the Echo()
+        application. A second channel is then called that redirects the first channel
+        into another extension that hangs up immediately. CHANNELREDIRECT_STATUS
+        should then return SUCCESS.
+        The second scenario only calls one channel and tries to redirect a non-existent
+        channel to an extension. CHANNELREDIRECT_STATUS should return NOCHANNEL.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'ChannelRedirect'
+  scenarios:
+    -
+      # Scenario 1
+      # The first local channel sends both ends into the Echo() application. The second
+      # channel then redirects the first channel to an extension that hangs up.
+      # CHANNELREDIRECT_STATUS should then return SUCCESS.
+      channels:
+        -
+          channel-id: 'Receiving-channel'
+          channel-name: 'Local/receiving@test'
+          context: 'test'
+          exten: 'echo'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Channel: 'Local/receiving@test-.*'
+                  Extension: 'receiving'
+                  Application: 'Echo'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Receiving channel hit Echo'
+                -
+                  action-type: 'start-call'
+                  delay: 1
+                  channel-id: 'Initiating-channel'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/receiving@test-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Receiving channel hung up'
+        -
+          channel-id: 'Initiating-channel'
+          channel-name: 'Local/initiating@test'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+              requirements:
+                match:
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Receiving channel successfully redirected'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Channel: 'Local/initiating@test-.*'
+                  Application: 'ChannelRedirect'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Initiating channel is redirecting receiving channel'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/initiating@test-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Initiating channel hung up'
+                -
+                  action-type: 'end-scenario'
+    -
+      # Scenario 2
+      # A local channel attempts to redirect a non-existent channel. CHANNELREDIRECT_STATUS
+      # should return NOCHANNEL.
+      channels:
+        -
+          channel-id: 'Null-initiate'
+          channel-name: 'Local/null-initiate@test'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+              requirements:
+                match:
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'CHANNELREDIRECT_STATUS returned NOCHANNEL'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Channel: 'Local/null-initiate@test-.*'
+                  Application: 'ChannelRedirect'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Initiating channel is attempting to redirect non-existent channel'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/null-initiate@test-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Null-initiate channel hung up'
+                -
+                  action-type: 'end-scenario'
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - apps
