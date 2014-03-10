@@ -1,0 +1,25 @@
+testinfo:
+    summary:     'Test outbound qualify handling'
+    description: |
+        'Send OPTIONS to a SIPp instance and confirm no crash occurs when challenged
+         for authentication'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'options.xml', '-i': '127.0.0.1', '-p': '5061'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

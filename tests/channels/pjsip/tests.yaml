@@ -21,3 +21,5 @@ tests:
     - test: 'mwi'
     - test: 'mwi_aggregate'
     - test: 'refer_send_to_vm'
+    - test: 'qualify'
+
