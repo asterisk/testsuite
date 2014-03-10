@@ -1092,7 +1092,7 @@ test-object-config:
                   message: 'Waitmarked user should not hear conf-waitforleader.'
 
 properties:
-    minversion: '11.8.0'
+    minversion: '12.0.0'
     tags:
       - confbridge
       - apps

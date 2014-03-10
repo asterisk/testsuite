@@ -154,13 +154,12 @@ test-object-config:
               type: 'headermatch'
               conditions:
                 match:
-                  Event: 'MusicOnHold'
+                  Event: 'MusicOnHoldStart'
                   Channel: 'Local/normal@confbridge-.*'
-                  State: 'Start'
               actions:
                 -
                   action-type: 'set-expected-result'
-                  expected-result: 'MusicOnHold Event Received for Normal_user'
+                  expected-result: 'MusicOnHoldStart Event Received for Normal_user'
         -
           channel-id: 'Waitmarked_user'
           channel-name: 'Local/waitmarked@confbridge'
@@ -194,13 +193,12 @@ test-object-config:
               type: 'headermatch'
               conditions:
                 match:
-                  Event: 'MusicOnHold'
+                  Event: 'MusicOnHoldStart'
                   Channel: 'Local/waitmarked@confbridge-.*'
-                  State: 'Start'
               actions:
                 -
                   action-type: 'set-expected-result'
-                  expected-result: 'MusicOnHold Event Received'
+                  expected-result: 'MusicOnHoldStart Event Received'
             -
               type: 'headermatch'
               conditions:
@@ -326,13 +324,12 @@ test-object-config:
               type: 'headermatch'
               conditions:
                 match:
-                  Event: 'MusicOnHold'
+                  Event: 'MusicOnHoldStart'
                   Channel: 'Local/normal@confbridge-.*'
-                  State: 'Start'
               actions:
                 -
                   action-type: 'set-expected-result'
-                  expected-result: 'MusicOnHold Event Received for Normal_user'
+                  expected-result: 'MusicOnHoldStart Event Received for Normal_user'
         -
           channel-id: 'Waitmarked_user'
           channel-name: 'Local/waitmarked@confbridge'
@@ -373,13 +370,12 @@ test-object-config:
               type: 'headermatch'
               conditions:
                 match:
-                  Event: 'MusicOnHold'
+                  Event: 'MusicOnHoldStart'
                   Channel: 'Local/waitmarked@confbridge-.*'
-                  State: 'Start'
               actions:
                -
                   action-type: 'set-expected-result'
-                  expected-result: 'MusicOnHold Event Received'
+                  expected-result: 'MusicOnHoldStart Event Received'
             -
               type: 'headermatch'
               conditions:
@@ -513,13 +509,12 @@ test-object-config:
               type: 'headermatch'
               conditions:
                 match:
-                  Event: 'MusicOnHold'
+                  Event: 'MusicOnHoldStart'
                   Channel: 'Local/normal@confbridge-.*'
-                  State: 'Start'
               actions:
                 -
                   action-type: 'set-expected-result'
-                  expected-result: 'MusicOnHold Event Received for Normal_user'
+                  expected-result: 'MusicOnHoldStart Event Received for Normal_user'
         -
           channel-id: 'Waitmarked_user'
           channel-name: 'Local/waitmarked@confbridge'
@@ -553,13 +548,12 @@ test-object-config:
               type: 'headermatch'
               conditions:
                 match:
-                  Event: 'MusicOnHold'
+                  Event: 'MusicOnHoldStart'
                   Channel: 'Local/waitmarked@confbridge-.*'
-                  State: 'Start'
               actions:
                 -
                   action-type: 'set-expected-result'
-                  expected-result: 'MusicOnHold Event Received'
+                  expected-result: 'MusicOnHoldStart Event Received'
             -
               type: 'headermatch'
               conditions:
@@ -574,7 +568,7 @@ test-object-config:
                   expected-result: 'Waitmarked_user is waiting for Leader'
 
 properties:
-    minversion: '11.8.0'
+    minversion: '12.0.0'
     tags:
       - confbridge
       - apps
