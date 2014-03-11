@@ -1,0 +1,51 @@
+testinfo:
+    summary:     'Test PJSIP presence un-subscribe.'
+    description: |
+        'This test creates a PJSUA account, "alice", that subscribes to buddy
+        "bob". Upon successfully subscribing it will then un-subscribe. This
+        ensures that alice successfully un-subscribed from bob.'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - python: 'pjsua'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_exten_state'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-case-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: 'pjsua-config'
+            typename: 'pjsua_mod.PJsua'
+
+test-case-config:
+    reactor-timeout: 15
+    connect-ami: 'True'
+
+pjsua-config:
+    callback_module: 'unsubscribe'
+    callback_method: 'buddy_subscribe'
+    transports:
+        -
+            name: 'local-ipv4'
+            bind: '127.0.0.1'
+            bindport: '5061'
+    accounts:
+        -
+            name: 'alice'
+            username: 'alice'
+            password: 'alice'
+            domain: '127.0.0.1'
+            buddies:
+                -
+                    name: 'bob'
+                    uri: 'sip:bob@127.0.0.1'
+

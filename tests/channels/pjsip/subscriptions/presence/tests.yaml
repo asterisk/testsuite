@@ -1,0 +1,7 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'digium_presence'
+    - test: 'presence_pidf'
+    - test: 'presence_xpidf'
+    - test: 'resubscribe'
+    - test: 'unsubscribe'
