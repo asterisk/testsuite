@@ -1,0 +1,194 @@
+testinfo:
+    summary: 'Tests AgentRequest and agent state.'
+    description:
+        This test verifies that once an agent logs in, that agent is placed in a
+        pool with status NOT_INUSE. When a channel requests the agent, they are placed
+        into a basic bridge and the agent's status changes to INUSE. Once the requesting
+        channel hangs up, the agent is then returned to the pool, and that agent's
+        status changes to NOT_INUSE again.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  apps:
+    - 'AgentRequest'
+    - 'AgentLogin'
+  scenarios:
+    -
+      # Scenario
+      # An agent logs in. This spawns a second channel that requests the agent.
+      # The two should then be bridged together, and the agent's status should change
+      # to INUSE. Afterwards, the requesting channel hangs up, and the agent's
+      # status should change back to available.
+      channels:
+        -
+          channel-id: 'Agent-login'
+          channel-name: 'Local/login@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'AgentLogin'
+                  Agent: '1000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 logged in.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  Channel: 'Local/login@default-.*'
+                  BridgeType: 'agent_hold'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 entered pool.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  Channel: 'Local/login@default-.*'
+                  BridgeType: 'basic'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent channel connected to bridge.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/login@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 received MusicOnHoldStart event.'
+                -
+                  # Delay to work around ASTERISK-23259
+                  action-type: 'start-call'
+                  delay: 8
+                  channel-id: 'Status-AVAILABLE'
+        -
+          channel-id: 'Agent-request'
+          channel-name: 'Local/request@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Channel: 'Local/request@default-.*'
+                  Application: 'AgentRequest'
+                  AppData: '1000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 received an agent request.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  Channel: 'Local/request@default-.*'
+                  BridgeType: 'basic'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'The requesting channel entered the bridge.'
+                -
+                  action-type: 'start-call'
+                  delay: 2
+                  channel-id: 'Status-INUSE'
+
+        -
+          channel-id: 'Status-AVAILABLE'
+          channel-name: 'Local/status-avail@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'AvailableAgent'
+              requirements:
+                match:
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent is available.'
+                -
+                  action-type: 'start-call'
+                  channel-id: 'Agent-request'
+        -
+          channel-id: 'Status-end'
+          channel-name: 'Local/status-avail2@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'AvailableAgent2'
+              requirements:
+                match:
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent is available.'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Agent-login'
+                -
+                  action-type: 'end-scenario'
+        -
+          channel-id: 'Status-INUSE'
+          channel-name: 'Local/status-inuse@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'InuseAgent'
+              requirements:
+                match:
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent is in use.'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Agent-request'
+                -
+                  action-type: 'start-call'
+                  channel-id: 'Status-end'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'starpy'
+        - python : 'twisted'
+    tags:
+        - agents
+        - apps

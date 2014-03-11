@@ -58,7 +58,13 @@ class AppTest(TestCase):
         self._event_instances = []      # The ApplicationEventInstance objects
 
         self.raw_test_config = test_config
-        self._application = self.raw_test_config['app']
+        if 'app' in self.raw_test_config:
+            self._applications = [ self.raw_test_config['app'] ]
+        elif 'apps' in self.raw_test_config:
+            self._applications = self.raw_test_config['apps']
+        else:
+            raise Exception("No 'app' or 'apps' defined in test-config")
+
         self._scenarios = self.raw_test_config['scenarios']
 
         self.register_ami_observer(self._ami_connect_handler)
@@ -102,7 +108,7 @@ class AppTest(TestCase):
                 self._event_instances.append(ae_instance)
 
             obj = ChannelObject(ami=self.ami[0],
-                                application=self._application,
+                                applications=self._applications,
                                 channel_def=channel_config)
             self._channel_objects[channel_id] = obj
             LOGGER.debug("Created channel object for %s" % channel_id)
@@ -202,20 +208,20 @@ class ChannelObject(object):
     default_audio_exten = 'sendAudio'
 
     def __init__(self, ami,
-                 application,
+                 applications,
                  channel_def):
         ''' Create a new ChannelObject
 
         Keywords:
         ami The AMI instance to spawn the channel in
-        application The application name to test
+        applications The application names to test
         channel_def A dictionary of parameters to extract that will configure
             the channel object
         '''
 
         self._channel_id = channel_def['channel-id']
         self._channel_name = channel_def['channel-name']
-        self._application = application
+        self._applications = applications
         self._controller_context = channel_def.get('context') or \
                                    ChannelObject.default_context
         self._controller_initial_exten = channel_def.get('exten') or \
@@ -524,7 +530,7 @@ class ChannelObject(object):
 
         if 'channel' not in event or 'application' not in event:
             return
-        if event['application'] != self._application:
+        if event['application'] not in self._applications:
             return
         if event['channel'] not in self._candidate_channels:
             # Whatever channel just entered isn't one of our channels.  This
