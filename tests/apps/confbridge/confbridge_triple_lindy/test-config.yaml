@@ -291,18 +291,6 @@ test-object-config:
                   Event: 'TestEvent'
                   State: 'PLAYBACK'
                   Channel: 'Local/marked-user@confbridge-.*'
-                  Message: 'conf-placeintoconf'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked user heard conf-placeintoconf'
-            -
-              type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  State: 'PLAYBACK'
-                  Channel: 'Local/marked-user@confbridge-.*'
                   Message: 'confbridge-join'
               actions:
                 -
@@ -562,18 +550,6 @@ test-object-config:
                   Event: 'TestEvent'
                   State: 'PLAYBACK'
                   Channel: 'Local/marked-user@confbridge-.*'
-                  Message: 'conf-placeintoconf'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked user heard conf-placeintoconf'
-            -
-              type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  State: 'PLAYBACK'
-                  Channel: 'Local/marked-user@confbridge-.*'
                   Message: 'confbridge-join'
               actions:
                 -
@@ -823,18 +799,6 @@ test-object-config:
                   Event: 'TestEvent'
                   State: 'PLAYBACK'
                   Channel: 'Local/marked-user@confbridge-.*'
-                  Message: 'conf-placeintoconf'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked user heard conf-placeintoconf'
-            -
-              type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  State: 'PLAYBACK'
-                  Channel: 'Local/marked-user@confbridge-.*'
                   Message: 'confbridge-join'
               actions:
                 -
@@ -1001,18 +965,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Marked user left Conference'
-            -
-              type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  State: 'PLAYBACK'
-                  Channel: 'Local/marked-user@confbridge-.*'
-                  Message: 'conf-placeintoconf'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked user heard conf-placeintoconf'
             -
               type: 'headermatch'
               conditions:
