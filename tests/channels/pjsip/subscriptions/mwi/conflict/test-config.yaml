@@ -1,0 +1,28 @@
+testinfo:
+    summary:     'Try a subscription to MWI that conflicts with endpoint settings'
+    description: |
+        'For this test, we create an endpoint that receives unsolicited MWI
+         for mailbox_a. The endpoint then attempts to SUBSCRIBE to an AoR
+         that provides MWI for mailbox_a. The SUBSCRIBE should be rejected
+         since settings conflict with each other.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'bad_subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'mwi-aor'} }
+
+properties:
+    minversion: '12.2.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_mwi'
+    tags:
+        - pjsip
