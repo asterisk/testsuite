@@ -72,10 +72,6 @@ ari-config:
                     channel:
                         id: 'MyStasisId$'
             count: 1
-            requests:
-                # delete the channel to end the test
-                method: 'delete'
-                uri: 'channels/MyStasisId'
         -
             # We should not see the other channel as it went to dialplan
             # The fact that is has the correct ID is checked by AMI & CEL
@@ -93,6 +89,10 @@ ari-config:
                     application: testsuite
                     channel:
                         id: 'MyStasisId$'
+            requests:
+                # delete the channel to end the test
+                method: 'delete'
+                uri: 'channels/MyStasisId'
             count: 1
         -
             conditions:
