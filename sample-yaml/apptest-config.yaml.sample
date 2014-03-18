@@ -19,8 +19,9 @@
 #    Hangup the local channel
 #
 app-test-config:
-    app: 'ConfBridge'          # Required.  The application that this test will
-                               # exercise.
+    apps:                      # Required.  The application(s) that this test
+      - 'Confbridge'           # will exercise.
+      - 'Dial'
     # An application test consists of some number of scenarios to execute.  Each
     # scenario should be independent of the others.  The test passes if all
     # scenarios complete successfully.

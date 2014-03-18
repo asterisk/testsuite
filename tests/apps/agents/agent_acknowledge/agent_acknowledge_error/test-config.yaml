@@ -1,0 +1,258 @@
+testinfo:
+    summary: 'Tests different errors an agent can get when trying to acknowledge a request.'
+    description:
+        The first scenario has an agent log in, then a channel requests that agent.
+        Upon hearing the beep, the agent inputs an invalid DTMF key, waits,
+        and if the two channels are still not bridged together, the test passes.
+        The second scenario is exactly the same, only autologoff is set to true
+        for the agent, and the agent does nothing when a request is sent. If the
+        agent logs off and the two were never bridged, the test passes.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  apps:
+    - 'AgentLogin'
+    - 'AgentRequest'
+  scenarios:
+    -
+      # Scenario 1
+      # An agent logs in and receives an AgentRequest. A beep should be played and
+      # the agent will attempt to acknowledge it with an invalid DTMF. If the agent
+      # does not enter the bridge with the requesting channel, the test passes.
+      channels:
+        -
+          channel-id: 'Login-1000'
+          channel-name: 'Local/login1000@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'AgentLogin'
+                  Agent: '1000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 logged in.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'agent_hold'
+                  Channel: 'Local/login1000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 entered the holding bridge.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/login1000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 is being played music on hold.'
+                -
+                  action-type: 'start-call'
+                  delay: 6
+                  channel-id: 'Request-1000'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Channel: 'Local/login1000@default-.*'
+                  Message: 'beep'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 heard beep.'
+                -
+                  action-type: 'send-dtmf'
+                  delay: 1
+                  dtmf: '*'
+                -
+                  action-type: 'set-expected-result'
+                  delay: 15
+                  expected-result: 'Invalid DTMF sent and agent 1000 never joined bridge.'
+                -
+                  action-type: 'end-scenario'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'basic'
+                  Channel: 'Local/login1000@default-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'Agent 1000 entered bridge with invalid DTMF!'
+        -
+          channel-id: 'Request-1000'
+          channel-name: 'Local/request1000@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Channel: 'Local/request1000@default-.*'
+                  Application: 'AgentRequest'
+                  AppData: '1000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 received a request.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'basic'
+                  Channel: 'Local/request1000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Requesting channel entered basic bridge.'
+    -
+      # Scenario 2
+      # The same as scenario 1, but the autologoff option is set to log an agent
+      # off if that agent does not acknowledge a request within 5 seconds. If the
+      # agent logs off and never entered the bridge with the requesting channel,
+      # the test passes.
+      channels:
+        -
+          channel-id: 'Login-2000'
+          channel-name: 'Local/login2000@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'AgentLogin'
+                  Agent: '2000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 2000 logged in.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'agent_hold'
+                  Channel: 'Local/login2000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 2000 entered the holding bridge.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/login2000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 2000 is being played music on hold.'
+                -
+                  action-type: 'start-call'
+                  delay: 6
+                  channel-id: 'Request-2000'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Channel: 'Local/login2000@default-.*'
+                  Message: 'beep'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 2000 heard beep.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'basic'
+                  Channel: 'Local/login2000@default-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'Agent 2000 entered bridge with invalid DTMF!'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'AgentLogoff'
+                  Agent: '2000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 2000 logged off automatically.'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Login-2000'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Request-2000'
+                -
+                  action-type: 'end-scenario'
+        -
+          channel-id: 'Request-2000'
+          channel-name: 'Local/request2000@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Channel: 'Local/request2000@default-.*'
+                  Application: 'AgentRequest'
+                  AppData: '2000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 2000 received a request.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'basic'
+                  Channel: 'Local/request2000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Requesting channel entered basic bridge.'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'starpy'
+        - python : 'twisted'
+    tags:
+        - agents
+        - apps

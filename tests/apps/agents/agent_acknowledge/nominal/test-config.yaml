@@ -1,0 +1,406 @@
+testinfo:
+    summary: 'Tests different ways an agent can acknowledge a request.'
+    description:
+        The first scenario logs an agent in, who is then sent a request. Upon
+        receiving the request, a beep should be played. Once the agent presses
+        the '#' key, the agent and requesting channel should be bridged.
+        The second scenario does the exact same thing, except instead of pressing
+        the '#' key, the '*' key should be pressed instead.
+        The third scenario should play something else instead of a beep, and if it
+        is heard, the scenario should end successfully.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  apps:
+    - 'AgentLogin'
+    - 'AgentRequest'
+  scenarios:
+    -
+      # Scenario 1
+      # An agent logs in and receives an AgentRequest. A beep should be played and
+      # the agent should acknowledge the request by pressing the '#' key, placing
+      # both the agent and the requesting channel into a bridge.
+      channels:
+        -
+          channel-id: 'Login-1000'
+          channel-name: 'Local/login1000@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'AgentLogin'
+                  Agent: '1000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 logged in.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'agent_hold'
+                  Channel: 'Local/login1000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 entered the holding bridge.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/login1000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 is being played music on hold.'
+                -
+                  action-type: 'start-call'
+                  delay: 6
+                  channel-id: 'Request-1000'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Channel: 'Local/login1000@default-.*'
+                  Message: 'beep'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 heard beep.'
+                -
+                  action-type: 'send-dtmf'
+                  delay: 1
+                  dtmf: '#'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'basic'
+                  Channel: 'Local/login1000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 entered basic bridge.'
+                -
+                  action-type: 'start-call'
+                  delay: 1
+                  channel-id: 'Status-INUSE'
+        -
+          channel-id: 'Request-1000'
+          channel-name: 'Local/request1000@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Channel: 'Local/request1000@default-.*'
+                  Application: 'AgentRequest'
+                  AppData: '1000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 received a request.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'basic'
+                  Channel: 'Local/request1000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Requesting channel entered basic bridge.'
+        -
+          channel-id: 'Status-INUSE'
+          channel-name: 'Local/status1000@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'AgentINUSE'
+              requirements:
+                match:
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 state is INUSE.'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Request-1000'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Login-1000'
+                -
+                  action-type: 'end-scenario'
+    -
+      # Scenario 2
+      # Exactly the same as scenario 1, but the accepted DTMF value should be '*'.
+      channels:
+        -
+          channel-id: 'Login-2000'
+          channel-name: 'Local/login2000@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'AgentLogin'
+                  Agent: '2000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 2000 logged in.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'agent_hold'
+                  Channel: 'Local/login2000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 2000 entered the holding bridge.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/login2000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 2000 is being played music on hold.'
+                -
+                  action-type: 'start-call'
+                  delay: 6
+                  channel-id: 'Request-2000'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Channel: 'Local/login2000@default-.*'
+                  Message: 'beep'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 2000 heard beep.'
+                -
+                  action-type: 'send-dtmf'
+                  delay: 1
+                  dtmf: '*'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'basic'
+                  Channel: 'Local/login2000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 2000 entered basic bridge.'
+                -
+                  action-type: 'start-call'
+                  delay: 1
+                  channel-id: 'Status-INUSE'
+        -
+          channel-id: 'Request-2000'
+          channel-name: 'Local/request2000@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Channel: 'Local/request2000@default-.*'
+                  Application: 'AgentRequest'
+                  AppData: '2000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 2000 received a request.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'basic'
+                  Channel: 'Local/request2000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Requesting channel entered basic bridge.'
+        -
+          channel-id: 'Status-INUSE'
+          channel-name: 'Local/status2000@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'AgentINUSE'
+              requirements:
+                match:
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 2000 state is INUSE.'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Request-2000'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Login-2000'
+                -
+                  action-type: 'end-scenario'
+    -
+      # Scenario 3
+      # Exactly the same as scenario 1, but a custom sound file will be played
+      # instead of a beep. Only worried about the custom sound being played back.
+      # Hang up channels and end scenario if the sound is heard.
+      channels:
+        -
+          channel-id: 'Login-3000'
+          channel-name: 'Local/login3000@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'AgentLogin'
+                  Agent: '3000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 3000 logged in.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'agent_hold'
+                  Channel: 'Local/login3000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 3000 entered the holding bridge.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/login3000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 3000 is being played music on hold.'
+                -
+                  action-type: 'start-call'
+                  delay: 6
+                  channel-id: 'Request-3000'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Channel: 'Local/login3000@default-.*'
+                  Message: 'hello-world'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 3000 heard custom beep.'
+                -
+                  action-type: 'hangup'
+                  delay: 1
+                  channel-id: 'Request-3000'
+                -
+                  action-type: 'hangup'
+                  delay: 1
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/login3000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'All channels hung up'
+                -
+                  action-type: 'end-scenario'
+        -
+          channel-id: 'Request-3000'
+          channel-name: 'Local/request3000@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Channel: 'Local/request3000@default-.*'
+                  Application: 'AgentRequest'
+                  AppData: '3000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 3000 received a request.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'basic'
+                  Channel: 'Local/request3000@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Requesting channel entered basic bridge.'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'starpy'
+        - python : 'twisted'
+    tags:
+        - agents
+        - apps

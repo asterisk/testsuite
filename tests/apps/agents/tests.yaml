@@ -2,4 +2,5 @@
 tests:
     - dir: 'agent_login'
     - dir: 'agent_request'
+    - dir: 'agent_acknowledge'
 
