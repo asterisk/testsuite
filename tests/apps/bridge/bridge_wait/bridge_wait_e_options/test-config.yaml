@@ -1,0 +1,297 @@
+testinfo:
+    summary: 'Tests the e options of the BridgeWait application'
+    description: |
+        'This test covers all the ways that a channel can be entertained within
+         a holding bridge. It tests the e(m), m(), e(n), e(s), e(r), and e(h).
+         The e(m) deals with playing music while on hold, m() is specifically to check
+         that MoH is playing to the participant, e(n) is to have no entertainment
+         in the Bridge, e(s) is to have silence within the Bridge, e(r) is to have
+         the holding Bridge ring without a pause and e(h) is to have a channel put
+         on hold.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'BridgeWait'
+  scenarios:
+    -
+      # Scenario 1: This test is to verify that the MoH is started using the
+      # the default MoH class through the e(m) operation.
+      channels:
+        -
+          channel-id: 'EM_Option'
+          channel-name: 'Local/em_option@holding_bridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/em_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel Hung Up'
+                -
+                  action-type: 'end-scenario'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/em_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHold Event was Received'
+                -
+                  action-type: 'hangup'
+                  delay: 1
+    -
+      # Scenario 2: This test verifies that the m option can be assigned a MoH
+      # class, and that it gets those MoH events.
+      channels:
+        -
+          channel-id: 'M_Option'
+          channel-name: 'Local/m_option@holding_bridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/m_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel Hung Up'
+                -
+                  action-type: 'end-scenario'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/m_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHold Event was Received'
+                -
+                  action-type: 'hangup'
+                  delay: 1
+    -
+      # Scenario 3: The e(n) test checks to make sure that no MoH or Hold events
+      # are present within the test since there should be no entertainment.
+      channels:
+        -
+          channel-id: 'EN_Option'
+          channel-name: 'Local/en_option@holding_bridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  Channel: 'Local/en_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'BridgeEnter Event Received'
+                -
+                  action-type: 'hangup'
+                  delay: 2
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/en_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'MusicOnHold Started!'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hold'
+                  Channel: 'Local/en_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'Hold Found!'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/en_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel Hung Up'
+                -
+                  action-type: 'end-scenario'
+    -
+      # Scenario 4: The e(s) test is identical to the e(n) test, yet it plays back
+      # silent audio instead of dead air. It also checks that no Hold or MoH Events
+      # were received.
+      channels:
+        -
+          channel-id: 'ES_Option'
+          channel-name: 'Local/es_option@holding_bridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  Channel: 'Local/es_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'BridgeEnter Event Received'
+                -
+                  action-type: 'hangup'
+                  delay: 2
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/es_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'MusicOnHold Started!'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hold'
+                  Channel: 'Local/es_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'Hold Found!'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/es_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel Hung Up'
+                -
+                  action-type: 'end-scenario'
+    -
+      # Scenario 5: The e(r) test verifies that the state of the channel changes
+      # to ringing by checking a Newstate event.
+      channels:
+        -
+          channel-id: 'ER_Option'
+          channel-name: 'Local/er_option@holding_bridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newstate'
+                  Channel: 'Local/er_option@holding_bridge-.*'
+                  ChannelStateDesc: 'Ringing'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel is Ringing'
+                -
+                  action-type: 'hangup'
+                  delay: 3
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/er_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel Hung Up'
+                -
+                  action-type: 'end-scenario'
+    -
+      # Scenario 6: The e(h) test checks to make sure that the channel is on
+      # hold through MoH events.
+      channels:
+        -
+          channel-id: 'EH_Option'
+          channel-name: 'Local/eh_option@holding_bridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  Channel: 'Local/eh_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'BridgeEnter Event Received'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/eh_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel on Hold'
+                -
+                  action-type: 'hangup'
+                  delay: 2
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/eh_option@holding_bridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel Hung Up'
+                -
+                  action-type: 'end-scenario'
+
+properties:
+    minversion: '12.0.0'
+    tags:
+      - bridge
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python: 'twisted'
+      - python: 'starpy'
+      - asterisk: 'app_bridgewait'

@@ -1,3 +1,4 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
+    - test: 'bridge_wait_e_options'
     - test: 'bridge_wait_roles'
