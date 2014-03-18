@@ -1,0 +1,351 @@
+testinfo:
+    summary: 'Tests interactions between waitmarked, marked, and endmarked users.'
+    description:
+        This test verifies that when a waitmarked, an endmarked, and a waitmarked
+        endmarked user all join a Conference, they all wait for the marked user to
+        join. They should all be able to interact with each other once the marked
+        user joins. When the marked user leaves, all users with the endmarked
+        tag should be removed from the Conference. The waitmarked user should return
+        to its waiting state.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'ConfBridge'
+  scenarios:
+    -
+      # Scenario 1
+      # A waitmarked user, an endmarked user, and an endmarked/waitmarked user all
+      # join a Conference and should hear music on hold while they wait for the marked
+      # user to join. Once the marked user joins, each user should be able to interact
+      # with each other. When the marked user leaves, every user with the endmarked
+      # tag should be removed from the Conference, and the waitmarked user should
+      # return to its waiting state.
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeStart'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference Started'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'EMPTY'
+              NewState: 'INACTIVE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from EMPTY to INACTIVE'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'INACTIVE'
+              NewState: 'SINGLE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from INACTIVE to SINGLE'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE'
+              NewState: 'MULTI_MARKED'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from SINGLE to MULTI_MARKED'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'MULTI_MARKED'
+              NewState: 'SINGLE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from MULTI_MARKED to SINGLE'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'SINGLE'
+              NewState: 'INACTIVE'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from SINGLE to INACTIVE'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'TestEvent'
+              State: 'CONF_CHANGE_STATE'
+              OldState: 'INACTIVE'
+              NewState: 'EMPTY'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Conference transitioned from INACTIVE to EMPTY'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'ConfbridgeEnd'
+              Conference: '1'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              delay: 2
+              expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
+      channels:
+        -
+          channel-id: 'Waitmarked-user'
+          channel-name: 'Local/waitmarked-user@confbridge'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked user joined Conference'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked user left Conference'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/waitmarked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked user is hearing MusicOnHold'
+                -
+                  action-type: 'start-call'
+                  delay: 1
+                  channel-id: 'Endmarked-user'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStop'
+                  Channel: 'Local/waitmarked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHold stopped for waitmarked user'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Channel: 'Local/waitmarked-user@confbridge-.*'
+                  Message: 'conf-waitforleader'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked user heard conf-waitforleader.'
+        -
+          channel-id: 'Endmarked-user'
+          channel-name: 'Local/endmarked-user@confbridge'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/endmarked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Endmarked user joined Conference'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/endmarked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Endmarked user left Conference'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/endmarked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Endmarked user is hearing MusicOnHold'
+                -
+                  action-type: 'start-call'
+                  delay: 1
+                  channel-id: 'Waitmarked-endmarked-user'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStop'
+                  Channel: 'Local/endmarked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHold stopped for endmarked user'
+        -
+          channel-id: 'Waitmarked-endmarked-user'
+          channel-name: 'Local/waitmarked-endmarked-user@confbridge'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-endmarked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked-endmarked user joined Conference'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/waitmarked-endmarked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked-endmarked user left Conference'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/waitmarked-endmarked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Waitmarked-endmarked user is hearing MusicOnHold'
+                -
+                  action-type: 'start-call'
+                  delay: 1
+                  channel-id: 'Marked-user'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStop'
+                  Channel: 'Local/waitmarked-endmarked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'MusicOnHold stopped for waitmarked-endmarked user'
+        -
+          channel-id: 'Marked-user'
+          channel-name: 'Local/marked-user@confbridge'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeJoin'
+                  Conference: '1'
+                  Channel: 'Local/marked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked-endmarked user joined Conference'
+                -
+                  action-type: 'hangup'
+                  delay: 1
+                -
+                  action-type: 'hangup'
+                  delay: 5
+                  channel-id: 'Waitmarked-user'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'ConfbridgeLeave'
+                  Conference: '1'
+                  Channel: 'Local/marked-user@confbridge-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked user left Conference'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Channel: 'Local/marked-user@confbridge-.*'
+                  Message: 'confbridge-join'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Marked user heard confbridge-join'
+
+properties:
+    minversion: '12.0.0'
+    tags:
+      - confbridge
+      - apps
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_confbridge'
+      - asterisk : 'app_playback'

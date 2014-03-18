@@ -11,3 +11,5 @@ tests:
     - test: 'confbridge_dynamic_menus'
     - test: 'confbridge_result'
     - test: 'confbridge_triple_lindy'
+    - test: 'confbridge_end_marked'
+
