@@ -1,0 +1,113 @@
+test-info:
+    summary: 'Tests that the BridgeWait roles are working correctly.'
+    description:
+        This test has a local channel join a holding bridge with role participant and
+        silence as the entertainment. The other end of the Local channel should enter
+        the background detect application. A second local channel should then join the
+        holding bridge with role announcer, and should play an audio file once in the
+        bridge. The end of the participant channel running background detect should
+        realize a sound is being played back to it, and pass the test if it does. The
+        other channel will then hang up and end the scenario.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'BridgeWait'
+  scenarios:
+    -
+      # Scenario 1
+      # Goes through the steps in the description above.
+      channels:
+        -
+          channel-id: 'Participant'
+          channel-name: 'Local/participant@default'
+          context: 'default'
+          exten: 'detect'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeTechnology: 'holding_bridge'
+                  BridgeName: 'somebridge'
+                  Channel: 'Local/participant@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Participant channel entered bridge'
+                -
+                  action-type: 'start-call'
+                  channel-id: 'Announcer'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Sound detected in recording'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/participant@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Participant channel hung up'
+        -
+          channel-id: 'Announcer'
+          channel-name: 'Local/announcer@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeTechnology: 'holding_bridge'
+                  BridgeName: 'somebridge'
+                  Channel: 'Local/announcer@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Announcer channel entered bridge'
+                -
+                  action-type: 'stream-audio'
+                  sound-file: 'vm-intro'
+                -
+                  action-type: 'hangup'
+                  delay: 6
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/announcer@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Announcer channel hung up'
+                -
+                  action-type: 'end-scenario'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_userevent'
+        - asterisk : 'app_bridgewait'
+    tags:
+        - apps
+        - bridge
