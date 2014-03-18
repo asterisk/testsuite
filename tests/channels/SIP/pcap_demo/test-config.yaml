@@ -1,4 +1,15 @@
 testinfo:
+    # This test is skipped as - on some CentOS 6 build agents - the yappcap
+    # library will throw an exception indicating that it can't allocate memory.
+    # Example:
+    #  File "yappcap.pyx", line 490, in yappcap.PcapLive.activate (yappcap.c:4333)
+    #   yappcap.PcapError: can't create rx ring on packet socket: Cannot allocate memory
+    #
+    # This is a random error and doesn't really preclude the usage of using yappcap
+    # or the pcap generation utilities in the Test Suite when you need it, but it
+    # does make this test unlikely to consistently pass, which is bad for continuous
+    # integration.
+    skip: True
     summary:    'Demo of PCAP and SIPMessage tests'
     description: |
         'Make a simple call and verify via pcap that an INVITE and a 200 happen'
