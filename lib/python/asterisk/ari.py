@@ -78,7 +78,8 @@ class AriTestObject(TestCase):
             self.iterations = [{'channel': 'Local/s@default',
                 'application': 'Echo'}]
 
-        self.create_asterisk(count=1)
+        self.asterisk_instances = test_config.get('asterisk-instances', 1)
+        self.create_asterisk(count=self.asterisk_instances)
 
     def run(self):
         """Override of TestCase run
@@ -132,7 +133,7 @@ class AriTestObject(TestCase):
 
     def _create_ami_connection(self):
         """Create the AMI connection"""
-        self.create_ami_factory(count=1)
+        self.create_ami_factory(count=self.asterisk_instances)
 
     def ami_connect(self, ami):
         """Override of TestCase ami_connect
@@ -140,6 +141,10 @@ class AriTestObject(TestCase):
 
         :param ami The AMI factory
         """
+        # only use the first ami instance
+        if ami.id != 0:
+            return
+
         ami.registerEvent('Newchannel', self._new_channel_handler)
         ami.registerEvent('Hangup', self._hangup_handler)
         self.execute_test()
@@ -161,6 +166,9 @@ class AriTestObject(TestCase):
         :param ami The AMI instance
         :param event Hangup event
         """
+        if event['channel'] not in self.channels:
+            return (ami, event)
+
         LOGGER.debug("Removing tracking for %s" % event['channel'])
         self.channels.remove(event['channel'])
         if len(self.channels) == 0:
@@ -188,6 +196,9 @@ class AriTestObject(TestCase):
 
         # There's only one Asterisk instance, so just use the first AMI factory
         LOGGER.info("Creating channel %s" % channel_def['channel'])
+        if not self.ami[0]:
+            LOGGER.warning("Error creating channel - no ami available")
+            return
         deferred = self.ami[0].originate(**channel_def)
         deferred.addErrback(self.handle_originate_failure)
 

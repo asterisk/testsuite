@@ -325,7 +325,7 @@ class TestCase(object):
         def __run_callback(result):
             """Notify the test that we are running"""
             for callback in self._start_callbacks:
-                callback()
+                callback(self.ast)
             self.run()
             return result
 
