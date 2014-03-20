@@ -94,8 +94,6 @@ test-object-config:
             -
               action-type: 'set-expected-result'
               expected-result: 'Conference transitioned from SINGLE_MARKED to EMPTY'
-            -
-              action-type: 'end-scenario'
         -
           type: 'headermatch'
           conditions:
@@ -106,6 +104,8 @@ test-object-config:
             -
               action-type: 'set-expected-result'
               expected-result: 'Conference Ended'
+            -
+              action-type: 'end-scenario'
       channels:
         -
           channel-id: 'Marked-1'
