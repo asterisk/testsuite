@@ -3,3 +3,4 @@ tests:
     - test: 'missing_aor'
     - test: 'unsolicited'
     - test: 'mwi_aggregate'
+    - test: 'sub_setup_teardown'
