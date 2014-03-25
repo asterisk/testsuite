@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<scenario name="Basic MESSAGE send and receive">
+  <send retrans="500">
+    <![CDATA[
+
+      MESSAGE sip:eggs@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: [from_user] <sip:[from_user]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:eggs@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 MESSAGE
+      Max-Forwards: 70
+      Expires: 3600
+      Content-Type: text/plain
+      Content-Length: 18
+
+      Watson, come here.
+
+    ]]>
+  </send>
+
+  <recv response="202" rtd="true" />
+
+</scenario>

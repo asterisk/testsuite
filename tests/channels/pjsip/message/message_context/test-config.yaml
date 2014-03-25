@@ -1,0 +1,58 @@
+testinfo:
+    summary: 'Test that proper context is used for inbound MESSAGE requests'
+    description: |
+        'Two PJSIP endpoints, alice and bob, are created. Alice specifies a message_context
+        but bob does not. MESSAGEs from alice should go to her configured message_context, while
+        MESSAGEs from bob should go to his configured context.'
+
+properties:
+    minversion: '12.2.0'
+    dependencies:
+        - app: 'sipp'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_messaging'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'message.xml', '-p': '5061', '-i': '127.0.0.1' }, 'ordered-args': ['-key', 'from_user', 'alice'] }
+                - { 'key-args': { 'scenario': 'message.xml', '-p': '5062', '-i': '127.0.0.1' }, 'ordered-args': ['-key', 'from_user', 'bob'] }
+
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'Message'
+                MessageFrom: 'alice <sip:alice@127.0.0.1>'
+        requirements:
+            match:
+                Context: 'message_context'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'Message'
+                MessageFrom: 'bob <sip:bob@127.0.0.1>'
+        requirements:
+            match:
+                Context: 'context'
+        count: '1'
