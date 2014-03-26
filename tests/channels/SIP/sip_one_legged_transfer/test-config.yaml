@@ -1,5 +1,5 @@
 testinfo:
-#    skip: 'Skip while failures are debugged'
+    skip: 'Skip while failures are debugged - see ASTERISK-23543'
     summary:     'Test SIP One-legged Transfer'
     description: |
         This test verifies a SIP One-legged transfer.  Phone C
