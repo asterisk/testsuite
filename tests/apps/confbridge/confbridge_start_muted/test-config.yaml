@@ -1,0 +1,187 @@
+testinfo:
+    summary: 'Test status of app_confbridge users with startmuted option set'
+    description: |
+        This tests execution of app_confbridge with three users entering a
+        single audio conference when configured with a user profile set with
+        startmuted.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+    app: 'ConfBridge'
+    scenarios:
+        -
+            events:
+                -
+                    type: 'headermatch'
+                    conditions:
+                        match:
+                            Event: 'ConfbridgeStart'
+                            Conference: '1'
+                    actions:
+                        -
+                            action-type: 'set-expected-result'
+                            expected-result: 'Conference Started'
+                -
+                    type: 'headermatch'
+                    conditions:
+                        match:
+                            Event: 'ConfbridgeEnd'
+                            Conference: '1'
+                    actions:
+                        -
+                            action-type: 'set-expected-result'
+                            expected-result: 'Conference Ended'
+                        -
+                            action-type: 'end-scenario'
+            channels:
+                -
+                    channel-id: 'Alice'
+                    channel-name: 'Local/alice@default'
+                    start-on-create: True
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/alice@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Alice Joined'
+                                -
+                                    action-type: 'start-call'
+                                    channel-id: 'Bob'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    Type: 'StateChange'
+                                    State: 'CONF_MUTE_UPDATE'
+                                    Mode: 'muted'
+                                    Channel: 'Local/alice@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Alice is muted'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/alice@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Alice Left'
+                -
+                    channel-id: 'Bob'
+                    channel-name: 'Local/bob@default'
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/bob@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Bob Joined'
+                                -
+                                    action-type: 'start-call'
+                                    channel-id: 'Carol'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    Type: 'StateChange'
+                                    State: 'CONF_MUTE_UPDATE'
+                                    Mode: 'muted'
+                                    Channel: 'Local/bob@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Bob is muted'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/bob@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Bob Left'
+                -
+                    channel-id: 'Carol'
+                    channel-name: 'Local/carol@default'
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/carol@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Carol Joined'
+                                -
+                                    action-type: 'hangup'
+                                    channel-id: 'Alice'
+                                -
+                                    action-type: 'hangup'
+                                    channel-id: 'Bob'
+                                -
+                                    action-type: 'hangup'
+                                    channel-id: 'Carol'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    Type: 'StateChange'
+                                    State: 'CONF_MUTE_UPDATE'
+                                    Mode: 'muted'
+                                    Channel: 'Local/carol@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Carol is muted'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/carol@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Carol Left'
+
+
+properties:
+    minversion: '11.9.0'
+    tags:
+        - confbridge
+        - apps
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_confbridge'
+        - asterisk: 'app_senddtmf'
+        - asterisk: 'app_playback'

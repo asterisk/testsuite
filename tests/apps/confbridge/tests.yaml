@@ -2,6 +2,7 @@
 tests:
     - test: 'confbridge_marked_unmarked'
     - test: 'confbridge_marked'
+    - test: 'confbridge_start_muted'
     - test: 'confbridge_waitmarked_normal'
     - test: 'confbridge_waitmarked_single'
     - test: 'confbridge_waitmarked_only'
