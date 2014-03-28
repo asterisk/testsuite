@@ -1,8 +1,11 @@
 testinfo:
-    summary: Test continuing on from the RESTful API back to the dialplan
+    summary: Test subscribing/unsubscribing to bridges
     description: |
-        This test simply waits for a call via the WebSocket, then hits the
-        continue controller to send it back to the dialplan.
+        This test subscribes an application to a bridge and
+        verifies that the application gets events in relation
+        to that bridge. It then unsubscribes the application
+        from that bridge, and verifies that it no longer
+        receives any notifications.
 
 test-modules:
     add-test-to-search-path: True
@@ -42,18 +45,17 @@ ari-config:
                     application: testsuite
                     bridge:
                     channel:
-            count: 0 # event should not happen since the 'testsuite'
-                     # application won't be subscribed by raise time
+            count: 1
+            callback:
+                module: subscribe_bridge
+                method: on_channel_left_bridge
         -   conditions:
                 match:
                     type: ChannelLeftBridge
                     application: bridge-watching-app
                     bridge:
                     channel:
-            count: 1
-            callback:
-                module: subscribe_bridge
-                method: on_channel_left_bridge
+            count: 0
 
 properties:
     minversion: '12.0.0'

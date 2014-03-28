@@ -38,8 +38,8 @@ def on_enter_testsuite(ari, event, test_object):
     assert TEST.bridge_id == event['bridge']['id']
     assert TEST.channel_id == event['channel']['id']
 
-    # now unsubscribe testsuite from the bridge.
-    ari.delete('applications', 'testsuite', 'subscription',
+    # now unsubscribe testsuite from the bridge-watching-app
+    ari.delete('applications', 'bridge-watching-app', 'subscription',
              eventSource='bridge:%s' % TEST.bridge_id)
 
     # upon removing the channel testsuite should receive no event, but
