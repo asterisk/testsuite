@@ -8,3 +8,5 @@ tests:
     - test: 'blind_transfer'
     - test: 'attended_transfer'
     - test: 'bridge_by_id'
+    - test: 'bridge_play'
+    - test: 'bridge_record'

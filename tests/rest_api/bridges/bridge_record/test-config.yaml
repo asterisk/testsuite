@@ -1,0 +1,83 @@
+testinfo:
+    summary: Test detection of RecordingStarted and RecordingFinished events
+             from bridge topic during bridges/record
+    description: |
+        This creates a bridgeand places a channel in the bridge implicitly
+        subscribing to it. Then the test executes the bridges/record ARI
+        command to it. Upon receiving the RecordingStarted event, the
+        recording will be stopped. The RecordingStarted and RecordingFinished
+        events must be received in order for the test to be considered
+        successful.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+apps: testsuite
+
+ari-config:
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            callback:
+                module: bridges_record
+                method: on_start
+        -   conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    application: testsuite
+                    bridge:
+                    channel:
+            count: 1
+            callback:
+                module: bridges_record
+                method: on_enter_testsuite
+        -   conditions:
+                match:
+                    type: RecordingStarted
+                    application: testsuite
+                    recording:
+            count: 1
+            callback:
+                module: bridges_record
+                method: on_recording_started
+        -   conditions:
+                match:
+                    type: RecordingFinished
+                    application: testsuite
+            count: 1
+            callback:
+                module: bridges_record
+                method: on_recording_finished
+        -   conditions:
+                match:
+                    type: ChannelLeftBridge
+                    application: testsuite
+                    bridge:
+                    channel:
+            count: 1
+            callback:
+                module: bridges_record
+                method: on_channel_left_bridge
+
+properties:
+    minversion: '12.2.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+    tags:
+        - ARI
+
+
