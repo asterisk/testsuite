@@ -1,0 +1,4 @@
+tests:
+    - test: 'pjsip'
+    - test: 'pjsip-auth'
+    - test: 'pjsip-ipv6'

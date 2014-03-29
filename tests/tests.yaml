@@ -28,3 +28,4 @@ tests:
     - test: 'cause_answered_elsewhere'
     - dir: 'bridge'
     - dir: 'rest_api'
+    - dir: 'hep'

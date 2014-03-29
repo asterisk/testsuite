@@ -1,0 +1,202 @@
+testinfo:
+    summary:     'Tests HEP with IPv6 PJSIP'
+    description: |
+        This test validates Asterisk sending SIP traffic using IPv6
+        source/destination addresses from the res_pjsip stack over
+        the Homer Encapsulation Protocol (HEP).
+        The test runs a basic inbound call through Asterisk's PJSIP
+        stack and receives the HEP packets on a UDP listener bound
+        to an IPv6 address. The resulting HEP packets are decoded,
+        validated, and the SIP payload verified.
+
+test-modules:
+    add-to-search-path:
+        -
+            'tests/hep'
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'hep_capture_node.HEPCaptureNode'
+            config-section: hep-node-config
+
+test-object-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                # IPv6 & UDP
+                - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5067', '-d': '5000', '-s': 'alice-ipv6-udp'} }
+
+hep-node-config:
+    bind-port: '9999'
+    packets:
+        -
+            ip_family: 10
+            uuid: '(.*?)@[::1]'
+            src_addr: '[::1]'
+            src_port: 5067
+            dst_addr: '[::1]'
+            dst_port: 5060
+            protocol_type: 1
+            capture_agent_id: 12345
+            ip_id: 17
+            payload:
+                decode: 'SIP'
+                value:
+                    - 'INVITE sip:echo@\[::1\]:5060 SIP/2.0'
+                    - 'Via: SIP/2.0/UDP \[::1\]:5067;branch=(.*)'
+                    - 'From: test1 <sip:alice-ipv6-udp@\[::1\]:5067>;tag=(.*)'
+                    - 'To: test <sip:test@\[::1\]:5060>'
+                    - 'Call-ID: (.*?)@::1'
+                    - 'CSeq: 1 INVITE'
+                    - 'Contact: <sip:test@\[::1\]:5067;transport=UDP>'
+                    - 'Max-Forwards: 70'
+                    - 'Subject: Test'
+                    - 'User-Agent: Test'
+                    - 'Content-Length: 0'
+        -
+            ip_family: 10
+            uuid: '(.*?)@[::1]'
+            src_addr: '[::1]'
+            src_port: 5060
+            dst_addr: '[::1]'
+            dst_port: 5067
+            protocol_type: 1
+            capture_agent_id: 12345
+            ip_id: 17
+            payload:
+                decode: 'SIP'
+                value:
+                    - 'SIP/2.0 100 Trying'
+                    - 'Via: SIP/2.0/UDP \[::1\]:5067;rport;received=::1;branch=(.*)'
+                    - 'Call-ID: (.*?)@::1'
+                    - 'From: "test1" <sip:alice-ipv6-udp@\[::1\]>;tag=(.*)'
+                    - 'To: "test" <sip:test@\[::1\]>'
+                    - 'CSeq: 1 INVITE'
+                    - 'Content-Length:  0'
+        -
+            ip_family: 10
+            uuid: '(.*?)@[::1]'
+            src_addr: '[::1]'
+            src_port: 5060
+            dst_addr: '[::1]'
+            dst_port: 5067
+            protocol_type: 1
+            capture_agent_id: 12345
+            ip_id: 17
+            payload:
+                decode: 'SIP'
+                value:
+                    - 'SIP/2.0 200 OK'
+                    - 'Via: SIP/2.0/UDP \[::1\]:5067;rport;received=::1;branch=(.*)'
+                    - 'Call-ID: (.*?)@::1'
+                    - 'From: "test1" <sip:alice-ipv6-udp@\[::1\]>;tag=(.*)'
+                    - 'To: "test" <sip:test@\[::1\]>;tag=(.*)'
+                    - 'CSeq: 1 INVITE'
+                    - 'Contact: <sip:\[::1\]:5060>'
+                    - 'Allow: OPTIONS, SUBSCRIBE, NOTIFY, PUBLISH, INVITE, ACK, BYE, CANCEL, UPDATE, PRACK, REFER, REGISTER, MESSAGE'
+                    - 'Supported: 100rel, timer, replaces, norefersub'
+                    - 'Content-Type: application/sdp'
+                    - 'Content-Length:(.*)'
+                    - '(.*)'
+                    - '(.*)'
+                    - 's=Asterisk'
+                    - 'c=IN IP6 \[::1\]'
+                    - 't=0 0'
+                    - 'm=audio(.*?)RTP/AVP 0 8 101'
+                    - 'c=IN IP6 \[::1\]'
+                    - 'a=rtpmap:0 PCMU/8000'
+                    - 'a=rtpmap:8 PCMA/8000'
+                    - 'a=rtpmap:101 telephone-event/8000'
+                    - 'a=fmtp:101 0-16'
+                    - 'a=ptime:20'
+                    - 'a=maxptime:150'
+                    - 'a=sendrecv'
+        -
+            ip_family: 10
+            uuid: '(.*?)@[::1]'
+            src_addr: '[::1]'
+            src_port: 5067
+            dst_addr: '[::1]'
+            dst_port: 5060
+            protocol_type: 1
+            capture_agent_id: 12345
+            ip_id: 17
+            payload:
+                decode: 'SIP'
+                value:
+                    - 'ACK sip:echo@\[::1\]:5060 SIP/2.0'
+                    - 'Via: SIP/2.0/UDP \[::1\]:5067;branch=(.*)'
+                    - 'From: test1 <sip:alice-ipv6-udp@\[::1\]:5067>;tag=(.*)'
+                    - 'To: test <sip:test@\[::1\]:5060>;tag=(.*)'
+                    - 'Call-ID: (.*?)@::1'
+                    - 'CSeq: 1 ACK'
+                    - 'Contact: <sip:test@\[::1\]:5067;transport=UDP>'
+                    - 'Max-Forwards: 70'
+                    - 'Subject: Test'
+                    - 'Content-Type: application/sdp'
+                    - 'Content-Length:(.*)'
+                    - '(.*)'
+                    - 'o=phoneA(.*?)IN IP6 \[::1\]'
+                    - 's=-'
+                    - 'c=IN IP6 ::1'
+                    - 't=0 0'
+                    - 'm=audio(.*?)RTP/AVP 0'
+                    - 'a=rtpmap:0 PCMU/8000'
+        -
+            ip_family: 10
+            uuid: '(.*?)@[::1]'
+            src_addr: '[::1]'
+            src_port: 5067
+            dst_addr: '[::1]'
+            dst_port: 5060
+            protocol_type: 1
+            capture_agent_id: 12345
+            ip_id: 17
+            payload:
+                decode: 'SIP'
+                value:
+                    - 'BYE sip:echo@\[::1\]:5060 SIP/2.0'
+                    - 'Via: SIP/2.0/UDP \[::1\]:5067;branch=(.*)'
+                    - 'From: test1 <sip:alice-ipv6-udp@\[::1\]:5067>;tag=(.*)'
+                    - 'To: test <sip:test@\[::1\]:5060>;tag=(.*)'
+                    - 'Call-ID: (.*?)@::1'
+                    - 'CSeq: 2 BYE'
+                    - 'Contact: <sip:test@\[::1\]:5067;transport=UDP>'
+                    - 'Max-Forwards: 70'
+                    - 'Subject: Test'
+                    - 'Content-Length: 0'
+        -
+            ip_family: 10
+            uuid: '(.*?)@[::1]'
+            src_addr: '[::1]'
+            src_port: 5060
+            dst_addr: '[::1]'
+            dst_port: 5067
+            protocol_type: 1
+            capture_agent_id: 12345
+            ip_id: 17
+            payload:
+                decode: 'SIP'
+                value:
+                    - 'SIP/2.0 200 OK'
+                    - 'Via: SIP/2.0/UDP \[::1\]:5067;rport;received=::1;branch=(.*)'
+                    - 'Call-ID: (.*?)@::1'
+                    - 'From: "test1" <sip:alice-ipv6-udp@\[::1\]>;tag=(.*)'
+                    - 'To: "test" <sip:test@\[::1\]>;tag=(.*)'
+                    - 'CSeq: 2 BYE'
+                    - 'Content-Length:  0'
+
+
+properties:
+    minversion: '12.2.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+        - asterisk: 'res_hep'
+        - asterisk: 'res_hep_pjsip'
+    tags:
+        - pjsip
