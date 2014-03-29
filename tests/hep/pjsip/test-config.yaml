@@ -95,7 +95,7 @@ hep-node-config:
                     - 'To: "test" <sip:test@127.0.0.1>;tag=(.*)'
                     - 'CSeq: 1 INVITE'
                     - 'Contact: <sip:127.0.0.1:5060>'
-                    - 'Allow: OPTIONS, SUBSCRIBE, NOTIFY, PUBLISH, INVITE, ACK, BYE, CANCEL, UPDATE, PRACK, REFER, REGISTER, MESSAGE'
+                    - 'Allow: (.*)'
                     - 'Supported: 100rel, timer, replaces, norefersub'
                     - 'Content-Type: application/sdp'
                     - 'Content-Length:(.*)'
