@@ -1,0 +1,62 @@
+testinfo:
+    summary:    'Testing the S option of the BridgeWait application'
+    description: |
+        'This test required that a channel join a holding bridge using
+         the S option of the BridgeWait application, which ultimately
+         automatically exits the bridge after a specified duration.
+         So, the channel receives a UserEvent as long as the duration
+         of the holding bridge is between 3 to 7 seconds long.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'BridgeWait'
+  scenarios:
+    -
+      channels:
+        -
+          channel-id: 'Bridgey'
+          channel-name: 'Local/bridge_holding@holding'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/bridge_holding@holding-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel Hung Up'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'CallResult'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'CallResult is a success'
+                -
+                  action-type: 'hangup'
+                  delay: 1
+                -
+                  action-type: 'end-scenario'
+
+properties:
+    minversion: '12.0.0'
+    tags:
+      - bridge
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python: 'twisted'
+      - python: 'starpy'
+      - asterisk: 'app_userevent'
+      - asterisk: 'app_bridgewait'
