@@ -1,10 +1,13 @@
 testinfo:
-    skip: 'Skip while failures are debugged'
     summary:     'Test AGI exit status'
     description: |
         'This test verifies that the AGI application returns the correct exit status for each of several scenarios'
 
 properties:
     minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_userevent'
     tags:
         - AGI

@@ -1,0 +1,4 @@
+#!/bin/this-path-does-not-exist
+
+exit 0
+

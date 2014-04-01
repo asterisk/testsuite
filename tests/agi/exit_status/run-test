@@ -1,166 +1,190 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python
+"""
+Copyright (C) 2014, Digium, Inc.
+Benjamin Ford <bford@digium.com>
 
-. lib/sh/library.sh
+This progream is free software, distributed under the terms of
+the GNU General Public License Version 2.
+"""
 
-echo " >>> Starting AGI exit status test"
+import os
+import sys
+import logging
 
-initialize userA
+from twisted.internet import reactor
+from shutil import copy
 
-mkdir -p $testdir/userA/cdr-csv
+sys.path.append("lib/python")
+from asterisk.test_case import TestCase
 
-for user in userA; do
-	# Shortcut for referral within this loop only
-	eval "conf=\${${user}_tmpdir}"
-	mkdir -p $conf/spool/outgoing
+LOGGER = logging.getLogger(__name__)
+PATH = os.path.dirname(os.path.realpath(__file__))
+EXPECTED_SUCCESSES = 7
 
-	if test $debug -gt 1; then
-		$ASTERISK -C $conf/asterisk.conf -rx 'core set debug 1 pbx_spool'
-		$ASTERISK -C $conf/asterisk.conf -rx 'dialplan show'
-	fi
-done
+class AGIExitStatusTest(TestCase):
+    """
+    This is the class that contains all the methods needed to run the test.
+    """
+    def __init__(self):
+        """
+        Initialization for class.
+        success_count keeps track of all successful tests.
+        can_call will only be set to true if an AGI script was called with AGI()
+        interrupt_agi is a temporary variable to deal with ASTERISK-23390
+        """
+        TestCase.__init__(self)
+        self.success_count = 0
+        self.can_call = False
+        self.interrupt_agi = False
+        self.create_asterisk()
 
-failure() {
-	echo " . . . . . FAIL"
-}
+    def run(self):
+        """
+        Creates the AMI connection with Asterisk.
+        """
+        TestCase.run(self)
+        self.copy_files()
+        self.create_ami_factory()
 
-success() {
-	echo " . . . . . OK"
-}
+    def copy_files(self):
+        """Copy testsuite files to the path of the current test"""
+        copy("%s/badinterpreter.agi" % PATH,
+            "%s/var/lib/asterisk/agi-bin/badinterpreter.agi" % self.ast[0].base)
+        copy("%s/badinterpreter2.agi" % PATH,
+            "%s/var/lib/asterisk/agi-bin/badinterpreter2.agi"
+            % self.ast[0].base)
+        copy("%s/badinterpreter3.agi" % PATH,
+            "%s/var/lib/asterisk/agi-bin/badinterpreter3.agi"
+            % self.ast[0].base)
+        copy("%s/donothing.agi" % PATH,
+            "%s/var/lib/asterisk/agi-bin/donothing.agi" % self.ast[0].base)
+        copy("%s/waiting.agi" % PATH,
+            "%s/var/lib/asterisk/agi-bin/waiting.agi" % self.ast[0].base)
+        copy("%s/executing.agi" % PATH,
+            "%s/var/lib/asterisk/agi-bin/executing.agi" % self.ast[0].base)
 
-echo -n " >>> Non-existent AGI"
-rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
+    def ami_connect(self, ami):
+        """
+        Sets up the AMI for Asterisk.
+        """
+        ami.registerEvent('UserEvent', self.user_event_handler)
+        ami.registerEvent('Newexten', self.new_exten_event_handler)
+        ami.registerEvent('Hangup', self.hangup_event_handler)
+        LOGGER.info("---Starting AGI exit_status test---")
+        deferred = ami.originate(channel="Local/doesnotexist@default",
+            application="Echo")
+        deferred.addErrback(self.handle_originate_failure)
 
-$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/02@agi_exit_status extension doesnotexist@agi_exit_status"
+    def user_event_handler(self, result, event):
+        """
+        Checks to see if the behavior of the AGI script was as expected.
+        """
+        if event['userevent'] != 'TestResult':
+            return
+        result = event['result']
+        if result == "pass":
+            if event['exten'] != 'h':
+                LOGGER.info("%s.agi behaved as expected." % event['exten'])
+            else:
+                if event['context'] == 'waiting-extens':
+                    LOGGER.info("waiting.agi behaved as expected.")
+                elif event['context'] == 'executing-extens':
+                    LOGGER.info("executing.agi behaved as expected.")
+            self.success_count += 1
+        elif result == "fail":
+            if event['exten'] != 'h':
+                LOGGER.error("%s.agi did not behave as intended." % event['exten'])
+            else:
+                if event['context'] == 'waiting-extens':
+                    LOGGER.error("waiting.agi did not behave as intended.")
+                elif event['context'] == 'executing-extens':
+                    LOGGER.error("executing.agi did not behave as intended.")
+        LOGGER.info("Successful tests: %d" % self.success_count)
+        if self.success_count == EXPECTED_SUCCESSES:
+            self.stop_reactor()
 
-sleep 3
+    def new_exten_event_handler(self, ami, event):
+        """
+        Newexten event handler. Used to detect the start of an AGi script for
+        the specific purpose of hanging up the channel later.
+        """
 
-if test `grep -c $AGI_NOTFOUND $testdir/userA/cdr-csv/Master.csv` = 0; then
-	failure
-	if test $debug -gt 0; then
-		echo " *** Non-existent test failed: did not find $AGI_NOTFOUND in $testdir/userA/cdr-csv/Master.csv"
-	fi
-	cleanup
-	exit 1
-else
-	success
-fi
+        def _handle_hangup_error(result):
+            """Handle a hangup error"""
+            LOGGER.warning("Error while hanging up channel: %s" % result)
+            self.stop_reactor()
 
-echo -n " >>> Non-existent AGI interpreter"
-rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
+        def _hangup_channel(ami, channel):
+            """Hangup the specified channel"""
+            LOGGER.debug("Hanging up channel %s" % channel)
+            ami.hangup(channel).addErrback(_handle_hangup_error)
 
-$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/10@agi_exit_status extension badinterpreter@agi_exit_status"
+        if 'application' not in event or 'channel' not in event:
+            return
 
-sleep 2
+        if event['application'] != 'AGI':
+            return
 
-if test `grep -c FAILURE $testdir/userA/cdr-csv/Master.csv` = 0; then
-	failure
-	echo " *** Non-existent test failed: did not find FAILURE in $testdir/userA/cdr-csv/Master.csv"
-	cleanup
-	exit 1
-else
-	success
-fi
+        self.can_call = True
+        LOGGER.info("Can call set to true.")
+        if self.interrupt_agi == False:
+            return
+        if event['exten'] == 'waiting' or event['exten'] == 'executing':
+            self.interrupt_agi = False
+            LOGGER.info("Detected channel %s in AGI" % event['channel'])
+            reactor.callLater(1, _hangup_channel, ami, event['channel'])
 
-echo -n " >>> Non-executable AGI script"
-rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
+    def hangup_event_handler(self, ami, event):
+        """
+        Hangup event handler. Detects when a channel hangs up so that a new
+        channel can start.
+        """
+        if event['event'] != 'Hangup' or 'channel' not in event:
+            return
+        LOGGER.info("Detected hangup for %s" % event['channel'])
+        if self.can_call == False:
+            return
+        if event['exten'] != 'waiting':
+            self.can_call = False
+        if event['exten'] == 'doesnotexist':
+            deferred = ami.originate(channel="Local/badinterpreter@default",
+                application="Echo")
+            deferred.addErrback(self.handle_originate_failure)
+        elif event['exten'] == 'badinterpreter':
+            deferred = ami.originate(channel=
+                "Local/badinterpreter2@default",application="Echo")
+            deferred.addErrback(self.handle_originate_failure)
+        elif event['exten'] == 'badinterpreter2':
+            deferred = ami.originate(channel=
+                "Local/badinterpreter3@default",application="Echo")
+            deferred.addErrback(self.handle_originate_failure)
+        elif event['exten'] == 'badinterpreter3':
+            deferred = ami.originate(channel="Local/donothing@default",
+                application="Echo")
+            deferred.addErrback(self.handle_originate_failure)
+        elif event['exten'] == 'donothing':
+            self.interrupt_agi = True
+            deferred = ami.originate(channel="Local/waiting@waiting-extens",
+                application="Echo")
+            deferred.addErrback(self.handle_originate_failure)
+        elif event['exten'] == 'h':
+            LOGGER.info("Hangup for h exten detected.")
+            if event['context'] == 'waiting-extens':
+                self.interrupt_agi = True
+                deferred = ami.originate(channel=
+                    "Local/executing@executing-extens",application="Echo")
+                deferred.addErrback(self.handle_originate_failure)
 
-$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/10@agi_exit_status extension badinterpreter2@agi_exit_status"
-
-sleep 2
-
-if test `grep -c FAILURE $testdir/userA/cdr-csv/Master.csv` = 0; then
-	failure
-	echo " *** Non-existent test failed: did not find FAILURE in $testdir/userA/cdr-csv/Master.csv"
-	cleanup
-	exit 1
-else
-	success
-fi
-
-echo -n " >>> Non-executable AGI interpreter"
-
-# Create a "shell" interpreter which is not executable
-for sh in /bin/true /usr/bin/true /usr/local/bin/true; do
-	if test -f $sh; then
-		cp -f $sh /tmp/bash
-		chmod 600 /tmp/bash
-		break
-	fi
-done
-
-# Did we succeed?
-if test -e /tmp/bash; then :; else
-	failure
-	echo "Unable to create non-executable file for AGI test"
-	cleanup
-	exit 1
-fi
-
-rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
-
-$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/10@agi_exit_status extension badinterpreter3@agi_exit_status"
-
-sleep 2
-
-if test `grep -c FAILURE $testdir/userA/cdr-csv/Master.csv` = 0; then
-	failure
-	echo " *** Non-existent test failed: did not find FAILURE in $testdir/userA/cdr-csv/Master.csv"
-	cleanup
-	rm -f /tmp/bash
-	exit 1
-else
-	success
-fi
-
-echo -n " >>> AGI which will receive hangup while waiting for a command"
-rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
-$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/01@agi_exit_status extension waiting@agi_exit_status"
-
-sleep 2
-
-if test `grep -c HANGUP $testdir/userA/cdr-csv/Master.csv` = 0; then
-	failure
-	echo " *** Command wait test failed: did not find HANGUP in $testdir/userA/cdr-csv/Master.csv"
-	cleanup
-	exit 1
-else
-	success
-fi
-
-echo -n " >>> AGI which will receive hangup while executing a command"
-rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
-$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/01@agi_exit_status extension executing@agi_exit_status"
-
-sleep 2
-
-# This is the result which is disputed in issue 17393
-if test `grep -c FAILURE $testdir/userA/cdr-csv/Master.csv` = 0; then
-	failure
-	echo " *** Command execute test failed: did not find FAILURE in $testdir/userA/cdr-csv/Master.csv"
-	cleanup
-	exit 1
-else
-	success
-fi
-
-echo -n " >>> AGI which should exit normally"
-rm -f $testdir/userA/cdr-csv/Master.csv ; touch $testdir/userA/cdr-csv/Master.csv
-$ASTERISK -C $userA_tmpdir/asterisk.conf -rx "$ORIGINATE Local/01@agi_exit_status extension donothing@agi_exit_status"
-
-sleep 2
-
-if test `grep -c SUCCESS $testdir/userA/cdr-csv/Master.csv` = 0; then
-	failure
-	echo " *** Do nothing test failed"
-	cleanup
-	exit 1
-else
-	success
-fi
-
-echo " *** All tests were successful"
-
-cleanup
-
-exit 0
-
+def main():
+    """
+    Main method, run by default, determines if test passes or fails.
+    """
+    test = AGIExitStatusTest()
+    reactor.run()
+    if test.success_count != EXPECTED_SUCCESSES:
+        LOGGER.error("The expected amount of tests did not pass. Expected successes:"
+        " %d   Actual: %d" % (EXPECTED_SUCCESSES, test.success_count))
+        return 1
+    return 0
+if __name__ == "__main__":
+    sys.exit(main() or 0)
