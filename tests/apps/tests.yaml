@@ -18,3 +18,4 @@ tests:
     - dir: 'playback'
     - test: 'say_interrupt'
     - test: 'channel_redirect'
+    - dir: 'disa'

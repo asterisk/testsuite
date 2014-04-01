@@ -1,0 +1,77 @@
+test-info:
+    summary: 'Tests that the DISA applciation with authentication is working correctly.'
+    description:
+        This test has a local channel enter the DISA application, enter in the authentication,
+        enter the desired extension, and sends it to that extension.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'DISA'
+  scenarios:
+    -
+      # Scenario 1
+      # Goes through the steps in the description above.
+      channels:
+        -
+          channel-id: 'DISA-Channel'
+          channel-name: 'Local/start@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Application: 'DISA'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel entered DISA application'
+                -
+                  action-type: 'send-dtmf'
+                  delay: 1
+                  dtmf: '1234#100'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+              requirements:
+                match:
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel entered extension successfully!'
+                -
+                  action-type: 'hangup'
+                -
+                  action-type: 'end-scenario'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestResult'
+                  Result: 'fail'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'Channel did not enter extension. Test failed'
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_userevent'
+    tags:
+        - apps
+        - disa
