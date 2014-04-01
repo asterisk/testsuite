@@ -18,4 +18,5 @@ tests:
     - test: 'hold_ice'
     - test: 'refer_send_to_vm'
     - test: 'qualify'
+    - test: 'headers'
 
