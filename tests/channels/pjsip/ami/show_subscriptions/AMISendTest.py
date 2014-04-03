@@ -25,6 +25,7 @@ ACTION = {
 
 class AMISendTest(TestCase):
     def __init__(self, path=None, config=None):
+        self.updates_received = 0
         super(AMISendTest, self).__init__(path, config)
         self.create_asterisk()
 
@@ -35,13 +36,22 @@ class AMISendTest(TestCase):
     def ami_connect(self, ami):
         super(AMISendTest, self).ami_connect(ami)
 
-        def _send_show_subscriptions(obj):
-            LOGGER.info('Getting inbound subscriptions...')
-            ami.sendDeferred(ACTION).addCallback(ami.errorUnlessResponse)
-            reactor.callLater(2, self.stop_reactor)
-            return obj
-
+	ami.registerEvent("TestEvent", self.test_event)
         LOGGER.info('Starting subscription scenario')
         sipp = SIPpScenario(self.test_name,
             {'scenario':'subscribe.xml', '-p':'5061' })
-        sipp.run(self).addCallback(_send_show_subscriptions)
+        sipp.run(self)
+
+    def test_event(self, ami, event):
+        if event['state'] != "SUBSCRIPTION_STATE_SET" \
+            or event['statetext'] != "ACTIVE" \
+            or event['endpoint'] != "user1":
+            return
+
+        self.updates_received += 1
+        if self.updates_received != 2:
+            return
+
+        LOGGER.info('Getting inbound subscriptions...')
+        ami.sendDeferred(ACTION).addCallback(ami.errorUnlessResponse)
+        reactor.callLater(2, self.stop_reactor)
