@@ -33,6 +33,8 @@ def on_start(ari, event, test_object):
     TEST.bridge_id = ari.post('bridges').json()['id']
     ari.post('channels', TEST.channel_id, 'answer')
     ari.post('bridges', TEST.bridge_id, 'addChannel', channel=TEST.channel_id)
+    ari.post('applications', 'testsuite', 'subscription',
+             eventSource='bridge:%s' % TEST.bridge_id)
     return True
 
 
@@ -55,6 +57,8 @@ def on_destroy(ari, event, test_object):
     no longer exists in the system but that the channel that was in the bridge
     still does exist.
     """
+    ari.delete('applications', 'testsuite', 'subscription',
+             eventSource='bridge:%s' % TEST.bridge_id)
     bridge_id = event['bridge']['id']
     assert TEST.bridge_id == bridge_id
     result = True

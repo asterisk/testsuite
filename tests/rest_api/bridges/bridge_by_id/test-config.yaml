@@ -58,6 +58,12 @@ ari-config:
                         bridgeId: 'MyFirstBridge'
                     # note: creating bridge does not result in another event
                 -
+                    # note: an explicit subscription to the bridge is required to catch BridgeDestroyed later
+                    method: 'post'
+                    uri: 'applications/testsuite/subscription'
+                    params:
+                        eventSource: 'bridge:MyFirstBridge'
+                -
                     method: 'post'
                     uri: 'channels'
                     params:
@@ -110,8 +116,15 @@ ari-config:
                         id: 'MyFirstBridge$'
             count: 1
             requests:
-                method: 'delete'
-                uri: 'channels/MyFirstChannel'
+                -
+                    # remove the explicit subscription
+                    method: 'delete'
+                    uri: 'applications/testsuite/subscription'
+                    params:
+                        eventSource: 'bridge:MyFirstBridge'
+                -
+                    method: 'delete'
+                    uri: 'channels/MyFirstChannel'
         -
             conditions:
                 match:
