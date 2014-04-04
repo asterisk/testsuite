@@ -31,8 +31,8 @@ class MasqueradeTest(TestCase):
 
         # Set longer timeout than default.
         #
-        # Optimizing out long chains of local channels can
-        # take awhile and they can come in bursts.
+        # Dialing and optimizing out long chains of local channels
+        # can take awhile and they can come in bursts.
         self.reactor_timeout = 60
 
         # Initial call chain parameters.
@@ -49,6 +49,7 @@ class MasqueradeTest(TestCase):
             self.base_exten = 9000
 
         # Clear test completion stage flags.
+        self.dialed_count = 0
         self.removed_count = 0
         self.park_retrieved = False
         self.got_AMI_ParkedCall = False
@@ -86,9 +87,15 @@ class MasqueradeTest(TestCase):
         logger.info("Initiating test call for a chain length of " + str(self.chain_length))
         exten = self.base_exten + self.chain_length
         if AsteriskVersion() < AsteriskVersion('12'):
-            self.ast[0].cli_originate("Local/" + str(exten) + "@outgoing extension parkme@parked")
+            self.ami[0].originate(channel="Local/" + str(exten) + "@outgoing",
+                context="parked", exten="parkme", priority=1,
+                timeout=900,
+                async=True).addErrback(TestCase.handle_originate_failure)
             return
-        self.ast[0].cli_originate("Local/" + str(exten) + "@outgoing extension parkme12@parked")
+        self.ami[0].originate(channel="Local/" + str(exten) + "@outgoing",
+            context="parked", exten="parkme12", priority=1,
+            timeout=900,
+            async=True).addErrback(TestCase.handle_originate_failure)
 
     # Initiate a call to retrieve the parked call.
     def get_parkedcall(self):
@@ -96,7 +103,10 @@ class MasqueradeTest(TestCase):
         tech_prefix = "IAX2/ast1/"
         if self.use_sip_calls:
             tech_prefix = "SIP/ast1/"
-        self.ast[1].cli_originate(tech_prefix + str(self.expected_space) + " extension retrieve@getit")
+        self.ami[1].originate(channel=tech_prefix + str(self.expected_space),
+            context="getit", exten="retrieve", priority=1,
+            timeout=30,
+            async=True).addErrback(TestCase.handle_originate_failure)
 
     # Called when got ParkedCall AMI event
     def evt_parkedcall(self, ami, event):
@@ -143,17 +153,25 @@ class MasqueradeTest(TestCase):
         status = event.get("status")
         logger.info("UserEvent: " + str(evt) + " status: " + str(status))
 
-        if evt == "optout":
+        if evt == "dialing":
+            self.dialed_count += 1
+            logger.info("Calls dialed: " + str(self.dialed_count))
+            # Prod reactor timeout
+            self.reset_timeout()
+            return
+        elif evt == "optout":
             self.removed_count += 1
-            logger.info("Calls optimized out: " + str(self.removed_count))
-            # Restart the timeout timer after so many local channels optimize out.
-            #if 0 == self.removed_count % 50:
-            #    self.reset_timeout()
+            logger.info("Calls hungup or optimized out: " + str(self.removed_count))
+            # Prod reactor timeout
             self.reset_timeout()
             self.check_result()
             return
         elif evt == "last_call":
-            if status == "HANGUP":
+            if "EXECUTING" in status:
+                # Prod reactor timeout
+                self.reset_timeout()
+                return
+            elif status == "HANGUP":
                 if self.park_retrieved:
                     return
                 logger.warning("The last call in the chain disconnected too early.")
@@ -198,19 +216,44 @@ class MasqueradeTest(TestCase):
         TestCase.run(self)
         self.create_ami_factory(2)
 
+    def send_core_show_locks(self):
+        """Send a core show locks CLI command"""
+        logger.debug('sending core show locks')
+        cli_deferred = self.ast[0].cli_exec("core show locks")
+        cli_deferred.addCallbacks(self.send_core_show_locks_callback)
+
+    def send_core_show_locks_callback(self, cli_command):
+        """Callback handler for the core show locks CLI command output"""
+        logger.info("Output for core show locks:")
+        logger.info(cli_command.output)
+        TestCase.stop_reactor(self)
+        return cli_command
+
     # This is called when we stop the reactor.
     def stop_reactor(self):
         self.test_complete = True
 
+        # Try to interpret results to reduce stupid assumptions
+        # when trying to figure out what went wrong.
+        if self.passed:
+            # Nothing to say about the test passing.
+            pass
+        elif not self.got_AMI_ParkedCall and self.chain_length != self.dialed_count:
+            logger.warning("Only dialed " + str(self.dialed_count) + " calls in chain.")
+        elif not self.got_AMI_ParkedCall:
+            logger.warning("Call did not get parked.")
+        elif self.chain_length != self.removed_count:
+            logger.warning("Only optimized " + str(self.removed_count) + " calls in chain.")
+        elif not self.got_AMI_UnParkedCall:
+            logger.warning("Call did not get retrieved from parking lot.")
+        elif not self.ast1_event or not self.ast2_event:
+            logger.warning("DTMF handshake failed.")
+
         # Get some useful output from the Asterisk instance
         # under test before tearing down in case of problems.
-        self.ast[0].cli_exec("core show locks")
-        # Must do "core show channels" after "core show locks" because
-        # the show channels command is likely to fail if a deadlock
-        # has happened.
-        #self.ast[0].cli_exec("core show channels concise")
-        self.ast[0].cli_exec("core show channels")
+        #self.send_core_show_locks()
 
+        # Comment this out when enabling "core show locks"
         TestCase.stop_reactor(self)
 
 
