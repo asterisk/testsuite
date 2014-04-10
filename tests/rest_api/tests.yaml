@@ -14,4 +14,3 @@ tests:
     - dir:  'mailbox'
     - test: 'chunked-transfer'
     - dir: 'playback'
-    - dir: 'snoop'
