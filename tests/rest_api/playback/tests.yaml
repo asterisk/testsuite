@@ -1,3 +1,4 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 'basic'
+    - test: 'to_channel_in_bridge'
