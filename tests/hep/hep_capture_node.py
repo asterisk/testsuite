@@ -171,7 +171,6 @@ class HEPPacketHandler(DatagramProtocol):
                                   hdr.length - self.hep_chunk.sizeof())
                 packet.uuid = hep_uuid.parse(data[length:])
                 length += hep_uuid.sizeof() - self.hep_chunk.sizeof()
-
         self.module.verify_packet(packet)
 
 

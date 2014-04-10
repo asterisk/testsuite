@@ -77,7 +77,7 @@ hep-node-config:
                     - 'Content-Length:  0'
         -
             ip_family: 2
-            uuid: '(.*?)@127.0.0.1'
+            uuid: 'PJSIP/alice-ipv4-udp-.*'
             src_addr: '127.0.0.1'
             src_port: 5060
             dst_addr: '127.0.0.1'
@@ -115,7 +115,7 @@ hep-node-config:
                     - 'a=sendrecv'
         -
             ip_family: 2
-            uuid: '(.*?)@127.0.0.1'
+            uuid: 'PJSIP/alice-ipv4-udp-.*'
             src_addr: '127.0.0.1'
             src_port: 5067
             dst_addr: '127.0.0.1'
@@ -146,7 +146,7 @@ hep-node-config:
                     - 'a=rtpmap:0 PCMU/8000'
         -
             ip_family: 2
-            uuid: '(.*?)@127.0.0.1'
+            uuid: 'PJSIP/alice-ipv4-udp-.*'
             src_addr: '127.0.0.1'
             src_port: 5067
             dst_addr: '127.0.0.1'
@@ -169,7 +169,7 @@ hep-node-config:
                     - 'Content-Length: 0'
         -
             ip_family: 2
-            uuid: '(.*?)@127.0.0.1'
+            uuid: 'PJSIP/alice-ipv4-udp-.*'
             src_addr: '127.0.0.1'
             src_port: 5060
             dst_addr: '127.0.0.1'
