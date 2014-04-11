@@ -2,3 +2,7 @@
 tests:
     - dir: 'mwi'
     - dir: 'presence'
+    - test: 'no_event_header'
+    - test: 'unknown_event_package'
+    - test: 'unallowed'
+    - test: 'below_min_expiry'

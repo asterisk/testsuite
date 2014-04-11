@@ -1,0 +1,19 @@
+testinfo:
+    summary: 'Test subscription for MWI without an accept header'
+    description: |
+        'If a subscription for MWI is made without an accept header, then
+         the subscription should complete successfully using the default
+         format when sending subscribed messages to the subscriber.'
+
+properties:
+    minversion: '12.1.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_mwi'
+        - asterisk : 'res_mwi_external'
+        - asterisk : 'res_mwi_external_ami'
+    tags:
+        - pjsip
+        - mwi_external

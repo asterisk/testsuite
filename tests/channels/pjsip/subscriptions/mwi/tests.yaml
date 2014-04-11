@@ -3,4 +3,5 @@ tests:
     - test: 'missing_aor'
     - test: 'unsolicited'
     - test: 'mwi_aggregate'
+    - test: 'no_accept_header'
     - test: 'sub_setup_teardown'

@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2014, Digium, Inc.
+Jonathan Rose <jrose@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+
+sys.path.append("lib/python/asterisk")
+
+from twisted.internet import reactor
+from sipp import SIPpScenario
+from test_case import TestCase
+
+
+class DigiumPresence(TestCase):
+    """Test case for presence on a digium phone"""
+
+    def __init__(self):
+        """Create a new instance of the DigiumPresence test case."""
+
+        super(DigiumPresence, self).__init__()
+        self.create_asterisk()
+
+    def run(self):
+        """Test execution method.  Connect to AMI."""
+        super(DigiumPresence, self).run()
+        self.create_ami_factory()
+
+    def ami_connect(self, ami):
+        """Wait for the presence state to change then issue a subscribe."""
+
+        def _on_scenario_complete(obj):
+            """Handler for when the sipp scenario runs successfully."""
+            # the scenario checks for the appropriate body text
+            # so if we get here the test passed
+            self.set_passed(True)
+            self.stop_reactor()
+            return obj
+
+        def _subscribe(ami, event):
+            """Presence has changed so subscribe and check for changes
+            in the notify.
+            """
+            sipp = SIPpScenario(self.test_name,
+                                {'scenario': 'subscribe.xml', '-p': '5061'})
+            sipp.run(self).addCallback(_on_scenario_complete)
+
+        ami.registerEvent('PresenceStatus', _subscribe)
+        # make sure alice is available
+        self.ast[0].cli_exec('presencestate change CustomPresence:alice'
+                             ' "away,lunch,banana"')
+
+
+def main():
+    """Main entry point for test."""
+    test = DigiumPresence()
+    reactor.run()
+    return not test.passed
+
+if __name__ == "__main__":
+    sys.exit(main())

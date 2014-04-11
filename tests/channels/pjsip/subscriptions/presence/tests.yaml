@@ -5,3 +5,4 @@ tests:
     - test: 'presence_xpidf'
     - test: 'resubscribe'
     - test: 'unsubscribe'
+    - test: 'no_accept_header'

@@ -1,0 +1,17 @@
+testinfo:
+    summary: 'Test subscription to presence without an accept header'
+    description: |
+        'If a subscription to presence is made without an accept header, then
+         the subscription should complete successfully using the default format
+         when sending subscribed messages to the subscriber.'
+
+properties:
+    minversion: '12.1.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_exten_state'
+        - asterisk : 'res_pjsip_pidf_digium_body_supplement'
+    tags:
+        - pjsip

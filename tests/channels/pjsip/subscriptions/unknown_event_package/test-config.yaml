@@ -1,0 +1,28 @@
+testinfo:
+    summary: 'Test subscription to an unknown event type'
+    description: |
+        'If a SIP subscription request is made with an event header
+         describing an unknown event package type, the request should
+         be rejected with a 489 response'
+
+properties:
+    minversion: '12.1.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    reactor-timeout: 30
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'subscribe.xml', '-p': '5061'} }
