@@ -1,0 +1,69 @@
+testinfo:
+    summary:  'Testing the pluggable module Call Files for Creation and Execution'
+    description: |
+        'This configuration runs a single instance of Asterisk to create
+         a call file, then move that call file into the astspooldir to be
+         executed. App2 will answer the call and playback a file. App1 will
+         answer their call and also playback a file. Both user will emit
+         userevents in order to indicate that the two calls were in fact
+         successful'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: call-files-config
+            typename: 'pluggable_modules.CallFiles'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: hangup-monitor
+            typename: 'pluggable_modules.HangupMonitor'
+
+test-object-config:
+    asterisk-instances: 1
+    connect-ami: True
+
+call-files-config:
+    -
+        ignore-originate-failure: 'no'
+        id: '0'
+        call-file-params:
+            Channel: 'Local/app2@tests'
+            Context: 'TestSet'
+            Extension: 'success'
+            Priority: 1
+    -
+        ignore-originate-failure: 'no'
+        id: '0'
+        call-file-params:
+            Channel: 'Local/app1@tests'
+            Application: 'UserEvent'
+            Data: 'CallResult, result: success'
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'CallResult'
+        requirements:
+            match:
+                result: 'success'
+        count: 2
+
+hangup-monitor:
+    ids: [ '0', ]
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_userevent'
+        - asterisk : 'pbx_spool'

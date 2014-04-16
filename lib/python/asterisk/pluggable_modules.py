@@ -7,9 +7,10 @@ Kinsey Moore <kmoore@digium.com>
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
-
+import os
 import sys
 import logging
+import shutil
 
 sys.path.append("lib/python")
 from ami import AMIEventInstance
@@ -263,3 +264,66 @@ class HangupMonitor(object):
         return (ami, event)
 
 
+class CallFiles(object):
+    """ This class allows call files to be created from a YAML configuration"""
+    def __init__(self, instance_config, test_object):
+        """Constructor"""
+        super(CallFiles, self).__init__()
+        self.test_object = test_object
+        self.call_file_instances = instance_config
+
+        if self.call_file_instances:
+            self.test_object.register_ami_observer(self.ami_connect)
+        else:
+            LOGGER.error("No configuration was specified for call files")
+            self.test_failed()
+
+    def test_failed(self):
+        """Checks to see whether or not the call files were
+           correctly specified """
+        self.test_object.set_passed(False)
+        self.test_object.stop_reactor()
+
+    def write_call_file(self, call_file_num, call_file):
+        """Write out the specified call file
+
+        Keyword Parameters:
+        call_file_num Which call file in the test we're writing out
+        call_file     A dictionary containing the call file
+                      information, derived from the YAML
+        """
+        params = call_file.get('call-file-params')
+        if not params:
+            LOGGER.error("No call file parameters specified")
+            self.test_failed()
+            return
+
+        self.locale = ("%s%s/tmp/test%d.call" %
+                       (self.test_object.ast[int(call_file['id'])].base,
+                        self.test_object.ast[int(call_file['id'])].directories
+                        ["astspooldir"], call_file_num))
+
+        with open(self.locale, 'w') as outfile:
+            for key, value in params.items():
+                outfile.write("%s: %s\n" % (key, value))
+        LOGGER.debug("Wrote call file to %s" % self.locale)
+        self.move_file(call_file_num, call_file)
+
+    def ami_connect(self, ami):
+        """Handler for AMI connection """
+        for index, call_file in enumerate(self.call_file_instances):
+            if ami.id == int(call_file.get('id')):
+                self.write_call_file(index, call_file)
+
+    def move_file(self, call_file_num, call_file):
+        """Moves call files to astspooldir directory to be run """
+        src_file = self.locale
+        dst_file = ("%s%s/outgoing/test%s.call" %
+                    (self.test_object.ast[int(call_file['id'])].base,
+                     self.test_object.ast[int(call_file['id'])].directories
+                     ["astspooldir"], call_file_num))
+
+        LOGGER.info("Moving file %s to %s" % (src_file, dst_file))
+
+        shutil.move(src_file, dst_file)
+        os.utime(dst_file, None)

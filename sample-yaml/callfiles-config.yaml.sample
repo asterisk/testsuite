@@ -1,0 +1,38 @@
+# Configuration sample for the pluggable module Call Files. For an extensive
+# example check out the test-config in the /tests/pbx/create_call_files folder
+# of the testsuite.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: call-files-config
+            typename: 'pluggable_modules.CallFiles'
+
+call-files-config:
+    # The ID of the AMI instance in which you want to Create and Execute
+    # the Call File.
+    id: '0'
+
+    # Whether to ignore failure of the originate.
+    ignore-originate-failure: 'no'
+
+    # Set parameters for the call files
+    call-file-params:
+        -
+            # The channel to execute the call file.
+            Channel: 'Local/s@default'
+
+            # The application to start once the channel is answered.
+            Application: 'Echo'
+
+            # The data to provide to the application.
+            Data: ''
+
+            # Aternatively, a context, extension, and priority can be set to override
+            # the application setting
+            Context: 'default'
+            Extension: '1234'
+            Priority: '1'
