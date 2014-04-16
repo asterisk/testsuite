@@ -67,9 +67,10 @@ class PJsuaAccount(object):
     This object contains a reference to a pj.Account and a dictionary of the
     account's buddies, keyed by buddy name
     """
-    def __init__(self, account):
+    def __init__(self, account, pj_lib):
         self.account = account
         self.buddies = {}
+        self.pj_lib = pj_lib
 
     def add_buddies(self, buddy_cfg):
         """
@@ -214,10 +215,16 @@ class PJsua(object):
         pj_acct_cfg = pj.AccountConfig(domain, username, password, name)
         if acct_cfg.get('mwi-subscribe'):
             pj_acct_cfg.mwi_enabled = 1
+        if acct_cfg.get('transport'):
+            acct_transport = acct_cfg.get('transport')
+            if acct_transport in self.pj_transports:
+                transport_id = self.pj_transports[acct_transport]._id
+                pj_acct_cfg.transport_id = transport_id
 
         LOGGER.info("Creating PJSUA account %s@%s" % (username, domain))
         account = PJsuaAccount(self.lib.create_account(pj_acct_cfg, False,
-                                                       RegDetector(self)))
+                                                       RegDetector(self)),
+                                                       self.lib)
         account.add_buddies(acct_cfg.get('buddies', []))
         return account
 

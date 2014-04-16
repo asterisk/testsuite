@@ -1,0 +1,119 @@
+testinfo:
+    summary:     'Test SIP Blind Transfer (caller transfers with direct media)'
+    description: |
+        'This test verifies a SIP Blind transfer with direct media occurring
+        between each endpoint. This uses a SIPp instance for each of "Alice",
+        "Bob", and "Charlie". Alice calls Bob through Asterisk and direct media
+        is set up between them. Alice then blind transfers Bob to Charlie which
+        causes the direct media between Alice and Bob to be torn down. After
+        Asterisk notifies Alice that Charlie answered, Alice hangs up. Direct
+        media is set up between Bob and Charlie. Charlie hangs up the call. A
+        second iteration is performed to ensure correct behavior when the
+        TRANSFER_CONTEXT channel variable is used. This test ensures that the
+        transfer was successful and that direct media occurs between the
+        endpoints. It also ensures various channel variables are set
+        appropriately.'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'res_pjsip'
+        - sipp :
+            version : 'v3.4.1'
+    tags:
+        - pjsip
+        - transfer
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-case-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-case-config:
+    connect-ami: 'True'
+    fail-on-any: False
+    test-iterations:
+        # First iteration
+        -
+            scenarios:
+                # Charlie receives transfered call and sends audio to Bob.
+                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.4'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
+                # Bob receives call from Alice and sends audio.
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.3'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
+                # Alice calls Bob and sends audio. Alice then attempts to blind transfer Bob to Charlie.
+                - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.2'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
+        # Second iteration
+        -
+            scenarios:
+                # Charlie receives transfered call and sends audio to Bob.
+                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.4'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
+                # Bob receives call from Alice and sends audio.
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.3'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
+                # Alice calls Bob and sends audio. Alice then attempts to blind transfer Bob to Charlie.
+                - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob_two', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.2'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
+
+ami-config:
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Variable: 'SIPTRANSFER'
+                    Value: 'yes'
+            count: 2
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Channel: 'PJSIP/bob-.{8}'
+                    Variable: 'SIPREFERRINGCONTEXT'
+                    Value: 'transfertest'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Channel: 'PJSIP/bob-.{8}'
+                    Variable: 'SIPREFERRINGCONTEXT'
+                    Value: 'other'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Channel: 'PJSIP/bob-.{8}'
+                    Variable: 'SIPREFERREDBYHDR'
+                    Value: 'sip:alice@127.0.0.2:5060'
+            count: 2
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Variable: 'SIPREFERTOHDR'
+                    Value: 'sip:charlie@127.0.0.1'
+            count: 2
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'BlindTransfer'
+                    TransfererChannel: 'PJSIP/alice-.{8}'
+            count: 2
+

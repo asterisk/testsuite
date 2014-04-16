@@ -1,0 +1,125 @@
+testinfo:
+    summary:     'Test SIP Blind Transfer (caller transfers with only REFER)'
+    description: |
+        'This test verifies a basic SIP Blind transfer where no re-INVITE is
+        sent to put an endpoint on hold. This uses a SIPp instance for each of
+        "Alice", "Bob", and "Charlie". Alice calls Bob through Asterisk. Alice
+        then blind transfers Bob to Charlie. After Asterisk notifies Alice that
+        Charlie answered, Alice hangs up. Charlie hangs up the call with Bob. A
+        second iteration is performed to ensure correct behavior when the
+        TRANSFER_CONTEXT channel variable is used. This test ensures that the
+        transfer was successful and that various channel variables are set
+        appropriately.'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - python: 'pjsua'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+        - transfer
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-case-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: 'pjsua-config'
+            typename: 'pjsua_mod.PJsua'
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-case-config:
+    connect-ami: 'True'
+
+pjsua-config:
+    callback_module: 'transfer'
+    callback_method: 'transfer'
+    transports:
+        -
+            name: 'local-ipv4-1'
+            bind: '127.0.0.1'
+            bindport: '5061'
+        -
+            name: 'local-ipv4-2'
+            bind: '127.0.0.1'
+            bindport: '5062'
+        -
+            name: 'local-ipv4-3'
+            bind: '127.0.0.1'
+            bindport: '5063'
+    accounts:
+        -
+            name: 'alice'
+            username: 'alice'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-1'
+        -
+            name: 'bob'
+            username: 'bob'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-2'
+        -
+            name: 'charlie'
+            username: 'charlie'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-3'
+
+ami-config:
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Variable: 'SIPTRANSFER'
+                    Value: 'yes'
+            count: 2
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Channel: 'PJSIP/bob-.{8}'
+                    Variable: 'SIPREFERRINGCONTEXT'
+                    Value: 'transfertest'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Channel: 'PJSIP/bob-.{8}'
+                    Variable: 'SIPREFERRINGCONTEXT'
+                    Value: 'other'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Channel: 'PJSIP/bob-.{8}'
+                    Variable: 'SIPREFERREDBYHDR'
+                    Value: 'alice <sip:alice@127.0.0.1>'
+            count: 2
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Variable: 'SIPREFERTOHDR'
+                    Value: 'sip:charlie@127.0.0.1'
+            count: 2
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'BlindTransfer'
+                    TransfererChannel: 'PJSIP/alice-.{8}'
+            count: 2
+
