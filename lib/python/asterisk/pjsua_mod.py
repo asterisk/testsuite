@@ -212,6 +212,8 @@ class PJsua(object):
         password = acct_cfg.get('password', '')
 
         pj_acct_cfg = pj.AccountConfig(domain, username, password, name)
+        if acct_cfg.get('mwi-subscribe'):
+            pj_acct_cfg.mwi_enabled = 1
 
         LOGGER.info("Creating PJSUA account %s@%s" % (username, domain))
         account = PJsuaAccount(self.lib.create_account(pj_acct_cfg, False,
@@ -245,3 +247,4 @@ class PJsua(object):
             callback_module = __import__(self.callback_module)
             callback_method = getattr(callback_module, self.callback_method)
             callback_method(self.test_object, self.pj_accounts)
+
