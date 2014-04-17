@@ -20,4 +20,5 @@ tests:
     - test: 'qualify'
     - test: 'headers'
     - dir: 'transfers'
+    - test: 'info_dtmf'
 
