@@ -66,3 +66,4 @@ tests:
     - test: 'outbound_register_from'
     - test: 'outbound_reregister_from'
     - test: 'direct_rtp_fallback'
+    - test: 'tel_uri'
