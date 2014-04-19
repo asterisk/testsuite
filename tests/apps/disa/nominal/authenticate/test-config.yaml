@@ -36,7 +36,7 @@ test-object-config:
                 -
                   action-type: 'send-dtmf'
                   delay: 1
-                  dtmf: '1234#100'
+                  dtmf: '1234#200'
             -
               type: 'headermatch'
               conditions:
