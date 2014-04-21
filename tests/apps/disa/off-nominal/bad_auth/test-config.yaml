@@ -1,0 +1,59 @@
+test-info:
+    summary: 'Test for Off-Nominal DISA Bad Authentication'
+    description:
+        This test has an inbound call enter the DISA application that has a
+        passcode. The channel provides an invalid passcode, and the channel
+        is hung up.
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_userevent'
+        - asterisk : 'app_disa'
+    tags:
+        - apps
+        - disa
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'DISA'
+  scenarios:
+    -
+      # Scenario 1
+      channels:
+        -
+          channel-id: 'DISA-Channel'
+          channel-name: 'Local/begin@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Application: 'DISA'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel entered DISA application'
+                -
+                  action-type: 'send-dtmf'
+                  delay: 1
+                  dtmf: '124#'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+                  Channel: 'Local/begin@default-.*'
+              actions:
+                -
+                  action-type: 'end-scenario'
