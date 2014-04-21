@@ -1,0 +1,30 @@
+testinfo:
+    summary: 'Test P-Asserted-Identity for a specific set of conditions'
+    description: |
+        'sendrpid=pai
+         trust_outbound_id=yes
+         callingpres=prohib_passed_screen
+
+         Since callingpres is prohibited, but we trust the peer,
+         full P-Asserted-Identity is expected with Privacy: id'
+
+properties:
+    minversion: '1.8.27'
+    dependencies:
+         - app : 'sipp'
+         - asterisk : 'chan_sip'
+    tags:
+        - SIP
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'receive.xml', '-p':'5062' } }
+                - { 'key-args': { 'scenario':'send.xml', '-p':'5061' } }
+

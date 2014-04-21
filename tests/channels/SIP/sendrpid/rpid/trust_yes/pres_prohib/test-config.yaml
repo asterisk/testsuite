@@ -1,0 +1,31 @@
+testinfo:
+    summary: 'Test Remote-Party-Id for a specific set of conditions'
+    description: |
+        'sendrpid=rpid
+         trust_outbound_id=no (default)
+         callingpres=prohib_not_screened
+
+         Since callingpres is prohibited and the peer has trust,
+         full Remote Party ID information is expected with screen and
+         privacy settings specified'
+
+properties:
+    minversion: '1.8.27'
+    dependencies:
+         - app : 'sipp'
+         - asterisk : 'chan_sip'
+    tags:
+        - SIP
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'receive.xml', '-p':'5062' } }
+                - { 'key-args': { 'scenario':'send.xml', '-p':'5061' } }
+
