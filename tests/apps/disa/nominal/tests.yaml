@@ -2,3 +2,4 @@
 tests:
     - test: 'authenticate'
     - test: 'no_authentication'
+    - test: 'no_context'
