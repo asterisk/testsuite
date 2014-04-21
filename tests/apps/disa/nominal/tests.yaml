@@ -1,3 +1,4 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 'authenticate'
+    - test: 'no_authentication'
