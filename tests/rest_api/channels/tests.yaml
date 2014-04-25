@@ -5,3 +5,4 @@ tests:
     - test: 'snoop_whisper'
     - test: 'snoop_spy'
     - test: 'snoop_id'
+    - dir: 'playback'
