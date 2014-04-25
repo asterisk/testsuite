@@ -10,7 +10,7 @@ tests:
     - dir: 'page'
     - dir: 'chanspy'
     - dir: 'queues'
-    - test: 'directed_pickup'
+    - dir: 'directed_pickup'
     - test: 'mixmonitor'
     - test: 'mixmonitor_audiohook_inherit'
     - test: 'mixmonitor_func'
