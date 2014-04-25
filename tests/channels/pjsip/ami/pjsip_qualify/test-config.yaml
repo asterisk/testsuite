@@ -1,0 +1,24 @@
+tinfo:
+    summary: 'Test PJSIPQualify AMI Action'
+    description: |
+        This Tests the AMI Action PJSIPQualify in order to make sure
+        the functionality is working properly.
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+
+test-modules:
+    # allow test_runner to find and run the local test
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: object-config
+        typename: 'AMISendTest.AMISendTest'
+
+object-config:
+    reactor-timeout: 15
