@@ -8,5 +8,7 @@ tests:
     - test: 'bridge_actions'
     - dir:  'danger'
     - test: 'originate'
+    - test: 'device_state_changed'
+    - test: 'presence_state_changed'
     # Temporarily disabled while failures are debugged
     #- test: 'response-time'
