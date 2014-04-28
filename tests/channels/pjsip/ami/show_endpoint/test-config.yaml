@@ -135,8 +135,8 @@ ami-config:
                     DefaultExpiration: '3600'
                     MaximumExpiration: '7200'
                     MinimumExpiration: '60'
-                    Contacts: 'user1/sip:user1@127.0.0.1:5062'
-                    TotalContacts: '1'
+                    Contacts: 'user1/sip:user1@127.0.0.1:5062,user1/sip:user1@127.0.0.2:5063'
+                    TotalContacts: '2'
                     ContactsRegistered: '0'
                     EndpointName: 'user1'
             count: 1
