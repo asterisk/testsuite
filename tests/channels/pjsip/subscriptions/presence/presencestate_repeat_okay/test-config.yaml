@@ -1,0 +1,34 @@
+testinfo:
+    summary: 'Ensure that repeated presence states with differing subvalues are sent properly.'
+    description: |
+        'A SIPp test expects to receive, after the initial subscription, two NOTIFYs corresponding
+        to presence subtype and message changes.'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_exten_state'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'repeat_presence_state.RepeatPresenceState'
+
+sipp-config:
+    reactor-timeout: 30
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'subscribe.xml', '-p': '5061'} }
