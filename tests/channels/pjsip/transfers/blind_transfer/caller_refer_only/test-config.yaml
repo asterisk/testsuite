@@ -104,7 +104,7 @@ ami-config:
                 match:
                     Event: 'VarSet'
                     Channel: 'PJSIP/bob-.{8}'
-                    Variable: 'SIPREFERREDBYHDR'
+                    Variable: '_{0,2}SIPREFERREDBYHDR'
                     Value: 'alice <sip:alice@127.0.0.1>'
             count: 2
         -
@@ -112,7 +112,7 @@ ami-config:
             conditions:
                 match:
                     Event: 'VarSet'
-                    Variable: 'SIPREFERTOHDR'
+                    Variable: '_{0,2}SIPREFERTOHDR'
                     Value: 'sip:charlie@127.0.0.1'
             count: 2
         -
