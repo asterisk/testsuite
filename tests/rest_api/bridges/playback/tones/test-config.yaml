@@ -1,0 +1,135 @@
+testinfo:
+    summary: Test detection of Playback events when using tones
+    description: |
+        * Originate a channel
+        * Create a bridge
+        * Add the channel to the bridge
+        * Start a tone playback on the bridge
+        * Pause the tone playback
+        * resume the tone playback
+        * Restart the tone playback
+        * Delete the tone playback
+        * Delete the channel
+        * Validate all the events
+
+properties:
+    minversion: '12.3.0'
+    dependencies:
+        - python: autobahn.websocket
+        - python: requests
+        - python: twisted
+        - python: starpy
+        - asterisk: res_ari_bridges
+        - asterisk: res_ari_channels
+        - asterisk: app_echo
+    tags:
+        - ARI
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+            callback:
+                module: bridges_play
+                method: on_start
+        -
+            conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    application: testsuite
+                    bridge:
+                        id: 'test-tones-bridge'
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'bridges/test-tones-bridge/play/MyPlaybackId'
+                params:
+                    media: 'tone:record'
+        -
+            conditions:
+                match:
+                    type: PlaybackStarted
+                    application: testsuite
+                    playback:
+                        id: 'MyPlaybackId'
+                        target_uri: 'bridge:test-tones-bridge'
+                        media_uri: 'tone:record'
+            count: 2
+            requests:
+                -
+                    instance: 1
+                    delay: 1
+                    method: 'post'
+                    uri: 'playbacks/MyPlaybackId/control'
+                    params:
+                        operation: pause
+                    # pause operation does not generate an event
+                -
+                    instance: 1
+                    delay: 2
+                    method: 'post'
+                    uri: 'playbacks/MyPlaybackId/control'
+                    params:
+                        operation: unpause
+                -
+                    instance: 2
+                    method: 'post'
+                    uri: 'playbacks/MyPlaybackId/control'
+                    params:
+                        operation: restart
+                -
+                    instance: 2
+                    delay: 2
+                    method: 'delete'
+                    uri: 'playbacks/MyPlaybackId'
+        -
+            conditions:
+                match:
+                    type: PlaybackFinished
+                    application: testsuite
+                    playback:
+            count: 1
+            callback:
+                module: bridges_play
+                method: on_playback_finished
+        -
+            conditions:
+                match:
+                    type: ChannelLeftBridge
+                    application: testsuite
+                    bridge:
+                    channel:
+            count: 1
+            callback:
+                module: bridges_play
+                method: on_channel_left_bridge
+
+properties:
+    minversion: '12.3.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+    tags:
+        - ARI

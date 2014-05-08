@@ -2,3 +2,5 @@
 tests:
     - test: 'basic'
     - test: 'to_channel_in_bridge'
+    - test: 'tones'
+    - test: 'tones_w_tonezone'
