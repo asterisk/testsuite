@@ -98,7 +98,7 @@ ami-config:
                 match:
                     Event: 'VarSet'
                     Channel: 'PJSIP/bob-.{8}'
-                    Variable: 'SIPREFERREDBYHDR'
+                    Variable: '_{0,2}SIPREFERREDBYHDR'
                     Value: 'sip:alice@127.0.0.2:5060'
             count: 2
         -
