@@ -6,7 +6,6 @@ testinfo:
 test-modules:
     add-test-to-search-path: True
     test-object:
-        config-section: test-object-config
         typename: ari.AriTestObject
     modules:
         -
@@ -33,7 +32,7 @@ ari-config:
                     type: StasisStart
                     application: testsuite
                     args: ['test']
-            count: 2
+            count: 1
             callback:
                 module: attended_transfer
                 method: on_test_start
