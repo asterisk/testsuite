@@ -74,21 +74,21 @@ class TestRun:
             self.__parse_run_output(self.stdout)
 
             self.passed = (p.returncode == 0 and self.test_config.expect_pass) or (p.returncode and not self.test_config.expect_pass)
-            core_dumps = self.__check_for_core()
+            core_dumps = self._check_for_core()
             if (len(core_dumps)):
                 print "Core dumps detected; failing test"
                 self.passed = False
-                self.__archive_core_dumps(core_dumps)
+                self._archive_core_dumps(core_dumps)
+
             if not self.passed:
-                self.__archive_ast_logs()
-                self.__archive_pcap_dump()
+                self._archive_logs()
             print 'Test %s %s\n' % (cmd, 'passed' if self.passed else 'failed')
 
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
         self.time = time.time() - start_time
 
-    def __check_for_core(self):
+    def _check_for_core(self):
         contents = os.listdir('.')
         core_files = []
         for item in contents:
@@ -96,7 +96,7 @@ class TestRun:
                 core_files.append(item)
         return core_files
 
-    def __archive_core_dumps(self, core_dumps):
+    def _archive_core_dumps(self, core_dumps):
         for core in core_dumps:
             if not os.path.exists(core):
                 print "Unable to find core dump file %s, skipping" % core
@@ -112,7 +112,7 @@ class TestRun:
                 res = subprocess.call(gdb_cmd, stdout=dest_file, stderr=subprocess.STDOUT)
                 if res != 0:
                     print "error analyzing core dump; gdb exited with %d" % res
-                """ Copy the backtrace over to the logs """
+                # Copy the backtrace over to the logs
             except OSError, ose:
                 print "OSError ([%d]: %s) occurred while executing %r" % (ose.errno, ose.strerror, gdb_cmd)
                 return
@@ -126,36 +126,51 @@ class TestRun:
                 except OSError, e:
                     print "Error removing core file: %s: Beware of the stale core file in CWD!" % (e,)
 
-    def __archive_ast_logs(self):
-        ast_directories = "%s/%s" % (Asterisk.test_suite_root, self.test_name.lstrip("tests/"))
+    def _archive_logs(self):
+        test_run_dir = os.path.join(Asterisk.test_suite_root,
+                       self.test_name.lstrip('tests/'))
+
         i = 1
-        while True:
-            if os.path.isdir("%s/ast%d" % (ast_directories, i)):
-                ast_dir = "%s/ast%d/var/log/asterisk" % (ast_directories, i)
-                dest_dir = "./logs/%s/ast%d/var/log/asterisk" % (self.test_name.lstrip("tests/"), i)
-                """ Only archive the logs if we havent archived it for this test run yet """
-                if not os.path.exists(dest_dir):
-                    try:
-                        hardlink_or_copy(ast_dir + "/messages.txt",
-                            dest_dir + "/messages.txt")
-                        hardlink_or_copy(ast_dir + "/full.txt",
-                            dest_dir + "/full.txt")
-                        if os.path.exists(ast_dir + "/mmlog"):
-                            hardlink_or_copy(ast_dir + "/mmlog",
-                                dest_dir + "/mmlog")
-                    except Exception, e:
-                        print "Exception occurred while archiving logs from %s to %s: %s" % (
-                            ast_dir, dest_dir, e
-                        )
-            else:
-                break
+        # Find the last run
+        while os.path.isdir(os.path.join(test_run_dir, 'run_%d' % i)):
+            i += 1
+        run_num = i - 1
+        run_dir = os.path.join(test_run_dir, 'run_%d' % run_num)
+        archive_dir = os.path.join('./logs',
+                                   self.test_name.lstrip('tests/'),
+                                   'run_%d' % run_num)
+        self._archive_ast_logs(run_num, run_dir, archive_dir)
+        self._archive_pcap_dump(run_dir, archive_dir)
+        hardlink_or_copy(os.path.join(run_dir, 'messages.txt'),
+                         os.path.join(archive_dir, 'messages.txt'))
+        hardlink_or_copy(os.path.join(run_dir, 'full.txt'),
+                         os.path.join(archive_dir, 'full.txt'))
+
+    def _archive_ast_logs(self, run_num, run_dir, archive_dir):
+        """Archive the Asterisk logs"""
+        i = 1
+        while os.path.isdir(os.path.join(run_dir, 'ast%d/var/log/asterisk' % i)):
+            ast_dir = "%s/ast%d/var/log/asterisk" % (run_dir, i)
+            dest_dir = os.path.join(archive_dir,
+                                    'ast%d/var/log/asterisk' % i)
+            try:
+                hardlink_or_copy(ast_dir + "/messages.txt",
+                    dest_dir + "/messages.txt")
+                hardlink_or_copy(ast_dir + "/full.txt",
+                    dest_dir + "/full.txt")
+                if os.path.exists(ast_dir + "/mmlog"):
+                    hardlink_or_copy(ast_dir + "/mmlog",
+                        dest_dir + "/mmlog")
+            except Exception, e:
+                print "Exception occurred while archiving logs from %s to %s: %s" % (
+                    ast_dir, dest_dir, e
+                )
             i += 1
 
-    def __archive_pcap_dump(self):
+    def _archive_pcap_dump(self, run_dir, archive_dir):
         filename = "dumpfile.pcap"
-        test_base = self.test_name.lstrip("tests/")
-        src = os.path.join(Asterisk.test_suite_root, test_base, str(self.pid), filename)
-        dst = os.path.join("logs", test_base, filename)
+        src = os.path.join(run_dir, filename)
+        dst = os.path.join(archive_dir, filename)
         if os.path.exists(src):
             try:
                 hardlink_or_copy(src, dst)

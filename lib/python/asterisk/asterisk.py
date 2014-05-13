@@ -212,14 +212,15 @@ class Asterisk(object):
         self._stop_cancel_tokens = []
         self.directories = {}
         self.ast_version = AsteriskVersion()
-        self.base = Asterisk.test_suite_root
         self.process_protocol = None
         self.process = None
         self.astetcdir = ""
         self.original_astmoddir = ""
 
         if base is not None:
-            self.base = "%s/%s" % (self.base, base)
+            self.base = base
+        else:
+            self.base = Asterisk.test_suite_root
         if self.localtest_root:
             self.ast_binary = self.localtest_root + "/usr/sbin/asterisk"
         else:

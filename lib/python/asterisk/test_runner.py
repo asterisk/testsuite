@@ -4,7 +4,7 @@
 This module provides an entry point, loading, and teardown of test
 runs for the Test Suite
 
-Copyright (C) 2012, Digium, Inc.
+Copyright (C) 2014, Digium, Inc.
 Matt Jordan <mjordan@digium.com>
 
 This program is free software, distributed under the terms of
@@ -278,20 +278,6 @@ def main(argv = None):
 
     if argv is None:
         args = sys.argv
-
-    # Set up logging - we're probably the first ones run!
-    log_config_file = os.path.join(os.getcwd(), "%s" % 'logger.conf')
-    if os.path.exists(log_config_file):
-        try:
-            logging.config.fileConfig(log_config_file, None, False)
-        except:
-            print "WARNING: failed to preserve existing loggers - some " \
-            "logging statements may be missing"
-            logging.config.fileConfig(log_config_file)
-    else:
-        print "WARNING: no logging.conf file found at %s; using default " \
-        " configuration" % (log_config_file)
-        logging.basicConfig()
 
     if (len(args) < 2):
         LOGGER.error("test_runner requires the full path to the test " \

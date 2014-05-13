@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Copyright (C) 2010-2012, Digium, Inc.
+Copyright (C) 2010-2014, Digium, Inc.
 Paul Belanger <pabelanger@digium.com>
 
 This program is free software, distributed under the terms of
@@ -31,12 +31,14 @@ try:
 except:
     PCAP_AVAILABLE = False
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = None
 
-def setup_logging():
+def setup_logging(log_dir):
     """Initialize the logger"""
 
-    config_file = os.path.join(os.getcwd(), TestCase.default_log_file_name)
+    global LOGGER
+
+    config_file = os.path.join(os.getcwd(), "logger.conf")
     if os.path.exists(config_file):
         try:
             logging.config.fileConfig(config_file, None, False)
@@ -49,7 +51,26 @@ def setup_logging():
         msg = ("WARNING: no logging.conf file found; using default "
                "configuration")
         print msg
-        logging.basicConfig(level=TestCase.default_log_level)
+        logging.basicConfig(level=logging.DEBUG)
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(level=logging.DEBUG)
+
+    LOGGER = logging.getLogger(__name__)
+
+    fmt = '[%(asctime)s] %(levelname)s[%(process)d]: %(name)s:%(lineno)d %(funcName)s: %(message)s'
+    datefmt = '%b %d %H:%M:%S'
+    form = logging.Formatter(fmt=fmt, datefmt=datefmt)
+
+    fh = logging.FileHandler(os.path.join(log_dir, 'full.txt'))
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(form)
+    root_logger.addHandler(fh)
+
+    mh = logging.FileHandler(os.path.join(log_dir, 'messages.txt'))
+    mh.setLevel(logging.INFO)
+    mh.setFormatter(form)
+    root_logger.addHandler(mh)
 
 
 class TestCase(object):
@@ -58,11 +79,7 @@ class TestCase(object):
     twisted reactor, and various other utilities.
     """
 
-    default_log_file_name = "logger.conf"
-
-    default_log_level = "WARN"
-
-    def __init__(self, test_path = '', test_config=None):
+    def __init__(self, test_path='', test_config=None):
         """Create a new instance of a TestCase. Must be called by inheriting
         classes.
 
@@ -109,9 +126,7 @@ class TestCase(object):
         self.pcapfilename = None
         self.create_pcap = False
         self._stopping = False
-        self.testlogdir = os.path.join(Asterisk.test_suite_root,
-                                       self.base,
-                                       str(os.getpid()))
+        self.testlogdir = self._set_test_log_directory()
         self.ast_version = AsteriskVersion()
         self._start_callbacks = []
         self._stop_callbacks = []
@@ -130,7 +145,9 @@ class TestCase(object):
         os.makedirs(self.testlogdir)
 
         # Set up logging
-        setup_logging()
+        setup_logging(self.testlogdir)
+
+        LOGGER.info("Executing " + self.test_name)
 
         if PCAP_AVAILABLE and self.create_pcap:
             self.pcapfilename = os.path.join(self.testlogdir, "dumpfile.pcap")
@@ -138,13 +155,24 @@ class TestCase(object):
 
         self._setup_conditions()
 
-        LOGGER.info("Executing " + self.test_name)
-
         # Enable twisted logging
         observer = log.PythonLoggingObserver()
         observer.start()
 
         reactor.callWhenRunning(self._run)
+
+    def _set_test_log_directory(self):
+        """Determine which logging directory we should use for this test run
+
+        Returns:
+        The full path that should be used as the directory for all log data
+        """
+        i = 1
+        base_path = os.path.join(Asterisk.test_suite_root, self.base)
+        while os.path.isdir(os.path.join(base_path, "run_%d" % i)):
+            i += 1
+        full_path = os.path.join(base_path, "run_%d" % i)
+        return full_path
 
     def _setup_conditions(self):
         """Register pre and post-test conditions.
@@ -208,7 +236,7 @@ class TestCase(object):
             num = i + 1
             LOGGER.info("Creating Asterisk instance %d" % num)
             host = "127.0.0.%d" % num
-            self.ast.append(Asterisk(base=self.base, host=host,
+            self.ast.append(Asterisk(base=self.testlogdir, host=host,
                                      ast_conf_options=self.ast_conf_options))
             self.condition_controller.register_asterisk_instance(self.ast[i])
             # If a base configuration for this Asterisk instance has been
