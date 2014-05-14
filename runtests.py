@@ -141,10 +141,12 @@ class TestRun:
                                    'run_%d' % run_num)
         self._archive_ast_logs(run_num, run_dir, archive_dir)
         self._archive_pcap_dump(run_dir, archive_dir)
-        hardlink_or_copy(os.path.join(run_dir, 'messages.txt'),
-                         os.path.join(archive_dir, 'messages.txt'))
-        hardlink_or_copy(os.path.join(run_dir, 'full.txt'),
-                         os.path.join(archive_dir, 'full.txt'))
+        if os.path.exists(os.path.join(run_dir, 'messages.txt')):
+            hardlink_or_copy(os.path.join(run_dir, 'messages.txt'),
+                             os.path.join(archive_dir, 'messages.txt'))
+        if os.path.exists(os.path.join(run_dir, 'full.txt')):
+            hardlink_or_copy(os.path.join(run_dir, 'full.txt'),
+                             os.path.join(archive_dir, 'full.txt'))
 
     def _archive_ast_logs(self, run_num, run_dir, archive_dir):
         """Archive the Asterisk logs"""
