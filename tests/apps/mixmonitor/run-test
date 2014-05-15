@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 '''
-Copyright (C) 2010, Digium, Inc.
+Copyright (C) 2010-2014, Digium, Inc.
 David Vossel <dvossel@digium.com>
+Matt Jordan <mjordan@digium.com>
 
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
@@ -10,17 +11,21 @@ the GNU General Public License Version 2.
 import sys
 import os
 import math
+import logging
+
 from twisted.internet import reactor
-from starpy import manager
 
-sys.path.append("lib/python")
-from asterisk.asterisk import Asterisk
+sys.path.append("lib/python/asterisk")
+from test_case import TestCase
 
-workingdir = "apps/mixmonitor"
-testdir = "tests/%s" % workingdir
+testdir = "tests/apps/mixmonitor"
 
-class MixMonitorTest:
+LOGGER = logging.getLogger(__name__)
+
+class MixMonitorTest(TestCase):
     def __init__(self):
+        super(MixMonitorTest, self).__init__()
+
         self.passed = False
         self.last_step = ""
         # playback file is 2559 bytes of ulaw, that will come out to be ~41118 of wav
@@ -30,21 +35,18 @@ class MixMonitorTest:
         self.audiofile2size = -1
         self.audiofile3size = -1
 
-        reactor.callWhenRunning(self.run)
-
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
-
         self.audiofile1 = os.path.join(os.getcwd(), "%s/testaudio1" % (testdir))
         self.audiofile2 = os.path.join(os.getcwd(), "%s/testaudio2" % (testdir))
         self.audiofile3 = os.path.join(os.getcwd(), "%s/testaudio3" % (testdir))
 
         self.talkingaudio = os.path.join(os.getcwd(), "%s/sounds/talking" % (testdir))
 
+        self.create_asterisk()
+
     def read_result(self):
         self.passed = True
         self.stop_reactor()
-        self.log_last_step("Reading result file from MixMonitor")
+        LOGGER.info("Reading result file from MixMonitor")
         if os.path.exists(self.audiofile1 + ".raw"):
             self.audiofile1size = os.path.getsize(self.audiofile1 + ".raw")
         if os.path.exists(self.audiofile2 + ".raw"):
@@ -52,54 +54,42 @@ class MixMonitorTest:
         if os.path.exists(self.audiofile3 + ".raw"):
             self.audiofile3size = os.path.getsize(self.audiofile3 + ".raw")
 
-        self.log_last_step("audiofile1 size is %d, a negative size indicates the file was not present." % (self.audiofile1size, ))
+        LOGGER.debug("audiofile1 size is %d, a negative size indicates the file was not present." % (self.audiofile1size, ))
         if math.fabs(self.audiofile1size - self.expectedfilesize) > self.filesizetolerance:
             # if this failed mixmonitor is not creating the correct file size for the time we expect.
-            self.log_last_step("audiofile1 size is not within the size tolerance.")
+            LOGGER.error("audiofile1 size is not within the size tolerance.")
             self.passed = False
 
-        self.log_last_step("audiofile2 size is %d, a negative size indicates the file was not present." % (self.audiofile2size, ))
+        LOGGER.debug("audiofile2 size is %d, a negative size indicates the file was not present." % (self.audiofile2size, ))
         if math.fabs(self.audiofile2size - self.expectedfilesize) > self.filesizetolerance:
             # if this failed it is likely because StopMixMonitor never let go of audiofile1
-            self.log_last_step("audiofile2 size is not within the size tolerance.")
+            LOGGER.error("audiofile2 size is not within the size tolerance.")
             self.passed = False
 
-        self.log_last_step("audiofile3 size is %d, a negative size indicates the file was not present." % (self.audiofile3size, ))
+        LOGGER.debug("audiofile3 size is %d, a negative size indicates the file was not present." % (self.audiofile3size, ))
         if self.audiofile3size == -1:
             # if this failed it is likely because MixMonitor never let go of audiofile2 on hangup
-            self.log_last_step("audiofile3 file does not exist.")
+            LOGGER.error("audiofile3 file does not exist.")
             self.passed = False
 
         if self.passed == True:
-            self.log_last_step("Test Passed... All audio files are the correct.")
-
-    def stop_reactor(self):
-        def __finish_stop(result):
-            print "Stopping Reactor ..."
-            if reactor.running:
-                reactor.stop()
-            return result
-        df = self.ast1.stop()
-        df.addCallback(__finish_stop)
+            LOGGER.info("Test Passed... All audio files are the correct.")
 
     def launch_test1(self):
-        self.log_last_step("Placing call to test1 exten")
-        self.ast1.cli_originate("Local/s@listener extension s@test1")
+        LOGGER.info("Placing call to test1 exten")
+        self.ast[0].cli_originate("Local/s@listener extension s@test1")
 
     def launch_test2(self):
-        self.log_last_step("Placing call to test2 exten")
-        self.ast1.cli_originate("Local/s@listener extension s@test2")
+        LOGGER.info("Placing call to test2 exten")
+        self.ast[0].cli_originate("Local/s@listener extension s@test2")
 
-    def log_last_step(self, step):
-        print step
-        self.last_step = step
 
     def check_test1(self, ami, event):
-        self.log_last_step("Checking Userevent")
+        LOGGER.info("Checking Userevent")
         if event.get("userevent").lower() != "test1":
             return
         status = event.get("status")
-        print ("Status of test1 is %s" % (status))
+        LOGGER.debug("Status of test1 is %s" % (status))
         if status != "SUCCESS":
             self.stop_reactor()
             return
@@ -108,19 +98,18 @@ class MixMonitorTest:
         self.launch_test2()
 
     def check_test2(self, ami, event):
-        self.log_last_step("Checking Userevent")
+        LOGGER.info("Checking Userevent")
         if event.get("userevent").lower() != "test2":
             return
         status = event.get("status")
-        print ("Status of test2 is %s" % (status))
+        LOGGER.debug("Status of test2 is %s" % (status))
         if status != "SUCCESS":
             self.stop_reactor()
             return
 
         self.read_result()
 
-    def ami_on_connect1(self, ami):
-        self.log_last_step("Connected to AMI 1")
+    def ami_connect(self, ami):
         self.ami = ami
         self.ami.registerEvent("UserEvent", self.check_test1)
 
@@ -129,26 +118,10 @@ class MixMonitorTest:
         self.ami.setVar(channel = "", variable = "TESTAUDIO3", value = self.audiofile3)
         self.ami.setVar(channel = "", variable = "TALK_AUDIO", value = self.talkingaudio)
 
-    def ami_login_error(self, ami):
-        self.log_last_step("AMI login failed")
-        self.stop_reactor()
-
-    def ami_login(self):
-        self.log_last_step("Logging in to the AMI")
-        self.ami_factory1 = manager.AMIFactory("user", "mysecret")
-        self.ami_factory1.login('127.0.0.1', 5038).addCallbacks(self.ami_on_connect1, self.ami_login_error)
+        self.launch_test1()
 
     def run(self):
-        def __finish_start_ops(result):
-            self.ami_login()
-            self.launch_test1()
-
-            reactor.callLater(30, self.stop_reactor)
-            return result
-
-        self.log_last_step("Starting Asterisk")
-        df = self.ast1.start()
-        df.addCallback(__finish_start_ops)
+        self.create_ami_factory()
 
 
 

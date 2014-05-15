@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 '''
-Copyright (C) 2010, Digium, Inc.
+Copyright (C) 2010-2014, Digium, Inc.
 David Vossel <dvossel@digium.com>
+Matt Jordan <mjordan@digium.com>
 
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
@@ -11,19 +12,23 @@ import sys
 import os
 import signal
 import subprocess
+import logging
+
 from twisted.application import service, internet
 from twisted.internet import reactor, defer
 from starpy import manager
 from starpy import fastagi
 
 sys.path.append("lib/python")
-from asterisk.asterisk import Asterisk
+from asterisk.test_case import TestCase
 
-workingdir = "apps/chanspy/chanspy_barge"
-testdir = "tests/%s" % workingdir
+LOGGER = logging.getLogger(__name__)
 
-class ChanSpyBarge:
+testdir = "tests/apps/chanspy/chanspy_barge"
+
+class ChanSpyBarge(TestCase):
     def __init__(self):
+        super(ChanSpyBarge, self).__init__()
         self.last_step = ""
         self.passed = False
         self.numSpyEvents = 0
@@ -31,21 +36,18 @@ class ChanSpyBarge:
         self.talkDetected = 0
         self.test_to = 25
 
-        reactor.callWhenRunning(self.run)
-        self.agi = fastagi.FastAGIFactory(self.reportPassed)
-        reactor.listenTCP(4573, self.agi, self.test_to, '127.0.0.1')
+        self.create_asterisk()
+        self.create_fastagi_factory()
 
         ast_conf_options = {
             "transmit_silence" : "yes",
         }
 
-        self.ast1 = Asterisk(base=workingdir, ast_conf_options=ast_conf_options)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
         self.talkingaudio = os.path.join(os.getcwd(), "%s/sounds/talking" % (testdir))
         self.audiofile1 = os.path.join(os.getcwd(), "%s/testaudio1" % (testdir))
 
-    def reportPassed(self, agi):
-        print "GOT PASS RESULTS!!!\n"
+    def fastagi_connect(self, agi):
+        LOGGER.info("GOT PASS RESULTS!!!")
         sequence = fastagi.InSequence()
         sequence.append(agi.execute, "HangUp")
         sequence.append(agi.finish)
@@ -55,101 +57,80 @@ class ChanSpyBarge:
 
     def readResult(self):
         self.stop_reactor()
-        self.logLastStep("Reading results")
-        self.ast1.cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
-        self.ast1.cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
+        LOGGER.info("Reading results")
+        self.ast[0].cli_exec("core show locks")   # get lock output in case of deadlock before tearing down.
+        self.ast[0].cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
 
-        self.ast1.cli_exec("core show globals") # The global variables here hold failure conditions
+        self.ast[0].cli_exec("core show globals") # The global variables here hold failure conditions
 
         if self.passed == True:
-            print 'SIP ChanSpy test PASSED!'
+            LOGGER.info('SIP ChanSpy test PASSED!')
         else:
-            print 'SIP ChanSpy Test FAILED'
-
-    def stop_reactor(self):
-        def __finish_stop(result):
-            print "Stopping Reactor ..."
-            if reactor.running:
-                reactor.stop()
-            return result
-        df = self.ast1.stop()
-        df.addCallback(__finish_stop)
+            LOGGER.error('SIP ChanSpy Test FAILED')
 
     def chanspyEvent(self, ami, event):
-        self.logLastStep('Received ChanSpyStart event')
+        LOGGER.info('Received ChanSpyStart event')
         self.numSpyEvents += 1
         if event['spyeechannel'].count('end_a') > 0:
             reactor.callLater(3, self.aHangup)
             reactor.callLater(4, self.bHangup)
 
-    def amiOnConnect(self, ami):
-        self.logLastStep("Connected to the AMI")
+    def ami_connect(self, ami):
         self.ami = ami
         self.ami.registerEvent('ChanSpyStart', self.chanspyEvent)
 
         self.ami.setVar(channel = "", variable = "TESTAUDIO1", value = self.audiofile1)
         self.ami.setVar(channel = "", variable = "TALK_AUDIO", value = self.talkingaudio)
 
-    def amiLoginError(self, ami):
-        self.logLastStep("AMI login failed")
-        reactor.callLater(1, self.readResult)
+        reactor.callLater(1, self.callChanSpy)
+        reactor.callLater(2, self.aCall)
 
-    def amiLogin(self):
-        self.logLastStep("Logging in to the AMI")
-        self.ami_factory = manager.AMIFactory("user", "mysecret")
-        self.ami_factory.login('127.0.0.1', 5038).addCallbacks(self.amiOnConnect, self.amiLoginError)
 
     def aCall(self):
-        self.logLastStep("A Calling into Wait")
+        LOGGER.info("A Calling into Wait")
         self.pja.stdin.write("m\n")
         self.pja.stdin.write("sip:play_exten@127.0.0.1:5060\n")
 
     def bCall(self):
-        self.logLastStep("B Calling into Playback")
+        LOGGER.info("B Calling into Playback")
         self.pjb.stdin.write("m\n")
         self.pjb.stdin.write("sip:play_exten@127.0.0.1:5060\n")
 
     def aHangup(self):
+        LOGGER.info("Hanging up A")
         self.pja.stdin.write("h\n")
 
     def bHangup(self): #calls into chanspy extension and plays audio to A using Barge
+        LOGGER.info("Hanging up B")
         self.pjb.stdin.write("h\n")
         reactor.callLater(2, self.verifyAudio)
 
     def startProcesses(self):
-        self.logLastStep("Starting Processes")
+        LOGGER.info("Starting Processes")
         playfilearg = "--play-file=%s.wav" % (self.talkingaudio)
         self.pja = subprocess.Popen(['pjsua', '--local-port=5065', '--auto-answer=200', '--null-audio', '--auto-loop'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         self.pjb = subprocess.Popen(['pjsua', '--local-port=5066', '--auto-answer=200', playfilearg, '--null-audio', '--auto-play'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
     def stopProcesses(self):
-        self.logLastStep("Stopping Processes")
+        LOGGER.info("Stopping Processes")
         os.kill(self.pja.pid, signal.SIGKILL)
         os.kill(self.pjb.pid, signal.SIGKILL)
 
-    def logLastStep(self, step):
-        print step
-        self.lastStep = step
-
     def callChanSpy(self):
-        self.logLastStep("Placing call to ChanSpy extension.")
-        self.ast1.cli_originate("SIP/end_b extension chanspytest@test")
+        LOGGER.info("Placing call to ChanSpy extension.")
+        self.ast[0].cli_originate("SIP/end_b extension chanspytest@test")
 
     def verifyAudio(self):
-        self.ast1.cli_originate("Local/play_recording@test extension detect_audio@test")
+        LOGGER.info("Verifying Audio")
+        self.ast[0].cli_originate("Local/play_recording@test extension detect_audio@test")
+
+    def stop_asterisk(self):
+        if not self.passed:
+            self.readResult()
 
     def run(self):
-        def __finish_start_ops(result):
-            # call extensions
-            self.amiLogin()
-            reactor.callLater(1, self.callChanSpy)
-            reactor.callLater(2, self.aCall)
-            # stop and read results after timeout
-            reactor.callLater(self.test_to, self.readResult)
-            return result
+        self.create_ami_factory()
 
-        df = self.ast1.start()
-        df.addCallback(__finish_start_ops)
 
 def main():
     test = ChanSpyBarge()
