@@ -17,7 +17,6 @@ properties:
         - asterisk: 'chan_sip'
     tags:
         - SIP
-        - REGISTER
 
 test-modules:
     test-object:
