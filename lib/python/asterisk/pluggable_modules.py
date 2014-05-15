@@ -241,6 +241,7 @@ class HangupMonitor(object):
         self.test_object = test_object
         self.test_object.register_ami_observer(self.__ami_connect)
         self.channels = []
+        self.num_calls = 0
 
     def __ami_connect(self, ami):
         """AMI connect handler"""
@@ -258,6 +259,9 @@ class HangupMonitor(object):
         """Handler for the Hangup event"""
         LOGGER.debug("Channel %s hungup" % event['channel'])
         self.channels.remove(event['channel'])
+        self.num_calls += 1
+        if 'min_calls' in self.__dict__ and self.num_calls < self.min_calls:
+            return (ami, event)
         if len(self.channels) == 0:
             LOGGER.info("All channels have hungup; stopping test")
             self.test_object.stop_reactor()
