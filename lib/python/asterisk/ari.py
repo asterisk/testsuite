@@ -39,7 +39,7 @@ VALIDATION_MATCHER = {
 }
 
 
-class AriTestObject(TestCase):
+class AriBaseTestObject(TestCase):
     """Class that acts as a Test Object in the pluggable module framework"""
 
     def __init__(self, test_path='', test_config=None):
@@ -48,7 +48,7 @@ class AriTestObject(TestCase):
         :param test_path The full path to the test location
         :param test_config The YAML test configuration
         """
-        super(AriTestObject, self).__init__(test_path, test_config)
+        super(AriBaseTestObject, self).__init__(test_path, test_config)
 
         if test_config is None:
             # Meh, just use defaults
@@ -67,16 +67,9 @@ class AriTestObject(TestCase):
         self.ari_factory = AriClientFactory(receiver=self, host=host, port=port,
                                         apps=self.apps,
                                         userpass=userpass)
-        self.iterations = test_config.get('test-iterations')
 
-        self.test_iteration = 0
-        self.channels = []
         self._ws_event_handlers = []
         self.timed_out = False
-
-        if self.iterations is None:
-            self.iterations = [{'channel': 'Local/s@default',
-                'application': 'Echo'}]
 
         self.asterisk_instances = test_config.get('asterisk-instances', 1)
         self.create_asterisk(count=self.asterisk_instances)
@@ -87,7 +80,7 @@ class AriTestObject(TestCase):
         Called when reactor starts and after all instances of Asterisk have
         started
         """
-        super(AriTestObject, self).run()
+        super(AriBaseTestObject, self).run()
         self.ari_factory.connect()
 
     def register_ws_event_handler(self, callback):
@@ -135,8 +128,34 @@ class AriTestObject(TestCase):
         """Create the AMI connection"""
         self.create_ami_factory(count=self.asterisk_instances)
 
+
+class AriTestObject(AriBaseTestObject):
+    """Class that acts as a Test Object in the pluggable module framework"""
+
+    def __init__(self, test_path='', test_config=None):
+        """Constructor for a test object
+
+        :param test_path The full path to the test location
+        :param test_config The YAML test configuration
+        """
+        super(AriTestObject, self).__init__(test_path, test_config)
+
+        if test_config is None:
+            # Meh, just use defaults
+            test_config = {}
+
+        self.iterations = test_config.get('test-iterations')
+
+        self.test_iteration = 0
+        self.channels = []
+
+        if self.iterations is None:
+            self.iterations = [{'channel': 'Local/s@default',
+                'application': 'Echo'}]
+
+
     def ami_connect(self, ami):
-        """Override of TestCase ami_connect
+        """Override of AriBaseTestObject ami_connect
         Called when an AMI connection is made
 
         :param ami The AMI factory
