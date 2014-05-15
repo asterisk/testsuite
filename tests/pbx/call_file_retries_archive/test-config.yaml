@@ -1,0 +1,45 @@
+testinfo:
+    summary: 'Testing the Archive Option of Call Files Max Retries'
+    description: |
+        'This test checks to make sure that when Archive is set to yes
+         in a call file, that it stores that file in the [astspooldir]'s
+         outgoing_done folder. This is done through a UserEvent.'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: call-files-config
+            typename: 'retries_archive.ArchiveCallFileRetry'
+        -
+            config-section: call-files-config
+            typename: 'pluggable_modules.CallFiles'
+
+test-object-config:
+    asterisk-instances: 1
+    connect-ami: True
+
+call-files-config:
+    -
+        ignore-originate-failure: 'no'
+        id: '0'
+        call-file-params:
+            Channel: 'Local/start@test_start'
+            Context: 'test_archive'
+            Extension: 'archive'
+            Priority: 1
+            Archive: 'yes'
+            MaxRetries: 4
+            RetryTime: 3
+            WaitTime: 1
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_userevent'
+        - asterisk : 'pbx_spool'

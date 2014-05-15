@@ -1,5 +1,9 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
+    - test: 'call_file_retries_archive'
+    - test: 'call_file_retries_alwaysdelete'
+    - test: 'call_file_retries_fail'
+    - test: 'call_file_retries_success'
     - test: 'create_call_files'
     - test: 'ast_db'
     - test: 'dialplan'

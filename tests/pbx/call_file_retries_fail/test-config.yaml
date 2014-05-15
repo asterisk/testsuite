@@ -1,0 +1,60 @@
+testinfo:
+    summary: 'Testing That Call Files Can Run Through All Max Retries'
+    description: |
+        'The test required that a Local Channel be originated to a dialplan
+         extension that would always fail, so as to make sure that the Call
+         File ran through all of its max retries. This was shown through a
+         UserEvent within the pluggable_modules.py framework.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: call-files-config
+            typename: 'pluggable_modules.CallFiles'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: hangup-config
+            typename: 'pluggable_modules.HangupMonitor'
+
+test-object-config:
+    asterisk-instances: 1
+    connect-ami: True
+
+call-files-config:
+    -
+        ignore-originate-failure: 'no'
+        id: '0'
+        call-file-params:
+            Channel: 'Local/fail@test_result'
+            Context: 'test_fail'
+            Extension: 'end_fail'
+            Priority: 1
+            MaxRetries: 4
+            RetryTime: 3
+            WaitTime: 2
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                Result: 'fail'
+        count: '4'
+
+hangup-config:
+    ids: ['0']
+    min_calls: 8
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_userevent'
+        - asterisk : 'pbx_spool'
