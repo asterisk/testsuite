@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 '''
-Copyright (C) 2010, Digium, Inc.
+Copyright (C) 2010-2014, Digium, Inc.
 Erin Spiceland <espiceland@digium.com>
+Matt Jordan <mjordan@digium.com>
 
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
@@ -9,18 +10,21 @@ the GNU General Public License Version 2.
 
 import sys
 import os
+import logging
+
 from twisted.internet import reactor
 from starpy import fastagi
 
 sys.path.append("lib/python")
-from asterisk.asterisk import Asterisk
+from asterisk.test_case import TestCase
 
-workingdir = "fastagi/say-date"
 testdir = "tests/fastagi"
 
+LOGGER = logging.getLogger(__name__)
 
-class FastAGISayDateTest:
+class FastAGISayDateTest(TestCase):
     def __init__(self):
+        super(FastAGISayDateTest, self).__init__()
         self.passed = False
         self.notified = False
         self.test = "COMPLETE"
@@ -29,74 +33,54 @@ class FastAGISayDateTest:
         # Listen for results from dialplan
         self.agi_factory = fastagi.FastAGIFactory(self.do_test)
         reactor.listenTCP(4573, self.agi_factory, self.timeout, '127.0.0.1')
+        self.agi = None
 
         # Listen for success or failure of talkdetect
         self.agi_factory2 = fastagi.FastAGIFactory(self.listen_result)
         reactor.listenTCP(4574, self.agi_factory2, self.timeout, '127.0.0.1')
-        reactor.callWhenRunning(self.run)
+        self.agi2 = None
 
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
+        self.create_asterisk(base_configs_path="%s/configs" % testdir)
 
     def listen_result(self, agi):
-        print "Got test success confirmation from dialplan."
+        LOGGER.info("Got test success confirmation from dialplan.")
+        self.agi2 = agi
         self.notified = True
 
     def on_failure(self, reason):
-        print 'SAY DATE failed: ', reason.getTraceback()
+        LOGGER.error('SAY DATE failed: %s' % reason.getTraceback())
         self.passed = False
 
     def finish_test(self, result):
-        print "AGI command reports success."
+        LOGGER.info("AGI command reports success.")
         self.passed = True
-        self.result_changed()
+        self.read_result()
 
     # This gets invoked by the dialplan when the call is answered
     # send SAY DATE command and wait for results
     def do_test(self, agi):
         self.agi = agi
-        print "Connection established."
+        LOGGER.debug("Connection established.")
         return agi.sayDate("1210498014").addCallback(
             self.finish_test).addErrback(self.on_failure)
 
     def read_result(self):
         self.agi.finish()
+        if self.passed is True and self.notified is True:
+            self.agi2.finish()
+            LOGGER.info("Test passed")
+        else:
+            LOGGER.error("Test failed")
         self.stop_reactor()
 
-        if self.passed is True and self.notified is True:
-            print "Success"
-        else:
-            print "Failed"
-
-    def stop_reactor(self):
-        def __finish_stop(result):
-            print "Stopping Reactor ..."
-            if reactor.running:
-                reactor.stop()
-            return result
-
-        df = self.ast1.stop()
-        df.addCallback(__finish_stop)
-
     def launch_test(self):
-        print "Originating call to begin test."
-        self.ast1.cli_originate("Local/511@agitest extension 1@td_and_agi_notify")
-
-    # Read result before timeout
-    def result_changed(self):
-        if self.passed is True:
-            self.read_result()
+        LOGGER.debug("Originating call to begin test.")
+        self.ast[0].cli_originate("Local/511@agitest extension 1@td_and_agi_notify")
+            
 
     def run(self):
-        def __finish_start_ops(result):
-            self.launch_test()
-            reactor.callLater(self.timeout, self.stop_reactor)
-            return result
-
-        print "Starting Asterisk"
-        df = self.ast1.start()
-        df.addCallback(__finish_start_ops)
-
+        super(FastAGISayDateTest, self).run()
+        self.launch_test()
 
 def main():
     test = FastAGISayDateTest()
