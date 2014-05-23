@@ -7,55 +7,45 @@ the GNU General Public License Version 2.
 '''
 
 import logging
-import subprocess
-import time
+from sys import path
+
+path.append("lib/python/asterisk")
+from sipp import SIPpScenario
 
 LOGGER = logging.getLogger(__name__)
 
 class TestLogic(object):
     def __init__(self):
-        self.channels = 0
         self.originated_id = None
         self.bridge_id = None
-        self.pja = subprocess.Popen(['pjsua', '--local-port=5065', '--null-audio',
-            '--id=sip:bob@127.0.0.1'],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
 TEST = TestLogic()
 
-def a_call_stasis():
-    TEST.pja.stdin.write("m\n")
-    TEST.pja.stdin.write("sip:stasis@127.0.0.1:5060\n")
-
-def on_third_leg(ami, event):
-    LOGGER.debug("Peforming transfer")
-    TEST.pja.stdin.write("X\n")
-    LOGGER.debug("Selecting transferee")
-    TEST.pja.stdin.write("1\n")
-    LOGGER.debug("DONE")
-    return True
-
-def a_call_app():
-    TEST.pja.stdin.write("H\n")
-    TEST.pja.stdin.write("m\n")
-    TEST.pja.stdin.write("sip:1000@127.0.0.1:5060\n")
-
 def on_kickoff_start(ari, event, test_object):
     LOGGER.debug("on_kickoff_start(%r)" % event)
+
+    sipp_referer = SIPpScenario(test_object.test_name,
+        {'scenario':'referer.xml', '-p':'5065', '-3pcc':'127.0.0.1:5064'}, target='127.0.0.1')
+    sipp_referee = SIPpScenario(test_object.test_name,
+        {'scenario':'referee.xml', '-p':'5066', '-3pcc':'127.0.0.1:5064'}, target='127.0.0.1')
+    sipp_referer.run(test_object)
+    sipp_referee.run(test_object)
+
     TEST.bridge_id = ari.post('bridges').json()['id']
-    a_call_stasis()
     TEST.originated_id = event['channel']['id']
+
     ari.post('bridges', TEST.bridge_id, 'addChannel', channel=event['channel']['id'])
     return True
 
 def on_test_start(ari, event, test_object):
     LOGGER.debug("on_test_start(%r)" % event)
+
     ari.post('bridges', TEST.bridge_id, 'addChannel', channel=event['channel']['id'])
-    a_call_app()
     return True
 
 def on_attended_transfer(ari, event, test_object):
     LOGGER.debug("on_attended_transfer(%r)" % event)
+
     ari.delete('bridges', TEST.bridge_id)
     ari.delete('channels', TEST.originated_id)
 

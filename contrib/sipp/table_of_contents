@@ -100,3 +100,24 @@ Below are descriptions of each of the scenarios.
 * uac-register-unregister.xml
 	This scenario is identical to uac-register.xml, except
 	that the Expires header is set to 0.
+
+=========================================================
+|                     TRANSFER                          |
+=========================================================
+
+* referee.xml
+	This scenario waits for a command from a cooperating
+	SIPp scenario (referer.xml or referer_uas.xml), sends
+	an INVITE, expects a 200 OK in return, sends an ACK to
+	complete the transaction, and then relays call
+	information to a the cooperating SIPp scenario. Use the
+	-3pcc option to control the 3PCC communication port. The
+	value associated with the -3pcc option should be the same
+	for both scenarios (e.g. '-3pcc 127.0.0.1:5064').
+
+* referer.xml
+	This scenario functions as a cooperating counterpart for
+	referee.xml and will initiate its call first. Once its call
+	is up, it will send a command to referee.xml, collect its
+	call information in a return command, and initiate the
+	REFER attended transfer.
