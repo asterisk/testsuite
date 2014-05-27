@@ -1,0 +1,86 @@
+testinfo:
+    summary: Test dialplan app user event from a channel not in stasis.
+    description: |
+        1) use ari to start a pair of local channels
+        2) subscribe to the second channel in dialplan
+        3) dialplan of second channel signals user event
+        4) check user event message received
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        typename: ari.AriOriginateTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: ami-config
+            typename: ami.AMIEventModule
+
+ari-config:
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+                    args: []
+            count: 1
+            # dialplan is waiting 3 seconds for subscription
+            # before issuing event
+            requests:
+                method: 'post'
+                uri: 'applications/testsuite/subscription'
+                params:
+                    eventSource: 'channel:testsuite-default-id;2'
+                expect: 200
+        -   conditions:
+                match:
+                    type: ChannelUserevent
+                    application: testsuite
+                    eventname: CanYouSeeMe
+                    # event arguments with redundant name
+                    userevent:
+                        eventname: CanYouSeeMe
+                        Param1: Value1
+                        Param2: Value2
+                    channel:
+                        id: 'testsuite-default-id;2'
+            count: 1
+            requests:
+                method: 'delete'
+                uri: 'channels/testsuite-default-id'
+
+ami-config:
+    -
+        type: headermatch
+        conditions:
+            match:
+                Event: UserEvent
+        requirements:
+            match:
+                Channel: 'Local/s@default-00000000;2'
+                Uniqueid: 'testsuite-default-id;2'
+                UserEvent: CanYouSeeMe
+                Param1: Value1
+                Param2: Value2
+        count: 1
+
+
+
+properties:
+    minversion: '12.3.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+        - asterisk : app_userevent
+    tags:
+        - ARI
+
+

@@ -488,6 +488,77 @@ class ARI(object):
         return resp
 
 
+class ARIRequest(object):
+    """ Object that issues ARI requests and valiates response """
+
+    def __init__(self, ari, config):
+        self.ari = ari
+        self.method = config['method']
+        self.uri = config['uri']
+        self.params = config.get('params') or {}
+        self.body = config.get('body')
+        self.instance = config.get('instance')
+        self.delay = config.get('delay')
+        self.expect = config.get('expect')
+        self.headers = None
+
+        if self.body:
+            self.body = json.dumps(self.body)
+            self.headers = {'Content-type': 'application/json'}
+
+    def var_replace(self, text, values):
+        """ perform variable replacement on text
+
+        This allows a string such as uri to be written in the form:
+        playbacks/{playback.id}/control
+
+        :param text: text with optional {var} entries
+        :param values: nested dict of values to get replacement values from
+        """
+        for match in re.findall(r'{[^}]*}', text):
+            value = values
+            for var in match[1:-1].split('.'):
+                if not var in value:
+                    LOGGER.error('Unable to replace variables in %s from %s' %
+                                 text, values)
+                    return None
+                value = value[var]
+            text = text.replace(match, value)
+
+        return text
+
+    def send(self, values):
+        uri = self.var_replace(self.uri, values)
+        url = self.ari.build_url(uri)
+        requests_method = getattr(requests, self.method)
+
+        response = requests_method(
+            url,
+            params=self.params,
+            data=self.body,
+            headers=self.headers,
+            auth=self.ari.userpass)
+
+        if self.expect:
+            if response.status_code != self.expect:
+                LOGGER.error('sent %s %s %s expected %s response %d %s' % (
+                    self.method, self.uri, self.params,
+                    self.expect,
+                    response.status_code, response.text))
+                return False
+        else:
+            if response.status_code / 100 != 2:
+                LOGGER.error('sent %s %s %s response %d %s' % (
+                    self.method, self.uri, self.params,
+                    response.status_code, response.text))
+                return False
+
+        LOGGER.info('sent %s %s %s response %d %s' % (
+            self.method, self.uri, self.params,
+            response.status_code, response.text))
+        return response
+
+
 class EventMatcher(object):
     """Object to observe incoming events and match them against a config"""
 
@@ -508,61 +579,13 @@ class EventMatcher(object):
             # No callback; just use a no-op
             self.callback = lambda *args, **kwargs: True
 
-        self.requests = []
-        request_list = self.instance_config.get('requests')
-        if not request_list:
-            request_list = []
+        request_list = self.instance_config.get('requests') or []
         if isinstance(request_list, dict):
             request_list = [request_list]
-        for request in request_list:
-            params = request['params'] if 'params' in request else {}
-            inst = request['instance'] if 'instance' in request else 0
-            delay = request['delay'] if 'delay' in request else 0
-            self.requests.append({
-                'method': request['method'],
-                'uri': request['uri'],
-                'params': params,
-                'instance': inst,
-                'delay': delay
-            })
+        self.requests = [ARIRequest(ari, request_config)
+                         for request_config in request_list]
 
         test_object.register_stop_observer(self.on_stop)
-
-    def var_replace(self, uri, values):
-        """ perform variable replacement on uri
-
-        This allows a uri to be written in the form:
-        playbacks/{playback.id}/control
-
-        :param uri: uri with optional {var} entries
-        :param values: nested dict of values to get replacement values from
-        """
-        for match in re.findall(r'{[^}]*}', uri):
-            value = values
-            for var in match[1:-1].split('.'):
-                if not var in value:
-                    LOGGER.error('Unable to replace variables in %s from %s' %
-                                 uri, values)
-                    return None
-                value = value[var]
-            uri = uri.replace(match, value)
-
-        return uri
-
-    def send_request(self, request, uri):
-        """ transmit an ari request
-
-        :param request: request parameters
-        :param uri: uri rewritten for this call
-        """
-        response = self.ari.request(request['method'],
-                                    uri,
-                                    **request['params'])
-
-        LOGGER.info('%s %s %s returned %s' % (request['method'],
-                                              uri,
-                                              request['params'],
-                                              response))
 
     def on_event(self, message):
         """Callback for every received ARI event.
@@ -574,17 +597,14 @@ class EventMatcher(object):
 
             # send any associated requests
             for request in self.requests:
-                if request['instance'] and request['instance'] != self.count:
+                if request.instance and request.instance != self.count:
                     continue
-                uri = self.var_replace(request['uri'], message)
-                if uri:
-                    if request['delay']:
-                        reactor.callLater(request['delay'],
-                                          self.send_request,
-                                          request,
-                                          uri)
-                    else:
-                        self.send_request(request, uri)
+                if request.delay:
+                    reactor.callLater(request.delay, request.send, message)
+                else:
+                    response = request.send(message)
+                if response is False:
+                    self.passed = False
 
             # Split call and accumulation to always call the callback
             try:
@@ -709,3 +729,5 @@ def decode_range(yaml):
     else:
         # Need exactly this many events
         return Range(int(yaml), int(yaml))
+
+# vim:sw=4:ts=4:expandtab:textwidth=79

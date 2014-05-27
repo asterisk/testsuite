@@ -1,0 +1,80 @@
+testinfo:
+    summary: Test sending a user event from ARI with invalid options
+    description: |
+        Tests these scenarios for correct HTTP response code
+        1) Invalid application
+        2) Invalid source object scheme
+        3) Non-existant object
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        typename: ari.AriOriginateTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+                    args: []
+            count: 1
+            requests:
+                -
+                    # test missing application (also unused variables)
+                    method: 'post'
+                    uri: 'events/user/missing-application'
+                    body:
+                        variables:
+                            Param1: Value1
+                            Param2: Value2
+                    expect: 400
+                -
+                    # test invalid application name
+                    method: 'post'
+                    uri: 'events/user/invalid-application'
+                    params:
+                        application: bogus
+                        source: 'channel:testsuite-default-id'
+                    expect: 404
+                -
+                    # test invalid source type
+                    method: 'post'
+                    uri: 'events/user/invalid-type'
+                    params:
+                        application: testsuite
+                        source: 'bogus:testsuite-default-id'
+                    expect: 400
+                -
+                    # test non-existant source id
+                    method: 'post'
+                    uri: 'events/user/bad-source'
+                    params:
+                        application: testsuite
+                        source: 'channel:doesnt-exist'
+                    expect: 422
+                -
+                    # test completed, delete channel to stop
+                    method: 'delete'
+                    uri: 'channels/testsuite-default-id'
+
+
+properties:
+    minversion: '12.3.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+        - asterisk : app_userevent
+    tags:
+        - ARI
+
+

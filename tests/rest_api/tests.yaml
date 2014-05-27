@@ -13,3 +13,4 @@ tests:
     - test: 'content-type'
     - dir:  'mailbox'
     - test: 'chunked-transfer'
+    - dir:  'events'

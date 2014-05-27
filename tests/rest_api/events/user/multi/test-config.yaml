@@ -1,0 +1,304 @@
+testinfo:
+    summary: Test sending a user event from ARI
+    description: |
+        Test these scenarios:
+        1) User event with channel and variables
+        2) User event with channel and no variables
+        3) User event with no channel and variables
+        4) User event with no channel and no variables
+        5) User event with bridge
+        6) User event with endpoint
+        7) User event with channel and bridge
+        8...) Combinations of params in body
+
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -   config-section: ami-config
+            typename: ami.AMIEventModule
+
+ari-config:
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+                    args: []
+            count: 1
+            # test 1: user event with channel and variables
+            requests:
+                method: 'post'
+                uri: 'events/user/ChannelAndData'
+                params:
+                    application: testsuite
+                    source: 'channel:testsuite-default-id'
+                body:
+                    variables:
+                        Param1: Value1
+                        Param2: Value2
+                expect: 204
+        -   conditions:
+                match:
+                    type: ChannelUserevent
+                    application: testsuite
+                    eventname: ChannelAndData
+                    userevent:
+                        eventname: ChannelAndData
+                        Param1: Value1
+                        Param2: Value2
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+            # test 2: user event with channel and no variables
+            requests:
+                method: 'post'
+                uri: 'events/user/ChannelNoData'
+                params:
+                    application: testsuite
+                    source: 'channel:testsuite-default-id'
+                expect: 204
+        -   conditions:
+                match:
+                    type: ChannelUserevent
+                    application: testsuite
+                    eventname: ChannelNoData
+                    userevent:
+                        eventname: ChannelNoData
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+            # test 3: user event with no channel and variables
+            requests:
+                method: 'post'
+                uri: 'events/user/DataWithNoChannel'
+                params:
+                    application: testsuite
+                body:
+                    variables:
+                        Param1: Value1
+                        Param2: Value2
+                expect: 204
+        -   conditions:
+                match:
+                    type: ChannelUserevent
+                    application: testsuite
+                    eventname: DataWithNoChannel
+                    userevent:
+                        eventname: DataWithNoChannel
+                        Param1: Value1
+                        Param2: Value2
+            count: 1
+            # test 4: user event no channel or data
+            requests:
+                method: 'post'
+                uri: 'events/user/LonesomeEvent'
+                params:
+                    application: testsuite
+                expect: 204
+        -   conditions:
+                match:
+                    type: ChannelUserevent
+                    application: testsuite
+                    eventname: LonesomeEvent
+                    userevent:
+                        eventname: LonesomeEvent
+            count: 1
+            # test 5: user event with a bridge
+            requests:
+            -   method: 'post'
+                uri: 'bridges/GeorgeWashington'
+                expect: 200
+            -   method: 'post'
+                uri: 'events/user/EventWithBridge'
+                params:
+                    application: testsuite
+                    source: 'bridge:GeorgeWashington'
+                expect: 204
+        -   conditions:
+                match:
+                    type: ChannelUserevent
+                    application: testsuite
+                    eventname: EventWithBridge
+                    bridge:
+                        id: GeorgeWashington
+            count: 1
+            # test 6: user event with an endpoint (from pjsip.conf)
+            requests:
+                method: 'post'
+                uri: 'events/user/EventWithEndpoint'
+                params:
+                    application: testsuite
+                    source: 'endpoint:PJSIP/alice'
+                expect: 204
+        -   conditions:
+                match:
+                    type: ChannelUserevent
+                    application: testsuite
+                    eventname: EventWithEndpoint
+                    endpoint:
+                        technology: PJSIP
+                        resource: alice
+            count: 1
+            # test 7: channel and bridge
+            requests:
+                method: 'post'
+                uri: 'events/user/ChannelAndBridge'
+                params:
+                    application: testsuite
+                    source: 'channel:testsuite-default-id,bridge:GeorgeWashington'
+                expect: 204
+        -   conditions:
+                match:
+                    type: ChannelUserevent
+                    application: testsuite
+                    eventname: ChannelAndBridge
+                    channel:
+                        id: 'testsuite-default-id$'
+                    bridge:
+                        id: 'GeorgeWashington'
+            count: 1
+            # test 8...: various combinations of params in body
+            requests:
+                method: 'post'
+                uri: 'events/user/BothInBody'
+                params:
+                body:
+                    application: testsuite
+                    source: 'channel:testsuite-default-id'
+                    variables:
+                        Param1: Value1
+                        Param2: Value2
+                expect: 204
+        -   conditions:
+                match:
+                    type: ChannelUserevent
+                    application: testsuite
+                    eventname: BothInBody
+                    userevent:
+                        eventname: BothInBody
+                        Param1: Value1
+                        Param2: Value2
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'events/user/AppInBody'
+                params:
+                    source: 'channel:testsuite-default-id'
+                body:
+                    application: testsuite
+                    variables:
+                        Param1: Value1
+                        Param2: Value2
+                expect: 204
+        -   conditions:
+                match:
+                    type: ChannelUserevent
+                    application: testsuite
+                    eventname: AppInBody
+                    userevent:
+                        eventname: AppInBody
+                        Param1: Value1
+                        Param2: Value2
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'events/user/SourceInBody'
+                params:
+                    application: testsuite
+                body:
+                    source: 'channel:testsuite-default-id'
+                    variables:
+                        Param1: Value1
+                        Param2: Value2
+                expect: 204
+        -   conditions:
+                match:
+                    type: ChannelUserevent
+                    application: testsuite
+                    eventname: SourceInBody
+                    userevent:
+                        eventname: SourceInBody
+                        Param1: Value1
+                        Param2: Value2
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+            # end of test, delete the test channel
+            requests:
+                method: 'delete'
+                uri: 'channels/testsuite-default-id'
+
+
+
+
+ami-config:
+    -
+        type: headermatch
+        conditions:
+            match:
+                Event: UserEvent
+                UserEvent: 'ChannelAndData'
+        requirements:
+            match:
+                Channel: 'Local/s@default-00000000;1'
+                Uniqueid: 'testsuite-default-id$'
+                Param1: 'Value1'
+                Param2: 'Value2'
+        count: 1
+    -
+        type: headermatch
+        conditions:
+            match:
+                Event: UserEvent
+                UserEvent: 'ChannelNoData'
+        requirements:
+            match:
+                Channel: 'Local/s@default-00000000;1'
+                Uniqueid: 'testsuite-default-id$'
+        count: 1
+    -
+        type: headermatch
+        conditions:
+            match:
+                Event: UserEvent
+                UserEvent: 'DataWithNoChannel'
+        requirements:
+            match:
+                Param1: 'Value1'
+                Param2: 'Value2'
+        count: 0
+    -
+        type: headermatch
+        conditions:
+            match:
+                Event: UserEvent
+                UserEvent: 'LonesomeEvent'
+        count: 0
+
+
+properties:
+    minversion: '12.3.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+        - asterisk : app_userevent
+    tags:
+        - ARI
+
+
