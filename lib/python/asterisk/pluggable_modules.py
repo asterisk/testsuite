@@ -264,8 +264,12 @@ class HangupMonitor(object):
             return (ami, event)
         if len(self.channels) == 0:
             LOGGER.info("All channels have hungup; stopping test")
-            self.test_object.stop_reactor()
+            self.stop_test()
         return (ami, event)
+
+    def stop_test(self):
+        """Allow subclasses to take different actions to stop the test."""
+        self.test_object.stop_reactor()
 
 
 class CallFiles(object):
