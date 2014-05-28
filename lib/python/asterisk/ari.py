@@ -603,8 +603,8 @@ class EventMatcher(object):
                     reactor.callLater(request.delay, request.send, message)
                 else:
                     response = request.send(message)
-                if response is False:
-                    self.passed = False
+                    if response is False:
+                        self.passed = False
 
             # Split call and accumulation to always call the callback
             try:
