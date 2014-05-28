@@ -56,17 +56,6 @@ test-object-config:
               type: 'headermatch'
               conditions:
                 match:
-                  Event: 'BridgeEnter'
-                  Channel: 'Local/login@default-.*'
-                  BridgeType: 'basic'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Agent channel connected to bridge.'
-            -
-              type: 'headermatch'
-              conditions:
-                match:
                   Event: 'MusicOnHoldStart'
                   Channel: 'Local/login@default-.*'
               actions:
@@ -78,6 +67,39 @@ test-object-config:
                   action-type: 'start-call'
                   delay: 8
                   channel-id: 'Status-AVAILABLE'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  Channel: 'Local/login@default-.*'
+                  BridgeType: 'basic'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent channel connected to bridge.'
+        -
+          channel-id: 'Status-AVAILABLE'
+          channel-name: 'Local/status-avail@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'AvailableAgent'
+              requirements:
+                match:
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent is available.'
+                -
+                  action-type: 'start-call'
+                  channel-id: 'Agent-request'
         -
           channel-id: 'Agent-request'
           channel-name: 'Local/request@default'
@@ -111,53 +133,6 @@ test-object-config:
                   action-type: 'start-call'
                   delay: 2
                   channel-id: 'Status-INUSE'
-
-        -
-          channel-id: 'Status-AVAILABLE'
-          channel-name: 'Local/status-avail@default'
-          context: 'default'
-          exten: 'wait'
-          events:
-            -
-              type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'UserEvent'
-                  UserEvent: 'AvailableAgent'
-              requirements:
-                match:
-                  Result: 'pass'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Agent is available.'
-                -
-                  action-type: 'start-call'
-                  channel-id: 'Agent-request'
-        -
-          channel-id: 'Status-end'
-          channel-name: 'Local/status-avail2@default'
-          context: 'default'
-          exten: 'wait'
-          events:
-            -
-              type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'UserEvent'
-                  UserEvent: 'AvailableAgent2'
-              requirements:
-                match:
-                  Result: 'pass'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Agent is available.'
-                -
-                  action-type: 'hangup'
-                  channel-id: 'Agent-login'
-                -
-                  action-type: 'end-scenario'
         -
           channel-id: 'Status-INUSE'
           channel-name: 'Local/status-inuse@default'
@@ -183,6 +158,30 @@ test-object-config:
                 -
                   action-type: 'start-call'
                   channel-id: 'Status-end'
+        -
+          channel-id: 'Status-end'
+          channel-name: 'Local/status-avail2@default'
+          context: 'default'
+          exten: 'wait'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'AvailableAgent2'
+              requirements:
+                match:
+                  Result: 'pass'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent is available.'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Agent-login'
+                -
+                  action-type: 'end-scenario'
 
 properties:
     minversion: '12.0.0'

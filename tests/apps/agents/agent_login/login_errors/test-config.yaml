@@ -35,10 +35,22 @@ test-object-config:
                 match:
                   Event: 'AgentLogin'
                   Agent: '1000'
+                  Channel: 'Local/valid-login@default-.*'
               actions:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'An agent attempted valid login 1000'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'agent_hold'
+                  Channel: 'Local/valid-login@default-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Valid agent channel entered bridge.'
             -
               type: 'headermatch'
               conditions:
@@ -52,17 +64,6 @@ test-object-config:
                 -
                   action-type: 'start-call'
                   channel-id: 'Same-agent'
-            -
-              type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'BridgeEnter'
-                  BridgeType: 'agent_hold'
-                  Channel: 'Local/valid-login@default-.*'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Valid agent channel entered bridge.'
         -
           channel-id: 'Same-agent'
           channel-name: 'Local/same-login@default'
@@ -82,6 +83,62 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'An agent attempted valid login 1000 while already logged in.'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Valid-agent'
+                -
+                  action-type: 'end-scenario'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'AgentLogin'
+                  Agent: '1000'
+                  Channel: 'Local/same-login@default-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  expected-result: 'A duplicate agent 1000 logged in'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Same-agent'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Valid-agent'
+                -
+                  action-type: 'end-scenario'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeType: 'agent_hold'
+                  Channel: 'Local/same-login@default-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'Channel entered bridge for duplicate login.'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Same-agent'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Valid-agent'
+                -
+                  action-type: 'end-scenario'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/same-login@default-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'MusicOnHoldStart Event received for duplicate login.'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Same-agent'
                 -
                   action-type: 'hangup'
                   channel-id: 'Valid-agent'
@@ -112,9 +169,6 @@ test-object-config:
                   action-type: 'set-expected-result'
                   expected-result: 'Detected invalid agent 4321 and now hanging up.'
                 -
-                  action-type: 'hangup'
-                  channel-id: 'Invalid-agent'
-                -
                   action-type: 'end-scenario'
             -
               type: 'headermatch'
@@ -126,16 +180,11 @@ test-object-config:
                 -
                   action-type: 'fail-test'
                   message: 'Invalid agent 4321 logged in!'
-            -
-              type: 'headermatch'
-              conditions:
-                match:
-                  Event: 'MusicOnHoldStart'
-                  Channel: 'Local/invalid-login@default-.*'
-              actions:
                 -
-                  action-type: 'fail-test'
-                  message: 'MusicOnHoldStart Event received for invalid login.'
+                  action-type: 'hangup'
+                  channel-id: 'Invalid-agent'
+                -
+                  action-type: 'end-scenario'
             -
               type: 'headermatch'
               conditions:
@@ -147,6 +196,26 @@ test-object-config:
                 -
                   action-type: 'fail-test'
                   message: 'Channel entered bridge for invalid login.'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Invalid-agent'
+                -
+                  action-type: 'end-scenario'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'MusicOnHoldStart'
+                  Channel: 'Local/invalid-login@default-.*'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'MusicOnHoldStart Event received for invalid login.'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Invalid-agent'
+                -
+                  action-type: 'end-scenario'
 
 properties:
     minversion: '12.0.0'

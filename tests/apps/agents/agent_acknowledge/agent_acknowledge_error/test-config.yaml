@@ -2,11 +2,11 @@ testinfo:
     summary: 'Tests different errors an agent can get when trying to acknowledge a request.'
     description:
         The first scenario has an agent log in, then a channel requests that agent.
-        Upon hearing the beep, the agent inputs an invalid DTMF key, waits,
-        and if the two channels are still not bridged together, the test passes.
-        The second scenario is exactly the same, only autologoff is set to true
-        for the agent, and the agent does nothing when a request is sent. If the
-        agent logs off and the two were never bridged, the test passes.
+        Upon hearing the beep, the agent inputs an invalid DTMF key and waits
+        to be connected or auto logged off.  If the agent gets logged off,
+        the test passes.
+        The second scenario is exactly the same, only the agent does nothing
+        when a request is sent.  If the agent get logged off, the test passes.
 
 test-modules:
     test-object:
@@ -21,8 +21,9 @@ test-object-config:
     -
       # Scenario 1
       # An agent logs in and receives an AgentRequest. A beep should be played and
-      # the agent will attempt to acknowledge it with an invalid DTMF. If the agent
-      # does not enter the bridge with the requesting channel, the test passes.
+      # the agent will attempt to acknowledge it with an invalid DTMF.  If the agent
+      # does not enter the bridge with the requesting channel before being auto
+      # logged off, the test passes.
       channels:
         -
           channel-id: 'Login-1000'
@@ -80,14 +81,8 @@ test-object-config:
                   expected-result: 'Agent 1000 heard beep.'
                 -
                   action-type: 'send-dtmf'
-                  delay: 1
+                  delay: 2
                   dtmf: '*'
-                -
-                  action-type: 'set-expected-result'
-                  delay: 15
-                  expected-result: 'Invalid DTMF sent and agent 1000 never joined bridge.'
-                -
-                  action-type: 'end-scenario'
             -
               type: 'headermatch'
               conditions:
@@ -98,7 +93,27 @@ test-object-config:
               actions:
                 -
                   action-type: 'fail-test'
-                  message: 'Agent 1000 entered bridge with invalid DTMF!'
+                  message: 'Agent 1000 entered basic bridge with invalid DTMF!'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Request-1000'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Login-1000'
+                -
+                  action-type: 'end-scenario'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'AgentLogoff'
+                  Agent: '1000'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Agent 1000 logged off automatically.'
+                -
+                  action-type: 'end-scenario'
         -
           channel-id: 'Request-1000'
           channel-name: 'Local/request1000@default'
@@ -130,10 +145,9 @@ test-object-config:
                   expected-result: 'Requesting channel entered basic bridge.'
     -
       # Scenario 2
-      # The same as scenario 1, but the autologoff option is set to log an agent
-      # off if that agent does not acknowledge a request within 5 seconds. If the
-      # agent logs off and never entered the bridge with the requesting channel,
-      # the test passes.
+      # The same as scenario 1, but the agent does not attempt to acknowledge
+      # the call.  If the agent does not enter the bridge with the requesting
+      # channel before being auto logged off, the test passes.
       channels:
         -
           channel-id: 'Login-2000'
@@ -199,7 +213,15 @@ test-object-config:
               actions:
                 -
                   action-type: 'fail-test'
-                  message: 'Agent 2000 entered bridge with invalid DTMF!'
+                  message: 'Agent 2000 entered bridge without DTMF!'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Request-2000'
+                -
+                  action-type: 'hangup'
+                  channel-id: 'Login-2000'
+                -
+                  action-type: 'end-scenario'
             -
               type: 'headermatch'
               conditions:
@@ -210,12 +232,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Agent 2000 logged off automatically.'
-                -
-                  action-type: 'hangup'
-                  channel-id: 'Login-2000'
-                -
-                  action-type: 'hangup'
-                  channel-id: 'Request-2000'
                 -
                   action-type: 'end-scenario'
         -

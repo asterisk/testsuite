@@ -81,7 +81,7 @@ test-object-config:
                   expected-result: 'Agent 1000 heard beep.'
                 -
                   action-type: 'send-dtmf'
-                  delay: 1
+                  delay: 2
                   dtmf: '#'
             -
               type: 'headermatch'
@@ -214,7 +214,7 @@ test-object-config:
                   expected-result: 'Agent 2000 heard beep.'
                 -
                   action-type: 'send-dtmf'
-                  delay: 1
+                  delay: 2
                   dtmf: '*'
             -
               type: 'headermatch'
@@ -349,11 +349,10 @@ test-object-config:
                   expected-result: 'Agent 3000 heard custom beep.'
                 -
                   action-type: 'hangup'
-                  delay: 1
                   channel-id: 'Request-3000'
                 -
                   action-type: 'hangup'
-                  delay: 1
+                  channel-id: 'Login-3000'
             -
               type: 'headermatch'
               conditions:
