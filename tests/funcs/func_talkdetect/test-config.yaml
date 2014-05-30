@@ -1,0 +1,125 @@
+testinfo:
+    summary: Test TALK_DETECT function emitting AMI/ARI events
+    description: |
+        "This verifies the TALK_DETECT function. It does this by
+        taking a Local channel, setting the TALK_DETECT function
+        on one half of the channel, and streaming audio through
+        on the other half of the channel.
+
+        When the test starts, both Local channel halves are placed
+        into a Stasis application. A subscription is made to the
+        ;1 channel, which is released into the dialplan.
+
+        The dialplan manages each iteration of the test; when
+        the ;1 channel has the appropriate TALK_DETECT settings
+        enabled on it, it enters into another Stasis application.
+        This Stasis application causes media to be played on the
+        ;2 channel.
+
+        The test consists of 4 iterations:
+         - An iteration that tests the base settings for TALK_DETECT.
+           A single pair of events is expected.
+         - An iteration that tests a shorter silence threshold and
+           a different talking threshold. Two pairs of events
+           are expected.
+         - An iteration that tests a very short silence threshold.
+           Three pairs of events are expected.
+         - An iteration that removes TALK_DETECT and plays back the
+           media. No events are expected."
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+
+test-object-config:
+    test-iterations:
+        -
+            channel: 'Local/stasis_app@default'
+            context: 'default'
+            exten: 'stasis_app'
+            priority: '1'
+            async: True
+
+ari-config:
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: ['subscribe']
+            count: 2
+            callback:
+                module: talk_detect
+                method: on_start
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: ['playback']
+            count: 4
+            callback:
+                module: talk_detect
+                method: do_playback
+        -   conditions:
+                match:
+                    type: PlaybackFinished
+            callback:
+                module: talk_detect
+                method: check_playback
+        -   conditions:
+                match:
+                    type: ChannelTalkingStarted
+            count: 6
+        -   conditions:
+                match:
+                    type: ChannelTalkingFinished
+                    duration: '[1-9](\d+)?'
+            count: 6
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'ChannelTalkingStart'
+        requirements:
+            match:
+                Channel: 'Local/stasis_app@default-00000000;1'
+        count: '6'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'ChannelTalkingStop'
+        requirements:
+            match:
+                Channel: 'Local/stasis_app@default-00000000;1'
+                Duration: '[1-9](\d+)?'
+        count: '6'
+
+properties:
+    minversion: '12.4.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_playbacks
+        - asterisk : func_talkdetect
+        - asterisk : app_stasis
+        - asterisk : res_stasis
+    tags:
+        - ARI
+
+

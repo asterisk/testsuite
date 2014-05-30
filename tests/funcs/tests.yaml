@@ -4,3 +4,4 @@ tests:
     - test: 'func_srv'
     - test: 'func_presencestate'
     - test: 'func_global'
+    - test: 'func_talkdetect'

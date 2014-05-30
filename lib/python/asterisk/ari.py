@@ -682,7 +682,7 @@ def all_match(pattern, message):
         return True
     elif isinstance(pattern, str) or isinstance(pattern, unicode):
         # Pattern strings are considered to be regexes
-        return re.match(pattern, message) is not None
+        return re.match(pattern, str(message)) is not None
     elif isinstance(pattern, int):
         # Integers are literal matches
         return pattern == message
