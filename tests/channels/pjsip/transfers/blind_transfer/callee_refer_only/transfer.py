@@ -28,7 +28,7 @@ class CharlieCallback(pj.AccountCallback):
         LOGGER.info("Incoming call for Charlie '%s' from '%s'." %
                 (call.info().uri, call.info().remote_uri))
         if ITERATION > 0:
-            referred_by_hdr = "Referred-By: alice <sip:alice@127.0.0.1>"
+            referred_by_hdr = "Referred-By: <sip:bob@127.0.0.1;ob>"
             if (referred_by_hdr not in msg.msg_info_buffer):
                 LOGGER.warn("Expected header not found: '%s'" % referred_by_hdr)
                 self.controller.test_object.set_passed(False)
@@ -43,7 +43,6 @@ class CharlieCallback(pj.AccountCallback):
         """Hang up the call."""
         LOGGER.info("Hanging up Charlie")
         self.charlie_call.hangup(code=200, reason="Q.850;cause=16")
-
 
 class BobCallback(pj.AccountCallback):
     """Derived callback class for Bob's account."""
@@ -60,9 +59,19 @@ class BobCallback(pj.AccountCallback):
         call.set_callback(inbound_cb)
         call.answer(200)
 
-
 class AlicePhoneCallCallback(pj.CallCallback):
     """Derived callback class for Alice's call."""
+
+    def __init__(self, call=None):
+        pj.CallCallback.__init__(self, call)
+
+    def on_state(self):
+        log_call_info(self.call.info())
+        if self.call.info().state == pj.CallState.DISCONNECTED:
+            LOGGER.info("Call disconnected: '%s'" % self.call)
+
+class BobPhoneCallCallback(pj.CallCallback):
+    """Derived callback class for Bob's call."""
 
     def __init__(self, call=None):
         pj.CallCallback.__init__(self, call)
@@ -81,6 +90,7 @@ class AlicePhoneCallCallback(pj.CallCallback):
         try:
             LOGGER.info("Attempting to blind transfer the call.")
             self.call.transfer(URI[2])
+            LOGGER.info("The call is %s" % self.call)
         except:
             LOGGER.warn("Failed to transfer the call! Retrying...")
             reactor.callLater(.2, self.transfer_call)
@@ -91,22 +101,9 @@ class AlicePhoneCallCallback(pj.CallCallback):
             LOGGER.info("Transfer target answered the call.")
             LOGGER.debug("Call uri: '%s'; remote uri: '%s'" %
                     (self.call.info().uri, self.call.info().remote_uri))
-            LOGGER.info("Hanging up Alice")
+            LOGGER.info("Hanging up Bob")
             self.call.hangup(code=200, reason="Q.850;cause=16")
         return cont
-
-
-class BobPhoneCallCallback(pj.CallCallback):
-    """Derived callback class for Bob's call."""
-
-    def __init__(self, call=None):
-        pj.CallCallback.__init__(self, call)
-
-    def on_state(self):
-        log_call_info(self.call.info())
-        if self.call.info().state == pj.CallState.DISCONNECTED:
-            LOGGER.info("Call disconnected: '%s'" % self.call)
-
 
 class CharliePhoneCallCallback(pj.CallCallback):
     """Derived callback class for Charlie's call."""
@@ -118,7 +115,6 @@ class CharliePhoneCallCallback(pj.CallCallback):
         log_call_info(self.call.info())
         if self.call.info().state == pj.CallState.DISCONNECTED:
             LOGGER.info("Call disconnected: '%s'" % self.call)
-
 
 class AMICallback(object):
     """Class to set up callbacks and place calls."""

@@ -1,6 +1,10 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
+    - test: 'callee_refer_only'
+    - test: 'callee_with_hold'
+    - test: 'callee_direct_media'
     - test: 'caller_refer_only'
-    - test: 'caller_direct_media'
     - test: 'caller_with_hold'
+    - test: 'caller_direct_media'
+
 
