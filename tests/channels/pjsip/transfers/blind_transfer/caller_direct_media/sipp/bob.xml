@@ -155,11 +155,44 @@
         crlf="true">
   </recv>
 
-  <!-- Wait for re-invite to setup RTP directly between bob and Asterisk
-       after charlie hangs up -->
-  <recv request="INVITE" crlf="true"/>
+  <!--
+  A re-INVITE will come from Asterisk to redirect media back to it
+  as Bob leaves the bridge. At the same time, Bob will get hung up.
+  Cache the needed values from the INVITE so we can handle both requets.
+  -->
+  <recv request="INVITE" crlf="true">
+    <action>
+      <ereg regexp="(.*)"
+          header="Via:"
+          search_in="hdr"
+          check_it="true"
+          assign_to="reinvite_via"/>
+      <ereg regexp="(.*)"
+          header="From:"
+          search_in="hdr"
+          check_it="true"
+          assign_to="reinvite_from"/>
+      <ereg regexp="(.*)"
+          header="To:"
+          search_in="hdr"
+          check_it="true"
+          assign_to="reinvite_to"/>
+      <ereg regexp="(.*)"
+          header="Call-ID:"
+          search_in="hdr"
+          check_it="true"
+          assign_to="reinvite_call_id"/>
+      <ereg regexp="(.*)"
+          header="CSeq:"
+          search_in="hdr"
+          check_it="true"
+          assign_to="reinvite_cseq"/>
+    </action>
+  </recv>
 
-  <send retrans="500">
+  <recv request="BYE" />
+
+  <send>
     <![CDATA[
 
       SIP/2.0 200 OK
@@ -168,6 +201,22 @@
       [last_To:]
       [last_Call-ID:]
       [last_CSeq:]
+      Contact: <sip:bob@[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      Via: [$reinvite_via]
+      From: [$reinvite_from]
+      To: [$reinvite_to]
+      Call-ID: [$reinvite_call_id]
+      CSeq: [$reinvite_cseq]
       Contact: <sip:bob@[local_ip]:[local_port];transport=[transport]>
       Content-Type: application/sdp
       Content-Length: [len]
@@ -187,22 +236,6 @@
         rtd="true"
         crlf="true">
   </recv>
-
-  <recv request="BYE" />
-
-  <send>
-    <![CDATA[
-
-      SIP/2.0 200 OK
-      [last_Via:]
-      [last_From:]
-      [last_To:]
-      [last_Call-ID:]
-      [last_CSeq:]
-      Content-Length: 0
-
-    ]]>
-  </send>
 
   <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
 

@@ -2,7 +2,7 @@
 
 <scenario name="Send Call">
 
-  <send retrans="500">
+  <send retrans="500" start_txn="initial_invite">
     <![CDATA[
 
       INVITE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
@@ -27,11 +27,11 @@
     ]]>
   </send>
 
-  <recv response="100" optional="true" />
-  <recv response="180" optional="true" />
-  <recv response="183" optional="true" />
+  <recv response="100" optional="true" response_txn="initial_invite"/>
+  <recv response="180" optional="true" response_txn="initial_invite"/>
+  <recv response="183" optional="true" response_txn="initial_invite"/>
 
-  <recv response="200" rtd="true">
+  <recv response="200" rtd="true" response_txn="initial_invite">
     <!-- Save the To tag. We'll need it when we send REFER -->
     <action>
       <ereg regexp="(;tag=.*)"
@@ -42,7 +42,7 @@
     </action>
   </recv>
 
-  <send>
+  <send ack_txn="initial_invite">
     <![CDATA[
 
       ACK sip:[service]@[remote_ip]:[remote_port] SIP/2.0
@@ -146,7 +146,7 @@
        Wait for re-invite for tearing down direct media between alice and bob
        due to transfering bob to charlie.
   -->
-<!--  <recv request="INVITE" crlf="true"/>
+  <recv request="INVITE" crlf="true"/>
 
   <send retrans="500">
     <![CDATA[
@@ -176,7 +176,7 @@
     rtd="true"
     crlf="true">
   </recv>
--->
+
   <!-- We should receive a NOTIFY from Asterisk with a '200 OK' sipfrag -->
   <recv request="NOTIFY" crlf="true">
     <!-- Check if 'SIP/2.0 200 OK' is in the body -->

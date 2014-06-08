@@ -146,7 +146,7 @@
        Wait for re-invite for tearing down direct media between alice and bob
        due to transfering alice to charlie.
   -->
-  <!-- <recv request="INVITE" crlf="true"/>
+  <recv request="INVITE" crlf="true"/>
 
   <send retrans="500" next="11">
     <![CDATA[
@@ -179,7 +179,7 @@
     crlf="true"
     next="12" >
   </recv>
--->
+
   <label id="12" />
 
   <!-- We should receive a NOTIFY from Asterisk with a '200 OK' sipfrag -->
