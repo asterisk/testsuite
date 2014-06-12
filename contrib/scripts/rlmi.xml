@@ -1,0 +1,25 @@
+   <list xmlns="urn:ietf:params:xml:ns:rlmi"
+         uri="sip:adam-friends@lists.vancouver.example.com"
+         version="7" fullState="true">
+     <name xml:lang="en">Buddy List</name>
+     <name xml:lang="fr">Liste d'amis</name>
+     <resource uri="sip:bob@vancouver.example.com">
+       <name>Bob Smith</name>
+       <instance id="juwigmtboe" state="active"
+                 cid="12345.aaa@vancouver.example.com"/>
+     </resource>
+     <resource uri="sip:dave@vancouver.example.com">
+       <name>Dave Jones</name>
+       <instance id="hqzsuxtfyq" state="active"
+                 cid="12345.aab@vancouver.example.com"/>
+     </resource>
+     <resource uri="sip:jim@vancouver.example.com">
+       <name>Jim</name>
+       <instance id="oflzxqzuvg" state="terminated"
+                 reason="rejected" />
+     </resource>
+     <resource uri="sip:ed@vancouver.example.com">
+       <name>Ed</name>
+       <instance id="grqhzsppxb" state="pending"/>
+     </resource>
+   </list>
