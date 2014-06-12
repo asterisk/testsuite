@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
    <list xmlns="urn:ietf:params:xml:ns:rlmi"
          uri="sip:adam-friends@lists.vancouver.example.com"
          version="7" fullState="true">
