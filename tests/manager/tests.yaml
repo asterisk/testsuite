@@ -10,5 +10,7 @@ tests:
     - test: 'originate'
     - test: 'device_state_changed'
     - test: 'presence_state_changed'
+    - test: 'manager_vars'
+    - test: 'status'
     # Temporarily disabled while failures are debugged
     #- test: 'response-time'

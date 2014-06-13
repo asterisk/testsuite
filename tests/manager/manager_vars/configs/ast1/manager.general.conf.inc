@@ -1,0 +1,1 @@
+channelvars = foo,does_not_exist
