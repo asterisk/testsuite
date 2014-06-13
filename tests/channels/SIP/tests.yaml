@@ -68,3 +68,4 @@ tests:
     - test: 'direct_rtp_fallback'
     - dir: 'sendrpid'
     - test: 'tel_uri'
+    - dir: 'ami'

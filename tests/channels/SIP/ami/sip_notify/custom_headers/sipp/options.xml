@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Notify Request">
+
+    <recv request="NOTIFY">
+		<action>
+			<ereg regexp=": val1"
+				search_in="hdr"
+				header="chead1"
+				check_it="true"
+				assign_to="1"/>
+			<log message="Received NOTIFY chead1: [$1]." />
+			<ereg regexp=": val2"
+				search_in="hdr"
+				header="chead2"
+				check_it="true"
+				assign_to="2"/>
+			<log message="Received NOTIFY chead2: [$2]." />
+			<ereg regexp=": val3"
+				search_in="hdr"
+				header="chead3"
+				check_it="true"
+				assign_to="3"/>
+			<log message="Received NOTIFY chead3: [$3]." />
+		</action>
+	</recv>
+
+    <send>
+      <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:user1@[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Content-Length: [len]
+      ]]>
+    </send>
+
+</scenario>

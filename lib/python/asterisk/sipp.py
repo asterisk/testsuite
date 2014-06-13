@@ -209,6 +209,49 @@ class SIPpTestCase(TestCase):
         return result
 
 
+class SIPpAMIActionTestCase(SIPpTestCase):
+    """SIPpTestCase that also executes an AMI action"""
+    def __init__(self, test_path, test_config):
+        """Constructor
+
+        Keyword Arguments:
+        test_path path to the location of the test directory
+        test_config yaml loaded object containing config information
+        """
+
+        super(SIPpAMIActionTestCase, self).__init__(test_path,
+                                                    test_config=test_config)
+
+        self.ami_token = self.create_fail_token("Remove token when AMI "
+                                                "command is successful")
+
+        self.ami_args = test_config['ami-action']['args']
+        self.ami_delay = test_config['ami-action'].get('delay', 0)
+
+    def on_reactor_timeout(self):
+        """Create a failure token when the test times out"""
+        self.create_fail_token("Reactor timed out. Test Failed.")
+
+    def remove_token_on_success(self, message, expected='Success'):
+        """Remove the failure token for AMI message if it didn't fail"""
+        if type(message) is dict and message['response'] != expected:
+            return
+        self.remove_fail_token(self.ami_token)
+
+    def ami_connect(self, ami):
+        """Handle the AMI connect event"""
+        super(SIPpAMIActionTestCase, self).ami_connect(ami)
+
+        def _ami_action():
+            """Send the AMI action"""
+            LOGGER.info("Sending Action: %s" % self.ami_args)
+            ami_out = ami.sendDeferred(self.ami_args)
+            ami_out.addCallback(ami.errorUnlessResponse)
+            ami_out.addCallback(self.remove_token_on_success)
+
+        reactor.callLater(self.ami_delay, _ami_action)
+
+
 class SIPpScenarioSequence(object):
     """Execute a sequence of SIPp Scenarios in sequence.
 

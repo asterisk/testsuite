@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Notify Request">
+
+    <recv request="NOTIFY">
+		<action>
+			<ereg regexp=": valid"
+				search_in="hdr"
+				header="controlheader"
+				check_it="true"
+				assign_to="1"/>
+			<log message="Received NOTIFY [$1]." />
+			<ereg regexp=": failure"
+				search_in="hdr"
+				header="From"
+				check_it_inverse="true"
+				assign_to="2"/>
+			<log message="Received NOTIFY [$2]." />
+			<ereg regexp=": failure"
+				search_in="hdr"
+				header="To"
+				check_it_inverse="true"
+				assign_to="3"/>
+			<log message="Received NOTIFY [$3]." />
+			<ereg regexp=" failure"
+				search_in="hdr"
+				header="Cseq"
+				check_it_inverse="true"
+				assign_to="4"/>
+			<log message="Received NOTIFY [$4]." />
+			<ereg regexp=" failure"
+				search_in="hdr"
+				header="Contact":
+				check_it_inverse="true"
+				assign_to="5"/>
+			<log message="Received NOTIFY [$5]." />
+			<ereg regexp=" failure"
+				search_in="hdr"
+				header="Call-Id"
+				check_it_inverse="true"
+				assign_to="6"/>
+			<log message="Received NOTIFY [$6]." />
+			<ereg regexp=" failure"
+				search_in="hdr"
+				header="Record-Route"
+				check_it_inverse="true"
+				assign_to="7"/>
+			<log message="Received NOTIFY [$7]." />
+			<ereg regexp=" failure"
+				search_in="hdr"
+				header="Route"
+				check_it_inverse="true"
+				assign_to="8"/>
+			<log message="Received NOTIFY [$8]." />
+			<ereg regexp=" failure"
+				search_in="hdr"
+				header="Request-Uri"
+				check_it_inverse="true"
+				assign_to="9"/>
+			<log message="Received NOTIFY [$9]." />
+			<ereg regexp=" failure"
+				search_in="hdr"
+				header="via"
+				check_it_inverse="true"
+				assign_to="10"/>
+			<log message="Received NOTIFY [$10]." />
+		</action>
+	</recv>
+
+    <send>
+      <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:user1@[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Content-Length: [len]
+      ]]>
+    </send>
+
+</scenario>

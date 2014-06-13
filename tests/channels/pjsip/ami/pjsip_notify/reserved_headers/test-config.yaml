@@ -1,0 +1,34 @@
+tinfo:
+    summary: 'Test PJSIPNotify AMI Action for reserved header usage'
+    description: |
+        This Tests the AMI Action PJSIPNotify in order to make sure
+        reserved headers can not be overwritten using variables in
+        the request.
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpAMIActionTestCase'
+
+sipp-config:
+    reactor-timeout: 15
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'options.xml', '-p': '5062'} }
+    ami-action:
+        delay: 1
+        args:
+            Action: "PJSIPNotify"
+            Endpoint: "user1"
+            Variable: "controlheader=valid,From=failure,To=failure,Cseq=failure,Contact=failure,Call-Id=failure,Record-Route=failure,Route=failure,Request-Uri=failure,via=failure"

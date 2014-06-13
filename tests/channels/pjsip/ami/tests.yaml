@@ -1,6 +1,7 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 'pjsip_qualify'
+    - dir: 'pjsip_notify'
     - test: 'show_endpoints'
     - test: 'show_endpoint'
     - test: 'show_registrations_inbound'

@@ -1,0 +1,33 @@
+tinfo:
+    summary: 'Test PJSIPNotify AMI Action for custom header usage'
+    description: |
+        This Tests the AMI Action PJSIPNotify in order to make sure
+        custom headers are accepted and applied as expected
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpAMIActionTestCase'
+
+sipp-config:
+    reactor-timeout: 15
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'options.xml', '-p': '5062'} }
+    ami-action:
+        delay: 1
+        args:
+            Action: "PJSIPNotify"
+            Endpoint: "user1"
+            Variable: "chead1=val1,chead2=val2,chead3=val3"
