@@ -129,8 +129,8 @@ cdr-config-12:
             -
                 # new in 12
                 source: '4321'
-                destination: 'SIP_alice'
-                dcontext: 'park-dial'
+                destination: ''
+                dcontext: 'default'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
                 lastapp: 'Park'
@@ -160,8 +160,8 @@ cdr-config-12:
             -
                 # new in 12
                 source: '4321'
-                destination: 'SIP_alice'
-                dcontext: 'park-dial'
+                destination: ''
+                dcontext: 'default'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
                 lastapp: 'Park'
@@ -201,8 +201,8 @@ cdr-config-12:
             -
                 # new in 12
                 source: '4321'
-                destination: 'SIP_alice'
-                dcontext: 'park-dial'
+                destination: ''
+                dcontext: 'default'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
                 lastapp: 'Park'

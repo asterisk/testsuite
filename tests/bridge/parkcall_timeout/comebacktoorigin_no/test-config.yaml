@@ -102,8 +102,8 @@ cdr-config-12:
                 amaflags: 'DOCUMENTATION'
             -
                 source: '4321'
-                destination: 'SIP_alice'
-                dcontext: 'park_context1'
+                destination: ''
+                dcontext: 'default'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
                 lastapp: 'Park'
@@ -131,8 +131,8 @@ cdr-config-12:
                 amaflags: 'DOCUMENTATION'
             -
                 source: '4321'
-                destination: 's'
-                dcontext: 'park_context2'
+                destination: ''
+                dcontext: 'default'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
                 lastapp: 'Park'
@@ -160,7 +160,7 @@ cdr-config-12:
                 amaflags: 'DOCUMENTATION'
             -
                 source: '4321'
-                destination: 's'
+                destination: ''
                 dcontext: 'default'
                 callerid: '"Bob" <4321>'
                 channel: '.*/bob-.*'
