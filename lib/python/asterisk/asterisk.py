@@ -450,6 +450,24 @@ class Asterisk(object):
 
         return self._stop_deferred
 
+    def get_path(self, astdirkey, *paths):
+        """Join paths using the correct prefix for the current instance.
+
+        Keyword Arguments:
+        astdirkey This argument must match a directory key from asterisk.conf.
+        *paths This is a list of paths to be appended using os.path.join.
+
+        Example Usage:
+        asterisk.get_path("astlogdir", "cdr-csv", "Master.csv")
+        """
+
+        if not astdirkey in self.directories:
+            msg = "Directory '%s' not found in asterisk.conf" % astdirkey
+            LOGGER.error(msg)
+            raise Exception(msg)
+
+        return os.path.join(self.base + self.directories[astdirkey], *paths)
+
     def install_configs(self, cfg_path, deps=None):
         """Installs all files located in the configuration directory for this
         instance of Asterisk.

@@ -35,10 +35,10 @@ class ChanSpyMixMonitorTest(TestCase):
         self.talk_detected = 0
         self.chanspy_channel = ""
 
-        self.talkingaudio = os.path.join(os.getcwd(), "%s/sounds/talking" % self.test_name)
-        self.audiofile1 = os.path.join(os.getcwd(), "%s/testaudio1" % self.test_name)
-
         self.create_asterisk()
+
+        self.talkingaudio = os.path.join(os.getcwd(), "%s/sounds/talking" % self.test_name)
+        self.audiofile1 = self.ast[0].get_path("astspooldir", "tmp", "testaudio1")
 
     def fastagi_connect(self, agi):
         LOGGER.info("Got pass results!")

@@ -43,41 +43,31 @@ class SIPTLSCallTest(TestCase):
     def __init__(self):
         TestCase.__init__(self)
 
-        workingdir = "channels/SIP/sip_tls_call"
-        testdir = "tests/%s" % workingdir
-
         # Additional setup for config files and keys
         LOGGER.info("Building test resources ...")
-        if os.path.exists('%s/configs/ast1/sip_helper.inc' % (testdir)):
-            os.remove('%s/configs/ast1/sip_helper.inc' % (testdir))
-        shutil.copy('%s/configs/helper1' % (testdir), '%s/configs/ast1/sip_helper.inc' % (testdir))
+        if os.path.exists('%s/configs/ast1/sip_helper.inc' % self.test_name):
+            os.remove('%s/configs/ast1/sip_helper.inc' % self.test_name)
+        shutil.copy('%s/configs/helper1' % self.test_name, '%s/configs/ast1/sip_helper.inc' % self.test_name)
 
-        if os.path.exists('%s/configs/ast2/sip_helper.inc' % (testdir)):
-            os.remove('%s/configs/ast2/sip_helper.inc' % (testdir))
-        shutil.copy('%s/configs/helper2' % (testdir), '%s/configs/ast2/sip_helper.inc' % (testdir))
-        file_replace_string('%s/configs/ast1/sip_helper.inc' % (testdir), '<<path>>', '%s' % (workingdir))
-        file_replace_string('%s/configs/ast2/sip_helper.inc' % (testdir), '<<path>>', '%s' % (workingdir))
+        if os.path.exists('%s/configs/ast2/sip_helper.inc' % self.test_name):
+            os.remove('%s/configs/ast2/sip_helper.inc' % self.test_name)
+        shutil.copy('%s/configs/helper2' % self.test_name, '%s/configs/ast2/sip_helper.inc' % self.test_name)
+        file_replace_string('%s/configs/ast1/sip_helper.inc' % self.test_name, '<<path>>', self.test_name)
+        file_replace_string('%s/configs/ast2/sip_helper.inc' % self.test_name, '<<path>>', self.test_name)
 
         self.create_asterisk(2)
 
         #Now that we've created the Asterisk instances, let's go ahead and remove the sip_helper.inc files
-        if os.path.exists('%s/configs/ast1/sip_helper.inc' % (testdir)):
-            os.remove('%s/configs/ast1/sip_helper.inc' % (testdir))
+        if os.path.exists('%s/configs/ast1/sip_helper.inc' % self.test_name):
+            os.remove('%s/configs/ast1/sip_helper.inc' % self.test_name)
 
-        if os.path.exists('%s/configs/ast2/sip_helper.inc' % (testdir)):
-            os.remove('%s/configs/ast2/sip_helper.inc' % (testdir))
+        if os.path.exists('%s/configs/ast2/sip_helper.inc' % self.test_name):
+            os.remove('%s/configs/ast2/sip_helper.inc' % self.test_name)
 
         # initialize test variables
         self.passed = False
         self.tone1 = False
         self.tone2 = False
-
-        if not os.path.exists('%s/' % workingdir):
-            os.makedirs('%s' % workingdir);
-        if os.path.exists('%s/keys' % (workingdir)):
-            shutil.rmtree('%s/keys' % (workingdir))
-        shutil.copytree('%s/configs/keys' % (testdir), '%s/keys' % (workingdir))
-        # End of additional setup for config files and keys
 
     def ami_connect(self, ami):
         if (AsteriskVersion() >= AsteriskVersion('12')):

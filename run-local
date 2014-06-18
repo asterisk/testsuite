@@ -17,7 +17,7 @@ setup() {
 	lua -e "getfenv()" 2>/dev/null && (
 		cd asttest
 		make
-		make install DESTDIR="$HERE/root"
+		make install DESTDIR="$HERE/astroot"
 	)
 	(
 		cd ..
@@ -54,7 +54,10 @@ run() {
 	# a unix socket name (asterisk.ctl) has to be no longer than
 	# UNIX_PATH_MAX (108) characters:
 	export AST_TEST_ROOT=`mktemp_symlink /tmp/ast_test_XXXXXX $HERE/astroot`
-	export PATH="$HERE/asttest/root/usr/local/bin:$HERE/astroot/usr/sbin:$PATH"
+	# Prepend $PATH to include locations populated by ./run-local setup
+	#     astroot/usr/local/bin - asttest
+	#     astroot/usr/sbin      - asterisk
+	export PATH="$HERE/astroot/usr/local/bin:$HERE/astroot/usr/sbin:$PATH"
         # Preprend ':' if LD_LIBRARY_PATH is not empty:
 	LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 	export LD_LIBRARY_PATH="$HERE/astroot/usr/lib${LD_LIBRARY_PATH}"

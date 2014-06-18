@@ -24,8 +24,6 @@ from asterisk.test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
 
-testdir = "tests/apps/chanspy/chanspy_barge"
-
 class ChanSpyBarge(TestCase):
     def __init__(self):
         super(ChanSpyBarge, self).__init__()
@@ -43,8 +41,8 @@ class ChanSpyBarge(TestCase):
             "transmit_silence" : "yes",
         }
 
-        self.talkingaudio = os.path.join(os.getcwd(), "%s/sounds/talking" % (testdir))
-        self.audiofile1 = os.path.join(os.getcwd(), "%s/testaudio1" % (testdir))
+        self.talkingaudio = os.path.join(os.getcwd(), "%s/sounds/talking" % self.test_name)
+        self.audiofile1 = self.ast[0].get_path("astspooldir", "tmp", "testaudio1")
 
     def fastagi_connect(self, agi):
         LOGGER.info("GOT PASS RESULTS!!!")

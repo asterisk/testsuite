@@ -31,8 +31,6 @@ class SIPTLS_Register_Test(TestCase):
     def __init__(self):
         TestCase.__init__(self)
 
-        self.testdir = "tests/channels/SIP/sip_tls_register"
-
         self.pass_sipp = False
         self.pass_event = False
 
@@ -41,34 +39,26 @@ class SIPTLS_Register_Test(TestCase):
 
         self.create_asterisk()
 
-        self.keysdir = "%s%s" % (self.ast[0].base, self.ast[0].directories['astkeydir'])
-        self.etcdir = "%s%s" % (self.ast[0].base, self.ast[0].directories['astetcdir'])
+        self.keysdir = self.ast[0].get_path('astkeydir')
+        self.etcdir = self.ast[0].get_path('astetcdir')
 
         # Additional setup for config files and keys
         logger.debug( "Building test resources ...")
-        if os.path.exists('%s/configs/ast1/sip_helper.inc' % (self.testdir)):
-            os.remove('%s/configs/ast1/sip_helper.inc' % (self.testdir))
-        shutil.copy('%s/configs/sip_helper_template.inc' % (self.testdir), '%s/configs/ast1/sip_helper.inc' % (self.testdir))
+        if os.path.exists('%s/configs/ast1/sip_helper.inc' % self.test_name):
+            os.remove('%s/configs/ast1/sip_helper.inc' % self.test_name)
+        shutil.copy('%s/configs/sip_helper_template.inc' % self.test_name, '%s/configs/ast1/sip_helper.inc' % self.test_name)
 
-        file_replace_string('%s/configs/ast1/sip_helper.inc' % (self.testdir), '<<path>>', '%s' % (self.keysdir))
+        file_replace_string('%s/configs/ast1/sip_helper.inc' % self.test_name, '<<path>>', self.keysdir)
 
         #recopy sip_helper.inc since it's been changed. Remove first in case one already exists.
         if os.path.exists('%s/sip_helper.inc' % self.etcdir):
             os.remove('%s/sip_helper.inc' % self.etcdir)
-        shutil.copy('%s/configs/ast1/sip_helper.inc' % (self.testdir), '%s' % (self.etcdir))
-
-        #For the registration test, we need to copy some keys for use with sipp.
-        #first delete them if they are already in the folder.
-        self.cleanup_tls()
-
-        #then copy them from the test directory to the working directory that sipp runs from.
-        shutil.copy('%s/configs/keys/serverA.key' % (self.testdir), 'cakey.pem')
-        shutil.copy('%s/configs/keys/serverA.crt' % (self.testdir), 'cacert.pem')
+        shutil.copy('%s/configs/ast1/sip_helper.inc' % self.test_name, self.etcdir)
 
         #Now that we've created the Asterisk instances, let's go ahead and remove the sip_helper.inc files
 
-        if os.path.exists('%s/configs/ast1/sip_helper.inc' % (self.testdir)):
-            os.remove('%s/configs/ast1/sip_helper.inc' % (self.testdir))
+        if os.path.exists('%s/configs/ast1/sip_helper.inc' % self.test_name):
+            os.remove('%s/configs/ast1/sip_helper.inc' % self.test_name)
 
         # initialize test variables
         self.passed = False
@@ -77,9 +67,9 @@ class SIPTLS_Register_Test(TestCase):
 
         if not os.path.exists('%s/' % self.keysdir):
             os.makedirs('%s' % self.keysdir);
-        if os.path.exists('%s/keys' % (self.keysdir)):
-            shutil.rmtree('%s/keys' % (self.keysdir))
-        shutil.copytree('%s/configs/keys' % (self.testdir), '%s/keys' % (self.keysdir))
+        if os.path.exists('%s/keys' % self.keysdir):
+            shutil.rmtree('%s/keys' % self.keysdir)
+        shutil.copytree('%s/configs/keys' % self.test_name, '%s/keys' % self.keysdir)
         # End of additional setup for config files and keys
 
     # Sets up callback function for PeerStatus events and runs/evaluates SIPp for the necessary scenario with TLS.
@@ -92,7 +82,15 @@ class SIPTLS_Register_Test(TestCase):
 
         self.ami = ami
         self.ami.registerEvent("PeerStatus", self.check_register_result)
-        scenario_def = {'scenario': 'register.xml', '-p': '5061', '-recv_timeout': '1000', '-s': 'SIP/v4-in', '-t': 'ln'}
+        scenario_def = {
+            'scenario': 'register.xml',
+            '-p': '5061',
+            '-recv_timeout': '1000',
+            '-s': 'SIP/v4-in',
+            '-t': 'ln',
+            '-tls_cert': '%s/configs/keys/serverA.crt' % self.test_name,
+            '-tls_key': '%s/configs/keys/serverA.key' % self.test_name,
+        }
 
         scenario = SIPpScenario("tests/channels/SIP/sip_tls_register", scenario_def)
         df = scenario.run(self)
@@ -123,13 +121,6 @@ class SIPTLS_Register_Test(TestCase):
         else:
             logger.info("Registration for peer %s in state %s" % (peer, status))
             return
-
-    # Cleans up TLS cert files used by SIPp
-    def cleanup_tls(self):
-        if os.path.exists('cacert.pem'):
-            os.remove('cacert.pem')
-        if os.path.exists('cakey.pem'):
-            os.remove('cakey.pem')
 
     # Sets up reactor and AMI connection
     def run(self):
