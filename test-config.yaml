@@ -51,6 +51,13 @@ global-settings:
                     typename: 'sip_channel_test_condition.SipChannelTestCondition'
                 post:
                     typename: 'sip_channel_test_condition.SipChannelTestCondition'
+            -
+                name: 'memory'
+                pre:
+                    typename: 'memory_test_condition.MemoryPreTestCondition'
+                post:
+                    typename: 'memory_test_condition.MemoryPostTestCondition'
+                    related-type: 'memory_test_condition.MemoryPreTestCondition'
 
 # Exclude all long-running tests (greater than one minute)
 config-fast:
@@ -96,6 +103,7 @@ config-pessimistic:
             - name: 'file-descriptors'
             - name: 'channels'
             - name: 'sip-channels'
+            - name: 'memory'
 
 config-specific-version:
     properties:

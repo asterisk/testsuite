@@ -91,6 +91,7 @@ class TestConditionController(object):
         Keyword arguments:
         pre_test_condition The pre-test condition to check
         """
+        LOGGER.info('Registered pre test condition %s' % str(pre_test_condition))
         self._prechecks.append((pre_test_condition, None))
 
     def register_post_test_condition(self, post_test_condition,
@@ -118,7 +119,9 @@ class TestConditionController(object):
             if (matching_pre_condition == None):
                 err_msg = ("No pre condition found matching %s" %
                            matching_pre_condition_name)
-                raise ValueError(err_msg)
+                LOGGER.error(err_msg)
+                return
+        LOGGER.info('Registered post test condition %s' % str(post_test_condition))
         self._postchecks.append((post_test_condition, matching_pre_condition))
 
     def register_observer(self, callback_method, test_filter=""):

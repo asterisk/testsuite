@@ -197,24 +197,14 @@ class TestCase(object):
         for cond in conditions:
             # cond is a 3-tuple of object, pre-post type, and related name
             obj, pre_post_type, related_name = cond
-            if (related_name == ""):
-                if (pre_post_type == "PRE"):
-                    self.condition_controller.register_pre_test_condition(obj)
-                elif (pre_post_type == "POST"):
-                    self.condition_controller.register_post_test_condition(obj)
-                else:
-                    msg = "Unknown condition type [%s]" % pre_post_type
-                    LOGGER.warning(msg)
-        for cond in conditions:
-            if (related_name != ""):
-                if (pre_post_type == "POST"):
-                    self.condition_controller.register_post_test_condition(
-                                                obj,
-                                                related_name)
-                else:
-                    msg = ("Unsupported type [%s] with related condition %s" %
-                           (pre_post_type, related_name))
-                    LOGGER.warning(msg)
+            if (pre_post_type == "PRE"):
+               self.condition_controller.register_pre_test_condition(obj)
+            elif (pre_post_type == "POST"):
+                self.condition_controller.register_post_test_condition(obj,
+                                                                       related_name)
+            else:
+                msg = "Unknown condition type [%s]" % pre_post_type
+                LOGGER.warning(msg)
         self.condition_controller.register_observer(
                                     self.handle_condition_failure,
                                     'Failed')
