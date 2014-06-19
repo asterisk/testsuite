@@ -1,0 +1,65 @@
+testinfo:
+    summary:     'Realtime static test'
+    description: |
+        'This tests the ability of Asterisk to load static realtime configuration.'
+
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_config_curl'
+        - asterisk: 'func_curl'
+
+    tags:
+        - pjsip
+        - realtime
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-case-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: 'realtime-config'
+            typename: 'realtime_test_module.RealtimeTestModule'
+
+test-case-config:
+    connect-ami: 'True'
+
+realtime-config:
+    entry_module: 'static'
+    entry_method: 'check_it'
+    data:
+        astconfig:
+            -
+                id: '0'
+                cat_metric: '0'
+                var_metric: '0'
+                filename: 'pjsip.conf'
+                category: 'alice'
+                var_name: 'type'
+                var_val: 'endpoint'
+                commented: '0'
+            -
+                id: '1'
+                cat_metric: '0'
+                var_metric: '1'
+                filename: 'pjsip.conf'
+                category: 'alice'
+                var_name: 'allow'
+                var_val: 'ulaw'
+                commented: '0'
+            -
+                id: '2'
+                cat_metric: '0'
+                var_metric: '2'
+                filename: 'pjsip.conf'
+                category: 'alice'
+                var_name: 'context'
+                var_val: 'fabulous'
+                commented: '0'
+

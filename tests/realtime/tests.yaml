@@ -1,0 +1,7 @@
+tests:
+    - test: 'single'
+    - test: 'multi'
+    - test: 'store'
+    - test: 'update'
+    - test: 'destroy'
+    - test: 'static'

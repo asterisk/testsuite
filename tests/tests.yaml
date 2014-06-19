@@ -29,3 +29,4 @@ tests:
     - dir: 'bridge'
     - dir: 'rest_api'
     - dir: 'hep'
+    - dir: 'realtime'
