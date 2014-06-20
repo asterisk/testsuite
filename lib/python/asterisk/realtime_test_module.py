@@ -502,7 +502,7 @@ class RealtimeTestModule(object):
         calls into a configuration-specified method, supplying the realtime
         data.
         """
-        if 'entry-method' not in self.module_config or \
+        if 'entry_method' not in self.module_config or \
                 'entry_module' not in self.module_config:
             return
 
