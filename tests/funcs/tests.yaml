@@ -5,3 +5,4 @@ tests:
     - test: 'func_presencestate'
     - test: 'func_global'
     - test: 'func_talkdetect'
+    - test: 'func_push'
