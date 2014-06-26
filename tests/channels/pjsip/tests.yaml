@@ -22,4 +22,4 @@ tests:
     - dir: 'transfers'
     - test: 'info_dtmf'
     - test: 'call_pickup'
-
+    - dir: 'video_calls'
