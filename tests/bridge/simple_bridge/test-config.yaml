@@ -24,6 +24,10 @@ test-modules:
             minversion: '12.0.0'
             config-section: 'ami-uut-v12'
             typename: 'ami.AMIEventModule'
+        -
+            minversion: '13.0.0'
+            config-section: 'cel-13-config'
+            typename: 'ami.AMIEventModule'
 
 bridge-config:
   test-runs:
@@ -366,6 +370,60 @@ cel-config:
             -
                 match:
                     EventName: 'CHAN_END'
+
+cel-13-config:
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: '.*/bob-.*'
+        requirements:
+            # First iteration
+            -
+                id: 'bob-enter-bridge-one'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+            # Second iteration
+            -
+                match:
+                    EventName: 'BRIDGE_ENTER'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: '.*/alice-.*'
+        requirements:
+            # First iteration
+            -
+                id: 'alice-enter-bridge-one'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+                    extra:
+                        bridge_technology: 'simple_bridge'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+                    extra:
+                        bridge_technology: 'simple_bridge'
+            # Second iteration
+            -
+                id: 'alice-bridge-enter-two'
+                match:
+                    EventName: 'BRIDGE_ENTER'
+                    extra:
+                        bridge_technology: 'simple_bridge'
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+                    extra:
+                        bridge_technology: 'simple_bridge'
+
 properties:
     minversion: '11.0.0'
     dependencies:
