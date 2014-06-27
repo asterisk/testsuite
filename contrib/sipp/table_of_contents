@@ -120,4 +120,13 @@ Below are descriptions of each of the scenarios.
 	referee.xml and will initiate its call first. Once its call
 	is up, it will send a command to referee.xml, collect its
 	call information in a return command, and initiate the
-	REFER attended transfer.
+	REFER attended transfer. This scenario MUST be started
+	before referee.xml.
+
+* referer_uas.xml
+	This scenario functions as a cooperating counterpart for
+	referee.xml and will accept a call. Once its call is up, it
+	will send a command to referee.xml, collect its call
+	information in a return command, and initiate the REFER
+	attended transfer. This scenario MUST be started before
+	referee.xml.

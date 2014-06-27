@@ -162,12 +162,17 @@ class SIPpTestCase(TestCase):
             # each set of scenarios in the YAML config
             sipp_scenarios = []
             for scenario in scenario_set:
-                ordered_args = scenario.get('ordered-args') or []
-                target = scenario.get('target') or '127.0.0.1'
-                sipp_scenarios.append(SIPpScenario(self.test_name,
-                                                   scenario['key-args'],
-                                                   ordered_args,
-                                                   target=target))
+                if ("coordinated-sender" in scenario
+                    and "coordinated-receiver" in scenario):
+                    sipp_scenarios.append(CoordinatedScenario(self.test_name,
+                                                              scenario))
+                else:
+                    ordered_args = scenario.get('ordered-args') or []
+                    target = scenario.get('target') or '127.0.0.1'
+                    sipp_scenarios.append(SIPpScenario(self.test_name,
+                                                       scenario['key-args'],
+                                                       ordered_args,
+                                                       target=target))
             self.scenarios.append(sipp_scenarios)
 
         final_deferred = defer.Deferred()
@@ -375,7 +380,7 @@ class SIPpScenarioSequence(object):
 class SIPpProtocol(protocol.ProcessProtocol):
     """Class that manages a single SIPp instance"""
 
-    def __init__(self, name, stop_deferred):
+    def __init__(self, name, stop_deferred, start_deferred=None):
         """Create a SIPp process
 
         Keyword Arguments:
@@ -389,6 +394,7 @@ class SIPpProtocol(protocol.ProcessProtocol):
         self.exited = False
         self.stderr = []
         self._stop_deferred = stop_deferred
+        self._start_deferred = start_deferred
 
     def kill(self):
         """Kill the SIPp scenario"""
@@ -407,6 +413,8 @@ class SIPpProtocol(protocol.ProcessProtocol):
     def connectionMade(self):
         """Override of ProcessProtocol.connectionMade"""
         LOGGER.debug("Connection made to SIPp scenario %s" % (self._name))
+        if self._start_deferred:
+            self._start_deferred.callback(self)
 
     def errReceived(self, data):
         """Override of ProcessProtocol.errReceived"""
@@ -501,7 +509,7 @@ class SIPpScenario(object):
             self._process.kill()
         return
 
-    def run(self, test_case=None):
+    def run(self, test_case=None, start_deferred=None):
         """Execute a SIPp scenario
 
         Execute the SIPp scenario that was passed to this object
@@ -585,7 +593,7 @@ class SIPpScenario(object):
             self._test_case = test_case
             exit_deferred.addCallback(__evaluate_scenario_results)
 
-        self._process = SIPpProtocol(self.scenario['scenario'], exit_deferred)
+        self._process = SIPpProtocol(self.scenario['scenario'], exit_deferred, start_deferred)
         reactor.spawnProcess(self._process,
                              sipp_args[0],
                              sipp_args,
@@ -593,6 +601,120 @@ class SIPpScenario(object):
                              None,
                              None)
         return self._our_exit_deferred
+
+class CoordinatedScenario(object):
+    """A SIPp based scenario for the Asterisk testsuite that handles basic 3PCC
+    coordination.
+
+    CoordinatedScenario wraps and builds on the capabilities of SIPpScenario to
+    allow a pair of 3PCC scenarios to launch at the appropriate times to
+    function correctly. The sender scenario will not be started until the
+    receiver scenario comes up and opens its 3PCC port.
+    """
+
+    next_3pcc_port = 5080
+
+    def __init__(self, test_dir, coordinated_config):
+        """
+        Keyword Arguments:
+        test_dir            The path to the directory containing the run-test
+                            file.
+
+        coordinated_config  The configuration to use for the two coordinated
+                            SIPp scenarios. The SIPpScenario configurations are
+                            stored under keys "coordinated-sender" and
+                            "coordinated-receiver". These configs should not
+                            explicitly set 3PCC configurations as it will be
+                            handled automatically.
+        """
+
+        self.coordination_port = CoordinatedScenario.next_3pcc_port
+        CoordinatedScenario.next_3pcc_port += 1
+        coordination_address = '127.0.0.1:%s' % (self.coordination_port)
+
+        receiver_config = coordinated_config["coordinated-receiver"]
+        receiver_config['key-args']['-3pcc'] = coordination_address
+        target = receiver_config.get('target', '127.0.0.1')
+        self.receiver = SIPpScenario(test_dir,
+                                     receiver_config['key-args'],
+                                     receiver_config.get('ordered-args', []),
+                                     target=target)
+
+        sender_config = coordinated_config["coordinated-sender"]
+        sender_config['key-args']['-3pcc'] = coordination_address
+        target = sender_config.get('target', '127.0.0.1')
+        self.sender = SIPpScenario(test_dir,
+                                     sender_config['key-args'],
+                                     sender_config.get('ordered-args', []),
+                                     target=target)
+
+        self.exited = False
+        self.passed = False
+        self.results = []
+        self.name = "Coordinated Scenario %d" % self.coordination_port
+
+
+    def kill(self):
+        """Kill the executing SIPp scenario"""
+        self.sender.kill()
+        self.receiver.kill()
+        return
+
+    def run(self, test_case=None):
+        """Execute a coordinated SIPp scenario
+
+        Execute the set of SIPp scenarios passed to this object
+
+        Keyword Arguments:
+        test_case  If not None, the scenario will automatically evaluate its
+                   pass/fail status at the end of the run. In the event of a
+                   failure, it will fail the test case scenario and call
+                   stop_reactor.
+
+        Returns:
+        A deferred that can be used to determine when the SIPp Scenario
+        has exited.
+        """
+
+        def __scenario_callback(result, exit_deferred):
+            """Callback called when a scenario completes"""
+            self.results.append(result)
+            if self.sender.exited and self.receiver.exited:
+                self.exited = True
+                if self.sender.passed and self.receiver.passed:
+                    self.passed = True
+
+                if self.passed:
+                    LOGGER.info("Coordinated SIPp Scenario %d Exited" %
+                                (self.coordination_port))
+                else:
+                    LOGGER.warning("Coordinated SIPp Scenario %d Failed" %
+                                   (self.coordination_port))
+                exit_deferred.callback(self)
+            return result
+
+        def __receiver_start_callback(result):
+            """Callback for receiver start"""
+            sender_deferred = self.sender.run(test_case)
+            sender_deferred.addCallback(__scenario_callback)
+            return result
+
+        LOGGER.info("Executing coordinated SIPp scenario %d" %
+                    (self.coordination_port))
+
+        # setup callback for the receiver scenario start
+        receiver_start_deferred = defer.Deferred()
+        receiver_start_deferred.addCallback(__receiver_start_callback)
+
+        # setup callback for receiver completion
+        exit_deferred = defer.Deferred()
+        receiver_deferred = self.receiver.run(test_case,
+                                                   receiver_start_deferred)
+        receiver_deferred.addCallback(__scenario_callback, exit_deferred)
+
+
+        return exit_deferred
+
 
 class SIPpTest(TestCase):
     """A SIPp based test for the Asterisk testsuite.

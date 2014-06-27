@@ -1,0 +1,59 @@
+testinfo:
+    summary: Test performing a caller-initiated attended transfer via chan_pjsip.
+    description: |
+        "Originate two SIP calls through Asterisk to remote endpoints and then have
+        one originating call transfer the other via REFER with Replaces header.
+
+        The four SIPp scenarios involved perform the following actions:
+        SIPp #1 (referer.xml) calls through Asterisk to SIPp #2 (uas.xml)
+        SIPp #1 kicks off SIPp #3 (referee.xml) which calls SIPp #4 (uas.xml).
+        SIPp #3 passes call information back to SIPp #1.
+        SIPp #1 initiates an attended transfer via REFER with Replaces information from SIPp #3.
+        SIPp #2 and SIPp #4 are bridged.
+        SIPp #1 and SIPp #3 are hung up.
+        SIPp #2 and SIPp #4 are hung up."
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: sipp.SIPpTestCase
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario':'uas.xml', '-p':'5067', '-m':'2'} }
+                - { 'coordinated-sender': {'key-args': {'scenario':'referer.xml', '-p':'5066'} },
+                    'coordinated-receiver': {'key-args': {'scenario':'referee.xml', '-p':'5065'} } }
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'AttendedTransfer'
+                Result: 'Success'
+        count: 1
+    -
+        type: 'callback'
+        conditions:
+            match:
+                Event: 'Hangup'
+        callbackModule: 'attended_transfer'
+        callbackMethod: 'transfer_complete'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : twisted
+        - python : starpy
+        - asterisk : app_dial
+        - asterisk : chan_pjsip
+    tags:
+        - PJSIP

@@ -1,6 +1,5 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
-    - dir: 'blind_transfer'
-    - dir: 'attended_transfer'
-
+    - test: 'caller_local'
+    - test: 'callee_local'
 
