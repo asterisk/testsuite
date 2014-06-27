@@ -37,6 +37,7 @@ ami-config:
                     Event: 'OutboundRegistrationDetail'
             requirements:
                 match:
+                    ActionID: '12345'
                     ObjectType: 'registration'
                     ObjectName: 'user.*'
                     OutboundAuth: 'reg-auth'
@@ -60,6 +61,7 @@ ami-config:
                     Event: 'AuthDetail'
             requirements:
                 match:
+                    ActionID: '12345'
                     ObjectType: 'auth'
                     ObjectName: 'reg-auth'
                     AuthType: 'userpass'
@@ -77,6 +79,7 @@ ami-config:
                     Event: 'OutboundRegistrationDetailComplete'
             requirements:
                 match:
+                    ActionID: '12345'
                     EventList: 'Complete'
                     Registered: '0'
                     NotRegistered: '5'

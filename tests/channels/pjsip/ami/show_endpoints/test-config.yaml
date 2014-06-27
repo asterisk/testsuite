@@ -37,6 +37,7 @@ ami-config:
                     Event: 'EndpointList'
             requirements:
                 match:
+                    ActionID: '12345'
                     ObjectType: 'endpoint'
                     ObjectName: 'user.*'
                     Transport: 'local'
@@ -54,6 +55,7 @@ ami-config:
                     Event: 'EndpointListComplete'
             requirements:
                 match:
+                    ActionID: '12345'
                     EventList: 'Complete'
                     ListItems: '2'
             count: 1

@@ -37,6 +37,7 @@ ami-config:
                     Event: 'EndpointDetail'
             requirements:
                 match:
+                    ActionID: '12345'
                     ObjectType: 'endpoint'
                     ObjectName: 'user1'
                     SrtpTag32: 'false'
@@ -125,6 +126,7 @@ ami-config:
                     Event: 'AorDetail'
             requirements:
                 match:
+                    ActionID: '12345'
                     ObjectType: aor
                     ObjectName: user1
                     Mailboxes: ''
@@ -147,6 +149,7 @@ ami-config:
                     Event: 'AuthDetail'
             requirements:
                 match:
+                    ActionID: '12345'
                     ObjectType: 'auth'
                     ObjectName: 'user1'
                     AuthType: 'userpass'
@@ -164,6 +167,7 @@ ami-config:
                     Event: 'TransportDetail'
             requirements:
                 match:
+                    ActionID: '12345'
                     ObjectType: 'transport'
                     ObjectName: 'local'
                     Cos: '0'
@@ -194,6 +198,7 @@ ami-config:
                     Event: 'IdentifyDetail'
             requirements:
                 match:
+                    ActionID: '12345'
                     ObjectType: 'identify'
                     ObjectName: 'user1'
                     Endpoint: 'user1'
@@ -206,6 +211,7 @@ ami-config:
                     Event: 'EndpointDetailComplete'
             requirements:
                 match:
+                    ActionID: '12345'
                     EventList: 'Complete'
                     ListItems: '5'
             count: 1

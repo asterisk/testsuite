@@ -18,7 +18,8 @@ from sipp import SIPpScenario
 LOGGER = logging.getLogger(__name__)
 
 ACTION = {
-    "Action":"PJSIPShowRegistrationsInbound"
+    "Action": "PJSIPShowRegistrationsInbound",
+    "ActionID": "12345",
 }
 
 class AMISendTest(TestCase):

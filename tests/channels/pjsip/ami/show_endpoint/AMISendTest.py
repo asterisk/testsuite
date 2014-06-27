@@ -14,8 +14,9 @@ sys.path.append("lib/python/asterisk")
 from test_case import TestCase
 
 ACTION = {
-    "Action":"PJSIPShowEndpoint",
-    "Endpoint":"user1"
+    "Action": "PJSIPShowEndpoint",
+    "ActionID": "12345",
+    "Endpoint": "user1"
 }
 
 class AMISendTest(TestCase):

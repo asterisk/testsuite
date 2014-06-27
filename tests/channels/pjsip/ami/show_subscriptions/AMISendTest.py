@@ -20,7 +20,8 @@ from twisted.internet import reactor
 LOGGER = logging.getLogger(__name__)
 
 ACTION = {
-    "Action":"PJSIPShowSubscriptionsInbound"
+    "Action": "PJSIPShowSubscriptionsInbound",
+    "ActionID": "12345",
 }
 
 class AMISendTest(TestCase):
