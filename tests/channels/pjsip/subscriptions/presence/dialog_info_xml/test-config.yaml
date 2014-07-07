@@ -1,0 +1,35 @@
+testinfo:
+    summary: 'Ensure that dialog-info+xml subscriptions receive the correct NOTIFY body.'
+    description: |
+        'A SIPp test runs that expects to receive NOTIFY messages with certain dialog-info+xml
+        body contents. If these aren't received the test fails.'
+
+properties:
+    minversion: '12.4.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_exten_state'
+        - asterisk: 'res_pjsip_dialog_info_body_generator'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'dialog_info_xml.DialogInfoXML'
+
+sipp-config:
+    reactor-timeout: 30
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'subscribe.xml', '-p': '5061'} }

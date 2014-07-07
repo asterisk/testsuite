@@ -9,3 +9,4 @@ tests:
     - test: 'devstate_repeat'
     - test: 'presencestate_repeat'
     - test: 'presencestate_repeat_okay'
+    - test: 'dialog_info_xml'
