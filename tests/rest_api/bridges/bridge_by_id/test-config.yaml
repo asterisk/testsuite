@@ -117,12 +117,6 @@ ari-config:
             count: 1
             requests:
                 -
-                    # remove the explicit subscription
-                    method: 'delete'
-                    uri: 'applications/testsuite/subscription'
-                    params:
-                        eventSource: 'bridge:MyFirstBridge'
-                -
                     method: 'delete'
                     uri: 'channels/MyFirstChannel'
         -
