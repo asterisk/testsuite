@@ -27,7 +27,7 @@ def on_channel_destroyed(ari, event, test_object):
 	global CHANNELS
 	LOGGER.debug("on_channel_destroyed: %s" % str(event.get('channel')))
 	CHANNELS += 1
-	if CHANNELS == 25:
+	if CHANNELS == 50:
 		LOGGER.info("All channels destroyed")
 		test_object.set_passed(True)
 		test_object.stop_reactor()

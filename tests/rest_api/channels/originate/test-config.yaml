@@ -37,7 +37,7 @@ ari-config:
                 match:
                     type: ChannelDestroyed
                     application: testsuite
-            count: 25
+            count: 50
             callback:
                 module: channel_originate
                 method: on_channel_destroyed
