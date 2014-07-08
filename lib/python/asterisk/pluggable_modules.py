@@ -15,6 +15,7 @@ import shutil
 sys.path.append("lib/python")
 from ami import AMIEventInstance
 from twisted.internet import reactor
+from starpy import fastagi
 
 LOGGER = logging.getLogger(__name__)
 
@@ -335,3 +336,69 @@ class CallFiles(object):
 
         shutil.move(src_file, dst_file)
         os.utime(dst_file, None)
+
+class FastAGIModule(object):
+    """A class that makes a FastAGI server available to be called via the
+    dialplan and allows simple commands to be executed.
+
+    Configuration is as follows:
+    config-section:
+        host: '127.0.0.1'
+        port: 4573
+        commands:
+            - 'SET VARIABLE "CHANVAR1" "CHANVAL1"'
+
+    Instead of commands, a callback may be specified to interact with Asterisk:
+        callback:
+            module: fast_agi_callback_module
+            method: fast_agi_callback_method
+    """
+
+    def __init__(self, instance_config, test_object):
+        """Constructor for pluggable modules"""
+        super(FastAGIModule, self).__init__()
+        self.test_object = test_object
+        self.port = instance_config.get('port', 4573)
+        self.host = instance_config.get('host', '127.0.0.1')
+        self.commands = instance_config.get('commands')
+	if 'callback' in instance_config:
+            self.callback_module = instance_config['callback']['module']
+            self.callback_method = instance_config['callback']['method']
+        fastagi_factory = fastagi.FastAGIFactory(self.fastagi_connect)
+        reactor.listenTCP(self.port, fastagi_factory,
+            test_object.reactor_timeout, self.host)
+
+    def fastagi_connect(self, agi):
+        """Handle incoming connections"""
+	if self.commands:
+            return self.execute_command(agi, 0)
+        else:
+            callback_module = __import__(self.callback_module)
+            method = getattr(callback_module, self.callback_method)
+            method(self.test_object, agi)
+
+    def on_command_failure(self, reason, agi, idx):
+        """Failure handler for executing commands"""
+        LOGGER.error('Could not execute command %s: %s' %
+                     (idx, self.commands[idx]))
+        LOGGER.error(reason.getTraceback())
+        agi.finish()
+
+    def on_command_success(self, result, agi, idx):
+        """Handler for executing commands"""
+        LOGGER.debug("Successfully executed '%s': %s" %
+                     (self.commands[idx],
+                      result))
+        self.execute_command(agi, idx + 1)
+
+    def execute_command(self, agi, idx):
+        """Execute the requested command"""
+        if len(self.commands) <= idx:
+            LOGGER.debug("Completed all commands for %s:%s" % (self.host,
+                         self.port))
+            agi.finish()
+            return
+
+        agi.sendCommand(self.commands[idx]
+        ).addCallback(self.on_command_success, agi, idx
+        ).addErrback(self.on_command_failure, agi, idx)
