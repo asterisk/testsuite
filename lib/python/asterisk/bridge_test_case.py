@@ -30,7 +30,10 @@ class BridgeTestCase(TestCase):
             'automon' : 4,
             'automixmon' : 5,
             'parkcall' : 6,
-            'atxferthreeway' : 7
+            'atxferthreeway' : 7,
+            # other arbitrary DTMF features can be matched under DTMF code 8
+            # as "unknown"
+            'unknown' : 8
             }
 
     def __init__(self, test_path='', test_config=None):
