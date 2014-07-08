@@ -46,6 +46,8 @@ ari-config:
                     type: StasisStart
                     application: testsuite
                     args: []
+                    channel:
+                        name: 'Local/s@default-.*'
             count: 1
             callback:
                 module: attended_transfer
