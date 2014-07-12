@@ -48,7 +48,7 @@ class Scenario(object):
             test.passed = False
             test.stop_reactor()
 
-        if resp.headers['Access-Control-Allow-Origin'] is None:
+        if resp.headers.get('Access-Control-Allow-Origin') is None:
             if expect_headers == True:
                 LOGGER.error("Expected Access-Control-Allow-Origin header.")
                 test.passed = False
