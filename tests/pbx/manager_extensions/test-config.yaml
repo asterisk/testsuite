@@ -1,0 +1,271 @@
+testinfo:
+    summary: 'Test manager commands that add and remove dialplan extensions'
+    description: |
+        'Working from a basic dialplan, some extensions are removed with
+        the DialplanExtensionRemove command while others are added with the
+        DialplanExtensionAdd command in such a way that whole extensions are
+        removed, single priorities of extensions are removed, priorities in
+        existing extensions are replaced, and new extensions are created.
+        Afterwards, calls are originated to each of the extensions involved
+        to make sure that all events for the remaining extensions and the
+        new extensions are received while calls to extensions and priorities
+        that were removed/replaced do not generate any such events.'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: 'control-config'
+        typename: 'ami_extension_control.AMIExtensionControl'
+    modules:
+        -
+            config-section: 'ami-events-config'
+            typename: 'ami.AMIEventModule'
+
+control-config:
+    commands:
+        -
+            # Test 1: Simple remove existing extension w/ priority
+            expected-response: 'Success'
+            command:
+                Action: 'DialplanExtensionRemove'
+                Context: 'alpha'
+                Extension: 'test1'
+                Priority: '4'
+                ActionID: 'testaction1'
+        -
+            # Test 2: Remove existing whole extension
+            expected-response: 'Success'
+            command:
+                Action: 'DialplanExtensionRemove'
+                Context: 'alpha'
+                Extension: 'test2'
+                ActionID: 'testaction2'
+        -
+            # Test 3: Simple add extension
+            expected-response: 'Success'
+            command:
+                Action: 'DialplanExtensionAdd'
+                Context: 'beta'
+                Extension: 'test3'
+                Priority: '1'
+                Application: 'Answer'
+                ActionID: 'testaction3_1'
+        -
+            expected-response: 'Success'
+            command:
+                Action: 'DialplanExtensionAdd'
+                Context: 'beta'
+                Extension: 'test3'
+                Priority: '2'
+                Application: 'UserEvent'
+                ApplicationData: 'ExtensionTest,Expected: Yes,Extension: ${EXTEN}'
+                ActionID: 'testaction3_2'
+        -
+            # Test 4: Add Extension with CID matching that won't match
+            expected-response: 'Success'
+            command:
+                Action: 'DialplanExtensionAdd'
+                Context: 'beta'
+                Extension: 'test4/unmatchable'
+                Priority: '1'
+                Application: 'Answer'
+                ActionID: 'testaction4_1'
+        -
+            expected-response: 'Success'
+            command:
+                Action: 'DialplanExtensionAdd'
+                Context: 'beta'
+                Extension: 'test4/unmatchable'
+                Priority: '2'
+                Application: 'UserEvent'
+                ApplicationData: 'ExtensionTest,Expected: No,Extension: ${EXTEN}'
+                ActionID: 'testaction4_2'
+        -
+            # Test 5: Add Extension with CID matching that will match
+            expected-response: 'Success'
+            command:
+                Action: 'DialplanExtensionAdd'
+                Context: 'beta'
+                Extension: 'test5/1337'
+                Priority: '1'
+                Application: 'Answer'
+                ActionID: 'testaction5_1'
+        -
+            expected-response: 'Success'
+            command:
+                Action: 'DialplanExtensionAdd'
+                Context: 'beta'
+                Extension: 'test5/1337'
+                Priority: '2'
+                Application: 'UserEvent'
+                ApplicationData: 'ExtensionTest,Expected: Yes,Extension: ${EXTEN}'
+                ActionID: 'testaction5_2'
+        -
+            # Test 6: Add Extension that replaces an existing priority
+            expected-response: 'Success'
+            command:
+                Action: 'DialplanExtensionAdd'
+                Context: 'alpha'
+                Extension: 'test6'
+                Priority: '3'
+                Application: 'UserEvent'
+                ApplicationData: 'ExtensionTest,Expected: Yes,Extension: ${EXTEN}'
+                Replace: 'yes'
+                ActionID: 'testaction6'
+        -
+            # Test 7: Failure to add extension because it already exists
+            expected-response: 'Error'
+            command:
+                Action: 'DialplanExtensionAdd'
+                Context: 'alpha'
+                Extension: 'test7'
+                Priority: '3'
+                Application: 'UserEvent'
+                ApplicationData: 'ExtensionTest,Expected: No,Extension: ${EXTEN}'
+                Replace: 'no'
+                ActionID: 'testaction7'
+        -
+            # Test 8: Remove an extension with caller ID matching
+            expected-response: 'Success'
+            command:
+                Action: 'DialplanExtensionRemove'
+                Context: 'alpha'
+                Extension: 'test8/1337'
+                Priority: '4'
+                ActionID: 'testaction8'
+        -
+            # Test 9: Failure to add extension because a priority isn't set
+            # No originate needed to test this
+            expected-response: 'Error'
+            command:
+                Action: 'DialplanExtensionAdd'
+                Context: 'beta'
+                Extension: 'test9'
+                Application: 'NoOp'
+                ActionID: 'testaction9'
+        -
+            # Test 10: Failure to add extension because application isn't set
+            # No originate needed to test this
+            expected-response: 'Error'
+            command:
+                Action: 'DialplanExtensionAdd'
+                Context: 'beta'
+                Extension: 'test10'
+                Priority: '1'
+                ActionID: 'testaction10'
+        -
+            # Test 11: Failure to remove extension because it doesn't exist
+            # No originate needed to test this
+            expected-response: 'Error'
+            command:
+                Action: 'DialplanExtensionRemove'
+                Context: 'alpha'
+                Extension: 'test11'
+                ActionID: 'testaction11'
+
+    originates:
+        -
+            channel: 'LOCAL/test1@alpha'
+        -
+            channel: 'LOCAL/test2@alpha'
+        -
+            channel: 'LOCAL/test3@beta'
+        -
+            channel: 'LOCAL/test4@beta'
+        -
+            channel: 'LOCAL/test5@beta'
+        -
+            channel: 'LOCAL/test6@alpha'
+        -
+            channel: 'LOCAL/test7@alpha'
+        -
+            channel: 'LOCAL/test8@alpha'
+
+ami-events-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'ExtensionTest'
+                Expected: 'Yes'
+                Extension: 'test1'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'ExtensionDNE'
+                Extension: 'test2'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'ExtensionTest'
+                Expected: 'Yes'
+                Extension: 'test3'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'ExtensionDNE'
+                Extension: 'test4'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'ExtensionTest'
+                Expected: 'Yes'
+                Extension: 'test5'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'ExtensionTest'
+                Expected: 'Yes'
+                Extension: 'test6'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'ExtensionTest'
+                Expected: 'Yes'
+                Extension: 'test7'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'ExtensionTest'
+                Expected: 'Yes'
+                Extension: 'test8'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'ExtensionTest'
+                Expected: 'No'
+        count: '0'
+
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - pbx
