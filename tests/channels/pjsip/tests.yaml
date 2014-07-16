@@ -23,3 +23,4 @@ tests:
     - test: 'info_dtmf'
     - test: 'call_pickup'
     - dir: 'video_calls'
+    - test: 'accountcode'

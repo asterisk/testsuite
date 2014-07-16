@@ -1,0 +1,46 @@
+testinfo:
+    summary:     'Test that a PJSIP channel can be assigned an accountcode'
+    description: |
+        'This test dials a PJSIP channel associated with endpoint alice,
+        where alice has a default accountcode associated with her endpoint.
+        The test verifies that the channel has the accountcode specified
+        by the endpoint configuration.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -
+            channel: 'Local/dial_alice@default'
+            application: 'Echo'
+            async: True
+
+ami-config:
+    # Alice events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'PJSIP/alice-.*'
+        requirements:
+            match:
+                AccountCode: 'alice1234'
+        count: '2'
+
+properties:
+    minversion: '12.5.0'
+    dependencies:
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+        - accountcode
