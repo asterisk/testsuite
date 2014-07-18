@@ -394,6 +394,12 @@ class TestCase(object):
             # Call the overridable method now
             self.stop_asterisk()
 
+            if not isinstance(self.ami, list):
+                LOGGER.error("self.ami not iterable for teardown: %s"
+                    % str(self.ami))
+                __stop_instances(None)
+                return
+
             # tear down AMI instances
             ami_defers = []
             for ami in self.ami:
