@@ -388,41 +388,18 @@ class TestCase(object):
             self._stop_deferred.callback(self)
             return result
 
-        def __stop_ami(result):
-            """Tear down AMI connections"""
-
-            # Call the overridable method now
-            self.stop_asterisk()
-
-            if not isinstance(self.ami, list):
-                LOGGER.error("self.ami not iterable for teardown: %s"
-                    % str(self.ami))
-                __stop_instances(None)
-                return
-
-            # tear down AMI instances
-            ami_defers = []
-            for ami in self.ami:
-                if ami:
-                    ami_defers.append(ami.logoff())
-
-            defer.DeferredList(ami_defers).addCallback(
-                __stop_instances).addErrback(__ami_stop_fail)
-
-        def __ami_stop_fail(result):
-            """Handle AMI stop failure"""
-            LOGGER.error("Failed to tear down AMI connection(s)")
-            __stop_instances(result)
-
         def __stop_instances(result):
             """Stop the instances"""
 
+            # Call the overridable method now
+            self.stop_asterisk()
             # Gather up the stopped defers; check success failure of stopping
             # when all instances of Asterisk have stopped
             stop_defers = []
             for index, item in enumerate(self.ast):
                 LOGGER.info("Stopping Asterisk instance %d" % (index + 1))
-                stop_defers.append(item.stop())
+                temp_defer = self.ast[index].stop()
+                stop_defers.append(temp_defer)
 
             defer.DeferredList(stop_defers).addCallback(
                 __check_success_failure)
@@ -431,9 +408,9 @@ class TestCase(object):
         self._stop_deferred = defer.Deferred()
         deferred = self.condition_controller.evaluate_post_checks()
         if deferred:
-            deferred.addCallback(__stop_ami)
+            deferred.addCallback(__stop_instances)
         else:
-            __stop_ami(None)
+            __stop_instances(None)
         return self._stop_deferred
 
     def stop_reactor(self):
