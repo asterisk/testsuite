@@ -14,3 +14,4 @@ tests:
     - dir:  'mailbox'
     - test: 'chunked-transfer'
     - dir:  'events'
+    - dir:  'message'

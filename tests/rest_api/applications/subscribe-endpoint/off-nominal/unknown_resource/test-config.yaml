@@ -1,0 +1,40 @@
+testinfo:
+    summary: Test off-nominal subscribing to an unknown resource
+    description: |
+        This test covers subscribing to an endpoint with a valid
+        technology, but an invalid resource. The test verifies
+        we get back a 422 response.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/applications/subscribe-endpoint'
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: subscriber
+            typename: 'subscriber.ResourceSubscription'
+
+test-object-config:
+    asterisk-instances: 1
+    test-iterations: 'None'
+
+subscriber:
+    id: 0
+    subscribe-only: True
+    subscriptions:
+        - { event-source: 'endpoint:PJSIP/alice', app: 'testsuite', expected-response: 422 }
+
+properties:
+    minversion: '12.5.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : chan_pjsip
+    tags:
+        - ARI
+

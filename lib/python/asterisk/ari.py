@@ -198,6 +198,9 @@ class AriTestObject(AriBaseTestObject):
     def execute_test(self):
         """Execute the current iteration of the test"""
 
+        if not isinstance(self.iterations, list):
+            return
+
         if (self.test_iteration == len(self.iterations)):
             LOGGER.info("All iterations executed; stopping")
             self.stop_reactor()

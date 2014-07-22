@@ -1,0 +1,149 @@
+testinfo:
+    summary: Test subscribing to a technology from an application.
+    description: |
+        This test covers nominal subscribing to an endpoint through
+        its technology and receiving events about the endpoints and
+        the channels associated with that endpoint. The test:
+        - Subscribes for updates about IAX2
+        - Originates a Local channel that dials an IAX2 endpoint
+          (alice/alice) and a PJSIP channel that dial a PJSIP
+          endpoint (bob). Both alice and bob are on the ast2
+          instance.
+        - The test verifies that we receive no updates about the
+          PJSIP resource (as we didn't subscribe for it), and that
+          we receive endpoint state notifications for the IAX2
+          resource and its channel.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/applications/subscribe-endpoint'
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: hangup-channel
+            typename: 'pluggable_modules.AMIChannelHangup'
+        -
+            config-section: subscriber
+            typename: 'subscriber.ResourceSubscription'
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+
+test-object-config:
+    asterisk-instances: 2
+    test-iterations:
+        -
+            channel: 'Local/dial_alice@default'
+            context: 'default'
+            exten: 'dial_bob'
+            priority: '1'
+
+hangup-channel:
+    id: '1'
+    conditions:
+        match:
+            Event: 'UserEvent'
+            Status: 'Bob'
+    count: '1'
+
+
+subscriber:
+    id: 0
+    subscriptions:
+        - { event-source: 'endpoint:IAX2', app: 'testsuite' }
+
+ari-config:
+    events:
+        -   conditions:
+                match:
+                    type: EndpointStateChange
+                    application: testsuite
+                    endpoint:
+                        technology: IAX2
+                        resource: alice
+                        state: unknown
+                        channel_ids: ['.*']
+            count: 1
+        -   conditions:
+                match:
+                    type: EndpointStateChange
+                    application: testsuite
+                    endpoint:
+                        technology: PJSIP
+                        resource: bob
+                        state: online
+                        channel_ids: ['.*']
+            count: 0
+        -   conditions:
+                match:
+                    type: ChannelCreated
+                    application: testsuite
+                    channel:
+                        name: 'IAX2/alice-.*'
+                        state: Down
+                        dialplan: { context: 'default', exten: 's', priority: 1 }
+            count: 1
+        -   conditions:
+                match:
+                    type: ChannelStateChange
+                    application: testsuite
+                    channel:
+                        name: 'IAX2/alice-.*'
+                        state: Ringing
+            count: 1
+        -   conditions:
+                match:
+                    type: ChannelStateChange
+                    application: testsuite
+                    channel:
+                        name: 'IAX2/alice-.*'
+                        state: Up
+            count: 1
+        -   conditions:
+                match:
+                    type: ChannelHangupRequest
+                    application: testsuite
+                    channel:
+                        name: 'IAX2/alice-.*'
+                        state: Up
+            count: 1
+        -   conditions:
+                match:
+                    type: ChannelDestroyed
+                    application: testsuite
+                    cause: 16
+                    cause_txt: 'Normal Clearing'
+                    channel:
+                        name: 'IAX2/alice-.*'
+                        state: Up
+            count: 1
+        -   conditions:
+                match:
+                    type: EndpointStateChange
+                    application: testsuite
+                    endpoint:
+                        technology: IAX2
+                        resource: alice
+                        state: unknown
+                        channel_ids: []
+            count: 1
+
+
+properties:
+    minversion: '12.5.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+        - asterisk : app_userevent
+        - asterisk : chan_pjsip
+        - asterisk : chan_iax2
+    tags:
+        - ARI
+

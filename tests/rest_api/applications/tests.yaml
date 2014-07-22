@@ -2,8 +2,7 @@
 tests:
     - test: 'errors'
     - test: 'subscribe-channel'
-# Endpoint test requires an actual SIP endpoint in an ARI test
-#    - test: 'subscribe-endpoint'
+    - dir: 'subscribe-endpoint'
     - test: 'subscribe-bridge'
     - test: 'subscribe-device-state'
     - test: 'double-subscribe-device-state'
