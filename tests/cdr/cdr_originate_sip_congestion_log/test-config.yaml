@@ -79,5 +79,6 @@ properties:
         - python : 'starpy'
         - asterisk : 'chan_sip'
     tags:
+        - accountcode
         - SIP
         - CDR

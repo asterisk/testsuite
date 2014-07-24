@@ -728,6 +728,8 @@ class SimpleTestCase(TestCase):
         # unique ID we've assigned, allowing us to associate the Asterisk
         # channel name with the channel we originated
         msg = "Originating call to %s" % call_details['channel']
+        if 'account' not in call_details:
+            call_details['account'] = None
         if 'async' not in call_details:
             call_details['async'] = False
         if 'channelid' not in call_details:
@@ -739,6 +741,7 @@ class SimpleTestCase(TestCase):
             deferred = ami.originate(channel=call_details['channel'],
                                      application=call_details['application'],
                                      variable=call_details['variable'],
+                                     account=call_details['account'],
                                      async=call_details['async'],
                                      channelid=call_details['channelid'],
                                      otherchannelid=call_details['otherchannelid'])
@@ -751,6 +754,7 @@ class SimpleTestCase(TestCase):
                                      exten=call_details['exten'],
                                      priority=call_details['priority'],
                                      variable=call_details['variable'],
+                                     account=call_details['account'],
                                      async=call_details['async'],
                                      channelid=call_details['channelid'],
                                      otherchannelid=call_details['otherchannelid'])

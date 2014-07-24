@@ -1,0 +1,77 @@
+testinfo:
+    summary:     'Test queue channel accountcode propagation (agent bob keeps accountcode)'
+    description: |
+        'The test checks that agent bob keeps his accountcode when alice does not have any.
+        1) alice does not have an accountcode or a peeraccount set
+        2) alice gets agent bob
+        3) bob has an accountcode when his channel is created
+        4) bob keeps his accountcode'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: hangup-config
+            typename: 'pluggable_modules.AMIChannelHangup'
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -
+            channel: 'Local/alice@default'
+            application: 'Echo'
+            async: True
+
+ami-config:
+    # Alice events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'CEL'
+                Channel: 'Local/alice@default-.*'
+                EventName: 'BRIDGE_EXIT'
+        requirements:
+            match:
+                AccountCode: ''
+                PeerAccount: 'bob_config'
+        count: '1'
+    # Bob events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'CEL'
+                Channel: 'PJSIP/bob-.*'
+                EventName: 'BRIDGE_EXIT'
+        requirements:
+            match:
+                AccountCode: 'bob_config'
+                PeerAccount: ''
+        count: '1'
+
+hangup-config:
+    type: 'headermatch'
+    conditions:
+        match:
+            Event: 'CEL'
+            EventName: 'BRIDGE_ENTER'
+            Peer: 'Local/alice@default-.*|PJSIP/bob-.*'
+            Channel: 'Local/alice@default-.*|PJSIP/bob-.*'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - asterisk : 'app_echo'
+        - asterisk : 'app_queue'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+        - accountcode

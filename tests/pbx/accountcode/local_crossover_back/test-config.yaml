@@ -1,0 +1,126 @@
+testinfo:
+    summary:     'Test local channel accountcode crossover back propagation'
+    description: |
+        'The test checks that local;1 and local;2 have accountcode/peeraccount
+        crossed over and account code changes on local;2 back propagate to local;1.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: hangup-config
+            typename: 'pluggable_modules.AMIChannelHangup'
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -
+            channel: 'Local/alice@default'
+            application: 'Echo'
+            async: True
+
+ami-config:
+    # Alice events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'CEL'
+                Channel: 'Local/alice@default-.*;2'
+                EventName: 'ANSWER'
+        requirements:
+            match:
+                AccountCode: 'alice_acct'
+                PeerAccount: 'alice_peer'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'CEL'
+                Channel: 'Local/alice@default-.*'
+                EventName: 'BRIDGE_EXIT'
+        requirements:
+            match:
+                AccountCode: 'alice_acct'
+                PeerAccount: 'bob_peer'
+        count: '1'
+    # Bob events for Local;1
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'CEL'
+                Channel: 'Local/bob@default-.*;1'
+                EventName: 'ANSWER'
+        requirements:
+            match:
+                AccountCode: 'bob_peer'
+                PeerAccount: 'bob_acct'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'CEL'
+                Channel: 'Local/bob@default-.*'
+                EventName: 'BRIDGE_EXIT'
+        requirements:
+            match:
+                AccountCode: 'bob_peer'
+                PeerAccount: 'alice_acct'
+        count: '1'
+    # Bob events for Local;2
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'CEL'
+                Channel: 'Local/bob@default-.*;2'
+                EventName: 'ANSWER'
+        requirements:
+            match:
+                AccountCode: 'bob_acct'
+                PeerAccount: 'bob_peer'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'CEL'
+                Channel: 'Local/bob@default-.*;2'
+                EventName: 'CHAN_END'
+        requirements:
+            match:
+                AccountCode: 'bob_acct'
+                PeerAccount: 'bob_peer'
+        count: '1'
+
+hangup-config:
+    type: 'headermatch'
+    conditions:
+        match:
+            Event: 'CEL'
+            EventName: 'BRIDGE_ENTER'
+            Peer: 'Local/alice@default-.*|Local/bob@default-.*'
+            Channel: 'Local/alice@default-.*|Local/bob@default-.*'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - asterisk : 'app_dial'
+        - asterisk : 'app_echo'
+        - asterisk : 'func_channel'
+    tags:
+        - accountcode

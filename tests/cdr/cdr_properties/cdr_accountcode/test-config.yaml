@@ -142,5 +142,6 @@ properties:
         - python : 'starpy'
         - asterisk : 'cdr_csv'
     tags:
+        - accountcode
         - CDR
         - chan_local

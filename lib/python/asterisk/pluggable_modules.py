@@ -42,6 +42,7 @@ class Originator(object):
             'scenario-trigger-after': None,
             'scenario-name': None,
             'id': '0',
+            'account': None,
             'async': 'False',
             'event': None,
             'timeout': None,
@@ -111,12 +112,14 @@ class Originator(object):
                                exten=self.config['exten'],
                                priority=self.config['priority'],
                                timeout=self.config['timeout'],
+                               account=self.config['account'],
                                async=self.config['async'])
         else:
             deferred = self.ami.originate(channel=self.config['channel'],
                                application=self.config['application'],
                                data=self.config['data'],
                                timeout=self.config['timeout'],
+                               account=self.config['account'],
                                async=self.config['async'])
         deferred.addErrback(self.failure)
 

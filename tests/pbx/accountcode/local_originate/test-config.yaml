@@ -1,0 +1,58 @@
+testinfo:
+    summary:     'Test accountcode with call origination'
+    description: |
+        'The test checks that AMI call origination sets the accountcode and peeraccount.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -
+            channel: 'Local/alice@default'
+            account: 'orig_acct'
+            application: 'Echo'
+            async: True
+
+ami-config:
+    # Alice events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'CEL'
+                Channel: 'Local/alice@default-.*;1'
+                EventName: 'ANSWER'
+        requirements:
+            match:
+                AccountCode: 'orig_acct'
+                PeerAccount: 'orig_acct'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'CEL'
+                Channel: 'Local/alice@default-.*;2'
+                EventName: 'ANSWER'
+        requirements:
+            match:
+                AccountCode: 'orig_acct'
+                PeerAccount: 'orig_acct'
+        count: '1'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - asterisk : 'app_echo'
+    tags:
+        - accountcode

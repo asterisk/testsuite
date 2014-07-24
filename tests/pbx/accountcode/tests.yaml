@@ -1,0 +1,14 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'dial_none'
+    - test: 'dial_peer_none'
+    - test: 'dial_peer_override'
+    - test: 'dial_predial'
+    - test: 'dial_straight_none'
+    - test: 'dial_straight_override'
+    - test: 'local_crossover'
+    - test: 'local_crossover_back'
+    - test: 'local_originate'
+    - test: 'queue_none'
+    - test: 'queue_peer_none'
+    - test: 'queue_peer_preserve'

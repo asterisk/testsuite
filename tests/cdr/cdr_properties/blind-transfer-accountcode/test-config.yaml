@@ -18,6 +18,7 @@ properties:
         - asterisk : 'cdr_csv'
         - asterisk : 'chan_sip'
     tags:
+        - accountcode
         - CDR
         - SIP
         - transfer

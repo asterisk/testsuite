@@ -1,0 +1,80 @@
+testinfo:
+    summary:     'Test dial channel accountcode propagation straight to bob'
+    description: |
+        'The test checks the straight accountcode propagation to an
+        outgoing channel that already has an accountcode.
+        1) alice has an accountcode set but does not have a peeraccount set
+        2) alice calls bob
+        3) bob has an accountcode when his channel is created
+        4) bob gets the accountcode of alice'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: hangup-config
+            typename: 'pluggable_modules.AMIChannelHangup'
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -
+            channel: 'Local/alice@default'
+            application: 'Echo'
+            async: True
+
+ami-config:
+    # Alice events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'CEL'
+                Channel: 'Local/alice@default-.*'
+                EventName: 'BRIDGE_EXIT'
+        requirements:
+            match:
+                AccountCode: 'alice_dialplan'
+                PeerAccount: 'alice_dialplan'
+        count: '1'
+    # Bob events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'CEL'
+                Channel: 'PJSIP/bob-.*'
+                EventName: 'BRIDGE_EXIT'
+        requirements:
+            match:
+                AccountCode: 'alice_dialplan'
+                PeerAccount: 'alice_dialplan'
+        count: '1'
+
+hangup-config:
+    type: 'headermatch'
+    conditions:
+        match:
+            Event: 'CEL'
+            EventName: 'BRIDGE_ENTER'
+            Peer: 'Local/alice@default-.*|PJSIP/bob-.*'
+            Channel: 'Local/alice@default-.*|PJSIP/bob-.*'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - asterisk : 'app_dial'
+        - asterisk : 'app_echo'
+        - asterisk : 'func_channel'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+        - accountcode
+

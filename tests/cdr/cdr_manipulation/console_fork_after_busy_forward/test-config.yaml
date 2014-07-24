@@ -103,5 +103,6 @@ properties:
         - asterisk : 'cdr_csv'
         - asterisk : 'chan_sip'
     tags:
+        - accountcode
         - CDR
         - chan_local
