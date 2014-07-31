@@ -9,7 +9,10 @@ tests:
     - dir:  'danger'
     - test: 'originate'
     - test: 'device_state_changed'
+    - test: 'device_state_list'
+    - test: 'exten_state_list'
     - test: 'presence_state_changed'
+    - test: 'presence_state_list'
     - test: 'manager_vars'
     - test: 'status'
     # Temporarily disabled while failures are debugged

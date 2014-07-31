@@ -1,0 +1,31 @@
+testinfo:
+    summary: 'Test the ExtensionStateList AMI action.'
+    description: |
+        Two extension states are set from both device
+        state and presence state values. The ExtensionStateList
+        command is executed, and the expected events are
+        evaluated.
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+    tags:
+        - AMI
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: presence-state-list
+            typename: 'ami_exten_state_list.AMIExtensionStateList'
+
+test-object-config:
+    asterisk-instances: 1
+    connect-ami: True
+
+presence-state-list:
