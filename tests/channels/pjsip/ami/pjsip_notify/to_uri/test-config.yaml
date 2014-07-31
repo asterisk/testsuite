@@ -1,0 +1,34 @@
+tinfo:
+    summary: 'Test PJSIPNotify AMI Action for content order'
+    description: |
+        This Tests the AMI Action PJSIPNotify in order to make sure
+        that Content section is put into the body of the NOTIFY in
+        the same order that it was specified in the request.
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpAMIActionTestCase'
+
+sipp-config:
+    reactor-timeout: 15
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'options.xml', '-p': '5062'} }
+    ami-action:
+        delay: 1
+        args:
+            Action: "PJSIPNotify"
+            URI: "sip:user1@127.0.0.1:5062"
+            Variable: "Content-Type=lettuce/varieties,Content=Bibb,Content=Boston,Content=Iceberg,Content=Romaine"

@@ -3,3 +3,4 @@ tests:
     - test: 'custom_headers'
     - test: 'reserved_headers'
     - test: 'content'
+    - test: 'to_uri'
