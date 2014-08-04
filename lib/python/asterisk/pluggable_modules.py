@@ -59,7 +59,7 @@ class Originator(object):
             if (self.config['scenario-trigger-after'] is not None and
                     self.config['scenario-name'] is not None):
                 LOGGER.error("Conflict between 'scenario-trigger-after' and "
-                        "'scenario-name'. Only one may be used.")
+                             "'scenario-name'. Only one may be used.")
                 raise Exception
             else:
                 test_object.register_scenario_started_observer(
@@ -74,13 +74,15 @@ class Originator(object):
             if 'id' not in self.config['event']:
                 self.config['event']['id'] = self.config['id']
 
-            self.ami_callback = AMIPrivateCallbackInstance(self.config['event'],
-                                    test_object, self.originate_callback)
+            callback = AMIPrivateCallbackInstance(self.config['event'],
+                                                  test_object,
+                                                  self.originate_callback)
+            self.ami_callback = callback
         return
 
     def ami_connect(self, ami):
         """Handle new AMI connections."""
-        LOGGER.info("AMI %s connected" % (str(ami.id)))
+        LOGGER.info("AMI %s connected", str(ami.id))
         if str(ami.id) == self.config['id']:
             self.ami = ami
             if self.config['trigger'] == 'ami_connect':
@@ -91,7 +93,7 @@ class Originator(object):
         """Handle origination failure."""
 
         if self.config['ignore-originate-failure'] == 'no':
-            LOGGER.info("Originate failed: %s" % (str(result)))
+            LOGGER.info("Originate failed: %s", str(result))
             self.test_object.set_passed(False)
         return None
 
@@ -105,30 +107,30 @@ class Originator(object):
         """Originate the call"""
         LOGGER.info("Originating call")
 
-        deferred = None
+        defer = None
         if len(self.config['context']) > 0:
-            deferred = self.ami.originate(channel=self.config['channel'],
-                               context=self.config['context'],
-                               exten=self.config['exten'],
-                               priority=self.config['priority'],
-                               timeout=self.config['timeout'],
-                               account=self.config['account'],
-                               async=self.config['async'])
+            defer = self.ami.originate(channel=self.config['channel'],
+                                       context=self.config['context'],
+                                       exten=self.config['exten'],
+                                       priority=self.config['priority'],
+                                       timeout=self.config['timeout'],
+                                       account=self.config['account'],
+                                       async=self.config['async'])
         else:
-            deferred = self.ami.originate(channel=self.config['channel'],
-                               application=self.config['application'],
-                               data=self.config['data'],
-                               timeout=self.config['timeout'],
-                               account=self.config['account'],
-                               async=self.config['async'])
-        deferred.addErrback(self.failure)
+            defer = self.ami.originate(channel=self.config['channel'],
+                                       application=self.config['application'],
+                                       data=self.config['data'],
+                                       timeout=self.config['timeout'],
+                                       account=self.config['account'],
+                                       async=self.config['async'])
+        defer.addErrback(self.failure)
 
     def scenario_started(self, result):
         """Handle origination on scenario start if configured to do so."""
-        LOGGER.info("Scenario '%s' started" % result.name)
+        LOGGER.info("Scenario '%s' started", result.name)
         if self.config['scenario-name'] is not None:
             if result.name == self.config['scenario-name']:
-                LOGGER.debug("Scenario name '%s' matched" % result.name)
+                LOGGER.debug("Scenario name '%s' matched", result.name)
                 self.originate_call()
         elif self.config['scenario-trigger-after'] is not None:
             self.scenario_count += 1
@@ -182,7 +184,7 @@ class AMIChannelHangup(AMIEventInstance):
             return
         if 'channel' not in event:
             return
-        LOGGER.info("Hanging up channel %s" % event['channel'])
+        LOGGER.info("Hanging up channel %s", event['channel'])
         self.hungup_channel = True
         reactor.callLater(self.delay, ami.hangup, event['channel'])
         return (ami, event)
@@ -210,8 +212,9 @@ class AMIChannelHangupAll(AMIEventInstance):
 
     def __hangup_handler(self, ami, event):
         """Hangup event handler"""
-        objects = [x for x in self.channels if (x['id'] == ami.id and
-                                            x['channel'] == event['channel'])]
+        objects = [x for x in self.channels if
+                   (x['id'] == ami.id and
+                    x['channel'] == event['channel'])]
         for obj in objects:
             self.channels.remove(obj)
 
@@ -224,7 +227,7 @@ class AMIChannelHangupAll(AMIEventInstance):
 
         objects = [x for x in self.channels if x['id'] == ami.id]
         for obj in objects:
-            LOGGER.info("Hanging up channel %s" % obj['channel'])
+            LOGGER.info("Hanging up channel %s", obj['channel'])
             ami.hangup(obj['channel']).addErrback(__hangup_ignore)
             self.channels.remove(obj)
 
@@ -241,7 +244,7 @@ class HangupMonitor(object):
     def __init__(self, instance_config, test_object):
         """Constructor for pluggable modules"""
         super(HangupMonitor, self).__init__()
-        self.__dict__.update(instance_config)
+        self.config = instance_config
         self.test_object = test_object
         self.test_object.register_ami_observer(self.__ami_connect)
         self.channels = []
@@ -249,22 +252,23 @@ class HangupMonitor(object):
 
     def __ami_connect(self, ami):
         """AMI connect handler"""
-        if str(ami.id) in self.ids:
+        if str(ami.id) in self.config["ids"]:
             ami.registerEvent('Newchannel', self.__new_channel_handler)
             ami.registerEvent('Hangup', self.__hangup_handler)
 
     def __new_channel_handler(self, ami, event):
         """Handler for the Newchannel event"""
-        LOGGER.debug("Tracking channel %s" % event['channel'])
+        LOGGER.debug("Tracking channel %s", event['channel'])
         self.channels.append(event['channel'])
         return (ami, event)
 
     def __hangup_handler(self, ami, event):
         """Handler for the Hangup event"""
-        LOGGER.debug("Channel %s hungup" % event['channel'])
+        LOGGER.debug("Channel %s hungup", event['channel'])
         self.channels.remove(event['channel'])
         self.num_calls += 1
-        if 'min_calls' in self.__dict__ and self.num_calls < self.min_calls:
+        if 'min_calls' in self.config\
+            and self.num_calls < self.config["min_calls"]:
             return (ami, event)
         if len(self.channels) == 0:
             LOGGER.info("All channels have hungup; stopping test")
@@ -283,6 +287,7 @@ class CallFiles(object):
         super(CallFiles, self).__init__()
         self.test_object = test_object
         self.call_file_instances = instance_config
+        self.locale = ""
 
         if self.call_file_instances:
             self.test_object.register_ami_observer(self.ami_connect)
@@ -318,7 +323,7 @@ class CallFiles(object):
         with open(self.locale, 'w') as outfile:
             for key, value in params.items():
                 outfile.write("%s: %s\n" % (key, value))
-        LOGGER.debug("Wrote call file to %s" % self.locale)
+        LOGGER.debug("Wrote call file to %s", self.locale)
         self.move_file(call_file_num, call_file)
 
     def ami_connect(self, ami):
@@ -335,7 +340,7 @@ class CallFiles(object):
                      self.test_object.ast[int(call_file['id'])].directories
                      ["astspooldir"], call_file_num))
 
-        LOGGER.info("Moving file %s to %s" % (src_file, dst_file))
+        LOGGER.info("Moving file %s to %s", src_file, dst_file)
 
         shutil.move(src_file, dst_file)
         os.utime(dst_file, None)
@@ -364,16 +369,16 @@ class FastAGIModule(object):
         self.port = instance_config.get('port', 4573)
         self.host = instance_config.get('host', '127.0.0.1')
         self.commands = instance_config.get('commands')
-	if 'callback' in instance_config:
+        if 'callback' in instance_config:
             self.callback_module = instance_config['callback']['module']
             self.callback_method = instance_config['callback']['method']
         fastagi_factory = fastagi.FastAGIFactory(self.fastagi_connect)
         reactor.listenTCP(self.port, fastagi_factory,
-            test_object.reactor_timeout, self.host)
+                          test_object.reactor_timeout, self.host)
 
     def fastagi_connect(self, agi):
         """Handle incoming connections"""
-	if self.commands:
+        if self.commands:
             return self.execute_command(agi, 0)
         else:
             callback_module = __import__(self.callback_module)
@@ -382,26 +387,25 @@ class FastAGIModule(object):
 
     def on_command_failure(self, reason, agi, idx):
         """Failure handler for executing commands"""
-        LOGGER.error('Could not execute command %s: %s' %
-                     (idx, self.commands[idx]))
+        LOGGER.error('Could not execute command %s: %s',
+                     idx, self.commands[idx])
         LOGGER.error(reason.getTraceback())
         agi.finish()
 
     def on_command_success(self, result, agi, idx):
         """Handler for executing commands"""
-        LOGGER.debug("Successfully executed '%s': %s" %
-                     (self.commands[idx],
-                      result))
+        LOGGER.debug("Successfully executed '%s': %s",
+                     self.commands[idx], result)
         self.execute_command(agi, idx + 1)
 
     def execute_command(self, agi, idx):
         """Execute the requested command"""
         if len(self.commands) <= idx:
-            LOGGER.debug("Completed all commands for %s:%s" % (self.host,
-                         self.port))
+            LOGGER.debug("Completed all commands for %s:%s",
+                         self.host, self.port)
             agi.finish()
             return
 
-        agi.sendCommand(self.commands[idx]
-        ).addCallback(self.on_command_success, agi, idx
-        ).addErrback(self.on_command_failure, agi, idx)
+        agi.sendCommand(self.commands[idx])\
+	.addCallback(self.on_command_success, agi, idx)\
+	.addErrback(self.on_command_failure, agi, idx)
