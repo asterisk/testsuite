@@ -208,10 +208,25 @@ ami-config:
             type: 'headermatch'
             conditions:
                 match:
+                    Event: 'ContactStatusDetail'
+            requirements:
+                match:
+                    AOR: 'user1'
+                    URI: '(sip:user1@127.0.0.1:5062|sip:user1@127.0.0.2:5063)'
+                    Status: 'Unknown'
+                    RoundtripUsec: 'N/A'
+                    EndpointName: 'user1'
+            count: 2
+        -
+            type: 'headermatch'
+            conditions:
+                match:
                     Event: 'EndpointDetailComplete'
             requirements:
                 match:
                     ActionID: '12345'
                     EventList: 'Complete'
-                    ListItems: '5'
+                    # XXX The ListItems here is the number of distinct events, not the actual number of list items.
+                    # This may need to be altered if the number of ListItems reported gets altered.
+                    ListItems: '6'
             count: 1
