@@ -69,6 +69,8 @@ ami-config:
 properties:
     minversion: '12.2.0'
     dependencies:
+        - sipp:
+            version: 'v3.0'
         - buildoption: 'TEST_FRAMEWORK'
         - python: 'twisted'
         - python: 'starpy'

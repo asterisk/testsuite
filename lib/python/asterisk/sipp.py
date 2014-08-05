@@ -502,6 +502,8 @@ class SIPpScenario(object):
         self.target = target
         self._our_exit_deferred = None
         self._test_case = None
+        if not self.sipp:
+            raise ValueError("SIPpTestObject requires that sipp is installed")
 
     def kill(self):
         """Kill the executing SIPp scenario"""
