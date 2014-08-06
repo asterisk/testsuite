@@ -23,13 +23,205 @@ test-modules:
     modules:
         -
             minversion: '12.0.0'
+            maxversion: '13.0.0'
             config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+        -
+            minversion: '13.0.0'
+            config-section: 'ami-config-13'
             typename: 'ami.AMIEventModule'
 
 object-config:
     reactor-timeout: 15
 
 ami-config:
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'EndpointDetail'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: 'endpoint'
+                    ObjectName: 'user1'
+                    SrtpTag32: 'false'
+                    DtlsSetup: 'active'
+                    DtlsCaPath: ''
+                    DtlsCaFile: ''
+                    DtlsCipher: ''
+                    DtlsPrivateKey: ''
+                    DtlsCertFile: ''
+                    DtlsRekey: '0'
+                    DtlsVerify: 'No'
+                    RtpEngine: 'asterisk'
+                    MwiFromUser: ''
+                    FromDomain: ''
+                    FromUser: ''
+                    SubMinExpiry: '0'
+                    AllowSubscribe: 'true'
+                    CosVideo: '0'
+                    CosAudio: '0'
+                    TosVideo: '0'
+                    TosAudio: '0'
+                    SdpSession: 'Asterisk'
+                    SdpOwner: '-'
+                    AllowTransfer: 'true'
+                    RecordOffFeature: 'automixmon'
+                    RecordOnFeature: 'automixmon'
+                    Language: ''
+                    ToneZone: ''
+                    T38UdptlIpv6: 'false'
+                    T38UdptlNat: 'false'
+                    FaxDetect: 'false'
+                    T38UdptlMaxdatagram: '0'
+                    T38UdptlEc: 'none'
+                    T38Udptl: 'false'
+                    DeviceStateBusyAt: '0'
+                    NamedPickupGroup: ''
+                    NamedCallGroup: ''
+                    PickupGroup: ''
+                    CallGroup: ''
+                    InbandProgress: 'false'
+                    OneTouchRecording: 'false'
+                    UseAvpf: 'false'
+                    MediaEncryption: 'none'
+                    AggregateMwi: 'true'
+                    Mailboxes: ''
+                    SendDiversion: 'true'
+                    SendRpid: 'false'
+                    SendPai: 'false'
+                    TrustIdOutbound: 'false'
+                    TrustIdInbound: 'false'
+                    CalleridTag: ''
+                    CalleridPrivacy: 'allowed_not_screened'
+                    Callerid: '<unknown>'
+                    DisableDirectMediaOnNat: 'false'
+                    DirectMediaGlareMitigation: 'none'
+                    ConnectedLineMethod: 'invite'
+                    DirectMediaMethod: 'invite'
+                    DirectMedia: 'false'
+                    IdentifyBy: 'username'
+                    MediaAddress: ''
+                    Aors: 'user1'
+                    OutboundAuth: ''
+                    Auth: 'user1'
+                    TimersSessExpires: '1800'
+                    TimersMinSe: '90'
+                    Timers: 'yes'
+                    100rel: 'yes'
+                    MohSuggest: 'default'
+                    OutboundProxy: ''
+                    Transport: 'local'
+                    RewriteContact: 'false'
+                    ForceRport: 'true'
+                    UsePtime: 'false'
+                    IceSupport: 'false'
+                    RtpSymmetric: 'false'
+                    RtpIpv6: 'false'
+                    DtmfMode: 'rfc4733'
+                    Context: 'default'
+                    DeviceState: 'Invalid|Not in use|Unavailable'
+                    ActiveChannels: ''
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'AorDetail'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: aor
+                    ObjectName: user1
+                    Mailboxes: ''
+                    RemoveExisting: 'false'
+                    MaxContacts: '1'
+                    AuthenticateQualify: 'false'
+                    QualifyFrequency: '0'
+                    DefaultExpiration: '3600'
+                    MaximumExpiration: '7200'
+                    MinimumExpiration: '60'
+                    Contacts: 'user1/sip:user1@127.0.0.1:5062,user1/sip:user1@127.0.0.2:5063'
+                    TotalContacts: '2'
+                    ContactsRegistered: '0'
+                    EndpointName: 'user1'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'AuthDetail'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: 'auth'
+                    ObjectName: 'user1'
+                    AuthType: 'userpass'
+                    NonceLifetime: '32'
+                    Realm: ''
+                    Md5Cred: ''
+                    Password: 'xxx'
+                    Username: 'user1'
+                    EndpointName: 'user1'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'TransportDetail'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: 'transport'
+                    ObjectName: 'local'
+                    Cos: '0'
+                    Tos: '0'
+                    LocalNet: ''
+                    Cipher: ''
+                    Method: 'unspecified'
+                    RequireClientCert: 'No'
+                    VerifyClient: 'No'
+                    VerifyServer: 'No'
+                    Domain: ''
+                    ExternalMediaAddress: ''
+                    ExternalSignalingPort: '0'
+                    ExternalSignalingAddress: ''
+                    Password: ''
+                    PrivKeyFile: ''
+                    CertFile: ''
+                    CaListFile: ''
+                    AsyncOperations: '1'
+                    Bind: '0.0.0.0:5060'
+                    Protocol: 'udp'
+                    EndpointName: 'user1'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'IdentifyDetail'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: 'identify'
+                    ObjectName: 'user1'
+                    Endpoint: 'user1'
+                    Match: '127.0.0.1/255.255.255.255'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'EndpointDetailComplete'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    EventList: 'Complete'
+                    ListItems: '5'
+            count: 1
+
+ami-config-13:
         -
             type: 'headermatch'
             conditions:
