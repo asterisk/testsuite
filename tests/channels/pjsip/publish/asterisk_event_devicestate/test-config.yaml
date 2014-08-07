@@ -1,0 +1,69 @@
+testinfo:
+    summary: 'Ensure that outbound and inbound Asterisk event PUBLISH messages are handled.'
+    description: |
+        'Two Asterisk instances are started. One is configured to send Asterisk event PUBLISH
+        messages to the other while the other is configured to receive them. Device state
+        changes are queued up. If the PUBLISH messages are not received on the second
+        Asterisk instance the test fails.'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_outbound_publish'
+        - asterisk: 'res_pjsip_publish_asterisk'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    asterisk-instances: 2
+    connect-ami: True
+
+originator:
+    trigger: 'ami_connect'
+    id: '0'
+    channel: 'Local/change_state@default'
+    context: 'default'
+    exten: 'dummy'
+    priority: '1'
+    async: 'True'
+
+ami-config:
+    -
+        id: '1'
+        type: 'orderedheadermatch'
+        conditions:
+            match:
+                Event: 'DeviceStateChange'
+                Device: 'Custom:presence'
+        requirements:
+            -
+                match:
+                    State: 'NOT_INUSE'
+            -
+                match:
+                    State: 'RINGING'
+            -
+                match:
+                    State: 'INUSE'
+            -
+                match:
+                    State: 'ONHOLD'
+        count: '4'
+        action: 'stop'

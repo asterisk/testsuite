@@ -36,6 +36,7 @@ class AMIEventInstance(object):
         self.match_conditions = conditions['match']
         self.nonmatch_conditions = conditions.get('nomatch', {})
         self.ids = instance_config['id'].split(',') if 'id' in instance_config else ['0']
+        self.action = instance_config['action'] if 'action' in instance_config else 'none'
         self.config = instance_config
         self.passed = True
         self._registered = False
@@ -156,6 +157,14 @@ class AMIEventInstance(object):
         # types to determine how to proceed
         for observer in self._event_observers:
             observer(ami, event)
+
+        # If this event instance has met the minimum number execute any specified action
+        # Note that if min is 0 this will never get reached, so something else must
+        # terminate the test
+        if self.count['event'] == self.count['min']:
+            if self.action == 'stop':
+                self.test_object.stop_reactor()
+
         return self.event_callback(ami, event)
 
     def check_result(self, callback_param):

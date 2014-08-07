@@ -24,3 +24,4 @@ tests:
     - test: 'call_pickup'
     - dir: 'video_calls'
     - test: 'accountcode'
+    - dir: 'publish'
