@@ -63,12 +63,35 @@ ari-config:
                 method: on_test_start
         -   conditions:
                 match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+                    channel:
+                        name: 'Local/_attended@transfer-.*'
+                    replace_channel:
+                        name: 'PJSIP/bob-.*'
+            count: 1
+            callback:
+                module: attended_transfer
+                method: on_swap_start
+        -   conditions:
+                match:
                     type: BridgeAttendedTransfer
                     application: testsuite
             count: 1
             callback:
                 module: attended_transfer
                 method: on_attended_transfer
+        -   conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    application: testsuite
+                    channel:
+                        name: 'Local/_attended@transfer-.*'
+            count: 1
+            callback:
+                module: attended_transfer
+                method: on_swap_enter
 
 properties:
     minversion: '12.1.0'
@@ -79,5 +102,7 @@ properties:
         - python : starpy
         - asterisk : res_ari_channels
         - asterisk : app_echo
+        - asterisk : chan_pjsip
     tags:
         - ARI
+        - pjsip

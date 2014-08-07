@@ -17,6 +17,7 @@ LOGGER = logging.getLogger(__name__)
 class TestLogic(object):
     def __init__(self):
         self.originated_id = None
+        self.swap_id = None
         self.bridge_id = None
 
 TEST = TestLogic()
@@ -51,6 +52,18 @@ def on_test_start(ari, event, test_object):
     LOGGER.debug("on_test_start(%r)" % event)
 
     ari.post('bridges', TEST.bridge_id, 'addChannel', channel=event['channel']['id'])
+    return True
+
+def on_swap_start(ari, event, test_object):
+    LOGGER.debug("on_swap_start(%r)" % event)
+
+    TEST.swap_id = event['channel']['id']
+    return True
+
+def on_swap_enter(ari, event, test_object):
+    LOGGER.debug("on_swap_enter(%r)" % event)
+
+    ari.delete('channels', TEST.swap_id)
     return True
 
 def on_attended_transfer(ari, event, test_object):
