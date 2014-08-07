@@ -1,0 +1,150 @@
+testinfo:
+    summary: Test detection of duration and talking_duration values of an ARI
+             recording.  Also checks sound file size and energy levels.
+    description: |
+        This test creates two local channel halves that get sent into ARI.
+        One half plays the sound file once, which is tt-somethingwrong in this
+        instance, plays silence/2 to create two seconds of silence, and
+        then plays tt-somethingwrong again.  The other half records the sound
+        files as they are being played. Checks the duration values then hangs up
+        the Local channel. Upon hanging up the channel, the SoundChecker
+        pluggable module checks the file size of the produced recording and also uses
+        BackgroundDetect to check if energy levels are sufficient.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -   config-section: sound-file-analyzer
+            typename: pluggable_modules.SoundChecker
+
+apps: testsuite
+
+test-object-config:
+    test-iterations:
+        -
+            endpoint: 'Local/s@default'
+            channelId: 'end1'
+            otherChannelId: 'end2'
+            app: 'testsuite'
+
+
+ari-config:
+    events:
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'end1'
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'end2'
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'channels/end1/record'
+                    params:
+                        name: 'the_recording'
+                        format: 'wav'
+                        maxSilenceSeconds: 4
+                        #maxDurationSeconds: 10
+        -
+            conditions:
+                match:
+                    type: RecordingStarted
+                    application: testsuite
+                    recording:
+                        name: 'the_recording'
+                        format: 'wav'
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'channels/end2/play/sound1'
+                    params:
+                        media: 'sound:tt-somethingwrong'
+                -
+                    method: 'post'
+                    uri: 'channels/end2/play/sound2'
+                    params:
+                        media: 'sound:silence/2'
+                -
+                    method: 'post'
+                    uri: 'channels/end2/play/sound3'
+                    params:
+                        media: 'sound:tt-somethingwrong'
+        -
+            conditions:
+                match:
+                    type: PlaybackFinished
+                    application: testsuite
+                    playback:
+                        id: 'sound3'
+                        target_uri: 'channel:end2$'
+                        media_uri: 'sound:tt-somethingwrong'
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'recordings/live/the_recording/stop'
+        -
+            conditions:
+                match:
+                    type: RecordingFinished
+                    application: testsuite
+                    recording:
+                        duration: 6
+                        talking_duration: 4
+                        silence_duration: 2
+            count: 1
+            requests:
+                -
+                    method: 'delete'
+                    uri: 'channels/end1'
+
+sound-file-analyzer:
+    auto-stop: 'true'
+    sound-file-config:
+        -
+            trigger:
+                match:
+                        event: 'Hangup'
+                        channel: 'Local/s@default-.*'
+            sound-file:
+                    file-name: 'recording/the_recording.wav'
+                    file-path-type: 'relative'
+                    actions:
+                        -
+                            type: 'size_check'
+                            size: 96000
+                            tolerance: 2000
+                        -
+                            type: 'energy_check'
+                            channel: 'Local/audio@soundtest'
+                            context: 'listener'
+                            exten: 's'
+                            priority: '1'
+
+properties:
+    minversion: '12.5.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_recordings
+        - asterisk : res_stasis
+    tags:
+        - ARI
+
+
