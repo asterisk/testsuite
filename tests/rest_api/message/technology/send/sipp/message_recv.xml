@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<scenario name="Basic MESSAGE send and receive">
+  <recv request="MESSAGE" crlf="true">
+    <action>
+      <ereg regexp="Hello there.*"
+            search_in="body" check_it="true" assign_to="1"/>
+      <ereg regexp="(\W|^)(Everything\sis\sawesome)(\W|$)"
+            search_in="hdr" header="X-Awesome-Header"
+            check_it="true" assign_to="2"/>
+    </action>
+  </recv>
+
+  <Reference variables="1,2" />
+
+  <send>
+    <![CDATA[
+      SIP/2.0 202 Accepted
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, SUBSCRIBE, NOTIFY, INFO, PUBLISH
+      Supported: replaces, timer
+      Content-Length: 0
+
+    ]]>
+  </send>
+</scenario>

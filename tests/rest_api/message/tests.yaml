@@ -1,0 +1,3 @@
+tests:
+    - dir: 'endpoint'
+    - dir: 'technology'

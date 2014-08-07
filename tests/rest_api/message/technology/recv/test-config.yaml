@@ -1,0 +1,65 @@
+testinfo:
+    summary: Test receiving a message from an endpoint
+    description: |
+        This test covers nominal subscribing to an endpoint for
+        text messages and receiving a message from said endpoint.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/message'
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: message-sender
+            typename: 'message_modules.SIPMessageRunner'
+        -
+            config-section: message-subscriber
+            typename: 'message_modules.MessageSubscriber'
+
+test-object-config:
+    asterisk-instances: 1
+    test-iterations: None
+
+message-subscriber:
+    subscriptions:
+        - { event-source: 'endpoint:PJSIP', app: 'testsuite' }
+
+message-sender:
+    end-on-success: True
+    sipp:
+        - { 'scenario':'message.xml', '-p':'5061' }
+
+ari-config:
+    events:
+        -   conditions:
+                match:
+                    type: TextMessageReceived
+                    application: testsuite
+                    message:
+                        to: 'pjsip:asterisk@127.0.0.1'
+                        from: '"alice" <sip:alice@127.0.0.1>'
+                        body: 'Watson, come here.'
+                    endpoint:
+                        technology: PJSIP
+                        resource: alice
+                        state: online
+            count: 1
+
+properties:
+    minversion: '12.5.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_endpoints
+        - asterisk : res_ari_applications
+        - asterisk : res_pjsip_messaging
+    tags:
+        - ARI
+
