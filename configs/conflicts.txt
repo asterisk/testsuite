@@ -10,4 +10,4 @@
 res_pjsip=chan_sip.so
 
 ;; and don't load chan_pjsip if the test uses chan_sip
-chan_sip=chan_pjsip.so,res_pjsip.so,res_pjsip_pubsub.so,res_pjsip_session.so
+chan_sip=chan_pjsip.so,res_pjsip.so,res_pjsip_pubsub.so,res_pjsip_session.so,res_pjsip_outbound_publish.so
