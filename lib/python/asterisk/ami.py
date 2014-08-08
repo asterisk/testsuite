@@ -35,8 +35,10 @@ class AMIEventInstance(object):
         conditions = instance_config['conditions']
         self.match_conditions = conditions['match']
         self.nonmatch_conditions = conditions.get('nomatch', {})
-        self.ids = instance_config['id'].split(',') if 'id' in instance_config else ['0']
-        self.action = instance_config['action'] if 'action' in instance_config else 'none'
+        self.ids = instance_config['id'].split(',') if 'id' in instance_config\
+	    else ['0']
+        self.action = instance_config['action'] if 'action' in instance_config\
+            else 'none'
         self.config = instance_config
         self.passed = True
         self._registered = False
@@ -96,7 +98,7 @@ class AMIEventInstance(object):
         object after AMI connect.
         """
         if str(ami.id) in self.ids and not self._registered:
-            LOGGER.debug("Registering event %s" %
+            LOGGER.debug("Registering event %s",
                          self.match_conditions['Event'])
             ami.registerEvent(self.match_conditions['Event'],
                               self.__event_callback)
@@ -115,7 +117,7 @@ class AMIEventInstance(object):
         """Dispose of this object's AMI event registrations"""
         if str(ami.id) not in self.ids:
             LOGGER.warning("Unable to dispose of AMIEventInstance - " \
-                           "unknown AMI object %d" % ami.id)
+                           "unknown AMI object %d", ami.id)
             return
         ami.deregisterEvent(self.match_conditions['Event'],
                             self.__event_callback)
@@ -129,27 +131,27 @@ class AMIEventInstance(object):
 
         for key, value in self.match_conditions.items():
             if key.lower() not in event:
-                LOGGER.debug("Condition %s not in event, returning" % (key))
+                LOGGER.debug("Condition %s not in event, returning", key)
                 return
             if not re.match(value, event.get(key.lower())):
-                LOGGER.debug("Condition %s: %s does not match %s: %s in event" %
-                             (key, value, key, event.get(key.lower())))
+                LOGGER.debug("Condition %s: %s does not match %s: %s in event",
+                             key, value, key, event.get(key.lower()))
                 return
             else:
-                LOGGER.debug("Condition %s: %s matches %s: %s in event" %
-                             (key, value, key, event.get(key.lower())))
+                LOGGER.debug("Condition %s: %s matches %s: %s in event",
+                             key, value, key, event.get(key.lower()))
 
         for key, value in self.nonmatch_conditions.items():
             if key.lower() not in event:
-                LOGGER.debug("Condition %s not in event, returning" % (key))
+                LOGGER.debug("Condition %s not in event, returning", key)
                 return
             if re.match(value, event.get(key.lower())):
-                LOGGER.debug("Condition %s: %s matches %s: %s in event" %
-                             (key, value, key, event.get(key.lower())))
+                LOGGER.debug("Condition %s: %s matches %s: %s in event",
+                             key, value, key, event.get(key.lower()))
                 return
             else:
-                LOGGER.debug("Condition %s: %s does not match %s: %s in event" %
-                             (key, value, key, event.get(key.lower())))
+                LOGGER.debug("Condition %s: %s does not match %s: %s in event",
+                             key, value, key, event.get(key.lower()))
 
         self.count['event'] += 1
 
@@ -158,9 +160,9 @@ class AMIEventInstance(object):
         for observer in self._event_observers:
             observer(ami, event)
 
-        # If this event instance has met the minimum number execute any specified action
-        # Note that if min is 0 this will never get reached, so something else must
-        # terminate the test
+        # If this event instance has met the minimum number execute any
+        # specified action. Note that if min is 0 this will never get reached,
+        # so something else must terminate the test
         if self.count['event'] == self.count['min']:
             if self.action == 'stop':
                 self.test_object.stop_reactor()
@@ -180,8 +182,8 @@ class AMIEventInstance(object):
         if (self.count['event'] > self.count['max']
                 or self.count['event'] < self.count['min']):
             LOGGER.warning("Event occurred %d times, which is out of the"
-                           " allowable range" % self.count['event'])
-            LOGGER.warning("Event description: %s" % (str(self.config)))
+                           " allowable range", self.count['event'])
+            LOGGER.warning("Event description: %s", str(self.config))
             self.test_object.set_passed(False)
             return callback_param
         return self.check_result(callback_param)
@@ -204,10 +206,10 @@ class AMIHeaderMatchInstance(AMIEventInstance):
                                                      test_object)
         LOGGER.debug("Initializing an AMIHeaderMatchInstance")
         if 'requirements' in instance_config:
-            self.match_requirements = (
-                    instance_config['requirements'].get('match', {}))
-            self.nonmatch_requirements = (
-                    instance_config['requirements'].get('nomatch', {}))
+            self.match_requirements =\
+                    instance_config['requirements'].get('match', {})
+            self.nonmatch_requirements =\
+                    instance_config['requirements'].get('nomatch', {})
         else:
             self.match_requirements = {}
             self.nonmatch_requirements = {}
@@ -216,31 +218,31 @@ class AMIHeaderMatchInstance(AMIEventInstance):
         """Callback called when an event is received from AMI"""
         for key, value in self.match_requirements.items():
             if key.lower() not in event:
-                LOGGER.warning("Requirement %s does not exist in event %s" %
-                               (key, event['event']))
+                LOGGER.warning("Requirement %s does not exist in event %s",
+                               key, event['event'])
                 self.passed = False
             elif not re.match(value, event.get(key.lower())):
                 LOGGER.warning("Requirement %s: %s does not match %s: %s in " \
-                               "event" % (key, value, key,
-                               event.get(key.lower(), '')))
+                               "event", key, value, key,
+                               event.get(key.lower(), ''))
                 self.passed = False
             else:
-                LOGGER.debug("Requirement %s: %s matches %s: %s in event" %
-                             (key, value, key, event.get(key.lower())))
+                LOGGER.debug("Requirement %s: %s matches %s: %s in event",
+                             key, value, key, event.get(key.lower()))
 
         for key, value in self.nonmatch_requirements.items():
             if key.lower() not in event:
-                LOGGER.warning("Requirement %s does not exist in event %s" %
-                                (key, event['event']))
+                LOGGER.warning("Requirement %s does not exist in event %s",
+                               key, event['event'])
                 self.passed = False
             elif re.match(value, event.get(key.lower(), '')):
-                LOGGER.warning("Requirement %s: %s matches %s: %s in event" %
-                               (key, value, key, event.get(key.lower(), '')))
+                LOGGER.warning("Requirement %s: %s matches %s: %s in event",
+                               key, value, key, event.get(key.lower(), ''))
                 self.passed = False
             else:
                 LOGGER.debug("Requirement %s: %s does not match %s: %s " \
-                             "in event" % (key, value, key,
-                              event.get(key.lower(), '')))
+                             "in event", key, value, key,
+                             event.get(key.lower(), ''))
 
         return (ami, event)
 
@@ -273,44 +275,42 @@ class AMIOrderedHeaderMatchInstance(AMIEventInstance):
         self.match_requirements = []
         self.nonmatch_requirements = []
         for instance in instance_config['requirements']:
-            self.match_requirements.append(
-                    instance.get('match', {}))
-            self.nonmatch_requirements.append(
-                    instance.get('nomatch', {}))
+            self.match_requirements.append(instance.get('match', {}))
+            self.nonmatch_requirements.append(instance.get('nomatch', {}))
 
     def event_callback(self, ami, event):
         """Callback called when an event is received from AMI"""
         if self.match_index >= len(self.match_requirements):
-            LOGGER.debug("Event received and not defined: %s" % event)
+            LOGGER.debug("Event received and not defined: %s", event)
             return
 
         for key, value in self.match_requirements[self.match_index].items():
             if key.lower() not in event:
-                LOGGER.warning("Requirement %s does not exist in event %s" %
-                                (key, event['event']))
+                LOGGER.warning("Requirement %s does not exist in event %s",
+                               key, event['event'])
                 self.passed = False
             elif not re.match(value, event.get(key.lower())):
                 LOGGER.warning("Requirement %s: %s does not match %s: " \
-                               "%s in event" % (key, value, key,
-                                event.get(key.lower())))
+                               "%s in event", key, value, key,
+                               event.get(key.lower()))
                 self.passed = False
             else:
-                LOGGER.debug("Requirement %s: %s matches %s: %s in event" %
-                              (key, value, key, event.get(key.lower())))
+                LOGGER.debug("Requirement %s: %s matches %s: %s in event",
+                             key, value, key, event.get(key.lower()))
 
         for key, value in self.nonmatch_requirements[self.match_index].items():
             if key.lower() not in event:
-                LOGGER.warning("Requirement %s does not exist in event %s" %
-                                (key, event['event']))
+                LOGGER.warning("Requirement %s does not exist in event %s",
+                               key, event['event'])
                 self.passed = False
             elif re.match(value, event.get(key.lower(), '')):
-                LOGGER.warning("Requirement %s: %s matches %s: %s in event" %
-                                (key, value, key, event.get(key.lower(), '')))
+                LOGGER.warning("Requirement %s: %s matches %s: %s in event",
+                               key, value, key, event.get(key.lower(), ''))
                 self.passed = False
             else:
                 LOGGER.debug("Requirement %s: %s does not match %s: %s "
-                             "in event" % (key, value, key,
-                              event.get(key.lower(), '')))
+                             "in event", key, value, key,
+                             event.get(key.lower(), ''))
 
         self.match_index += 1
         return (ami, event)
@@ -338,7 +338,8 @@ class CelRequirement(object):
         for key, value in requirements['match'].items():
             lower_key = key.lower()
             if lower_key == 'extra':
-                value = dict((key.lower(), value) for key, value in value.iteritems())
+                value = dict((key.lower(), value)\
+                    for key, value in value.iteritems())
             self.requirements[lower_key] = value
         self.orderings = requirements.get('partialorder') or []
         self.named_id = requirements.get('id')
@@ -361,17 +362,20 @@ class CelRequirement(object):
                     if extra_item is None:
                         continue
                     extra_match = re.match(extra_item, str(extra_value))
-                    if extra_match is None or extra_match.end() != len(str(extra_value)):
-                        LOGGER.debug('Skipping %s - %s does not equal %s for extra-subfield %s' %
-                                     (event['eventname'], extra_item, str(extra_value), extra_key))
+                    if extra_match is None or\
+                        extra_match.end() != len(str(extra_value)):
+                        LOGGER.debug('Skipping %s - %s does not equal %s for '
+                                     'extra-subfield %s', event['eventname'],
+                                     extra_item, str(extra_value), extra_key)
                         return False
             else:
                 match = re.match(item, value)
                 if match is None or match.end() != len(value):
-                    LOGGER.debug('Skipping %s - %s does not equal %s for field %s' %
-                                 (event['eventname'], item, value, key))
+                    LOGGER.debug('Skipping %s - %s does not equal %s '
+                                 'for field %s', event['eventname'], item,
+                                 value, key)
                     return False
-        LOGGER.debug('Matched CEL event %s' % event['eventname'])
+        LOGGER.debug('Matched CEL event %s', event['eventname'])
         return True
 
     def __str__(self):
@@ -413,7 +417,7 @@ class AMICelInstance(AMIEventInstance):
 
         # Add of all our named events to the lists of events that haven't
         # occurred yet
-        named_events = [ev for ev in self.match_requirements if
+        named_events = [ev for ev in self.match_requirements if\
             ev.named_id is not None]
         AMICelInstance.unmatched_cel_events.extend(named_events)
 
@@ -425,12 +429,12 @@ class AMICelInstance(AMIEventInstance):
         if len(self.match_requirements) == 0:
             return
 
-        LOGGER.debug("Received CEL event %s" % str(event))
+        LOGGER.debug("Received CEL event %s", str(event))
 
         req = self.match_requirements[0]
         if not req.is_match(event):
-            LOGGER.debug("Dropping event %s - next required event is %s" %
-                         (event['eventname'], req.requirements['eventname']))
+            LOGGER.debug("Dropping event %s - next required event is %s",
+                         event['eventname'], req.requirements['eventname'])
             return
 
         self.match_requirements.pop(0)
@@ -447,9 +451,9 @@ class AMICelInstance(AMIEventInstance):
         at the end of the test"""
 
         if len(self.match_requirements) != 0:
-            LOGGER.warning("Length of expected CEL requirements not zero: %d" %
+            LOGGER.warning("Length of expected CEL requirements not zero: %d",
                            len(self.match_requirements))
-            LOGGER.warning("Missed CEL requirement: %s" %
+            LOGGER.warning("Missed CEL requirement: %s",
                            str(self.match_requirements[0]))
             self.test_object.set_passed(False)
             return reason
@@ -464,21 +468,21 @@ class AMICelInstance(AMIEventInstance):
         for order_type, named_event in cel_requirement.orderings.items():
             order_type = order_type.lower()
             if order_type == 'after':
-                matches = [ev for ev in AMICelInstance.matched_cel_events if
+                matches = [ev for ev in AMICelInstance.matched_cel_events if\
                     ev.named_id == named_event]
                 if len(matches) == 0:
-                    LOGGER.warning('Event %s did not occur after %s; failing' %
-                                   (str(cel_requirement), named_event))
+                    LOGGER.warning('Event %s did not occur after %s; failing',
+                                   str(cel_requirement), named_event)
                     self.test_object.set_passed(False)
             elif order_type == 'before':
-                matches = [ev for ev in AMICelInstance.unmatched_cel_events if
+                matches = [ev for ev in AMICelInstance.unmatched_cel_events if\
                     ev.named_id == named_event]
                 if len(matches) == 0:
-                    LOGGER.warning('Event %s did not occur before %s; failing' %
-                                   (str(cel_requirement), named_event))
+                    LOGGER.warning('Event %s did not occur before %s; failing',
+                                   str(cel_requirement), named_event)
                     self.test_object.set_passed(False)
             else:
-                LOGGER.warning('Unknown partialorder type %s; ignoring' %
+                LOGGER.warning('Unknown partialorder type %s; ignoring',
                                order_type)
 
 
@@ -507,8 +511,8 @@ class AMICallbackInstance(AMIEventInstance):
         method = getattr(callback_module, self.callback_method)
         self.passed = method(ami, event)
         if self.passed == None:
-            LOGGER.error("Callback %s.%s returned None instead of a boolean" %
-                (self.callback_module, self.callback_method))
+            LOGGER.error("Callback %s.%s returned None instead of a boolean",
+                         self.callback_module, self.callback_method)
             self.passed = False
 
     def check_result(self, callback_param):
@@ -548,8 +552,8 @@ class AMIEventInstanceFactory:
             LOGGER.debug("instance type is 'callback'")
             return AMICallbackInstance(instance_config, test_object)
         else:
-            LOGGER.error("Invalid type %s specified for AMI event instance" %
-                    instance_type)
+            LOGGER.error("Invalid type %s specified for AMI event instance",
+                         instance_type)
             raise Exception
 
 class AMIEventModule(object):
@@ -571,8 +575,8 @@ class AMIEventModule(object):
         self.test_object = test_object
         self.ami_instances = []
         for instance in module_config:
-            event_instance = AMIEventInstanceFactory.create_instance(instance,
-                                                                    test_object)
+            event_instance = AMIEventInstanceFactory\
+                .create_instance(instance, test_object)
             self.ami_instances.append(event_instance)
 
 class AMI(object):
@@ -606,7 +610,7 @@ class AMI(object):
         """Start the login process"""
 
         self._attempts += 1
-        LOGGER.debug("AMI Login attempt #%d" % (self._attempts))
+        LOGGER.debug("AMI Login attempt #%d", self._attempts)
         if not self._start:
             self._start = datetime.datetime.now()
         deferred = self.ami_factory.login(self.host, self.port)
@@ -634,8 +638,8 @@ class AMI(object):
         """
         runtime = (datetime.datetime.now() - self._start).seconds
         if runtime >= self.login_timeout:
-            LOGGER.error("AMI login failed after %d second timeout: %s" %
-                         (self.login_timeout, reason.getErrorMessage()))
+            LOGGER.error("AMI login failed after %d second timeout: %s",
+                         self.login_timeout, reason.getErrorMessage())
             return self.on_error()
         delay = 2 ** self._attempts
         if delay + runtime >= self.login_timeout:
