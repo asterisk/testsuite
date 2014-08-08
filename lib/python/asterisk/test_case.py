@@ -107,7 +107,10 @@ class TestCase(object):
         except OSError:
             pass
         try:
-            join_path = os.path.join(Asterisk.test_suite_root, self.base)
+            join_path = os.path.relpath(
+                os.path.join(Asterisk.test_suite_root, self.base),
+                os.path.dirname(named_dir)
+            )
             os.symlink(join_path, named_dir)
         except OSError:
             pass
