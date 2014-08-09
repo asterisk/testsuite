@@ -54,19 +54,18 @@ class AriBaseTestObject(TestCase):
             # Meh, just use defaults
             test_config = {}
 
-        self.apps = test_config.get('apps') or 'testsuite'
+        self.apps = test_config.get('apps', 'testsuite')
         if isinstance(self.apps, list):
             self.apps = ','.join(self.apps)
-        host = test_config.get('host') or '127.0.0.1'
-        port = test_config.get('port') or DEFAULT_PORT
-        userpass = (test_config.get('username') or 'testsuite',
-            test_config.get('password') or 'testsuite')
+        host = test_config.get('host', '127.0.0.1')
+        port = test_config.get('port', DEFAULT_PORT)
+        userpass = (test_config.get('username', 'testsuite'),
+                    test_config.get('password', 'testsuite'))
 
         # Create the REST interface and the WebSocket Factory
         self.ari = ARI(host, port=port, userpass=userpass)
         self.ari_factory = AriClientFactory(receiver=self, host=host, port=port,
-                                        apps=self.apps,
-                                        userpass=userpass)
+                                            apps=self.apps, userpass=userpass)
 
         self._ws_event_handlers = []
         self.timed_out = False
@@ -151,7 +150,7 @@ class AriTestObject(AriBaseTestObject):
 
         if self.iterations is None:
             self.iterations = [{'channel': 'Local/s@default',
-                'application': 'Echo'}]
+                                'application': 'Echo'}]
 
 
     def ami_connect(self, ami):
@@ -175,7 +174,7 @@ class AriTestObject(AriBaseTestObject):
         :param ami The AMI instance
         :param event The Newchannl event
         """
-        LOGGER.debug("Tracking channel %s" % event['channel'])
+        LOGGER.debug("Tracking channel %s", event['channel'])
         self.channels.append(event['channel'])
         return (ami, event)
 
@@ -188,7 +187,7 @@ class AriTestObject(AriBaseTestObject):
         if event['channel'] not in self.channels:
             return (ami, event)
 
-        LOGGER.debug("Removing tracking for %s" % event['channel'])
+        LOGGER.debug("Removing tracking for %s", event['channel'])
         self.channels.remove(event['channel'])
         if len(self.channels) == 0:
             self.test_iteration += 1
@@ -201,7 +200,7 @@ class AriTestObject(AriBaseTestObject):
         if not isinstance(self.iterations, list):
             return
 
-        if (self.test_iteration == len(self.iterations)):
+        if self.test_iteration == len(self.iterations):
             LOGGER.info("All iterations executed; stopping")
             self.stop_reactor()
             return
@@ -217,7 +216,7 @@ class AriTestObject(AriBaseTestObject):
         """Create a new channel"""
 
         # There's only one Asterisk instance, so just use the first AMI factory
-        LOGGER.info("Creating channel %s" % channel_def['channel'])
+        LOGGER.info("Creating channel %s", channel_def['channel'])
         if not self.ami[0]:
             LOGGER.warning("Error creating channel - no ami available")
             return
@@ -252,7 +251,7 @@ class AriOriginateTestObject(AriTestObject):
         """Create a new channel"""
 
         # Create a channel using ARI POST to channel instead
-        LOGGER.info("Creating channel %s" % channel_def['endpoint'])
+        LOGGER.info("Creating channel %s", channel_def['endpoint'])
         self.ari.post('channels', **channel_def)
 
 
@@ -278,20 +277,20 @@ class WebSocketEventModule(object):
 
         :param event: Dictionary parsed from incoming JSON event.
         """
-        LOGGER.debug("Received event: %r" % event.get('type'))
+        LOGGER.debug("Received event: %r", event.get('type'))
         matched = False
         for matcher in self.event_matchers:
             if matcher.on_event(event):
                 matched = True
         if not matched:
-            LOGGER.info("Event had no matcher: %r" % event)
+            LOGGER.info("Event had no matcher: %r", event)
 
 
 class AriClientFactory(WebSocketClientFactory):
     """Twisted protocol factory for building ARI WebSocket clients."""
 
     def __init__(self, receiver, host, apps, userpass, port=DEFAULT_PORT,
-        timeout_secs=60):
+                 timeout_secs=60):
         """Constructor
 
         :param receiver The object that will receive events from the protocol
@@ -303,9 +302,9 @@ class AriClientFactory(WebSocketClientFactory):
         url = "ws://%s:%d/ari/events?%s" % \
               (host, port,
                urllib.urlencode({'app': apps, 'api_key': '%s:%s' % userpass}))
-        LOGGER.info("WebSocketClientFactory(url=%s)" % url)
-        WebSocketClientFactory.__init__(self, url, debug = True,
-            protocols=['ari'])
+        LOGGER.info("WebSocketClientFactory(url=%s)", url)
+        WebSocketClientFactory.__init__(self, url, debug=True,
+                                        protocols=['ari'])
         self.timeout_secs = timeout_secs
         self.attempts = 0
         self.start = None
@@ -330,12 +329,12 @@ class AriClientFactory(WebSocketClientFactory):
         This call will give up after timeout_secs has been exceeded.
         """
         self.attempts += 1
-        LOGGER.debug("WebSocket attempt #%d" % self.attempts)
+        LOGGER.debug("WebSocket attempt #%d", self.attempts)
         if not self.start:
             self.start = datetime.datetime.now()
         runtime = (datetime.datetime.now() - self.start).seconds
         if runtime >= self.timeout_secs:
-            LOGGER.error("  Giving up after %d seconds" % self.timeout_secs)
+            LOGGER.error("  Giving up after %d seconds", self.timeout_secs)
             raise Exception("Failed to connect after %d seconds" %
                             self.timeout_secs)
 
@@ -361,7 +360,7 @@ class AriClientProtocol(WebSocketClientProtocol):
 
     def onClose(self, wasClean, code, reason):
         """Called back when connection is closed."""
-        LOGGER.debug("WebSocket closed(%r, %d, %s)" % (wasClean, code, reason))
+        LOGGER.debug("WebSocket closed(%r, %d, %s)", wasClean, code, reason)
         self.receiver.on_ws_closed(self)
 
     def onMessage(self, msg, binary):
@@ -369,7 +368,7 @@ class AriClientProtocol(WebSocketClientProtocol):
 
         :param msg: Received text message.
         """
-        LOGGER.debug("rxed: %s" % msg)
+        LOGGER.debug("rxed: %s", msg)
         msg = json.loads(msg)
         self.receiver.on_ws_event(msg)
 
@@ -408,9 +407,9 @@ class ARI(object):
         :throws: requests.exceptions.HTTPError
         """
         url = self.build_url(*args)
-        LOGGER.info("GET %s %r" % (url, kwargs))
+        LOGGER.info("GET %s %r", url, kwargs)
         return self.raise_on_err(requests.get(url, params=kwargs,
-                                         auth=self.userpass))
+                                              auth=self.userpass))
 
     def put(self, *args, **kwargs):
         """Send a PUT request to ARI.
@@ -421,9 +420,9 @@ class ARI(object):
         :throws: requests.exceptions.HTTPError
         """
         url = self.build_url(*args)
-        LOGGER.info("PUT %s %r" % (url, kwargs))
+        LOGGER.info("PUT %s %r", url, kwargs)
         return self.raise_on_err(requests.put(url, params=kwargs,
-                                          auth=self.userpass))
+                                              auth=self.userpass))
 
     def post(self, *args, **kwargs):
         """Send a POST request to ARI.
@@ -434,9 +433,9 @@ class ARI(object):
         :throws: requests.exceptions.HTTPError
         """
         url = self.build_url(*args)
-        LOGGER.info("POST %s %r" % (url, kwargs))
+        LOGGER.info("POST %s %r", url, kwargs)
         return self.raise_on_err(requests.post(url, params=kwargs,
-                                          auth=self.userpass))
+                                               auth=self.userpass))
 
     def delete(self, *args, **kwargs):
         """Send a DELETE request to ARI.
@@ -447,9 +446,9 @@ class ARI(object):
         :throws: requests.exceptions.HTTPError
         """
         url = self.build_url(*args)
-        LOGGER.info("DELETE %s %r" % (url, kwargs))
+        LOGGER.info("DELETE %s %r", url, kwargs)
         return self.raise_on_err(requests.delete(url, params=kwargs,
-                                            auth=self.userpass))
+                                                 auth=self.userpass))
 
     def request(self, method, *args, **kwargs):
         """ Send an arbitrary request to ARI.
@@ -461,10 +460,10 @@ class ARI(object):
         :throws: requests.exceptions.HTTPError
         """
         url = self.build_url(*args)
-        LOGGER.info("%s %s %r" % (method, url, kwargs))
+        LOGGER.info("%s %s %r", method, url, kwargs)
         requests_method = getattr(requests, method)
         return self.raise_on_err(requests_method(url, params=kwargs,
-                                auth=self.userpass))
+                                                 auth=self.userpass))
 
     def set_allow_errors(self, value):
         """Sets whether error responses returns exceptions.
@@ -485,8 +484,8 @@ class ARI(object):
         :returns: resp
         """
         if not self.allow_errors and resp.status_code / 100 != 2:
-            LOGGER.error('%s (%d %s): %r' % (resp.url, resp.status_code,
-                                             resp.reason, resp.text))
+            LOGGER.error('%s (%d %s): %r', resp.url, resp.status_code,
+                         resp.reason, resp.text)
             resp.raise_for_status()
         return resp
 
@@ -522,7 +521,7 @@ class ARIRequest(object):
             value = values
             for var in match[1:-1].split('.'):
                 if not var in value:
-                    LOGGER.error('Unable to replace variables in %s from %s' %
+                    LOGGER.error('Unable to replace variables in %s from %s',
                                  text, values)
                     return None
                 value = value[var]
@@ -531,6 +530,7 @@ class ARIRequest(object):
         return text
 
     def send(self, values):
+        """Send this ARI request substituting the given values"""
         uri = self.var_replace(self.uri, values)
         url = self.ari.build_url(uri)
         requests_method = getattr(requests, self.method)
@@ -544,21 +544,20 @@ class ARIRequest(object):
 
         if self.expect:
             if response.status_code != self.expect:
-                LOGGER.error('sent %s %s %s expected %s response %d %s' % (
-                    self.method, self.uri, self.params,
-                    self.expect,
-                    response.status_code, response.text))
+                LOGGER.error('sent %s %s %s expected %s response %d %s',
+                             self.method, self.uri, self.params, self.expect,
+                             response.status_code, response.text)
                 return False
         else:
             if response.status_code / 100 != 2:
-                LOGGER.error('sent %s %s %s response %d %s' % (
-                    self.method, self.uri, self.params,
-                    response.status_code, response.text))
+                LOGGER.error('sent %s %s %s response %d %s',
+                             self.method, self.uri, self.params,
+                             response.status_code, response.text)
                 return False
 
-        LOGGER.info('sent %s %s %s response %d %s' % (
-            self.method, self.uri, self.params,
-            response.status_code, response.text))
+        LOGGER.info('sent %s %s %s response %d %s',
+                    self.method, self.uri, self.params,
+                    response.status_code, response.text)
         return response
 
 
@@ -615,11 +614,11 @@ class EventMatcher(object):
                 if res:
                     return True
                 else:
-                    LOGGER.error("Callback failed: %r" %
+                    LOGGER.error("Callback failed: %r",
                                  self.instance_config)
                     self.passed = False
             except:
-                LOGGER.error("Exception in callback: %s" %
+                LOGGER.error("Exception in callback: %s",
                              traceback.format_exc())
                 self.passed = False
 
@@ -690,7 +689,7 @@ def all_match(pattern, message):
         # Integers are literal matches
         return pattern == message
     else:
-        LOGGER.error("Unhandled pattern type %s" % type(pattern))
+        LOGGER.error("Unhandled pattern type %s", type(pattern))
 
 
 class Range(object):
