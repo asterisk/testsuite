@@ -11,6 +11,7 @@ import os
 import sys
 import logging
 import shutil
+import re
 
 sys.path.append("lib/python")
 from ami import AMIEventInstance
@@ -344,6 +345,239 @@ class CallFiles(object):
 
         shutil.move(src_file, dst_file)
         os.utime(dst_file, None)
+
+
+class SoundChecker(object):
+    """ This class allows the user to check if a given sound file exists,
+    whether a sound file fits within a range of file size, and has enough
+    energy in it to pass a BackgroundDetect threshold of silence"""
+
+    def __init__(self, module_config, test_object):
+        """Constructor"""
+        super(SoundChecker, self).__init__()
+        self.test_object = test_object
+        self.module_config = module_config['sound-file-config']
+        self.filepath = ""
+        self.sound_file = {}
+        self.actions = []
+        self.index = 0
+        self.action_index = 0
+        self.auto_stop = module_config.get('auto-stop', False)
+        self.test_object.register_ami_observer(self.ami_connect)
+
+    def build_sound_file_location(self, filename, path_type, path_name=""):
+        """Creates the filepath for the given sound file.
+        File_path_types should include relative and absolute, and if absolute,
+        look for an absolute_path string. Fails if the path type is invalid
+        or parameters are missing
+
+        Keyword Arguments:
+        filename:  The same of the file to be set and used
+        path-type: The type of path file- either relative or absolute
+        path_name: Optional parameter that must be included with an
+                   absolute type_path. It stores the actual file path to be
+                   used
+        returns:
+        filepath: The filepath that this sound_file test will use.
+        """
+        asterisk_instance = self.module_config[self.index].get('id', 0)
+        if path_type == 'relative':
+            ast_instance = self.test_object.ast[asterisk_instance]
+            base_path = ast_instance.base
+            spool_dir = ast_instance.directories["astspooldir"]
+            filepath = ("%s%s/%s" % (base_path, spool_dir, filename))
+            return filepath
+        elif path_type == 'absolute':
+            if path_name:
+                filepath = "%s/%s" % (path_name, filename)
+                return filepath
+            else:
+                raise Exception("No absolute path specified")
+        else:
+            raise Exception("Invalid file path type or undefined path type")
+
+    def size_check(self, ami):
+        """The size range test.
+        Checks whether the size of the file meets a certain threshold of
+        byte size. Fails if it doesn't.  Iterates action_index so that the
+        next action can be done.
+
+        Keyword Arguments:
+        ami- the AMI instance used by this test, not used by this function
+        but needs to be passed into sound_check_actions to continue
+        """
+        filesize = -1
+        filesize = os.path.getsize(self.filepath)
+        size = self.actions[self.action_index].get('size')
+        tolerance = self.actions[self.action_index].get('tolerance')
+        if ((filesize - size) > tolerance) or ((size - filesize) > tolerance):
+            LOGGER.error("""File '%s' failed size check: expected %d, actual %d
+                          (tolerance +/- %d""" % (self.filepath, size, filesize,
+                                                tolerance))
+            self.test_object.set_passed(False)
+            if self.auto_stop:
+                self.test_object.stop_reactor()
+            return
+        else:
+            self.action_index += 1
+            self.sound_check_actions(ami)
+
+    def energy_check(self, ami):
+        """Checks the energy levels of a given sound file.
+        This is done by creating a local channel into a dialplan extension
+        that does a BackgroundDetect on the sound file.  The extensions must
+        be defined by the user.
+
+        Keyword Arguments:
+        ami- the AMI instance used by this test
+        """
+        energyfile = self.filepath[:self.filepath.find('.')]
+        action = self.actions[self.action_index]
+        #ami.originate has no type var, so action['type'] has to be popped
+        action.pop('type')
+        action['variable'] = {'SOUNDFILE': energyfile}
+        ami.registerEvent("UserEvent", self.verify_presence)
+        dfr = ami.originate(**action)
+        dfr.addErrback(self.test_object.handle_originate_failure)
+
+    def sound_check_actions(self, ami):
+        """The second, usually larger part of the sound check.
+        Iterates through the actions that will be used to check various
+        aspects of the given sound file.  Waits for the output of the action
+        functions before continuing. If all actions have been completed resets
+        the test to register for a new event as defined in the triggers. If
+        all sound-file tests have been finished, sets the test to passed.
+
+        Keyword Arguments:
+        ami- the AMI instance used by this test
+        """
+        if self.action_index == len(self.actions):
+            self.action_index = 0
+            self.index += 1
+            if self.index == len(self.module_config):
+                LOGGER.info("Test successfully passed")
+                self.test_object.set_passed(True)
+                if self.auto_stop:
+                    self.test_object.stop_reactor()
+            else:
+                self.event_register(ami)
+        else:
+            actiontype = self.actions[self.action_index]['type']
+            if actiontype == 'size_check':
+                self.size_check(ami)
+            elif actiontype == 'energy_check':
+                self.energy_check(ami)
+
+    def verify_presence(self, ami, event):
+        """UserEvent verifier for the energy check.
+        Verifies that the userevent that was given off by the dialplan
+        extension called in energy_check was a soundcheck userevent and that
+        the status is pass.  Fails if the status was not pass. Iterates
+        action_index if it passed so that the next action can be done.
+
+        Keyword Arguments:
+        ami- the AMI instance used by this test
+        event- the event (Userevent) being picked up by the AMI that
+        determines whether a correct amount of energy has been detected.
+        """
+        userevent = event.get("userevent")
+        if not userevent:
+            return
+        if userevent.lower() != "soundcheck":
+            return
+        LOGGER.info("Checking the sound check userevent")
+        ami.deregisterEvent("UserEvent", self.verify_presence)
+        status = event.get("status")
+        LOGGER.debug("Status of the sound check is " + status)
+        if status != "pass":
+            LOGGER.error("The sound check wasn't successful- test failed")
+            self.test_object.set_passed(False)
+            if self.auto_stop:
+                self.test_object.stop_reactor()
+            return
+        else:
+            self.action_index += 1
+            self.sound_check_actions(ami)
+
+    def sound_check_start(self, ami, event):
+        """The first part of the sound_check test. Required.
+        It deregisters the prerequisite event as defined in triggers so that
+        it doesn't keep looking for said events. Then it checks whether the
+        sound file described in the YAML exists by looking for the file with
+        the given path. The filepath is determined by calling
+        build_sound_file_location.  After this initial part of sound_check,
+        the remaining actions are then called.
+
+        Keyword Arguments:
+        ami- the AMI instance used by this test
+        event- the event (defined by the triggers section) being picked up by
+        the AMI that allows the rest of the pluggable module to be accessed
+        """
+        config = self.module_config[self.index]
+        instance_id = config.get('id', 0)
+        if ami.id != instance_id:
+            return
+        current_trigger = config['trigger']['match']
+        if current_trigger.get('channel'):
+            if not (re.match(current_trigger.get('channel'),
+                    event.get('channel'))):
+                return
+        ami.deregisterEvent(current_trigger.get('event'),
+                            self.sound_check_start)
+        self.sound_file = config['sound-file']
+        if not self.sound_file:
+            raise Exception("No sound file parameters specified")
+        if (not self.sound_file.get('file-name') or
+            not self.sound_file.get('file-path-type')):
+            raise Exception("No file or file path type specified")
+        if self.sound_file.get('absolute-path'):
+            file_name = self.sound_file['file-name']
+            file_path_type = self.sound_file['file-path-type']
+            absolute_path = self.sound_file['absolute-path']
+            self.filepath = self.build_sound_file_location(file_name,
+                                                           file_path_type,
+                                                           absolute_path)
+        else:
+            file_name = self.sound_file['file-name']
+            file_path_type = self.sound_file['file-path-type']
+            self.filepath = self.build_sound_file_location(file_name,
+                                                           file_path_type)
+        #Find the filesize here if it exists
+        if not os.path.exists(self.filepath):
+            LOGGER.error("File '%s' does not exist!" % self.filepath)
+            self.test_object.set_passed(False)
+            if self.auto_stop == True:
+                self.test_object.stop_reactor()
+            return
+        self.actions = self.sound_file.get('actions')
+        self.sound_check_actions(ami)
+
+    def event_register(self, ami):
+        """Event register for the prerequisite event.
+        Starts looking for the event defined in the triggers section of the
+        YAML that allows the rest of the test to be accessed.
+
+        Keyword Arguments:
+        ami- the AMI instance used by this test
+        """
+        current_trigger = self.module_config[self.index]['trigger']['match']
+        trigger_id = current_trigger.get('id', 0)
+        if ami.id != trigger_id:
+            return
+        if not current_trigger:
+            raise Exception("Missing a trigger")
+        else:
+            ami.registerEvent(current_trigger.get('event'),
+                              self.sound_check_start)
+
+    def ami_connect(self, ami):
+        """Starts the ami_connection and then calls event_register
+
+        Keyword Arguments:
+        ami- the AMI instance used by this test
+        """
+        self.event_register(ami)
+
 
 class FastAGIModule(object):
     """A class that makes a FastAGI server available to be called via the

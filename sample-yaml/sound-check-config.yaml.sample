@@ -1,0 +1,89 @@
+#Configuration sample for the SoundChecker Module
+
+sound-file-analyzer:
+    auto-stop: True #If auto-stop is set to true than the test automatically stops reactor if test passes/fails
+    sound-file-config:
+        -
+            # The trigger for the test. One has the option to use
+            # regexes if they wish when looking at a channel. Currently, the pluggable module
+            # only supports events in order to trigger the tests. AMI id is optional but will be
+            # set to 0 if not defined.
+            trigger:
+                match:
+                        # The AMI id to look at for the occurring event
+                        id: 0
+
+                        # The event to look for, a common one would be a hang up of a channel after a
+                        # sound file has been created in the dialplan.
+                        event: 'Hangup'
+
+                        # The channel to look at for the given event.
+                        channel: 'Local/s@record-.*'
+
+            id: 0 # Asterisk instance to look at. Optional if you just want to use instance 0.
+            sound-file:
+                    # The name of the audio file that we are testing, text before one or more forward
+                    # slashes represent extensions beyond the given path
+                    file-name: 'testaudio1.raw'
+
+                    # There are two different path types that this pluggable module uses:
+                    #
+                    # absolute: You write your own file path and MUST include an absolute-path variable
+                    # to write the file path
+                    #
+                    # relative: Looks at the var/spool/asterisk folder of the given test run; from
+                    # there, one must must add extensions to the file-name in order to reach the
+                    # other folders underneath var/spool/asterisk
+                    file-path-type: 'absolute'
+                    absolute-path: '/home/cwolfe/asterisk_trunk/testsuite/tests/apps/mixmonitor'
+
+                    # The list of actions that will be done to the sound-file.  So far, this module
+                    # only supports two which are defined by setting the type variable:
+                    #
+                    # size_check: Takes in a size integer that will serve as a basis size, and a
+                    # tolerance integer which allows leeway from the size variable.  In the example
+                    # below, if the file size is around 36000 to 46000 bytes, then this portion of
+                    # the test passes.
+                    #
+                    # energy_check: Takes in a channel name, context, extension, and priority and
+                    # originates a channel into the dialplan.  The channel should land itself in
+                    # an extension that goes into a BackgroundDetect application that tests the
+                    # amount of silence that one would expect in a sound file.
+                    actions:
+                        -
+                            type: 'size_check'
+                            size: 41000
+                            tolerance: 5000
+                        -
+                            type: 'energy_check'
+                            channel: 'Local/audio@soundtest'
+                            context: 'listener'
+                            exten: 's'
+                            priority: '1'
+        -
+            # If one just wanted to trigger a test immediately after the previous test has gone
+            # by, they could simply look for a hangup of the channel they use to run the previous
+            # sound test, as done in this sample-yaml.
+            trigger:
+                match:
+                        id: 0
+                        event: 'Hangup'
+                        channel: 'Local/audio@soundtest-.*'
+            id: 0
+            sound-file:
+                    # An example of the use of the relative path_type.  Note the extension before
+                    # the actual file name.
+                    file-name: 'monitor/theSound.wav'
+                    file-path-type: 'relative'
+                    actions:
+                        -
+                            type: 'size_check'
+                            size: 32000
+                            tolerance: 5000
+                        -
+                            type: 'energy_check'
+                            channel: 'Local/audio@soundtest'
+                            context: 'listener'
+                            exten: 's'
+                            priority: '1'
+
