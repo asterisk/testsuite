@@ -3,4 +3,5 @@ tests:
     - test: 'file_conflicts'
     - test: 'format_unavailable'
     - test: 'nominal'
+    - test: 'duration'
     - dir: 'stored'
