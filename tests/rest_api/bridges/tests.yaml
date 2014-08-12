@@ -9,4 +9,6 @@ tests:
     - test: 'attended_transfer'
     - test: 'bridge_by_id'
     - test: 'bridge_record'
+    - test: 'id_propagate'
+    - test: 'no_id_propagate'
     - dir: 'playback'

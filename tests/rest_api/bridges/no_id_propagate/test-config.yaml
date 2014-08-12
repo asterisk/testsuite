@@ -1,0 +1,199 @@
+testinfo:
+    summary: Test checks whether in a holding two party bridge, the bridge does NOT
+             propagate linkedids and accountcodes.
+    description: |
+             Two channels, labelled as alice and bob, both enter a holding bridge. One
+             channel, alice, has an accountcode, while the other one doesn't. When they
+             enter the bridge, the accountcode of one channel should NOT be stored in
+             in the other's peeraccount.  The LinkedId of the channel that entered the
+             bridge first should not replace the LinkedId of the channel that entered
+             last. Fails if conditions aren't met.
+
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: cel-config
+            typename: ami.AMIEventModule
+
+test-object-config:
+    test-iterations:
+        -
+            endpoint: 'Local/s@default'
+            channelId: 'alice'
+            app: 'testsuite'
+
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'alice'
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'channels/alice/variable'
+                    params:
+                        variable: 'CHANNEL(accountcode)'
+                        value: 'alice'
+                -
+                    method: 'post'
+                    uri: 'channels'
+                    params:
+                        endpoint: 'Local/s@default'
+                        app: 'testsuite'
+                        channelId: 'bob'
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'bob'
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'bridges'
+                    params:
+                        bridgeId: 'TheBridge'
+                        type: 'holding'
+                -
+                    method: 'post'
+                    uri: 'bridges/TheBridge/addChannel'
+                    params:
+                        channel: 'alice'
+        -
+            conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    application: testsuite
+                    channel:
+                        id: 'alice'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'bridges/TheBridge/addChannel'
+                params:
+                    channel: 'bob'
+        -
+            conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    application: testsuite
+                    channel:
+                        id: 'bob'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'bridges/TheBridge/removeChannel'
+                params:
+                    channel: 'alice'
+        -
+            conditions:
+                match:
+                    type: ChannelLeftBridge
+                    application: testsuite
+                    channel:
+                        id: 'alice'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'bridges/TheBridge/removeChannel'
+                params:
+                    channel: 'bob'
+        -
+            conditions:
+                match:
+                    type: ChannelLeftBridge
+                    application: testsuite
+                    channel:
+                        id: 'bob'
+            count: 1
+            requests:
+                -
+                    method: 'delete'
+                    uri: 'bridges/TheBridge'
+                -
+                    method: 'delete'
+                    uri: 'channels/bob'
+                -
+                    method: 'delete'
+                    uri: 'channels/alice'
+
+
+cel-config:
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/s@default-.{7}0;1'
+        requirements:
+            -
+                match:
+                    EventName: 'CHAN_START'
+                    UniqueID: 'alice'
+                    PeerAccount: ''
+                    LinkedID: 'alice'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/s@default-.{7}1;1'
+        requirements:
+            -
+                match:
+                    EventName: 'CHAN_START'
+                    UniqueID: 'bob'
+                    PeerAccount: ''
+                    LinkedID: 'bob'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/s@default-.{7}0;1'
+        requirements:
+            -
+                match:
+                     EventName: 'BRIDGE_EXIT'
+                     UniqueID: 'alice'
+                     PeerAccount: ''
+                     LinkedID: 'alice'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/s@default-.{7}1;1'
+        requirements:
+            -
+                match:
+                     EventName: 'BRIDGE_EXIT'
+                     UniqueID: 'bob'
+                     PeerAccount: ''
+                     LinkedID: 'bob'
+
+
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+    tags:
+        - ARI
+        - accountcode

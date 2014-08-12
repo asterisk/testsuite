@@ -1,0 +1,206 @@
+testinfo:
+    summary: Test checks whether in a mixing two party bridge, the bridge propagates
+             linkedids and accountcodes.
+    description: |
+             Two channels are created, named alice and bob.  Their accountcodes are set
+             to the same name of their respective channelIds, as are their linkedIds.
+             They both enter a mixing bridge, and their accountcodes should be stored
+             in the other's respective peeraccount.  The channel that entered first also
+             replaces the other's linkedId with its own.  If these events occur, the
+             test passes.
+
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: cel-config
+            typename: ami.AMIEventModule
+
+test-object-config:
+    test-iterations:
+        -
+            endpoint: 'Local/s@default'
+            channelId: 'alice'
+            app: 'testsuite'
+
+
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'alice'
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'channels/alice/variable'
+                    params:
+                        variable: 'CHANNEL(accountcode)'
+                        value: 'alice'
+                -
+                    method: 'post'
+                    uri: 'channels'
+                    params:
+                        endpoint: 'Local/s@default'
+                        app: 'testsuite'
+                        channelId: 'bob'
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'bob'
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'channels/bob/variable'
+                    params:
+                        variable: 'CHANNEL(accountcode)'
+                        value: 'bob'
+                -
+                    method: 'post'
+                    uri: 'bridges'
+                    params:
+                        bridgeId: 'TheBridge'
+                        type: 'mixing'
+                -
+                    method: 'post'
+                    uri: 'bridges/TheBridge/addChannel'
+                    params:
+                        channel: 'alice'
+        -
+            conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    application: testsuite
+                    channel:
+                        id: 'alice'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'bridges/TheBridge/addChannel'
+                params:
+                    channel: 'bob'
+        -
+            conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    application: testsuite
+                    channel:
+                        id: 'bob'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'bridges/TheBridge/removeChannel'
+                params:
+                    channel: 'alice'
+        -
+            conditions:
+                match:
+                    type: ChannelLeftBridge
+                    application: testsuite
+                    channel:
+                        id: 'alice'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'bridges/TheBridge/removeChannel'
+                params:
+                    channel: 'bob'
+        -
+            conditions:
+                match:
+                    type: ChannelLeftBridge
+                    application: testsuite
+                    channel:
+                        id: 'bob'
+            count: 1
+            requests:
+                -
+                    method: 'delete'
+                    uri: 'bridges/TheBridge'
+                -
+                    method: 'delete'
+                    uri: 'channels/bob'
+                -
+                    method: 'delete'
+                    uri: 'channels/alice'
+
+
+cel-config:
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/s@default-.{7}0;1'
+        requirements:
+            -
+                match:
+                    EventName: 'CHAN_START'
+                    UniqueID: 'alice'
+                    PeerAccount: ''
+                    LinkedID: 'alice'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/s@default-.{7}1;1'
+        requirements:
+            -
+                match:
+                    EventName: 'CHAN_START'
+                    UniqueID: 'bob'
+                    PeerAccount: ''
+                    LinkedID: 'bob'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/s@default-.{7}0;1'
+        requirements:
+            -
+                match:
+                    EventName: 'BRIDGE_EXIT'
+                    UniqueID: 'alice'
+                    PeerAccount: 'bob'
+                    LinkedID: 'alice'
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/s@default-.{7}1;1'
+        requirements:
+            -
+                match:
+                     EventName: 'BRIDGE_EXIT'
+                     UniqueID: 'bob'
+                     PeerAccount: 'alice'
+                     LinkedID: 'alice'
+
+
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+    tags:
+        - ARI
+        - accountcode
