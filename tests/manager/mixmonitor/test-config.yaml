@@ -1,0 +1,93 @@
+testinfo:
+    summary:     'Test MixMonitor recording functionality applications'
+    description: |
+        'This test verifies basic functionality of the recording feature in
+         MixMonitor by creating a local channel that upon being answered triggers
+         the MixMonitor and records the playback of tt-monkeys. The test passes
+         when the SoundChecker pluggable module verifies that the file is the
+         correct size and contains energy, meaning a file was created and stored
+         the recording correctly.'
+test-modules:
+        add-test-to-search-path: True
+        test-object:
+            config-section: test-object-config
+            typename: 'test_case.TestCaseModule'
+        modules:
+          - config-section: ami-config-11
+            typename: 'ami.AMIEventModule'
+            minversion: '11.0.0'
+            maxversion: '12.0.0'
+          - config-section: ami-config-12
+            typename: 'ami.AMIEventModule'
+            minversion: '12.0.0'
+          - config-section: start-call
+            typename: 'pluggable_modules.Originator'
+
+          - config-section: sound-file-analyzer
+            typename: 'pluggable_modules.SoundChecker'
+
+test-object-config:
+    asterisk-instances: 1
+    connect-ami: true
+
+start-call:
+    channel: 'Local/s@default'
+    context: 'default'
+    exten: 'echo'
+    priority: 1
+    trigger: 'ami_connect'
+    async: True
+
+ami-config-11:
+    -
+        type: 'callback'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'Local/s@default-00000000;1'
+        callbackModule: 'start_mix'
+        callbackMethod: 'record'
+
+ami-config-12:
+    -
+        type: 'callback'
+        conditions:
+            match:
+                Event: 'DialEnd'
+                DestChannel: 'Local/s@default-.*'
+        callbackModule: 'start_mix'
+        callbackMethod: 'record'
+
+sound-file-analyzer:
+    auto-stop: True
+    sound-file-config:
+        -
+            trigger:
+                match:
+                        id: 0
+                        event: 'Hangup'
+                        channel: 'Local/s@default-.*'
+            id: 0
+            sound-file:
+                    file-name: 'monitor/theRecording.wav'
+                    file-path-type: 'relative'
+                    actions:
+                        -
+                            type: 'size_check'
+                            size: 258000
+                            tolerance: 5000
+                        -
+                            type: 'energy_check'
+                            channel: 'Local/audio@soundtest'
+                            context: 'default'
+                            exten: 's'
+                            priority: '1'
+
+properties:
+    minversion: '11.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk: 'app_mixmonitor'
+    tags:
+        - mixmonitor
