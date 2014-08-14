@@ -1,0 +1,124 @@
+testinfo:
+    summary: Tests that the forward ARI playback command on bridges works as intended
+    description: |
+        This test puts a local channel half into Stasis, and the other into the Echo
+        application.  The channel that enters Stasis then gets put into a bridge.
+        Starts an ARI playback of tt-monkeys on the bridge, and as soon as the playback
+        starts, fast forwards the playback. Test passes if a playback FastForward
+        TestEvent gets received.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: ami-config
+            typename: ami.AMIEventModule
+
+apps: testsuite
+
+test-object-config:
+    test-iterations:
+        -
+            endpoint: 'Local/s@default'
+            channelId: 'theChannel'
+            app: 'testsuite'
+
+
+ari-config:
+    events:
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'theChannel'
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'bridges/theBridge'
+                -
+                    method: 'post'
+                    uri: 'bridges/theBridge/addChannel'
+                    params:
+                        channel: 'theChannel'
+        -
+            conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    application: testsuite
+                    bridge:
+                        id: 'theBridge'
+                    channel:
+                        id: 'theChannel'
+            requests:
+                -
+                    method: 'post'
+                    uri: 'bridges/theBridge/play/monkeys'
+                    params:
+                       media: 'sound:tt-monkeys'
+        -
+            conditions:
+                match:
+                    type: PlaybackStarted
+                    application: testsuite
+                    playback:
+                        id: 'monkeys'
+                        target_uri: 'bridge:theBridge$'
+                        media_uri: 'sound:tt-monkeys'
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'playbacks/monkeys/control?operation=forward'
+                -
+                    delay: 3
+                    method: 'delete'
+                    uri: 'playbacks/monkeys'
+        -
+            conditions:
+                match:
+                    type: PlaybackFinished
+                    application: testsuite
+                    playback:
+                        id: 'monkeys'
+                        target_uri: 'bridge:theBridge$'
+                        media_uri: 'sound:tt-monkeys'
+            count: 1
+            requests:
+                -
+                    method: 'delete'
+                    uri: 'bridges/theBridge'
+                -
+                    method: 'delete'
+                    uri: 'channels/theChannel'
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'PLAYBACK'
+                Control: 'FastForward'
+                SkipMs: '3000'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+        - asterisk : res_ari_playbacks
+    tags:
+        - ARI

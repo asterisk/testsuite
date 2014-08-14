@@ -1,3 +1,5 @@
 tests:
     - test: 'basic'
     - test: 'tones'
+    - test: 'forward'
+    - test: 'reverse'

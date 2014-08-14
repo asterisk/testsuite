@@ -4,3 +4,5 @@ tests:
     - test: 'to_channel_in_bridge'
     - test: 'tones'
     - test: 'tones_w_tonezone'
+    - test: 'forward'
+    - test: 'reverse'
