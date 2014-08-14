@@ -586,9 +586,11 @@ class ApplicationEventInstance(AMIEventInstance):
     def event_callback(self, ami, event):
         """Override of AMIEventInstance event_callback."""
 
+        actions = list(self.actions)
+
         # If we aren't matching on a channel, then just execute the actions
         if 'channel' not in event or len(self.channel_id) == 0:
-            self.execute_next_action()
+            self.execute_next_action(actions=actions)
             return
 
         self.channel_obj = self.test_object.get_channel_object(self.channel_id)
@@ -598,23 +600,23 @@ class ApplicationEventInstance(AMIEventInstance):
         # names
         if (self.channel_obj.app_channel in event['channel']
             or self.channel_obj.controller_channel in event['channel']):
-            self.execute_next_action()
+            self.execute_next_action(actions=actions)
 
-    def execute_next_action(self, result=None):
+    def execute_next_action(self, result=None, actions=None):
         """Execute the next action in the sequence"""
 
-        if (len(self.actions) == 0):
+        if (not actions or len(actions) == 0):
             return
 
         LOGGER.debug("Executing action %d on %s" %
                      (self.__current_action, str(self.channel_obj)))
-        ret_obj = self.actions.pop(0)(self.channel_obj)
+        ret_obj = actions.pop(0)(self.channel_obj)
 
         self.__current_action += 1
         if ret_obj is not None:
-            ret_obj.addCallback(self.execute_next_action)
+            ret_obj.addCallback(self.execute_next_action, actions)
         else:
-            reactor.callLater(0, self.execute_next_action)
+            reactor.callLater(0, self.execute_next_action, actions)
         return result
 
     def dispose(self, ami):

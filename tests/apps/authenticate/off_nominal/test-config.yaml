@@ -1,0 +1,74 @@
+test-info:
+    summary: Tests the failure reponse of the Authenticate application with a custom prompt.
+    description: |
+        This test will originate a local channel, and when the channel is detected,
+        the Authenticate application will be called through the dialplan. An incorrect
+        dtmf password will be provided, and the test will pass as long as the Authenticate
+        application fails correctly, by playing 'auth-incorrect' until the max number of
+        tries is exceeded, and then it will play 'vm-goodbye' and hang up the channel.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  apps:
+     - 'Authenticate'
+  scenarios:
+    -
+      channels:
+        -
+          channel-id: 'Authenticate-Channel'
+          channel-name: 'Local/start@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Application: 'Authenticate'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  dtmf: '0112#'
+            -
+              type: 'headermatch'
+              count: 2
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Channel: 'Local/start@default-.*'
+                  Message: 'auth-incorrect'
+              actions:
+                -
+                  action-type: 'send-dtmf'
+                  dtmf: '3581#'
+
+            -
+              type: 'headermatch'
+              count: 1
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Channel: 'Local/start@default-.*'
+                  Message: 'vm-goodbye'
+              actions:
+                -
+                  action-type: 'end-scenario'
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'app_authenticate'
+    tags:
+        - apps

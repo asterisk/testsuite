@@ -19,3 +19,4 @@ tests:
     - test: 'say_interrupt'
     - test: 'channel_redirect'
     - dir: 'disa'
+    - dir: 'authenticate'
