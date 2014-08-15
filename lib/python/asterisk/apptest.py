@@ -606,17 +606,19 @@ class ApplicationEventInstance(AMIEventInstance):
         """Execute the next action in the sequence"""
 
         if (not actions or len(actions) == 0):
+            self.__current_action = 0
             return
 
         LOGGER.debug("Executing action %d on %s" %
                      (self.__current_action, str(self.channel_obj)))
-        ret_obj = actions.pop(0)(self.channel_obj)
+        action = actions.pop(0)
+        ret_obj = action(self.channel_obj)
 
         self.__current_action += 1
         if ret_obj is not None:
-            ret_obj.addCallback(self.execute_next_action, actions)
+            ret_obj.addCallback(self.execute_next_action, actions=actions)
         else:
-            reactor.callLater(0, self.execute_next_action, actions)
+            reactor.callLater(0, self.execute_next_action, actions=actions)
         return result
 
     def dispose(self, ami):
@@ -813,6 +815,7 @@ class ActionSendMessage(object):
             self.message_fields['Channel'] = test_object.get_channel_object(self.channel_id).app_channel
         LOGGER.debug('Sending message: %s' % str(self.message_fields))
         channel_object.ami.sendMessage(self.message_fields)
+        return None
 
 
 class ActionFactory(object):
