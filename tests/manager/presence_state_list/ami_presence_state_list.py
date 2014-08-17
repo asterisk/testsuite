@@ -125,6 +125,10 @@ class AMIPresenceStateList(object):
             # Not for us!
             return
 
+        if (event.get('event') != 'PresenceStateChange'):
+            # Ignore completion event
+            return
+
         self.check_parameter(event, 'status')
         self.check_parameter(event, 'subtype')
         self.check_parameter(event, 'message')

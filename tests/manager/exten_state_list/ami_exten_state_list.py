@@ -139,6 +139,10 @@ class AMIExtensionStateList(object):
             # Not for us!
             return
 
+        if (event.get('event') != 'ExtensionStatus'):
+            # Ignore completion event
+            return
+
         self.check_parameter(event, 'exten')
         self.check_parameter(event, 'status')
         self.check_parameter(event, 'statustext')
@@ -147,7 +151,7 @@ class AMIExtensionStateList(object):
         if self.state_pos == len(EXPECTED_STATES):
             self.test_object.set_passed(True)
         elif self.state_pos > len(EXPECTED_STATES):
-            LOGGER.error("Oh snap, we got %d presence updates but expected %d" %
+            LOGGER.error("Oh snap, we got %d updates but expected %d" %
                 (self.state_pos, len(EXPECTED_STATES)))
             self.test_object.set_passed(False)
 
