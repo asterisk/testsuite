@@ -540,7 +540,12 @@ class ChannelObject(object):
 
         self.app_channel = event['channel']
         self._candidate_channels.remove(event['channel'])
-        self.controller_channel = self._candidate_channels[0]
+        if (';2' in self.app_channel):
+            controller_name = self.app_channel.replace(';2', '') + ';1'
+        else:
+            controller_name = self.app_channel.replace(';1', '') + ';2'
+        self.controller_channel = controller_name
+        self._candidate_channels.remove(controller_name)
         LOGGER.debug("Setting App Channel to %s; Controlling Channel to %s"
                      % (self.app_channel, self.controller_channel))
         return (ami, event)
@@ -586,21 +591,20 @@ class ApplicationEventInstance(AMIEventInstance):
     def event_callback(self, ami, event):
         """Override of AMIEventInstance event_callback."""
 
-        actions = list(self.actions)
-
         # If we aren't matching on a channel, then just execute the actions
         if 'channel' not in event or len(self.channel_id) == 0:
-            self.execute_next_action(actions=actions)
+            self.execute_next_action(actions=self.actions)
             return
 
         self.channel_obj = self.test_object.get_channel_object(self.channel_id)
+
         # Its possible that the event matching could only be so accurate, as
         # there may be multiple Local channel in the same extension.  Make
         # sure that this is actually for us by checking the Asterisk channel
         # names
         if (self.channel_obj.app_channel in event['channel']
             or self.channel_obj.controller_channel in event['channel']):
-            self.execute_next_action(actions=actions)
+            self.execute_next_action(actions=self.actions)
 
     def execute_next_action(self, result=None, actions=None):
         """Execute the next action in the sequence"""
