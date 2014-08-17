@@ -35,6 +35,13 @@ ari-config:
                 method: on_test_start
         -   conditions:
                 match:
+                    type: ChannelEnteredBridge
+            count: 2
+            callback:
+                module: blind_transfer
+                method: on_channel_entered_bridge
+        -   conditions:
+                match:
                     type: BridgeBlindTransfer
                     application: testsuite
             count: 1
