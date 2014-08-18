@@ -20,9 +20,10 @@ def get_vars(ari, channel_id):
     actual = resp.json()["value"]
     eq('works', actual)
 
+    ari.set_allow_errors(True)
     resp = ari.get('channels', channel_id, 'variable', variable='SHELL(echo -n fail)')
-    actual = resp.json()["value"]
-    eq('', actual)
+    ari.set_allow_errors(False)
+    eq(500, resp.status_code)
 
 
 def on_start(ari, event, test_object):
