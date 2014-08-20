@@ -4,7 +4,7 @@
 	<recv request="INVITE" crlf="true">
                 <action>
                         <!-- Check that the Diversion header is present and contains the correct caller id. -->
-	        	<ereg regexp="user2" search_in="hdr" header="Diversion:" check_it="true" assign_to="1" />
+	        	<ereg regexp="amenhotep.*sip:1234.*" search_in="hdr" header="Diversion:" check_it="true" assign_to="1" />
 		        <log message="Received INVITE with Diversion header: [$1]." />
 		</action>
         </recv>
