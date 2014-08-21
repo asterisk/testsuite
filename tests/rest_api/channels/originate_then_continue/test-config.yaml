@@ -1,7 +1,9 @@
 testinfo:
-    summary: Test originating calls to a Stasis application using ARI.
+    summary: Test continuing from calls originated into Stasis using ARI
     description: |
-        Originate a specific number of calls using ARI and verify all enter Stasis.
+        Originate a call into ARI and then have that call continue to a PBX
+        extension that will generate the user event.  Check for the user event
+        and all anticipated Stasis events.
 
 test-modules:
     add-test-to-search-path: True
@@ -11,6 +13,9 @@ test-modules:
         -   config-section: ari-config
             typename: ari.WebSocketEventModule
 
+        -   config-section: ami-config
+            typename: ami.AMIEventModule
+
 ari-config:
     apps: testsuite
     events:
@@ -18,7 +23,9 @@ ari-config:
                 match:
                     type: StasisStart
                     application: testsuite
-                    args: []
+                nomatch:
+                    channel:
+                        id: 'continue_guy'
             count: 1
             callback:
                 module: channel_originate
@@ -27,22 +34,39 @@ ari-config:
                 match:
                     type: StasisStart
                     application: testsuite
-                    args: ['blast']
-            count: 25
-            callback:
-                module: channel_originate
-                method: on_blast_start
+                    channel:
+                        id: 'continue_guy'
+            requests:
+                # Set the channel to continue
+                method: 'post'
+                uri: 'channels/continue_guy/continue'
+                params:
+                    context: 'default'
+                    extension: '2000'
+                    priority: 1
+
+            count: 1
         -   conditions:
                 match:
                     type: ChannelDestroyed
                     application: testsuite
-            count: 50
+            count: 2
             callback:
                 module: channel_originate
                 method: on_channel_destroyed
 
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+        requirements:
+            match:
+                UserEvent: 'ExtensionExecuted'
+
 properties:
-    minversion: '12.0.0'
+    minversion: '12.6.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests
