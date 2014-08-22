@@ -1,17 +1,17 @@
 testinfo:
-    summary: 'Test playback start and manipulation using IDs'
+    summary: 'Test results of a hangup while in a bridge when doing playback to the channel'
     description: |
         * Originate a channel
         * Create a bridge
         * Add the channel to the bridge
         * Playback two audio files to the channel (not the bridge)
-        * Wait for both to complete
-        * Remove the channel from the bridge
+        * Wait for the first to complete
+        * hangup the channel when the second starts
         * Delete the bridge
         * Validate all the events
 
 properties:
-    minversion: '12.2.0'
+    minversion: '12.6.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests
@@ -24,7 +24,6 @@ properties:
         - ARI
 
 test-modules:
-    add-test-to-search-path: True
     test-object:
         config-section: test-object-config
         typename: ari.AriOriginateTestObject
@@ -45,9 +44,23 @@ ari-config:
                     channel:
                         id: 'testsuite-default-id$'
             count: 1
-            callback:
-                module: play_file
-                method: on_start
+            requests:
+                -
+                    instance: 1
+                    method: 'post'
+                    uri: 'bridges'
+                    params:
+                        bridgeId: 'testsuite-bridge'
+                -
+                    instance: 1
+                    method: 'post'
+                    uri: 'channels/testsuite-default-id/answer'
+                -
+                    instance: 1
+                    method: 'post'
+                    uri: 'bridges/testsuite-bridge/addChannel'
+                    params:
+                        channel: 'testsuite-default-id'
         -
             conditions:
                 match:
@@ -57,14 +70,12 @@ ari-config:
             requests:
                 -
                     instance: 1
-                    delay: 1
                     method: 'post'
                     uri: 'channels/testsuite-default-id/play/MyPlaybackId1'
                     params:
                         media: 'sound:silence/5'
                 -
                     instance: 1
-                    delay: 2
                     method: 'post'
                     uri: 'channels/testsuite-default-id/play/MyPlaybackId2'
                     params:
@@ -78,9 +89,6 @@ ari-config:
                         id: 'MyPlaybackId1'
                         target_uri: 'channel:testsuite-default-id$'
             count: 1
-            callback:
-                module: play_file
-                method: on_playback_started1
         -
             conditions:
                 match:
@@ -90,9 +98,6 @@ ari-config:
                         id: 'MyPlaybackId1'
                         target_uri: 'channel:testsuite-default-id$'
             count: 1
-            callback:
-                module: play_file
-                method: on_playback_finished1
         -
             conditions:
                 match:
@@ -101,10 +106,12 @@ ari-config:
                     playback:
                         id: 'MyPlaybackId2'
                         target_uri: 'channel:testsuite-default-id$'
+            requests:
+                -
+                    instance: 1
+                    method: 'delete'
+                    uri: 'channels/testsuite-default-id'
             count: 1
-            callback:
-                module: play_file
-                method: on_playback_started2
         -
             conditions:
                 match:
@@ -114,18 +121,17 @@ ari-config:
                         id: 'MyPlaybackId2'
                         target_uri: 'channel:testsuite-default-id$'
             count: 1
-            callback:
-                module: play_file
-                method: on_playback_finished2
         -
             conditions:
                 match:
                     type: ChannelLeftBridge
                     application: testsuite
             count: 1
-            callback:
-                module: play_file
-                method: on_leave
+            requests:
+                -
+                    instance: 1
+                    method: 'delete'
+                    uri: 'bridges/testsuite-bridge'
         -
             conditions:
                 match:

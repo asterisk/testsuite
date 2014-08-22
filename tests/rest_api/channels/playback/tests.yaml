@@ -2,6 +2,7 @@
 tests:
     - test: 'basic'
     - test: 'to_channel_in_bridge'
+    - test: 'to_channel_in_bridge_hangup'
     - test: 'tones'
     - test: 'tones_w_tonezone'
     - test: 'forward'
