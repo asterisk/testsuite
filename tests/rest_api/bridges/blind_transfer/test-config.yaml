@@ -20,6 +20,8 @@ ari-config:
                     type: StasisStart
                     application: testsuite
                     args: []
+                    channel:
+                        name: 'Local/s@default-00000000;2'
             count: 1
             callback:
                 module: blind_transfer
@@ -28,18 +30,45 @@ ari-config:
                 match:
                     type: StasisStart
                     application: testsuite
+                    args: []
+                    channel:
+                        name: 'Local/1000@default-00000001;1'
+                    replace_channel:
+                        name: 'PJSIP/bob-0000000.'
+            count: 1
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
                     args: ['test']
-            count: 2
+            count: 1
             callback:
                 module: blind_transfer
                 method: on_test_start
         -   conditions:
                 match:
                     type: ChannelEnteredBridge
-            count: 2
+                    channel:
+                        name: 'PJSIP/.*'
+            count: 1
             callback:
                 module: blind_transfer
                 method: on_channel_entered_bridge
+        -   conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    channel:
+                        name: 'Local/s@default-00000000;2'
+            count: 1
+        -   conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    channel:
+                        name: 'Local/1000@default-.*'
+            count: 1
+            callback:
+                module: blind_transfer
+                method: on_replace_channel_enter
         -   conditions:
                 match:
                     type: BridgeBlindTransfer

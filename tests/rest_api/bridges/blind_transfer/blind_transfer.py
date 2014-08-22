@@ -15,11 +15,9 @@ class TestLogic(object):
     def __init__(self):
         self.channels = 0
         self.bridge_id = None
+        self.originated_id = None
         self.pja = subprocess.Popen(['pjsua', '--local-port=5065', '--null-audio',
             '--id=sip:bob@127.0.0.1'],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        self.pjb = subprocess.Popen(['pjsua', '--local-port=5066', '--null-audio',
-            '--id=sip:alice@127.0.0.1'],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
 TEST = TestLogic()
@@ -28,10 +26,6 @@ def a_call_stasis():
     TEST.pja.stdin.write("m\n")
     TEST.pja.stdin.write("sip:stasis@127.0.0.1:5060\n")
 
-def b_call_stasis():
-    TEST.pjb.stdin.write("m\n")
-    TEST.pjb.stdin.write("sip:stasis@127.0.0.1:5060\n")
-
 def a_call_transfer():
     TEST.pja.stdin.write("x\n")
     TEST.pja.stdin.write("sip:1000@127.0.0.1:5060\n")
@@ -39,9 +33,11 @@ def a_call_transfer():
 def on_kickoff_start(ari, event, test_object):
     LOGGER.debug("on_kickoff_start(%r)" % event)
     TEST.bridge_id = ari.post('bridges').json()['id']
+
+    TEST.originated_id = event['channel']['id']
+    ari.post('bridges', TEST.bridge_id, 'addChannel', channel=TEST.originated_id)
+
     a_call_stasis()
-    b_call_stasis()
-    ari.delete('channels', event['channel']['id'])
     return True
 
 def on_test_start(ari, event, test_object):
@@ -53,16 +49,20 @@ def on_test_start(ari, event, test_object):
 def on_channel_entered_bridge(ari, event, test_object):
 
     TEST.channels += 1
-    if TEST.channels == 2:
+    if TEST.channels == 1:
         a_call_transfer()
 
     return True
 
+def on_replace_channel_enter(ari, event, test_object):
+
+    ari.delete('channels', event['channel']['id'])
+    return True
 
 def on_blind_transfer(ari, event, test_object):
     LOGGER.debug("on_blind_transfer(%r)" % event)
     ari.delete('bridges', TEST.bridge_id)
-    TEST.pjb.stdin.write("h\n")
+    ari.delete('channels', TEST.originated_id)
 
     if event.get('result') != 'Success':
         LOGGER.error('Blind transfer failed: %s' % event.get('result'))
