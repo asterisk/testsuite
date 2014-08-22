@@ -108,9 +108,9 @@ test-object-config:
               type: 'headermatch'
               conditions:
                 match:
-                  Event: 'Newexten'
-                  Context: 'default'
-                  Extension: 'wait'
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Message: 'tt-monkeys'
               actions:
                 -
                   action-type: 'send-ami-message'
