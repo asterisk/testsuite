@@ -1,0 +1,31 @@
+testinfo:
+    summary: 'This test ensures that a list subscription can be established.'
+    description: |
+        'This test uses a SIPp scenario to subscribe to a presence list. The
+        SIPp script ensures that Asterisk returns a 200 OK and that a
+        "Require: eventlist" header is present.'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+        - sipp:
+            version: 'v3.0'
+    tags:
+        - rls
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: 'test-case-config'
+        typename: 'sipp.SIPpTestCase'
+
+test-case-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'list_subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list'} }

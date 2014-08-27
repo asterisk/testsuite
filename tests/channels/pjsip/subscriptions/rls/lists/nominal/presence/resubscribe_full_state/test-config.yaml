@@ -1,0 +1,57 @@
+testinfo:
+    summary: 'Test to ensure that full state is sent on resubscription'
+    description: |
+        'This test uses SIPp to establish a subscription to a resource list.
+        The resource list is a presence list that contains two elements,
+        alice@default and bob@default. Once the subscription is established,
+        the scenario resubscribes to the list. A PCAP listener is used to
+        ensure that the NOTIFY bodies sent by Asterisk are valid. Each of the
+        two bodies should convey full resource state of the list, even though
+        the list is configured to receive partial state notifications. The
+        version number of the list should increment for each NOTIFY body.'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - python: 'yappcap'
+        - python: 'pyxb'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+    tags:
+        - rls
+        - pjsip
+
+test-modules:
+    add-to-search-path:
+        -
+            'tests/channels/pjsip/subscriptions/rls/'
+    test-object:
+        config-section: 'test-case-config'
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'test-config'
+            typename: 'rls_test.IntegrityCheck'
+
+test-case-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'resubscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list'} }
+
+test-config:
+    list_name: 'pres_list'
+    resources:
+        -
+            { 'alice': {'type': 'PIDF', 'state': 'active'},
+              'bob': {'type': 'PIDF', 'state': 'active'} }
+        -
+            { 'alice': {'type': 'PIDF', 'state': 'active'},
+              'bob': {'type': 'PIDF', 'state': 'active'} }
+    full_state:
+        -
+            True
+        -
+            True

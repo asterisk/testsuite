@@ -25,6 +25,8 @@ try:
 except:
     PCAP_AVAILABLE = False
 
+import rlmi
+
 LOGGER = logging.getLogger(__name__)
 
 class PcapListener(object):
@@ -57,7 +59,7 @@ class PcapListener(object):
         # Let exceptions propagate - if we can't create the pcap, this should
         # throw the exception to the pluggable module creation routines
         test_object.create_pcap_listener(
-            device=None,
+            device=device,
             bpf_filter=bpf_filter,
             dumpfile=filename)
 
@@ -201,6 +203,105 @@ class SDPPacket(Packet):
             self.rtcp_port = self.rtp_port + 1
 
 
+class PIDFPacket(Packet):
+    '''A PIDF presence body. Owned by SIPPacket or a MultipartPacket.'''
+
+    def __init__(self, ascii_packet, raw_packet, content_id):
+        Packet.__init__(self, packet_type="PIDF", raw_packet=raw_packet)
+        self.xml = ascii_packet.strip()
+        self.content_id = content_id
+
+class MWIPacket(Packet):
+    '''An MWI body. Owned by SIPPacket or a MultipartPacket.'''
+
+    def __init__(self, ascii_packet, raw_packet, content_id):
+        headers = {}
+
+        Packet.__init__(self, packet_type="MWI", raw_packet=raw_packet)
+        self.content_id = content_id
+        headers_string = ascii_packet.split('\r\n')
+        for header in headers_string:
+            colon_pos = header.find(':')
+            headers[header[:colon_pos]] = header[colon_pos + 1:].strip()
+
+        self.voice_message = headers.get('Voice-Message')
+        self.messages_waiting = headers.get('Messages-Waiting')
+
+
+class RLMIPacket(Packet):
+    '''An RLMI body. Owned either by a SIPPacket or a MultipartPacket.'''
+
+    def __init__(self, ascii_packet, raw_packet):
+        Packet.__init__(self, packet_type="RLMI", raw_packet=raw_packet)
+        self.list_elem = rlmi.CreateFromDocument(ascii_packet.strip())
+
+
+class MultipartPart:
+    def __init__(self, part, raw_packet):
+        self.headers = {}
+
+        last_pos = part.find('\r\n\r\n')
+        headers = part[:last_pos].split('\r\n')
+        body = part[last_pos:]
+
+        for header in headers:
+            colon_pos = header.find(':')
+            self.headers[header[:colon_pos]] = header[colon_pos + 1:].strip()
+
+        content_type = self.headers.get('Content-Type')
+        self.content_id = self.headers.get('Content-ID').strip('<>')
+
+        self.body = BodyFactory.create_body(content_type, body.strip(),
+                                            raw_packet, self.content_id)
+
+
+class MultipartPacket(Packet):
+    '''A multipart body. Owned either by a SIPPacket or a Multipartpacket.'''
+
+    def __init__(self, content_type, ascii_packet, raw_packet):
+        Packet.__init__(self, packet_type="Multipart", raw_packet=raw_packet)
+        self.boundary = None
+        self.parts = []
+
+        for part in content_type.split(';'):
+            param, equal, value = part.partition('=')
+            if param == 'boundary':
+                self.boundary = '--%s' % value.strip('"')
+
+        if not self.boundary:
+            raise Exception
+
+        parts = ascii_packet.split(self.boundary)
+
+        # Start with the second part since the initial boundary has no content
+        # before it.
+        for part in parts[1:]:
+            stripped = part.strip('\r\n ')
+            # The final boundary in a multipart body is --boundary--
+            if stripped == '--':
+                break
+            self.parts.append(MultipartPart(stripped, raw_packet))
+
+
+class BodyFactory(object):
+    @staticmethod
+    def create_body(content_type, ascii_packet, raw_packet, content_id=None):
+        body_type, _, _ = content_type.partition(';')
+        if (body_type == 'application/sdp'):
+            return SDPPacket(ascii_packet, raw_packet)
+        elif (body_type == 'multipart/related'):
+            return MultipartPacket(content_type, ascii_packet, raw_packet)
+        elif (body_type == 'application/rlmi+xml'):
+            return RLMIPacket(ascii_packet, raw_packet)
+        elif (body_type == 'application/pidf+xml'):
+            return PIDFPacket(ascii_packet, raw_packet, content_id)
+        elif (body_type == 'application/simple-message-summary'):
+            return MWIPacket(ascii_packet, raw_packet, content_id)
+        else:
+            return Packet(body_type, raw_packet)
+    pass
+
+
 class SIPPacket(Packet):
     ''' A SIP packet '''
 
@@ -213,7 +314,7 @@ class SIPPacket(Packet):
         '''
         Packet.__init__(self, packet_type='SIP', raw_packet=raw_packet)
 
-        self.sdp_packet = None
+        self.body = None
         self.headers = {}
         self.request_line = ''
         self.ascii_packet = ascii_packet
@@ -232,8 +333,11 @@ class SIPPacket(Packet):
             colon_pos = header.find(':')
             self.headers[header[:colon_pos]] = header[colon_pos + 1:].strip()
         if int(self.headers.get('Content-Length')) > 0:
-            self.sdp_packet = SDPPacket(ascii_packet=remainder_packet,
-                                        raw_packet=raw_packet)
+            content_type = self.headers.get('Content-Type',
+                                            'application/sdp').strip()
+            self.body = BodyFactory.create_body(content_type,
+                                                ascii_packet=remainder_packet,
+                                                raw_packet=raw_packet)
 
 
 class SIPPacketFactory():
@@ -270,9 +374,10 @@ class SIPPacketFactory():
         # RTP port and RTCP port; then set that information for this particular
         # stream in the factory manager so that the factories for RTP can
         # interpret packets correctly
-        if ret_packet != None and ret_packet.sdp_packet != None and \
-            ret_packet.sdp_packet.rtp_port != 0 and \
-            ret_packet.sdp_packet.rtcp_port != 0:
+        if ret_packet and ret_packet.body and \
+                ret_packet.body.packet_type == 'SDP' and \
+                ret_packet.sdp_packet.rtp_port != 0 and \
+                ret_packet.sdp_packet.rtcp_port != 0:
             self._factory_manager.add_global_data(ret_packet.ip_layer.header.source,
                                                   {'rtp': ret_packet.sdp_packet.rtp_port,
                                                    'rtcp': ret_packet.sdp_packet.rtcp_port})
@@ -451,3 +556,6 @@ class VOIPListener(PcapListener):
         if packet_type not in self._callbacks:
             self._callbacks[packet_type] = []
         self._callbacks[packet_type].append(callback)
+
+    def remove_callbacks(self, packet_type):
+        del self._callbacks[packet_type]

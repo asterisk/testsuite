@@ -6,3 +6,4 @@ tests:
     - test: 'unknown_event_package'
     - test: 'unallowed'
     - test: 'below_min_expiry'
+    - dir: 'rls'
