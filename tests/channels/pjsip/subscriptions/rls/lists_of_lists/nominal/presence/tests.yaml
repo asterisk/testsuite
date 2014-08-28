@@ -1,0 +1,10 @@
+tests:
+    - test: 'subscription_establishment'
+    - test: 'initial_notify'
+    - test: 'full_state_alice'
+    - test: 'full_state_carol'
+    - test: 'partial_state_alice'
+    - test: 'partial_state_carol'
+    - test: 'resubscribe_full_state'
+    - test: 'termination_full_state'
+    - test: 'listception_initial_notify'

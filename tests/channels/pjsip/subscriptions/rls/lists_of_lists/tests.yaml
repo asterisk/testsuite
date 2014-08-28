@@ -1,3 +1,2 @@
 tests:
     - dir: 'nominal'
-    - dir: 'off_nominal'

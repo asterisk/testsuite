@@ -1,0 +1,72 @@
+testinfo:
+    summary: 'Baseline test to ensure subscription establishment and RLMI document correctness.'
+    description: |
+        'This test uses SIPp to establish a subscription to a resource list.
+        The resource list is a presence list that contains two elements,
+        carol and a sublist containing alice and bob. Once the subscription is
+        established, a PCAP listner is used to ensure that the NOTIFY body sent
+        by Asterisk is what is expected. It checks the following:
+            * That the multipart body contains three parts
+            * That the multipart body consists of one RLMI document, one PIDF
+              document, and one multipart body containing another RLMI document
+              and two additional PIDF documents.
+            * That the RLMI document have the proper integrity
+                * Each Multipart body has only a single list element
+                * The version number is 0
+                * Each Multipart body has the expected number of resource elements
+                * Each resource element has an instance element with a
+                  cid attribute corresponding to the Content-ID of the
+                  multipart body part
+                * Each resource element has the expected name element present
+            * The PIDF documents have proper integrity
+                * The reported states are correct for each part
+                * The Content-ID header matches the corresponding cid attribute
+                  from the instance element in the RLMI document.'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - python: 'yappcap'
+        - python: 'pyxb'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+    tags:
+        - rls
+        - pjsip
+
+test-modules:
+    add-to-search-path:
+        -
+            'tests/channels/pjsip/subscriptions/rls/'
+    test-object:
+        config-section: 'test-case-config'
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'test-config'
+            typename: 'rls_test.IntegrityCheck'
+
+test-case-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'list_subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list'} }
+
+test-config:
+    list_name: 'pres_list'
+    resources:
+        -
+            {
+                'pres_sublist': {
+                    'type': 'Multipart', 'state': 'active', 'sublist': {
+                        'alice': {'type': 'PIDF', 'state': 'active'},
+                        'bob': {'type':' PIDF', 'state': 'active'}
+                    }
+                },
+                'carol': {'type': 'PIDF', 'state': 'active'}
+            }
+    full_state:
+        -
+            True

@@ -1,0 +1,7 @@
+tests:
+    - test: 'subscription_establishment'
+    - test: 'initial_notify'
+    - test: 'full_state'
+    - test: 'partial_state'
+    - test: 'resubscribe_full_state'
+    - test: 'termination_full_state'
