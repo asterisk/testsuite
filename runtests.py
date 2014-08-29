@@ -317,25 +317,28 @@ class TestSuite:
 
             print "--> Running test '%s' ..." % t.test_name
 
-            # Establish Preconditions
-            print "Making sure Asterisk isn't running ..."
-            if os.system("if pidof asterisk >/dev/null; then killall -9 asterisk >/dev/null 2>&1; "
+            if self.options.dry_run:
+                t.passed = True
+            else:
+                # Establish Preconditions
+                print "Making sure Asterisk isn't running ..."
+                if os.system("if pidof asterisk >/dev/null; then killall -9 asterisk >/dev/null 2>&1; "
                          "sleep 1; ! pidof asterisk >/dev/null; fi"):
                     print "Could not kill asterisk."
                     sys.exit(1)
-            print "Making sure SIPp isn't running..."
-            if os.system("if pidof sipp >/dev/null; then killall -9 sipp >/dev/null 2>&1; "
+                print "Making sure SIPp isn't running..."
+                if os.system("if pidof sipp >/dev/null; then killall -9 sipp >/dev/null 2>&1; "
                          "sleep 1; ! pidof sipp >/dev/null; fi"):
                     print "Could not kill sipp."
                     sys.exit(1)
-            # XXX TODO Hard coded path, gross.
-            os.system("rm -f /var/run/asterisk/asterisk.ctl")
-            os.system("rm -f /var/run/asterisk/asterisk.pid")
-            os.chdir(test_suite_dir)
+                # XXX TODO Hard coded path, gross.
+                os.system("rm -f /var/run/asterisk/asterisk.ctl")
+                os.system("rm -f /var/run/asterisk/asterisk.pid")
+                os.chdir(test_suite_dir)
 
-            # Run Test
+                # Run Test
 
-            t.run()
+                t.run()
             self.total_count += 1
             self.total_time += t.time
             if t.passed is False:
@@ -381,6 +384,8 @@ class TestSuite:
         ts.setAttribute("time", "%.2f" % self.total_time)
         ts.setAttribute("failures", str(self.total_failures))
         ts.setAttribute("name", "AsteriskTestSuite")
+        if self.options.dry_run:
+            ts.setAttribute("dry-run", str(self.total_count))
 
         for t in self.tests:
             if t.did_run is False:
@@ -427,6 +432,9 @@ def main(argv=None):
     parser.add_option("-L", "--list-tags", action="store_true",
             dest="list_tags", default=False,
             help="List available tags")
+    parser.add_option("-n", "--dry-run", action="store_true",
+            dest="dry_run", default=False,
+            help="Only show which tests would be run.")
     (options, args) = parser.parse_args(argv)
 
     ast_version = AsteriskVersion(options.version)
