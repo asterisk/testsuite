@@ -30,6 +30,8 @@ test-object-config:
 
 hep-node-config:
     bind-port: '9999'
+    packet-blacklist:
+        - 'RTCP'
     packets:
         -
             ip_family: 2
@@ -197,5 +199,7 @@ properties:
         - asterisk : 'res_pjsip'
         - asterisk: 'res_hep'
         - asterisk: 'res_hep_pjsip'
+        - python: 'json'
+        - python: 'construct'
     tags:
         - pjsip

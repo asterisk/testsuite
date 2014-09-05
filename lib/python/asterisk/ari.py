@@ -15,6 +15,7 @@ import traceback
 import urllib
 
 from test_case import TestCase
+from test_suite_utils import all_match
 from twisted.internet import reactor
 try:
     from autobahn.websocket import WebSocketClientFactory, \
@@ -651,46 +652,6 @@ class EventMatcher(object):
         if res and nomatch:
             res = not all_match(nomatch, message)
         return res
-
-
-def all_match(pattern, message):
-    """Match a pattern from the YAML config with a received message.
-
-    :param pattern: Configured pattern.
-    :param message: Message to compare.
-    :returns: True if message matches pattern; False otherwise.
-    """
-    #LOGGER.debug("%r ?= %r" % (pattern, message))
-    #LOGGER.debug("  %r" % type(pattern))
-    #LOGGER.debug("  %r" % type(message))
-    if pattern is None:
-        # Empty pattern always matches
-        return True
-    elif isinstance(pattern, list):
-        # List must be an exact match
-        res = len(pattern) == len(message)
-        i = 0
-        while res and i < len(pattern):
-            res = all_match(pattern[i], message[i])
-            i += 1
-        return res
-    elif isinstance(pattern, dict):
-        # Dict should match for every field in the pattern.
-        # extra fields in the message are fine.
-        for key, value in pattern.iteritems():
-            to_check = message.get(key)
-            if to_check is None or not all_match(value, to_check):
-                return False
-        return True
-    elif isinstance(pattern, str) or isinstance(pattern, unicode):
-        # Pattern strings are considered to be regexes
-        return re.match(pattern, str(message)) is not None
-    elif isinstance(pattern, int):
-        # Integers are literal matches
-        return pattern == message
-    else:
-        LOGGER.error("Unhandled pattern type %s", type(pattern))
-
 
 class Range(object):
     """Utility object to handle numeric ranges (inclusive)."""

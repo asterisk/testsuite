@@ -12,10 +12,15 @@ the GNU General Public License Version 2.
 """
 
 import os
+import logging
+import re
+
 from os import close
 from os import remove
 from shutil import move
 from tempfile import mkstemp
+
+LOGGER = logging.getLogger(__name__)
 
 def which(program):
     """Find the executable for a specified program
@@ -66,3 +71,42 @@ def file_replace_string(file_name, pattern, subst):
     # Move new file
     move(abs_path, file_name)
 
+def all_match(pattern, message):
+    """Match all items in a pattern to some message values
+
+    This will recursively call itself, matching each item in pattern
+    to the items in message
+
+    :param pattern: Configured pattern.
+    :param message: Message to compare.
+    :returns: True if message matches pattern; False otherwise.
+    """
+    LOGGER.debug('Pattern: %s, message %s' %
+        (str(pattern), str(message)))
+    if pattern is None:
+        # Empty pattern always matches
+        return True
+    elif isinstance(pattern, list):
+        # List must be an exact match
+        res = len(pattern) == len(message)
+        i = 0
+        while res and i < len(pattern):
+            res = all_match(pattern[i], message[i])
+            i += 1
+        return res
+    elif isinstance(pattern, dict):
+        # Dict should match for every field in the pattern.
+        # extra fields in the message are fine.
+        for key, value in pattern.iteritems():
+            to_check = message.get(key)
+            if to_check is None or not all_match(value, to_check):
+                return False
+        return True
+    elif isinstance(pattern, str) or isinstance(pattern, unicode):
+        # Pattern strings are considered to be regexes
+        return re.match(pattern, str(message)) is not None
+    elif isinstance(pattern, int):
+        # Integers are literal matches
+        return pattern == message
+    else:
+        LOGGER.error("Unhandled pattern type %s" % type(pattern))

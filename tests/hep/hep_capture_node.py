@@ -15,6 +15,8 @@ the GNU General Public License Version 2.
 import socket
 import logging
 import re
+import sys
+import json
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
@@ -22,6 +24,10 @@ from twisted.internet import reactor
 from construct import *
 
 LOGGER = logging.getLogger(__name__)
+
+sys.path.append('lib/python/asterisk')
+
+from test_suite_utils import all_match
 
 def enum(**enums):
     """Make an enumeration out of the passed in values"""
@@ -32,6 +38,30 @@ IP_FAMILY = enum(v4=2, v6=10)
 HEP_VARIABLE_TYPES = enum(auth_key=14,
                           payload=15,
                           uuid=17)
+
+HEP_PROTOCOL_TYPE = enum(SIP=1,
+                         H323=2,
+                         SDP=3,
+                         RTP=4,
+                         RTCP=5,
+                         MGCP=6,
+                         MEGACO=7,
+                         M2UA=8,
+                         M3UA=9,
+                         IAX=10)
+
+HEP_PROTOCOL_TYPES_TO_STRING = {
+    HEP_PROTOCOL_TYPE.SIP: 'SIP',
+    HEP_PROTOCOL_TYPE.H323: 'H323',
+    HEP_PROTOCOL_TYPE.SDP: 'SDP',
+    HEP_PROTOCOL_TYPE.RTP: 'RTP',
+    HEP_PROTOCOL_TYPE.RTCP: 'RTCP',
+    HEP_PROTOCOL_TYPE.MGCP: 'MGCP',
+    HEP_PROTOCOL_TYPE.MEGACO: 'MEGACO',
+    HEP_PROTOCOL_TYPE.M2UA: 'M2UA',
+    HEP_PROTOCOL_TYPE.M3UA: 'M3UA',
+    HEP_PROTOCOL_TYPE.IAX: 'IAX',
+}
 
 class HEPPacket(object):
     """A HEP packet"""
@@ -185,13 +215,28 @@ class HEPCaptureNode(object):
         test_object   The one and only test object
         """
         self.test_object = test_object
-        self.packets = module_config.get('packets') or []
-        bind_port = module_config.get('bind-port') or 9999
+        self.packets = module_config.get('packets', [])
+        self.black_list = module_config.get('packet-blacklist', [])
+        self.match_any = module_config.get('match-any', False)
+        bind_port = module_config.get('bind-port', 9999)
 
         protocol = HEPPacketHandler(self)
+        LOGGER.info('HEP Capture Agent: binding to %d' % (int(bind_port)))
         reactor.listenUDP(int(bind_port), protocol)
 
         self.current_packet = 0
+
+        self.test_object.register_stop_observer(self.on_stop_handler)
+
+    def on_stop_handler(self, result):
+        """A deferred callback called when the test is stopped
+
+        result The result of the previous deferreds
+        """
+        if len(self.packets):
+            LOGGER.error('Still waiting on %d packets!' % len(self.packets))
+            self.test_object.set_passed(False)
+        self.test_object.set_passed(True)
 
     def verify_sip_packet(self, payload, expected):
         """Verify a SIP packet
@@ -207,18 +252,18 @@ class HEPCaptureNode(object):
         sip_lines = [line for line in payload.split('\r\n') if line]
 
         if len(sip_lines) != len(expected):
-            LOGGER.error('Packet %d: Number of lines in SIP payload %d is ' \
+            LOGGER.debug('Packet %d: Number of lines in SIP payload %d is ' \
                          'not expected %d', self.current_packet, len(sip_lines),
                          len(expected))
-            self.test_object.set_passed(False)
-            return
+            return False
 
         for i in range(0, len(sip_lines)):
             if not re.match(expected[i], sip_lines[i]):
-                LOGGER.error('Packet %d, SIP line %d: actual %s does not ' \
+                LOGGER.debug('Packet %d, SIP line %d: actual %s does not ' \
                              'match expected %s', self.current_packet, i,
                              sip_lines[i], expected[i])
-                self.test_object.set_passed(False)
+                return False
+        return True
 
     def verify_rtcp_packet(self, payload, expected):
         """Verify an RTCP packet
@@ -227,7 +272,42 @@ class HEPCaptureNode(object):
         payload  The actual payload
         expected The expected values
         """
-        pass
+        return all_match(expected, json.loads(payload))
+
+    def match_expected_packet(self, actual_packet, expected_packet):
+        """Verify a received packet against an expected packet
+
+        Keyword Arguments:
+        actual_packet The received packet
+        expected_packet The packet we think we should have gotten
+
+        Returns:
+        True if they matched
+        False otherwise
+        """
+        res = True
+
+        for key, value in expected_packet.items():
+            actual = getattr(actual_packet, key, None)
+
+            if isinstance(value, str):
+                if not re.match(value, actual):
+                    LOGGER.debug('Packet %d: key %s expected value %s did ' \
+                                 'not match %s', self.current_packet, key,
+                                 value, actual)
+                    res = False
+            elif isinstance(value, int):
+                if actual != value:
+                    LOGGER.debug('Packet %d: key %s expected value %d != ' \
+                                 'actual %d', self.current_packet, key, value,
+                                 actual)
+                    res = False
+            elif key == 'payload':
+                if value['decode'] == 'SIP':
+                    res = self.verify_sip_packet(actual, value['value'])
+                elif value['decode'] == 'RTCP':
+                    res = self.verify_rtcp_packet(actual, value['value'])
+        return res
 
     def verify_packet(self, packet):
         """Verify a packet
@@ -236,10 +316,17 @@ class HEPCaptureNode(object):
         packet The HEPPacket to verify
         """
 
+        # pro-actively get the type out of the packet so we can ignore it
+        # safely if we don't care about it
+        packet_type = HEP_PROTOCOL_TYPES_TO_STRING.get(packet.protocol_type)
+        if packet_type in self.black_list:
+            LOGGER.debug('Ignoring packet of type "%s"' % packet_type)
+            return
+
         self.current_packet += 1
-        if self.current_packet > len(self.packets):
-            LOGGER.error('Number of packets %d exceeded expected: %d' %
-                         (self.current_packet, len(self.packets)))
+        if not len(self.packets):
+            LOGGER.error('Number of packets %d exceeded expected' %
+                (self.current_packet))
             self.test_object.set_passed(False)
             return
 
@@ -273,23 +360,23 @@ class HEPCaptureNode(object):
             self.test_object.set_passed(False)
 
         # Verify the keys specified in the YAML
-        for key, value in self.packets[self.current_packet - 1].items():
-            actual = getattr(packet, key, None)
+        if self.match_any:
+            i = 0
+            for expected_packet in self.packets:
+                if self.match_expected_packet(packet, expected_packet):
+                    LOGGER.debug('Found a match for packet %d' %
+                        self.current_packet)
+                    self.packets.remove(expected_packet)
+                    break
+                i += 1
+            else:
+                LOGGER.error('Failed to find match for packet %d: %s' %
+                    (self.current_packet, str(packet.__dict__)))
+                self.test_object.set_passed(False)
+        else:
+            expected_packet = self.packets.pop(0)
+            if not self.match_expected_packet(packet, expected_packet):
+                LOGGER.error('Failed to match packet %d: %s' %
+                    (self.current_packet, str(packet.__dict__)))
+                self.test_object.set_passed(False)
 
-            if isinstance(value, str):
-                if not re.match(value, actual):
-                    LOGGER.error('Packet %d: key %s expected value %s did ' \
-                                 'not match %s', self.current_packet, key,
-                                 value, actual)
-                    self.test_object.set_passed(False)
-            elif isinstance(value, int):
-                if actual != value:
-                    LOGGER.error('Packet %d: key %s expected value %d != ' \
-                                 'actual %d', self.current_packet, key, value,
-                                 actual)
-                    self.test_object.set_passed(False)
-            elif key == 'payload':
-                if value['decode'] == 'SIP':
-                    self.verify_sip_packet(actual, value['value'])
-                elif value['decode'] == 'RTCP':
-                    self.verify_rtcp_packet(actual, value['value'])
