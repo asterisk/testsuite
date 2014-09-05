@@ -15,4 +15,4 @@ tests:
     - dir: 'cdr_manipulation'
     - dir: 'cdr_properties'
     - test: 'sqlite3'
-
+    - test: 'cdr_dial_subroutines'

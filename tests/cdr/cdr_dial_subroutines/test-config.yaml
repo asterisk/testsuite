@@ -1,0 +1,109 @@
+testinfo:
+    summary: 'Test that the destination/context is preserved in subroutines'
+    description: |
+        'Test that CDRs preserve the dialplan context/extension when they
+        are generated from within GoSub and Macro applications.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    end-test-delay: 2
+    test-iterations:
+        -
+            channel: 'Local/1000@default'
+            application: 'Echo'
+            async: True
+
+cdr-config:
+    -
+        file: 'Master'
+        lines:
+            -
+            # 5000@default -> (answer)
+                destination: '5000'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/5000@default-.*'
+                dchannel: ''
+                lastapp: 'Hangup'
+                lastarg: ''
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+            # 4000@default -> 5000@default
+                destination: '4000'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/4000@default-.*'
+                dchannel: 'Local/5000@default-.*'
+                lastapp: 'Dial'
+                lastarg: 'Local/5000@default/n'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+            # 3000@default -> 4000@default
+                destination: '3000'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/3000@default-.*'
+                dchannel: 'Local/4000@default-.*'
+                lastapp: 'Dial'
+                lastarg: 'Local/4000@default/n'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+            # 2000@default -> 3000@default
+                destination: '2000'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/2000@default-.*'
+                dchannel: 'Local/3000@default-.*'
+                lastapp: 'Dial'
+                lastarg: 'Local/3000@default/n'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+            # 1000@default -> 2000@default
+                destination: '1000'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/1000@default-.*'
+                dchannel: 'Local/2000@default-.*'
+                lastapp: 'Dial'
+                lastarg: 'Local/2000@default/n'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+            -
+            # caller with Echo app
+                destination: '1000'
+                dcontext: 'default'
+                callerid: '"" <>'
+                channel: 'Local/1000@default-.*'
+                dchannel: ''
+                lastapp: 'Echo'
+                lastarg: ''
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'cdr_csv'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_macro'
+        - asterisk : 'app_playback'
+        - asterisk : 'app_stack'
+    tags:
+        - CDR
+        - chan_local

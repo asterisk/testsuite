@@ -12,3 +12,4 @@ properties:
         - asterisk: 'app_dial'
     tags:
         - hangup
+        - CDR
