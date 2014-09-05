@@ -1,0 +1,142 @@
+testinfo:
+    summary: Test CDRs generated in a multi-party bridge.
+    description: |
+        Five Local channels are put into a multi-party bridge. The oldest
+        channel (0) and the second to newest (3) are removed from the
+        bridge, then re-added. The test verifies that all expected CDRs
+        are generated between the pairs of channels - both for the original
+        matchings as well as new matchings for channels 0 and 3.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+
+test-object-config:
+    test-iterations:
+        -
+            - {'channel': 'Local/s@default', 'context': 'default', 'exten': 'echo', 'priority': '1', }
+            - {'channel': 'Local/s@default', 'context': 'default', 'exten': 'echo', 'priority': '1', }
+            - {'channel': 'Local/s@default', 'context': 'default', 'exten': 'echo', 'priority': '1', }
+            - {'channel': 'Local/s@default', 'context': 'default', 'exten': 'echo', 'priority': '1', }
+            - {'channel': 'Local/s@default', 'context': 'default', 'exten': 'echo', 'priority': '1', }
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            callback:
+                module: cdr_bridge_multi
+                method: on_start
+        -   conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    application: testsuite
+            callback:
+                module: cdr_bridge_multi
+                method: on_enter
+        -   conditions:
+                match:
+                    type: ChannelLeftBridge
+                    application: testsuite
+            callback:
+                module: cdr_bridge_multi
+                method: on_leave
+
+cdr-config:
+    -
+        file: 'Master'
+        lines:
+            # Channel 0 should have 4 matchings initially
+            -
+                channel: 'Local/s@default-.{7}0;2'
+                dchannel: 'Local/s@default-.{7}2;2'
+            -
+                channel: 'Local/s@default-.{7}0;2'
+                dchannel: 'Local/s@default-.{7}4;2'
+            -
+                channel: 'Local/s@default-.{7}0;2'
+                dchannel: 'Local/s@default-.{7}3;2'
+            -
+                channel: 'Local/s@default-.{7}0;2'
+                dchannel: 'Local/s@default-.{7}1;2'
+            # Channel 0 should have 4 matchings again when it re-joins
+            -
+                channel: 'Local/s@default-.{7}0;2'
+                dchannel: 'Local/s@default-.{7}2;2'
+            -
+                channel: 'Local/s@default-.{7}0;2'
+                dchannel: 'Local/s@default-.{7}4;2'
+            -
+                channel: 'Local/s@default-.{7}0;2'
+                dchannel: 'Local/s@default-.{7}3;2'
+            -
+                channel: 'Local/s@default-.{7}0;2'
+                dchannel: 'Local/s@default-.{7}1;2'
+            # Channel 1 should have 4 matchings: 3 initially, and
+            # one additional when channel 3 re-joins
+            -
+                channel: 'Local/s@default-.{7}1;2'
+                dchannel: 'Local/s@default-.{7}2;2'
+            -
+                channel: 'Local/s@default-.{7}1;2'
+                dchannel: 'Local/s@default-.{7}4;2'
+            -
+                channel: 'Local/s@default-.{7}1;2'
+                dchannel: 'Local/s@default-.{7}3;2'
+            -
+                channel: 'Local/s@default-.{7}1;2'
+                dchannel: 'Local/s@default-.{7}3;2'
+            # Channel 2 should have 3 matchings: 2 initially, and
+            # one additional when channel 3 re-joins
+            -
+                channel: 'Local/s@default-.{7}2;2'
+                dchannel: 'Local/s@default-.{7}4;2'
+            -
+                channel: 'Local/s@default-.{7}2;2'
+                dchannel: 'Local/s@default-.{7}3;2'
+            -
+                channel: 'Local/s@default-.{7}2;2'
+                dchannel: 'Local/s@default-.{7}3;2'
+            # Channel 3 should have 2 matchings: 1 initial matching
+            # and one additional when it re-joins
+            -
+                channel: 'Local/s@default-.{7}3;2'
+                dchannel: 'Local/s@default-.{7}4;2'
+            -
+                channel: 'Local/s@default-.{7}3;2'
+                dchannel: 'Local/s@default-.{7}4;2'
+            # And channel 4 is all by itself (the CDR it has is
+            # from its dialplan execution prior to joining the
+            # bridge)
+            -
+                channel: 'Local/s@default-.{7}4;2'
+                dchannel: ''
+
+properties:
+    minversion: '12.6.0'
+    dependencies:
+        - python: autobahn.websocket
+        - python: requests
+        - python: twisted
+        - python: starpy
+        - asterisk: res_ari_channels
+        - asterisk: res_ari_bridges
+        - asterisk: app_stasis
+        - asterisk: app_echo
+    tags:
+        - ARI
+        - CDR

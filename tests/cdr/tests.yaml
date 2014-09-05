@@ -4,6 +4,7 @@ tests:
     - test: 'console_dial_sip_busy'
     - test: 'console_dial_sip_congestion'
     - test: 'cdr_originate_sip_congestion_log'
+    - test: 'cdr_bridge_multi'
     - test: 'console_dial_sip_transfer'
     - test: 'cdr_unanswered_yes'
     # Temporarily disabled while failures are debugged
