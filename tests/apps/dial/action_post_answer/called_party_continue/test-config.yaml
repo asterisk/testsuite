@@ -121,3 +121,4 @@ properties:
         - python : 'starpy'
     tags:
         - dial
+        - CDR

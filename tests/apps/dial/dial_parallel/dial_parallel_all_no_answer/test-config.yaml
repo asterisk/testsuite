@@ -13,6 +13,8 @@ properties:
     tags:
         - SIP
         - dial
+        - CDR
+
 test-modules:
     test-object:
         config-section: sipp-config
