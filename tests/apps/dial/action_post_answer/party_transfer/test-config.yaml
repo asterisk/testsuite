@@ -90,8 +90,8 @@ cdr-config-12:
                 amaflags: 'DOCUMENTATION'
             -
                 accountcode: ''
-                destination: 'jump'
-                dcontext: 'other'
+                destination: 'transfer'
+                dcontext: 'default'
                 callerid: '"" <>'
                 channel: 'Local/transfer@default-.{8};2'
                 dchannel: 'Local/target@default-.{8};1'

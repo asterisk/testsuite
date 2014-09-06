@@ -239,8 +239,8 @@ cdr-config-12:
                 amaflags: 'DOCUMENTATION'
             -
                 accountcode: ''
-                destination: 'goto_full_jump'
-                dcontext: 'goto_full_context'
+                destination: 'goto_full'
+                dcontext: 'default'
                 callerid: '"" <>'
                 channel: 'Local/goto_full@default-.{8};2'
                 dchannel: 'Local/target@default-.{8};1'
