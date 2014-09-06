@@ -77,12 +77,17 @@ class MixMonitorTest(TestCase):
 
     def launch_test1(self):
         LOGGER.info("Placing call to test1 exten")
-        self.ast[0].cli_originate("Local/s@listener extension s@test1")
+        self.ami.originate(channel="Local/s@listener",
+            context="test1",
+            exten="s",
+            priority="1")
 
     def launch_test2(self):
         LOGGER.info("Placing call to test2 exten")
-        self.ast[0].cli_originate("Local/s@listener extension s@test2")
-
+        self.ami.originate(channel="Local/s@listener",
+            context="test2",
+            exten="s",
+            priority="1")
 
     def check_test1(self, ami, event):
         LOGGER.info("Checking Userevent")
