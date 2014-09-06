@@ -63,7 +63,7 @@ test-object-config:
                   action-type: 'end-scenario'
 
 properties:
-    minversion: '1.8.0.0'
+    minversion: '1.8.29.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'
