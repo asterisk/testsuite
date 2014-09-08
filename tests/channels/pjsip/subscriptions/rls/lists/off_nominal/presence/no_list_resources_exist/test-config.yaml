@@ -1,0 +1,31 @@
+testinfo:
+    summary: 'Off Nominal: Subscription to a list without any existing resources.'
+    description: |
+        'This test uses a SIPp scenario to subscribe to a presence list. However,
+         none of the resources defined by the resource list exist. We expect Asterisk
+         to respond to the subscription with a 500 error.'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+        - sipp:
+            version: 'v3.0'
+    tags:
+        - rls
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: 'test-case-config'
+        typename: 'sipp.SIPpTestCase'
+
+test-case-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'list_subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list'} }
+

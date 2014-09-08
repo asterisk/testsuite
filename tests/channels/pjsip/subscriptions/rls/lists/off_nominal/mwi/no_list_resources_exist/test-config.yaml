@@ -1,0 +1,33 @@
+testinfo:
+    summary: 'Off Nominal: Subscription to a list without any existing resources.'
+    description: |
+        'This test uses a SIPp scenario to subscribe to an MWI list. However, none
+         of the resources defined by the resource list exist. We expect Asterisk to
+         respond to the subscription with a 500 error.'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - python: 'yappcap'
+        - python: 'pyxb'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+        - asterisk: 'res_mwi_external'
+    tags:
+        - mwi
+        - rls
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: 'test-case-config'
+        typename: 'sipp.SIPpTestCase'
+
+test-case-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'list_subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'mail_list'} }
+

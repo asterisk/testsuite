@@ -1,0 +1,8 @@
+tests:
+    - test: 'subscribe_wo_eventlist_support'
+    - test: 'subscribe_wrong_event_header'
+    - test: 'list_does_not_exist'
+    - test: 'no_list_resources_exist'
+    - test: 'some_list_resources_exist'
+    - test: 'resource_duplication'
+

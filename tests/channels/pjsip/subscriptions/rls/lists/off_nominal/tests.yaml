@@ -1,0 +1,4 @@
+tests:
+    - dir: 'presence'
+    - dir: 'mwi'
+
