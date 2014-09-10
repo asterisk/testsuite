@@ -1,0 +1,30 @@
+testinfo:
+    summary: 'Ensure that Asterisk is capable of sending large NOTIFY requests for RLS'
+    description: |
+        'For this test, a SIPp scenario subscribes to a presence list that contains
+        twenty resources. The initial full state NOTIFY that Asterisk sends in response
+        to the SUBSCRIBE is quite large. We ensure that Asterisk does not encounter any
+        errors when attempting to send this large message.'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+        - asterisk: 'res_pjsip_exten_state'
+    tags:
+        - rls
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: 'sipp-config'
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list', '-t': 't1'} }
