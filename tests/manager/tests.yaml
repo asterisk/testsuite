@@ -16,6 +16,7 @@ tests:
     - test: 'mixmonitor'
     - test: 'manager_vars'
     - test: 'status'
+    - test: 'status_all_vars'
     - test: 'userevent'
     # Temporarily disabled while failures are debugged
     #- test: 'response-time'
