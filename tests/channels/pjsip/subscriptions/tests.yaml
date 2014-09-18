@@ -7,3 +7,4 @@ tests:
     - test: 'unallowed'
     - test: 'below_min_expiry'
     - dir: 'rls'
+    - test: 'mismatch'
