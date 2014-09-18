@@ -418,7 +418,5 @@ ami-config-13:
                 match:
                     ActionID: '12345'
                     EventList: 'Complete'
-                    # XXX The ListItems here is the number of distinct events, not the actual number of list items.
-                    # This may need to be altered if the number of ListItems reported gets altered.
-                    ListItems: '6'
+                    ListItems: '7'
             count: 1
