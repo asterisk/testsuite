@@ -1,0 +1,42 @@
+testinfo:
+    summary: 'Ensure that subscriptions with mismatched event and accept headers are rejected.'
+    description: |
+        'A SIPp test attempts multiple subscriptions where the Event and Accept headers do not
+        mesh properly. Each of these attempts should be rejected by Asterisk. The following
+        combinations are attempted:
+            * Event: message-summary, Accept: application/pidf+xml
+            * Event: message-summary, Accept: application/xpidf+xml
+            * Event: message-summary, Accept: application/dialog-info+xml
+            * Event: presence, Accept: application/simple-message-summary
+            * Event: dialog, Accept: application/simple-message-summary'
+
+properties:
+    minversion: '12.5.0'
+    dependencies:
+        - sipp:
+            version: 'v3.0'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+        - asterisk: 'res_pjsip_exten_state'
+        - asterisk: 'res_pjsip_mwi'
+        - asterisk: 'res_pjsip_pidf_body_generator'
+        - asterisk: 'res_pjsip_xpidf_body_generator'
+        - asterisk: 'res_pjsip_dialog_info_body_generator'
+        - asterisk: 'res_pjsip_mwi_body_generator'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    reactor-timeout: 30
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'subscribe.xml', '-p': '5061'} }
