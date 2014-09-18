@@ -31,12 +31,14 @@ class IntegrityCheck(VOIPListener):
         self.list_name = module_config['list_name']
         self.full_state = module_config['full_state']
         self.ami_action = module_config.get('ami_action')
+        self.stop_after_notifys = module_config.get('stop_after_notifys', True)
 
         self.version = 0
         self.ami = None
         self.test_object.register_ami_observer(self.ami_connect)
-        self.test_object.register_scenario_started_observer(
-            self.scenario_started)
+        if hasattr(self.test_object, 'register_scenario_started_observer'):
+            self.test_object.register_scenario_started_observer(
+                self.scenario_started)
         self.add_callback('SIP', self.multipart_handler)
 
     def set_pcap_defaults(self, module_config):
@@ -75,10 +77,11 @@ class IntegrityCheck(VOIPListener):
         self.version += 1
 
         if self.version == len(self.resources):
-            # We only deal with as many NOTIFIES as we have resources
-            self.test_object.set_passed(True)
             self.test_object.remove_fail_token(self.token)
-            self.test_object.stop_reactor()
+            if self.stop_after_notifys:
+                # We only deal with as many NOTIFIES as we have resources
+                self.test_object.set_passed(True)
+                self.test_object.stop_reactor()
 
     def ami_connect(self, ami):
         """Callback when AMI connects. Sets test AMI instance."""

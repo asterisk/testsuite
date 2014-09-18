@@ -5,3 +5,4 @@ tests:
     - test: 'partial_state'
     - test: 'resubscribe_full_state'
     - test: 'termination_full_state'
+    - dir: 'batched'

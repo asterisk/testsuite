@@ -1,0 +1,6 @@
+tests:
+    - test: 'basic'
+    - test: 'single_resource_multiple_changes'
+    - test: 'multiple_resources_single_change'
+    - test: 'resubscription_interruption'
+    - test: 'termination_interruption'

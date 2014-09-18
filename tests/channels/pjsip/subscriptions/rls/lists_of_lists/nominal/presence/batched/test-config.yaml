@@ -1,0 +1,80 @@
+testinfo:
+    summary: 'Ensure that notification batching only occurs at topmost list level.'
+    description: |
+        'Two lists are configured. pres_list_a contains pres_list_b within it. pres_list_a
+         is configured not to have notification batching. pres_list_b is configured to have
+         notification batching. Since pres_list_a is the topmost list, notification batching
+         should not occur. The way that this will be tested is to do the following.
+         * A SIPp scenario subscribes to pres_list_a.
+         * We perform two rapid state changes.
+         * We ensure that both state changes result in individual NOTIFY requests from Asterisk.'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - python: 'yappcap'
+        - python: 'pyxb'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+    tags:
+        - rls
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    add-to-search-path:
+        -
+            'tests/channels/pjsip/subscriptions/rls'
+    test-object:
+        config-section: 'test-case-config'
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'test-config'
+            typename: 'rls_test.IntegrityCheck'
+        -
+            typename: 'driver.TestDriver'
+
+test-case-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list_a'} }
+
+test-config:
+    list_name: 'pres_list_a'
+    resources:
+        -
+            {
+                'pres_list_b': {
+                    'type': 'Multipart', 'state': 'active', 'sublist': {
+                        'alice': {'type': 'PIDF', 'state': 'active'},
+                        'bob': {'type': 'PIDF', 'state': 'active'}
+                    }
+                }
+            }
+        -
+            {
+                'pres_list_b': {
+                    'type': 'Multipart', 'state': 'active', 'sublist': {
+                        'alice': {'type': 'PIDF', 'state': 'active'},
+                    }
+                }
+            }
+        -
+            {
+                'pres_list_b': {
+                    'type': 'Multipart', 'state': 'active', 'sublist': {
+                        'bob': {'type': 'PIDF', 'state': 'active'}
+                    }
+                }
+            }
+    full_state:
+        -
+            True
+        -
+            False
+        -
+            False

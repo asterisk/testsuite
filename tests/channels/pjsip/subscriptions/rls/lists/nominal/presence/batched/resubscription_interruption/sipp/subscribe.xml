@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic Sipstone UAC">
+  <send retrans="500">
+    <![CDATA[
+
+      SUBSCRIBE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: sipp <sip:sipp@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: sut <sip:[service]@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 SUBSCRIBE
+      Contact: sip:sipp@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Performance Test
+      Event: presence
+      Supported: eventlist
+      Accept: application/rlmi+xml
+      Accept: application/pidf+xml
+      Accept: multipart/related
+      Expires: 3600
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="100"
+        optional="true">
+  </recv>
+
+  <recv response="200" rtd="true">
+      <action>
+          <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
+      </action>
+  </recv>
+
+  <!-- Initial NOTIFY upon subscribing -->
+  <recv request="NOTIFY" crlf="true">
+      <action>
+          <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
+      </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Pause to allow for state change to be batched -->
+  <pause />
+
+  <send retrans="500">
+    <![CDATA[
+
+      SUBSCRIBE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: sipp <sip:sipp@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: sut <sip:[service]@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: [cseq] SUBSCRIBE
+      Contact: sip:sipp@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Performance Test
+      Event: presence
+      Supported: eventlist
+      Accept: application/rlmi+xml
+      Accept: application/pidf+xml
+      Accept: multipart/related
+      Expires: 3600
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- NOTIFY upon resubscription -->
+  <recv request="NOTIFY" crlf="true">
+      <action>
+          <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
+          <ereg regexp=".*" search_in="hdr" header="From:" assign_to="notify_from" />
+          <ereg regexp=".*" search_in="hdr" header="To:" assign_to="notify_to" />
+          <ereg regexp=".*" search_in="hdr" header="Via:" assign_to="notify_via" />
+          <ereg regexp=".*" search_in="hdr" header="CSeq:" assign_to="notify_cseq" />
+      </action>
+  </recv>
+
+  <recv response="200" crlf="true">
+      <action>
+          <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
+      </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      Via: [$notify_via]
+      From: [$notify_from]
+      To: [$notify_to]
+      [last_Call-ID:]
+      CSeq: [$notify_cseq]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <timewait milliseconds="8000" />
+
+</scenario>

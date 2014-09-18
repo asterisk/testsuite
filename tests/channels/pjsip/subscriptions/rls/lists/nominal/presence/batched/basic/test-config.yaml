@@ -1,0 +1,76 @@
+testinfo:
+    summary: 'Ensure that in a basic scenario, notifications are batched when appropriate.'
+    description: |
+        'This runs a basic scenario that does the following:
+         * A SIPp scenario subscribes to a resource list with notification batching enabled.
+         * A state change occurs on one of the resources in the list.
+         * After the batching period, a NOTIFY is sent to the scenario.
+         * The SIPp scenario resubscribes to the resource.
+         * A state change occurs on one of the resources in the list.
+         * After the batching period, a NOTIFY is sent to the scenario.
+         * The SIpp scneario terminates its subscription to the resource.
+         The important part is that the NOTIFYs that Asterisk sends in response to SUBSCRIBE
+         request are not delayed by the batching interval but that the NOTIFYs that Asterisk
+         sends in response to state changes are delayed.'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - python: 'yappcap'
+        - python: 'pyxb'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+    tags:
+        - rls
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    add-to-search-path:
+        -
+            'tests/channels/pjsip/subscriptions/rls'
+    test-object:
+        config-section: 'test-case-config'
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'test-config'
+            typename: 'rls_test.IntegrityCheck'
+        -
+            typename: 'driver.TestDriver'
+
+test-case-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list'} }
+
+test-config:
+    list_name: 'pres_list'
+    resources:
+        -
+            { 'alice': {'type': 'PIDF', 'state': 'active'},
+              'bob': {'type': 'PIDF', 'state': 'active'}}
+        -
+            { 'alice': {'type': 'PIDF', 'state': 'active'}}
+        -
+            { 'alice': {'type': 'PIDF', 'state': 'active'},
+              'bob': {'type': 'PIDF', 'state': 'active'}}
+        -
+            { 'bob': {'type': 'PIDF', 'state': 'active'}}
+        -
+            { 'alice': {'type': 'PIDF', 'state': 'terminated'},
+              'bob': {'type': 'PIDF', 'state': 'terminated'}}
+    full_state:
+        -
+            True
+        -
+            False
+        -
+            True
+        -
+            False
+        -
+            True
