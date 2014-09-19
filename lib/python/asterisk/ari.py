@@ -15,6 +15,8 @@ import traceback
 import urllib
 
 from test_case import TestCase
+from pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
+                               PLUGGABLE_ACTION_REGISTRY, var_replace
 from test_suite_utils import all_match
 from twisted.internet import reactor
 try:
@@ -509,30 +511,9 @@ class ARIRequest(object):
             self.body = json.dumps(self.body)
             self.headers = {'Content-type': 'application/json'}
 
-    def var_replace(self, text, values):
-        """ perform variable replacement on text
-
-        This allows a string such as uri to be written in the form:
-        playbacks/{playback.id}/control
-
-        :param text: text with optional {var} entries
-        :param values: nested dict of values to get replacement values from
-        """
-        for match in re.findall(r'{[^}]*}', text):
-            value = values
-            for var in match[1:-1].split('.'):
-                if not var in value:
-                    LOGGER.error('Unable to replace variables in %s from %s',
-                                 text, values)
-                    return None
-                value = value[var]
-            text = text.replace(match, value)
-
-        return text
-
     def send(self, values):
         """Send this ARI request substituting the given values"""
-        uri = self.var_replace(self.uri, values)
+        uri = var_replace(self.uri, values)
         url = self.ari.build_url(uri)
         requests_method = getattr(requests, self.method)
 
@@ -692,5 +673,83 @@ def decode_range(yaml):
     else:
         # Need exactly this many events
         return Range(int(yaml), int(yaml))
+
+class ARIPluggableEventModule(object):
+    """Subclass of ARIEventInstance that works with the pluggable event action
+    module.
+    """
+
+    def __init__(self, test_object, triggered_callback, config):
+        """Setup the ARI event observer"""
+        self.test_object = test_object
+        self.triggered_callback = triggered_callback
+        if isinstance(config, list):
+            self.config = config
+        else:
+            self.config = [config]
+        for event_description in self.config:
+            event_description["expected_count_range"] =\
+                decode_range(event_description.get('count', 1))
+            event_description["event_count"] = 0
+        test_object.register_ws_event_handler(self.event_callback)
+        test_object.register_stop_observer(self.on_stop)
+
+    def event_callback(self, event):
+        """Callback called when an event is received from ARI"""
+        for event_description in self.config:
+            match = event_description["match"]
+            nomatch = event_description.get("nomatch", None)
+            if not all_match(match, event):
+                continue
+
+            # Now validate the nomatch, if it's there
+            if nomatch and all_match(nomatch, event):
+                continue
+            event_description["event_count"] += 1
+            self.triggered_callback(self, self.test_object.ari, event)
+
+    def on_stop(self, *args):
+        """Callback for the end of the test.
+
+        :param args: Ignored arguments.
+        """
+        for event_desc in self.config:
+            if not event_desc["expected_count_range"]\
+                .contains(event_desc["event_count"]):
+                # max could be int or float('inf'); format with %r
+                LOGGER.error("Expected %d <= count <= %r; was %d (%r, !%r)",
+                             event_desc["expected_count_range"].min_value,
+                             event_desc["expected_count_range"].max_value,
+                             event_desc["event_count"],
+                             event_desc["match"],
+                             event_desc.get("nomatch", None))
+                self.test_object.set_passed(False)
+            self.test_object.set_passed(True)
+PLUGGABLE_EVENT_REGISTRY.register("ari-events", ARIPluggableEventModule)
+
+class ARIPluggableRequestModule(object):
+    """Pluggable ARI action module.
+    """
+
+    def __init__(self, test_object, config):
+        """Setup the ARI event observer"""
+        self.test_object = test_object
+        if not isinstance(config, list):
+            config = [config]
+        self.requests = [ARIRequest(test_object.ari, request_config)
+                         for request_config in config]
+        self.count = 0
+
+    def run(self, triggered_by, source, extra):
+        """Callback called when this action is triggered."""
+        self.count += 1
+        for request in self.requests:
+            if request.instance and request.instance != self.count:
+                continue
+            if request.delay:
+                reactor.callLater(request.delay, request.send, extra)
+            else:
+                request.send(extra)
+PLUGGABLE_ACTION_REGISTRY.register("ari-requests", ARIPluggableRequestModule)
 
 # vim:sw=4:ts=4:expandtab:textwidth=79

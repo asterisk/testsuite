@@ -25,8 +25,8 @@ test-modules:
         config-section: test-object-config
         typename: ari.AriOriginateTestObject
     modules:
-        -   config-section: ari-config
-            typename: ari.WebSocketEventModule
+        -   config-section: pluggable-config
+            typename: pluggable_modules.EventActionModule
 
 test-object-config:
     # using default origination:
@@ -34,141 +34,137 @@ test-object-config:
     #   channelId: testsuite-default-id
     #   app: testsuite
 
-ari-config:
-    apps: testsuite
-    events:
-        -
-            conditions:
-                match:
-                    type: 'ChannelStateChange'
+pluggable-config:
+    -
+        ari-events:
+            match:
+                type: 'ChannelStateChange'
             count: '>1'
-        -
-            conditions:
-                match:
-                    type: StasisStart
-                    application: testsuite
-                    channel:
-                        id: 'testsuite-default-id$'
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                channel:
+                    id: 'testsuite-default-id$'
             count: 1
-            requests:
-                -
-                    method: 'post'
-                    uri: 'bridges'
-                    params:
-                        bridgeId: 'MyFirstBridge'
-                    # note: creating bridge does not result in another event
-                -
-                    # note: an explicit subscription to the bridge is required to catch BridgeDestroyed later
-                    method: 'post'
-                    uri: 'applications/testsuite/subscription'
-                    params:
-                        eventSource: 'bridge:MyFirstBridge'
-                -
-                    method: 'post'
-                    uri: 'channels'
-                    params:
-                        endpoint: 'Local/s@default'
-                        channelId: 'MyFirstChannel'
-                        app: 'testsuite'
-        -
-            conditions:
-                match:
-                    type: StasisStart
-                    application: testsuite
-                    channel:
-                        id: 'MyFirstChannel$'
-            count: 1
-            requests:
+        ari-requests:
+            -
                 method: 'post'
-                uri: 'bridges/MyFirstBridge/addChannel'
+                uri: 'bridges'
                 params:
-                    channel: 'MyFirstChannel'
-        -
-            conditions:
-                match:
-                    type: ChannelEnteredBridge
-                    application: testsuite
-                    channel:
-                        id: 'MyFirstChannel$'
-            count: 1
-            requests:
+                    bridgeId: 'MyFirstBridge'
+                # note: creating bridge does not result in another event
+            -
+                # note: an explicit subscription to the bridge is required to catch BridgeDestroyed later
                 method: 'post'
-                uri: 'bridges/MyFirstBridge/removeChannel'
+                uri: 'applications/testsuite/subscription'
                 params:
-                    channel: 'MyFirstChannel'
-        -
-            conditions:
-                match:
-                    type: ChannelLeftBridge
-                    application: testsuite
-                    channel:
-                        id: 'MyFirstChannel$'
+                    eventSource: 'bridge:MyFirstBridge'
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'Local/s@default'
+                    channelId: 'MyFirstChannel'
+                    app: 'testsuite'
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                channel:
+                    id: 'MyFirstChannel$'
             count: 1
-            requests:
-                method: 'delete'
-                uri: 'bridges/MyFirstBridge'
-        -
-            conditions:
-                match:
-                    type: BridgeDestroyed
-                    application: testsuite
-                    bridge:
-                        id: 'MyFirstBridge$'
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/MyFirstBridge/addChannel'
+            params:
+                channel: 'MyFirstChannel'
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                application: testsuite
+                channel:
+                    id: 'MyFirstChannel$'
             count: 1
-            requests:
-                -
-                    method: 'delete'
-                    uri: 'channels/MyFirstChannel'
-        -
-            conditions:
-                match:
-                    type: ChannelHangupRequest
-                    application: testsuite
-                    channel:
-                        id: 'MyFirstChannel$'
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/MyFirstBridge/removeChannel'
+            params:
+                channel: 'MyFirstChannel'
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                application: testsuite
+                channel:
+                    id: 'MyFirstChannel$'
             count: 1
-        -
-            conditions:
-                match:
-                    type: ChannelDestroyed
-                    application: testsuite
-                    channel:
-                        id: 'MyFirstChannel$'
+        ari-requests:
+            method: 'delete'
+            uri: 'bridges/MyFirstBridge'
+    -
+        ari-events:
+            match:
+                type: BridgeDestroyed
+                application: testsuite
+                bridge:
+                    id: 'MyFirstBridge$'
             count: 1
-            requests:
-                # delete the first stasis channel to end the test
-                method: 'delete'
-                uri: 'channels/testsuite-default-id'
-        -
-            conditions:
-                match:
-                    type: StasisEnd
-                    application: testsuite
-                    channel:
-                        id: 'MyFirstChannel$'
+        ari-requests:
+            method: 'delete'
+            uri: 'channels/MyFirstChannel'
+    -
+        ari-events:
+            match:
+                type: ChannelHangupRequest
+                application: testsuite
+                channel:
+                    id: 'MyFirstChannel$'
             count: 1
-        -
-            conditions:
-                match:
-                    type: ChannelHangupRequest
-                    application: testsuite
-                    channel:
-                        id: 'testsuite-default-id$'
+    -
+        ari-events:
+            match:
+                type: ChannelDestroyed
+                application: testsuite
+                channel:
+                    id: 'MyFirstChannel$'
             count: 1
-        -
-            conditions:
-                match:
-                    type: ChannelDestroyed
-                    application: testsuite
-                    channel:
-                        id: 'testsuite-default-id$'
+        ari-requests:
+            # delete the first stasis channel to end the test
+            method: 'delete'
+            uri: 'channels/testsuite-default-id'
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: testsuite
+                channel:
+                    id: 'MyFirstChannel$'
             count: 1
-        -
-            conditions:
-                match:
-                    type: StasisEnd
-                    application: testsuite
-                    channel:
-                        id: 'testsuite-default-id$'
+    -
+        ari-events:
+            match:
+                type: ChannelHangupRequest
+                application: testsuite
+                channel:
+                    id: 'testsuite-default-id$'
             count: 1
-
+    -
+        ari-events:
+            match:
+                type: ChannelDestroyed
+                application: testsuite
+                channel:
+                    id: 'testsuite-default-id$'
+            count: 1
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: testsuite
+                channel:
+                    id: 'testsuite-default-id$'
+            count: 1

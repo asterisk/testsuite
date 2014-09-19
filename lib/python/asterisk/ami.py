@@ -13,6 +13,8 @@ import datetime
 import logging
 import re
 import json
+from pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
+                               PLUGGABLE_ACTION_REGISTRY, var_replace
 
 LOGGER = logging.getLogger(__name__)
 
@@ -647,3 +649,76 @@ class AMI(object):
         reactor.callLater(delay, self.login)
         return reason
 
+class AMIStartEventModule(object):
+    """An event module that triggers when the test starts."""
+
+    def __init__(self, test_object, triggered_callback, config):
+        """Setup the test start observer"""
+        self.test_object = test_object
+        self.triggered_callback = triggered_callback
+        self.config = config
+        test_object.register_ami_observer(self.start_observer)
+
+    def start_observer(self, ami):
+        """Notify the event-action mapper that ami has started."""
+        self.triggered_callback(self, ami)
+PLUGGABLE_EVENT_REGISTRY.register("ami-start", AMIStartEventModule)
+
+class AMIPluggableEventInstance(AMIHeaderMatchInstance):
+    """Subclass of AMIEventInstance that works with the pluggable event action
+    module.
+    """
+
+    def __init__(self, test_object, triggered_callback, config, data):
+        """Setup the AMI event observer"""
+        self.triggered_callback = triggered_callback
+	self.data = data
+        super(AMIPluggableEventInstance, self).__init__(config, test_object)
+
+    def event_callback(self, ami, event):
+        """Callback called when an event is received from AMI"""
+	super(AMIPluggableEventInstance, self).event_callback(ami, event)
+        if self.passed:
+            self.triggered_callback(self.data, ami, event)
+
+class AMIPluggableEventModule(object):
+    """Generates AMIEventInstance instances that match events for the pluggable
+    event-action framework.
+    """
+    def __init__(self, test_object, triggered_callback, config):
+        """Setup the AMI event observers"""
+        self.instances = []
+        if not isinstance(config, list):
+            config = [config]
+        for instance in config:
+            self.instances.append(AMIPluggableEventInstance(test_object,
+                                                            triggered_callback,
+                                                            instance,
+                                                            self))
+PLUGGABLE_EVENT_REGISTRY.register("ami-events", AMIPluggableEventModule)
+
+def replace_ami_vars(mydict, values):
+    outdict = {}
+    for key, value in mydict.iteritems():
+        outdict[key] = var_replace(value, values)
+
+    return outdict
+
+class AMIPluggableActionModule(object):
+    """Pluggable AMI action module.
+    """
+
+    def __init__(self, test_object, config):
+        """Setup the AMI event observer"""
+        self.test_object = test_object
+        if not isinstance(config, list):
+            config = [config]
+        self.config = config
+
+    def run(self, triggered_by, source, extra):
+        """Callback called when this action is triggered."""
+        for instance in self.config:
+            action = replace_ami_vars(instance["action"], extra)
+            ami_id = instance.get("id", 0)
+            self.test_object.ami[ami_id].sendMessage(action)
+PLUGGABLE_ACTION_REGISTRY.register("ami-actions", AMIPluggableActionModule)

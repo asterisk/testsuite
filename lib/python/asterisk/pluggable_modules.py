@@ -17,6 +17,10 @@ sys.path.append("lib/python")
 from ami import AMIEventInstance
 from twisted.internet import reactor
 from starpy import fastagi
+from test_runner import load_and_parse_module
+from pluggable_registry import PLUGGABLE_ACTION_REGISTRY,\
+                               PLUGGABLE_EVENT_REGISTRY,\
+                               PluggableRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -641,5 +645,172 @@ class FastAGIModule(object):
             return
 
         agi.sendCommand(self.commands[idx])\
-	.addCallback(self.on_command_success, agi, idx)\
-	.addErrback(self.on_command_failure, agi, idx)
+        .addCallback(self.on_command_success, agi, idx)\
+        .addErrback(self.on_command_failure, agi, idx)
+
+class EventActionModule(object):
+    """A class that links arbitrary events with one or more actions.
+
+    Configuration is as follows:
+    config-section:
+        actions:
+            custom-action-name: custom.action.location
+        events:
+            custom-event-name: custom.event.location
+        mapping:
+            -
+                custom-event-name:
+                    event-config-goes-here
+                custom-action-name:
+                    action-config-goes-here
+
+    Or if no locally-defined events or actions are desired:
+    config-section:
+        -
+            event-name:
+                event-config-goes-here
+            other-event-name:
+                event-config-goes-here
+            action-name:
+                action-config-goes-here
+
+    Or if no locally-defined events or actions are desired and only one set is
+    desired:
+    config-section:
+        event-name:
+            event-config-goes-here
+        action-name:
+            action-config-goes-here
+
+    Any event in a set will trigger all actions in a set.
+    """
+
+    def __init__(self, instance_config, test_object):
+        """Constructor for pluggable modules"""
+        super(EventActionModule, self).__init__()
+        self.test_object = test_object
+        config = instance_config
+        if isinstance(config, list):
+            config = {"mapping": config}
+        elif isinstance(config, dict) and "mapping" not in config:
+            config = {"mapping": [config]}
+
+        # Parse out local action and event definitions
+        self.local_action_registry = PluggableRegistry()
+        self.local_event_registry = PluggableRegistry()
+
+        def register_modules(config, registry):
+            """Register pluggable modules into the registry"""
+            for key, local_class_path in config.iteritems():
+                local_class = load_and_parse_module(local_class_path)
+                if not local_class:
+                    raise Exception("Unable to load %s for module key %s"
+                                    % (local_class_path, key))
+                registry.register(key, local_class)
+
+        if "actions" in config:
+            register_modules(config["actions"], self.local_action_registry)
+        if "events" in config:
+            register_modules(config["events"], self.local_event_registry)
+
+        self.event_action_sets = []
+        self.parse_mapping(config)
+
+    def parse_mapping(self, config):
+        """Parse out the mapping and instantiate objects."""
+        for e_a_set in config["mapping"]:
+            plug_set = {"events": [], "actions": []}
+
+            for plug_name, plug_config in e_a_set.iteritems():
+                self.parse_module_config(plug_set, plug_name, plug_config)
+
+            if 0 == len(plug_set["events"]):
+                raise Exception("Pluggable set requires at least one event: %s"
+                                % e_a_set)
+
+            self.event_action_sets.append(plug_set)
+
+    def parse_module_config(self, plug_set, plug_name, plug_config):
+        """Parse module config and update the pluggable module set"""
+        if self.local_event_registry.check(plug_name):
+            plug_class = self.local_event_registry.get_class(plug_name)
+            plug_set["events"].append(
+                plug_class(self.test_object, self.event_triggered, plug_config))
+        elif self.local_action_registry.check(plug_name):
+            plug_class = self.local_action_registry.get_class(plug_name)
+            plug_set["actions"].append(
+                plug_class(self.test_object, plug_config))
+        elif PLUGGABLE_EVENT_REGISTRY.check(plug_name):
+            plug_class = PLUGGABLE_EVENT_REGISTRY.get_class(plug_name)
+            plug_set["events"].append(
+                plug_class(self.test_object, self.event_triggered, plug_config))
+        elif PLUGGABLE_ACTION_REGISTRY.check(plug_name):
+            plug_class = PLUGGABLE_ACTION_REGISTRY.get_class(plug_name)
+            plug_set["actions"].append(
+                plug_class(self.test_object, plug_config))
+        else:
+            raise Exception("Pluggable component '%s' not recognized"
+                            % plug_name)
+
+    def find_triggered_set(self, triggered_by):
+        """Find the set that was triggered."""
+        for e_a_set in self.event_action_sets:
+            for event_mod in e_a_set["events"]:
+                if event_mod == triggered_by:
+                    return e_a_set
+        return None
+
+    def event_triggered(self, triggered_by, source=None, extra=None):
+        """Run actions for the triggered set."""
+        triggered_set = self.find_triggered_set(triggered_by)
+        if not triggered_set:
+            raise Exception("Unable to find event/action set for %s"
+                            % triggered_by)
+
+        for action_mod in triggered_set["actions"]:
+            action_mod.run(triggered_by, source, extra)
+
+class TestStartEventModule(object):
+    """An event module that triggers when the test starts."""
+
+    def __init__(self, test_object, triggered_callback, config):
+        """Setup the test start observer"""
+        self.test_object = test_object
+        self.triggered_callback = triggered_callback
+        self.config = config
+        test_object.register_start_observer(self.start_observer)
+
+    def start_observer(self, ast):
+        """Notify the event-action mapper that the test has started."""
+        self.triggered_callback(self, ast)
+PLUGGABLE_EVENT_REGISTRY.register("test-start", TestStartEventModule)
+
+class LogActionModule(object):
+    """An action module that logs a message when triggered."""
+
+    def __init__(self, test_object, config):
+        """Setup the test start observer"""
+        self.test_object = test_object
+        self.message = config["message"]
+
+    def run(self, triggered_by, source, extra):
+        """Log a message."""
+        LOGGER.info(self.message)
+PLUGGABLE_ACTION_REGISTRY.register("logger", LogActionModule)
+
+class CallbackActionModule(object):
+    """An action module that calls the specified callback."""
+
+    def __init__(self, test_object, config):
+        """Setup the test start observer"""
+        self.test_object = test_object
+        self.module = config["module"]
+        self.method = config["method"]
+
+    def run(self, triggered_by, source, extra):
+        """Call the callback."""
+        module = __import__(self.module)
+        method = getattr(module, self.method)
+        self.test_object.set_passed(method(self.test_object, triggered_by,
+                                           source, extra))
+PLUGGABLE_ACTION_REGISTRY.register("callback", CallbackActionModule)

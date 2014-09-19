@@ -35,63 +35,66 @@ test-modules:
         typename: ari.AriTestObject
     modules:
         -
-            config-section: ari-config
-            typename: ari.WebSocketEventModule
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
 
-ari-config:
-    apps: testsuite
-    events:
-        -   conditions:
-                match:
-                    type: StasisStart
-                    application: testsuite
-                    args: []
-                    channel:
-                        name: 'Local/s@default-.*'
+pluggable-config:
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: []
+                channel:
+                    name: 'Local/s@default-.*'
             count: 1
-            callback:
-                module: attended_transfer
-                method: on_kickoff_start
-        -   conditions:
-                match:
-                    type: StasisStart
-                    application: testsuite
-                    args: ['test']
+        callback:
+            module: attended_transfer
+            method: on_kickoff_start
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: ['test']
             count: 1
-            callback:
-                module: attended_transfer
-                method: on_test_start
-        -   conditions:
-                match:
-                    type: StasisStart
-                    application: testsuite
-                    args: []
-                    channel:
-                        name: 'Local/_attended@transfer-.*'
-                    replace_channel:
-                        name: 'PJSIP/bob-.*'
+        callback:
+            module: attended_transfer
+            method: on_test_start
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: []
+                channel:
+                    name: 'Local/_attended@transfer-.*'
+                replace_channel:
+                    name: 'PJSIP/bob-.*'
             count: 1
-            callback:
-                module: attended_transfer
-                method: on_swap_start
-        -   conditions:
-                match:
-                    type: BridgeAttendedTransfer
-                    application: testsuite
+        callback:
+            module: attended_transfer
+            method: on_swap_start
+    -
+        ari-events:
+            match:
+                type: BridgeAttendedTransfer
+                application: testsuite
             count: 1
-            callback:
-                module: attended_transfer
-                method: on_attended_transfer
-        -   conditions:
-                match:
-                    type: ChannelEnteredBridge
-                    application: testsuite
-                    channel:
-                        name: 'Local/_attended@transfer-.*'
+        callback:
+            module: attended_transfer
+            method: on_attended_transfer
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                application: testsuite
+                channel:
+                    name: 'Local/_attended@transfer-.*'
             count: 1
-            callback:
-                module: attended_transfer
-                method: on_swap_enter
+        callback:
+            module: attended_transfer
+            method: on_swap_enter
 
 properties:
     minversion: '12.1.0'

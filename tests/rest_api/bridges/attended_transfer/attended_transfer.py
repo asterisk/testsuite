@@ -22,7 +22,7 @@ class TestLogic(object):
 
 TEST = TestLogic()
 
-def on_kickoff_start(ari, event, test_object):
+def on_kickoff_start(test_object, triggered_by, ari, event):
     LOGGER.debug("on_kickoff_start(%r)" % event)
 
     def _start_referer_scenario(referer_scenario, test_object):
@@ -48,25 +48,25 @@ def on_kickoff_start(ari, event, test_object):
     ari.post('bridges', TEST.bridge_id, 'addChannel', channel=event['channel']['id'])
     return True
 
-def on_test_start(ari, event, test_object):
+def on_test_start(test_object, triggered_by, ari, event):
     LOGGER.debug("on_test_start(%r)" % event)
 
     ari.post('bridges', TEST.bridge_id, 'addChannel', channel=event['channel']['id'])
     return True
 
-def on_swap_start(ari, event, test_object):
+def on_swap_start(test_object, triggered_by, ari, event):
     LOGGER.debug("on_swap_start(%r)" % event)
 
     TEST.swap_id = event['channel']['id']
     return True
 
-def on_swap_enter(ari, event, test_object):
+def on_swap_enter(test_object, triggered_by, ari, event):
     LOGGER.debug("on_swap_enter(%r)" % event)
 
     ari.delete('channels', TEST.swap_id)
     return True
 
-def on_attended_transfer(ari, event, test_object):
+def on_attended_transfer(test_object, triggered_by, ari, event):
     LOGGER.debug("on_attended_transfer(%r)" % event)
 
     ari.delete('bridges', TEST.bridge_id)
