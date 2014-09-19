@@ -184,6 +184,9 @@ class Asterisk(object):
     Note that AST_TEST_ROOT has to be reasonably short (symlinked in /tmp?) so
     we're not running into the asterisk.ctl AF_UNIX limit.
     """
+    def compare_free_space(x, y):
+        return os.statvfs(y).f_bavail - os.statvfs(x).f_bavail
+
     localtest_root = os.getenv("AST_TEST_ROOT")
     if localtest_root:
         # Base location of the temporary files created by the testsuite
@@ -191,8 +194,10 @@ class Asterisk(object):
         # The default etc directory for Asterisk
         default_etc_directory = os.path.join(localtest_root, "etc/asterisk")
     else:
+        # select tmp path with most available space
+        best_tmp = sorted(['/tmp', '/var/tmp'], cmp=compare_free_space)[0]
         # Base location of the temporary files created by the testsuite
-        test_suite_root = "/tmp/asterisk-testsuite"
+        test_suite_root = best_tmp + "/asterisk-testsuite"
         # The default etc directory for Asterisk
         default_etc_directory = "/etc/asterisk"
 
