@@ -28,6 +28,6 @@
         optional="true">
   </recv>
 
-  <recv response="404">
+  <recv response="489">
   </recv>
 </scenario>
