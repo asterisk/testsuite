@@ -184,8 +184,17 @@ class Asterisk(object):
     Note that AST_TEST_ROOT has to be reasonably short (symlinked in /tmp?) so
     we're not running into the asterisk.ctl AF_UNIX limit.
     """
+
     def compare_free_space(x, y):
-        return os.statvfs(y).f_bavail - os.statvfs(x).f_bavail
+        # statvfs can return a long; comparison functions must return an
+        # int. Hence the checks that occur here.
+        blocks_avail = os.statvfs(y).f_bavail - os.statvfs(x).f_bavail
+        if (blocks_avail > 0):
+            return 1
+        elif (blocks_avail < 0):
+            return -1
+        else:
+            return 0
 
     localtest_root = os.getenv("AST_TEST_ROOT")
     if localtest_root:
