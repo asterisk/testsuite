@@ -69,3 +69,4 @@ tests:
     - dir: 'sendrpid'
     - test: 'tel_uri'
     - dir: 'ami'
+    - test: 'invite_retransmit'

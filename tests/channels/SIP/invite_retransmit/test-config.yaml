@@ -1,0 +1,17 @@
+testinfo:
+    summary: 'Test the behaviour of retransmitted invite'
+    description: |
+        'In a busy callflow make sure that only 486 and not 503 is '
+        'generated on a busy callflow case. Tests the fix of '
+        'ASTERISK-24335.'
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - asterisk: 'chan_sip'
+        - python: 'twisted'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.0'
+    tags:
+        - SIP
