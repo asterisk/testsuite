@@ -12,6 +12,7 @@ testinfo:
 properties:
     minversion: '13.0.0'
     dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
         - python: 'twisted'
         - python: 'starpy'
         - python: 'yappcap'
