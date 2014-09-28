@@ -15,7 +15,6 @@ import subprocess
 import optparse
 import time
 import yaml
-import socket
 import shutil
 import xml.dom
 import random
@@ -24,14 +23,13 @@ sys.path.append("lib/python")
 
 from asterisk.version import AsteriskVersion
 from asterisk.asterisk import Asterisk
-from asterisk.test_config import Dependency, TestConfig
-from asterisk import test_suite_utils
+from asterisk.test_config import TestConfig
 
 TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
 
-class TestRun:
 
+class TestRun:
     def __init__(self, test_name, ast_version, options, global_config=None):
         self.can_run = False
         self.did_run = False
@@ -224,7 +222,9 @@ class TestSuite:
                 path = "%s/%s" % (test_dir, t[val])
                 if val == "test":
                     # If we specified a subset of tests, there's no point loading the others.
-                    if self.options.test and not (path + '/').startswith(self.options.test):
+                    if (self.options.tests and
+                            not any((path + '/').startswith(test)
+                                    for test in self.options.tests)):
                         continue
 
                     tests.append(TestRun(path, ast_version, self.options, self.global_config))
@@ -236,9 +236,9 @@ class TestSuite:
     def list_tags(self):
         def chunks(l, n):
             for i in xrange(0, len(l), n):
-                yield l[i:i+n]
+                yield l[i:(i + n)]
 
-        tags= set()
+        tags = set()
         for test in self.tests:
             tags = tags.union(test.test_config.tags)
         tags = list(set(tags))
@@ -259,11 +259,11 @@ class TestSuite:
         for t in self.tests:
             print "%.3d) %s" % (i, t.test_config.test_name)
             print "      --> Summary: %s" % t.test_config.summary
-            print "      --> Minimum Version: %s (%s)" % \
-                         (str(t.test_config.minversion), str(t.test_config.minversion_check))
+            print ("      --> Minimum Version: %s (%s)" %
+                   (t.test_config.minversion, t.test_config.minversion_check))
             if t.test_config.maxversion is not None:
-                print "      --> Maximum Version: %s (%s)" % \
-                             (str(t.test_config.maxversion), str(t.test_config.maxversion_check))
+                print ("      --> Maximum Version: %s (%s)" %
+                       (t.test_config.maxversion, t.test_config.maxversion_check))
             if t.test_config.features:
                 print "      --> Features:"
                 for feature_name in t.test_config.features:
@@ -306,7 +306,7 @@ class TestSuite:
                     print "--- --> Dependency: %s - %s" % (d.name, str(d.met))
                 print
                 continue
-            if self.global_config != None:
+            if self.global_config is not None:
                 exclude = False
                 for excluded in self.global_config.excluded_tests:
                     if excluded in t.test_name:
@@ -360,12 +360,11 @@ class TestSuite:
         char_list = []
         for r in bad_chars:
             # we do +1 here to include the last item
-            for i in range(r[0], r[1]+1):
+            for i in range(r[0], r[1] + 1):
                 char_list.append(chr(i))
         return data.translate(None, ''.join(char_list))
 
     def write_results_xml(self, fn, stdout=False):
-        testOutput = ""
         try:
             f = open(TEST_RESULTS, "w")
         except IOError:
@@ -420,9 +419,10 @@ def main(argv=None):
     parser.add_option("-l", "--list-tests", action="store_true",
             dest="list_tests", default=False,
             help="List tests instead of running them.")
-    parser.add_option("-t", "--test",
-            dest="test",
-            help="Run a single specified test instead of all tests.")
+    parser.add_option("-t", "--test", action="append", default=[],
+            dest="tests",
+            help=("Run a single specified test (directory) instead of all tests.  "
+                  "May be specified more than once."))
     parser.add_option("-g", "--tag", action="append",
             dest="tags",
             help="Specify one or more tags to select a subset of tests.")
@@ -439,9 +439,10 @@ def main(argv=None):
 
     ast_version = AsteriskVersion(options.version)
 
-    # Ensure that there's a trailing '/' in the test specified with -t
-    if options.test and options.test[-1] != '/':
-        options.test += '/'
+    # Ensure that there's a trailing '/' in the tests specified with -t
+    for i, test in enumerate(options.tests):
+        if not test.endswith('/'):
+            options.tests[i] = test + '/'
 
     test_suite = TestSuite(ast_version, options)
 
@@ -460,7 +461,8 @@ def main(argv=None):
 
     test_suite.write_results_xml(TEST_RESULTS, stdout=True)
 
-    if not options.test:
+    # If exactly one test was requested, then skip the summary.
+    if len(test_suite.tests) != 1:
         print "\n=== TEST RESULTS ===\n"
         print "PATH: %s\n" % os.getenv("PATH")
         for t in test_suite.tests:
