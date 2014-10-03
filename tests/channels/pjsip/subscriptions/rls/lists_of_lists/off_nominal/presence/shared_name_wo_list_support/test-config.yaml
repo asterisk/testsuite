@@ -1,0 +1,33 @@
+testinfo:
+    summary: 'Lists of Lists off-nominal: subscribing to a name that is for
+              both a list of lists and a stand alone resource without event
+              list support.'
+    description: |
+        'This test uses SIPp to establish a subscription to an presence
+         resource named carol. The caveat is that a separate resource list
+         exists with the same name and we expect the presence resource to
+         be the resource subscribed to since the subscription does not
+         support eventlist type NOTIFY messages.'
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - python: 'yappcap'
+        - python: 'pyxb'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+    tags:
+        - rls
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: 'test-case-config'
+        typename: 'sipp.SIPpTestCase'
+
+test-case-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'presence_subscription.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'carol'} }

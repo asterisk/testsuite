@@ -1,0 +1,4 @@
+tests:
+    - test: 'shared_name_w_list_support'
+    - test: 'shared_name_wo_list_support'
+    - test: 'resource_duplication'

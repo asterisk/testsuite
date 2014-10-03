@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic Sipstone UAC">
+  <send retrans="500">
+    <![CDATA[
+
+      SUBSCRIBE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: sipp <sip:sipp@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: sut <sip:[service]@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 SUBSCRIBE
+      Contact: sip:sipp@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Performance Test
+      Event: presence
+      Accept: application/rlmi+xml
+      Accept: application/pidf+xml
+      Accept: multipart/related
+      Expires: 3600
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="100"
+        optional="true">
+  </recv>
+
+  <recv response="200" rtd="true">
+  </recv>
+
+  <recv request="NOTIFY" crlf="true">
+    <action>
+      <ereg regexp="presence" check_it="true" search_in="hdr" header="Event" assign_to="subevent" />
+      <ereg regexp="application\\/pidf\\+xml" check_it="true" search_in="hdr" header="Content-Type" assign_to="content_type" />
+      <!-- This one makes sure we aren't looking at an event list -->
+      <ereg regexp="application\\/rlmi\\+xml" check_it_inverse="true" search_in="hdr" header="Content-Type" assign_to="not_eventlist" />
+    </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <Reference variables="subevent,content_type,not_eventlist" />
+</scenario>

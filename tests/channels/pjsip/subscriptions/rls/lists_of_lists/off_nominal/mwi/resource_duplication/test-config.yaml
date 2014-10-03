@@ -1,0 +1,95 @@
+testinfo:
+    summary: 'Lists of Lists off-nominal: resource duplication.'
+    description: |
+        'This test uses SIPp to establish a subscription to a resource list.
+        The resource list is an MWI list that contains two elements, carol and
+        a sublist containing alice, bob, and a duplicate entry for carol. Once
+        the subscription is established, a PCAP listner is used to ensure that
+        the NOTIFY body sent by Asterisk is what is expected. It checks the
+        following:
+            * That the multipart body contains three parts
+            * That the multipart body consists of one RLMI document, an MWI
+              document for carol, and a Multipart body that contains the
+              inner list (RLMI, and two MWI bodies for alice and bob) without
+              a duplicate entry for carol.
+            * That each Multipart document has the proper integrity
+                * Each multipart body has is only a single RLMI list element
+                * The version number is 0
+                * Each multipart body has the correct number of list elements
+                * Each resource element has an instance element with a cid
+                  attribute corresponding to the Content-ID of its multipart body
+                  part
+                * Each resource element has the expected name element present
+            * The MWI documents have proper integrity
+                * The reported unread messages/voice messages are correct for
+                  each part
+                * The Content-ID header matches the corresponding cid attribute
+                  from the instance element in the RLMI document.'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - python: 'yappcap'
+        - python: 'pyxb'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+        - asterisk: 'res_mwi_external'
+    tags:
+        - mwi
+        - rls
+        - pjsip
+
+test-modules:
+    add-to-search-path:
+        -
+            'tests/channels/pjsip/subscriptions/rls/'
+    test-object:
+        config-section: 'test-case-config'
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'test-config'
+            typename: 'rls_test.IntegrityCheck'
+
+test-case-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'list_subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'mail_list'} }
+
+test-config:
+    list_name: 'mail_list'
+    resources:
+        -
+            {
+                # Primary list carol wins because it was listed before mail_sublist
+                'carol': {
+                    'type': 'MWI',
+                    'state': 'active',
+                    'voice_message': '0/0 (0/0)',
+                    'messages_waiting': 'no'
+                },
+                'mail_sublist': {
+                    'type': 'Multipart',
+                    'state': 'active',
+                    'sublist': {
+                        'alice': {
+                            'type': 'MWI',
+                            'state': 'active',
+                            'voice_message': '0/0 (0/0)',
+                            'messages_waiting': 'no'
+                        },
+                        'bob': {
+                            'type': 'MWI',
+                            'state': 'active',
+                            'voice_message': '0/0 (0/0)',
+                            'messages_waiting': 'no'
+                        }
+                    }
+                }
+            }
+    full_state:
+        -
+            True
