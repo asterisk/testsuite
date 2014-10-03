@@ -108,7 +108,6 @@ hep-node-config:
                     - 'c=IN IP6 \[::1\]'
                     - 't=0 0'
                     - 'm=audio(.*?)RTP/AVP 0 8 101'
-                    - 'c=IN IP6 \[::1\]'
                     - 'a=rtpmap:0 PCMU/8000'
                     - 'a=rtpmap:8 PCMA/8000'
                     - 'a=rtpmap:101 telephone-event/8000'
