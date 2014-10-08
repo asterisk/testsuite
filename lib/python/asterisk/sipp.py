@@ -766,7 +766,7 @@ class SIPpTest(TestCase):
         self._scenario_objects = []
 
     def stop_asterisk(self):
-        """Kill any scenarios still in existance"""
+        """Kill any scenarios still in existence"""
         for scenario in self._scenario_objects:
             if not scenario.exited:
                 LOGGER.warn("SIPp Scenario %s has not exited; killing" %

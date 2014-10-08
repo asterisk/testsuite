@@ -19,7 +19,7 @@ LOGGER = logging.getLogger(__name__)
 
 class SipDialogTestCondition(TestCondition):
     """This class is a base class for the pre- and post-test condition
-    classes that check for the existance of SIP dialogs in Asterisk. It provides
+    classes that check for the existence of SIP dialogs in Asterisk. It provides
     common functionality for parsing out the results of the 'sip show objects'
     and 'sip show history' Asterisk commands
     """

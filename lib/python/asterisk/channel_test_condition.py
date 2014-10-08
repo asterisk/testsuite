@@ -12,7 +12,7 @@ from twisted.internet import defer
 from test_conditions import TestCondition
 
 class ChannelTestCondition(TestCondition):
-    """Test condition that checks for the existance of channels.  If channels
+    """Test condition that checks for the existence of channels.  If channels
     are detected and the number of active channels is greater than the
     configured amount, an error is raised.
 
