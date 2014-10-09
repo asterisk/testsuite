@@ -1,0 +1,31 @@
+testinfo:
+    summary:     'Test res_phoneprov_pjsip basic ops'
+    description: |
+        'Test res_phoneprov_pjsip basic ops by setting up a user in pjsip.conf and insuring
+        that proper template substitution is done.
+
+properties:
+    minversion: '12.7.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - python : 'httplib'
+        - python : 'email'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_phoneprov'
+        - asterisk : 'res_pjsip_phoneprov_provider'
+
+substitutions:
+    profile_variable: "this is a test"
+    context: "defctx1"
+    username: "6000"
+    callerid: "6000"
+    display_name: "Joe"
+    server: "127.0.0.1"
+    server_port: "41060"
+    extension_length: "3"
+    timezone: "America/Denver"
+    tzoffset: "-25200"
+    context_1: "defctx1"
+    context_2: "defctx2"
