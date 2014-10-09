@@ -1,0 +1,15 @@
+profile_variable: ${PROFILE_VARIABLE}
+context: ${SIPPEER(${CALLERID},context)}
+mac: ${MAC}
+profile: ${PROFILE}
+username: ${USERNAME}
+display_name: ${DISPLAY_NAME}
+secret: ${SECRET}
+server: ${SERVER}
+server_port: ${SERVER_PORT}
+line: ${LINE}
+linekeys: ${LINEKEYS}
+timezone: ${TIMEZONE}
+tzoffset: ${TZOFFSET}
+extension_length: ${EXTENSION_LENGTH}
+${PP_EACH_EXTENSION(${MAC},cfgex.txt)}

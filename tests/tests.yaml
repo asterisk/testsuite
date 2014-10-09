@@ -18,6 +18,7 @@ tests:
     - dir: 'agi'
     - dir: 'asyncagi'
     - dir: 'pbx'
+    - dir: 'phoneprov'
     - test: 'predial'
     - dir: 'hangup'
     - dir: 'fax'

@@ -1,0 +1,27 @@
+testinfo:
+    summary:     'Test res_phoneprov basic ops'
+    description: |
+        'Test res_phoneprov basic ops by setting up a user in users.conf and insuring
+        that proper template substitution is done.
+
+properties:
+    minversion: '12.7.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - python : 'httplib'
+        - python : 'email'
+        - asterisk : 'chan_sip'
+        - asterisk : 'res_phoneprov'
+
+substitutions:
+    profile_variable: "this is a test"
+    context: "defctx1"
+    username: "6000"
+    server: "127.0.0.1"
+    server_port: "41060"
+    extension_length: "3"
+    timezone: "America/Denver"
+    tzoffset: "-25200"
+    context_1: "defctx1"
+    context_2: "defctx2"
