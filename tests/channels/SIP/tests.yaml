@@ -70,3 +70,4 @@ tests:
     - test: 'tel_uri'
     - dir: 'ami'
     - test: 'invite_retransmit'
+    - test: 'no_ack_dialog_cleanup'
