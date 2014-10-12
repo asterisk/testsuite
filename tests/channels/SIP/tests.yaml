@@ -71,3 +71,4 @@ tests:
     - dir: 'ami'
     - test: 'invite_retransmit'
     - test: 'no_ack_dialog_cleanup'
+    - test: 'no_reinvite_after_491'
