@@ -1,0 +1,408 @@
+testinfo:
+    summary:    'Test Manager GetConfig and UpdateConfig'
+    description: |
+        'Test Manager GetConfig and UpdateConfig'
+properties:
+    minversion: '12.7.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - manager
+        - AMI
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: object-config
+        typename: 'ManagerConfigTest.ManagerConfigTest'
+
+object-config:
+    reactor-timeout: 15
+    ami-config:
+        - ###  Create a new config file
+            message:
+                Action: 'CreateConfig'
+                Filename: 'test.conf'
+            expected:
+                Response: 'Success'
+                Message: 'New configuration file created successfully'
+
+        - ###  Load initial values
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'NewCat'
+                Cat-000000: 'Cat1T'
+                Options-000000: 'template'
+
+                Action-000001: 'Append'
+                Cat-000001: 'Cat1T'
+                Var-000001: 'type'
+                Value-000001: 'type1'
+                Options-000001: 'catfilter="TEMPLATES=restrict"'
+
+                Action-000002: 'NewCat'
+                Cat-000002: 'Cat1'
+                Options-000002: 'inherit="Cat1T"'
+
+                Action-000003: 'Append'
+                Cat-000003: 'Cat1'
+                Var-000003: 'var1'
+                Value-000003: 'value1'
+
+                Action-000004: 'NewCat'
+                Cat-000004: 'Cat2T'
+                Options-000004: 'template'
+
+                Action-000005: 'Append'
+                Cat-000005: 'Cat2T'
+                Var-000005: 'type'
+                Value-000005: 'type2'
+                Options-000005: 'catfilter="TEMPLATES=restrict"'
+            expected:
+                Response: 'Success'
+
+        - ###  Find the one concrete category
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1'
+                Templates-000000: 'Cat1T'
+                IsTemplate-000000: null
+                Line-000000-000000: 'type=type1'
+                Line-000000-000001: 'var1=value1'
+                Line-000000-000002: null
+                Category-000001: null
+
+        - ###  Find the fist template
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Category: 'Cat1T'
+                Filter: 'TEMPLATES=restrict'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1T'
+                IsTemplate-000000: '1'
+                Category-000001: null
+
+        - ###  Find both templates
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Filter: 'TEMPLATES=restrict'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1T'
+                IsTemplate-000000: '1'
+                Category-000001: 'Cat2T'
+                IsTemplate-000001: '1'
+                Category-000002: null
+
+        - ###  Find everything
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Filter: 'TEMPLATES=include'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1T'
+                IsTemplate-000000: '1'
+                Category-000001: 'Cat1'
+                IsTemplate-000001: null
+                Templates-000001: 'Cat1T'
+                Category-000002: 'Cat2T'
+                IsTemplate-000002: '1'
+                Category-000003: null
+
+        - ###  Test for non existent config file
+            message:
+                Action: 'GetConfig'
+                Filename: 'nonexistent.conf'
+            expected:
+                Response: 'Error'
+
+        - ###  Add a new category
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'NewCat'
+                Cat-000000: 'Cat3'
+            expected:
+                Response: 'Success'
+
+        - ###  Now delete it
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'DelCat'
+                Cat-000000: 'Cat3'
+            expected:
+                Response: 'Success'
+
+        - ###  Make sure it's gone
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Category: 'Cat3'
+            expected:
+                Response: 'Success'
+                Payload: 'No categories found'
+
+        - ###  Add a second Cat1 inheriting from Cat2T without ignoredups.  Should fail.
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'NewCat'
+                Cat-000000: 'Cat1'
+                Options-000000: 'inherit="Cat2T"'
+            expected:
+                Response: 'Error'
+                Message: 'Create category did not complete successfully'
+
+        - ###  Add a second Cat1 inheriting from nonexistent cat.  Should fail.
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'NewCat'
+                Cat-000000: 'Cat1'
+                Options-000000: 'ignoredups,inherit="CatZZZZZ"'
+            expected:
+                Response: 'Error'
+                Message: 'Create category did not complete successfully'
+
+        - ###  Add a second Cat1 inhetiting from Cat2T for real
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'NewCat'
+                Cat-000000: 'Cat1'
+                Options-000000: 'allowdups,inherit="Cat2T"'
+
+                Action-000001: 'Append'
+                Cat-000001: 'Cat1'
+                Var-000001: 'varXXX'
+                Value-000001: 'valueXXX'
+                Options-000001: 'catfilter="type=type2"'
+            expected:
+                Response: 'Success'
+
+        - ###  With no filters make sure both Cat1's are returned
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Category: 'Cat1'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1'
+                Category-000001: 'Cat1'
+                Category-000002: null
+
+        - ###  With a filter make sure only 1 Cat1 is returned
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Category: 'Cat1'
+                Filter: 'varXXX=valueXXX'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1'
+                Line-000000-000000: 'type=type2'
+                Line-000000-000001: 'varXXX=valueXXX'
+                Line-000000-000002: null
+                Category-000001: null
+
+        - ###  With no filters this should delete BOTH Cat1's
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'DelCat'
+                Cat-000000: 'Cat1'
+            expected:
+                Response: 'Success'
+
+        - ###  Make sure both are gone
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Category: 'Cat1'
+            expected:
+                Response: 'Success'
+                Payload: 'No categories found'
+                Category-000000: null
+
+        - ###  Add 1 Cat1 back in again
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'NewCat'
+                Cat-000000: 'Cat1'
+                Options-000000: 'inherit="Cat1T"'
+
+                Action-000001: 'Append'
+                Cat-000001: 'Cat1'
+                Var-000001: 'var1'
+                Value-000001: 'value1'
+
+                Action-000002: 'Append'
+                Cat-000002: 'Cat1'
+                Var-000002: 'commonvar1'
+                Value-000002: 'commonvalue1'
+
+            expected:
+                Response: 'Success'
+
+        - ###  Add a Cat2 in with a variable in common with Cat1
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'NewCat'
+                Cat-000000: 'Cat2'
+                Options-000000: 'inherit="Cat2T"'
+
+                Action-000001: 'Append'
+                Cat-000001: 'Cat2'
+                Var-000001: 'var2'
+                Value-000001: 'value2'
+
+                Action-000002: 'Append'
+                Cat-000002: 'Cat2'
+                Var-000002: 'commonvar1'
+                Value-000002: 'commonvalue1'
+            expected:
+                Response: 'Success'
+
+        - ###  With only a filter make sure both Cat1 and Cat2 are returned
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Filter: 'commonvar1=commonvalue1'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1'
+                Category-000001: 'Cat2'
+
+        - ###  Now add a second Cat2
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'NewCat'
+                Cat-000000: 'Cat2'
+                Options-000000: 'allowdups,inherit="Cat2T"'
+
+                Action-000001: 'Append'
+                Cat-000001: 'Cat2'
+                Var-000001: 'var2'
+                Value-000001: 'value2'
+
+                Action-000002: 'Append'
+                Cat-000002: 'Cat2'
+                Var-000002: 'commonvar1'
+                Value-000002: 'commonvalue1'
+            expected:
+                Response: 'Success'
+
+        - ###  Delete the commonvar1 from both
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'Delete'
+                Cat-000000: 'Cat2'
+                Var-000000: 'commonvar1'
+            expected:
+                Response: 'Success'
+
+        - ###  With only a filter only Cat1 should be returned
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Filter: 'commonvar1=commonvalue1'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1'
+                Category-000001: null
+
+        - ###  Just make sure all 3 are still there
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1'
+                Category-000001: 'Cat2'
+                Category-000002: 'Cat2'
+                Category-000003: null
+
+        - ###  Reset
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'DelCat'
+                Cat-000000: 'Cat1'
+
+                Action-000001: 'DelCat'
+                Cat-000001: 'Cat2'
+
+                Action-000002: 'NewCat'
+                Cat-000002: 'Cat1'
+
+                Action-000003: 'Append'
+                Cat-000003: 'Cat1'
+                Var-000003: 'type'
+                Value-000003: 'type1'
+
+            expected:
+                Response: 'Success'
+
+        -  ###  Insert var1 back into Cat1 at line 0
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'Insert'
+                Cat-000000: 'Cat1'
+                Var-000000: 'var1'
+                Value-000000: 'value1'
+                Line-000000: '0'
+            expected:
+                Response: 'Success'
+
+        - ###  Make sure lines are now in the right order
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Category: 'Cat1'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1'
+                Line-000000-000000: 'var1=value1'
+                Line-000000-000001: 'type=type1'
+                Line-000000-000002: null
