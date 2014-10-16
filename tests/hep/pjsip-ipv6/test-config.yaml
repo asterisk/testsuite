@@ -72,7 +72,7 @@ hep-node-config:
                 decode: 'SIP'
                 value:
                     - 'SIP/2.0 100 Trying'
-                    - 'Via: SIP/2.0/UDP \[::1\]:5067;rport;received=::1;branch=(.*)'
+                    - 'Via: SIP/2.0/UDP \[::1\]:5067;rport=5067;received=::1;branch=(.*)'
                     - 'Call-ID: (.*?)@::1'
                     - 'From: "test1" <sip:alice-ipv6-udp@\[::1\]>;tag=(.*)'
                     - 'To: "test" <sip:test@\[::1\]>'
@@ -92,7 +92,7 @@ hep-node-config:
                 decode: 'SIP'
                 value:
                     - 'SIP/2.0 200 OK'
-                    - 'Via: SIP/2.0/UDP \[::1\]:5067;rport;received=::1;branch=(.*)'
+                    - 'Via: SIP/2.0/UDP \[::1\]:5067;rport=5067;received=::1;branch=(.*)'
                     - 'Call-ID: (.*?)@::1'
                     - 'From: "test1" <sip:alice-ipv6-udp@\[::1\]>;tag=(.*)'
                     - 'To: "test" <sip:test@\[::1\]>;tag=(.*)'
@@ -183,7 +183,7 @@ hep-node-config:
                 decode: 'SIP'
                 value:
                     - 'SIP/2.0 200 OK'
-                    - 'Via: SIP/2.0/UDP \[::1\]:5067;rport;received=::1;branch=(.*)'
+                    - 'Via: SIP/2.0/UDP \[::1\]:5067;rport=5067;received=::1;branch=(.*)'
                     - 'Call-ID: (.*?)@::1'
                     - 'From: "test1" <sip:alice-ipv6-udp@\[::1\]>;tag=(.*)'
                     - 'To: "test" <sip:test@\[::1\]>;tag=(.*)'
