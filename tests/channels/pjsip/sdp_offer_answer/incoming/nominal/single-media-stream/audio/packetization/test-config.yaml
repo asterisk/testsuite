@@ -1,0 +1,47 @@
+testinfo:
+    summary:     'Test packetization of an audio stream'
+    description: |
+        This tests several scenarios, each of which offers a single audio
+        media stream with some packetization option:
+        1. Offer a ptime of 30 ms to an endpoint configured with 'use_ptime'
+           set to yes. Expect to get back an answer with a ptime attribute
+           of 30 ms.
+        2. Offer a ptime of 30 ms to an endpoint configured with 'use_ptime'
+           set to no. Expect to get back an answer with a ptime attribute
+           of 20 ms (the minimum packetization for the codecs for the
+            endpoint)
+        3. Don't offer a ptime in the offer, but send the offer to an endpoint
+           that is configured with a codec packetization. Expect to get an
+           answer with the packetization of the endpoint.
+        4. Offer a ptime of 30 ms to an endpoint configured with 'use_ptime'
+           set to no, and a packetization set to something other than the
+           default packetization. Expect to get an answer with the packetization
+           of the endpoint.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-ptime-accept.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-accept-ptime'} }
+                - { 'key-args': {'scenario': 'uac-ptime-decline.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice-decline-ptime'} }
+                - { 'key-args': {'scenario': 'uac-ptime-endpoint.xml', '-i': '127.0.0.1', '-p': '5063', '-s': 'alice-ptime'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-ptime-decline-endpoint.xml', '-i': '127.0.0.1', '-p': '5063', '-s': 'alice-ptime'} }
+
+
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

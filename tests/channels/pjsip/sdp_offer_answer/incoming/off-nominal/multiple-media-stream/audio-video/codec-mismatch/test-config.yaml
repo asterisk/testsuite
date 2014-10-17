@@ -1,0 +1,30 @@
+testinfo:
+    summary:     'Test off-nominal offer with one audio/video stream and various codec issues'
+    description: |
+        This tests inbound offers with an audio and a video stream that contain
+        mismatched codecs for an endpoint. It verfies:
+        - That Asterisk sends a 488 if neither stream is acceptable
+        - That if a stream is acceptable, it is honored while an invalid stream is declined
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-codec-mismatch.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+                - { 'key-args': {'scenario': 'uac-audio-mismatch.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice'} }
+                - { 'key-args': {'scenario': 'uac-video-mismatch.xml', '-i': '127.0.0.1', '-p': '5063', '-s': 'alice'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

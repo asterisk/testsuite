@@ -1,0 +1,30 @@
+testinfo:
+    summary:     'Test offers of RTP/AVP and RTP/AVPF'
+    description: |
+        This tests the use_avpf endpoint option. It checks that:
+        1. If an offer contains a profile of RTP/AVP and 'use_avpf' is set
+           to False, that the offer is accepted
+        2. That if an offer contains a profile of RTP/AVPF, and 'use_avpf'
+           is set to True, that the offer is accepted
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-avp.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-avp'} }
+                - { 'key-args': {'scenario': 'uac-avpf.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice-avpf'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

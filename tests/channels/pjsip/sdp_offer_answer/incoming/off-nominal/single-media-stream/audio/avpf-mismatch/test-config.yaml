@@ -1,0 +1,31 @@
+testinfo:
+    summary:     'Test off-nominal offers of RTP/AVP and RTP/AVPF'
+    description: |
+        This tests the use_avpf endpoint option in off-nominal cases. It checks
+        that:
+        1. If an offer contains a profile of RTP/AVP and 'use_avpf' is set
+           to True, that the offer is rejected with a 488
+        2. That if an offer contains a profile of RTP/AVPF, and 'use_avpf'
+           is set to False, that the offer is rejected with a 488
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-avp-fail.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-avpf'} }
+                - { 'key-args': {'scenario': 'uac-avpf-fail.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice-avp'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

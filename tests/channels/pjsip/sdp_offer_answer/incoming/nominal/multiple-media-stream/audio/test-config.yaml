@@ -1,0 +1,28 @@
+testinfo:
+    summary:     'Test offers with multiple audio streams'
+    description: |
+        This tests inbound offers that contain multiple audio
+        media streams. Asterisk should accept the first audio
+        media stream and decline the others.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-multiple-audio.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+                - { 'key-args': {'scenario': 'uac-multiple-audio-initial-declined.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

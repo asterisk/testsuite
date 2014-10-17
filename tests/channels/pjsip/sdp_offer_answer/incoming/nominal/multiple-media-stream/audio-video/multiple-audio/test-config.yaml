@@ -1,0 +1,29 @@
+testinfo:
+    summary:     'Test offers with multiple audio streams/one video stream'
+    description: |
+        This tests inbound offers that contain multiple audio
+        media streams and a single video stream. Asterisk should
+        accept the first audio media stream, decline the other
+        audio streams, and keep the video stream.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-multiple-audio-with-video.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+                - { 'key-args': {'scenario': 'uac-multiple-audio-initial-declined.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

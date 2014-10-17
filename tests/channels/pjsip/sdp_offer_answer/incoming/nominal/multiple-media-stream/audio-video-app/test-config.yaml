@@ -1,0 +1,29 @@
+testinfo:
+    summary:     'Test offers with one audio/video stream and application streams'
+    description: |
+        This tests inbound offers that contain a single audio/video stream,
+        which Asterisk supports, along with multiple application streams, which
+        Asterisk does not support. It verifies that the audio/video streams
+        are accepted, while the application streams are declined.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-audio-video-app.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+                - { 'key-args': {'scenario': 'uac-audio-video-app-initial-decline.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

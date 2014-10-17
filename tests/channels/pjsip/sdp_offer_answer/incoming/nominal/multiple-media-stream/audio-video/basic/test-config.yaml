@@ -1,0 +1,57 @@
+testinfo:
+    summary:     'Test basic offer/answer with one audio and one video stream'
+    description: |
+        This tests several scenarios, each of which offer a single audio
+        media stream:
+        1. Offer a silly amount of codecs to an endpoint configured with
+           allow=all. Expect a silly amount back in the order that they
+           are defined in Asterisk.
+        2. Offer a set of codecs in the priority order defined for the
+           endpoint, where the set of codecs offered is the same set
+           that is configured for the endpoint. Get back the codecs
+           in the order specified for the endpoint.
+        3. Offer a set of codecs that is a subset of the configured
+           codecs on the endpoint. Verify that we get an answer with
+           only the codecs offered, but in the priority order of the
+           endpoint.
+        4. Offer a set of codecs with no rtpmap for standard codecs. Expect
+           something back (in this case, we get an answer that the media
+           stream was accepted).
+        5. Offer a set of codecs with an odd RTP number mapping. Get back
+           an answer that supports our silly choices.
+        6. Send an INVITE request, but include no SDP. Asterisk will send
+           an offer with the 200 OK response, at which point the UAC sends
+           an answer.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    reactor-timeout: 80
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-all-codecs.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice-codec-all', } }
+                - { 'key-args': {'scenario': 'uac-basic-codecs.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-codec-match', } }
+                - { 'key-args': {'scenario': 'uac-basic-codecs.xml', '-i': '127.0.0.1', '-p': '5063', '-s': 'alice-codec-extended', } }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-basic-codecs-no-rtpmap.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-codec-match', } }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-basic-codecs-odd-rtpmap.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-codec-match', } }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-basic-codecs-delayed.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-codec-match', } }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

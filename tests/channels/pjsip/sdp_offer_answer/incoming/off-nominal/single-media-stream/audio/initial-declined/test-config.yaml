@@ -1,0 +1,39 @@
+testinfo:
+    summary:     'Test offer/answer with a single declined audio stream'
+    description: |
+        This test has two scenarios that offer a single declined audio
+        stream:
+        - The first scenario, uac-declined.xml, offers a declined
+          audio stream with the INVITE request. The expected response
+          is a 488.
+        - The second scenario, uac-declined-delayed.xml, offers a declined
+          audio stream in the ACK. This should cause the channel to
+          be immediately hung up.
+
+# Note: The second scenario is currently disabled. This is due
+# to ASTERISK-24410. When that issue is resolved, this scenario
+# should be enabled.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    reactor-timeout: 80
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-declined.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice', } }
+#                - { 'key-args': {'scenario': 'uac-declined-delayed.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice', } }
+
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

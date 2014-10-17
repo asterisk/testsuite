@@ -1,0 +1,6 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'avpf-mismatch'
+    - test: 'codec-mismatch'
+    - test: 'initial-declined'
+

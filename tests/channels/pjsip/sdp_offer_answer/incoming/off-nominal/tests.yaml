@@ -1,4 +1,5 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
-    - dir: 'nominal'
-    - dir: 'off-nominal'
+    - dir: 'multiple-media-stream'
+    - dir: 'single-media-stream'
+

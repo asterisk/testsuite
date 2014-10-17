@@ -1,0 +1,29 @@
+testinfo:
+    summary:     'Test offer/answer with declined audio/video streams'
+    description: |
+        This test sends a single offer with a declined audio/video
+        stream matching the codecs of the endpoint. It verifies that
+        since no media stream is being offered, Asterisk responds with
+        a 488.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    reactor-timeout: 80
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-declined.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice', } }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
