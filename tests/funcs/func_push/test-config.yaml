@@ -170,6 +170,7 @@ ami-config:
             match:
                 Event: 'VarSet'
                 Variable: '__INHERIT_PUSH'
+                Channel: 'Local/s@default-.*'
         requirements:
             -
                 match:
@@ -177,6 +178,17 @@ ami-config:
             -
                 match:
                     Value: 'yes,please'
+        count: '2'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: '__INHERIT_PUSH'
+                Channel: 'Local/dest@default-.*'
+        requirements:
+            match:
+                Value: 'yes,please'
         count: '2'
     -
         type: 'orderedheadermatch'
@@ -198,6 +210,7 @@ ami-config:
             match:
                 Event: 'VarSet'
                 Variable: '__INHERIT_UNSHIFT'
+                Channel: 'Local/s@default-.*'
         requirements:
             -
                 match:
@@ -205,6 +218,17 @@ ami-config:
             -
                 match:
                     Value: 'yes,please'
+        count: '2'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: '__INHERIT_UNSHIFT'
+                Channel: 'Local/dest@default-.*'
+        requirements:
+            match:
+                Value: 'yes,please'
         count: '2'
     -
         type: 'headermatch'
