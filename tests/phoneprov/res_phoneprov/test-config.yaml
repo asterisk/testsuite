@@ -22,6 +22,5 @@ substitutions:
     server_port: "41060"
     extension_length: "3"
     timezone: "America/Denver"
-    tzoffset: "-25200"
     context_1: "defctx1"
     context_2: "defctx2"
