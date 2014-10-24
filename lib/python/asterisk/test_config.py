@@ -320,9 +320,9 @@ class TestConfig(object):
                 self.feature_check[self.minversion.feature] = False
         if "maxversion" in properties:
             self.maxversion = AsteriskVersion(properties["maxversion"])
-        self.expect_pass = (properties.get("expectedResult") or
-                            properties.get("expected-result") or
-                            True)
+        self.expect_pass = (
+                properties.get("expectedResult", self.expect_pass) and
+                properties.get("expected-result", self.expect_pass))
         if "tags" in properties:
             self.tags = properties["tags"]
         if "features" in properties:

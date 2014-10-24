@@ -69,9 +69,19 @@ class TestRun:
                 pass
             p.wait()
 
+            # Sanitize p.returncode so it's always a boolean.
+            did_pass = (p.returncode == 0)
+            if did_pass and not self.test_config.expect_pass:
+                msg = "Test passed but was expected to fail."
+                print msg
+                self.stdout += msg + "\n"
+            if not did_pass and not self.test_config.expect_pass:
+                print "Test failed as expected."
+
             self.__parse_run_output(self.stdout)
 
-            self.passed = (p.returncode == 0 and self.test_config.expect_pass) or (p.returncode and not self.test_config.expect_pass)
+            self.passed = (did_pass == self.test_config.expect_pass)
+
             core_dumps = self._check_for_core()
             if (len(core_dumps)):
                 print "Core dumps detected; failing test"
