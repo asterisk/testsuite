@@ -6,4 +6,3 @@ tests:
     - test: 'func_global'
     - test: 'func_talkdetect'
     - test: 'func_push'
-    - dir: 'func_curl'
