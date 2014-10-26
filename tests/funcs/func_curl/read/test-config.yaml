@@ -1,0 +1,17 @@
+testinfo:
+    summary:     'Test for CURL write'
+    description: |
+        This test exercises the CURL function's write capabilities. It
+        creates a small JSON file and hosts it on the Asterisk instance's
+        static HTTP server. It then spawns a channel which uses the CURL
+        function to cURL the hosted JSON file into the Asterisk spool/tmp
+        directory. Finally, it verifies that the retrieved file contains
+        the same information as the hosted file.
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'func_curl'
+        - asterisk: 'app_echo'
