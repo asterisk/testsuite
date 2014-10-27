@@ -20,125 +20,10 @@ test-modules:
         -
             config-section: ami-config
             typename: 'ami.AMIEventModule'
-
-test-case-config:
-    connect-ami: 'True'
-
-hangup-config:
-    ids: ['0']
-
-originator-config:
-    trigger: 'ami_connect'
-
-ami-config:
-    -
-        type: 'orderedheadermatch'
-        conditions:
-            match:
-                Event: 'VarSet'
-                Variable: 'REGULAR_PUSH'
-        requirements:
-            -
-                match:
-                    Value: 'yes'
-            -
-                match:
-                    Value: 'yes,please'
-        count: '2'
-    -
-        type: 'orderedheadermatch'
-        conditions:
-            match:
-                Event: 'VarSet'
-                Variable: '__INHERIT_PUSH'
-        requirements:
-            -
-                match:
-                    Value: 'yes'
-            -
-                match:
-                    Value: 'yes,please'
-        count: '2'
-    -
-        type: 'orderedheadermatch'
-        conditions:
-            match:
-                Event: 'VarSet'
-                Variable: 'REGULAR_UNSHIFT'
-        requirements:
-            -
-                match:
-                    Value: 'please'
-            -
-                match:
-                    Value: 'yes,please'
-        count: '2'
-    -
-        type: 'orderedheadermatch'
-        conditions:
-            match:
-                Event: 'VarSet'
-                Variable: '__INHERIT_UNSHIFT'
-        requirements:
-            -
-                match:
-                    Value: 'please'
-            -
-                match:
-                    Value: 'yes,please'
-        count: '2'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'UserEvent'
-                UserEvent: 'PushInheritance'
-        requirements:
-            match:
-                result: 'pass'
-        count: '1'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'UserEvent'
-                UserEvent: 'UnshiftInheritance'
-        requirements:
-            match:
-                result: 'pass'
-        count: '1'
-
-
-properties:
-    minversion: '1.8.29.0'
-    minvserion: '11.11.0'
-    minversion: '12.4.0'
-    dependencies:
-        - python: 'twisted'
-        - python: 'starpy'
-        - asterisk: 'func_strings'
-testinfo:
-    summary: 'Tests the PUSH and UNSHIFT dialplan functions, ensuring the inheritable variables are evaluated properly'
-    description: |
-        "This test ensures that the PUSH and UNSHIFT functions correctly append and
-        prepend strings to a variable. The test performs this on both regular variables
-        as well as inheritable variables. With the inheritable variables, we also
-        ensure that the variable values are inherited as expected."
-
-test-modules:
-    test-object:
-        config-section: test-case-config
-        typename: 'test_case.TestCaseModule'
-    modules:
         -
-            config-section: originator-config
-            typename: 'pluggable_modules.Originator'
-        -
-            config-section: hangup-config
-            typename: 'pluggable_modules.HangupMonitor'
-        -
-            config-section: ami-config
+            config-section: ami-config-12
             typename: 'ami.AMIEventModule'
+            minversion: '12.0.0'
 
 test-case-config:
     connect-ami: 'True'
@@ -148,6 +33,60 @@ hangup-config:
 
 originator-config:
     trigger: 'ami_connect'
+
+ami-config-12:
+    -
+        type: 'orderedheadermatch'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: '__INHERIT_PUSH'
+                Channel: 'Local/s@default-.*'
+        requirements:
+            -
+                match:
+                    Value: 'yes'
+            -
+                match:
+                    Value: 'yes,please'
+        count: '2'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: '__INHERIT_PUSH'
+                Channel: 'Local/dest@default-.*'
+        requirements:
+            match:
+                Value: 'yes,please'
+        count: '2'
+    -
+        type: 'orderedheadermatch'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: '__INHERIT_UNSHIFT'
+                Channel: 'Local/s@default-.*'
+        requirements:
+            -
+                match:
+                    Value: 'please'
+            -
+                match:
+                    Value: 'yes,please'
+        count: '2'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: '__INHERIT_UNSHIFT'
+                Channel: 'Local/dest@default-.*'
+        requirements:
+            match:
+                Value: 'yes,please'
+        count: '2'
 
 ami-config:
     -
@@ -169,32 +108,6 @@ ami-config:
         conditions:
             match:
                 Event: 'VarSet'
-                Variable: '__INHERIT_PUSH'
-                Channel: 'Local/s@default-.*'
-        requirements:
-            -
-                match:
-                    Value: 'yes'
-            -
-                match:
-                    Value: 'yes,please'
-        count: '2'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'VarSet'
-                Variable: '__INHERIT_PUSH'
-                Channel: 'Local/dest@default-.*'
-        requirements:
-            match:
-                Value: 'yes,please'
-        count: '2'
-    -
-        type: 'orderedheadermatch'
-        conditions:
-            match:
-                Event: 'VarSet'
                 Variable: 'REGULAR_UNSHIFT'
         requirements:
             -
@@ -203,32 +116,6 @@ ami-config:
             -
                 match:
                     Value: 'yes,please'
-        count: '2'
-    -
-        type: 'orderedheadermatch'
-        conditions:
-            match:
-                Event: 'VarSet'
-                Variable: '__INHERIT_UNSHIFT'
-                Channel: 'Local/s@default-.*'
-        requirements:
-            -
-                match:
-                    Value: 'please'
-            -
-                match:
-                    Value: 'yes,please'
-        count: '2'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'VarSet'
-                Variable: '__INHERIT_UNSHIFT'
-                Channel: 'Local/dest@default-.*'
-        requirements:
-            match:
-                Value: 'yes,please'
         count: '2'
     -
         type: 'headermatch'
@@ -258,3 +145,4 @@ properties:
         - python: 'twisted'
         - python: 'starpy'
         - asterisk: 'func_strings'
+
