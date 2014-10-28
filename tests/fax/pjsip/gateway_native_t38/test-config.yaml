@@ -21,6 +21,9 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - custom : 'fax'
+        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip_t38'
     tags:
         - pjsip
         - fax
