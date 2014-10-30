@@ -47,8 +47,8 @@ class SIPpVersion:
             except OSError:
                 return
             for line in sipp_process.stdout:
-                if line.strip().startswith('SIPp'):
-                    sipp = line.strip().lstrip('SIPp ')
+                if line.strip().startswith('SIPp '):
+                    sipp = line.strip()[5:]
                     sipp = sipp.split(',', 1)
                     sipp = sipp[0].split('-', 1)
                     version = sipp[0]

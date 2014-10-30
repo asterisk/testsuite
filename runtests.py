@@ -42,6 +42,9 @@ class TestRun:
         self.__check_can_run(ast_version)
         self.stdout = ""
 
+        assert self.test_name.startswith('tests/')
+        self.test_relpath = self.test_name[6:]
+
     def run(self):
         self.passed = False
         self.did_run = True
@@ -110,7 +113,7 @@ class TestRun:
                 print "Unable to find core dump file %s, skipping" % core
                 continue
             random_num = random.randint(0, 16000)
-            dest_dir = "./logs/%s" % self.test_name.lstrip("tests/")
+            dest_dir = "./logs/%s" % self.test_relpath
             if not os.path.exists(dest_dir):
                 os.makedirs(dest_dir)
             dest_file = open(dest_dir + "/backtrace_%s.txt" % str(random_num), "w")
@@ -136,7 +139,7 @@ class TestRun:
 
     def _archive_logs(self):
         test_run_dir = os.path.join(Asterisk.test_suite_root,
-                       self.test_name.lstrip('tests/'))
+                                    self.test_relpath)
 
         i = 1
         # Find the last run
@@ -145,7 +148,7 @@ class TestRun:
         run_num = i - 1
         run_dir = os.path.join(test_run_dir, 'run_%d' % run_num)
         archive_dir = os.path.join('./logs',
-                                   self.test_name.lstrip('tests/'),
+                                   self.test_relpath,
                                    'run_%d' % run_num)
         self._archive_ast_logs(run_num, run_dir, archive_dir)
         self._archive_pcap_dump(run_dir, archive_dir)
