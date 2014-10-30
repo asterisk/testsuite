@@ -70,6 +70,7 @@ class AriBaseTestObject(TestCase):
         self.ari_factory = AriClientFactory(receiver=self, host=host, port=port,
                                             apps=self.apps, userpass=userpass)
 
+        self._ws_connection = None
         self._ws_event_handlers = []
         self.timed_out = False
 
@@ -117,6 +118,7 @@ class AriBaseTestObject(TestCase):
 
         :param protocol The WS Client protocol object
         """
+        self._ws_connection = protocol
         reactor.callLater(0, self._create_ami_connection)
 
     def on_ws_closed(self, protocol):
@@ -124,12 +126,17 @@ class AriBaseTestObject(TestCase):
 
         :param protocol The WS Client protocol object
         """
+        self._ws_connection = None
         LOGGER.debug("WebSocket connection closed...")
 
     def _create_ami_connection(self):
         """Create the AMI connection"""
         self.create_ami_factory(count=self.asterisk_instances)
 
+    def stop_reactor(self):
+        if self._ws_connection != None:
+            self._ws_connection.dropConnection()
+        super(AriBaseTestObject, self).stop_reactor()
 
 class AriTestObject(AriBaseTestObject):
     """Class that acts as a Test Object in the pluggable module framework"""
