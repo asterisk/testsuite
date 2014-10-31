@@ -25,7 +25,7 @@ setup() {
 		if [ ! -f config.status ]; then
 			./configure --enable-dev-mode
 			make menuselect.makeopts
-			menuselect/menuselect --enable DONT_OPTIMIZE --enable TEST_FRAMEWORK
+			menuselect/menuselect --enable DONT_OPTIMIZE --enable TEST_FRAMEWORK $MENUSELECT_OPTIONS
 		fi
 		make
 		make install samples DESTDIR="$HERE/astroot"

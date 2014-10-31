@@ -1,0 +1,55 @@
+#!/bin/sh
+
+print_usage() {
+	echo "Usage:"
+	echo "$0 [-s] [-n] [-b logs/]"
+	echo "\t-s            Strip /var/log/asterisk/refs.txt from output"
+	echo "\t-n            Sort output by number of objects leaked"
+	echo "\t-r            Reverse sort output"
+	echo "\t-b BASEDIR    Search for logs from BASEDIR instead of logs/"
+	exit $1
+}
+
+SORTPARAMS="-k2"
+REVERSEPARAMS=""
+STRIPFILE=
+BASEPATH=logs/
+while getopts ":snrhb:" opt; do
+	case $opt in
+		s)
+			STRIPFILE=/var/log/asterisk/refs.txt
+			;;
+		r)
+			REVERSEPARAMS="-r"
+			;;
+		n)
+			SORTPARAMS="-n"
+			;;
+		b)
+			BASEPATH="$OPTARG"
+			;;
+		:)
+			echo "Option -$OPTARG requires an argument."
+			exit 1
+			;;
+		h)
+			print_usage 0
+			;;
+		\?)
+			print_usage 1 1>&2
+			;;
+	esac
+done
+
+if test $OPTIND -le $#; then
+	print_usage 1 1>&2
+fi
+
+REFS_FILES=$(find "${BASEPATH}" -name refs.txt 2>/dev/null)
+if test -z "$REFS_FILES"; then
+	echo "No refs.txt logs found in ${BASEPATH}"
+	exit
+fi
+
+echo "Leaked objects per instance of Asterisk:"
+grep -H $REFS_FILES -e '==== Leaked Object '|sed -e "s,$STRIPFILE:.*,,"|uniq -c|sort $SORTPARAMS $REVERSEPARAMS

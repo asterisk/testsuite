@@ -91,6 +91,8 @@ class TestRun:
                 self.passed = False
                 self._archive_core_dumps(core_dumps)
 
+            self._process_ref_debug()
+
             if not self.passed:
                 self._archive_logs()
             print 'Test %s %s\n' % (cmd, 'passed' if self.passed else 'failed')
@@ -137,7 +139,7 @@ class TestRun:
                 except OSError, e:
                     print "Error removing core file: %s: Beware of the stale core file in CWD!" % (e,)
 
-    def _archive_logs(self):
+    def _find_run_dirs(self):
         test_run_dir = os.path.join(Asterisk.test_suite_root,
                                     self.test_relpath)
 
@@ -150,6 +152,53 @@ class TestRun:
         archive_dir = os.path.join('./logs',
                                    self.test_relpath,
                                    'run_%d' % run_num)
+        return (run_num, run_dir, archive_dir)
+
+    def _process_ref_debug(self):
+        (run_num, run_dir, archive_dir) = self._find_run_dirs()
+        if (run_num == 0):
+            return
+
+        refcounter_py = os.path.join(run_dir, "ast1/var/lib/asterisk/scripts/refcounter.py")
+        if not os.path.exists(refcounter_py):
+            return
+
+        i = 1
+        while os.path.isdir(os.path.join(run_dir, 'ast%d/var/log/asterisk' % i)):
+            ast_dir = "%s/ast%d/var/log/asterisk" % (run_dir, i)
+            refs_in = os.path.join(ast_dir, "refs")
+            if os.path.exists(refs_in):
+                refs_txt = os.path.join(ast_dir, "refs.txt")
+                dest_file = open(refs_txt, "w")
+                refcounter = [
+                    refcounter_py,
+                    "-f", refs_in,
+                    "-sn"
+                ]
+                res = -1
+                try:
+                    res = subprocess.call(refcounter,
+                                          stdout=dest_file,
+                                          stderr=subprocess.STDOUT)
+                except Exception, e:
+                    print "Exception occurred while processing REF_DEBUG"
+                finally:
+                    dest_file.close()
+                if res != 0:
+                    dest_dir = os.path.join(archive_dir,
+                                            'ast%d/var/log/asterisk' % i)
+                    if not os.path.exists(dest_dir):
+                        os.makedirs(dest_dir)
+                    hardlink_or_copy(refs_txt,
+                        os.path.join(dest_dir, "refs.txt"))
+                    hardlink_or_copy(refs_in,
+                        os.path.join(dest_dir, "refs"))
+                    print "REF_DEBUG identified leaks, mark test as failure"
+                    self.passed = False
+            i += 1
+
+    def _archive_logs(self):
+        (run_num, run_dir, archive_dir) = self._find_run_dirs()
         self._archive_ast_logs(run_num, run_dir, archive_dir)
         self._archive_pcap_dump(run_dir, archive_dir)
         if os.path.exists(os.path.join(run_dir, 'messages.txt')):
