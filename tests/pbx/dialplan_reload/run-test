@@ -15,33 +15,34 @@ sys.path.append("lib/python")
 from asterisk.test_case import TestCase
 LOGGER = logging.getLogger(__name__)
 
-workingdir = "dialplan-reload"
-testdir = "tests/%s" % workingdir
+# How many times to do the restart cycle
+restart_iterations = 5
+
 
 class DialplanReloadTest(TestCase):
     count = 0
 
     def __init__(self):
         TestCase.__init__(self)
-        # artificially high timeout as this can take a while
-        self.reactor_timeout = 300
+        # Each iteration resets the timeout
+        self.reactor_timeout = 30
         self.create_asterisk(1)
 
     def run(self):
         TestCase.run(self)
 
         def callback(defer):
-            LOGGER.info("DIALPLAN SHOW = " + defer.output);
+            LOGGER.info("DIALPLAN SHOW = %s" % defer.output)
             print defer.output.strip()
             if defer.output.find("CID match ''") == -1:
                 print "Dialplan did not load correctly"
-                reactor.callLater(1,self.failure)
+                self.failure()
             else:
-                reactor.callLater(3,self.reload)
+                self.reload()
 
         def errback(failure):
-            LOGGER.error("CLI dialplan show failed");
-            reactor.callLater(1,self.failure)
+            LOGGER.error("CLI dialplan show failed")
+            self.failure()
 
         # log the trouble context just to be sure it was loaded
         df = self.ast[0].cli_exec("dialplan show incoming_1")
@@ -51,23 +52,36 @@ class DialplanReloadTest(TestCase):
     def reload(self):
 
         def callback(defer):
-            LOGGER.info("RESTART = " + defer.output)
-            print "Restart #" + str(self.count) + " = " + defer.output.strip()
+            def fullybooted_success(defer):
+                LOGGER.info("core waitfullybooted success")
+                if self.count == restart_iterations:
+                    self.success()
+                else:
+                    self.reload()
+
+            def fullybooted_failure(failure):
+                LOGGER.error("core waitfullybooted failed")
+                self.failure()
+
+            def fullybooted_run():
+                self.reset_timeout()
+                waitfullybooted = self.ast[0].cli_exec("core waitfullybooted")
+                waitfullybooted.addCallback(fullybooted_success)
+                waitfullybooted.addErrback(fullybooted_failure)
+
+            LOGGER.info("Restarted #%d" % self.count)
             self.count += 1
-            if self.count == 50:
-                reactor.callLater(3,self.success)
-            else:
-                reactor.callLater(3,self.reload)
+            reactor.callLater(3, fullybooted_run)
 
         def errback(failure):
             LOGGER.error("CLI restart failed")
-            reactor.callLater(1,self.failure)
+            self.failure()
 
         df = self.ast[0].cli_exec("core restart gracefully")
         df.addCallback(callback)
         df.addErrback(errback)
 
-        LOGGER.info("Restarted # " + str(self.count))
+        LOGGER.info("Restarting #%d" % self.count)
 
     def success(self):
         self.passed = True
@@ -75,6 +89,7 @@ class DialplanReloadTest(TestCase):
 
     def failure(self):
         self.stop_reactor()
+
 
 def main():
     test = DialplanReloadTest()
