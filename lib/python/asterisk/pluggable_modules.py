@@ -814,3 +814,26 @@ class CallbackActionModule(object):
         self.test_object.set_passed(method(self.test_object, triggered_by,
                                            source, extra))
 PLUGGABLE_ACTION_REGISTRY.register("callback", CallbackActionModule)
+
+class StopTestActionModule(object):
+    """Action module that stops a test"""
+
+    def __init__(self, test_object, config):
+        """Constructor
+
+        Keyword Arguments:
+        test_object The main test object
+        config      The pluggable module config
+        """
+        self.test_object = test_object
+
+    def run(self, triggered_by, source, extra):
+        """Execute the action, which stops the test
+
+        Keyword Arguments:
+        triggered_by The event that triggered this action
+        source       The Asterisk interface object that provided the event
+        extra        Source dependent data
+        """
+        self.test_object.stop_reactor()
+PLUGGABLE_ACTION_REGISTRY.register("stop_test", StopTestActionModule)

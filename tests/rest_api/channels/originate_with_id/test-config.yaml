@@ -27,7 +27,8 @@ test-modules:
         config-section: test-object-config
         typename: ari.AriOriginateTestObject
     modules:
-        -   config-section: ari-config
+        -
+            config-section: ari-config
             typename: ari.WebSocketEventModule
         -
             config-section: ami-config
@@ -35,8 +36,12 @@ test-modules:
         -
             config-section: cel-config
             typename: 'ami.AMIEventModule'
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
 
 test-object-config:
+    stop-on-end: False
     test-iterations:
         -
             # test 1 - both id's creating local channel
@@ -59,6 +64,16 @@ test-object-config:
             channelId: 'MyStasisId'
             otherChannelId: 'MyOtherStasisId'
             app: 'testsuite'
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: ChannelDestroyed
+                application: testsuite
+                channel:
+                    id: 'MyStasisId$'
+        stop_test:
 
 ari-config:
     apps: testsuite
@@ -98,14 +113,6 @@ ari-config:
             conditions:
                 match:
                     type: ChannelHangupRequest
-                    application: testsuite
-                    channel:
-                        id: 'MyStasisId$'
-            count: 1
-        -
-            conditions:
-                match:
-                    type: ChannelDestroyed
                     application: testsuite
                     channel:
                         id: 'MyStasisId$'
