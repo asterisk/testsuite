@@ -154,7 +154,7 @@ class AriTestObject(AriBaseTestObject):
             test_config = {}
 
         self.iterations = test_config.get('test-iterations')
-
+        self.stop_on_end = test_config.get('stop-on-end', True)
         self.test_iteration = 0
         self.channels = []
 
@@ -211,8 +211,10 @@ class AriTestObject(AriBaseTestObject):
             return
 
         if self.test_iteration == len(self.iterations):
-            LOGGER.info("All iterations executed; stopping")
-            self.stop_reactor()
+            LOGGER.info("All iterations executed")
+            if self.stop_on_end:
+                LOGGER.info("Stopping test")
+                self.stop_reactor()
             return
 
         iteration = self.iterations[self.test_iteration]

@@ -24,6 +24,11 @@ test-object-config:
     # If not provided, default is 'testsuite'
     apps: foo-test
 
+    # If True, the test will be automatically stopped when all test iterations
+    # specified by test-iterations have completed. If set to False, the test will
+    # continue to run and must be stopped by another mechanism. Default is True.
+    stop-on-end: False
+
     # Define the channels to create for the test. If not specified, a single Local
     # channel will be created to s@default, tied to the Echo application. Channels
     # can be created in parallel for a single iteration if a list is provided.
