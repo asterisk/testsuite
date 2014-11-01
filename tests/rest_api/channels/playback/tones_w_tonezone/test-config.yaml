@@ -28,10 +28,25 @@ test-modules:
         config-section: test-object-config
         typename: ari.AriOriginateTestObject
     modules:
-        -   config-section: ari-config
+        -
+            config-section: ari-config
             typename: ari.WebSocketEventModule
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
 
 test-object-config:
+    stop-on-end: False
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: ChannelDestroyed
+                application: testsuite
+                channel:
+                    id: 'testsuite-default-id$'
+        stop_test:
 
 ari-config:
     apps: testsuite
@@ -122,12 +137,3 @@ ari-config:
                     channel:
                         id: 'testsuite-default-id$'
             count: 1
-        -
-            conditions:
-                match:
-                    type: ChannelDestroyed
-                    application: testsuite
-                    channel:
-                        id: 'testsuite-default-id$'
-            count: 1
-
