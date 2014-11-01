@@ -33,6 +33,7 @@ test-object-config:
     #   endpoint: Local/s@default
     #   channelId: testsuite-default-id
     #   app: testsuite
+    stop-on-end: False
 
 pluggable-config:
     -
@@ -160,6 +161,7 @@ pluggable-config:
                 channel:
                     id: 'testsuite-default-id$'
             count: 1
+        stop_test:
     -
         ari-events:
             match:
