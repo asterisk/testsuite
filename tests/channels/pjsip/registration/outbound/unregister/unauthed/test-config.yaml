@@ -24,11 +24,9 @@ properties:
     tags:
         - pjsip
         - AMI
-    # Expect it to fail until ASTERISK-24411 is resolved. Note: A pause has
-    # been added to the end of the SIPp scenario to work around frequent
-    # failures caused by ASTERISK-24414. The pause should be removed once
-    # ASTERISK-24414 is resolved.
-    expected-result: False
+    # Note: A pause has been added to the end of the SIPp scenario to work
+    # around frequent failures caused by ASTERISK-24414. The pause should
+    # be removed once ASTERISK-24414 is resolved.
 
 test-modules:
     add-test-to-search-path: 'True'
