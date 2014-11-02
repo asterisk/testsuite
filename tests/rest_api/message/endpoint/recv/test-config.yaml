@@ -13,7 +13,7 @@ test-modules:
     modules:
         -
             config-section: ari-config
-            typename: ari.WebSocketEventModule
+            typename: pluggable_modules.EventActionModule
         -
             config-section: message-sender
             typename: 'message_modules.SIPMessageRunner'
@@ -30,25 +30,24 @@ message-subscriber:
         - { event-source: 'endpoint:PJSIP/alice', app: 'testsuite' }
 
 message-sender:
-    end-on-success: True
     sipp:
         - { 'scenario':'message.xml', '-p':'5061' }
 
 ari-config:
-    events:
-        -   conditions:
-                match:
-                    type: TextMessageReceived
-                    application: testsuite
-                    message:
-                        to: 'pjsip:asterisk@127.0.0.1'
-                        from: '"alice" <sip:alice@127.0.0.1>'
-                        body: 'Watson, come here.'
-                    endpoint:
-                        technology: PJSIP
-                        resource: alice
-                        state: online
-            count: 1
+    ari-events:
+        match:
+            type: TextMessageReceived
+            application: testsuite
+            message:
+                to: 'pjsip:asterisk@127.0.0.1'
+                from: '"alice" <sip:alice@127.0.0.1>'
+                body: 'Watson, come here.'
+            endpoint:
+                technology: PJSIP
+                resource: alice
+                state: online
+        count: 1
+    stop_test:
 
 properties:
     minversion: '12.5.0'
