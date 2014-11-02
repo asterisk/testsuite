@@ -53,3 +53,8 @@ def on_leave(ari, event, test_object):
     assert TEST.channel_id == channel_id
     assert TEST.bridge1_id == bridge_id or TEST.bridge2_id == bridge_id
     return True
+
+
+def on_end(ari, event, test_object):
+    test_object.stop_reactor()
+    return True

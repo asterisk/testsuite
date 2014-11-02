@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 id = None
 
+STASIS_END_EVENTS = 0
+
 
 def on_start(ari, event, test_object):
     logger.debug("on_start(%r)" % event)
@@ -23,7 +25,13 @@ def on_start(ari, event, test_object):
 
 def on_end(ari, event, test_object):
     global id
+    global STASIS_END_EVENTS
+
     logger.debug("on_end(%r)" % event)
+    STASIS_END_EVENTS += 1
+    if (STASIS_END_EVENTS == 2):
+        test_object.stop_reactor()
+
     return id == event['channel']['id']
 
 

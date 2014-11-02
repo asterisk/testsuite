@@ -12,6 +12,9 @@ test-modules:
         -   config-section: ari-config
             typename: ari.WebSocketEventModule
 
+test-object-config:
+    stop-on-end: False
+
 ari-config:
     apps: testsuite
     events:
@@ -45,6 +48,9 @@ ari-config:
                     type: StasisEnd
                     application: testsuite
             count: 1
+            callback:
+                module: bridge_move
+                method: on_end
 
 properties:
     minversion: '12.0.0'
