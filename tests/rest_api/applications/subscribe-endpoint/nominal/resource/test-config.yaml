@@ -30,10 +30,13 @@ test-modules:
         -
             config-section: ari-config
             typename: ari.WebSocketEventModule
-
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
 
 test-object-config:
     asterisk-instances: 2
+    stop-on-end: False
     test-iterations:
         -
             channel: 'Local/dial_alice@default'
@@ -110,16 +113,19 @@ ari-config:
                         name: 'PJSIP/bob-00000000'
                         state: Up
             count: 1
-        -   conditions:
-                match:
-                    type: EndpointStateChange
-                    application: testsuite
-                    endpoint:
-                        technology: PJSIP
-                        resource: bob
-                        state: online
-                        channel_ids: []
-            count: 1
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: EndpointStateChange
+                application: testsuite
+                endpoint:
+                    technology: PJSIP
+                    resource: bob
+                    state: online
+                    channel_ids: []
+        stop_test:
 
 
 properties:

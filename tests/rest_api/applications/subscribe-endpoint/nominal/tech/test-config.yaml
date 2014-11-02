@@ -30,10 +30,13 @@ test-modules:
         -
             config-section: ari-config
             typename: ari.WebSocketEventModule
-
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
 
 test-object-config:
     asterisk-instances: 2
+    stop-on-end: False
     test-iterations:
         -
             channel: 'Local/dial_alice@default'
@@ -120,17 +123,19 @@ ari-config:
                         name: 'IAX2/alice-.*'
                         state: Up
             count: 1
-        -   conditions:
-                match:
-                    type: EndpointStateChange
-                    application: testsuite
-                    endpoint:
-                        technology: IAX2
-                        resource: alice
-                        state: unknown
-                        channel_ids: []
-            count: 1
 
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: EndpointStateChange
+                application: testsuite
+                endpoint:
+                    technology: IAX2
+                    resource: alice
+                    state: unknown
+                    channel_ids: []
+        stop_test:
 
 properties:
     minversion: '12.5.0'
