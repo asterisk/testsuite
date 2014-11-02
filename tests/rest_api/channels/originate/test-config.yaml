@@ -7,9 +7,14 @@ test-modules:
     add-test-to-search-path: True
     test-object:
         typename: ari.AriTestObject
+        config-section: test-config
     modules:
-        -   config-section: ari-config
+        -
+            config-section: ari-config
             typename: ari.WebSocketEventModule
+
+test-config:
+    stop-on-end: False
 
 ari-config:
     apps: testsuite
