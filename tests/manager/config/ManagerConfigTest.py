@@ -34,6 +34,7 @@ class ManagerConfigTest(TestCase):
                 self.run_test(x)
                 if (not self.passed):
                     break
+            self.syncami.logoff()
         except Exception as e:
             self.passed = False
             LOGGER.error("Exception caught: %s" % e)

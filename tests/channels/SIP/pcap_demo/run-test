@@ -8,7 +8,6 @@ import logging
 sys.path.append("lib/python")
 
 from asterisk.test_case import TestCase
-from asterisk.syncami import SyncAMI
 from sip_message import SIPMessage, SIPMessageTest
 
 from twisted.internet import reactor

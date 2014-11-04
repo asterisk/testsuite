@@ -57,7 +57,9 @@ class SyncAMI(object):
 
     def logoff(self):
         """Log out of AMI"""
-        return self.send({'action': 'logoff'})
+        result = self.send({'action': 'logoff'})
+        self.con.close()
+        return result
 
     def send(self, args):
         """Send an AMI request "action" given a dict of header values

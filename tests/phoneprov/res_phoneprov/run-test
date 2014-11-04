@@ -28,6 +28,10 @@ class ResPhoneprovTest(TestCase):
         self.reactor_timeout = 15
         self.create_asterisk()
 
+    def stop_reactor(self):
+        self.con.close()
+        super(ResPhoneprovTest, self).stop_reactor()
+
     def run(self):
         super(ResPhoneprovTest, self).run()
         self.passed = True
