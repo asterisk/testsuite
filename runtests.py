@@ -257,7 +257,7 @@ class TestSuite:
 
         self.tests = []
         self.global_config = self._parse_global_config()
-        self.tests = self._parse_test_yaml("tests", ast_version)
+        self.tests = sorted(self._parse_test_yaml("tests", ast_version), key=lambda test: test.test_name)
         self.total_time = 0.0
         self.total_count = 0
         self.total_failures = 0
