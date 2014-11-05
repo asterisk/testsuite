@@ -268,6 +268,11 @@ def read_module_paths(test_config, test_path):
             TestModuleFinder.supported_paths.append(path)
             sys.path.append(path)
 
+    if 'add-relative-to-search-path' in test_config['test-modules']:
+        for path in test_config['test-modules']['add-relative-to-search-path']:
+            TestModuleFinder.supported_paths.append(os.path.join(test_path, path))
+            sys.path.append(os.path.join(test_path, path))
+
 def main(argv = None):
     """Main entry point for the test run
 
