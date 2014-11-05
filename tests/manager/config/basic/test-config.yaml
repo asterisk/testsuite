@@ -3,7 +3,7 @@ testinfo:
     description: |
         'Test Manager GetConfig and UpdateConfig Basic Ops'
 properties:
-    minversion: '1.8.0'
+    minversion: '11.14.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
