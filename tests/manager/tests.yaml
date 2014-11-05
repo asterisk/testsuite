@@ -6,7 +6,7 @@ tests:
     - test: 'authtimeout'
     - test: 'acl-login'
     - test: 'bridge_actions'
-    - test: 'config'
+    - dir:  'config'
     - dir:  'danger'
     - test: 'originate'
     - test: 'device_state_changed'

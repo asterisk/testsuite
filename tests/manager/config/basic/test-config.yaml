@@ -1,0 +1,277 @@
+testinfo:
+    summary:    'Test Manager GetConfig and UpdateConfig Basic Ops'
+    description: |
+        'Test Manager GetConfig and UpdateConfig Basic Ops'
+properties:
+    minversion: '1.8.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - manager
+        - AMI
+
+test-modules:
+    add-test-to-search-path: 'True'
+    add-relative-to-search-path: ['..']
+    test-object:
+        config-section: object-config
+        typename: 'ManagerConfigTest.ManagerConfigTest'
+
+object-config:
+    reactor-timeout: 15
+    ami-config:
+        - ###  Create a new config file
+            message:
+                Action: 'CreateConfig'
+                Filename: 'test.conf'
+            expected:
+                Response: 'Success'
+                Message: 'New configuration file created successfully'
+
+        - ###  NewCat, Append and Insert
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'NewCat'
+                Cat-000000: 'Cat1'
+
+                Action-000001: 'Append'
+                Cat-000001: 'Cat1'
+                Var-000001: 'var1'
+                Value-000001: 'value1 ;moreinfo'
+
+                Action-000002: 'Append'
+                Cat-000002: 'Cat1'
+                Var-000002: 'var2'
+                Value-000002: 'value2 "moreinfo"'
+
+                Action-000003: 'Insert'
+                Cat-000003: 'Cat1'
+                Var-000003: 'var0'
+                Value-000003: 'value0 \;moreinfo'
+                Line-000003: '0'
+            expected:
+                Response: 'Success'
+
+        - ###  Readback
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1'
+                Line-000000-000000: 'var0=value0 \;moreinfo'
+                Line-000000-000001: 'var1=value1 ;moreinfo'
+                Line-000000-000002: 'var2=value2 "moreinfo"'
+                Line-000000-000003: null
+                Category-000001: null
+
+        - ###  Delete, Update
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'Delete'
+                Cat-000000: 'Cat1'
+                Var-000000: 'var0'
+
+                Action-000001: 'Append'
+                Cat-000001: 'Cat1'
+                Var-000001: 'var1'
+                Value-000001: 'value1 ;second'
+
+                Action-000002: 'Update'
+                Cat-000002: 'Cat1'
+                Var-000002: 'var1'
+                Value-000002: 'value1 ;another'
+                Match-000002: 'value1 ;moreinfo'
+            expected:
+                Response: 'Success'
+
+        - ###  Readback
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1'
+                Line-000000-000000: 'var1=value1 ;another'
+                Line-000000-000001: 'var2=value2 "moreinfo"'
+                Line-000000-000002: 'var1=value1 ;second'
+                Line-000000-000003: null
+                Category-000001: null
+
+        - ###  RenameCat
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'RenameCat'
+                Cat-000000: 'Cat1'
+                value-000000: 'Cat2'
+            expected:
+                Response: 'Success'
+
+        - ###  Readback
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat2'
+                Line-000000-000000: 'var1=value1 ;another'
+                Line-000000-000001: 'var2=value2 "moreinfo"'
+                Line-000000-000002: 'var1=value1 ;second'
+                Line-000000-000003: null
+                Category-000001: null
+
+        - ###  EmptyCat
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'EmptyCat'
+                Cat-000000: 'Cat2'
+            expected:
+                Response: 'Success'
+
+        - ###  Readback
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat2'
+                Line-000000-000000: null
+                Category-000001: null
+
+        - ###  NewCat, DelCat
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'DelCat'
+                Cat-000000: 'Cat2'
+
+                Action-000001: 'NewCat'
+                Cat-000001: 'Cat1'
+            expected:
+                Response: 'Success'
+
+        - ###  Readback
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1'
+                Category-000001: null
+
+###  Negative tests
+        -
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'DelCat'
+                Cat-000000: 'Cat99'
+
+            expected:
+                Response: 'Error'
+        -
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'RenameCat'
+                Cat-000000: 'Cat99'
+
+            expected:
+                Response: 'Error'
+        -
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'RenameCat'
+                Cat-000000: 'Cat99'
+                Value-000000: 'Cat98'
+
+            expected:
+                Response: 'Error'
+        -
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'Update'
+                Cat-000000: 'Cat99'
+
+            expected:
+                Response: 'Error'
+        -
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'Update'
+                Cat-000000: 'Cat1'
+
+            expected:
+                Response: 'Error'
+        -
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'Update'
+                Cat-000000: 'Cat1'
+                Var-000000: 'nonexistent'
+
+            expected:
+                Response: 'Error'
+        -
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'Append'
+                Cat-000000: 'Cat1'
+                Var-000000: 'var1'
+                Value-000000: 'value1'
+
+                Action-000001: 'Update'
+                Cat-000001: 'Cat1'
+                Var-000001: 'var1'
+                Value-000001: 'value2'
+                Match-000001: 'value99'
+
+            expected:
+                Response: 'Error'
+        -
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'Insert'
+                Cat-000000: 'Cat1'
+                Var-000000: 'var2'
+                Value-000000: 'value2'
+
+            expected:
+                Response: 'Error'

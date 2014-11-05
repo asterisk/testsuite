@@ -11,6 +11,7 @@ tests:
     - test: 'call-files'
     - test: 'callerid_match'
     - test: 'dialplan_reload'
+    - test: 'dialplan_save'
     - test: 'pbx_lua_goto'
     - test: 'pbx_lua_background'
     - test: 'manager_extensions'

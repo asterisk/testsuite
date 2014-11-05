@@ -13,6 +13,7 @@ properties:
 
 test-modules:
     add-test-to-search-path: 'True'
+    add-relative-to-search-path: ['..']
     test-object:
         config-section: object-config
         typename: 'ManagerConfigTest.ManagerConfigTest'

@@ -1,0 +1,12 @@
+testinfo:
+    summary:     'Test dialplan save with escaped semicolons'
+    description: |
+        'This test verifies that saving a dialplan with escaped semicolons preserves the escapes.'
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - dialplan
