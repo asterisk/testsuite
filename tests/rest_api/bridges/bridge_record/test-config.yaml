@@ -12,7 +12,6 @@ testinfo:
 test-modules:
     add-test-to-search-path: True
     test-object:
-        config-section: test-object-config
         typename: ari.AriTestObject
     modules:
         -   config-section: ari-config
