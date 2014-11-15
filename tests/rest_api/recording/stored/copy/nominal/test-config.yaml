@@ -15,6 +15,9 @@ test-modules:
         -   config-section: ari-config
             typename: ari.WebSocketEventModule
 
+test-object-config:
+    stop-on-end: False
+
 ari-config:
     apps: testsuite
     events:
@@ -45,6 +48,9 @@ ari-config:
                 match:
                     type: StasisEnd
                     application: testsuite
+            callback:
+                module: recording
+                method: on_stasis_end
             count: 1
 
 properties:

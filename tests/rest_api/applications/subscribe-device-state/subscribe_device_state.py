@@ -11,7 +11,7 @@ DEVICE = 'Stasis:Test'
 INITIAL_STATE = 'NOT_INUSE'
 CHANGED_STATE = 'INUSE'
 
-def on_start(ari, event, obj):
+def on_start(ari, event, test_obj):
     # add a device state
     ari.put(URL, DEVICE, deviceState=INITIAL_STATE)
 
@@ -32,7 +32,8 @@ def on_start(ari, event, obj):
     ari.delete('channels', event['channel']['id'])
     return True
 
-def on_state_change(ari, event, obj):
+def on_state_change(ari, event, test_obj):
     assert event['device_state']['name'] == DEVICE
     assert event['device_state']['state'] == CHANGED_STATE
+    test_obj.stop_reactor()
     return True

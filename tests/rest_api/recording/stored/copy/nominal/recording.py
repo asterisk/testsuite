@@ -138,3 +138,18 @@ def on_recording_finished(ari, event, test_object):
         fail_test()
         return
     return True
+
+
+def on_stasis_end(ari, event, test_object):
+    """Handler for StasisEnd
+
+    End the test
+
+    Keyword Arguments:
+    event The StasisEnd event
+    test_object Our one and only test object
+    """
+    LOGGER.info("Test finished")
+    test_object.stop_reactor()
+    return True
+

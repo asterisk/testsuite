@@ -14,6 +14,7 @@ test-modules:
             typename: ari.WebSocketEventModule
 
 test-object-config:
+    stop-on-end: False
     test-iterations:
         -   # Spawn two channels for this test
             -   channel: Local/s@default

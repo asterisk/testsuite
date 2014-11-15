@@ -155,6 +155,8 @@ class BridgeUnhappy(object):
 
 TEST = BridgeUnhappy()
 
+END_EVENTS = 0
+
 
 def on_start(ari, event, test_object):
     r = TEST.on_start(ari, event)
@@ -164,7 +166,12 @@ def on_start(ari, event, test_object):
 
 
 def on_end(ari, event, test_object):
+    global END_EVENTS
+
+    END_EVENTS += 1
     r = TEST.on_end(ari, event)
     if r:
         TEST.run_test(ari)
+    if END_EVENTS == 2:
+        test_object.stop_reactor()
     return r

@@ -37,4 +37,5 @@ def on_end(ari, event, test_object):
 def on_state_change(ari, event, test_object):
     LOGGER.debug("on_state_change(%r)" % event)
     assert TEST.has_ended, "Expected no state changes before StasisEnd"
+    test_object.stop_reactor()
     return True

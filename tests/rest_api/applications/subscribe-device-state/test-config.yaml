@@ -13,6 +13,9 @@ test-modules:
         -   config-section: ari-config
             typename: ari.WebSocketEventModule
 
+test-object-config:
+    stop-on-end: False
+
 ari-config:
     events:
         -   conditions:

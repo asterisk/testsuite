@@ -31,8 +31,20 @@ test-modules:
     modules:
         -   config-section: ari-config
             typename: ari.WebSocketEventModule
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
 
 test-object-config:
+    stop-on-end: False
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: testsuite
+        stop_test:
 
 ari-config:
     apps: testsuite
