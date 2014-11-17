@@ -51,6 +51,8 @@ class PcapListener(object):
         device = module_config.get('device')
         bpf_filter = module_config.get('bpf-filter')
         filename = module_config.get('filename')
+        snaplen = module_config.get('snaplen')
+        buffer_size = module_config.get('buffer-size')
         if (module_config.get('register-observer')):
             test_object.register_pcap_observer(self.__pcap_callback)
         if (module_config.get('debug-packets')):
@@ -61,7 +63,9 @@ class PcapListener(object):
         test_object.create_pcap_listener(
             device=device,
             bpf_filter=bpf_filter,
-            dumpfile=filename)
+            dumpfile=filename,
+            snaplen=snaplen,
+            buffer_size=buffer_size)
 
     def __pcap_callback(self, packet):
         ''' Private callback. Will log packets out as DEBUG messages if

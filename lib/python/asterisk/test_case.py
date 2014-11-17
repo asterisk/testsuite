@@ -292,15 +292,19 @@ class TestCase(object):
         """
         pass
 
-    def create_pcap_listener(self, device=None, bpf_filter=None, dumpfile=None):
+    def create_pcap_listener(self, device=None, bpf_filter=None, dumpfile=None,
+                             snaplen=None, buffer_size=None):
         """Create a single instance of a pcap listener.
 
         Keyword arguments:
-        device     The interface to listen on. Defaults to the first interface
-                   beginning with 'lo'.
-        bpf_filter BPF (filter) describing what packets to match, i.e.
-                   "port 5060"
-        dumpfile   The filename at which to save a pcap capture
+        device      The interface to listen on. Defaults to the first interface
+                    beginning with 'lo'.
+        bpf_filter  BPF (filter) describing what packets to match, i.e.
+                    "port 5060"
+        dumpfile    The filename at which to save a pcap capture
+        snaplen     Number of bytes to capture from each packet. Defaults to
+                    65535.
+        buffer_size The ring buffer size. Defaults to 0.
 
         """
 
@@ -313,7 +317,8 @@ class TestCase(object):
         # tests can create their own. Tests may only want to watch a specific
         # port, while a general logger will want to watch more general traffic
         # which can be filtered later.
-        return PcapListener(device, bpf_filter, dumpfile, self._pcap_callback)
+        return PcapListener(device, bpf_filter, dumpfile, self._pcap_callback,
+                snaplen, buffer_size)
 
     def start_asterisk(self):
         """This method will be called when the reactor is running, but
