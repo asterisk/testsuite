@@ -332,7 +332,7 @@ class Asterisk(object):
         def __wait_fully_booted_error(cli_command):
             """Errback for CLI command waitfullybooted"""
 
-            if time.time() - self.__start_asterisk_time > 5:
+            if time.time() - self.__start_asterisk_time > 90:
                 msg = "Asterisk core waitfullybooted for %s failed" % self.host 
                 LOGGER.error(msg)
                 self._start_deferred.errback(Exception(msg))
@@ -350,6 +350,14 @@ class Asterisk(object):
             "-f", "-g", "-q", "-m", "-n",
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
         ]
+
+        if os.getenv("VALGRIND_ENABLE") == "true":
+            valgrind_path = test_suite_utils.which('valgrind')
+            if valgrind_path:
+                cmd = [valgrind_path] + cmd
+            else:
+                LOGGER.error('Valgrind not found')
+
 
         # Make the start/stop deferreds - this method will return
         # the start deferred, and pass the stop deferred to the AsteriskProtocol
@@ -455,7 +463,7 @@ class Asterisk(object):
         else:
             # Schedule a kill. If we don't gracefully shut down Asterisk, this
             # will ensure that the test is stopped.
-            self._stop_cancel_tokens.append(reactor.callLater(10, __send_kill))
+            self._stop_cancel_tokens.append(reactor.callLater(200, __send_kill))
 
             # Start by asking to stop gracefully.
             __send_stop_gracefully()

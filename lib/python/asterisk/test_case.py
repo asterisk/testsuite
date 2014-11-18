@@ -138,6 +138,9 @@ class TestCase(object):
         self._pcap_callbacks = []
         self._stop_deferred = None
 
+        if os.getenv("VALGRIND_ENABLE") == "true":
+            self.reactor_timeout *= 20
+
         # Pull additional configuration from YAML config if possible
         if test_config:
             if 'reactor-timeout' in test_config:

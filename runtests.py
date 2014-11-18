@@ -497,6 +497,9 @@ def main(argv=None):
     parser.add_option("-n", "--dry-run", action="store_true",
             dest="dry_run", default=False,
             help="Only show which tests would be run.")
+    parser.add_option("-V", "--valgrind", action="store_true",
+            dest="valgrind", default=False,
+            help="Run Asterisk under Valgrind")
     (options, args) = parser.parse_args(argv)
 
     ast_version = AsteriskVersion(options.version)
@@ -516,6 +519,9 @@ def main(argv=None):
     if options.list_tags:
         test_suite.list_tags()
         return 0
+
+    if options.valgrind:
+        os.environ["VALGRIND_ENABLE"] = "true"
 
     print "Running tests for Asterisk %s ...\n" % str(ast_version)
 
