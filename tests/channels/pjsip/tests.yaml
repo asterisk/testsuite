@@ -25,3 +25,4 @@ tests:
     - dir: 'video_calls'
     - test: 'accountcode'
     - dir: 'publish'
+    - dir: 'optimistic_srtp'

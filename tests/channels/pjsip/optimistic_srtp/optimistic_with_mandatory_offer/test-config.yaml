@@ -1,0 +1,24 @@
+testinfo:
+    summary:     'Tests SRTP offer with crypto and optimistic encryption enabled.'
+    description: |
+        'Run a SIPp scenario that sends an INVITE with mandatory encryption.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'offer.xml', '-i': '127.0.0.1', '-p': '5061'} }
+
+properties:
+    minversion: '13.1.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

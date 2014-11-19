@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <!DOCTYPE scenario SYSTEM "sipp.dtd">
 
-<scenario name="Test call declination on SRTP offer where it is not enabled">
+<scenario name="SRTP Test">
   <send retrans="500">
     <![CDATA[
 
       INVITE sip:echo@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: test1 <sip:bob@[local_ip]:[local_port]>;tag=[call_number]
+      From: test1 <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
       To: test <sip:test@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: 1 INVITE
@@ -40,7 +40,48 @@
   <recv response="183" optional="true">
   </recv>
 
-  <recv response="488" rtd="true">
+  <recv response="200" rtd="true">
+    <action>
+      <ereg regexp="a=crypto:1" search_in="body" check_it="true" assign_to="1"/>
+    </action>
+  </recv>
+  <Reference variables="1"/>
+
+  <send>
+    <![CDATA[
+
+      ACK sip:echo@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: test1 <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 1 ACK
+      Contact: sip:test@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Test
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <send retrans="500">
+    <![CDATA[
+
+      BYE sip:echo@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: test1 <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 2 BYE
+      Contact: sip:test@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Test
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
   </recv>
 
   <!-- definition of the response time repartition table (unit is ms)   -->

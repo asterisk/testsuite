@@ -1,0 +1,6 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'mandatory_with_optimistic_offer'
+    - test: 'optimistic_with_mandatory_offer'
+    - test: 'optimistic_with_optimistic_offer'
+    - test: 'optimistic_with_no_crypto'
