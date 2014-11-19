@@ -18,6 +18,13 @@ import yaml
 import shutil
 import xml.dom
 import random
+import select
+
+# Re-open stdout so it's line buffered.
+# This allows timely processing of piped output.
+newfno = os.dup(sys.stdout.fileno())
+os.close(sys.stdout.fileno())
+sys.stdout = os.fdopen(newfno, 'w', 1)
 
 sys.path.append("lib/python")
 
@@ -30,7 +37,7 @@ TEST_RESULTS = "asterisk-test-suite-report.xml"
 
 
 class TestRun:
-    def __init__(self, test_name, ast_version, options, global_config=None):
+    def __init__(self, test_name, ast_version, options, global_config=None, timeout=-1):
         self.can_run = False
         self.did_run = False
         self.time = 0.0
@@ -41,6 +48,7 @@ class TestRun:
         self.failure_message = ""
         self.__check_can_run(ast_version)
         self.stdout = ""
+        self.timeout = timeout
 
         assert self.test_name.startswith('tests/')
         self.test_relpath = self.test_name[6:]
@@ -64,9 +72,20 @@ class TestRun:
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
             self.pid = p.pid
+
+            poll = select.poll()
+            poll.register(p.stdout, select.POLLIN)
+
+            timedout = False
             try:
-                for l in p.stdout.readlines():
-                    print l,
+                while(True):
+                    if not poll.poll(self.timeout):
+                        timedout = True
+                        p.terminate()
+                    l = p.stdout.readline()
+                    if not l:
+                        break
+                    print l
                     self.stdout += l
             except IOError:
                 pass
@@ -95,7 +114,7 @@ class TestRun:
 
             if not self.passed:
                 self._archive_logs()
-            print 'Test %s %s\n' % (cmd, 'passed' if self.passed else 'failed')
+            print 'Test %s %s\n' % (cmd, 'timedout' if timedout else 'passed' if self.passed else 'failed')
 
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
@@ -289,7 +308,7 @@ class TestSuite:
                                     for test in self.options.tests)):
                         continue
 
-                    tests.append(TestRun(path, ast_version, self.options, self.global_config))
+                    tests.append(TestRun(path, ast_version, self.options, self.global_config, self.options.timeout))
                 elif val == "dir":
                     tests += self._parse_test_yaml(path, ast_version)
 
@@ -346,6 +365,16 @@ class TestSuite:
 
     def run(self):
         test_suite_dir = os.getcwd()
+        i = 0
+        for t in self.tests:
+            if t.can_run is False:
+                continue
+            if self.global_config != None:
+                for excluded in self.global_config.excluded_tests:
+                    if excluded in t.test_name:
+                        continue
+            i += 1
+        print "Tests to run: %d,  Maximum test inactivity time: %d sec." % (i, (self.options.timeout / 1000))
 
         for t in self.tests:
             if t.can_run is False:
@@ -497,12 +526,18 @@ def main(argv=None):
     parser.add_option("-n", "--dry-run", action="store_true",
             dest="dry_run", default=False,
             help="Only show which tests would be run.")
+    parser.add_option("--timeout", metavar='int', type=int,
+            dest="timeout", default=-1,
+            help="Abort test after n seconds of no output.")
     parser.add_option("-V", "--valgrind", action="store_true",
             dest="valgrind", default=False,
             help="Run Asterisk under Valgrind")
     (options, args) = parser.parse_args(argv)
 
     ast_version = AsteriskVersion(options.version)
+
+    if options.timeout > 0:
+        options.timeout *= 1000
 
     # Ensure that there's a trailing '/' in the tests specified with -t
     for i, test in enumerate(options.tests):
