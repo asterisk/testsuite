@@ -26,3 +26,4 @@ tests:
     - test: 'accountcode'
     - dir: 'publish'
     - dir: 'optimistic_srtp'
+    - test: 'in_dialog_invite_replaces'

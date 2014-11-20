@@ -1,0 +1,25 @@
+testinfo:
+    summary:     'Tests handling of an in-dialog INVITE with Replaces'
+    description: |
+        'Run a SIPp scenario that sends a call to Asterisk and once answered sends an INVITE with Replaces in-dialog'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'invite_with_replaces.xml', '-i': '127.0.0.1', '-p': '5061', '-d': '5000', '-s': 'call'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.3'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
