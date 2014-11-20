@@ -110,3 +110,62 @@ def all_match(pattern, message):
         return pattern == message
     else:
         LOGGER.error("Unhandled pattern type %s" % type(pattern))
+
+
+def get_bindable_ipv4_addr():
+    """Attempts to obtain a bindable IPv4 address that isn't loopback
+    """
+    try:
+        import netifaces
+    except:
+        return None
+
+    interfaces = netifaces.interfaces()
+    for interface in interfaces:
+        ifaddresses = netifaces.ifaddresses(interface)
+        ifaddress4 = ifaddresses.get(netifaces.AF_INET)
+
+        if not ifaddress4:
+            continue
+
+        for address in ifaddress4:
+            if address.get('broadcast'):
+                return address.get('addr')
+
+    return None
+
+
+def get_bindable_ipv6_addr():
+    """Attempts to obtain a bindable IPv6 address that isn't loopback
+    or link local
+    """
+    try:
+        import netifaces
+    except:
+        return None
+
+    interfaces = netifaces.interfaces()
+    for interface in interfaces:
+        ifaddresses = netifaces.ifaddresses(interface)
+        ifaddress6 = ifaddresses.get(netifaces.AF_INET6)
+
+        if not ifaddress6:
+            continue
+
+        for address in ifaddress6:
+            addr = address.get('addr')
+            if not addr:
+                continue
+
+            # skip anything containing zone marker (link local)
+            if '%' in addr:
+                continue
+
+            #skip loopback address
+            if addr == '::1':
+                continue
+
+            return addr
+
+    return None
+

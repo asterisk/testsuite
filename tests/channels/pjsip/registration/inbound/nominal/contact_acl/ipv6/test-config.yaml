@@ -1,0 +1,66 @@
+testinfo:
+    summary: 'Test PJSIP registration from IPV6 addresses when using ACLs'
+    description: |
+        'Tests permit and deny acls against local loopback as well as an
+         address picked from available interfaces provided that one exists.
+         The local loopback address is explicitly denied while other
+         addresses are permitted. This variant of the test uses ipv6.'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        typename: 'sipp.SIPpTestCase'
+        config-section: test-object-config
+    modules:
+        -
+            typename: 'scenario_generator.ScenarioGeneratorModule'
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    fail-on-any: True
+    reactor-timeout: 10
+
+ami-config:
+    -
+        type: 'headermatch' # one for alice
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'alice'
+        count: '1'
+    -
+        type: 'headermatch' # one for bob
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'bob'
+        count: '1'
+    -
+        type: 'headermatch' # two total and not more.
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+        count: '2'
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python: 'twisted'
+        - python: 'starpy'
+        - python: 'netifaces'
+        - sipp:
+            version: 'v3.3'
+        - asterisk: 'res_pjsip'
+        - custom: 'ipv6addr'
+    tags:
+        - pjsip
+        - ACL

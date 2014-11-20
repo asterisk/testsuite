@@ -12,10 +12,39 @@ the GNU General Public License Version 2.
 import logging
 import test_suite_utils
 
+from abc import ABCMeta, abstractmethod
 from twisted.internet import reactor, defer, protocol, error
 from test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
+
+
+class ScenarioGenerator(object):
+    """Scenario Generators provide a generator function for creating scenario
+    sets for use by SIPpTestCase"""
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def generator(self):
+        pass
+
+
+class ConfigScenarioGenerator(ScenarioGenerator):
+    """Default SIPpTestCase Scenario Generator. The generator is initialized
+    with a list of scenarios provided by a list of dictionary objects.
+    """
+
+    def __init__(self, test_iterations):
+        self.test_iterations = test_iterations
+
+    def generator(self):
+        """Generatess scenarios sets by pulling them from the full scenario
+        set list one at a time.
+        """
+        for defined_scenario_set in self.test_iterations:
+            yield defined_scenario_set
+        return
+
 
 class SIPpTestCase(TestCase):
     """A SIPp test object for the pluggable framework.
@@ -55,6 +84,14 @@ class SIPpTestCase(TestCase):
         self._test_config = test_config
         self._current_test = 0
         self.scenarios = []
+
+        test_iterations = test_config.get('test-iterations')
+        if test_iterations:
+            self.scenario_generator = ConfigScenarioGenerator(test_iterations)
+        else:
+            # Scenario Generator should be provided by a pluggable module.
+            self.scenario_generator = None
+
         if 'fail-on-any' in self._test_config:
             self._fail_on_any = self._test_config['fail-on-any']
         else:
@@ -62,6 +99,14 @@ class SIPpTestCase(TestCase):
 
         self.register_intermediate_obverver(self._handle_scenario_finished)
         self.create_asterisk()
+
+    def register_scenario_generator(self, generator):
+        """Register a scenario generator object instead of using
+        ConfigScenarioGenerator
+
+        generator should be a concrete implementation of ScenarioGenerator
+        """
+        self.scenario_generator = generator
 
     def run(self):
         """Override of the run method.
@@ -156,7 +201,7 @@ class SIPpTestCase(TestCase):
             self.stop_reactor()
             return result
 
-        for defined_scenario_set in self._test_config['test-iterations']:
+        for defined_scenario_set in self.scenario_generator.generator():
             scenario_set = defined_scenario_set['scenarios']
             # Build a list of SIPpScenario objects to run in parallel from
             # each set of scenarios in the YAML config
@@ -174,6 +219,12 @@ class SIPpTestCase(TestCase):
                                                        ordered_args,
                                                        target=target))
             self.scenarios.append(sipp_scenarios)
+
+        if len(self.scenarios) == 0:
+            LOGGER.error("No scenarios registered. Test Failed.")
+            self.set_passed(False)
+            self.stop_reactor()
+            return
 
         final_deferred = defer.Deferred()
         final_deferred.addCallback(_final_deferred_callback)

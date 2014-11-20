@@ -165,6 +165,21 @@ class Dependency(object):
         except:
             return False
 
+    def depend_ipv4addr(self):
+        """Check that an interface has a bindable ipv4 address (not loopback)
+        """
+        if test_suite_utils.get_bindable_ipv4_addr():
+            return True
+        return False
+
+    def depend_ipv6addr(self):
+        """Check that an interface has a bindable ipv6 address (not loopback,
+           not link-local)
+        """
+        if test_suite_utils.get_bindable_ipv6_addr():
+            return True
+        return False
+
     def depend_pjsuav6(self):
         """This tests if pjsua was compiled with IPv6 support.
 

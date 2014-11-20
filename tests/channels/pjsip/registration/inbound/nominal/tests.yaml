@@ -5,5 +5,7 @@ tests:
     - dir: 'multiple_contacts'
     - dir: 'single_contact'
     - dir: 'unregister'
+    - dir: 'contact_acl'
     - test: 'path'
     - test: 'user_agent'
+
