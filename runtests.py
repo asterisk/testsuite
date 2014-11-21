@@ -49,6 +49,7 @@ class TestRun:
         self.__check_can_run(ast_version)
         self.stdout = ""
         self.timeout = timeout
+        self.cleanup = options.cleanup
 
         assert self.test_name.startswith('tests/')
         self.test_relpath = self.test_name[6:]
@@ -114,6 +115,16 @@ class TestRun:
 
             if not self.passed:
                 self._archive_logs()
+            elif self.cleanup:
+                try:
+                    (run_num, run_dir, archive_dir) = self._find_run_dirs()
+                    symlink_dir = os.path.dirname(run_dir)
+                    absolute_dir = os.path.join(os.path.dirname(symlink_dir), os.readlink(symlink_dir))
+                    shutil.rmtree(absolute_dir)
+                    os.remove(symlink_dir)
+                except:
+                    print "Unable to clean up directory for test %s (non-fatal)" % self.test_name
+
             print 'Test %s %s\n' % (cmd, 'timedout' if timedout else 'passed' if self.passed else 'failed')
 
         else:
@@ -530,6 +541,9 @@ def main(argv=None):
     parser.add_option("-V", "--valgrind", action="store_true",
             dest="valgrind", default=False,
             help="Run Asterisk under Valgrind")
+    parser.add_option("-c", "--cleanup", action="store_true",
+            dest="cleanup", default=False,
+            help="Cleanup tmp directory after each successful test")
     (options, args) = parser.parse_args(argv)
 
     ast_version = AsteriskVersion(options.version)
