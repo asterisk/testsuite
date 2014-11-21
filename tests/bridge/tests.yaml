@@ -21,3 +21,4 @@ tests:
     - test: 'transfer_failure'
     - test: 'bridge_action'
     - test: 'atxfer_threeway_nominal'
+    - test: 'atxfer_retries'

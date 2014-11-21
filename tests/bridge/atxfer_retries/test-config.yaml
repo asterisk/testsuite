@@ -1,0 +1,193 @@
+testinfo:
+    summary: 'Ensure that dialing a transfer extension can be re-attempted.'
+    description: |
+        'This test consists of two separate calls:
+        On call #1: Alice calls Bob. Alice initiates an attended transfer. Alice dials
+        a non-existent extension. Alice should then be given another attempt to transfer.
+        Alice then dials a real extension. The transfer should succeed.
+
+        On call #2: The FEATURE() dialplan function is used to alter the number of transfer
+        attempts from the default to 1. Alice initiates an attended transfer. Alice dials
+        a non-existent extension. The transfer attempt should fail, and Alice and Bob should
+        be bridged with each other again.'
+
+test-modules:
+    test-object:
+        config-section: app-config
+        typename: 'apptest.AppTest'
+
+app-config:
+    app: 'Dial'
+    scenarios:
+        -
+            # Call 1. See testinfo description for details.
+            channels:
+                -
+                    channel-id: 'Alice'
+                    channel-name: 'Local/alice@default'
+                    context: 'default'
+                    exten: 'wait'
+                    start-on-create: True
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'BridgeEnter'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Alice is bridged'
+                                -
+                                    action-type: 'send-dtmf'
+                                    dtmf: '*2'
+                                    delay: 2
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    State: 'TRANSFER_BEGIN_DIAL'
+                                    Attempt: '1'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Begin first extension dial'
+                                -
+                                    action-type: 'send-dtmf'
+                                    dtmf: '1235'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    State: 'TRANSFER_DIALLED'
+                                    Attempt: '1'
+                                    Dialled: '1235'
+                                    Result: 'Failure'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'End first extension dial(failed)'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    State: 'TRANSFER_BEGIN_DIAL'
+                                    Attempt: '2'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Begin second extension dial'
+                                -
+                                    action-type: 'send-dtmf'
+                                    dtmf: '1234'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    State: 'TRANSFER_DIALLED'
+                                    Attempt: '2'
+                                    Dialled: '1234'
+                                    Result: 'Success'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'End second extension dial(succeeded)'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    State: 'TRANSFER_DIAL_FINAL'
+                                    Result: 'Success'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Transfer succeeded'
+                                -
+                                    action-type: 'hangup'
+                                    delay: 2
+                                -
+                                    action-type: 'send-ami-message'
+                                    fields: {'Channel': '/.*/'}
+                                -
+                                    action-type: 'end-scenario'
+        -
+            # Call 2. See testinfo description for details.
+            channels:
+                -
+                    channel-id: 'Alice'
+                    channel-name: 'Local/alice2@default'
+                    context: 'default'
+                    exten: 'wait'
+                    start-on-create: True
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'BridgeEnter'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Alice is bridged'
+                                -
+                                    action-type: 'send-dtmf'
+                                    dtmf: '*2'
+                                    delay: 2
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    State: 'TRANSFER_BEGIN_DIAL'
+                                    Attempt: '1'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Begin first extension dial'
+                                -
+                                    action-type: 'send-dtmf'
+                                    dtmf: '1235'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    State: 'TRANSFER_DIALLED'
+                                    Attempt: '1'
+                                    Dialled: '1235'
+                                    Result: 'Failure'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'End first extension dial(failed)'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    State: 'TRANSFER_DIAL_FINAL'
+                                    Result: 'Failure'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Transfer Failed'
+                                -
+                                    action-type: 'hangup'
+                                    delay: 2
+                                -
+                                    action-type: 'end-scenario'
+
+
+properties:
+    minversion: '13.1.0'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - bridge
