@@ -231,6 +231,9 @@ class Asterisk(object):
         self.astetcdir = ""
         self.original_astmoddir = ""
 
+        valgrind_env = os.getenv("VALGRIND_ENABLE") or ""
+        self.valgrind_enabled = True if "true" in valgrind_env else False
+
         if base is not None:
             self.base = base
         else:
@@ -332,8 +335,9 @@ class Asterisk(object):
         def __wait_fully_booted_error(cli_command):
             """Errback for CLI command waitfullybooted"""
 
-            if time.time() - self.__start_asterisk_time > 90:
-                msg = "Asterisk core waitfullybooted for %s failed" % self.host 
+            timeout = 90 if self.valgrind_enabled else 5
+            if time.time() - self.__start_asterisk_time > timeout:
+                msg = "Asterisk core waitfullybooted for %s failed" % self.host
                 LOGGER.error(msg)
                 self._start_deferred.errback(Exception(msg))
             else:
@@ -357,7 +361,6 @@ class Asterisk(object):
                 cmd = [valgrind_path] + cmd
             else:
                 LOGGER.error('Valgrind not found')
-
 
         # Make the start/stop deferreds - this method will return
         # the start deferred, and pass the stop deferred to the AsteriskProtocol
@@ -459,11 +462,13 @@ class Asterisk(object):
                         "Asterisk %s stopped prematurely" % self.host)
             except defer.AlreadyCalledError:
                 LOGGER.warning("Asterisk %s stop deferred already called" %
-                    self.host)
+                               self.host)
         else:
             # Schedule a kill. If we don't gracefully shut down Asterisk, this
             # will ensure that the test is stopped.
-            self._stop_cancel_tokens.append(reactor.callLater(200, __send_kill))
+            sched_time = 200 if self.valgrind_enabled else 5
+            self._stop_cancel_tokens.append(reactor.callLater(sched_time,
+                                            __send_kill))
 
             # Start by asking to stop gracefully.
             __send_stop_gracefully()
