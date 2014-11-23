@@ -180,6 +180,11 @@ app-config:
                                     action-type: 'hangup'
                                     delay: 2
                                 -
+                                    action-type: 'send-ami-message'
+                                    fields:
+                                        Action: 'Hangup'
+                                        Channel: '/^Local/.*$/'
+                                -
                                     action-type: 'end-scenario'
 
 
