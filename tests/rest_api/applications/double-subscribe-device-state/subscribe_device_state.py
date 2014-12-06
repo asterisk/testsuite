@@ -39,4 +39,5 @@ def on_start(ari, event, obj):
 def on_state_change(ari, event, obj):
     assert event['device_state']['name'] == DEVICE
     assert event['device_state']['state'] == CHANGED_STATE
+    obj.stop_reactor()
     return True
