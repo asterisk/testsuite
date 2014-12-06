@@ -24,8 +24,8 @@ app-config:
             channels:
                 -
                     channel-id: 'Alice'
-                    channel-name: 'Local/alice@default'
-                    context: 'default'
+                    channel-name: 'Local/alice@atxfer_retries'
+                    context: 'atxfer_retries'
                     exten: 'wait'
                     start-on-create: True
                     events:
@@ -120,8 +120,8 @@ app-config:
             channels:
                 -
                     channel-id: 'Alice'
-                    channel-name: 'Local/alice2@default'
-                    context: 'default'
+                    channel-name: 'Local/alice2@atxfer_retries'
+                    context: 'atxfer_retries'
                     exten: 'wait'
                     start-on-create: True
                     events:
