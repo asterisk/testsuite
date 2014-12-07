@@ -15,6 +15,7 @@ LOGGER = logging.getLogger(__name__)
 URI = ["sip:bob@127.0.0.1", "sip:bob_two@127.0.0.1", "sip:charlie@127.0.0.1"]
 ITERATION = 0
 
+
 class CharlieCallback(pj.AccountCallback):
     """Derived callback class for Charlie's account."""
 
@@ -26,11 +27,12 @@ class CharlieCallback(pj.AccountCallback):
     def on_incoming_call2(self, call, msg):
         self.charlie_call = call
         LOGGER.info("Incoming call for Charlie '%s' from '%s'." %
-                (call.info().uri, call.info().remote_uri))
+                    (call.info().uri, call.info().remote_uri))
         if ITERATION > 0:
             referred_by_hdr = "Referred-By: <sip:bob@127.0.0.1;ob>"
             if (referred_by_hdr not in msg.msg_info_buffer):
-                LOGGER.warn("Expected header not found: '%s'" % referred_by_hdr)
+                LOGGER.warn("Expected header not found: '%s'" %
+                            referred_by_hdr)
                 self.controller.test_object.set_passed(False)
                 self.controller.test_object.stop_reactor()
 
@@ -44,20 +46,23 @@ class CharlieCallback(pj.AccountCallback):
         LOGGER.info("Hanging up Charlie")
         self.charlie_call.hangup(code=200, reason="Q.850;cause=16")
 
+
 class BobCallback(pj.AccountCallback):
     """Derived callback class for Bob's account."""
 
     def __init__(self, account=None):
         pj.AccountCallback.__init__(self, account)
         self.bob_call = None
+        self.bob_phone_call = None
 
     def on_incoming_call(self, call):
         self.bob_call = call
         LOGGER.info("Incoming call for Bob '%s' from '%s'." %
-                (call.info().uri, call.info().remote_uri))
-        inbound_cb = BobPhoneCallCallback(call)
-        call.set_callback(inbound_cb)
+                    (call.info().uri, call.info().remote_uri))
+        self.bob_phone_call = BobPhoneCallCallback(call)
+        call.set_callback(self.bob_phone_call)
         call.answer(200)
+
 
 class AlicePhoneCallCallback(pj.CallCallback):
     """Derived callback class for Alice's call."""
@@ -70,6 +75,7 @@ class AlicePhoneCallCallback(pj.CallCallback):
         if self.call.info().state == pj.CallState.DISCONNECTED:
             LOGGER.info("Call disconnected: '%s'" % self.call)
 
+
 class BobPhoneCallCallback(pj.CallCallback):
     """Derived callback class for Bob's call."""
 
@@ -79,9 +85,7 @@ class BobPhoneCallCallback(pj.CallCallback):
     def on_state(self):
         log_call_info(self.call.info())
         if self.call.info().state == pj.CallState.CONFIRMED:
-            LOGGER.info("Call is up between Alice and Bob. Transferring call" \
-                    " to Charlie.")
-            self.transfer_call()
+            LOGGER.info("Call is up: '%s'." % self.call)
         if self.call.info().state == pj.CallState.DISCONNECTED:
             LOGGER.info("Call disconnected: '%s'" % self.call)
 
@@ -100,10 +104,12 @@ class BobPhoneCallCallback(pj.CallCallback):
         if code == 200 and reason == "OK" and final == 1 and cont == 0:
             LOGGER.info("Transfer target answered the call.")
             LOGGER.debug("Call uri: '%s'; remote uri: '%s'" %
-                    (self.call.info().uri, self.call.info().remote_uri))
+                         (self.call.info().uri,
+                          self.call.info().remote_uri))
             LOGGER.info("Hanging up Bob")
             self.call.hangup(code=200, reason="Q.850;cause=16")
         return cont
+
 
 class CharliePhoneCallCallback(pj.CallCallback):
     """Derived callback class for Charlie's call."""
@@ -116,6 +122,7 @@ class CharliePhoneCallCallback(pj.CallCallback):
         if self.call.info().state == pj.CallState.DISCONNECTED:
             LOGGER.info("Call disconnected: '%s'" % self.call)
 
+
 class AMICallback(object):
     """Class to set up callbacks and place calls."""
 
@@ -123,6 +130,8 @@ class AMICallback(object):
         self.test_object = test_object
         self.ami = self.test_object.ami[0]
         self.ami.registerEvent('Hangup', self.hangup_event_handler)
+        self.ami.registerEvent('BridgeEnter', self.bridge_enter_handler)
+        self.ami.registerEvent('BridgeLeave', self.bridge_leave_handler)
         self.alice = accounts.get('alice')
         bob = accounts.get('bob')
         charlie = accounts.get('charlie')
@@ -131,6 +140,27 @@ class AMICallback(object):
         bob.account.set_callback(self.bob_cb)
         charlie.account.set_callback(self.charlie_cb)
         self.channels_hungup = 0
+        self.alice_in_bridge = False
+        self.bob_in_bridge = False
+
+    def bridge_enter_handler(self, ami, event):
+        """AMI bridge enter event callback."""
+        channel = event.get('channel')
+        if 'bob' in channel:
+            self.bob_in_bridge = True
+        elif 'alice' in channel:
+            self.alice_in_bridge = True
+        if self.bob_in_bridge and self.alice_in_bridge:
+            LOGGER.info('Both Alice and Bob are in bridge; starting transfer')
+            self.bob_cb.bob_phone_call.transfer_call()
+
+    def bridge_leave_handler(self, ami, event):
+        """AMI bridge leave event callback."""
+        channel = event.get('channel')
+        if 'bob' in channel:
+            self.bob_in_bridge = False
+        elif 'alice' in channel:
+            self.alice_in_bridge = False
 
     def hangup_event_handler(self, ami, event):
         """AMI hang up event callback."""
@@ -165,7 +195,10 @@ def log_call_info(call_info):
     """Log call info."""
     LOGGER.debug("Call '%s' <-> '%s'" % (call_info.uri, call_info.remote_uri))
     LOGGER.debug("Call state: '%s'; last code: '%s'; last reason: '%s'" %
-            (call_info.state_text, call_info.last_code, call_info.last_reason))
+                 (call_info.state_text,
+                  call_info.last_code,
+                  call_info.last_reason))
+
 
 def transfer(test_object, accounts):
     """The test's callback method.
