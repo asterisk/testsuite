@@ -21,7 +21,7 @@ test-object-config:
                 - { 'key-args': {'scenario': 'uac-video-mismatch.xml', '-i': '127.0.0.1', '-p': '5063', '-s': 'alice'} }
 
 properties:
-    minversion: '12.0.0'
+    minversion: '13.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'
