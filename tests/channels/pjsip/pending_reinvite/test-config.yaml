@@ -1,0 +1,35 @@
+testinfo:
+    summary: 'Ensure graceful operation when receiving a 491 response on a reinvite.'
+    description: |
+        'A SIPp scenario places a call into Asterisk. Once the call has been answered, we
+        trigger a reinvite by calling the CONNECTEDLINE() dialplan function. The SIPp
+        scenario responds to the reinvite with a 491 response. Asterisk then waits a small
+        amount of time (approximately 2 seconds) and then sends a new reinvite. The SIPp
+        scenario responds this time with a 200 OK, and then hangs up the call.
+
+        The reason this test exists is because there was an issue in Asterisk 12+ for a time
+        where reception of a 491 response in Asterisk would result in a crash due to improper
+        reference counting of a PJSIP structure. This test ensures that the code changes have
+        fixed the issue as expected.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-491.xml'}}
+
+properties:
+    minversion: '12.8.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - app: 'sipp'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+    tags:
+        - pjsip
