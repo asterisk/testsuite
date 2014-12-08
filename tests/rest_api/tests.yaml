@@ -15,3 +15,4 @@ tests:
     - test: 'chunked-transfer'
     - dir:  'events'
     - dir:  'message'
+    - dir:  'external_interaction'

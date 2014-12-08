@@ -1,29 +1,32 @@
 testinfo:
-    summary: Test that ensures attended transfer events are delivered via WebSocket.
+    summary: |
+        "Verifies that appropriate BridgeAttendedTransfer, StasisStart,
+        and StasisEnd events are delivered when an attended transfer
+        occurs between a Stasis App and a Stasis Bridge."
     description: |
         "This test originates one call into Stasis():
 
-          Originated Channel -> Stasis()
+          Originated Channel -> Stasis(testsuite)
 
         It then starts two SIPp scenarios that call into the dialplan:
 
-          SIPp #1 (referer.xml) -> Stasis()
-          SIPp #2 (referee.xml) -> Echo()
+          SIPp #1 (referer.xml) -> Stasis(testsuite)
+          SIPp #2 (referee.xml) -> Stasis(testsuite,no_bridge)
 
         The two SIPp scenarios work together via 3PCC mode to pass
         SIPp #2's call information back to SIPp #1 once both calls are up:
 
           SIPp #2 --3PCC(call information)-> SIPp #1
 
-        The test bridges the two channels in Stasis():
+        The test bridges the two channels in Stasis(testsuite):
 
-          Originated Channel -> Stasis() -> Bridge -> Stasis() -> SIPp #1
+          Originated Channel -> Stasis(testsuite) -> Bridge -> Stasis(testsuite) -> SIPp #1
 
         SIPp #1 then performs an attended transfer using a REFER with
         SIPp #2's call information which results in a Local channel
-        passing information between Stasis() and Echo():
+        passing information between Stasis(testsuite) and Stasis(testsuite,no_bridge):
 
-          Originated Channel -> Stasis() -> Bridge -> Stasis() -> Local Channel Pair -> Echo()
+          Originated Channel -> Stasis(testsuite) -> Bridge -> Stasis(testsuite) -> Local Channel Pair -> Stasis(testsuite,no_bridge)
 
         Now that the transfer is complete and the transferring channels
         have been hung up, the remaining channels are hung up and the
@@ -31,6 +34,9 @@ testinfo:
 
 test-modules:
     add-test-to-search-path: True
+    add-to-search-path:
+        -
+            'tests/rest_api/external_interaction/attended_transfer'
     test-object:
         typename: ari.AriTestObject
     modules:
@@ -48,6 +54,15 @@ pluggable-config:
                 channel:
                     name: 'Local/s@default-.*'
             count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'bridges/test_bridge'
+            -
+                method: 'post'
+                uri: 'bridges/test_bridge/addChannel'
+                params:
+                    channel: '{channel.id}'
         callback:
             module: attended_transfer
             method: on_kickoff_start
@@ -58,9 +73,18 @@ pluggable-config:
                 application: testsuite
                 args: ['test']
             count: 1
-        callback:
-            module: attended_transfer
-            method: on_test_start
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/test_bridge/addChannel'
+            params:
+                channel: '{channel.id}'
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: ['no_bridge']
+            count: 1
     -
         ari-events:
             match:
@@ -71,19 +95,28 @@ pluggable-config:
                     name: 'Local/_attended@transfer-.*'
                 replace_channel:
                     name: 'PJSIP/bob-.*'
-            count: 1
-        callback:
-            module: attended_transfer
-            method: on_swap_start
+            count: 2
     -
         ari-events:
             match:
                 type: BridgeAttendedTransfer
                 application: testsuite
+                transferer_first_leg:
+                    name: 'PJSIP/bob-.*'
+                transferer_first_leg_bridge:
+                    id: 'test_bridge'
+                replace_channel:
+                    name: "Local/_attended@transfer-.*"
+                result: 'Success'
+                destination_type: 'application'
             count: 1
-        callback:
-            module: attended_transfer
-            method: on_attended_transfer
+        ari-requests:
+            -
+                method: 'delete'
+                uri: 'bridges/test_bridge'
+            -
+                method: 'delete'
+                uri: 'channels/{transferee.id}'
     -
         ari-events:
             match:
@@ -92,19 +125,19 @@ pluggable-config:
                 channel:
                     name: 'Local/_attended@transfer-.*'
             count: 1
-        callback:
-            module: attended_transfer
-            method: on_swap_enter
+        ari-requests:
+            method: 'delete'
+            uri: 'channels/{channel.id}'
 
 properties:
-    minversion: '12.1.0'
+    minversion: '12.8.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests
         - python : twisted
         - python : starpy
         - asterisk : res_ari_channels
-        - asterisk : app_echo
+        - asterisk : res_ari_bridges
         - asterisk : chan_pjsip
     tags:
         - ARI

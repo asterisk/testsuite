@@ -78,7 +78,7 @@ ari-config:
                 method: on_blind_transfer
 
 properties:
-    minversion: '12.1.0'
+    minversion: '12.8.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

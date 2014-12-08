@@ -1,0 +1,135 @@
+testinfo:
+    summary: |
+        "Verifies that appropriate BridgeAttendedTransfer, StasisStart,
+        and StasisEnd events are delivered when an attended transfer
+        occurs between a Stasis Bridge and a non-Stasis application."
+    description: |
+        "This test originates one call into Stasis():
+
+          Originated Channel -> Stasis()
+
+        It then starts two SIPp scenarios that call into the dialplan:
+
+          SIPp #1 (referer.xml) -> Stasis()
+          SIPp #2 (referee.xml) -> Echo()
+
+        The two SIPp scenarios work together via 3PCC mode to pass
+        SIPp #2's call information back to SIPp #1 once both calls are up:
+
+          SIPp #2 --3PCC(call information)-> SIPp #1
+
+        The test bridges the two channels in Stasis():
+
+          Originated Channel -> Stasis() -> Bridge -> Stasis() -> SIPp #1
+
+        SIPp #1 then performs an attended transfer using a REFER with
+        SIPp #2's call information which results in a Local channel
+        passing information between Stasis() and Echo():
+
+          Originated Channel -> Stasis() -> Bridge -> Stasis() -> Local Channel Pair -> Echo()
+
+        Now that the transfer is complete and the transferring channels
+        have been hung up, the remaining channels are hung up and the
+        test ends."
+
+test-modules:
+    add-test-to-search-path: True
+    add-to-search-path:
+        -
+            'tests/rest_api/external_interaction/attended_transfer'
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+
+pluggable-config:
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: []
+                channel:
+                    name: 'Local/s@default-.*'
+            count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'bridges/test_bridge'
+            -
+                method: 'post'
+                uri: 'bridges/test_bridge/addChannel'
+                params:
+                    channel: '{channel.id}'
+        callback:
+            module: attended_transfer
+            method: on_kickoff_start
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: ['test']
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/test_bridge/addChannel'
+            params:
+                channel: '{channel.id}'
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: []
+                channel:
+                    name: 'Local/_attended@transfer-.*'
+                replace_channel:
+                    name: 'PJSIP/bob-.*'
+            count: 1
+    -
+        ari-events:
+            match:
+                type: BridgeAttendedTransfer
+                application: testsuite
+                transferer_first_leg:
+                    name: 'PJSIP/bob-.*'
+                transferer_first_leg_bridge:
+                    id: 'test_bridge'
+                result: 'Success'
+            count: 1
+        ari-requests:
+            -
+                method: 'delete'
+                uri: 'bridges/test_bridge'
+            -
+                method: 'delete'
+                uri: 'channels/{transferee.id}'
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                application: testsuite
+                channel:
+                    name: 'Local/_attended@transfer-.*'
+            count: 1
+        ari-requests:
+            method: 'delete'
+            uri: 'channels/{channel.id}'
+
+properties:
+    minversion: '12.8.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+        - asterisk : app_echo
+        - asterisk : chan_pjsip
+    tags:
+        - ARI
+        - pjsip

@@ -525,10 +525,11 @@ class ARIRequest(object):
         uri = var_replace(self.uri, values)
         url = self.ari.build_url(uri)
         requests_method = getattr(requests, self.method)
+        params = dict((key, var_replace(val, values)) for key, val in self.params.iteritems())
 
         response = requests_method(
             url,
-            params=self.params,
+            params=params,
             data=self.body,
             headers=self.headers,
             auth=self.ari.userpass)

@@ -1,0 +1,2 @@
+tests:
+    - test: 'stasis_bridge_to_same_stasis_app'

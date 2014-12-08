@@ -1,0 +1,95 @@
+testinfo:
+    summary: Test that ensures that unbridged channels can be stolen properly.
+    description: |
+        "This test originates one Local channel into Stasis() and Echo() and
+        another Local channel into a pair of echo applications. It then uses
+        the AMI bridge action to pull the Local channel half with uniqueid
+        StasisChannel and Local channel half with uniqueid EchoChannel into
+        a bridge and hangs them up. This test verifies that all expected
+        events are received."
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        typename: ari.AriBaseTestObject
+    modules:
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+
+pluggable-config:
+    -
+        ami-start:
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'channels/EchoChannel'
+                params:
+                    endpoint: 'Local/echo@default'
+                    extension: 'echo'
+                    otherChannelId: 'SecondEchoChan'
+            -
+                method: 'post'
+                uri: 'channels/StasisChannel'
+                params:
+                    endpoint: 'Local/echo@default'
+                    app: 'testsuite'
+                    otherChannelId: 'SecondStasisChan'
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: []
+                channel:
+                    id: 'StasisChannel'
+            count: 1
+        ami-actions:
+            action:
+                action: 'Bridge'
+                Channel1: 'StasisChannel'
+                Channel2: 'EchoChannel'
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: testsuite
+                channel:
+                    id: 'StasisChannel'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: BridgeEnter
+                    uniqueid: 'StasisChannel'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: BridgeEnter
+                    uniqueid: 'EchoChannel'
+            count: 1
+        ami-actions:
+            -
+                action:
+                    action: 'Hangup'
+                    Channel: 'StasisChannel'
+            -
+                action:
+                    action: 'Hangup'
+                    Channel: 'EchoChannel'
+        stop_test:
+
+properties:
+    minversion: '12.8.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
