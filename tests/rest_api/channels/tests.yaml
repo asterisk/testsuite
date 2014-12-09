@@ -2,6 +2,7 @@ tests:
     - test: 'originate'
     - test: 'originate_with_vars'
     - test: 'originate_with_id'
+    - test: 'originate_with_linkedid'
     - test: 'originate_then_continue'
     - test: 'snoop_whisper'
     - test: 'snoop_spy'

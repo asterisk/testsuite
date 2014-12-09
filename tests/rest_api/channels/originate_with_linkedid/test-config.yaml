@@ -1,0 +1,87 @@
+
+testinfo:
+    summary: 'Test LinkedID propagation with specified originator on ARI Originate'
+    description: |
+        * Originate the first channel with a defined Unique ID
+        * Once the first channel enters the Stasis application originate a second channel
+          * The second channel specifies the first channel as its originator
+        * Hang up the first channel once the second channel has hung up
+        * Check that the CEL events for the second channel contain the unique id of the first channel as the linked id
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+    tags:
+        - ARI
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: cel-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
+
+test-object-config:
+    stop-on-end: False
+    test-iterations:
+        -
+            endpoint: 'Local/one@default'
+            channelId: 'MyCustomId'
+            app: 'testsuite'
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: ChannelDestroyed
+                application: testsuite
+                channel:
+                    id: 'MySecondId$'
+        stop_test:
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            # detect the first local channel
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'MyCustomId$'
+            requests:
+                method: 'post'
+                uri: 'channels?originator=MyCustomId&app=testsuite&endpoint=Local%2Ftwo%40default&channelId=MySecondId'
+            count: 1
+
+cel-config:
+    -
+        type: 'cel'
+        conditions:
+            match:
+                Channel: 'Local/two@default-.{7}1;.'
+        requirements:
+            -
+                match:
+                    Channel: 'Local/two@default-.{7}1;1'
+                    EventName: 'CHAN_START'
+                    LinkedId: 'MyCustomId'
+            -
+                match:
+                    Channel: 'Local/two@default-.{7}1;2'
+                    EventName: 'CHAN_START'
+                    LinkedId: 'MyCustomId'
