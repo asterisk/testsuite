@@ -48,6 +48,7 @@ ari-config:
                         Param2: Value2
                     channel:
                         id: 'testsuite-default-id;2'
+                        language: 'en'
             count: 1
             requests:
                 method: 'delete'
@@ -66,6 +67,7 @@ ami-config:
                 UserEvent: CanYouSeeMe
                 Param1: Value1
                 Param2: Value2
+                Language: 'en'
         count: 1
 
 
