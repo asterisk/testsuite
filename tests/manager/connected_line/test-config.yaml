@@ -1,0 +1,48 @@
+testinfo:
+    summary: 'Ensure that NewConnectedLine event is sent when connected line is updated on a channel'
+    description: |
+        'A channel calls into an extension where the CONNECTEDLINE() function is used to update the
+        connected line name and number of the channel. The test ensures that a NewConnectedLine event
+        happens as a result and that it has the expected values.'
+
+test-modules:
+    test-object:
+        typename: test_case.TestCaseModule
+        config-section: test-config
+    modules:
+        -
+            config-section: ami-config
+            typename: ami.AMIEventModule
+        -
+            config-section: originator-config
+            typename: pluggable_modules.Originator
+
+test-config:
+    connect-ami: True
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'NewConnectedLine'
+                Channel: 'Local/s@default.*'
+        requirements:
+            match:
+                ConnectedLineName: 'Test'
+                ConnectedLineNum: '1234'
+        count: '1'
+        action: 'stop'
+
+originator-config:
+    trigger: 'ami_connect'
+
+
+properties:
+    minversion: '13.1.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+    tags:
+        - AMI

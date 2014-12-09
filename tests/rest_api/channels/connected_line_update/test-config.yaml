@@ -1,0 +1,56 @@
+testinfo:
+    summary: 'Ensures that ChannelConnectedLine events are received when expected.'
+    description: |
+        'A channel calls into a Stasis application. The application uses the CONNECTEDLINE()
+        function to update the connected line of the channel. We then ensure that a corresponding
+        ChannelConnectedLine event is received, and that the connected line name and number are
+        the expected values.'
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: 'StasisStart'
+                    application: 'testsuite'
+                    args: []
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'channels/{channel.id}/variable'
+                params:
+                    variable: 'CONNECTEDLINE(all)'
+                    value: 'TEST <1234>'
+        -
+            conditions:
+                match:
+                    type: 'ChannelConnectedLine'
+                    channel:
+                        connected:
+                            name: 'TEST'
+                            number: '1234'
+            count: 1
+            requests:
+                method: 'delete'
+                uri: 'channels/{channel.id}'
+
+properties:
+    minversion: '13.1.0'
+    dependencies:
+        - python: autobahn.websocket
+        - python: requests
+        - python: twisted
+        - python: starpy
+        - asterisk: res_ari_channels
+    tags:
+        - ARI
