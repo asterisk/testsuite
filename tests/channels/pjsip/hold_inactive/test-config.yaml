@@ -1,0 +1,17 @@
+testinfo:
+    summary: 'Test various SIP Hold scenarios in chan_pjsip using inactive streams'
+    description: |
+        This tests SIP Hold, where one SIP phone puts another SIP phone on hold by
+        sending a re-INVITE with a modified SDP containing a restricted audio
+        direction with and without an IP address of 0.0.0.0. Restricted audio
+        direction is also tested for unholding by a re-INVITE without an SDP.
+
+
+properties:
+    minversion: '12.9.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

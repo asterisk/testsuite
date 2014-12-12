@@ -1,0 +1,267 @@
+#!/usr/bin/env python
+"""
+Copyright (C) 2014, Digium, Inc.
+Kinsey Moore <kmoore@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+"""
+
+import sys
+import logging
+
+sys.path.append("lib/python")
+
+from asterisk.test_case import TestCase
+from asterisk.sipp import SIPpScenario
+from twisted.internet import reactor
+
+LOGGER = logging.getLogger(__name__)
+INJECT_FILE = "inject.csv"
+
+
+class SIPHold(TestCase):
+    '''TestCase to execute and evaluate PJSIP hold/unhold scenarios '''
+
+    def __init__(self):
+        ''' Constructor '''
+        super(SIPHold, self).__init__()
+        self.create_asterisk()
+
+        self.sipp_scn_phone_a = [{'scenario': 'phone_A.xml',
+                                  '-i': '127.0.0.2', '-p': '5060',
+                                  '-inf': INJECT_FILE},
+                                 {'scenario': 'phone_A.xml',
+                                  '-i': '127.0.0.2', '-p': '5060',
+                                  '-inf': INJECT_FILE},
+                                 {'scenario': 'phone_A.xml',
+                                  '-i': '127.0.0.2', '-p': '5060',
+                                  '-inf': INJECT_FILE},
+                                 {'scenario': 'phone_A.xml',
+                                  '-i': '127.0.0.2', '-p': '5060',
+                                  '-inf': INJECT_FILE},
+                                 {'scenario': 'phone_A.xml',
+                                  '-i': '127.0.0.2', '-p': '5060',
+                                  '-inf': INJECT_FILE}]
+        self.sipp_scn_phone_b = [{'scenario': 'phone_B_media_restrict.xml',
+                                  '-i': '127.0.0.3', '-p': '5060',
+                                  '-inf': INJECT_FILE},
+                                 {'scenario': 'phone_B_unhold_sans_sdp.xml',
+                                  '-i': '127.0.0.3', '-p': '5060',
+                                  '-inf': INJECT_FILE},
+                                 {'scenario': 'phone_B_duplicate_hold.xml',
+                                  '-i': '127.0.0.3', '-p': '5060',
+                                  '-inf': INJECT_FILE},
+                                 {'scenario': 'phone_B_hold_update.xml',
+                                  '-i': '127.0.0.3', '-p': '5060',
+                                  '-inf': INJECT_FILE},
+                                 {'scenario': 'phone_B_IP_media_restrict.xml',
+                                  '-i': '127.0.0.3', '-p': '5060',
+                                  '-inf': INJECT_FILE}]
+
+        self.passed = True
+        self.moh_start_events = 0
+        self.moh_stop_events = 0
+        self.hold_events = 0
+        self.unhold_events = 0
+        self.user_events = 0
+        self.status_inuse_events = 0
+        self.status_onhold_events = 0
+        self.status_notinuse_events = 0
+        self._test_counter = 0
+        self._a_finished = False
+        self._b_finished = False
+
+    def ami_connect(self, ami):
+        ''' Reaction to new AMI connection
+
+        :param ami: AMI connection that was established
+        '''
+        super(SIPHold, self).ami_connect(ami)
+        ami.registerEvent('UserEvent', self.user_event_handler)
+
+        ami.registerEvent('MusicOnHoldStart', self.moh_start_event_handler)
+        ami.registerEvent('MusicOnHoldStop', self.moh_stop_event_handler)
+
+        ami.registerEvent('ExtensionStatus', self.extension_status_handler)
+
+        ami.registerEvent('Hold', self.hold_event_handler)
+        ami.registerEvent('Unhold', self.unhold_event_handler)
+
+        LOGGER.info("Starting SIP scenario")
+        self.execute_scenarios()
+
+    def execute_scenarios(self):
+        '''Execute sipp scenarios and check results for a single test phase
+        '''
+        def __check_scenario_a(result):
+            ''' Callback from successful sipp scenario - raises flag
+            indicating that side A completed execution
+
+            :param result: value returned by sipp indicating completion status
+            '''
+            self._a_finished = True
+            return result
+
+        def __check_scenario_b(result):
+            ''' Callback from successful sipp scenario - raises flag
+            indicating that side B completed execution
+
+            :param result: value returned by sipp indicating completion status
+            '''
+            self._b_finished = True
+            return result
+
+        def __execute_next_scenario(result):
+            ''' Callback from successful sipp scenario - if both sipp
+            scenarios are finished then this function will start executing
+            the next scenario.
+
+            :param result: value returned by sipp indicating completion status
+            '''
+            if self._a_finished and self._b_finished:
+                self._test_counter += 1
+                self.reset_timeout()
+                self.execute_scenarios()
+            return result
+
+        if self._test_counter == len(self.sipp_scn_phone_a):
+            LOGGER.info("All scenarios executed")
+            return
+
+        sipp_a = SIPpScenario(self.test_name,
+                              self.sipp_scn_phone_a[self._test_counter])
+        sipp_b = SIPpScenario(self.test_name,
+                              self.sipp_scn_phone_b[self._test_counter])
+
+        # Start up the listener first - Phone A calls Phone B
+        self._a_finished = False
+        self._b_finished = False
+        res_b = sipp_b.run(self)
+        res_a = sipp_a.run(self)
+
+        res_a.addCallback(__check_scenario_a)
+        res_a.addCallback(__execute_next_scenario)
+        res_b.addCallback(__check_scenario_b)
+        res_b.addCallback(__execute_next_scenario)
+
+    def user_event_handler(self, ami, event):
+        ''' Reacts to UserEvents issued to indicate the end of a call.
+        stops the testsuite once all calls have reached that point.
+
+        :param ami: AMI connection that the event was received from
+        :param event: Event that was received
+        '''
+        self.user_events += 1
+        if (self.user_events == len(self.sipp_scn_phone_a)):
+            LOGGER.info("All user events received; stopping reactor")
+            self.stop_reactor()
+
+    def moh_start_event_handler(self, ami, event):
+        ''' Reacts to music on hold start events and tallies them.
+
+        :param ami: AMI connection the event was received from
+        :param event: Event that was received
+        '''
+        LOGGER.debug("Received MOH start event")
+        self.moh_start_events += 1
+
+    def moh_stop_event_handler(self, ami, event):
+        ''' Reacts to music on hold stop events and tallies them.
+
+        :param ami: AMI connection the event was received from
+        :param event: Event that was received
+        '''
+
+        LOGGER.debug("Received MOH stop event")
+        self.moh_stop_events += 1
+
+    def extension_status_handler(self, ami, event):
+        ''' Count hold, unhold, and hungup statuses '''
+        status = event.get('status')
+        if status == '1':
+            self.status_inuse_events += 1
+        elif status == '16':
+            self.status_onhold_events += 1
+        elif status == '0':
+            self.status_notinuse_events += 1
+
+    def hold_event_handler(self, ami, event):
+        ''' Reacts to hold events and tallies them.
+
+        :param ami: AMI connection the event was received from
+        :param event: Event that was received
+        '''
+
+        LOGGER.debug("Recieved Hold event")
+        self.hold_events += 1
+
+    def unhold_event_handler(self, ami, event):
+        ''' Reacts to unhold events and tallies them.
+
+        :param ami: AMI connection the event was received from
+        :param event: Event that was received
+        '''
+
+        LOGGER.debug("Received Unhold event")
+        self.unhold_events += 1
+
+    def run(self):
+        ''' Run the test and create an AMI connection '''
+
+        super(SIPHold, self).run()
+        self.create_ami_factory()
+
+
+def main():
+    ''' Run the test and check the results '''
+    test = SIPHold()
+    reactor.run()
+
+    if (test.moh_start_events != len(test.sipp_scn_phone_a)):
+        LOGGER.error("Failed to receive %d MOH start events (received %d)" %
+                     (len(test.sipp_scn_phone_a), test.moh_start_events))
+        test.passed = False
+    if (test.moh_stop_events != len(test.sipp_scn_phone_a)):
+        LOGGER.error("Failed to receive %d MOH stop events (received %d)" %
+                     (len(test.sipp_scn_phone_a), test.moh_stop_events))
+        test.passed = False
+    if (test.hold_events != len(test.sipp_scn_phone_a)):
+        LOGGER.error("Failed to receive %d Hold events (received %d)" %
+                     (len(test.sipp_scn_phone_a), test.hold_events))
+        test.passed = False
+    if (test.unhold_events != len(test.sipp_scn_phone_a)):
+        LOGGER.error("Failed to receive %d Unhold events (received %d)" %
+                     (len(test.sipp_scn_phone_a), test.unhold_events))
+        test.passed = False
+    if (test.user_events != len(test.sipp_scn_phone_a)):
+        LOGGER.error("Failed to receive %d user test events (received %d)" %
+                     (len(test.sipp_scn_phone_a), test.user_events))
+        test.passed = False
+    if (test.status_inuse_events != len(test.sipp_scn_phone_a) * 2):
+        LOGGER.error("ExtensionStatus - InUse: %d / %d" %
+                     (len(test.sipp_scn_phone_a) * 2,
+                      test.status_inuse_events))
+        test.passed = False
+    if (test.status_onhold_events != len(test.sipp_scn_phone_a)):
+        LOGGER.error("ExtensionStatus - Hold: %d / %d" %
+                     (len(test.sipp_scn_phone_a),
+                      test.status_onhold_events))
+        test.passed = False
+    if (test.status_notinuse_events != len(test.sipp_scn_phone_a)):
+        LOGGER.error("ExtensionStatus - NotInUse: %d / %d" %
+                     (len(test.sipp_scn_phone_a),
+                      test.status_notinuse_events))
+        test.passed = False
+
+    if test.passed:
+        return 0
+    else:
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
