@@ -1,0 +1,29 @@
+testinfo:
+    summary:     'Test offer/answer in a hold with declined video stream'
+    description: |
+        This test sends a single offer with a valid audio stream and an
+        inactive video stream. A session is successfully established.
+        Once established a re-invite is sent with an offer putting the
+        audio stream on hold. It verifies that Asterisk responds with a
+        200 OK to this scenario.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-hold.xml', '-i': '127.0.0.1', '-p': '5061', } }
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

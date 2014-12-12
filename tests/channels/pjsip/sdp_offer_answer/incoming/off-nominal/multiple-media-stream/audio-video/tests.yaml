@@ -2,3 +2,4 @@
 tests:
     - test: 'codec-mismatch'
     - test: 'initial-declined'
+    - test: 'hold-declined'
