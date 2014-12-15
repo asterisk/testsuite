@@ -74,16 +74,20 @@ while read line ; do
 		test=${BASH_REMATCH[1]}
 		status=${BASH_REMATCH[2]}
 		col=$(( $(tput cols) - 36 ))
+		et=$(( $SECONDS - $st ))
+
 		if [[ $status = passed ]] ; then
 			(( passed++ ))
 			COLOR=${GREEN}
 			label=Passed
+			[[ $et -gt $maxelapsed ]] && maxelapsed=$et
 		fi
 		if [[ $status = failed ]] ; then
 			(( failed++ ))
 			COLOR=${RED}
 			label=Failed
 			failures+=("FAILED: $test")
+			[[ $et -gt $maxelapsed ]] && maxelapsed=$et
 		fi
 		if [[ $status = timedout ]] ; then
 			(( failed++ ))
@@ -93,8 +97,6 @@ while read line ; do
 			timeouts+=("TIMEDOUT: $test")
 		fi
 		kill $countpid
-		et=$(( $SECONDS - $st ))
-		[[ $et -gt $maxelapsed ]] && maxelapsed=$et
 		printf "[${COLOR}%s${NORM}][${GREEN}%4d${NORM}][${RED}%4d${NORM}]\n" $label $passed $failed
 	fi
 done
