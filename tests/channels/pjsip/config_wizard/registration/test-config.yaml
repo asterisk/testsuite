@@ -1,0 +1,88 @@
+testinfo:
+    summary: 'Test PJSIP Config Wizard Outbound Registration'
+    description: |
+        Tests the PJSIP Config Wizard to make sure the
+        objects created are the same as discretely defined objects.
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_config_wizard'
+        - asterisk : 'res_pjsip_endpoint_identifier_ip'
+        - asterisk : 'res_pjsip_outbound_registration'
+
+    tags:
+        - pjsip
+
+test-modules:
+    # allow test_runner to find and run the local test
+    add-test-to-search-path: 'True'
+    add-relative-to-search-path: ['../']
+    test-object:
+        config-section: object-config
+        typename: 'AMISendTest.AMISendTest'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+object-config:
+    reactor-timeout: 15
+    ACTION: { "Action": "PJSIPShowRegistrationsOutbound", "ActionID": "12345" }
+
+ami-config:
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'OutboundRegistrationDetail'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: 'registration'
+                    ObjectName: 'trunk1-reg-*'
+                    OutboundAuth: 'trunk1-oauth'
+                    AuthRejectionPermanent: 'true'
+                    MaxRetries: '10'
+                    ForbiddenRetryInterval: '0'
+                    RetryInterval: '38'
+                    Expiration: '3600'
+                    OutboundProxy: ''
+                    Transport: 'ipv4'
+                    ContactUser: ''
+                    ClientUri: 'sip:testuser@127.*'
+                    ServerUri: 'sip:127.*'
+                    Status: 'Unregistered|Rejected'
+                    NextReg: '0'
+            count: 2
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'AuthDetail'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: 'auth'
+                    ObjectName: 'trunk1-oauth'
+                    AuthType: 'userpass'
+                    NonceLifetime: '32'
+                    Realm: ''
+                    Md5Cred: ''
+                    Password: 'testpass'
+                    Username: 'testuser'
+
+            count: 2
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'OutboundRegistrationDetailComplete'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    EventList: 'Complete'
+                    Registered: '0'
+                    NotRegistered: '2'
+            count: 1

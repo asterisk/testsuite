@@ -26,5 +26,6 @@ tests:
     - dir: 'video_calls'
     - test: 'accountcode'
     - dir: 'publish'
+    - dir: 'config_wizard'
     - dir: 'optimistic_srtp'
     - test: 'in_dialog_invite_replaces'
