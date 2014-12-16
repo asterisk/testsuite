@@ -6,7 +6,7 @@ testinfo:
         'ASTERISK-24335.'
 
 properties:
-    minversion: '1.8.0.0'
+    minversion: '1.8.32.0'
     dependencies:
         - asterisk: 'chan_sip'
         - python: 'twisted'
