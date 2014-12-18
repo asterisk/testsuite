@@ -1,0 +1,46 @@
+testinfo:
+    summary: 'Test incompatible DTMF modes.'
+    description: |
+        'Checks to make sure that if two endpoints with incompatible DTMF modes
+         are connected the appropriate bridge type is chosen.'
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'invite_recv.xml', '-p':'5062' } }
+                - { 'key-args': { 'scenario':'invite.xml', '-p':'5061' } }
+
+ami-config:
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'BridgeLeave'
+                    BridgeTechnology: 'simple_bridge'
+            count: 2 # two channels in, two out
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'BridgeLeave'
+                    BridgeTechnology: 'native_bridge'
+            count: 0 # should never bridge natively
+
