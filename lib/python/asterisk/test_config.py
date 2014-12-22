@@ -252,16 +252,16 @@ class TestConfig(object):
         self.config = None
         self.summary = None
         self.description = None
-        self.maxversion = None
+        self.maxversion = []
         self.maxversion_check = False
-        self.minversion = None
+        self.minversion = []
         self.minversion_check = False
         self.forced_version = None
         self.deps = []
         self.tags = []
         self.expect_pass = True
         self.excluded_tests = []
-        self.features = []
+        self.features = set()
         self.feature_check = {}
         self.test_configuration = "(none)"
         self.condition_definitions = []
@@ -322,30 +322,37 @@ class TestConfig(object):
     def _process_properties(self):
         """Process test properties block"""
 
-        self.minversion = AsteriskVersion("1.4")
-        if self.config == None:
+        if self.config is None:
             return
         if "properties" not in self.config:
             return
         properties = self.config["properties"]
-        if "minversion" in properties:
-            self.minversion = AsteriskVersion(properties["minversion"])
-            if self.minversion.feature:
-                self.features.append(self.minversion.feature)
-                self.feature_check[self.minversion.feature] = False
-        if "maxversion" in properties:
-            self.maxversion = AsteriskVersion(properties["maxversion"])
-        self.expect_pass = (
-                properties.get("expectedResult", self.expect_pass) and
-                properties.get("expected-result", self.expect_pass))
+        minversion = properties.get("minversion", ["1.4"])
+
+        if not isinstance(minversion, list):
+            minversion = [minversion]
+        self.minversion = [AsteriskVersion(ver) for ver in minversion]
+
+        maxversion = properties.get("maxversion", [])
+        if not isinstance(maxversion, list):
+            maxversion = [maxversion]
+        self.maxversion = [AsteriskVersion(ver) for ver in maxversion]
+
+        self.expect_pass = (properties.get("expectedResult", self.expect_pass) and
+                            properties.get("expected-result", self.expect_pass))
         if "tags" in properties:
             self.tags = properties["tags"]
         if "features" in properties:
-            self.features.extend(properties["features"])
-            for feature in self.features:
-                self.feature_check[feature] = False
+            self.features = set(properties["features"])
         if "forced-version" in properties:
             self.forced_version = AsteriskVersion(properties["forced-version"])
+
+        for ver in self.minversion:
+            if ver.feature:
+                self.features.add(ver.feature)
+
+        for feature in self.features:
+            self.feature_check[feature] = False
 
     def _parse_config(self):
         """Parse the test-config YAML file."""
@@ -420,7 +427,6 @@ class TestConfig(object):
             ]
         return self.deps
 
-
     def check_deps(self, ast_version):
         """Check whether or not a test should execute based on its dependencies
 
@@ -437,17 +443,22 @@ class TestConfig(object):
         if self.forced_version is not None:
             ast_version = self.forced_version
 
-        self.minversion_check = True
-        if ast_version < self.minversion:
-            self.can_run = False
-            self.minversion_check = False
-            return self.can_run
+        # If we have a minimum version for our branch; use that. Otherwise,
+        # compare against all listed minimum versions.
+        min_candidates = [ver for ver in self.minversion
+                          if ver.major == ast_version.major]
+        if not len(min_candidates):
+            min_candidates = self.minversion
+        self.minversion_check = all([ast_version >= ver
+                                     for ver in min_candidates])
+        # Max version is a bit different: generally, it is a hard cut-off
+        # (as what the test covers has been removed). We should always be less
+        # than any provided max version.
+        self.maxversion_check = all([ast_version < ver
+                                     for ver in self.maxversion])
 
-        self.maxversion_check = True
-        if self.maxversion is not None and ast_version > self.maxversion:
+        if not self.minversion_check or not self.maxversion_check:
             self.can_run = False
-            self.maxversion_check = False
-            return self.can_run
 
         for feature in self.features:
             self.feature_check[feature] = ast_version.has_feature(feature)
@@ -457,7 +468,6 @@ class TestConfig(object):
         for dep in self.get_deps():
             if dep.met is False:
                 self.can_run = False
-                break
         return self.can_run
 
     def check_tags(self, requested_tags):

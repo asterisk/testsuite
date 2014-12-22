@@ -352,10 +352,12 @@ class TestSuite:
             print "%.3d) %s" % (i, t.test_config.test_name)
             print "      --> Summary: %s" % t.test_config.summary
             print ("      --> Minimum Version: %s (%s)" %
-                   (t.test_config.minversion, t.test_config.minversion_check))
+                   (", ".join([str(v) for v in t.test_config.minversion]),
+                    t.test_config.minversion_check))
             if t.test_config.maxversion is not None:
                 print ("      --> Maximum Version: %s (%s)" %
-                       (t.test_config.maxversion, t.test_config.maxversion_check))
+                       (", ".join([str(v) for v in t.test_config.maxversion]),
+                        t.test_config.maxversion_check))
             if t.test_config.features:
                 print "      --> Features:"
                 for feature_name in t.test_config.features:
