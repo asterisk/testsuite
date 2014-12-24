@@ -1,0 +1,41 @@
+testinfo:
+    summary: 'Verify the user_eq_phone setting'
+    description: |
+        This test verifies that when the user_eq_phone setting is enabled on a
+        PJSIP endpoint, a request sent from Asterisk to that endpoint that
+        contains a telephone number in the request URI has a 'user=phone'
+        specified appended to it. The test originates a Local channel that
+        causes an outbound dial to number 12568675309 at endpoint 'jenny'.
+        The SIPp scenario verifies that a 'user=phone' tag is found in the
+        INVITE request received from Asterisk.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator
+            typename: 'pluggable_modules.Originator'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uas.xml', '-i': '127.0.0.1', '-p': '5061'} }
+
+originator:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'Local/s@default'
+    application: 'Echo'
+    async: 'True'
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
