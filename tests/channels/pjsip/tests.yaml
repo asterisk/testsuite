@@ -30,3 +30,4 @@ tests:
     - dir: 'optimistic_srtp'
     - test: 'in_dialog_invite_replaces'
     - test: 'dtmf_incompatible'
+    - test: 'keep_alive'

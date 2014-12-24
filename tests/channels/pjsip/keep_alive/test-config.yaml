@@ -1,0 +1,35 @@
+testinfo:
+    summary: 'Verify the keep_alive_interval setting for the PJSIP stack'
+    description: |
+        This test verifies the keep_alive_interval setting for the PJSIP stack
+        in Asterisk. It sets the keep_alive_interval to 2 seconds, makes a
+        TCP client connection to the PJSIP stack, and then waits for 5 keep
+        alives. Upon receiving 5 packets, it disconnects and stops the test.
+        In all cases, the test verifies on stopping:
+         * That 5 total packets were received
+         * That the time deltas between packets were received within
+           approximately 2 seconds of each other
+         * That the keep alive values are all '\r\n\r\n'
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            typename: 'keep_alive.KeepAliveReceiver'
+            config-section: dummy-config
+
+test-object-config:
+    asterisk-instances: 1
+    connect-ami: True
+
+dummy-config:
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
