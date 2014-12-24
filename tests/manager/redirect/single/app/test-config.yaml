@@ -1,0 +1,77 @@
+testinfo:
+    summary: 'Redirect a single channel that is in a dialplan application'
+    description: |
+        Redirect a single channel that is in the Echo application, verify
+        that it gets redirected to the appropriate dialplan location, and
+        make sure no surrogate channels are hanging around.
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk: 'app_echo'
+        - asterisk: 'app_userevent'
+    tags:
+        - manager
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: event-action-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-config:
+    test-iterations:
+        -
+            channel: 'Local/s@default'
+            application: 'Echo'
+
+event-action-config:
+    -
+        ami-events:
+            # if a DialEnd event is received and the channel is in the 'up'
+            # state assume the local channel is in the 'echo' application
+            conditions:
+                match:
+                    Event: 'DialEnd'
+                    DestChannel: 'Local/s.*1'
+            requirements:
+                match:
+                   DestChannelState: '6' # Up
+            count: '1'
+        ami-actions:
+            # redirect the channel to the "redirect" extension
+            action:
+                Action: 'Redirect'
+                Channel: 'Local/s@default-00000000;1'
+                Context: 'default'
+                Exten: 'redirect'
+                Priority: '1'
+    -
+        ami-events:
+            # check to make sure that the user event is received (raised
+            # from the extension the channel got redirected)
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    Channel: 'Local/s.*1'
+                requirements:
+                    UserEvent: 'Redirected'
+            count: '1'
+        ami-actions:
+            # the channel has been redirected at this point so check the
+            # current channel status
+            action:
+                Action: 'Status'
+    -
+        ami-events:
+            # make sure the surrogate channel is not hanging around
+            conditions:
+                match:
+                    Event: 'Status'
+                    Channel: 'Surrogate/Local/s.*1'
+            count: '0'

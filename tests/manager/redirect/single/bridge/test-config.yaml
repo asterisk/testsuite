@@ -1,0 +1,88 @@
+testinfo:
+    summary: 'Redirect a single channel that is in bridge'
+    description: |
+        Redirect a single channel that is in a bridge with another channel,
+        verify that the channel gets redirected to the appropriate dialplan
+        location, and make sure the channel it was bridged with is hung up.
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_echo'
+        - asterisk: 'app_userevent'
+    tags:
+        - manager
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: event-action-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-config:
+    test-iterations:
+        -
+            channel: 'Local/alice@default'
+            context: 'default'
+            exten: 'call-bob'
+            priority: '1'
+
+event-action-config:
+    -
+        ami-events:
+            # verify the alice and bob get bridged
+            -
+                conditions:
+                    match:
+                        Event: 'BridgeEnter'
+                        Channel: 'Local/alice.*1$'
+                count: '1'
+            -
+                conditions:
+                    match:
+                        Event: 'BridgeEnter'
+                        Channel: 'Local/bob.*1$'
+                count: '1'
+    -
+        ami-events:
+            # wait for bob to enter the echo application before redirecting
+            conditions:
+                match:
+                    Event: 'Newexten'
+                    Channel: 'Local/bob.*2$'
+                    ChannelState: '6' # Up
+            count: '1'
+
+        ami-actions:
+            # redirect alice to the "redirect" extension
+            action:
+                Action: 'Redirect'
+                Channel: 'Local/alice@default-00000000;1'
+                Context: 'default'
+                Exten: 'redirect'
+                Priority: '1'
+    -
+        ami-events:
+            -
+                # check to make sure bob got hungup
+                conditions:
+                    match:
+                        Event: 'Hangup'
+                        Channel: 'Local/bob.*1$'
+                count: '1'
+            -
+                # check to make sure that the user event is received (raised
+                # from the extension the channel got redirected)
+                conditions:
+                    match:
+                        Event: 'UserEvent'
+                        Channel: 'Local/alice.*1$'
+                    requirements:
+                        UserEvent: 'Redirected'
+                count: '1'
