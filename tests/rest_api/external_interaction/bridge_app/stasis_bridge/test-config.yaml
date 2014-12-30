@@ -1,0 +1,152 @@
+testinfo:
+    summary: |
+        "Ensure channel in Stasis bridge can be pulled out using the Bridge()
+        app and resumes at the priority after the Stasis() app."
+    description: |
+        "This test originates a Local channel (dummy) channel into
+        Stasis(testsuite,dummy) and Echo() to kick off the test. A Stasis
+        bridge is created (test_bridge) along with originating a Local channel
+        (alice) into Stasis(testsuite,test) and Echo(). The alice channel is
+        then added to the Stasis bridge upon a StasisStart event.
+
+        A Local channel (bob) is originated into Bridge() and echo(). This
+        causes the alice channel half in the Stasis bridge to be pulled out and
+        put into a non-stasis bridge with the bob channel half. The bob channel
+        half in the non-stasis bridge with alice is then hung up.
+
+        This ensures that the alice channel half is not re-entered into the
+        Stasis(testsuite,test) app and instead executes the priority following
+        it. The StasisStart and StasisEnd events are all also checked to ensure
+        they occur the proper number of times."
+    issues:
+        - jira: 'ASTERISK-24637'
+
+properties:
+    minversion: '12.8.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+        - asterisk : app_echo
+    tags:
+        - ARI
+    # Expect test to fail until ASTERISK-24637 is resolved.
+    expected-result: False
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    apps: testsuite
+    test-iterations:
+        -
+            channelId: 'dummy'
+            endpoint: 'Local/dummy@default'
+            context: 'default'
+            extension: 'echo'
+            priority: '1'
+
+pluggable-config:
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: ['dummy']
+                channel:
+                    id: 'dummy;2'
+            count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'bridges/test_bridge'
+            -
+                method: 'post'
+                uri: 'channels/alice'
+                params:
+                    endpoint: 'Local/app_stasis@default'
+                    context: 'default'
+                    extension: 'echo'
+                    priority: '1'
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: ['test']
+                channel:
+                    id: 'alice;2'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/test_bridge/addChannel'
+            params:
+                channel: '{channel.id}'
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                channel:
+                    id: 'alice;2'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'channels/bob'
+            params:
+                endpoint: 'Local/app_bridge@default'
+                context: 'default'
+                extension: 'echo'
+                priority: '1'
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    id: 'alice;2'
+            count: 1
+        ari-requests:
+            method: 'delete'
+            uri: 'bridges/test_bridge'
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: testsuite
+                channel:
+                    id: 'alice;2'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: BridgeEnter
+                    uniqueid: 'bob;2'
+                nomatch:
+                    bridgecreator: 'Stasis'
+            count: 1
+        ari-requests:
+            method: 'delete'
+            uri: 'channels/bob;2'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: UserEvent
+                    UserEvent: 'BridgeAppExit'
+                    result: 'passed'
+            count: 1
+        ari-requests:
+            method: 'delete'
+            uri: 'channels/dummy;2'
+

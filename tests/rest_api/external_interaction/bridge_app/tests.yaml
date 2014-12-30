@@ -1,0 +1,3 @@
+tests:
+    - test: 'stasis_bridge'
+    - dir: 'x_option'

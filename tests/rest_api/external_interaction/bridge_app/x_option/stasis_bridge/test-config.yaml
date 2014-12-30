@@ -1,0 +1,161 @@
+testinfo:
+    summary: |
+        "Ensure channel in Stasis bridge can be pulled out using the Bridge()
+        app and is hung up per the 'x' option specified for Bridge()."
+    description: |
+        "This test originates a Local channel (dummy) channel into
+        Stasis(testsuite,dummy) and Echo() to kick off the test. A Stasis
+        bridge is created (test_bridge) along with originating a Local channel
+        (alice) into Stasis(testsuite,test) and Echo(). The alice channel is
+        then added to the Stasis bridge upon a StasisStart event.
+
+        A Local channel (bob) is originated into Bridge() with the 'x' option
+        used and echo(). This causes the alice channel half in the Stasis
+        bridge to be pulled out and put into a non-stasis bridge with the bob
+        channel half. The bob channel half in the non-stasis bridge with alice
+        is then hung up.
+
+        This ensures that the alice channel half is hung up without re-entering
+        Stasis(testsuite,test) or continuing on in the dial plan. The
+        StasisStart and StasisEnd events are all also checked to ensure they
+        occur the proper number of times."
+
+properties:
+    minversion: '12.8.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+        - asterisk : app_echo
+    tags:
+        - ARI
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    apps: testsuite
+    test-iterations:
+        -
+            channelId: 'dummy'
+            endpoint: 'Local/dummy@default'
+            context: 'default'
+            extension: 'echo'
+            priority: '1'
+
+pluggable-config:
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: ['dummy']
+                channel:
+                    id: 'dummy;2'
+            count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'bridges/test_bridge'
+            -
+                method: 'post'
+                uri: 'channels/alice'
+                params:
+                    endpoint: 'Local/app_stasis@default'
+                    context: 'default'
+                    extension: 'echo'
+                    priority: '1'
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: ['test']
+                channel:
+                    id: 'alice;2'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/test_bridge/addChannel'
+            params:
+                channel: '{channel.id}'
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                channel:
+                    id: 'alice;2'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'channels/bob'
+            params:
+                endpoint: 'Local/app_bridge@default'
+                context: 'default'
+                extension: 'echo'
+                priority: '1'
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    id: 'alice;2'
+            count: 1
+        ari-requests:
+            method: 'delete'
+            uri: 'bridges/test_bridge'
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: testsuite
+                channel:
+                    id: 'alice;2'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: BridgeEnter
+                    Uniqueid: 'bob;2'
+                nomatch:
+                    Bridgecreator: 'Stasis'
+            count: 1
+        ari-requests:
+            -
+                method: 'delete'
+                uri: 'channels/bob;2'
+            -
+                method: 'delete'
+                uri: 'channels/dummy;2'
+    # Ensure alice leaves the non-stasis bridge
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: BridgeLeave
+                    Uniqueid: 'alice;2'
+                nomatch:
+                    Bridgecreator: 'Stasis'
+            count: 1
+    # Ensure alice channel halves are hung up with cause 16 and not 38
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: Hangup
+                    Uniqueid: 'alice.*'
+                    Cause: '16'
+            count: 2
+
