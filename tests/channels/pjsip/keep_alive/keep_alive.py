@@ -33,7 +33,7 @@ class KeepAliveProtocol(protocol.Protocol):
         self.test_object = test_object
 
     def dataReceived(self, data):
-        LOGGER.debug('Received packet: {}'.format(data))
+        LOGGER.debug('Received packet: {0}'.format(data))
         received_packets.append((datetime.utcnow(), data))
         if len(received_packets) == 5:
             self.transport.loseConnection()
@@ -56,14 +56,14 @@ class KeepAliveFactory(protocol.ClientFactory):
 
     def clientConnectionFailed(self, connector, reason):
         """twisted callback for a failed client connection"""
-        LOGGER.warn('Failed to connect to Asterisk on port 5060: {}'.format(
+        LOGGER.warn('Failed to connect to Asterisk on port 5060: {0}'.format(
             reason))
         self.test_object.set_passed(False)
         self.test_object.stop_reactor()
 
     def clientConnectionLost(self, connector, reason):
         """twisted callback for a lost client connection"""
-        LOGGER.info('Client connection dropped: {}'.format(reason))
+        LOGGER.info('Client connection dropped: {0}'.format(reason))
         self.test_object.stop_reactor()
 
 
@@ -98,7 +98,7 @@ class KeepAliveReceiver(object):
         Used to verify that we got our packets.
         """
         if len(received_packets) != 5:
-            LOGGER.warn('Failed to get 5 packets: got {} instead'.format(
+            LOGGER.warn('Failed to get 5 packets: got {0} instead'.format(
                 len(received_packets)))
             self.test_object.set_passed(False)
             return result
@@ -107,14 +107,14 @@ class KeepAliveReceiver(object):
                   zip(received_packets[:-1], received_packets[1:])]
         if not all([d == 2 for d in deltas]):
             LOGGER.warn('Failed to get expected deltas between keep-alives')
-            LOGGER.warn('Deltas: {}'.format(deltas))
-            LOGGER.warn('Received packets: {}'.format(received_packets))
+            LOGGER.warn('Deltas: {0}'.format(deltas))
+            LOGGER.warn('Received packets: {0}'.format(received_packets))
             self.test_object.set_passed(False)
             return result
 
         if not all([p[1] == '\r\n\r\n' for p in received_packets]):
             LOGGER.warn('Failed to get expected keep-alive values')
-            LOGGER.warn('Received packets: {}'.format(received_packets))
+            LOGGER.warn('Received packets: {0}'.format(received_packets))
             self.test_object.set_passed(False)
             return result
 
