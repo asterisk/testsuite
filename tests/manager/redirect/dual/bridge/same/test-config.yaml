@@ -1,0 +1,114 @@
+testinfo:
+    summary: 'Redirect two channels that are in a bridge together'
+    description: |
+        Redirect two channels that are bridged, verify that both channels are
+        redirected to the same dialplan location, the bridge they were
+        in gets destroyed, and neither channel is hung up by the process.
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_echo'
+        - asterisk: 'app_userevent'
+    tags:
+        - manager
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: event-action-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-config:
+    # expect three user events - the first two are raised during redirect and
+    # the last event ends the test
+    expected_events: 3
+    test-iterations:
+        -
+            channel: 'Local/alice@default'
+            context: 'default'
+            exten: 'call-bob'
+            priority: '1'
+
+event-action-config:
+    -
+        ami-events:
+            # verify that alice and bob get bridged
+            conditions:
+                match:
+                    Event: 'BridgeEnter'
+                    Channel: 'Local/.*1$'
+            count: '2'
+    -
+        ami-events:
+            # wait for bob to enter the echo application before redirecting
+            # (note - this is the condition that triggers the redirect)
+            conditions:
+                match:
+                    Event: 'DialEnd'
+                    DestChannel: 'Local/bob.*1'
+            requirements:
+                match:
+                   DestChannelState: '6' # Up
+            count: '1'
+
+        ami-actions:
+            # redirect alice/bob to the "redirect" extension
+            action:
+                Action: 'Redirect'
+                Channel: 'Local/alice@default-00000000;1'
+                Context: 'default'
+                Exten: 'redirect'
+                Priority: '1'
+                Extrachannel: 'Local/bob@default-00000001;1'
+                Extracontext: 'default'
+                Extraexten: 'redirect'
+                Extrapriority: '1'
+    -
+        ami-events:
+            # verify that the bridge gets destroyed
+            conditions:
+                match:
+                    Event: 'BridgeDestroy'
+                    BridgeNumChannels: '0'
+            count: '1'
+    -
+        ami-events:
+            # check to make sure that the user event is received (raised
+            # from the extension the channel got redirected) for both
+            # alice and bob
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    Channel: 'Local/.*1$'
+                requirements:
+                    UserEvent: 'Redirected'
+            count: '2'
+            trigger-on-count: True
+
+        ami-actions:
+            # once we receive two redirected events check alice/bob's status
+            action:
+                Action: 'Status'
+
+    -
+        ami-events:
+            # make sure the alice/bob are still up
+            conditions:
+                match:
+                    Event: 'Status'
+                    Channel: 'Local/.*1$'
+            count: '2'
+            trigger-on-count: True
+
+        ami-actions:
+            # notify the simple test case to stop
+            action:
+                Action: 'UserEvent'
+                UserEvent: 'Done'

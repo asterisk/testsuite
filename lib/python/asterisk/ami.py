@@ -667,19 +667,27 @@ PLUGGABLE_EVENT_REGISTRY.register("ami-start", AMIStartEventModule)
 class AMIPluggableEventInstance(AMIHeaderMatchInstance):
     """Subclass of AMIEventInstance that works with the pluggable event action
     module.
+
+    Events can be set to 'trigger-on-count' meaning (when set to True) the
+    trigger callback will not be called until the min count is reached. For
+    event/actions this means actions won't be executed until an event reaches
+    its specified count.
     """
 
     def __init__(self, test_object, triggered_callback, config, data):
         """Setup the AMI event observer"""
         self.triggered_callback = triggered_callback
 	self.data = data
+        self.trigger_on_count = config.get('trigger-on-count', False)
         super(AMIPluggableEventInstance, self).__init__(config, test_object)
 
     def event_callback(self, ami, event):
         """Callback called when an event is received from AMI"""
 	super(AMIPluggableEventInstance, self).event_callback(ami, event)
-        if self.passed:
+        if self.passed and (not self.trigger_on_count or
+                            self.count['event'] == self.count['min']):
             self.triggered_callback(self.data, ami, event)
+
 
 class AMIPluggableEventModule(object):
     """Generates AMIEventInstance instances that match events for the pluggable
