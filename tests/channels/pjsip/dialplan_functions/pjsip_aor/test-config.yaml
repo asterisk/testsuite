@@ -1,0 +1,58 @@
+testinfo:
+    summary:     'Register a single contact on an AOR and confirm PJSIP_AOR returns the correct information'
+    description: |
+        'Register a single contact to an AOR using IPv4 UDP. Once done place a call into Asterisk
+         which executes dialplan. This dialplan uses the PJSIP_AOR dialplan function to confirm that the
+         information on the AOR registered against is correct. An AOR with a static contact is also checked
+         to ensure the correct information is present.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    fail-on-any: False
+    reactor-timeout: 10
+    test-iterations:
+        -
+            scenarios:
+                # IPv4 & UDP - register with no authentication
+                - { 'key-args': {'scenario': 'dynamic-contact.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+ami-config:
+    -
+        id: '0'
+        type: 'headermatch'
+        count: '1'
+        conditions:
+            match:
+                Event: 'UserEvent'
+        requirements:
+            match:
+                Status: 'passed'
+    -
+        id: '0'
+        type: 'headermatch'
+        count: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                Status: 'failed'
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.3'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'func_pjsip_aor'
+    tags:
+        - pjsip
+

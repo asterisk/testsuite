@@ -2,3 +2,5 @@
 tests:
     - test: 'pjsip_channel'
     - test: 'pjsip_endpoint'
+    - test: 'pjsip_aor'
+    - test: 'pjsip_contact'
