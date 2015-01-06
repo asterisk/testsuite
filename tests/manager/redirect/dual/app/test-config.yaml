@@ -27,38 +27,40 @@ test-modules:
 test-config:
     # expect three user events - the first will kick off the second originate
     # and the second/third one will be raised during redirect
-    expected_events: 3
+    expected_events: 4
     test-iterations:
         -
-            channel: 'Local/one@default'
+            channel: 'Local/real_one@default'
             application: 'Echo'
         -
-            channel: 'Local/two@default'
+            channel: 'Local/real_two@default'
+            application: 'Echo'
+        -
+            # keep the simple test case alive until all user events
+            # have been raised
+            channel: 'Local/keepalive@default'
             application: 'Echo'
 
 event-action-config:
     -
         ami-events:
-            # once we receive two DialEnd events (both in the 'up' state)
-            # assume the channels are ready to be redirected
+            # once we receive two DialEnd events assume the channels are ready
+            # to be redirected
             conditions:
                 match:
                     Event: 'DialEnd'
-                    DestChannel: 'Local/.*1'
-            requirements:
-                match:
-                   DestChannelState: '6' # Up
+                    DestChannel: 'Local/real.*1'
             count: '2'
             trigger-on-count: True
         ami-actions:
             # redirect the channels to the "redirect" extension
             action:
                 Action: 'Redirect'
-                Channel: 'Local/one@default-00000000;1'
+                Channel: 'Local/real_one@default-00000000;1'
                 Context: 'default'
                 Exten: 'redirect'
                 Priority: '1'
-                Extrachannel: 'Local/two@default-00000001;1'
+                Extrachannel: 'Local/real_two@default-00000001;1'
                 Extracontext: 'default'
                 Extraexten: 'redirect'
                 Extrapriority: '1'
@@ -87,3 +89,11 @@ event-action-config:
                     Event: 'Status'
                     Channel: 'Surrogate/Local/.*'
             count: '0'
+            conditions:
+                match:
+                    Event: 'StatusComplete'
+            count: '1'
+        ami-actions:
+            action:
+                Action: 'UserEvent'
+                UserEvent: 'Done'

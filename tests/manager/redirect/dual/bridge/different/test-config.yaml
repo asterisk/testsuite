@@ -40,6 +40,11 @@ test-config:
             context: 'default'
             exten: 'call-bob1'
             priority: '1'
+        -
+            # keep the simple test case alive until all user events
+            # have been raised
+            channel: 'Local/keepalive@default'
+            application: 'Echo'
 
 event-action-config:
     -
@@ -51,9 +56,6 @@ event-action-config:
                 match:
                     Event: 'DialEnd'
                     DestChannel: 'Local/bob.*1'
-            requirements:
-                match:
-                   DestChannelState: '6' # Up
             count: '2'
             trigger-on-count: True
 
@@ -94,7 +96,6 @@ event-action-config:
             # once we receive two redirected events check alices's status
             action:
                 Action: 'Status'
-
     -
         ami-events:
             # make sure the alices are still up

@@ -35,6 +35,11 @@ test-config:
             context: 'default'
             exten: 'call-bob'
             priority: '1'
+        -
+            # keep the simple test case alive until all user events
+            # have been raised
+            channel: 'Local/keepalive@default'
+            application: 'Echo'
 
 event-action-config:
     -
@@ -53,9 +58,6 @@ event-action-config:
                 match:
                     Event: 'DialEnd'
                     DestChannel: 'Local/bob.*1'
-            requirements:
-                match:
-                   DestChannelState: '6' # Up
             count: '1'
 
         ami-actions:
@@ -103,7 +105,7 @@ event-action-config:
             conditions:
                 match:
                     Event: 'Status'
-                    Channel: 'Local/.*1$'
+                    Channel: 'Local/a|b.*1$'
             count: '2'
             trigger-on-count: True
 

@@ -25,6 +25,7 @@ test-modules:
             typename: 'pluggable_modules.EventActionModule'
 
 test-config:
+    expected_events: 2
     test-iterations:
         -
             channel: 'Local/s@default'
@@ -75,3 +76,13 @@ event-action-config:
                     Event: 'Status'
                     Channel: 'Surrogate/Local/s.*1'
             count: '0'
+            conditions:
+                match:
+                    Event: 'StatusComplete'
+            count: '1'
+        ami-actions:
+            action:
+                Action: 'UserEvent'
+                UserEvent: 'Done'
+
+
