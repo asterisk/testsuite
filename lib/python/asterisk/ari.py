@@ -432,9 +432,10 @@ class ARI(object):
         :throws: requests.exceptions.HTTPError
         """
         url = self.build_url(*args)
+        json = kwargs.pop('json', None)
         LOGGER.info("PUT %s %r", url, kwargs)
         return self.raise_on_err(requests.put(url, params=kwargs,
-                                              auth=self.userpass))
+                                              json=json, auth=self.userpass))
 
     def post(self, *args, **kwargs):
         """Send a POST request to ARI.
@@ -445,9 +446,10 @@ class ARI(object):
         :throws: requests.exceptions.HTTPError
         """
         url = self.build_url(*args)
+        json = kwargs.pop('json', None)
         LOGGER.info("POST %s %r", url, kwargs)
         return self.raise_on_err(requests.post(url, params=kwargs,
-                                               auth=self.userpass))
+                                               json=json, auth=self.userpass))
 
     def delete(self, *args, **kwargs):
         """Send a DELETE request to ARI.
