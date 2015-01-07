@@ -1,0 +1,193 @@
+testinfo:
+    summary:    'Test Manager UpdateConfig NOT preserving effective context'
+    description: |
+        'Test Manager UpdateConfig NOT preserving effective context'
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - manager
+        - AMI
+
+test-modules:
+    add-test-to-search-path: 'True'
+    add-relative-to-search-path: ['..']
+    test-object:
+        config-section: object-config
+        typename: 'ManagerConfigTest.ManagerConfigTest'
+
+object-config:
+    reactor-timeout: 15
+    ami-config:
+        - ###  Create a new config file
+            message:
+                Action: 'CreateConfig'
+                Filename: 'test.conf'
+            expected:
+                Response: 'Success'
+                Message: 'New configuration file created successfully'
+
+###################################################################
+        - ###  Load initial values
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'NewCat'
+                Cat-000000: 'Cat1T'
+                Options-000000: 'template'
+
+                Action-000001: 'Append'
+                Cat-000001: 'Cat1T'
+                Var-000001: 'var1'
+                Value-000001: 'on'
+                Options-000001: 'catfilter="TEMPLATES=restrict"'
+
+                Action-000002: 'NewCat'
+                Cat-000002: 'Cat1'
+                Options-000002: 'inherit="Cat1T"'
+
+                Action-000003: 'Append'
+                Cat-000003: 'Cat1'
+                Var-000003: 'var1'
+                Value-000003: 'off'
+
+            expected:
+                Response: 'Success'
+
+        - ###  Make sure everything's there
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Filter: 'TEMPLATES=include'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1T'
+                IsTemplate-000000: '1'
+                Line-000000-000000: 'var1=on'
+                Line-000000-000002: null
+
+                Category-000001: 'Cat1'
+                Templates-000001: 'Cat1T'
+                IsTemplate-000001: null
+                Line-000001-000000: 'var1=on'
+                Line-000001-000001: 'var1=off'
+                Line-000001-000002: null
+                Category-000002: null
+
+###################################################################
+        - ###  Change var1 to off in the template
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+                PreserveEffectiveContext: 'no'
+
+                Action-000000: 'Update'
+                Cat-000000: 'Cat1T'
+                Var-000000: 'var1'
+                Value-000000: 'off'
+                Match-000000: 'on'
+                Options-000000: 'catfilter="TEMPLATES=restrict"'
+
+            expected:
+                Response: 'Success'
+
+        - ###  test Cat1 should only have var1=off (inherited)
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Filter: 'TEMPLATES=include'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1T'
+                IsTemplate-000000: '1'
+                Line-000000-000000: 'var1=off'
+                Line-000000-000002: null
+
+                Category-000001: 'Cat1'
+                Templates-000001: 'Cat1T'
+                IsTemplate-000001: null
+                Line-000001-000000: 'var1=off'
+                Line-000001-000001: null
+                Category-000002: null
+
+###################################################################
+        - ###  Change var1 back to to on in the template
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+                PreserveEffectiveContext: 'no'
+
+                Action-000000: 'Update'
+                Cat-000000: 'Cat1T'
+                Var-000000: 'var1'
+                Value-000000: 'on'
+                Match-000000: 'off'
+                Options-000000: 'catfilter="TEMPLATES=restrict"'
+
+            expected:
+                Response: 'Success'
+
+        - ###  test Cat1 should only have var1=on (inherited)
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Filter: 'TEMPLATES=include'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1T'
+                IsTemplate-000000: '1'
+                Line-000000-000000: 'var1=on'
+                Line-000000-000002: null
+
+                Category-000001: 'Cat1'
+                Templates-000001: 'Cat1T'
+                IsTemplate-000001: null
+                Line-000001-000000: 'var1=on'
+                Line-000001-000001: null
+                Category-000002: null
+
+###################################################################
+        - ###  Change var1 back to off using the pre 13.2 behavior
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'EmptyCat'
+                Cat-000000: 'Cat1T'
+                Options-000000: 'catfilter="TEMPLATES=restrict"'
+
+                Action-000001: 'Append'
+                Cat-000001: 'Cat1T'
+                Var-000001: 'var1'
+                Value-000001: 'off'
+                Options-000001: 'catfilter="TEMPLATES=restrict"'
+
+            expected:
+                Response: 'Success'
+
+        - ###  test Cat1 should noew have an overridden var1=on because the above update preserved the old (on) value.
+            message:
+                Action: 'GetConfig'
+                Filename: 'test.conf'
+                Filter: 'TEMPLATES=include'
+            expected:
+                Response: 'Success'
+                Category-000000: 'Cat1T'
+                IsTemplate-000000: '1'
+                Line-000000-000000: 'var1=off'
+                Line-000000-000001: null
+
+                Category-000001: 'Cat1'
+                Templates-000001: 'Cat1T'
+                IsTemplate-000001: null
+                Line-000001-000000: 'var1=off'
+                Line-000001-000001: 'var1=on'
+                Line-000001-000002: null
+                Category-000002: null
