@@ -8,6 +8,7 @@ testinfo:
 properties:
     minversion: '1.8.0.0'
     dependencies:
+        - asterisk : 'app_voicemail'
         - python : 'twisted'
         - python : 'starpy'
     tags:
