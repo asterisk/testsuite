@@ -1,3 +1,4 @@
 tests:
     - test: 'stasis_bridge'
+    - test: 'stasis_bridge_direct_originate'
     - test: 'stasis_app'

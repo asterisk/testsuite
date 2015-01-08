@@ -1,14 +1,27 @@
 testinfo:
-    summary: Test that ensures bridged channels in Stasis() can be stolen properly using AMI Redirect.
+    summary: Tests that bridged Stasis() channels created with direct origination can be stolen using AMI Redirect.
     description: |
-        "This test originates a Local channel into Stasis() and Echo(), puts
-        the Stasis() channel into a bridge, and uses the AMI redirect action
-        to move the Local channel half with uniqueid StasisChannel into
-        default,echo,1 which leads to the Echo() application. Once the channel
-        reaches the Echo() application, it is hung up. This test verifies that
-        the appropriate events are generated."
+        "This test originates a channel into Stasis(testsuite) and an extension
+        that leads to Echo():
+
+        Echo() <-> Channel(SecondStasisChan) <-LocalBridge-> Channel(StasisChannel) <-> Stasis(testsuite)
+
+        puts the Stasis(testsuite) channel into a bridge:
+
+        ... Channel(StasisChannel) <-> Stasis(testsuite) <-> Bridge(test_bridge)
+
+        and uses the AMI redirect action to move the channel with UniqueID
+        'StasisChannel' into default,echo,1 which leads to the Echo()
+        application:
+
+        ... Channel(StasisChannel) <-> exten => default,echo,1,Echo()
+
+        Once the channel reaches the Echo() application, it is
+        hung up. This test verifies that the appropriate events are
+        generated."
 
 test-modules:
+    add-test-to-search-path: True
     test-object:
         typename: ari.AriBaseTestObject
     modules:
@@ -25,10 +38,8 @@ pluggable-config:
                 uri: 'channels/StasisChannel'
                 params:
                     endpoint: 'Local/echo@default'
+                    app: 'testsuite'
                     otherChannelId: 'SecondStasisChan'
-                    context: 'default'
-                    extension: 'stasis'
-                    priority: '1'
             -
                 method: 'post'
                 uri: 'bridges/test_bridge'
@@ -101,7 +112,7 @@ pluggable-config:
         stop_test:
 
 properties:
-    minversion: '12.8.0'
+    minversion: '13.2.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests
