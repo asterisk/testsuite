@@ -1,2 +1,4 @@
 tests:
     - test: 'stasis_bridge_to_non_stasis_app'
+    - test: 'stasis_bridge_to_same_stasis_app'
+    - test: 'stasis_bridge_to_different_stasis_app'

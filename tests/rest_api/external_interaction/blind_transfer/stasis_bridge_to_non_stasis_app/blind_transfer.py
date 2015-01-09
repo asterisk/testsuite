@@ -55,22 +55,29 @@ def on_channel_entered_bridge(ari, event, test_object):
     return True
 
 def on_replace_channel_enter(ari, event, test_object):
-
     ari.delete('channels', event['channel']['id'])
+    ari.delete('channels', TEST.originated_id)
+    ari.delete('bridges', TEST.bridge_id)
     return True
 
 def on_blind_transfer(ari, event, test_object):
     LOGGER.debug("on_blind_transfer(%r)" % event)
-    ari.delete('bridges', TEST.bridge_id)
-    ari.delete('channels', TEST.originated_id)
 
     if event.get('result') != 'Success':
         LOGGER.error('Blind transfer failed: %s' % event.get('result'))
         return False
 
+    # Transferer
     if not event['channel']['name'].startswith('PJSIP/bob-'):
+        return False
+    # Transferee
+    elif event['transferee']['id'] != TEST.originated_id:
+        return False
+    # Channel replacing the transferer's channel
+    elif not event['replace_channel']['name'].startswith('Local/1000@default-'):
         return False
     elif event['bridge']['id'] != TEST.bridge_id:
         return False
 
     return True
+

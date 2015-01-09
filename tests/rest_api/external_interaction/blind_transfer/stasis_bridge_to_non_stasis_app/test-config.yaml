@@ -1,26 +1,70 @@
 testinfo:
-    summary: Test originating calls to a Stasis application using ARI and then blind transferring.
+    summary: |
+        "Verify StasisStart and StasisEnd events when channels are put into a
+         Stasis application, bridged, and one channel is blind transferred to
+         a non-stasis application."
     description: |
-        Originate two external SIP calls into Stasis and then have one blind transfer the other.
+        "A dummy local channel is created with half the channel placed into the
+         Stasis(testsuite,dummy) application and the other half placed into the
+         Echo() application. This sole purpose of this dummy channel is to have
+         a channel up preventing the test from immediately ending and thus
+         keeping the websocket connected, to allow StasisEnd events for all
+         other channels to be verified.
+
+         The kick off local channel ('Alice') is entered into the
+         Stasis(testsuite) app and a Stasis bridge is created. A SIP channel
+         ('Bob') is then entered into the Stasis(testsuite,test) app and added
+         to the bridge with alice. Bob blind transfers Alice to the Echo() app
+         via extension 1000. The local channel half replacing Bob's is added to
+         the bridge with Alice. The other local channel half executes the Echo()
+         app. The StasisStart events for all channels (except the dummy halves)
+         are verified.
+
+         Upon the local channel half entering the bridge replacing Bob's
+         channel, the channel and Alice's channel are hung up. The bridge is
+         then also destroyed. Once all StasisEnd events have been verified,
+         the dummy channel halves are hung up thus ending the test."
 
 test-modules:
     add-test-to-search-path: True
     test-object:
-        typename: ari.AriTestObject
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
     modules:
         -   config-section: ari-config
             typename: ari.WebSocketEventModule
 
-ari-config:
+test-object-config:
     apps: testsuite
+    test-iterations:
+        - [ { channelId: 'dummy',
+              endpoint: 'Local/dummy@default',
+              context: 'default',
+              extension: '1000',
+              priority: '1' },
+            { channelId: 'alice',
+              endpoint: 'Local/s@default',
+              context: 'default',
+              extension: '1000',
+              priority: '1' } ]
+
+ari-config:
     events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: ['dummy']
+                    channel:
+                        id: 'dummy;2'
+            count: 1
         -   conditions:
                 match:
                     type: StasisStart
                     application: testsuite
                     args: []
                     channel:
-                        name: 'Local/s@default-00000000;2'
+                        id: 'alice;2'
             count: 1
             callback:
                 module: blind_transfer
@@ -29,21 +73,19 @@ ari-config:
                 match:
                     type: StasisStart
                     application: testsuite
-                    args: []
-                    channel:
-                        name: 'Local/1000@default-00000001;1'
-                    replace_channel:
-                        name: 'PJSIP/bob-0000000.'
-            count: 1
-        -   conditions:
-                match:
-                    type: StasisStart
-                    application: testsuite
                     args: ['test']
+                    channel:
+                        name: 'PJSIP/bob-0000000.'
             count: 1
             callback:
                 module: blind_transfer
                 method: on_test_start
+        -   conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    channel:
+                        id: 'alice;2'
+            count: 1
         -   conditions:
                 match:
                     type: ChannelEnteredBridge
@@ -55,19 +97,14 @@ ari-config:
                 method: on_channel_entered_bridge
         -   conditions:
                 match:
-                    type: ChannelEnteredBridge
+                    type: StasisStart
+                    application: testsuite
+                    args: []
                     channel:
-                        name: 'Local/s@default-00000000;2'
+                        name: 'Local/1000@default-0000000.;1'
+                    replace_channel:
+                        name: 'PJSIP/bob-0000000.'
             count: 1
-        -   conditions:
-                match:
-                    type: ChannelEnteredBridge
-                    channel:
-                        name: 'Local/1000@default-.*'
-            count: 1
-            callback:
-                module: blind_transfer
-                method: on_replace_channel_enter
         -   conditions:
                 match:
                     type: BridgeBlindTransfer
@@ -76,6 +113,40 @@ ari-config:
             callback:
                 module: blind_transfer
                 method: on_blind_transfer
+        -   conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    channel:
+                        name: 'Local/1000@default-0000000.;1'
+            count: 1
+            callback:
+                module: blind_transfer
+                method: on_replace_channel_enter
+        -   conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+                    channel:
+                        name: 'PJSIP/bob-0000000.'
+            count: 1
+        -   conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+                    channel:
+                        id: 'alice;2'
+            count: 1
+        -   conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+                    channel:
+                        name: 'Local/1000@default-0000000.;1'
+            count: 1
+            requests:
+                -
+                    method: 'delete'
+                    uri: 'channels/dummy;2'
 
 properties:
     minversion: '12.8.0'
@@ -84,7 +155,11 @@ properties:
         - python : requests
         - python : twisted
         - python : starpy
-        - asterisk : res_ari_channels
+        - app : pjsua
+        - asterisk : app_stasis
         - asterisk : app_echo
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+        - asterisk : res_pjsip
     tags:
         - ARI
