@@ -17,3 +17,4 @@ tests:
     - test: 'gateway_timeout4'
     - test: 'gateway_timeout5'
     - test: 'voxfax_g711'
+    - test: 't38_negotiation_timeout'

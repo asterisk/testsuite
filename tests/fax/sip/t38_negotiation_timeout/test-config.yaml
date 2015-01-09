@@ -1,0 +1,70 @@
+testinfo:
+    summary: 'Test T.38 Negotiation Timeout'
+    description: |
+        "This test exercises the T.38 negotiation timeout and the ability to
+        set this timeout via res_fax.conf and via FAXOPT(t38timeout).
+
+        This test initiates a call via a SIPp scenario which establishes a call
+        and then waits longer than the T.38 negotiation timeout before sending
+        a response to the T.38 negotiation attempt. The SIPp scenario then
+        hangs up the call.
+
+        When Asterisk receives a call, it provides the current config-option
+        T.38 timeout to be checked by the test, modifies the timeout using
+        FAXOPT(), and again provides the T.38 timeout to be checked by the
+        test. Asterisk then attempts to receive a fax using the modified T.38
+        negotiation timeout. Once the negotiation timeout passes and the
+        delayed negotiation response is received, Asterisk receives a BYE and
+        hangs up the channel.
+        "
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 't38timeout.xml', '-i': '127.0.0.2', '-p': '5060'} }
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'TestStatus'
+                t38timeout: '10'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'TestStatus'
+                t38timeout: '5'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Hangup'
+        count: '1'
+
+properties:
+    minversion: '11.16.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+    tags:
+        - SIP
+        - fax
