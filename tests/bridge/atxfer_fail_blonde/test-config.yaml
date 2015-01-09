@@ -1,0 +1,83 @@
+testinfo:
+    summary: 'Test blonde transfer to a failed destination'
+    description: |
+        'Checks for channel leak after an attended transfer that switches
+        to blonde mode and fails to connect to the target destination.
+        1) Alice calls Bob
+        2) Alice performs DTMF attended transfer to Charlie (123)
+        3) Charlie delays slightly...
+        4) Alice hangs up, converting attended transfer to blonde mode
+        5)                        ...and hangs up to fail transfer
+        6) When the transfer recall is answered by Alice, hang up
+        7) Check "core show channels" for leaked Local/123 channel
+        '
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: 'bridge-config'
+        typename: 'bridge_test_case.BridgeTestCase'
+    modules:
+        -
+            config-section: 'pluggable-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+bridge-config:
+    test-runs:
+      -
+          originate_channel: 'SIP/alice_atxfer@uut'
+          hangup: 'alice'
+          features:
+              -
+                  who: 'alice'
+                  what: 'atxfer'
+                  success: 'true'
+                  exten: '123'
+
+pluggable-config:
+    -
+        # after Alice actives blonde transfer
+        ami-events:
+            conditions:
+                match:
+                    Event: CEL
+                    EventName: ATTENDEDTRANSFER
+                    Channel: 'SIP/alice-00000000'
+        # hangup the transfer destination
+        ami-actions:
+            -
+                action:
+                    Action: 'Hangup'
+                    Channel: 'Local/123@default-00000000;1'
+                    Cause: 17
+
+    -
+        # after transfer recall calls back Alice
+        ami-events:
+            conditions:
+                match:
+                    Event: CEL
+                    EventName: ANSWER
+                    Channel: 'SIP/alice-00000002'
+        # hang the call up, test is done
+        ami-actions:
+            -
+                action:
+                    Action: 'Hangup'
+                    Channel: 'SIP/alice-00000002'
+                    Cause: 16
+
+properties:
+    minversion: '11.0.0'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'chan_sip'
+    tags:
+        - bridge
+    testconditions:
+        -
+            # this checks 'core show channels' for leaked channel
+            name: 'channels'
+            allowedchannels: 0

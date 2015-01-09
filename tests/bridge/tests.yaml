@@ -3,6 +3,7 @@ tests:
     - test: 'disconnect'
     - test: 'atxfer_setup'
     - test: 'atxfer_nominal'
+    - test: 'atxfer_fail_blonde'
     - test: 'blindxfer_setup'
     - test: 'blindxfer_nominal'
     - test: 'blonde_nominal'
