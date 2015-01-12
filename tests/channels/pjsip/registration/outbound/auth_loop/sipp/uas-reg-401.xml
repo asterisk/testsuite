@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Register rejecter">
+  <recv request="REGISTER" crlf="true">
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 401 Unauthorized
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      WWW-Authenticate: Digest realm="asterisk", nonce="47ebe028cda119c35d4877b383027d28da013815"
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv request="REGISTER" crlf="true">
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 401 Unauthorized
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      WWW-Authenticate: Digest realm="asterisk", nonce="47ebe028cda3284789cda42390815234bcedf"
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Keep the scenario going for a while to ensure that no further messages are sent -->
+  <timewait milliseconds="3000" />
+</scenario>

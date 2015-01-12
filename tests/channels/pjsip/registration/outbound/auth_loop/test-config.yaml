@@ -1,0 +1,53 @@
+testinfo:
+    summary: 'Ensure that Asterisk will not get caught in an infinite loop attempting registration authentication'
+    description: |
+        " * Asterisk will attempt to register with a server (a SIPp scenario).
+          * Asterisk will be challenged for authentication
+          * Asterisk will send the REGISTER a second time with auth credentials.
+          * Asterisk will again be challenged for authentication
+          * At this point, Asterisk should consider the registration to be rejected and not
+            re-attempt registration.
+
+          This tests Asterisk's ability to stop sending registrations after receiving consecutive
+          401 responses."
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'ami.AMIEventModule'
+            config-section: ami-config
+
+sipp-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'uas-reg-401.xml', '-p': '5061'} }
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Registry'
+                ChannelType: 'PJSIP'
+        requirements:
+            match:
+                Username: 'sip:us@127.0.0.1'
+                Domain: 'sip:them@127.0.0.1:5061'
+                Status: 'Rejected'
+        count: '1'
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_outbound_authenticator_digest'
+        - asterisk: 'res_pjsip_outbound_registration'
+    tags:
+        - pjsip
