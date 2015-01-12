@@ -33,8 +33,6 @@ properties:
         - asterisk : app_echo
     tags:
         - ARI
-    # Expect test to fail until ASTERISK-24637 is resolved.
-    expected-result: False
 
 test-modules:
     test-object:
