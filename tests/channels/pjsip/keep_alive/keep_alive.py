@@ -67,6 +67,19 @@ class KeepAliveFactory(protocol.ClientFactory):
         self.test_object.stop_reactor()
 
 
+def total_seconds(td):
+    """Since Python 2.6 doesn't contain total_seconds, we implement its
+       equivalent here.
+
+    Keyword Arguments:
+    td -- the timedelta object
+
+    Returns:
+    The total number of seconds in the timedelta object
+    """
+    return float(td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
+
+
 class KeepAliveReceiver(object):
     """A pluggable module for verifying the keep_alive_interval option"""
 
@@ -103,7 +116,7 @@ class KeepAliveReceiver(object):
             self.test_object.set_passed(False)
             return result
 
-        deltas = [round((j[0] - i[0]).total_seconds()) for i, j in
+        deltas = [round(total_seconds(j[0] - i[0])) for i, j in
                   zip(received_packets[:-1], received_packets[1:])]
         if not all([d == 2 for d in deltas]):
             LOGGER.warn('Failed to get expected deltas between keep-alives')
