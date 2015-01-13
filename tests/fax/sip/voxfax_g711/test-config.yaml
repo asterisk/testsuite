@@ -9,6 +9,11 @@ testinfo:
 properties:
     minversion: '11.0.0'
     dependencies:
-        - asterisk: 'app_dial'
+        - python : 'twisted'
+        - python : 'starpy'
+        - custom : 'fax'
+        - asterisk: 'app_userevent'
+        - asterisk: 'chan_sip'
     tags:
+        - fax
         - hangup

@@ -13,9 +13,12 @@ testinfo:
 properties:
     minversion: '1.8.0.0'
     dependencies:
-        - app : 'bash'
-        - app : 'asttest'
+        - python : 'twisted'
+        - python : 'starpy'
         - custom : 'fax'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_userevent'
+        - asterisk: 'chan_sip'
     tags:
         - fax
         - fax_passthrough

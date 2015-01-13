@@ -65,6 +65,11 @@ properties:
     dependencies:
         - sipp :
             version : 'v3.0'
+        - python : 'twisted'
+        - python : 'starpy'
+        - custom : 'fax'
+        - asterisk: 'app_userevent'
+        - asterisk: 'chan_sip'
     tags:
         - SIP
         - fax
