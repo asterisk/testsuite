@@ -11,6 +11,7 @@ tests:
     - dir: 'chanspy'
     - dir: 'queues'
     - dir: 'directed_pickup'
+    - dir: 'macro'
     - test: 'mixmonitor'
     - test: 'mixmonitor_audiohook_inherit'
     - test: 'mixmonitor_func'

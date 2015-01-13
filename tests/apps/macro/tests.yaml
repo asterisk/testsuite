@@ -1,0 +1,6 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'park_timeout_inside'
+    - test: 'park_timeout_outside'
+    - test: 'redirect_inside'
+    - test: 'redirect_outside'
