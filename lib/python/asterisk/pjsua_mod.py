@@ -113,7 +113,7 @@ class PJsua(object):
         self.lib = None
         self.num_regs = 0
         self.num_accts = 0
-        self.ami = None
+        self.ami_connected = 0
         self.callback_module = instance_config['callback_module']
         self.callback_method = instance_config['callback_method']
 
@@ -124,7 +124,13 @@ class PJsua(object):
         We use AMI connection as the signal to start creating PJSUA accounts
         and starting PJLIB.
         """
-        self.ami = ami
+        self.ami_connected += 1
+        if (self.ami_connected < len(self.test_object.ami)):
+            LOGGER.info("{0} ami connected. Waiting for "
+                        "{1}".format(self.ami_connected,
+                                     len(self.test_object.ami)))
+            return
+
         self.lib = pj.Lib()
         try:
             self.lib.init()
