@@ -194,5 +194,9 @@ properties:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_echo'
+        - asterisk: 'app_playback'
+        - asterisk: 'app_senddtmf'
     tags:
         - bridge

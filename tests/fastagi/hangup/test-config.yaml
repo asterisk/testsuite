@@ -12,5 +12,12 @@ properties:
         - app : 'python'
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_echo'
+        - asterisk: 'app_playback'
+        - asterisk: 'app_senddtmf'
+        - asterisk: 'app_talkdetect'
+        - asterisk: 'func_global'
+        - asterisk: 'res_agi'
     tags:
         - AGI

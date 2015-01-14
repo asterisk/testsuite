@@ -237,6 +237,14 @@ properties:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_playback'
+        - asterisk: 'app_record'
+        - asterisk: 'app_senddtmf'
+        - asterisk: 'app_talkdetect'
+        - asterisk: 'app_userevent'
+        - asterisk: 'chan_sip'
+        - asterisk: 'func_channel'
     tags:
         - bridge
         - parking

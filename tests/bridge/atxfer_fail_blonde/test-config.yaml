@@ -73,7 +73,9 @@ properties:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'
         - python : 'starpy'
-        - asterisk : 'chan_sip'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_echo'
+        - asterisk: 'chan_sip'
     tags:
         - bridge
     testconditions:

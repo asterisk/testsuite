@@ -32,5 +32,7 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'chan_sip'
     tags:
         - bridge

@@ -96,6 +96,9 @@ properties:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'chan_sip'
+        - asterisk: 'res_parking'
     tags:
         - bridge
         - parking

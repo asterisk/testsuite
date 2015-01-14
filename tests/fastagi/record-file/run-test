@@ -38,7 +38,7 @@ class FastAGIRecordFileTest:
 
         self.ast1 = Asterisk(base=workingdir)
         self.ast1.install_configs("%s/configs/ast1" % (testdir))
-	self.audio_file = "%s/talking.ulaw" % (workingdir)
+        self.audio_file = "%s/talking.ulaw" % (workingdir)
 
     def on_record_failure(self, reason):
         if os.path.exists(self.audio_file):
@@ -97,9 +97,9 @@ class FastAGIRecordFileTest:
             if self.passed[t] is False:
                 self.overall_result = False
 
-	if self.overall_result is True:
+        if self.overall_result is True:
             print "Success"
-	else:
+        else:
             print "Failed"
 
     def stop_reactor(self):
