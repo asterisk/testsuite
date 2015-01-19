@@ -2,6 +2,7 @@
 tests:
     - test: 'handle_options_request'
     - test: 'incoming_calls_without_auth'
+    - test: 'incoming_call_on_second_transport'
     - dir: 'basic_calls'
     - dir: 'sdp_offer_answer'
     - test: 'srtp_negotiation'
