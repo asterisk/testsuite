@@ -1,4 +1,5 @@
 tests:
+    - test: 'error'
     - test: 'happy'
     - test: 'unhappy'
     - test: 'hangup'
