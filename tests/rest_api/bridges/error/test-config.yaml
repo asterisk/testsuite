@@ -1,0 +1,48 @@
+testinfo:
+    summary: Test for verifying that posts to the 'bridges' endpoint fails when expected.
+    description: |
+    The following combinations of variable states are the expected failure conditions:
+    Case AD:  name/none, type/different
+    Case CD:  name/same, type/different
+    Case DA:  name/different, type/none
+    Case DB:  name/different, type/empty
+    Case DC:  name/different, type/same
+    Case DD:  name/different, type/different
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+test-object-config:
+    stop-on-end: False
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            callback:
+                module: error
+                method: on_start
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+        - asterisk : res_ari_bridges
+    tags:
+        - ARI
