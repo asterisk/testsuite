@@ -1,0 +1,35 @@
+testinfo:
+    summary: 'Tests that Asterisk cleans up properly when incompatible codecs are offered.'
+    description: |
+        'Asterisk has an endpoint configured that only accepts G.722 audio.
+        A SIPp scenario places an offer with only ulaw and alaw in it. We ensure that
+        Asterisk responds with a 488.
+
+        The test also uses the file-descriptors test condition to ensure that
+        we do not leak any RTP ports.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-488.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'echo'}}
+
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+        - asterisk: 'res_pjsip_sdp_rtp'
+    tags:
+        - pjsip
+    testconditions:
+        -
+            name: 'file-descriptors'
