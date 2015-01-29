@@ -1,0 +1,5 @@
+tests:
+    - test: 'non_stasis_app'
+    - test: 'non_stasis_bridge'
+    - test: 'same_stasis_app'
+    - test: 'different_stasis_app'
