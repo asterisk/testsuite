@@ -1,0 +1,51 @@
+testinfo:
+    summary: "Ensure that an ill-timed reinvite does not result in a stuck channel"
+    description: |
+        'Asterisk originates a call to a Local channel that runs Echo. The other half of
+        the local channel is placed into the dialplan and calls a SIPp scenario. The SIPp
+        scenario answers the call and then performs a blind transfer to an extension that
+        immediately hangs up. The SIPp scenario, upon receiving a NOTIFY that the blind
+        transfer has failed, sends a reinvite to Asterisk. Asterisk should respond to this
+        reinvite with a 200 OK and then immediately send a BYE. The channel test condition
+        is used to ensure that there are no active channels once the test concludes.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: sipp.SIPpTestCase
+    modules:
+        -
+            config-section: originator-config
+            typename: pluggable_modules.Originator
+
+sipp-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'transferer.xml', '-i': '127.0.0.1', '-p': '5061' }}
+
+originator-config:
+    channel: 'Local/echo@default'
+    context: 'default'
+    exten: 'call-sipp'
+    priority: '1'
+    trigger: 'scenario_start'
+    scenario-name: 'transferer.xml'
+
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+        - asterisk: 'res_pjsip_refer'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_echo'
+    tags:
+        - pjsip
+    testconditions:
+        -
+            name: 'channels'
