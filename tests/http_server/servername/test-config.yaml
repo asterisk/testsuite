@@ -1,0 +1,20 @@
+testinfo:
+    summary: Tests the http-server 'servername' property.
+    description: |
+        This test connects as a client to a running instance of the asterisk
+        http-server. After making an arbitrary request, the test parses the
+        response headers to verify the value returned in the 'Server' header
+        matches the expected value. The expected values that are tested follow
+        the three possible logic paths: the default value when nothing is
+        provided through configuration, a configured value that is non-empty
+        and a configured value that is empty/null.
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - python : twisted
+        - python : starpy
+        - python : requests
+    tags:
+        - HTTP_SERVER
+        - configuration

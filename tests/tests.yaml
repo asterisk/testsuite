@@ -31,3 +31,4 @@ tests:
     - dir: 'rest_api'
     - dir: 'hep'
     - dir: 'realtime'
+    - dir: 'http_server'
