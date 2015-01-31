@@ -1,0 +1,17 @@
+testinfo:
+    summary: 'Test SDP codec attribute offer/answer and passthrough'
+    description: |
+        This tests SDP codec attribute offer/answer and passthrough. It ensures that attributes
+        that are offered are answered accordingly and that attributes are passed through to a called
+        party.
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_session'
+        - asterisk : 'chan_pjsip'
+    tags:
+        - pjsip
