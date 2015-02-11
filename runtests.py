@@ -398,11 +398,13 @@ class TestSuite:
                 if t.test_config.forced_version is not None:
                     print "--- --> Forced Asterisk Version: %s" % \
                         (str(t.test_config.forced_version))
-                print "--- --> Minimum Version: %s (%s)" % \
-                    (str(t.test_config.minversion), str(t.test_config.minversion_check))
+                print ("--- --> Minimum Version: %s (%s)" %
+                       (", ".join([str(v) for v in t.test_config.minversion]),
+                        t.test_config.minversion_check))
                 if t.test_config.maxversion is not None:
-                    print "--- --> Maximum Version: %s (%s)" % \
-                        (str(t.test_config.maxversion), str(t.test_config.maxversion_check))
+                    print ("--- --> Maximum Version: %s (%s)" %
+                           (", ".join([str(v) for v in t.test_config.maxversion]),
+                            t.test_config.maxversion_check))
                 for f in t.test_config.features:
                     print "--- --> Version Feature: %s - %s" % (f, str(t.test_config.feature_check[f]))
                 print "--- --> Tags: %s" % (t.test_config.tags)
