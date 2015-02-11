@@ -156,6 +156,7 @@ class FastAGIDatabaseTest(TestCase):
         # if self.passed["Put"] is None, not one test has completed yet
         # and we should wait for the timeout.
         if self.passed["Put"] is not None:
+            self.agi.finish()
             self.stop_reactor()
             for test in self.passed:
                 if self.passed[test] is False:

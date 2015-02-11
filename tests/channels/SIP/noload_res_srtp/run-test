@@ -23,6 +23,7 @@ class SIPCallTest(TestCase):
         self.connected_chan2 = False
         self.connected_no_srtp1 = False
         self.connected_no_srtp2 = False
+        self.agis = []
 
         # Create one AGI server
         # Will call fastagi_connect() once an AGI connection is established.
@@ -58,13 +59,17 @@ class SIPCallTest(TestCase):
 
             if self.connected_chan1 and self.connected_no_srtp1 and self.connected_chan2 and self.connected_no_srtp2:
                 print "Test passed"
+                for a in self.agis:
+                    a.finish()
+                self.agis = []
                 self.passed = True
-                reactor.stop()
+                self.stop_reactor()
             # Hold the AGI connection until the reactor times out
             # so the other side has a chance to get its test result.
             ## Drop the AGI connection
             #agi.finish()
 
+        self.agis.append(agi)
         agi.getVariable("TEST_RESULT").addCallback(get_test_result)
 
     def stop_asterisk(self):
@@ -78,9 +83,8 @@ class SIPCallTest(TestCase):
 
 def main():
     test = SIPCallTest()
-    test.start_asterisk()
     reactor.run()
-    test.stop_asterisk()
+
     if test.passed:
         return 0
     return 1

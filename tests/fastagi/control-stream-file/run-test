@@ -38,6 +38,7 @@ class FastAGIControlStreamFileTest(TestCase):
                 self.passed = True
             else:
                 LOGGER.error("Unexpected result '%r'", result)
+            self.agi.finish()
         finally:
             self.stop_reactor()
 

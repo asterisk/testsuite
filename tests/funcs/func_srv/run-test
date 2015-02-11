@@ -68,11 +68,11 @@ class func_srv_test(TestCase):
                         # Records with the same priority are ordered randomly, so check 2/3 instead.
                         if not (r.record_num == 2 and r.match(t[2])) and not (r.record_num == 3 and r.match(t[1])):
                             print "Record #%s did not match." % r.record_num
-                            reactor.stop()
+                            self.stop_reactor()
                             return
 
             self.passed = True
-            reactor.stop()
+            self.stop_reactor()
 
     def run(self):
         TestCase.run(self)
@@ -80,9 +80,7 @@ class func_srv_test(TestCase):
 
 def main():
     test = func_srv_test()
-    test.start_asterisk()
     reactor.run()
-    test.stop_asterisk()
 
     if not test.passed:
         return 1

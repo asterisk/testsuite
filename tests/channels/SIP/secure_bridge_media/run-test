@@ -61,7 +61,7 @@ class SIPCallTest(TestCase):
             if self.connected_chan2 and self.connected_srtp2:
                 print "Test passed"
                 self.passed = True
-                reactor.stop()
+                self.stop_reactor()
 
         agi.getVariable("TEST_RESULT").addCallback(get_test_result)
 
@@ -71,9 +71,7 @@ class SIPCallTest(TestCase):
 
 def main():
     test = SIPCallTest()
-    test.start_asterisk()
     reactor.run()
-    test.stop_asterisk()
     if test.passed:
         return 0
     return 1

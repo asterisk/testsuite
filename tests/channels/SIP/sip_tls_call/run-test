@@ -96,7 +96,7 @@ class SIPTLSCallTest(TestCase):
         if self.tone1 and self.tone2:
             LOGGER.info("Both tones have matched at least once. Test PASSED.")
             self.passed = True
-            self.stop_reactor()
+            reactor.callLater(2, self.stop_reactor)
 
     def run(self):
         TestCase.run(self)

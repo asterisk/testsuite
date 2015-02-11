@@ -41,7 +41,7 @@ class func_presencestate_test(TestCase):
                 return
 
         self.passed = True
-        reactor.stop()
+        self.stop_reactor()
 
     def ami_connect(self, ami):
         self.ami[0].registerEvent("UserEvent", self.passOrFail)
@@ -54,9 +54,7 @@ class func_presencestate_test(TestCase):
 
 def main():
     test = func_presencestate_test()
-    test.start_asterisk()
     reactor.run()
-    test.stop_asterisk()
 
     if not test.passed:
         return 1
