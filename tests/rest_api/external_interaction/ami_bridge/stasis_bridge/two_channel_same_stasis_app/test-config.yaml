@@ -1,0 +1,217 @@
+testinfo:
+    summary: Bridge channels via AMI that are in the same stasis app and bridge
+    description: |
+        "This test originates a Local channel placing half ('alice') into
+        Stasis(testsuite) and the other half ('echo_alice') into Echo(). The
+        'alice' half is added to the bridge 'test_bridge'. Another Local
+        channel is originated with half ('bob') also placed into
+        Stasis(testsuite) while the other half ('echo_bob') is placed into
+        Echo(). The 'bob' half is also added to the bridge 'test_bridge'. The
+        AMI bridge action is then used to pull both 'alice' & 'bob' out of the
+        stasis app and bridge then push them both into a new non-stasis
+        bridge. The 'bob' channel half is then hung up.
+
+        This test verifies that the channels can be pulled out of the same
+        stasis app & bridge and put into a new bridge via the AMI Bridge
+        action. It also verifies that the StasisStart & StasisEnd events occur
+        for both 'alice' & 'bob' and ensures that 'alice' does not re-enter
+        Stasis when 'bob' is hung up."
+
+test-modules:
+    test-object:
+        typename: ari.AriBaseTestObject
+    modules:
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+
+pluggable-config:
+    # Create channel where the 'alice' half enters Stasis and the 'echo_alice'
+    # half enters dialplan executing Echo()
+    -
+        ami-start:
+        ari-requests:
+            method: 'post'
+            uri: 'channels/alice'
+            params:
+                endpoint: 'Local/echo@default'
+                app: 'testsuite'
+                otherChannelId: 'echo_alice'
+    # Ensure the 'alice' channel half enters Stasis. Create stasis bridge
+    # 'test_bridge' and add 'alice' to it.
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: 'testsuite'
+                args: []
+                channel:
+                    id: 'alice'
+            count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'bridges/test_bridge'
+            -
+                method: 'post'
+                uri: 'bridges/test_bridge/addChannel'
+                params:
+                    channel: 'alice'
+    # Ensure 'alice' is in a Stasis bridge. Then create channel where the 'bob'
+    # half enters Stasis and the 'echo_bob' half enters dialplan executing
+    # Echo().
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                bridge:
+                    id: 'test_bridge'
+                    channels: ['alice']
+                channel:
+                    id: 'alice'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'channels/bob'
+            params:
+                endpoint: 'Local/echo@default'
+                app: 'testsuite'
+                otherChannelId: 'echo_bob'
+    # Ensure the 'bob' channel half enters Stasis. Then add 'bob' to the same
+    # Stasis bridge as 'alice'.
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: 'testsuite'
+                args: []
+                channel:
+                    id: 'bob'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/test_bridge/addChannel'
+            params:
+                channel: 'bob'
+    # Ensure 'bob' is in the same Stasis bridge as 'alice'. Then bridge
+    # 'alice' and 'bob' using AMI.
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                bridge:
+                    id: 'test_bridge'
+                    channels: ['alice', 'bob']
+                channel:
+                    id: 'bob'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'Bridge'
+                Channel1: 'alice'
+                Channel2: 'bob'
+    # Ensure 'alice' leaves the Stasis bridge (test_bridge)
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    id: 'alice'
+            count: 1
+    # Ensure 'alice' leaves Stasis
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: 'testsuite'
+                channel:
+                    id: 'alice'
+            count: 1
+    # Ensure 'bob' leaves the Stasis bridge (test_bridge)
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    id: 'bob'
+            count: 1
+    # Ensure 'bob' leaves Stasis
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: 'testsuite'
+                channel:
+                    id: 'bob'
+            count: 1
+    # Ensure 'alice' & 'bob' enter the new bridge. Then hang up 'bob'.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: BridgeEnter
+                    UniqueID: '(alice|bob)'
+                    BridgeNumChannels: '1'
+                nomatch:
+                    Bridgeuniqueid: 'test_bridge'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: BridgeEnter
+                    UniqueID: '(alice|bob)'
+                    BridgeNumChannels: '2'
+                nomatch:
+                    Bridgeuniqueid: 'test_bridge'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'Hangup'
+                Channel: 'bob'
+    # Ensure bob is hung up.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: Hangup
+                    Uniqueid: 'bob'
+            count: 1
+    # Ensure alice is hung up (not returned to Stasis) and destroy the Stasis
+    # bridge.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: Hangup
+                    Uniqueid: 'alice'
+            count: 1
+        ari-requests:
+            method: 'delete'
+            uri: 'bridges/test_bridge'
+    # Ensure the Stasis bridge was destroyed.
+    -
+        ari-events:
+            match:
+                type: BridgeDestroyed
+                bridge:
+                    id: 'test_bridge'
+            count: 1
+        stop_test:
+
+properties:
+    minversion: '13.1.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+        - asterisk : app_echo
+    tags:
+        - ARI

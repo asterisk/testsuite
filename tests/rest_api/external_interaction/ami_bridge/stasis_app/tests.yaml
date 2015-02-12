@@ -1,7 +1,4 @@
 tests:
     - test: 'non_stasis_app'
-    - test: 'non_stasis_bridge'
-    - test: 'same_stasis_app'
-    - test: 'different_stasis_app'
     - test: 'two_channel_same_stasis_app'
     - test: 'two_channel_different_stasis_app'
