@@ -8,5 +8,6 @@ tests:
     - test: 'snoop_spy'
     - test: 'snoop_id'
     - dir: 'playback'
+    - dir: 'redirect'
     - test: 'connected_line_update'
     - test: 'originate_to_dialplan'

@@ -1,0 +1,47 @@
+testinfo:
+    summary: Test off-nominal channel redirects
+    description: |
+        This test covers issuing 'bad things' to the /redirect operation
+        of the /channels resource. That includes:
+        * Not providing a channel ID
+        * Redirecting a channel that doesn't exist
+        * Redirecting a channel to an empty destination
+        * Specifying a channel technology that doesn't support redirects
+        * Specifying a valid channel technology, but nowhere to go
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        typename: ari.AriTestObject
+        config-section: test-config
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+test-config:
+    stop-on-end: False
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+            count: 2
+            callback:
+                module: redirect_off_nominal
+                method: on_stasis_start
+
+properties:
+    minversion: '13.3.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - asterisk : res_ari_channels
+        - asterisk : app_stasis
+        - asterisk : chan_pjsip
+    tags:
+        - ARI

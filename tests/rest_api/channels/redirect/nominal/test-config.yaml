@@ -1,0 +1,37 @@
+testinfo:
+    summary: Test redirecting channels using ARI
+    description: |
+        This test covers redirecting channels using ARI. Specifically,
+        it does the following:
+        - The first Asterisk instance (ast1) acts as a call generator
+          using a Stasis application. It spawns calls to the second
+          Asterisk instance (ast2). If a call is forwarded - which is
+          detected by a Local channel entering the destination extension
+          (ast3 or ast4), it creates a new call to that server and
+          bridges it with the Local channel.
+        - The second Asterisk instance (ast2) acts as a load balancer.
+          As calls are received from ast1, it picks a server to forward
+          them to in a round-robin fashion. It then uses the /redirect
+          operation on the channels resource to forward the calls to
+          the specified server.
+        - The third and fourth Asterisk instances (ast3 and ast4)
+          receive the forwarded calls.
+        Two Stasis applications handle the test: a call generator,
+        connected to ast1, and the load balancer, connected to ast2,
+        ast3, and ast4. When the load balancer detects that all calls
+        have been forwarded to ast3 and ast4, it stops the test. A
+        total of 10 calls are processed, with 5 being forwarded to both
+        ast3 and ast4.
+
+properties:
+    minversion: '13.3.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+        - asterisk : chan_pjsip
+        - asterisk : app_stasis
+    tags:
+        - ARI

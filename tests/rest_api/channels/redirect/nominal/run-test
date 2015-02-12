@@ -1,0 +1,336 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+"""A test that verifies the redirect operation for the ARI channels resource
+
+Copyright (C) 2015, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+"""
+
+import sys
+import uuid
+import logging
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.test_case import TestCase
+from asterisk.ari import ARI, AriClientFactory
+
+LOGGER = logging.getLogger(__name__)
+
+USERPASS = ('testsuite', 'testsuite')
+
+CHANNEL_COUNT = 10
+
+
+class BaseReceiver(object):
+    """Base class for an ARI protocol receiver"""
+
+    def __init__(self, test_object):
+        """Constructor
+
+        Keyword Arguments:
+        test_object -- our TestCase instance
+        """
+        self.test_object = test_object
+
+    def on_ws_event(self, message):
+        """Handler for WebSocket events
+
+        Keyword Arguments:
+        message  -- The WS event payload
+        """
+        msg_type = message.get('type')
+        callback = getattr(self, 'handle_{0}'.format(msg_type.lower()), None)
+        if callback:
+            callback(message)
+
+    def on_ws_open(self, protocol):
+        """Handler for WebSocket Client Protocol opened
+
+        Keyword Arguments:
+        protocol -- The WS Client protocol object
+        """
+        LOGGER.debug("{0}: WebSocket connection made {1}".format(self,
+                                                                 protocol))
+        self.test_object.protocol_connected(protocol)
+
+    def on_ws_closed(self, protocol):
+        """Handler for WebSocket Client Protocol closed
+
+        :param protocol The WS Client protocol object
+        """
+        LOGGER.debug("{0}: WebSocket connection closed {1}".format(self,
+                                                                   protocol))
+
+
+class CallSpawner(BaseReceiver):
+    """A class that spawns calls and handles forwards
+
+    The call spawner originates channels to another Asterisk instance
+    and - if the channel is forwarded - deals with the Local channel
+    and re-originates to the specified destination.
+    """
+
+    def __init__(self, ast, test_object):
+        """Constructor
+
+        Keyword Arguments:
+        ast         -- our call spawning Asterisk instance
+        test_object -- our TestCase object
+        """
+        super(CallSpawner, self).__init__(test_object)
+        self.channels = []
+        self.bridges = []
+        self.redirected_channels = {}
+        self.client = ARI(ast.host, userpass=USERPASS)
+        self.factory = AriClientFactory(receiver=self,
+                                        host=ast.host,
+                                        port=8088,
+                                        apps='call_spawner',
+                                        userpass=USERPASS)
+        self.factory.connect()
+
+    def spawn_calls(self):
+        """Make me a call!"""
+        for i in xrange(0, CHANNEL_COUNT):
+            LOGGER.debug('Originating channel {0}'.format(i))
+            self.client.post('channels',
+                             endpoint='PJSIP/ast2',
+                             app='call_spawner')
+
+    def handle_channelleftbridge(self, message):
+        """ChannelLeftBridge handler
+
+        Keyword Arguments:
+        message -- the JSON message
+        """
+        bridge = message['bridge']
+        if not bridge['channels']:
+            self.client.delete('bridges', bridge['id'])
+
+    def handle_stasisend(self, message):
+        """StasisEnd handler
+
+        Keyword Arguments:
+        message -- the JSON message
+        """
+        channel_id = message['channel']['id']
+        self.channels.remove(channel_id)
+
+    def handle_stasisstart(self, message):
+        """StasisStart handler
+
+        Keyword Arguments:
+        message -- the JSON message
+        """
+        channel_id = message['channel']['id']
+        channel_name = message['channel']['name']
+        args = message['args']
+
+        # args will be:
+        # - empty if the channel was spawned and accepted
+        # - ast3 or ast4 if we should redirect the channel there
+        # - redirected if it is a Local channel created due to a call
+        #   forward being received
+        if not args:
+            LOGGER.debug('Spawned channel: {0}'.format(channel_name))
+        elif 'ast3' in args or 'ast4' in args:
+            outbound_id = str(uuid.uuid4())
+            self.redirected_channels[outbound_id] = channel_id
+
+            LOGGER.debug('Got redirect to {0}'.format(args))
+            self.client.post('channels',
+                             channelId=outbound_id,
+                             endpoint='PJSIP/{0}'.format(args[0]),
+                             app='call_spawner',
+                             appData='redirected')
+        elif 'redirected' in args:
+            bridge_id = str(uuid.uuid4())
+            self.client.post('bridges',
+                             bridgeId=bridge_id)
+            self.bridges.append(bridge_id)
+            redirect_id = self.redirected_channels[channel_id]
+
+            LOGGER.debug('Bridging redirect {0} and {1} in {2}'.format(
+                redirect_id, channel_id, bridge_id))
+            self.client.post('channels', channel_id, 'answer')
+            self.client.post('channels', redirect_id, 'answer')
+            self.client.post('bridges', 'addChannel', channel_id)
+            self.client.post('bridges', 'addChannel', redirect_id)
+
+        self.channels.append(channel_id)
+
+    def hangup_channels(self):
+        """Hang up all tracked channels"""
+
+        # We will race between the StasisEnd event being processed
+        # from a BYE from the loaded systems and our attempt to
+        # delete the channel; ignore any HTTP errors
+        self.client.set_allow_errors(True)
+        for channel in self.channels:
+            LOGGER.debug('Hanging up {0}'.format(channel))
+            self.client.delete('channels', channel)
+        self.client.set_allow_errors(False)
+        for bridge in self.bridges:
+            LOGGER.debug('Destroying bridge {0}'.format(bridge))
+            self.client.delete('bridges', bridge)
+
+
+class BalancerReceiver(BaseReceiver):
+    """A class that load balances and handles their destination
+
+    The balancer load balances in a round-robin fashion between
+    destination servers. It maintains a connection to the destination
+    servers as well to detect when all calls are placed.
+    """
+
+    def __init__(self, ast_instances, test_object):
+        """Constructor
+
+        Keyword Arguments:
+        ast_instances -- list of Asterisk instances to balance across
+        test_object   -- our TestCase object
+        """
+        super(BalancerReceiver, self).__init__(test_object)
+
+        # The channels in each Asterisk instance
+        self.channels = {'ast3': [], 'ast4': []}
+        # The ARI clients for each Asterisk instance
+        self.client_map = {}
+        # The ARI clients
+        clients = []
+        # Number of channels this has handled
+        self.channels_handled = 0
+
+        for ast_instance in ast_instances:
+            clients.append(ARI(ast_instance.host, userpass=USERPASS))
+            factory = AriClientFactory(receiver=self,
+                                       host=ast_instance.host,
+                                       port=8088,
+                                       apps='balancer',
+                                       userpass=USERPASS)
+            factory.connect()
+        self.client_map['ast2'] = clients[0]
+        self.client_map['ast3'] = clients[1]
+        self.client_map['ast4'] = clients[2]
+
+    def handle_stasisend(self, message):
+        """StasisEnd handler
+
+        Keyword Arguments:
+        message -- the JSON message
+        """
+        channel_id = message['channel']['id']
+        for c_list in self.channels.itervalues():
+            if channel_id in c_list:
+                c_list.remove(channel_id)
+        if sum(len(c_list) for c_list in self.channels.itervalues()) == 0:
+            LOGGER.info('All channels hung up')
+
+    def handle_stasisstart(self, message):
+        """StasisStart handler
+
+        Keyword Arguments:
+        message -- the JSON message
+        """
+        channel_id = message['channel']['id']
+        instance = message['args'][0]
+        client = self.client_map[instance]
+
+        if instance == 'ast2':
+            self.channels_handled += 1
+            rr_pick = self.channels_handled % 2
+            target_instance = 'ast{0}'.format(rr_pick + 3)
+            LOGGER.debug('Bouncing {0} from {1} to {2}'.format(
+                channel_id, instance, target_instance))
+            client.post('channels', channel_id, 'redirect',
+                        endpoint='PJSIP/{0}'.format(target_instance))
+            return
+
+        LOGGER.debug('Answering channel {0} on {1}'.format(
+            channel_id, instance))
+        client.post('channels', channel_id, 'answer')
+        channels = self.channels[instance]
+        channels.append(channel_id)
+
+        if all([len(chan_list) == (CHANNEL_COUNT / 2)
+                for chan_list in self.channels.itervalues()]):
+            self.test_object.set_passed(True)
+
+            LOGGER.info('All channels answered and balanced:')
+            for server, chan_list in self.channels.items():
+                LOGGER.info('Server {0}: {1}'.format(server, chan_list))
+            self.test_object.hangup_all_channels()
+
+    def hangup_channels(self):
+        """Hang up all tracked channels"""
+
+        for server, chan_list in self.channels.items():
+            for chan in chan_list:
+                self.client_map[server].delete('channels', chan)
+
+
+class RedirectTest(TestCase):
+    """A class that manages this test"""
+
+    def __init__(self):
+        """Constructor"""
+        super(RedirectTest, self).__init__()
+        self.create_asterisk(count=4)
+        self.protocols = []
+        self.spawner = None
+        self.balancer = None
+
+    def run(self):
+        """Entry point for the twisted reactor"""
+        super(RedirectTest, self).run()
+
+        # Create the ARI spawner
+        self.spawner = CallSpawner(self.ast[0], self)
+        # Create the ARI balancers
+        self.balancer = BalancerReceiver(self.ast[1:], self)
+
+    def protocol_connected(self, protocol):
+        """Called by the various BaseReceivers on protocol connection
+
+        Keyword Arguments:
+        protocol -- the twisted protocol that connected
+        """
+        self.protocols.append(protocol)
+        if len(self.protocols) == 4:
+            LOGGER.info('Spawning calls!')
+            self.spawner.spawn_calls()
+
+    def hangup_all_channels(self):
+        """Hangs up all channels in both the spawner and the balancer
+        """
+        self.balancer.hangup_channels()
+        self.spawner.hangup_channels()
+        for protocol in self.protocols:
+            protocol.transport.loseConnection()
+        self.stop_reactor()
+
+
+def main():
+    """Main entry point for the test.
+
+    Returns:
+    0 on test pass
+    1 on test failure
+    """
+
+    test = RedirectTest()
+    reactor.run()
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
