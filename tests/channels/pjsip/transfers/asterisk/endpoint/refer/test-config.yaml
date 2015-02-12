@@ -1,0 +1,36 @@
+testinfo:
+    summary:     'Test sending a REFER to another PJSIP endpoint via Transfer'
+    description: |
+        'This test takes an inbound channel from PJSIP/Alice and sends
+         it over to PJSIP endpoint Bob using the Transfer dialplan
+         application. Because Alice is answered, this is achieved using
+         a REFER request with a Refer-To header that specifies Bob's URI
+         as the destination.
+
+         The test verifies the alice scenario receives a properly
+         formatted REFER request from Asterisk with the expected URI in
+         the Refer-To header.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # IPv4 & UDP
+                - { 'key-args': {'scenario': 'alice.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+properties:
+    minversion: '13.3.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'app_transfer'
+    tags:
+        - pjsip
