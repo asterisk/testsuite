@@ -1,0 +1,309 @@
+testinfo:
+    summary: "Transfer (attended) non-Stasis app to Stasis bridge"
+    description: |
+        "Upon the kick off local channel entering into the Stasis(testsuite)
+         app, the Stasis bridge 'test_bridge' is created. A call is made from
+         the 'alice' PJSUA account and put into the Echo() app. Alice begins
+         an attended transfer by making another call that is put into the
+         Stasis(testsuite) app and then added to the 'test_bridge' stasis
+         bridge. A channel is then originated to the 'bob' PJSUA account and
+         put into the same Stasis(testsuite) app and added to the 'test_bridge'
+         stasis bridge with the second call from alice.
+
+         Alice then completes the attended transfer essentially transferring
+         the Echo() app to the Stasis bridge. Asterisk does this by creating a
+         Local channel where half masquerades into the Echo() app and the other
+         half is swapped with the channel of the second call from alice. After
+         the transfer is successful with the local replacement channel half in
+         the 'test_bridge' stasis bridge with bob, bob is hung up. This then
+         initiates the tear down of the local channels and destruction of the
+         stasis bridge.
+
+         This test verifies that a non-Stasis app can be transferred (attended)
+         to a Stasis bridge. It also verifies that the StasisStart & StasisEnd
+         events occur for the alice, bob, and local replacement channels."
+    issues:
+        - jira: 'ASTERISK-24782'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'ari.AriOriginateTestObject'
+    modules:
+        -
+            config-section: 'pjsua-config'
+            typename: 'phones.PjsuaPhoneController'
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    apps: testsuite
+    test-iterations:
+        -
+            channelId: 'dummy'
+            endpoint: 'Local/dummy@default'
+            context: 'default'
+            extension: 'echo'
+            priority: '1'
+
+pjsua-config:
+    transports:
+        -
+            name: 'local-ipv4-1'
+            bind: '127.0.0.1'
+            bindport: '5061'
+        -
+            name: 'local-ipv4-2'
+            bind: '127.0.0.1'
+            bindport: '5062'
+    accounts:
+        -
+            name: 'alice'
+            username: 'alice'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-1'
+        -
+            name: 'bob'
+            username: 'bob'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-2'
+
+pluggable-config:
+    # Upon kickoff channel entering Stasis app: create a bridge, don't add
+    # kickoff channel to bridge, instruct alice to place call into Echo().
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: 'testsuite'
+                args: ['dummy']
+                channel:
+                    id: 'dummy;2'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/test_bridge'
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'alice'
+            call_uri: 'sip:echo@127.0.0.1'
+    # Ensure alice's first channel is answered. Then instruct alice to place a
+    # call into Stasis(testsuite,test).
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Newexten'
+                    Channel: 'PJSIP/alice-.*'
+                    ChannelStateDesc: 'Up'
+                    Application: 'Echo'
+            count: 1
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'alice'
+            call_uri: 'sip:stasis@127.0.0.1'
+    # Upon alice entering the Stasis app: add the channel to the bridge and
+    # originate a call to bob.
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: 'testsuite'
+                args: ['test']
+                channel:
+                    name: 'PJSIP/alice-.*'
+            count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'bridges/test_bridge/addChannel'
+                params:
+                    channel: '{channel.id}'
+            -
+                method: 'post'
+                uri: 'channels/bob'
+                params:
+                    endpoint: 'PJSIP/bob'
+                    context: 'default'
+                    extension: 'stasis'
+                    priority: '1'
+    # Ensure alice enters the Stasis bridge.
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    name: 'PJSIP/alice-.*'
+                application: 'testsuite'
+            count: 1
+    # Upon bob entering Stasis app: add the channel to the bridge.
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: 'testsuite'
+                args: ['test']
+                channel:
+                    name: 'PJSIP/bob-.*'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/test_bridge/addChannel'
+            params:
+                channel: '{channel.id}'
+    # Ensure bob enters the Stasis bridge. Then instruct alice to perform an
+    # attended transfer. This is to transfer the remote side of the first
+    # channel which is Echo() to the remote side of the second channel which
+    # is the Stasis bridge. Essentially bob will be in the stasis bridge with a
+    # local channel that is in the Echo() app.
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    name: 'PJSIP/bob-.*'
+                application: 'testsuite'
+            count: 1
+        pjsua_phone:
+            action: 'transfer'
+            pjsua_account: 'alice'
+            transfer_type: 'attended'
+    # Ensure the attended transfer occurs with the proper info.
+    -
+        ari-events:
+            match:
+                type: BridgeAttendedTransfer
+                application: 'testsuite'
+                transferer_first_leg:
+                    name: 'PJSIP/alice-.*'
+                transferer_second_leg:
+                    name: 'PJSIP/alice-.*'
+                transferer_second_leg_bridge:
+                    id: 'test_bridge'
+                replace_channel:
+                    name: 'Local/_attended@transfer-.*'
+                result: 'Success'
+            count: 1
+    # Ensure the local channel half for the transfer that is replacing Alice's
+    # channel enters the Stasis(testsuite) application.
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: 'testsuite'
+                args: []
+                channel:
+                    name: 'Local/_attended@transfer-.*'
+                replace_channel:
+                    name: 'PJSIP/alice-.*'
+            count: 1
+    # Ensure alice leaves the Stasis bridge.
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                application: 'testsuite'
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    name: 'PJSIP/alice-.*'
+            count: 1
+    # Ensure the local channel half for the transfer enters the Stasis bridge.
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                application: 'testsuite'
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    name: 'Local/_attended@transfer-.*'
+            count: 1
+    # Ensure the alice channel exits the Stasis app. Then hang up bob.
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: 'testsuite'
+                channel:
+                    name: 'PJSIP/alice-.*'
+            count: 1
+        ami-actions:
+            action:
+               action: 'Hangup'
+               channel: '/^PJSIP/bob-.*$/'
+    # Upon hanging up bob, ensure bob leaves the bridge.
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                application: 'testsuite'
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    name: 'PJSIP/bob-.*'
+            count: 1
+    # Ensure bob exits the Stasis app.
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: 'testsuite'
+                channel:
+                    name: 'PJSIP/bob-.*'
+            count: 1
+    # Ensure the bridged local channel half used for the transfer leaves the
+    # bridge.
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                application: 'testsuite'
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    name: 'Local/_attended@transfer-.*'
+            count: 1
+    # Ensure the bridged local channel half used for the transfer exits the
+    # Stasis app. Then hang up the kickoff local channel halves and destroy
+    # the bridge.
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: 'testsuite'
+                channel:
+                    name: 'Local/_attended@transfer-.*'
+            count: 1
+        ami-actions:
+            action:
+               action: 'Hangup'
+               channel: '/^Local/dummy@default-.*;2$/'
+        ari-requests:
+            method: 'delete'
+            uri: 'bridges/test_bridge'
+
+properties:
+    minversion: '13.1.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - python : pjsua
+        - asterisk : app_stasis
+        - asterisk : app_echo
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+        - asterisk : res_pjsip
+    tags:
+        - ARI
+        - pjsip
+    # Expect test to fail until ASTERISK-24782 is resolved.
+    expected-result: False
+

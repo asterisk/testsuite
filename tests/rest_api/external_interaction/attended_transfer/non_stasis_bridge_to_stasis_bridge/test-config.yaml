@@ -1,0 +1,398 @@
+testinfo:
+    summary: "Transfer (attended) non-Stasis bridge to Stasis bridge"
+    description: |
+        "Upon the kick off local channel entering into the Stasis(testsuite)
+         app, a call is made from the 'alice' PJSUA account that executes the
+         Dial() app and calls the 'bob' PJSUA account. Once alice and bob are
+         in a non-Stasis bridge, alice begins an attended transfer by making
+         another call. The second alice channel is put into the
+         Stasis(testsuite) app, the Stasis bridge 'test_bridge' is created, and
+         the second alice channel is added to Stasis bridge. A channel is then
+         originated to the 'carol' PJSUA account and put into the same
+         Stasis(testsuite) app and added to the Stasis bridge 'test_bridge'
+         with the second alice channel.
+
+         Alice then completes the attended transfer essentially transferring
+         the non-Stasis bridge to the Stasis bridge. Asterisk does this by
+         creating a Local channel where each half is swapped in place of the
+         two alice channels. After the transfer is successful with a local
+         replacement channel half in the non-Stasis bridge with bob and another
+         in the Stasis bridge with carol, bob is hung up. This then initiates
+         the hang up of the local replacement channel half that was in the
+         non-Stasis bridge with bob and the hang up of the local replacement
+         channel half that was in the Stasis bridge with carol. Carol is then
+         hung up which initiates the hung up of the kick off local channel and
+         the destruction of the stasis bridge.
+
+         This test verifies that a non-Stasis bridge can be transferred
+         (attended) to a Stasis bridge. It also verifies that the StasisStart &
+         StasisEnd events occur for the alice(second), carol, and local
+         replacement channels."
+    issues:
+        - jira: 'ASTERISK-24782'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'ari.AriOriginateTestObject'
+    modules:
+        -
+            config-section: 'pjsua-config'
+            typename: 'phones.PjsuaPhoneController'
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    apps: testsuite
+    test-iterations:
+        -
+            channelId: 'dummy'
+            endpoint: 'Local/dummy@default'
+            context: 'default'
+            extension: 'echo'
+            priority: '1'
+
+pjsua-config:
+    transports:
+        -
+            name: 'local-ipv4-1'
+            bind: '127.0.0.1'
+            bindport: '5061'
+        -
+            name: 'local-ipv4-2'
+            bind: '127.0.0.1'
+            bindport: '5062'
+        -
+            name: 'local-ipv4-3'
+            bind: '127.0.0.1'
+            bindport: '5063'
+    accounts:
+        -
+            name: 'alice'
+            username: 'alice'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-1'
+        -
+            name: 'bob'
+            username: 'bob'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-2'
+        -
+            name: 'carol'
+            username: 'carol'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-3'
+
+pluggable-config:
+    # Upon kickoff channel entering Stasis app: create a bridge, don't add
+    # kickoff channel to bridge, instruct alice to place call to bob via the
+    # Dial() app.
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: 'testsuite'
+                args: ['dummy']
+                channel:
+                    id: 'dummy;2'
+            count: 1
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'alice'
+            call_uri: 'sip:bob@127.0.0.1'
+    # Ensure alice's first channel and bob are bridged. Then instruct alice to
+    # place another call, this time into Stasis(testsuite).
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'BridgeEnter'
+                    Channel: 'PJSIP/(alice|bob)-.*'
+                    BridgeNumChannels: '2'
+            count: 1
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'alice'
+            call_uri: 'sip:stasis@127.0.0.1'
+
+    # Upon alice entering the Stasis app: create the stasis bridge
+    # 'test_bridge', add  alice's second channel to the Stasis bridge, and
+    # originate a call to carol.
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: 'testsuite'
+                args: ['test']
+                channel:
+                    name: 'PJSIP/alice-.*'
+            count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'bridges/test_bridge'
+            -
+                method: 'post'
+                uri: 'bridges/test_bridge/addChannel'
+                params:
+                    channel: '{channel.id}'
+            -
+                method: 'post'
+                uri: 'channels/carol'
+                params:
+                    endpoint: 'PJSIP/carol'
+                    context: 'default'
+                    extension: 'stasis'
+                    priority: '1'
+    # Ensure alice's second channel enters the Stasis bridge.
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    name: 'PJSIP/alice-.*'
+                application: 'testsuite'
+            count: 1
+    # Ensure carol enters the Stasis app. Then add carol to the Stasis bridge
+    # with alice's second channel.
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: 'testsuite'
+                args: ['test']
+                channel:
+                    name: 'PJSIP/carol-.*'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/test_bridge/addChannel'
+            params:
+                channel: '{channel.id}'
+    # Ensure carol enters the Stasis bridge. Then instruct alice to perform an
+    # attended transfer. This is to transfer the remote side of the first
+    # channel which is a non-Stasis bridge to the remote side of the second
+    # channel which is a Stasis bridge. Essentially bob will be in the
+    # non-Stasis bridge, carol will be in the Stasis bridge, and the halves of
+    # a local channel will be in each thus linking the non-Stasis bridge with
+    # the Stasis bridge.
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    name: 'PJSIP/carol-.*'
+                application: 'testsuite'
+            count: 1
+        pjsua_phone:
+            action: 'transfer'
+            pjsua_account: 'alice'
+            transfer_type: 'attended'
+    # Ensure the attended transfer occurs with the proper info.
+    -
+        ari-events:
+            match:
+                type: BridgeAttendedTransfer
+                application: 'testsuite'
+                transferer_first_leg:
+                    name: 'PJSIP/alice-.*'
+                transferer_first_leg_bridge:
+                    bridge_class: 'basic'
+                transferer_second_leg:
+                    name: 'PJSIP/alice-.*'
+                transferer_second_leg_bridge:
+                    id: 'test_bridge'
+                    bridge_class: 'stasis'
+                transferee:
+                    name: 'PJSIP/bob-.*'
+                transfer_target:
+                    id: 'carol'
+                destination_type: 'link'
+                destination_link_first_leg:
+                    name: 'Local/_attended@transfer-.*;1'
+                destination_link_second_leg:
+                    name: 'Local/_attended@transfer-.*;2'
+                result: 'Success'
+            count: 1
+    # Ensure alice's first channel leaves the non-Stasis bridge.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'BridgeLeave'
+                    Channel: 'PJSIP/alice-.*'
+                nomatch:
+                    BridgeUniqueid: 'test_bridge'
+            count: 1
+    # Ensure alice's first channel is hung up.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'PJSIP/alice-.*'
+                    ConnectedLineNum: 'bob'
+            count: 1
+    # Ensure the local channel half for the transfer that is replacing alice's
+    # second channel enters the Stasis(testsuite) application.
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: 'testsuite'
+                args: []
+                channel:
+                    name: 'Local/_attended@transfer-.*;2'
+                replace_channel:
+                    name: 'PJSIP/alice-.*'
+            count: 1
+    # Ensure alice's second channel leaves the Stasis bridge.
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                application: 'testsuite'
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    name: 'PJSIP/alice-.*'
+            count: 1
+    # Ensure the local channel half for the transfer enters the Stasis bridge.
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                application: 'testsuite'
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    name: 'Local/_attended@transfer-.*;2'
+            count: 1
+    # Ensure alice's second channel exits the Stasis app. Then hang up bob.
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: 'testsuite'
+                channel:
+                    name: 'PJSIP/alice-.*'
+            count: 1
+        ami-actions:
+            action:
+               action: 'Hangup'
+               channel: '/^PJSIP/bob-.*$/'
+    # Upon hanging up bob, ensure bob leaves the non-Stasis bridge and is hung
+    # up.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'BridgeLeave'
+                    Channel: 'PJSIP/bob-.*'
+                nomatch:
+                    BridgeUniqueid: 'test_bridge'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'PJSIP/bob-.*'
+            count: 1
+    # Ensure the local channel half that was bridged with bob in the non-Stasis
+    # bridge leaves the bridge and is hung up.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'BridgeLeave'
+                    Channel: 'Local/_attended-.*;1'
+                nomatch:
+                    BridgeUniqueid: 'test_bridge'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'Local/_attended-.*;1'
+            count: 1
+    # Ensure the local channel half in Stasis bridge with carol leaves the
+    # bridge.
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                application: 'testsuite'
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    name: 'Local/_attended-.*;2'
+            count: 1
+    # Ensure the local channel half in Stasis bridge with carol exits the
+    # Stasis app. Then hang up carol.
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: 'testsuite'
+                channel:
+                    name: 'Local/_attended-.*;2'
+            count: 1
+        ari-requests:
+            method: 'delete'
+            uri: 'channels/carol'
+    # Ensure carol leaves the Stasis bridge.
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                application: 'testsuite'
+                bridge:
+                    id: 'test_bridge'
+                channel:
+                    name: 'PJSIP/carol-.*'
+            count: 1
+    # Ensure carol exits the Stasis app. Then hang up the kickoff local channel
+    # halves and destroy the Stasis bridge.
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: 'testsuite'
+                channel:
+                    name: 'PJSIP/carol-.*'
+            count: 1
+        ami-actions:
+            action:
+               action: 'Hangup'
+               channel: '/^Local/dummy@default-.*;2$/'
+        ari-requests:
+            method: 'delete'
+            uri: 'bridges/test_bridge'
+
+properties:
+    minversion: '13.1.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - python : pjsua
+        - asterisk : app_stasis
+        - asterisk : app_echo
+        - asterisk : app_dial
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+        - asterisk : res_pjsip
+    tags:
+        - ARI
+        - pjsip
+    # Expect test to fail until ASTERISK-24782 is resolved.
+    expected-result: False
+
