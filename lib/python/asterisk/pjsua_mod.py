@@ -98,7 +98,7 @@ class PJsua(object):
 
     This class will initiate PJLIB, create any configured accounts, and wait
     for the accounts to register. Once registered, this will call into user
-    code so that manipulation of the endpoints may be performed.
+    code so that manipulation of the endpoints may be performed if specified.
     """
 
     def __init__(self, instance_config, test_object):
@@ -114,8 +114,8 @@ class PJsua(object):
         self.num_regs = 0
         self.num_accts = 0
         self.ami_connected = 0
-        self.callback_module = instance_config['callback_module']
-        self.callback_method = instance_config['callback_method']
+        self.callback_module = instance_config.get('callback_module')
+        self.callback_method = instance_config.get('callback_method')
 
     def __ami_connect(self, ami):
         """
@@ -255,6 +255,10 @@ class PJsua(object):
             self.pj_accounts[name] = self.__create_account(acct)
 
     def reg_success(self):
+        if self.callback_module is None or self.callback_method is None:
+            LOGGER.error("No callback configured.")
+            self.test_object.stop_reactor()
+            return
         self.num_regs += 1
         if self.num_regs == self.num_accts:
             callback_module = __import__(self.callback_module)

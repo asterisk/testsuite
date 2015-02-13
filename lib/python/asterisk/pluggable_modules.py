@@ -837,3 +837,20 @@ class StopTestActionModule(object):
         """
         self.test_object.stop_reactor()
 PLUGGABLE_ACTION_REGISTRY.register("stop_test", StopTestActionModule)
+
+class PjsuaPhoneActionModule(object):
+    """An action module that instructs a phone to perform an action."""
+
+    def __init__(self, test_object, config):
+        """Setup the test start observer"""
+        self.test_object = test_object
+        self.module = __import__("phones")
+        self.method = config["action"]
+        self.config = config
+
+    def run(self, triggered_by, source, extra):
+        """Instruct phone to perform action"""
+        method = getattr(self.module, self.method)
+        method(self.test_object, triggered_by, source, extra, self.config)
+PLUGGABLE_ACTION_REGISTRY.register("pjsua_phone", PjsuaPhoneActionModule)
+
