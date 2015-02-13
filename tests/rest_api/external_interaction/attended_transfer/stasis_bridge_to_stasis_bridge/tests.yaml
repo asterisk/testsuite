@@ -1,0 +1,4 @@
+tests:
+    - test: 'same_stasis_app'
+    - test: 'different_stasis_app'
+

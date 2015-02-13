@@ -3,4 +3,5 @@ tests:
     - test: 'stasis_bridge_to_stasis_app'
     - test: 'non_stasis_app_to_stasis_bridge'
     - test: 'non_stasis_bridge_to_stasis_bridge'
+    - dir: 'stasis_bridge_to_stasis_bridge'
 
