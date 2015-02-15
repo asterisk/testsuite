@@ -88,8 +88,11 @@ class ForkCdrModuleBasic(CDRModule):
             (self.test_object.ast[0].base,
              self.test_object.ast[0].directories['astlogdir'], "cdrtest_local"))
 
-        if int(cdr1[0].duration) < int(cdr1[1].duration):
-            LOGGER.error("Fail: Original CDR duration shorter than forked")
+        original = int(cdr1[0].duration)
+        forked = int(cdr1[1].duration)
+        if original < forked:
+            LOGGER.error("Fail: Original CDR duration '%d' shorter than "
+                         "forked '%d'" % (original, forked))
             self.test_object.set_passed(False)
         return
 
