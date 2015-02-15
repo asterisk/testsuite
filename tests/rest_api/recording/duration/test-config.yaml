@@ -117,8 +117,8 @@ sound-file-analyzer:
         -
             trigger:
                 match:
-                        event: 'Hangup'
-                        channel: 'Local/s@default-.*'
+                    event: 'Hangup'
+                    channel: 'Local/s@default-.*'
             sound-file:
                     file-name: 'recording/the_recording.wav'
                     file-path-type: 'relative'
