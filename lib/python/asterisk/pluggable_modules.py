@@ -521,11 +521,20 @@ class SoundChecker(object):
         instance_id = config.get('id', 0)
         if ami.id != instance_id:
             return
+
         current_trigger = config['trigger']['match']
-        if current_trigger.get('channel'):
-            if not (re.match(current_trigger.get('channel'),
-                    event.get('channel'))):
+        for key, value in current_trigger.iteritems():
+            if key.lower() not in event:
+                LOGGER.debug("Condition %s not in event, returning", key)
                 return
+            if not re.match(value, event.get(key.lower())):
+                LOGGER.debug("Condition %s: %s does not match %s: %s in event",
+                             key, value, key, event.get(key.lower()))
+                return
+            else:
+                LOGGER.debug("Condition %s: %s matches %s: %s in event",
+                             key, value, key, event.get(key.lower()))
+
         ami.deregisterEvent(current_trigger.get('event'),
                             self.sound_check_start)
         self.sound_file = config['sound-file']
@@ -565,7 +574,7 @@ class SoundChecker(object):
         ami- the AMI instance used by this test
         """
         current_trigger = self.module_config[self.index]['trigger']['match']
-        trigger_id = current_trigger.get('id', 0)
+        trigger_id = self.module_config[self.index]['trigger'].get('id', 0)
         if ami.id != trigger_id:
             return
         if not current_trigger:

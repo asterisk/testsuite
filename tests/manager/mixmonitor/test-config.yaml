@@ -64,9 +64,9 @@ sound-file-analyzer:
         -
             trigger:
                 match:
-                        id: 0
-                        event: 'Hangup'
-                        channel: 'Local/s@default-.*'
+                    event: 'TestEvent'
+                    type: 'StateChange'
+                    state: 'MIXMONITOR_END'
             id: 0
             sound-file:
                     file-name: 'monitor/theRecording.wav'
@@ -84,10 +84,11 @@ sound-file-analyzer:
                             priority: '1'
 
 properties:
-    minversion: '11.0.0'
+    minversion: ['11.16.0', '13.3.0']
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk: 'app_mixmonitor'
+        - buildoption: 'TEST_FRAMEWORK'
     tags:
         - mixmonitor
