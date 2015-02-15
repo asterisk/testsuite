@@ -194,7 +194,7 @@ class AttTransferTest(TestCase):
         self.ast[0].cli_exec("core show channels")# if channels are still up for some reason, we want to know that as well
         self.lib.destroy()
         self.lib = None
-        reactor.stop()
+        self.stop_reactor()
 
 def main():
     # Run Attended Transfer Test
