@@ -106,6 +106,12 @@ class AttTransferTest(TestCase):
         transfers end_b to end_c.
         '''
 
+        # We can get a few Link/Unlink events before the transfer kicks
+        # off; don't track channels twice
+        if event['channel2'] in self.chans:
+            return
+
+        LOGGER.debug("Tracking channel %s" % event['channel2'])
         self.chans.append(event['channel2'])
         numchans = len(self.chans)
         if numchans == 1:
