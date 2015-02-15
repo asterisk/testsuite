@@ -55,6 +55,9 @@ class StartConfBridgeState(ConfbridgeTestState):
             return
         logger.debug("Detected variable MIXMONITOR_FILENAME: %s" % event['file'])
         self.test_case.set_recording_file("%s.wav" % event['file'])
+        if self.test_case.expected_events['channelhungup']:
+            self.test_case.confbridge_ended()
+
 
     def handle_confbridge_join_event(self, ami, event):
         """ ConfBridgeJoin event handler """
@@ -160,11 +163,11 @@ class ConfBridgeRecording(TestCase):
         # A dictionary is used to set the parameters for each test.
         # This includes the channel to create, and, if applicable, the
         # recording file to set for the ConfBridge.
-        self._tests = [{'channel':'local/record-default@confbridge',
+        self._tests = [{'channel':'local/record_default@confbridge',
                         'file': ''},
-                {'channel': 'local/record-conf@confbridge',
+                {'channel': 'local/record_conf@confbridge',
                  'file': ''},
-                {'channel': 'local/record-func@confbridge',
+                {'channel': 'local/record_func@confbridge',
                 'file': 'confbridge_recording_func.wav'},]
         self._test_results = []
         self._current_test = 0
@@ -181,6 +184,8 @@ class ConfBridgeRecording(TestCase):
         self.expected_events['recordingfilename'] = False
         self.expected_events['confbridgeleave'] = False
         self.expected_events['confbridgeend'] = False
+        self.expected_events['channelhungup'] = False
+        self.expected_events['talkdetectiontriggered'] = False
 
     def confbridge_ended(self):
         """ Called when the confbridge channels have hung up.  This
@@ -188,6 +193,10 @@ class ConfBridgeRecording(TestCase):
         if we've recorded anything, and if we received all expected
         events from the test states.
         """
+
+        if self.expected_events['talkdetectiontriggered']:
+            return
+        self.expected_events['talkdetectiontriggered'] = True
 
         # Check that we got all the expected events
         failed_events = [e for e, v in self.expected_events.items() if not v]
@@ -201,11 +210,13 @@ class ConfBridgeRecording(TestCase):
             self._test_results.append(True)
 
         # Check the recorded file
-        logger.debug("Performing talk detection on file %s " % self._record_file[:len(self._record_file) - 4])
-        self.ami[0].originate(channel = "Local/detect_audio@talkdetect",
-            context = 'talkdetect', exten='playback', priority='1',
-            variable = {'TESTAUDIO': '"%s"' % (self._record_file[:len(self._record_file) - 4])}
-            ).addErrback(self.handle_originate_failure)
+        logger.info("Performing talk detection on file %s " % self._record_file[:len(self._record_file) - 4])
+        self.ami[0].originate(channel="Local/detect_audio@talkdetect",
+                              context='talkdetect',
+                              exten='playback',
+                              priority='1',
+                              variable={'TESTAUDIO': '"%s"' % (self._record_file[:len(self._record_file) - 4])}
+                            ).addErrback(self.handle_originate_failure)
 
     def set_recording_file(self, filename):
         """ Called by the test states when the recorded file is known """
@@ -245,9 +256,9 @@ class ConfBridgeRecording(TestCase):
         variable = {}
         if self._tests[self._current_test]['file']:
             variable["RECORD_FILE"] = self._tests[self._current_test]['file']
-        ami.originate(channel = channel,
-            context = 'caller', exten='wait', priority='1',
-            variable = variable
+        ami.originate(channel=channel,
+            context='caller', exten='wait', priority='1',
+            variable=variable
             ).addErrback(self.handle_originate_failure)
 
     def new_exten_event_handler(self, ami, event):
@@ -284,7 +295,9 @@ class ConfBridgeRecording(TestCase):
         if event['channel'] != self._confbridge_channel:
             return
         logger.debug("Hangup detected of ConfBridge channel %s" % self._confbridge_channel)
-        self.confbridge_ended()
+        self.expected_events['channelhungup'] = True
+        if self.expected_events['recordingfilename']:
+            self.confbridge_ended()
 
     def new_channel_handler(self, ami, event):
         """ Record all new non-Bridge channels.  This lets us later determine
@@ -305,6 +318,9 @@ class ConfBridgeRecording(TestCase):
             return
         if 'status' not in event or 'message' not in event:
             return
+        if self._current_test > len(self._tests):
+            return
+
         logger.debug("Received status %s: %s" % (event['status'], event['message']))
         # Note that we only want to override the test results if it Failed
         if event['status'] == 'fail':
