@@ -39,6 +39,10 @@ class BlindTransfer(TestCase):
         self.passed = False
         self.channel1 = None
         self.transfer_event_received = False
+
+        # start up the processes
+        self.start_processes()
+
         self.create_asterisk()
 
     def read_result(self):
@@ -56,8 +60,6 @@ class BlindTransfer(TestCase):
     def ami_connect(self, ami):
         TestCase.ami_connect(self, ami)
 
-        # start up the processes
-        self.start_processes()
         if AsteriskVersion() >= AsteriskVersion("12"):
             ami.registerEvent('BridgeEnter', self.bridge_enter_event_handler)
             ami.registerEvent('BlindTransfer', self.blind_transfer_event_handler)
