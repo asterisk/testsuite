@@ -24,7 +24,7 @@
       c=IN IP[media_ip_type] [media_ip]
       t=0 0
       m=audio 6002 RTP/SAVP 0
-      a=crypto:1 AES_CM_128_HMAC_SHA1_32 inline:WbTBosdVUZqEb6Htqhn+m3z7wUh4RJVR8nE15GbN
+      a=crypto:[field0]
       a=rtpmap:0 PCMU/8000
 
     ]]>

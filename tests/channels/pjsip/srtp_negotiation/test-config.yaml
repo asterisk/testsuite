@@ -3,15 +3,36 @@ testinfo:
     description: |
         'Run a SIPp scenario that tests SRTP key negotiation scenarios including:
          * nominal scenario with a single crypto offer
+           - verify AES_CM_128_HMAC_SHA1_32
+           - verify AES_CM_128_HMAC_SHA1_80
+           - verify key lifetime of 2^n, where n is within the allowed range
+           - verify key lifetime of n, where n is within the allowed range
+           - verify key lifetime of 2^n w/ MKI, where MKI is 1
+           - verify key lifetime of n w/ MKI, where MKI is 1
+           - verify no key lifetime with MKI of 1
          * nominal scenario with multiple crypto offers with varying crypto suites, first suite unsupported
          * nominal scenario with unencrypted media with extraneous crypto attribute
-         * off-nominal call rejection via missing crypto attribute
-         * off-nominal call rejection via no encryption offered (enabled on endpoint)
-         * off-nominal call rejection via unknown cryptographic suite in crypto offer
-         * off-nominal call rejection via missing suite
-         * off-nominal call rejection via missing tag
-         * off-nominal call rejection via missing key
-         * off-nominal call rejection via lifetime specified (unsupported)
+         * off-nominal calls
+           - verify declining an empty crypto attribute
+           - verify declining only a tag
+           - verify declining an invalid tag (0)
+           - verify declining an attribute with no tag
+           - verify declining a non-integer tag (FOO)
+           - verify declining an invalid tag (100000000000)
+           - verify declining an invalid crypto suite
+           - verify declining missing crypto suite
+           - verify declining missing key (complete)
+           - verify declining key with length 0
+           - verify declining half a key
+           - verify declining a key with no 'inline'
+           - verify declining a key with improperly formatted 'inline' specifier
+           - verify declining short lifetime (2^n)
+           - verify declining short lifetime (100)
+           - verify declining a non-integer lifetime
+           - verify declining unsupported MKI
+           - verify declining an empty lifetime w/ MKI
+           - verify declining an invalid MKI (no key length)
+           - verify declining an invalid MKI (non-integer)
         '
 
 test-modules:
@@ -23,18 +44,14 @@ test-object-config:
     test-iterations:
         -
             scenarios:
-                - { 'key-args': {'scenario': 'accept_nominal.xml', '-i': '127.0.0.1', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'accept_nominal.xml', '-i': '127.0.0.1', '-p': '5061', '-inf': 'accept.csv', '-m': '7'} }
                 - { 'key-args': {'scenario': 'accept_multiple_attrib_first_bad.xml', '-i': '127.0.0.1', '-p': '5062'} }
                 - { 'key-args': {'scenario': 'accept_disabled_with_attrib.xml', '-i': '127.0.0.1', '-p': '5063'} }
                 - { 'key-args': {'scenario': 'decline_no_attrib.xml', '-i': '127.0.0.1', '-p': '5064'} }
-                - { 'key-args': {'scenario': 'decline_unknown_suite.xml', '-i': '127.0.0.1', '-p': '5067'} }
-                - { 'key-args': {'scenario': 'decline_no_suite.xml', '-i': '127.0.0.1', '-p': '5068'} }
-                - { 'key-args': {'scenario': 'decline_no_tag.xml', '-i': '127.0.0.1', '-p': '5069'} }
-                - { 'key-args': {'scenario': 'decline_no_key.xml', '-i': '127.0.0.1', '-p': '5070'} }
-                - { 'key-args': {'scenario': 'decline_with_lifetime.xml', '-i': '127.0.0.1', '-p': '5071'} }
+                - { 'key-args': {'scenario': 'decline.xml', '-i': '127.0.0.1', '-p': '5067', '-inf': 'decline.csv', '-m': '20'} }
 
 properties:
-    minversion: '12.0.0'
+    minversion: '13.3.0'
     dependencies:
         - sipp :
             version : 'v3.0'

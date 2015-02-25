@@ -1,0 +1,71 @@
+testinfo:
+    summary:     'Test various inbound SDES-SRTP SDP Offer/Answer scenarios'
+    description: |
+        This test covers inbound SDP Offer/Answer scenarios. It uses three
+        scenarios, each of which have an injection file that varies the
+        crypto attribute in the SDP.
+        * srtp-invite-single-crypto: test a single crypto attribute
+          - verify AES_CM_128_HMAC_SHA1_32
+          - verify AES_CM_128_HMAC_SHA1_80
+          - verify key lifetime of 2^n, where n is within the allowed range
+          - verify key lifetime of n, where n is within the allowed range
+          - verify key lifetime of 2^n w/ MKI, where MKI is 1
+          - verify key lifetime of n w/ MKI, where MKI is 1
+          - verify no key lifetime with MKI of 1
+        * srtp-invite-double-crypto:
+          - verify two keys, with AES_CM_128_HMAC_SHA1_80 as primary and AES_CM_128_HMAC_SHA1_32 as secondary
+          - verify two keys, with AES_CM_128_HMAC_SHA1_32 as primary and AES_CM_128_HMAC_SHA1_80 as secondary
+          - verify two keys with valid lifetimes
+          - verify two keys, where the first key has an unsupported MKI and the second key has a supported MKI
+          - verify two keys, where the first key has lifetime w/o MKI and the second key has an unsupported MKI
+          - verify two keys, where the first key has lifetime w/o MKI and the second key has a supported MKI
+          - verify two keys, where the first key has an unsupported lifetime and the second key has a supported lifetime
+          - verify two keys, where the first key has an unsupported crypto suite and the second is valid
+        * srtp-invite-off-nominal-crypto:
+          - verify declining an empty crypto attribute
+          - verify declining only a tag
+          - verify declining an invalid tag (0)
+          - verify declining an attribute with no tag
+          - verify declining a non-integer tag (FOO)
+          - verify declining an invalid tag (100000000000)
+          - verify declining an invalid crypto suite
+          - verify declining missing crypto suite
+          - verify declining missing key (complete)
+          - verify declining key with length 0
+          - verify declining half a key
+          - verify declining a key with no 'inline'
+          - verify declining a key with improperly formatted 'inline' specifier
+          - verify declining short lifetime (2^n)
+          - verify declining short lifetime (100)
+          - verify declining a non-integer lifetime
+          - verify declining unsupported MKI
+          - verify declining an empty lifetime w/ MKI
+          - verify declining an invalid MKI (no key length)
+          - verify declining an invalid MKI (non-integer)
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'srtp-invite-single-crypto.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 's', '-inf': 'inject_attrib_single_nominal.csv', '-m': '7'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'srtp-invite-double-crypto.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 's', '-inf': 'inject_attrib_double_nominal.csv', '-m': '8'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'srtp-invite-off-nominal-crypto.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 's', '-inf': 'inject_attrib_single_off_nominal.csv', '-m': '20'} }
+
+properties:
+    minversion: ['11.17.0','13.3.0']
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk: 'chan_sip'
+    tags:
+        - SIP
