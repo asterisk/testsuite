@@ -1,0 +1,18 @@
+# Configuration sample for the DNS server pluggable module. The module will
+# start a local authoritative DNS server for provided zone files. This test
+# is useful for testing DNS related operations.
+
+dns-server-config:
+
+        # The port to listen on for DNS requests.
+        port: 10053
+
+        # Python style zone files.
+        python-zones:
+                -
+                        example-domain.com
+
+        # BIND style zone files.
+        bind-zones:
+                -
+                        another-example-domain.com
