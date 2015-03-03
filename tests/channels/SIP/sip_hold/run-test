@@ -39,15 +39,19 @@ class SIPHold(TestCase):
         self.sipp_phone_a_scenarios = [{'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BYPASS},
             {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BYPASS},
             {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BYPASS},
+            {'scenario':'phone_A_no_direction.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BYPASS},
             {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BRIDGE},
             {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BRIDGE},
-            {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BRIDGE},]
+            {'scenario':'phone_A.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BRIDGE},
+            {'scenario':'phone_A_no_direction.xml','-i':'127.0.0.2','-p':'5060','-inf':INJECT_FILE_BRIDGE}]
         self.sipp_phone_b_scenarios = [{'scenario':'phone_B_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BYPASS},
             {'scenario':'phone_B_IP_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BYPASS},
             {'scenario':'phone_B_IP_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BYPASS},
+            {'scenario':'phone_B_no_direction.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BYPASS},
             {'scenario':'phone_B_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BRIDGE},
             {'scenario':'phone_B_IP_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BRIDGE},
-            {'scenario':'phone_B_IP_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BRIDGE},]
+            {'scenario':'phone_B_IP_media_restrict.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BRIDGE},
+            {'scenario':'phone_B_no_direction.xml','-i':'127.0.0.3','-p':'5060','-inf':INJECT_FILE_BRIDGE}]
 
         self.passed = True
         self.moh_start_events = 0
