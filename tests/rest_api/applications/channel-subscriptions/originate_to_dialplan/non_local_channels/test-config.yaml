@@ -1,0 +1,223 @@
+testinfo:
+    summary: 'Test ARI origination of non-local channels to dialplan locations'
+    description: |
+        'This attempts to test originating non-local channels to the dialplan,
+        using all combinations of extension, context, priority, and label. The
+        originations go in the following order:
+        * Only extension specified
+        * Extension and priority specified
+        * Extension and label specified
+        * Extension, priority, and label specified
+        * Extension and numeric label specified
+        * Extension, priority, and numeric label specified
+        * All of the above repeated, this time specifying a context.
+
+        In total there are 12 originations performed. Each origination sets a
+        channel variable on the channel that specifies where we expect the
+        origination to end up. A user event is emitted from the dialplan to
+        indicate if the results meet expectations. Another user event is
+        emitted only for the last origination to indicate that the test is
+        complete and should be stopped. Additionally ensure that no ARI events
+        are received.'
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - python: autobahn.websocket
+        - python: requests
+        - python: twisted
+        - python: starpy
+        - python: pjsua
+        - asterisk: app_echo
+        - asterisk: app_userevent
+        - asterisk: res_ari_channels
+        - asterisk: res_pjsip
+    tags:
+        - ARI
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: originate-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -
+            config-section: pjsua-config
+            typename: phones.PjsuaPhoneController
+        -
+            config-section: pluggable-config
+            typename: pluggable_modules.EventActionModule
+
+pjsua-config:
+    transports:
+        -
+            name: 'local-ipv4-1'
+            bind: '127.0.0.1'
+            bindport: '5061'
+    accounts:
+        -
+            name: 'alice'
+            username: 'alice'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-1'
+
+originate-config:
+    apps: testsuite
+    test-iterations:
+        -
+            channelId: 'dummy'
+            endpoint: 'Local/dummy@default'
+            context: 'default'
+            extension: 'echo'
+            priority: '1'
+
+pluggable-config:
+    # Upon alice registering, originate the channels.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: TestEvent
+                    State: 'AOR_CONTACT_ADDED'
+                    AOR: 'alice'
+            count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'PJSIP/alice'
+                    extension: 'test'
+                body: {'variables': {'location': 'test@default:1'}}
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'PJSIP/alice'
+                    extension: 'test'
+                    priority: '3'
+                body: {'variables': {'location': 'test@default:3'}}
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'PJSIP/alice'
+                    extension: 'test'
+                    label: 'dopey'
+                body: {'variables': {'location': 'test@default:5'}}
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'PJSIP/alice'
+                    extension: 'test'
+                    priority: '5'
+                    label: 'doc'
+                body: {'variables': {'location': 'test@default:7'}}
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'PJSIP/alice'
+                    extension: 'test'
+                    label: '9'
+                body: {'variables': {'location': 'test@default:9'}}
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'PJSIP/alice'
+                    extension: 'test'
+                    priority: '5'
+                    label: '11'
+                body: {'variables': {'location': 'test@default:11'}}
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'PJSIP/alice'
+                    context: 'grumpy'
+                    extension: 'test'
+                body: {'variables': {'location': 'test@grumpy:1'}}
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'PJSIP/alice'
+                    context: 'grumpy'
+                    extension: 'test'
+                    priority: '3'
+                body: {'variables': {'location': 'test@grumpy:3'}}
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'PJSIP/alice'
+                    context: 'grumpy'
+                    extension: 'test'
+                    label: 'sleepy'
+                body: {'variables': {'location': 'test@grumpy:5'}}
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'PJSIP/alice'
+                    context: 'grumpy'
+                    extension: 'test'
+                    priority: '5'
+                    label: 'bashful'
+                body: {'variables': {'location': 'test@grumpy:7'}}
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'PJSIP/alice'
+                    context: 'grumpy'
+                    extension: 'test'
+                    label: '9'
+                body: {'variables': {'location': 'test@grumpy:9'}}
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'PJSIP/alice'
+                    context: 'grumpy'
+                    extension: 'test'
+                    priority: '5'
+                    label: '11'
+                body: {'variables': {'location': 'test@grumpy:11'}}
+    # Ensure no ARI events are received.
+    -
+        ari-events:
+            match:
+                type: '.*'
+            count: '0'
+    # Ensure we have the correct number of successful results.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'Success'
+            count: '12'
+    # Ensure we have no failed results.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'Failed'
+            count: '0'
+    # Ensure indication is received that all calls should have occurred. Then
+    # hang up the kick off dummy channel to end the test.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'TestSuiteTestEnd'
+            count: '1'
+        ari-requests:
+            method: 'delete'
+            uri: 'channels/dummy'
+

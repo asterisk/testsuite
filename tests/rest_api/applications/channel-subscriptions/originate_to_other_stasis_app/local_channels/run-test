@@ -1,0 +1,292 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+"""A test that verifies ARI app local channel subscriptions
+
+This creates two ARI apps. A local channel is created by the first app where
+half is placed into the second app and the other half is placed into the
+dialplan. This verifies that the ARI events are received by the appropriate app
+and for the appropriate channel half.
+
+Copyright (C) 2015, Digium, Inc.
+John Bigelow <jbigelow@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+"""
+
+import sys
+import logging
+
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.test_case import TestCase
+from asterisk.ari import ARI, AriClientFactory
+
+LOGGER = logging.getLogger(__name__)
+
+USERPASS = ('testsuite', 'testsuite')
+
+
+class BaseReceiver(object):
+    """Base class for an ARI protocol receiver"""
+
+    def __init__(self, test_object):
+        """Constructor
+
+        Keyword Arguments:
+        test_object -- our TestCase instance
+        """
+        self.test_object = test_object
+
+    def on_ws_event(self, message):
+        """Handler for WebSocket events
+
+        Keyword Arguments:
+        message -- The WS event payload
+        """
+        msg_type = message.get('type')
+        callback = getattr(self, 'handle_{0}'.format(msg_type.lower()), None)
+        if callback:
+            callback(message)
+
+    def on_ws_open(self, protocol):
+        """Handler for WebSocket Client Protocol opened
+
+        Keyword Arguments:
+        protocol -- The WS Client protocol object
+        """
+        LOGGER.debug("{0}: WebSocket connection made {1}".format(self,
+                                                                 protocol))
+        self.test_object.protocol_connected(protocol)
+
+    def on_ws_closed(self, protocol):
+        """Handler for WebSocket Client Protocol closed
+
+        Keyword Arguments:
+        protocol -- The WS Client protocol object
+        """
+        LOGGER.debug("{0}: WebSocket connection closed {1}".format(self,
+                                                                   protocol))
+
+
+class App(BaseReceiver):
+    """A class that originates a channel
+
+    Originates a channel to a single Asterisk instance. The app name and
+    channel id are verified of any received ARI events and the test is failed
+    if they are not what is expected.
+    """
+
+    def __init__(self, ast, test_object, app_name):
+        """Constructor
+
+        Keyword Arguments:
+        ast         -- our call originating Asterisk instance
+        test_object -- our TestCase object
+        app_name    -- our name
+        """
+        super(App, self).__init__(test_object)
+        self.app_name = app_name
+        self.channels = []
+        self.ari_events = {'channeldialplan': 0, 'stasisstart': 0}
+        self.client = ARI(ast.host, userpass=USERPASS)
+        self.factory = AriClientFactory(receiver=self,
+                                        host=ast.host,
+                                        port=8088,
+                                        apps=app_name,
+                                        userpass=USERPASS)
+        self.factory.connect()
+
+    def originate_call(self):
+        """Make me a call!"""
+        if self.test_object.originate_channel is None:
+            LOGGER.warn('ARI channel origination info not found!')
+            return
+        LOGGER.debug("{0}: Originating channel".format(self.app_name))
+        self.client.post('channels', **self.test_object.originate_channel)
+
+    def event_failure(self, message, item):
+        """Fail the test"""
+        if item == "application":
+            msg = "{0} received event {1} for {2}."
+        if item == "channelid":
+            msg = "{0} received event {1} with unexpected channel {2}."
+        LOGGER.warn(msg.format(self.app_name, message['type'], message[item]))
+        self.test_object.set_passed(False)
+        self.test_object.hangup_all_channels()
+
+    def handle_channeldialplan(self, message):
+        """ChannelDialplan handler
+
+        Keyword Arguments:
+        message -- the JSON message
+        """
+        if message['application'] != self.app_name:
+            self.event_failure(message, "application")
+            return
+        if message['channel']['id'] != \
+                self.test_object.originate_channel['otherChannelId']:
+            self.event_failure(message, "channelid")
+            return
+
+        self.ari_events[message['type'].lower()] += 1
+
+    def handle_stasisend(self, message):
+        """StasisEnd handler
+
+        Keyword Arguments:
+        message -- the JSON message
+        """
+        channel_id = message['channel']['id']
+        self.channels.remove(channel_id)
+
+    def handle_stasisstart(self, message):
+        """StasisStart handler
+
+        Keyword Arguments:
+        message -- the JSON message
+        """
+        channel_id = message['channel']['id']
+        self.channels.append(channel_id)
+        if message['application'] != self.app_name:
+            self.event_failure(message, "application")
+            return
+        if message['channel']['id'] != \
+                self.test_object.originate_channel['channelId']:
+            self.event_failure(message, "channelid")
+            return
+
+        self.ari_events[message['type'].lower()] += 1
+
+    def hangup_channels(self):
+        """Hang up all tracked channels"""
+
+        # We will race between the StasisEnd event being processed
+        # from a BYE from the loaded systems and our attempt to
+        # delete the channel; ignore any HTTP errors
+        self.client.set_allow_errors(True)
+        for channel in self.channels:
+            LOGGER.debug('Hanging up {0}'.format(channel))
+            self.client.delete('channels', channel)
+        self.client.set_allow_errors(False)
+
+
+class OriginateToDifferentApp(TestCase):
+    """A class that manages this test
+
+    This creates ARI apps and will fail the test if the number of ARI events
+    doesn't match the number of expected.
+    """
+
+    def __init__(self):
+        """Constructor"""
+        super(OriginateToDifferentApp, self).__init__()
+        self.create_asterisk(count=1)
+        self.protocols = []
+        # Name of apps to create
+        self.app_names = ('AppA', 'AppB')
+        self.tmp_app_names = None
+        # App name and app object pairs
+        self.apps = {}
+        # The application that will originate the channel.
+        self.orig_src_app = self.app_names[0]
+        # The application that the originated channel will be put into.
+        self.orig_dst_app = self.app_names[1]
+        # Channel info to originate
+        self.originate_channel = {'endpoint': 'Local/do_stuff@default',
+                                  'channelId': 'StasisHalf',
+                                  'otherChannelId': 'DpHalf',
+                                  'app': self.orig_dst_app}
+        # Expected number of ARI events each app receives.
+        self.expected = {self.app_names[0]: {'channeldialplan': 0,
+                                             'stasisstart': 0},
+                         self.app_names[1]: {'channeldialplan': 6,
+                                             'stasisstart': 1}}
+
+    def run(self):
+        """Entry point for the twisted reactor"""
+        super(OriginateToDifferentApp, self).run()
+
+        self.tmp_app_names = list(self.app_names)
+        self.tmp_app_names.reverse()
+        name = self.tmp_app_names.pop()
+        # Create the first ARI app
+        self.apps[name] = App(self.ast[0], self, name)
+
+    def protocol_connected(self, protocol):
+        """Called by the various Apps on protocol connection
+
+        This will create subsequent apps after the first and be called upon
+        protocol connection for each.
+
+        Keyword Arguments:
+        protocol -- the twisted protocol that connected
+        """
+        self.protocols.append(protocol)
+
+        # Creating the apps immediately after one another leads to a random
+        # twisted error. So we create the next app upon the connection of the
+        # previously created app.
+        try:
+            name = self.tmp_app_names.pop()
+            self.apps[name] = App(self.ast[0], self, name)
+        except IndexError:
+            pass
+
+        if len(self.protocols) != 2:
+            return
+
+        LOGGER.info('Originating call!')
+        self.apps[self.orig_src_app].originate_call()
+        reactor.callLater(10, self.hangup_all_channels)
+
+    def hangup_all_channels(self):
+        """Hangs up all channels in each app"""
+        for app in self.apps.values():
+            app.hangup_channels()
+        for protocol in self.protocols:
+            protocol.transport.loseConnection()
+        self.check_results()
+        self.stop_reactor()
+
+    def check_results(self):
+        """Check the number of ARI events received by each app
+
+        This sets a failure if the number of received events doesn't match what
+        was expected.
+        """
+        for name in self.app_names:
+            diff = [k for k in self.expected[name]
+                    if self.apps[name].ari_events[k] != self.expected[name][k]]
+            if not diff:
+                continue
+
+            self.set_passed(False)
+            for event in diff:
+                LOGGER.warn("{0} received {1} {2} events; expected " \
+                        "{3}".format(name, self.apps[name].ari_events[event],
+                                     event, self.expected[name][event]))
+        # Any previously set failures will override this.
+        self.set_passed(True)
+
+
+def main():
+    """Main entry point for the test.
+
+    Returns:
+    0 on test pass
+    1 on test failure
+    """
+
+    test = OriginateToDifferentApp()
+    reactor.run()
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

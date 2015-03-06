@@ -1,0 +1,88 @@
+testinfo:
+    summary: |
+        "Test subscriptions when originating a local channel to Stasis app and
+        dialplan."
+    description: |
+        "This test originates a Local channel placing half 'StasisHalf' into
+        Stasis(testsuite) and the other half 'DpHalf' into the dialplan where
+        it executes dialplan applications and eventually hangs up.
+
+        This test verifies that both channel halves have been subscribed to by
+        the 'testsuite' Stasis app and ARI events are received for both. It
+        ensures ChannelDialplan events occur showing the dialplan progression
+        for 'DpHalf' and a StasisStart event occurs for 'StasisHalf'."
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - python: autobahn.websocket
+        - python: requests
+        - python: twisted
+        - python: starpy
+        - asterisk: app_playback
+        - asterisk: res_ari_applications
+        - asterisk: res_ari_channels
+    tags:
+        - ARI
+
+test-modules:
+    test-object:
+        config-section: originate-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -
+            config-section: pluggable-config
+            typename: pluggable_modules.EventActionModule
+
+originate-config:
+    apps: testsuite
+    test-iterations:
+        # Originate a local channel placing half 'StasisHalf' into
+        # Stasis(testsuite) and the other half 'DpHalf' into the dialplan.
+        -
+            endpoint: 'Local/do_stuff@default'
+            channelId: 'StasisHalf'
+            otherChannelId: 'DpHalf'
+            app: 'testsuite'
+
+pluggable-config:
+    # Ensure Stasis app 'testsuite' receives ARI events for 'DpHalf' while is
+    # executes dialplan.
+    -
+        ari-events:
+            -
+                match:
+                    type: 'ChannelDialplan'
+                    application: 'testsuite'
+                    dialplan_app: 'NoOp'
+                    channel:
+                        id: 'DpHalf'
+                count: '1'
+            -
+                match:
+                    type: 'ChannelDialplan'
+                    application: 'testsuite'
+                    dialplan_app: 'Answer'
+                    channel:
+                        id: 'DpHalf'
+                count: '1'
+            -
+                match:
+                    type: 'ChannelDialplan'
+                    application: 'testsuite'
+                    dialplan_app: 'Playback'
+                    dialplan_app_data: 'silence/1'
+                    channel:
+                        id: 'DpHalf'
+                count: '1'
+    # Ensure Stasis app 'testsuite' receives the ARI StasisStart event for
+    # 'StasisHalf' when it enters.
+    -
+        ari-events:
+            match:
+                type: 'StasisStart'
+                application: 'testsuite'
+                channel:
+                    id: 'StasisHalf'
+            count: '1'
+

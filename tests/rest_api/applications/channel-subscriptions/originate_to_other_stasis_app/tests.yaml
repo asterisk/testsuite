@@ -1,0 +1,3 @@
+tests:
+    - test: 'local_channels'
+    - test: 'non_local_channels'

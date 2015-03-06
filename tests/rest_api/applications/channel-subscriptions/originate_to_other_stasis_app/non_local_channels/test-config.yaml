@@ -1,0 +1,31 @@
+testinfo:
+    summary: |
+        "Test subscriptions when originating a non-local channel to another
+        Stasis app."
+    description: |
+        "This test creates two Stasis apps each with a separate websocket and a
+        PJSIP phone 'alice'. Once both websockets are established and the phone
+        has registered, a PJSIP channel is originated from AppA with specifying
+        app AppB.
+
+        This test verifies that the 'alice' channel has been subscribed to by
+        the AppB Stasis app and AppB receives a StasisStart ARI event for the
+        channel. It also ensures AppA does not receive any of the ARI events
+        that is expected for AppB to receive."
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - python: autobahn.websocket
+        - python: requests
+        - python: twisted
+        - python: starpy
+        - python: pjsua
+        - asterisk: app_playback
+        - asterisk: res_ari_applications
+        - asterisk: res_ari_channels
+        - asterisk: res_pjsip
+    tags:
+        - ARI
+        - pjsip
+

@@ -1,8 +1,8 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 'errors'
-    - test: 'subscribe-channel'
     - dir: 'subscribe-endpoint'
     - test: 'subscribe-bridge'
     - test: 'subscribe-device-state'
     - test: 'double-subscribe-device-state'
+    - dir: 'channel-subscriptions'

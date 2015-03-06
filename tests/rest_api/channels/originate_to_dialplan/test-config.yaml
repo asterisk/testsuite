@@ -1,8 +1,8 @@
 testinfo:
-    summary: 'Test ARI origination to dialplan locations'
+    summary: 'Test ARI origination of local channels to dialplan locations'
     description: |
-        'This attempts to test originating to the dialplan, using all
-        combinations of extension, context, priority, and label. The
+        'This attempts to test originating local channels to the dialplan,
+        using all combinations of extension, context, priority, and label. The
         originations go in the following order:
         * Only extension specified
         * Extension and priority specified
@@ -12,10 +12,11 @@ testinfo:
         * Extension, priority, and numeric label specified
         * All of the above repeated, this time specifying a context.
 
-        In total there are 12 originations performed. Each origination
-        sets a channel variable on the channel that specifies where we
-        expect the origination to end up. A user event is emitted from
-        the dialplan to indicate if the results meet expectations.'
+        In total there are 12 originations performed. Each origination sets a
+        channel variable on the channel that specifies where we expect the
+        origination to end up. A user event is emitted from the dialplan to
+        indicate if the results meet expectations. Additionally ensure that no
+        ARI events are received.'
 
 properties:
     minversion: '13.2.0'
@@ -36,9 +37,8 @@ test-modules:
         typename: ari.AriOriginateTestObject
     modules:
         -
-            config-section: ami-config
-            typename: ami.AMIEventModule
-
+            config-section: pluggable-config
+            typename: pluggable_modules.EventActionModule
 
 originate-config:
     test-iterations:
@@ -111,18 +111,25 @@ originate-config:
             label: '11'
             json: {'variables': {'location': 'test@grumpy:11'}}
 
-ami-config:
+pluggable-config:
+    # Ensure no ARI events are received.
     -
-        type: 'headermatch'
-        conditions:
+        ari-events:
             match:
-                Event: 'UserEvent'
-                UserEvent: 'Success'
-        count: '12'
+                type: '.*'
+            count: '0'
     -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'UserEvent'
-                UserEvent: 'Failed'
-        count: '0'
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'Success'
+            count: '12'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'Failed'
+            count: '0'
+

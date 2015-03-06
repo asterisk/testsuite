@@ -116,6 +116,8 @@ class PJsua(object):
         self.ami_connected = 0
         self.callback_module = instance_config.get('callback_module')
         self.callback_method = instance_config.get('callback_method')
+        # Default is 4. Must be lower than PJSUA_MAX_CALLS (default is 32).
+        self.max_calls = 30
 
     def __ami_connect(self, ami):
         """
@@ -131,9 +133,11 @@ class PJsua(object):
                                      len(self.test_object.ami)))
             return
 
+        ua_cfg = pj.UAConfig()
+        ua_cfg.max_calls = self.max_calls
         self.lib = pj.Lib()
         try:
-            self.lib.init()
+            self.lib.init(ua_cfg=ua_cfg)
             self.__create_transports()
             self.lib.set_null_snd_dev()
             self.__create_accounts()

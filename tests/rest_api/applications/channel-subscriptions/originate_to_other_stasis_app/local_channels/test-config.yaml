@@ -1,0 +1,32 @@
+testinfo:
+    summary: |
+        "Test subscriptions when originating a local channel to another Stasis
+        app and dialplan."
+    description: |
+        "This test creates two Stasis apps each with a separate websocket. Once
+        both websockets are established a local channel is originated from AppA
+        with specifying app AppB. Local channel half 'StasisHalf' is placed
+        into Stasis app AppB while the other half 'DpHalf' is put into the
+        dialplan where it executes dialplan applications and eventually hangs
+        up.
+
+        This test verifies that both channel halves have been subscribed to by
+        the AppB Stasis app and AppB receives ARI events from both halves. It
+        ensures AppB receives ChannelDialplan events showing the dialplan
+        progression for 'DpHalf' and a StasisStart event for 'StasisHalf'. It
+        also ensures AppA does not receive any of the ARI events that is
+        expected for AppB to receive."
+
+properties:
+    minversion: '13.2.0'
+    dependencies:
+        - python: autobahn.websocket
+        - python: requests
+        - python: twisted
+        - asterisk: app_playback
+        - asterisk: res_ari_applications
+        - asterisk: res_ari_channels
+        - asterisk: res_pjsip
+    tags:
+        - ARI
+
