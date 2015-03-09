@@ -1,0 +1,63 @@
+testinfo:
+    summary: 'Test ordering of endpoint identifiers'
+    description: |
+        'It is possible that two or more endpoint identifiers could match
+         against an incoming call. This test makes sure that no matter what
+         order the endpoint identifier modules were loaded priority is given
+         based on the ones specified in the global endpoint_identifier_order
+         option.
+
+         It does this by starting two Asterisk instances. ast1 contains an
+         endpoint alice that calls ast2 that also has an endpoint alice
+         configured. ast2 also has configured an identify section that matches
+         on the localhost. This causes a conflict between the username and
+         ip endpoint identifiers. However, by specifying that the preferred
+         endpoint identifier order is ip,username it can be guaranteed to
+         identify the endpoint by ip and correctly choose the right endpoint.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: originator-config
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: hangup-config
+            typename: 'pluggable_modules.HangupMonitor'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    asterisk-instances: 2
+    connect-ami: True
+
+originator-config:
+    trigger: 'ami_connect'
+    channel: 'PJSIP/alice'
+    async: 'True'
+
+hangup-config:
+    ids: '0'
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '1'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'Identify'
+        requirements:
+            match:
+                result: 'pass'
+        count: '1'
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

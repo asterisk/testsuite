@@ -33,3 +33,4 @@ tests:
     - test: 'dtmf_incompatible'
     - test: 'user_eq_phone'
     - test: 'keep_alive'
+    - test: 'endpoint_identify'
