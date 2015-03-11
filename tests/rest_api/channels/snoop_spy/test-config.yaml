@@ -78,6 +78,14 @@ ari-config:
             callback:
                 module: channel_spy
                 method: on_amd_start
+        -   conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+            count: 3
+            callback:
+                module: channel_spy
+                method: on_end
 
 properties:
     minversion: '12.0.0'

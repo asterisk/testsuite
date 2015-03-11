@@ -56,5 +56,7 @@ def on_leave(ari, event, test_object):
 
 
 def on_end(ari, event, test_object):
+    ari.delete('bridges', TEST.bridge1_id)
+    ari.delete('bridges', TEST.bridge2_id)
     test_object.stop_reactor()
     return True

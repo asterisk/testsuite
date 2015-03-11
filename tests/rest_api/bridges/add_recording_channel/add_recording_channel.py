@@ -25,5 +25,6 @@ def on_start(ari, event, obj):
         # done so stop recording and remove
         ari.delete('recordings/live', 'test_adding_recording')
         ari.delete('channels', channel_id)
+        ari.delete('bridges', bridge_id)
 
     return True

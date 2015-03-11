@@ -29,6 +29,12 @@ def on_start(ari, event, test_object):
     return True
 
 
+def on_stop(ari, event, test_object):
+    LOGGER.debug("on_stop(%r)" %event)
+    ari.delete('bridges', TEST.bridge_id)
+    return True
+
+
 def on_enter(ari, event, test_object):
     channel_id = event['channel']['id']
     bridge_id = event['bridge']['id']

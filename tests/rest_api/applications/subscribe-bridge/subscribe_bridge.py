@@ -52,5 +52,6 @@ def on_channel_left_bridge(ari, event, test_object):
     # bridge-watching-app received a ChannelLeftBridge event
     assert TEST.bridge_id == event['bridge']['id']
     assert TEST.channel_id == event['channel']['id']
-    ari.delete('channels', TEST.channel_id);
+    ari.delete('channels', TEST.channel_id)
+    ari.delete('bridges', TEST.bridge_id)
     return True

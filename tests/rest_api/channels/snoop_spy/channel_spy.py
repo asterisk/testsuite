@@ -13,6 +13,7 @@ LOGGER = logging.getLogger(__name__)
 class Snoop(object):
     def __init__(self):
         self.bridge_id = None
+        self.stops = 0
 
 TEST = Snoop()
 
@@ -32,4 +33,11 @@ def on_snoop_start(ari, event, test_object):
 def on_amd_start(ari, event, test_object):
     LOGGER.debug("on_amd_start(%r)" % event)
     ari.post('bridges', TEST.bridge_id, 'addChannel', channel=event['channel']['id'])
+    return True
+
+def on_end(ari, event, test_object):
+    LOGGER.debug("on_end(%r)" % event)
+    TEST.stops += 1
+    if TEST.stops == 3:
+        ari.delete('bridges', TEST.bridge_id)
     return True
