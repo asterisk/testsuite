@@ -466,7 +466,7 @@ class Asterisk(object):
         else:
             # Schedule a kill. If we don't gracefully shut down Asterisk, this
             # will ensure that the test is stopped.
-            sched_time = 200 if self.valgrind_enabled else 5
+            sched_time = 200 if self.valgrind_enabled else 10
             self._stop_cancel_tokens.append(reactor.callLater(sched_time,
                                             __send_kill))
 
