@@ -112,6 +112,9 @@ pluggable-config:
                     Event: Hangup
                     uniqueid: 'EchoChannel'
             count: 1
+        ari-requests:
+            method: 'delete'
+            uri: 'bridges/test_bridge'
         stop_test:
 
 properties:

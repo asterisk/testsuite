@@ -81,6 +81,7 @@ class ParkRetrieveTest(TestCase):
 
             LOGGER.info("All events matched expectations. Test Passed.")
             self.set_passed(True)
+            ami.hangup(parkee)
             self.stop_reactor()
 
     def check_unparkedcall(self, ami, event):

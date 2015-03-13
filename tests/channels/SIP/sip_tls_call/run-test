@@ -95,6 +95,7 @@ class SIPTLSCallTest(TestCase):
 
         if self.tone1 and self.tone2:
             LOGGER.info("Both tones have matched at least once. Test PASSED.")
+            ami.hangup(event['channel'])
             self.passed = True
             reactor.callLater(2, self.stop_reactor)
 

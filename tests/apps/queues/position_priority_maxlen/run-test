@@ -48,9 +48,11 @@ class QueuePositionPriority(TestCase):
         TestCase.__init__(self)
         self.create_asterisk()
         self.test_run = 0
+        self.channels = []
         self.passed = False
 
     def check_position(self, ami, event):
+        self.channels.append(event['channel'])
         position = int(event.get('position'))
         if position != TEST_RUNS[self.test_run]['ExpectedPosition']:
             LOGGER.error("Queue caller %d entered at unexpected position %d. \
@@ -73,6 +75,9 @@ class QueuePositionPriority(TestCase):
         else:
             # This just so happens to be the final caller, so we're done!
             self.passed = True
+
+        for chan in self.channels:
+            ami.hangup(chan)
 
         self.stop_reactor()
 

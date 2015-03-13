@@ -23,16 +23,28 @@ class PageTest(TestCase):
 
         self.reactor_timeout = 60
         self.create_asterisk()
+        self.channels = []
 
     def ami_connect(self, ami):
         self.ami[0].registerEvent("UserEvent", self.check_amd_status_result)
+        self.ami[0].registerEvent("Newchannel", self.ami_newchannel)
         self.ami[0].originate(channel = "IAX2/127.0.0.1/1000",
                               application = "Playback",
                               data = "demo-congrats")
 
+    def ami_newchannel(self, ami, event):
+        self.channels.append(event['channel'])
+
     def check_amd_status_result(self, ami, event):
+        def __hangup_ignore(result):
+            # Ignore hangup errors - if the channel is gone, we don't care
+            return
+
         if event.get("userevent").lower() != "amdevent":
             return
+
+        for x in self.channels:
+            ami.hangup(x).addErrback(__hangup_ignore)
 
         status = event.get("status")
         logger.debug("Status of AMD is %s" % (status))

@@ -26,6 +26,10 @@ test-modules:
             minversion: '12.0.0'
             config-section: ami-config-12
             typename: 'ami.AMIEventModule'
+        -
+            minversion: '12.0.0'
+            config-section: hangup-config-12
+            typename: 'pluggable_modules.AMIChannelHangupAll'
 
 test-object-config:
     expected_events: 0
@@ -73,3 +77,13 @@ ami-config-12:
                 LocalOneChannel: 'Local/dial_bar@default-.{7}0;1'
                 LocalTwoChannel: 'Local/dial_bar@default-.{7}0;2'
         count: '1'
+
+hangup-config-12:
+    type: 'headermatch'
+    delay: 2
+    conditions:
+        match:
+            Event: 'LocalOptimizationEnd'
+            LocalOneChannel: 'Local/dial_bar@default-.{7}0;1'
+            LocalTwoChannel: 'Local/dial_bar@default-.{7}0;2'
+

@@ -296,6 +296,7 @@ properties:
         - python : twisted
         - python : starpy
         - asterisk : res_ari_channels
+        - asterisk : chan_pjsip
         - asterisk : app_echo
         - asterisk : app_userevent
     tags:
