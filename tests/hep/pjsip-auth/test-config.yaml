@@ -79,6 +79,7 @@ hep-node-config:
                     - 'From: "test1" <sip:alice-ipv4-udp@127.0.0.1>;tag=(.*)'
                     - 'To: "test" <sip:test@127.0.0.1>'
                     - 'CSeq: 1 INVITE'
+                    - 'Server: (.*)'
                     - 'Content-Length:  0'
         -
             ip_family: 2
@@ -100,6 +101,7 @@ hep-node-config:
                     - 'From: "test1" <sip:alice-ipv4-udp@127.0.0.1>;tag=(.*)'
                     - 'To: "test" <sip:test@127.0.0.1>;tag=(.*)'
                     - 'CSeq: 1 INVITE'
+                    - 'Server: (.*)'
                     - 'Contact: <sip:127.0.0.1:5060>'
                     - 'Allow: (.*)'
                     - 'Supported: 100rel, timer, replaces, norefersub'
@@ -194,6 +196,7 @@ hep-node-config:
                     - 'From: "test1" <sip:alice-ipv4-udp@127.0.0.1>;tag=(.*)'
                     - 'To: "test" <sip:test@127.0.0.1>;tag=(.*)'
                     - 'CSeq: 2 BYE'
+                    - 'Server: (.*)'
                     - 'Content-Length:  0'
 
 
@@ -202,7 +205,8 @@ properties:
     dependencies:
         - sipp :
             version : 'v3.0'
-        - asterisk : 'res_pjsip'
+        - asterisk: 'app_echo'
+        - asterisk: 'res_pjsip'
         - asterisk: 'res_hep'
         - asterisk: 'res_hep_pjsip'
         - python: 'json'
