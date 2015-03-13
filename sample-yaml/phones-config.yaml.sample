@@ -1,0 +1,195 @@
+# Configuration sample for the pluggable action module 'pjsua_phone' and the
+# pluggable module 'phones.PjsuaPhoneController'.
+#
+# Info:
+# * The initialization of phones occurs upon the 'phones.PjsuaPhoneController'
+#   pluggable module being loaded. This initiates the PJsua transports,
+#   and accounts which will register via SIP to Asterisk. Once all PJsua phones
+#   are ready, a 'PJsuaPhonesReady' UserEvent will be generated on all AMI
+#   connections. Use this event to trigger a call to a phone.
+# * Inbound calls to phones will automatically be answered unless a phone
+#   isn't ready. In that case a phone will respond with a SIP 603 message.
+# * Blind transfers will always transfer the first call to the specified
+#   transfer target.
+# * Attended transfers will always transfer the first call to the second call
+#   that a phone has.
+#
+# * The ability to control a phone from YAML is handled by the action module
+#   registered as 'pjsua_phone' in the pluggable registry. Therefore the
+#   'pluggable_modules.EventActionModule' module must be loaded.
+# * An action named 'pjsua_phone' within the EventActionModule configuration is
+#   used to control a phone from YAML.
+# * Configuration parameter requirements for the action module differ depending
+#   on the value of the action and transfer_type parameters.
+#   * action - The action the phone should perform. Values:
+#     * call - Make a call.
+#       * pjsua_account - PJsua account name that should perform the action.
+#       * call_uri - SIP URI of the call's destination.
+#     * transfer - Transfer a call.
+#       * pjsua_account - PJsua account name that should perform the action.
+#       * transfer_type - Type of transfer. Values:
+#         * blind - Blind transfer type.
+#           * transfer_uri - SIP URI of the transfer target.
+#         * attended - Attended transfer type.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: pjsua-config
+            typename: 'phones.PjsuaPhoneController'
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+
+# Both modules require the test object to have an AMI connection.
+test-object-config:
+    connect-ami: True
+
+# Create 5 phones with each bound to a unique port.
+pjsua-config:
+    transports:
+        -
+            name: 'local-ipv4-1'
+            bind: '127.0.0.1'
+            bindport: '5061'
+        -
+            name: 'local-ipv4-2'
+            bind: '127.0.0.1'
+            bindport: '5062'
+        -
+            name: 'local-ipv4-3'
+            bind: '127.0.0.1'
+            bindport: '5063'
+        -
+            name: 'local-ipv4-4'
+            bind: '127.0.0.1'
+            bindport: '5064'
+        -
+            name: 'local-ipv4-5'
+            bind: '127.0.0.1'
+            bindport: '5065'
+    accounts:
+        -
+            name: 'abraham'
+            username: 'abraham'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-1'
+        -
+            name: 'beth'
+            username: 'beth'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-2'
+        -
+            name: 'carl'
+            username: 'carl'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-3'
+        -
+            name: 'daryl'
+            username: 'daryl'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-4'
+        -
+            name: 'eugene'
+            username: 'eugene'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-5'
+
+# Control phones based on AMI/ARI events. This sample uses AMI.
+pluggable-config:
+    # Upon the 'PJsuaPhonesReady' UserEvent being received:
+    # * A call is originated from Asterisk to eugene's phone. Eugene is put
+    #   into the dialplan upon answering.
+    # * A call is made from abraham's phone and destined for beth's phone. The
+    #   call from abraham enters the dialplan at the 'beth' extension and calls
+    #   beth's phone which auto answers.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'PJsuaPhonesReady'
+            count: 1
+        # Originate a call to eugene and put into dialplan.
+        ami-actions:
+            action:
+                Action: 'Originate'
+                Channel: 'PJSIP/eugene'
+                Context: 'default'
+                Exten: 'echo'
+                Priority: '1'
+        # Abraham calls Beth.
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'abraham'
+            call_uri: 'sip:beth@127.0.0.1'
+    # Once abraham and beth are bridged, abraham blind transfers beth to the
+    # 'playback' dialplan extension.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'BridgeEnter'
+                    Channel: 'PJSIP/(abraham|beth)-.*'
+                    BridgeNumChannels: '2'
+            count: 1
+        pjsua_phone:
+            action: 'transfer'
+            pjsua_account: 'abraham'
+            transfer_type: 'blind'
+            transfer_uri: 'sip:playback@127.0.0.1'
+    # Upon abraham's call being hung up due to the transfer, a call is made
+    # from carl's phone and destined for daryl's phone.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'PJSIP/abraham-.*'
+            count: 1
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'carl'
+            call_uri: 'sip:daryl@127.0.0.1'
+    # Once carl and daryl are bridged, have carl begin an attended transfer.
+    # Carl does this by making a call to the 'playback' dialplan extension
+    # which is the transfer target.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'BridgeEnter'
+                    Channel: 'PJSIP/(carl|daryl)-.*'
+                    BridgeNumChannels: '2'
+            count: 1
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'carl'
+            call_uri: 'sip:playback@127.0.0.1'
+    # Once the playback for carl begins, carl completes the attended transfer.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'PLAYBACK'
+                    Channel: 'PJSIP/carl-.*'
+            count: 1
+        # Carl completes the transfer thus transferring (attended) daryl to
+        # the playback.
+        pjsua_phone:
+            action: 'transfer'
+            pjsua_account: 'carl'
+            transfer_type: 'attended'
+    # Wait for hang ups.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'PJSIP/carl-.*'
+            count: 2
+

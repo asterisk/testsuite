@@ -72,14 +72,13 @@ originate-config:
             priority: '1'
 
 pluggable-config:
-    # Upon alice registering, originate the channels.
+    # Upon phone being ready, originate the channels.
     -
         ami-events:
             conditions:
                 match:
-                    Event: TestEvent
-                    State: 'AOR_CONTACT_ADDED'
-                    AOR: 'alice'
+                    Event: 'UserEvent'
+                    UserEvent: 'PJsuaPhonesReady'
             count: 1
         ari-requests:
             -

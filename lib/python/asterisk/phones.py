@@ -70,6 +70,10 @@ class PjsuaPhoneController(pjsua_mod.PJsua):
             acc_cb = AccCallback()
             phone_obj.account.set_callback(acc_cb)
             LOGGER.info("%s is ready to receive calls." % name)
+        # Send a userevent out on all instances indicating that the PJSUA
+        # phones are ready.
+        for ami in self.test_object.ami:
+            ami.userEvent('PJsuaPhonesReady')
 
     def get_phone_obj(self, name=None, account=None):
         """Get PjsuaPhone object
