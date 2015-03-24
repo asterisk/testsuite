@@ -1,0 +1,136 @@
+testinfo:
+    summary:     'Tests the PJSIP rpid_immediate option'
+    description: |
+        'Tests if connected line is immediately sent back to the caller
+        before answering if rpid_immediate is enabled or not if disabled.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -
+            channel: 'Local/s@default'
+            application: 'Echo'
+
+ami-config:
+    -
+        # rpid_immediate is enabled for alice
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'NewConnectedLine'
+                Channel: 'Local/s@default-.*;2'
+                ConnectedLineName: '.*alice'
+        count: '4'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'NewConnectedLine'
+                Channel: 'Local/s@default-.*;2'
+                ConnectedLineName: 'Cfg alice'
+        requirements:
+            match:
+                ConnectedLineNum: '3456'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'NewConnectedLine'
+                Channel: 'Local/s@default-.*;2'
+                ConnectedLineName: 'Immediate alice'
+        requirements:
+            match:
+                ConnectedLineNum: '1234'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'NewConnectedLine'
+                Channel: 'Local/s@default-.*;2'
+                ConnectedLineName: 'Ringing alice'
+        requirements:
+            match:
+                ConnectedLineNum: '5678'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'NewConnectedLine'
+                Channel: 'Local/s@default-.*;2'
+                ConnectedLineName: 'Answer alice'
+        requirements:
+            match:
+                ConnectedLineNum: '9012'
+        count: '1'
+    -
+        # rpid_immediate is disabled for bob
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'NewConnectedLine'
+                Channel: 'Local/s@default-.*;2'
+                ConnectedLineName: '.*bob'
+        count: '3'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'NewConnectedLine'
+                Channel: 'Local/s@default-.*;2'
+                ConnectedLineName: 'Cfg bob'
+        requirements:
+            match:
+                ConnectedLineNum: '3456'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'NewConnectedLine'
+                Channel: 'Local/s@default-.*;2'
+                ConnectedLineName: 'Ringing bob'
+        requirements:
+            match:
+                ConnectedLineNum: '5678'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'NewConnectedLine'
+                Channel: 'Local/s@default-.*;2'
+                ConnectedLineName: 'Answer bob'
+        requirements:
+            match:
+                ConnectedLineNum: '9012'
+        count: '1'
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_echo'
+        - asterisk: 'func_callerid'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_caller_id'
+        - asterisk: 'res_pjsip_endpoint_identifier_user'
+        - asterisk: 'res_pjsip_sdp_rtp'
+        - asterisk: 'res_pjsip_session'
+    tags:
+        - pjsip
