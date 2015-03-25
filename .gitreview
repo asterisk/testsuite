@@ -1,0 +1,5 @@
+[gerrit]
+host=gerrit.asterisk.org
+port=29418
+project=testsuite.git
+
