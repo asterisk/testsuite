@@ -13,7 +13,8 @@ test-modules:
             typename: ari.WebSocketEventModule
 
 ast-config-options:
-    live_dangerously: 'yes'
+    -
+        live_dangerously: 'yes'
 
 ari-config:
     events:

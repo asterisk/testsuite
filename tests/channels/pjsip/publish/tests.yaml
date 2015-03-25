@@ -2,3 +2,4 @@
 tests:
     - test: 'asterisk_event_devicestate'
     - test: 'asterisk_event_mwi'
+    - test: 'asterisk_event_db'

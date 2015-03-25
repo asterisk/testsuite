@@ -232,8 +232,10 @@ class TestCase(object):
             num = i + 1
             LOGGER.info("Creating Asterisk instance %d" % num)
             host = "127.0.0.%d" % num
-            self.ast.append(Asterisk(base=self.testlogdir, host=host,
-                                     ast_conf_options=self.ast_conf_options))
+            ast = Asterisk(base=self.testlogdir, host=host,
+                           ast_conf_options=(self.ast_conf_options[i] if
+                                             self.ast_conf_options else None))
+            self.ast.append(ast)
             self.condition_controller.register_asterisk_instance(self.ast[i])
             # If a base configuration for this Asterisk instance has been
             # provided, install it first

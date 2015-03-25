@@ -1,0 +1,177 @@
+#!/usr/bin/env python
+# vim: sw=3 et:
+"""A test for intra-Astrisk PUBLISHing of AstDB information
+
+Copyright (C) 2011, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+"""
+
+import sys
+import logging
+
+from twisted.internet import reactor, defer
+
+sys.path.append("lib/python")
+
+from asterisk.test_case import TestCase
+
+LOGGER = logging.getLogger(__name__)
+
+
+class AsteriskEventDB(TestCase):
+    """Class that executes the test.
+    """
+
+    def __init__(self):
+        super(AsteriskEventDB, self).__init__()
+        """Constructor"""
+
+        # Override each instance's EID to something predictable, and
+        # make sure we can definitely write to the AstDB through an API
+        self.ast_conf_options = [{'entityid': '11:11:11:11:11:11',
+                                  'live_dangerously': 'yes'},
+                                 {'entityid': 'ff:ff:ff:ff:ff:ff',
+                                  'live_dangerously': 'yes'}]
+        self.create_asterisk(count=2)
+        self.connected_amis = 0
+
+    def run(self):
+        """Execute the test"""
+        super(AsteriskEventDB, self).run()
+        self.create_ami_factory(count=2)
+
+    def ami_connect(self, ami):
+        """Called on AMI connect
+        """
+        self.connected_amis += 1
+        results = []
+        LOGGER.debug("Creating shared families on instance {}".format(ami.id))
+        results.append(ami.setVar(channel=None,
+                                  variable='DB_SHARED(put,global)',
+                                  value='global_shared'))
+        results.append(ami.setVar(channel=None,
+                                  variable='DB_SHARED(put,global)',
+                                  value='filtered_shared'))
+        results.append(ami.setVar(channel=None,
+                                  variable='DB_SHARED(put,unique)',
+                                  value='unique_shared'))
+
+        # Wait until the shared families have all been successfully created
+        # before trying to update keys/values in the families
+        def_list = defer.DeferredList(results)
+        def_list.addCallback(self.set_and_check_variables)
+
+    def set_and_check_variables(self, result_list):
+        """Set the variables for the test, then check the results
+
+        Keyword Arguments:
+        result_list: A deferred list result from setting the shared families
+        """
+        if not all([success for success, result in result_list]):
+            LOGGER.error('Failed to set a variable!')
+            self.set_passed(False)
+            return
+
+        # Only proceed to check variables once both AMI instances have
+        # connected
+        if self.connected_amis != 2:
+            return
+
+        def verify_results(results):
+            """Verifies that all results from verify are successful
+
+            Keyword Arguments:
+            results: A deferred list result from verifying each AstDB variable
+            """
+            if all([success for success, result in results]):
+                self.set_passed(True)
+            else:
+                self.set_passed(False)
+            self.stop_reactor()
+
+        def verify(message, key, ami, expected):
+            """Verify a particular AMI GetVar result
+
+            Keyword Arguments:
+            message  The AMI response from GetVar
+            key      The AstDB key being verified
+            ami      The AMI instance
+            expected The expected value
+
+            Returns:
+            True if message == expected, False otherwise
+            """
+            if message != expected:
+                LOGGER.error("Instance {} got {} for {}; expected {}".format(
+                    ami.id, message, key, expected))
+                self.set_passed(False)
+                return False
+            else:
+                LOGGER.debug("Instance {} got expected {} for {}".format(
+                    ami.id, message, key))
+                return True
+
+        def check_variables():
+            """Check the propagated values.
+
+            When this is called, the values should have propagated between the
+            Asterisk instaces.
+            """
+            results = []
+
+            # Verify globally shared keys/values
+            for ami in self.ami:
+                key = 'DB(global_shared/key1)'
+                results.append(ami.getVar(None, key).addCallback(
+                    verify, key, ami, 'foo'))
+
+                key = 'DB(global_shared/key2)'
+                results.append(ami.getVar(None, key).addCallback(
+                    verify, key, ami, 'bar'))
+
+            # Verify first Asterisk instance's variables
+            key = 'DB(ff:ff:ff:ff:ff:ff/unique_shared/key)'
+            results.append(self.ami[0].getVar(None, key).addCallback(
+                verify, key, self.ami[0], 'bar'))
+
+            key = 'DB(filtered_shared/key)'
+            results.append(self.ami[0].getVar(None, key).addCallback(
+                verify, key, self.ami[0], 'foo'))
+
+            # Verify second Asterisk instance's variables
+            key = 'DB(11:11:11:11:11:11/unique_shared/key)'
+            results.append(self.ami[1].getVar(None, key).addCallback(
+                verify, key, self.ami[1], 'foo'))
+
+            key = 'DB(filtered_shared/key)'
+            results.append(self.ami[1].getVar(None, key).addCallback(
+                verify, key, self.ami[1], 'bar'))
+
+            def_list = defer.DeferredList(results)
+            def_list.addCallback(verify_results)
+
+        for i, value in enumerate(['foo', 'bar']):
+            for key in ['DB(global_shared/key{})'.format(i + 1),
+                        'DB(unique_shared/key)',
+                        'DB(filtered_shared/key)']:
+                self.ami[i].setVar(channel=None, variable=key, value=value)
+
+        # If we don't share within 3 seconds, we have a serious problem
+        # and should definitely fail...
+        reactor.callLater(3, check_variables)
+
+
+def main():
+    test = AsteriskEventDB()
+    reactor.run()
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
