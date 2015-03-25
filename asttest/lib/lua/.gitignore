@@ -1,0 +1,6 @@
+*_lua.h
+*-patched.stamp
+*.luac
+luafilesystem-1.4.2
+luasocket-2.0.2
+luaposix-5.1.4
