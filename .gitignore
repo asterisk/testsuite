@@ -1,4 +1,5 @@
 *.pyc
 asterisk-test-suite-report.xml
 /astroot
+/contrib/valgrind/suppressions.txt
 /logs
