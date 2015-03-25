@@ -1,0 +1,29 @@
+testinfo:
+    summary: 'Test handling of inbound/outbound PUBLISH requests for event "asterisk-db".'
+    description: |
+        'Two Asterisk instances are started. Both are configured to PUBLISH to each
+        other as well as handle inbound PUBLISH requests from each other for
+        event type "asterisk-db". Both instances of Asterisk create two global
+        shared families, "global_shared" and "filtered_shared", as well as a
+        single unique shared family, "unique_shared". Values are set for keys
+        in each family. Each Asterisk instance then verifies that:
+          - The "filtered_shared" family is not updated, due to being filtered out
+            by a regex in the PJSIP configuration
+          - The "global_shared" family has keys from both instances
+          - Each Asterisk instance has the "unique_shared" key/value from the other
+            Asterisk instance stored in a family corresponding to that instance's
+            EID.
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'func_db'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+        - asterisk: 'res_pjsip_outbound_publish'
+        - asterisk: 'res_pjsip_publish_asterisk'
+    tags:
+        - pjsip
+
