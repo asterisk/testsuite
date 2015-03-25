@@ -349,18 +349,28 @@ class Asterisk(object):
         self.install_configs(os.getcwd() + "/configs", deps)
         self._setup_configs()
 
-        cmd = [
-            self.ast_binary,
-            "-f", "-g", "-q", "-m", "-n",
-            "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
-        ]
+        cmd_prefix = []
 
         if os.getenv("VALGRIND_ENABLE") == "true":
             valgrind_path = test_suite_utils.which('valgrind')
             if valgrind_path:
-                cmd = [valgrind_path] + cmd
+                cmd_prefix = [
+                    valgrind_path,
+                    '--xml=yes',
+                    '--xml-file=%s' % self.get_path("astlogdir", 'valgrind.xml'),
+                    '--xml-user-comment=%s (%s)' % (
+                        os.environ['TESTSUITE_ACTIVE_TEST'], self.host)]
+                suppression_file = 'contrib/valgrind/suppressions.txt'
+                if os.path.exists(suppression_file):
+                    cmd_prefix.append('--suppressions=%s' % suppression_file)
             else:
                 LOGGER.error('Valgrind not found')
+
+        cmd = cmd_prefix + [
+            self.ast_binary,
+            "-f", "-g", "-q", "-m", "-n",
+            "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf")
+        ]
 
         # Make the start/stop deferreds - this method will return
         # the start deferred, and pass the stop deferred to the AsteriskProtocol

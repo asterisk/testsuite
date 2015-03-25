@@ -127,6 +127,7 @@ Optional (needed by specific tests):
                   $ make update
                   $ make install
             - python-twisted
+            - python-lxml
         - pjsua
             - Download and build pjproject 1.x from source
             - http://www.pjsip.org/download.htm

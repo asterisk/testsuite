@@ -20,6 +20,12 @@ import xml.dom
 import random
 import select
 
+try:
+    import lxml.etree as ET
+except:
+    # Ensure ET is defined
+    ET = None
+
 # Re-open stdout so it's line buffered.
 # This allows timely processing of piped output.
 newfno = os.dup(sys.stdout.fileno())
@@ -59,10 +65,15 @@ class TestRun:
         assert self.test_name.startswith('tests/')
         self.test_relpath = self.test_name[6:]
 
+    def stdout_print(self, msg):
+        self.stdout += msg + "\n"
+        print msg
+
     def run(self):
         self.passed = False
         self.did_run = True
         start_time = time.time()
+        os.environ['TESTSUITE_ACTIVE_TEST'] = self.test_name
         cmd = [
             "%s/run-test" % self.test_name,
         ]
@@ -71,9 +82,7 @@ class TestRun:
             cmd = ["./lib/python/asterisk/test_runner.py",
                    "%s" % self.test_name]
         if os.path.exists(cmd[0]) and os.access(cmd[0], os.X_OK):
-            msg = "Running %s ..." % cmd
-            print msg
-            self.stdout += msg + "\n"
+            self.stdout_print("Running %s ..." % cmd)
             cmd.append(str(self.ast_version).rstrip())
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
@@ -91,8 +100,7 @@ class TestRun:
                     l = p.stdout.readline()
                     if not l:
                         break
-                    print l
-                    self.stdout += l
+                    self.stdout_print(l)
             except IOError:
                 pass
             p.wait()
@@ -100,22 +108,19 @@ class TestRun:
             # Sanitize p.returncode so it's always a boolean.
             did_pass = (p.returncode == 0)
             if did_pass and not self.test_config.expect_pass:
-                msg = "Test passed but was expected to fail."
-                print msg
-                self.stdout += msg + "\n"
+                self.stdout_print("Test passed but was expected to fail.")
             if not did_pass and not self.test_config.expect_pass:
                 print "Test failed as expected."
-
-            self.__parse_run_output(self.stdout)
 
             self.passed = (did_pass == self.test_config.expect_pass)
 
             core_dumps = self._check_for_core()
             if (len(core_dumps)):
-                print "Core dumps detected; failing test"
+                self.stdout_print("Core dumps detected; failing test")
                 self.passed = False
                 self._archive_core_dumps(core_dumps)
 
+            self._process_valgrind()
             self._process_ref_debug()
 
             if not self.passed:
@@ -130,6 +135,7 @@ class TestRun:
                 except:
                     print "Unable to clean up directory for test %s (non-fatal)" % self.test_name
 
+            self.__parse_run_output(self.stdout)
             print 'Test %s %s\n' % (cmd, 'timedout' if timedout else 'passed' if self.passed else 'failed')
 
         else:
@@ -189,6 +195,33 @@ class TestRun:
                                    'run_%d' % run_num)
         return (run_num, run_dir, archive_dir)
 
+    def _process_valgrind(self):
+        (run_num, run_dir, archive_dir) = self._find_run_dirs()
+        if (run_num == 0):
+            return
+        if not ET:
+            return
+
+        i = 1
+        while os.path.isdir(os.path.join(run_dir, 'ast%d/var/log/asterisk' % i)):
+            ast_dir = "%s/ast%d/var/log/asterisk" % (run_dir, i)
+            valgrind_xml = os.path.join(ast_dir, 'valgrind.xml')
+            valgrind_txt = os.path.join(ast_dir, 'valgrind-summary.txt')
+
+            # All instances either use valgrind or not.
+            if not os.path.exists(valgrind_xml):
+                return
+
+            dom = ET.parse(valgrind_xml)
+            xslt = ET.parse('contrib/valgrind/text-summary.xsl')
+            transform = ET.XSLT(xslt)
+            txt = transform(dom)
+            self.stdout_print("%s" % txt)
+            with open(valgrind_txt, 'a') as txtfile:
+                txtfile.write("%s" % txt)
+                txtfile.close()
+            i += 1
+
     def _process_ref_debug(self):
         (run_num, run_dir, archive_dir) = self._find_run_dirs()
         if (run_num == 0):
@@ -216,7 +249,7 @@ class TestRun:
                                           stdout=dest_file,
                                           stderr=subprocess.STDOUT)
                 except Exception, e:
-                    print "Exception occurred while processing REF_DEBUG"
+                    self.stdout_print("Exception occurred while processing REF_DEBUG")
                 finally:
                     dest_file.close()
                 if res != 0:
@@ -228,20 +261,26 @@ class TestRun:
                         os.path.join(dest_dir, "refs.txt"))
                     hardlink_or_copy(refs_in,
                         os.path.join(dest_dir, "refs"))
-                    print "REF_DEBUG identified leaks, mark test as failure"
+                    self.stdout_print("REF_DEBUG identified leaks, mark test as failure")
                     self.passed = False
             i += 1
+
+    def _archive_files(self, src_dir, dest_dir, *filenames):
+        for filename in filenames:
+            try:
+                srcfile = os.path.join(src_dir, filename)
+                if os.path.exists(srcfile):
+                    hardlink_or_copy(srcfile, os.path.join(dest_dir, filename))
+            except Exception, e:
+                print "Exception occurred while archiving file '%s' to %s: %s" % (
+                    srcfile, dest_dir, e
+                )
 
     def _archive_logs(self):
         (run_num, run_dir, archive_dir) = self._find_run_dirs()
         self._archive_ast_logs(run_num, run_dir, archive_dir)
         self._archive_pcap_dump(run_dir, archive_dir)
-        if os.path.exists(os.path.join(run_dir, 'messages.txt')):
-            hardlink_or_copy(os.path.join(run_dir, 'messages.txt'),
-                             os.path.join(archive_dir, 'messages.txt'))
-        if os.path.exists(os.path.join(run_dir, 'full.txt')):
-            hardlink_or_copy(os.path.join(run_dir, 'full.txt'),
-                             os.path.join(archive_dir, 'full.txt'))
+        self._archive_files(run_dir, archive_dir, 'messages.txt', 'full.txt')
 
     def _archive_ast_logs(self, run_num, run_dir, archive_dir):
         """Archive the Asterisk logs"""
@@ -250,31 +289,13 @@ class TestRun:
             ast_dir = "%s/ast%d/var/log/asterisk" % (run_dir, i)
             dest_dir = os.path.join(archive_dir,
                                     'ast%d/var/log/asterisk' % i)
-            try:
-                hardlink_or_copy(ast_dir + "/messages.txt",
-                    dest_dir + "/messages.txt")
-                hardlink_or_copy(ast_dir + "/full.txt",
-                    dest_dir + "/full.txt")
-                if os.path.exists(ast_dir + "/mmlog"):
-                    hardlink_or_copy(ast_dir + "/mmlog",
-                        dest_dir + "/mmlog")
-            except Exception, e:
-                print "Exception occurred while archiving logs from %s to %s: %s" % (
-                    ast_dir, dest_dir, e
-                )
+            self._archive_files(ast_dir, dest_dir,
+                'messages.txt', 'full.txt', 'mmlog',
+                'valgrind.xml', 'valgrind-summary.txt')
             i += 1
 
     def _archive_pcap_dump(self, run_dir, archive_dir):
-        filename = "dumpfile.pcap"
-        src = os.path.join(run_dir, filename)
-        dst = os.path.join(archive_dir, filename)
-        if os.path.exists(src):
-            try:
-                hardlink_or_copy(src, dst)
-            except Exception, e:
-                print "Exeception occured while archiving pcap file from %s to %s: %s" % (
-                    src, dst, e
-                )
+        self._archive_files(run_dir, archive_dir, 'dumpfile.pcap')
 
     def __check_can_run(self, ast_version):
         """Check tags and dependencies in the test config."""
@@ -577,6 +598,8 @@ def main(argv=None):
         return 0
 
     if options.valgrind:
+        if not ET:
+            print "python lxml module not loaded, text summaries from valgrind will not be produced.\n"
         os.environ["VALGRIND_ENABLE"] = "true"
 
     print "Running tests for Asterisk %s ...\n" % str(ast_version)

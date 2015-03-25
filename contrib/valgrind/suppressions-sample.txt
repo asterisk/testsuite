@@ -1,0 +1,38 @@
+#
+# This is a sample valgrind suppressions file for Asterisk.
+#
+# To use this suppression file with the testsuite, copy it to:
+#   contrib/valgrind/suppressions.txt
+#
+# This is meant for use when valgrind parameters include:
+#   --show-leak-kinds=all
+#
+# Extra valgrind options are read from:
+#   ~/.valgrindrc, $VALGRIND_OPTS, ./.valgrindrc
+#
+{
+   <ast_threadstorage_get>
+   # The threadstorage for the main thread is not cleaned by exit().
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   ...
+   fun:ast_threadstorage_get
+}
+{
+   <ast_ssl_init>
+   # libasteriskssl doesn't cleanup the init items.
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:ast_ssl_init
+}
+{
+   <load_dynamic_module>
+   # dlclose is not run on modules at shutdown.
+   # This does not suppress allocations from module_load.
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:load_dynamic_module
+}
