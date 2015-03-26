@@ -1,0 +1,40 @@
+testinfo:
+    summary: 'Test that Asterisk does not handle MESSAGE retransmissions'
+    description: |
+        'A SIPp scenario sends the same SIP MESSAGE request twice. The test ensures that
+        Asterisk only attempts to process one of them. If both MESSAGEs reach the dialplan,
+        the test fails.'
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - app: 'sipp'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_messaging'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'message_retrans.xml', '-p': '5061' } }
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'MessageHandled'
+        count: '1'
