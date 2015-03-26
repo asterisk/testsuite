@@ -184,7 +184,7 @@ Build and install it.
     $ make install
 
 Check out the test suite:
-    $ svn co http://svn.digium.com/svn/testsuite/asterisk/trunk testsuite
+    $ git clone http://gerrit.asterisk.org/testsuite
     $ cd testsuite
 
 List the tests:
@@ -211,7 +211,7 @@ Optionally configure and make it:
     $ ./configure && make
 
 Check out the test suite:
-    $ svn co http://svn.digium.com/svn/testsuite/asterisk/trunk testsuite
+    $ git clone http://gerrit.asterisk.org/testsuite
     $ cd testsuite
 
 Setup the test environment:

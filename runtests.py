@@ -26,6 +26,11 @@ newfno = os.dup(sys.stdout.fileno())
 os.close(sys.stdout.fileno())
 sys.stdout = os.fdopen(newfno, 'w', 1)
 
+# Ensure logs directory exists before importing
+# anything that might use logging.
+if not os.path.isdir("logs"):
+    os.mkdir("logs")
+
 sys.path.append("lib/python")
 
 from asterisk.version import AsteriskVersion
