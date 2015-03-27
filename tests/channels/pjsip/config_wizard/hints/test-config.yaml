@@ -1,0 +1,63 @@
+testinfo:
+    summary: 'Test PJSIP Config Wizard Phone Hints'
+    description: |
+        Tests the PJSIP Config Wizard to make sure the
+        hints are properly created.
+
+properties:
+    minversion: '13.3.0'
+    dependencies:
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_config_wizard'
+
+    tags:
+        - pjsip
+
+test-modules:
+    # allow test_runner to find and run the local test
+    add-test-to-search-path: 'True'
+    add-relative-to-search-path: ['../']
+    test-object:
+        config-section: object-config
+        typename: 'AMISendTest.AMISendTest'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+object-config:
+    reactor-timeout: 15
+    ACTION: { "Action": "ShowDialPlan", "ActionID": "12345", "Context": "default_hints", "Extension": "9090" }
+
+ami-config:
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'ListDialplan'
+                    Priority: 'hint'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    Context: 'default_hints'
+                    Extension: '9090'
+                    Priority: 'hint'
+                    Application: 'PJSIP/phone1'
+                    Registrar: 'res_pjsip_config_wizard'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'ListDialplan'
+                    Priority: '1'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    Context: 'default_hints'
+                    Extension: '9090'
+                    Priority: '1'
+                    Application: 'Dial'
+                    AppData: '\${HINT}/0000'
+                    Registrar: 'res_pjsip_config_wizard'
+            count: 1
