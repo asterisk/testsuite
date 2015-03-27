@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<scenario name="Basic MESSAGE send and receive">
+  <send>
+    <![CDATA[
+
+      MESSAGE sip:test@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=z9hG4bK-24096-1-0
+      From: user <sip:sipp@[local_ip]:[local_port]>;tag=1
+      To: <sip:test@[remote_ip]:[remote_port]>
+      Call-ID: 1234567890
+      CSeq: 1 MESSAGE
+      Max-Forwards: 70
+      Expires: 3600
+      Content-Type: text/plain
+      Content-Length: 18
+
+      Watson, come here.
+
+    ]]>
+  </send>
+
+  <send>
+    <![CDATA[
+
+      MESSAGE sip:test@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=z9hG4bK-24096-1-0
+      From: user <sip:sipp@[local_ip]:[local_port]>;tag=1
+      To: <sip:test@[remote_ip]:[remote_port]>
+      Call-ID: 1234567890
+      CSeq: 1 MESSAGE
+      Max-Forwards: 70
+      Expires: 3600
+      Content-Type: text/plain
+      Content-Length: 18
+
+      Watson, come here.
+
+    ]]>
+  </send>
+
+</scenario>
