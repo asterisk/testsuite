@@ -1,0 +1,75 @@
+testinfo:
+    summary: "Verify that Hold can be intercepted"
+    description: |
+        "This test verifies that a channel that initiates a call hold
+        with the HOLD_INTERCEPT function enabled on it will have the
+        hold frame intercepted and turned into an event for ARI clients.
+        A Local channel enters the Stasis application, and the HOLD_INTERCEPT
+        function is placed on the channel. A POST /hold operation is then
+        used to simulate a call hold on the channel. The test verifies
+        that a ChannelHold event is raised with the channel initating
+        the hold. A DELETE /hold operation is then used, and a ChannelUnhold
+        event is raised with the channel initiating the unhold."
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: 'ari.AriTestObject'
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+test-object-config:
+    apps: testsuite
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            callback:
+                module: hold_intercept
+                method: on_start
+        -
+            conditions:
+                match:
+                    type: ChannelHold
+                    application: testsuite
+                    channel:
+                        name: 'Local/s@default-.*'
+            count: 1
+            callback:
+                module: hold_intercept
+                method: on_hold
+        -
+            conditions:
+                match:
+                    type: ChannelUnhold
+                    application: testsuite
+                    channel:
+                        name: 'Local/s@default-.*'
+            count: 1
+            callback:
+                module: hold_intercept
+                method: on_unhold
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : app_stasis
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+        - asterisk : func_holdintercept
+    tags:
+        - ARI
