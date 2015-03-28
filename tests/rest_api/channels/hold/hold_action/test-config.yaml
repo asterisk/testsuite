@@ -1,0 +1,101 @@
+testinfo:
+    summary: "Verify that Hold can be posted/deleted on a channel"
+    description: |
+        "This test verifies that a channel that initiates a call hold
+        will have the Hold event raised for it, and that a channel that
+        removes a call hold will have an Unhold event raised for it.
+        The test puts two Local channels into a Bridge together. When
+        both channels are in a bridge, an ARI POST /hold operation is
+        performed on the first channel. When the Hold event is received,
+        an ARI DELETE /hold operation is performed on the same channel.
+        When the Unhold event is received, the channels are removed from
+        the bridge and hung up, and the bridge is destroyed."
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: 'ari.AriTestObject'
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+test-object-config:
+    apps: testsuite
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            callback:
+                module: hold_action
+                method: on_first_start
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: ['second']
+            count: 1
+            callback:
+                module: hold_action
+                method: on_second_start
+        -
+            conditions:
+                match:
+                    type: ChannelEnteredBridge
+            count: 2
+            callback:
+                module: hold_action
+                method: on_entered_bridge
+        -
+            conditions:
+                match:
+                    type: ChannelHold
+                    application: testsuite
+                    channel:
+                        name: 'Local/s@default-.*'
+            count: 1
+            callback:
+                module: hold_action
+                method: on_hold
+        -
+            conditions:
+                match:
+                    type: ChannelUnhold
+                    application: testsuite
+                    channel:
+                        name: 'Local/s@default-.*'
+            count: 1
+            callback:
+                module: hold_action
+                method: on_unhold
+        -
+            conditions:
+                match:
+                    type: ChannelLeftBridge
+            count: 2
+            callback:
+                module: hold_action
+                method: on_left_bridge
+
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : app_stasis
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+    tags:
+        - ARI
