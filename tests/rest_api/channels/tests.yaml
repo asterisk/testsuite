@@ -11,3 +11,4 @@ tests:
     - dir: 'redirect'
     - test: 'connected_line_update'
     - test: 'originate_to_dialplan'
+    - dir: 'hold'
