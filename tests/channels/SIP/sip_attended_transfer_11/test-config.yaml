@@ -1,0 +1,59 @@
+testinfo:
+    summary:     'Test SIP Attended Transfer'
+    description: |
+        'This test sets up three PJSUA accounts: Alice, Bob, and Carol. The test commences
+         as follows:
+             * Alice places a call through Asterisk to Bob.
+             * Once Alice and Bob are bridged, Alice places a call through Asterisk to Carol.
+             * Once Alice and Carol are bridged, Alice performs an attended transfer.
+             * The test ensures that Bob and Carol are bridged and that Alice is hung up.'
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: 'pjsua-config'
+            typename: 'pjsua_mod.PJsua'
+
+test-object-config:
+    connect-ami: True
+
+pjsua-config:
+    callback_module: 'attended_transfer'
+    callback_method: 'phones_registered'
+    transports:
+        -
+            name: 'local-ipv4'
+            bind: '127.0.0.1'
+            bindport: '5061'
+    accounts:
+        -
+            name: 'alice'
+            username: 'alice'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4'
+        -
+            name: 'bob'
+            username: 'bob'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4'
+        -
+            name: 'carol'
+            username: 'carol'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4'
+
+properties:
+    minversion: '11.0.0'
+    maxversion: '12.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - python : 'pjsua'
+        - asterisk : 'chan_sip'
+    tags:
+        - SIP
+        - transfer
