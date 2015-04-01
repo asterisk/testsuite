@@ -14,14 +14,27 @@ test-modules:
         -
             config-section: ami-uut
             typename: 'ami.AMIEventModule'
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
 
 test-object-config:
     reactor-timeout: 60
+    stop-on-end: False
     test-iterations:
         -
             -   channel: Local/s@default
                 application: Playback
                 data: demo-congrats
+
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: BridgeDestroyed
+                application: testsuite
+        stop_test:
 
 ami-uut:
     -
