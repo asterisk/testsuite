@@ -1,6 +1,7 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 't38'
+    - test: 't38_with_auth'
     - test: 'directmedia_reinvite_t38'
     - test: 'gateway_t38_g711'
     - test: 'gateway_native_t38'
