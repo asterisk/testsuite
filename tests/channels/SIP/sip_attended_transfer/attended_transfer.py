@@ -8,7 +8,11 @@ the GNU General Public License Version 2.
 
 import logging
 import pjsua as pj
+import sys
 
+sys.path.append('lib/python/asterisk')
+
+from version import AsteriskVersion
 from twisted.internet import reactor
 
 LOGGER = logging.getLogger(__name__)
@@ -52,8 +56,8 @@ class CallCallback(pj.CallCallback):
             reactor.callFromThread(self.on_answered)
 
 
-class BridgeState(object):
-    '''Object for tracking state of a bridge
+class BridgeTwelve(object):
+    '''Object for tracking attributes of an Asterisk 12+ bridge
 
     The main data the test cares about is the bridge's unique id and whether two
     channels have been bridged together by the bridge.
@@ -61,6 +65,118 @@ class BridgeState(object):
     def __init__(self):
         self.unique_id = None
         self.bridged = False
+
+
+class BridgeStateTwelve(object):
+    '''Tracker of Bridge State for Asterisk 12+
+
+    Since Asterisk 12+ has the concept of Bridge objects, this tracks the
+    bridges by detecting when they are created. Once bridges are created, we
+    determine that channels are bridged when BridgeEnter events indicate that
+    two channels are present.
+    '''
+    def __init__(self, test_object, controller, ami):
+        self.test_object = test_object
+        self.controller = controller
+        self.ami = ami
+        self.bridge1 = BridgeTwelve()
+        self.bridge2 = BridgeTwelve()
+
+        self.ami.registerEvent('BridgeCreate', self.bridge_create)
+        self.ami.registerEvent('BridgeEnter', self.bridge_enter)
+
+    def bridge_create(self, ami, event):
+        if not self.bridge1.unique_id:
+            self.bridge1.unique_id = event.get('bridgeuniqueid')
+        elif not self.bridge2.unique_id:
+            self.bridge2.unique_id = event.get('bridgeuniqueid')
+        else:
+            LOGGER.error("Unexpected third bridge created")
+            self.test_object.set_passed(False)
+            self.test_object.stop_reactor()
+
+    def bridge_enter(self, ami, event):
+        if (event.get('bridgeuniqueid') == self.bridge1.unique_id and
+                event.get('bridgenumchannels') == '2'):
+            self.bridge1.bridged = True
+            if self.controller.state == BOB_CALLED:
+                self.controller.call_carol()
+            elif self.controller.state == TRANSFERRED:
+                self.controller.hangup_calls()
+            else:
+                LOGGER.error("Unexpected BridgeEnter event")
+                self.test_object.set_passed(False)
+                self.test_object.stop_reactor()
+        elif (event.get('bridgeuniqueid') == self.bridge2.unique_id and
+              event.get('bridgenumchannels') == '2'):
+            self.bridge2.bridged = True
+            if self.controller.state == CAROL_CALLED:
+                self.controller.transfer_call()
+            elif self.controller.state == TRANSFERRED:
+                self.controller.hangup_calls()
+            else:
+                LOGGER.error("Unexpected BridgeEnter event")
+                self.test_object.set_passed(False)
+                self.test_object.stop_reactor()
+
+    def bridge1_bridged(self):
+        return self.bridge1.bridged
+
+    def bridge2_bridged(self):
+        return self.bridge2.bridged
+
+
+class BridgeStateEleven(object):
+    '''Tracker of bridge state for Asterisk 11-
+
+    Since in Asterisk versions prior to 12, there are no bridge objects, the
+    only way we can track the state of bridges in Asterisk is via Bridge events
+    and our own channel count. We count unique bridges by using the "channel2"
+    header in Bridge events from Asterisk.
+    '''
+    def __init__(self, test_object, controller, ami):
+        self.test_object = test_object
+        self.controller = controller
+        self.ami = ami
+        self.chans = []
+        self.final_bridge = 0
+
+        self.ami.registerEvent('Bridge', self.bridge)
+        self.ami.registerEvent('VarSet', self.bridge_peer)
+
+    def bridge(self, ami, event):
+        if event['channel2'] in self.chans:
+            return
+
+        self.chans.append(event['channel2'])
+        numchans = len(self.chans)
+        if numchans == 1:
+            self.controller.call_carol()
+        elif numchans == 2:
+            self.controller.transfer_call()
+
+    def bridge_peer(self, ami, event):
+        if event['variable'] != "BRIDGEPEER" or len(self.chans) < 2:
+            return
+
+        LOGGER.info("Inspecting BRIDGEPEER VarSet")
+
+        # we should get 2 bridgepeers with swapped channel and value headers
+        # indicating the bridged channels
+        if self.chans[:2] == [event['channel'], event['value']] or\
+            self.chans[:2] == [event['value'], event['channel']]:
+            LOGGER.info("Got expected VarSet")
+            self.final_bridge += 1
+            if self.final_bridge == 2:
+                LOGGER.info("Transfer successful!")
+                # success!
+                self.controller.hangup_calls()
+
+    def bridge1_bridged(self):
+        return len(self.chans) == 1
+
+    def bridge2_bridged(self):
+        return len(self.chans) == 2
 
 
 class Transfer(object):
@@ -74,13 +190,11 @@ class Transfer(object):
     def __init__(self, test_object, accounts):
         super(Transfer, self).__init__()
         self.ami = test_object.ami[0]
-        self.ami.registerEvent('BridgeCreate', self.bridge_create)
-        self.ami.registerEvent('BridgeEnter', self.bridge_enter)
 
-        # bridge1 bridges Alice and Bob
-        self.bridge1 = BridgeState()
-        # bridge2 bridges Alice and Carol
-        self.bridge2 = BridgeState()
+        if AsteriskVersion() < AsteriskVersion('12'):
+            self.bridge_state = BridgeStateEleven(test_object, self, self.ami)
+        else:
+            self.bridge_state = BridgeStateTwelve(test_object, self, self.ami)
 
         self.bob_call_answered = False
         self.carol_call_answered = False
@@ -98,40 +212,6 @@ class Transfer(object):
         self.test_object = test_object
         self.state = INIT
 
-    def bridge_create(self, ami, event):
-        if not self.bridge1.unique_id:
-            self.bridge1.unique_id = event.get('bridgeuniqueid')
-        elif not self.bridge2.unique_id:
-            self.bridge2.unique_id = event.get('bridgeuniqueid')
-        else:
-            LOGGER.error("Unexpected third bridge created")
-            self.test_object.set_passed(False)
-            self.test_object.stop_reactor()
-
-    def bridge_enter(self, ami, event):
-        if (event.get('bridgeuniqueid') == self.bridge1.unique_id and
-                event.get('bridgenumchannels') == '2'):
-            self.bridge1.bridged = True
-            if self.state == BOB_CALLED:
-                self.call_carol()
-            elif self.state == TRANSFERRED:
-                self.hangup_calls()
-            else:
-                LOGGER.error("Unexpected BridgeEnter event")
-                self.test_object.set_passed(False)
-                self.test_object.stop_reactor()
-        elif (event.get('bridgeuniqueid') == self.bridge2.unique_id and
-                event.get('bridgenumchannels') == '2'):
-            self.bridge2.bridged = True
-            if self.state == CAROL_CALLED:
-                self.transfer_call()
-            elif self.state == TRANSFERRED:
-                self.hangup_calls()
-            else:
-                LOGGER.error("Unexpected BridgeEnter event")
-                self.test_object.set_passed(False)
-                self.test_object.stop_reactor()
-
     def bob_call_confirmed(self):
         self.bob_call_answered = True
         self.call_carol()
@@ -146,13 +226,13 @@ class Transfer(object):
         self.state = BOB_CALLED
 
     def call_carol(self):
-        if self.bridge1.bridged and self.bob_call_answered:
+        if self.bridge_state.bridge1_bridged() and self.bob_call_answered:
             self.call_to_carol = self.alice.make_call('sip:carol@127.0.0.1',
                     CallCallback(None, self.carol_call_confirmed))
             self.state = CAROL_CALLED
 
     def transfer_call(self):
-        if self.bridge2.bridged and self.carol_call_answered:
+        if self.bridge_state.bridge2_bridged() and self.carol_call_answered:
             self.call_to_bob.transfer_to_call(self.call_to_carol)
             self.state = TRANSFERRED
 
