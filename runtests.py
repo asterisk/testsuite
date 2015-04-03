@@ -335,7 +335,8 @@ class TestSuite:
         try:
             f = open("%s/%s" % (test_dir, TESTS_CONFIG), "r")
         except IOError:
-            print "Failed to open %s/%s" % (test_dir, TESTS_CONFIG)
+            if test_dir != "tests/custom":
+                print "Failed to open %s/%s" % (test_dir, TESTS_CONFIG)
             return tests
         except:
             print "Unexpected error: %s" % sys.exc_info()[0]
