@@ -3,10 +3,11 @@ testinfo:
     description: |
         "This test starts two Asterisk instances and sends a fax between them
          using the PJSIP channel driver - The endpoints use userpass
-         authentication."
+         authentication. Addresses a bug that caused a failure in faxes using
+         authentication while sending from a PJSIP endpoint detailed in
+         ASTERISK-24933"
 
 properties:
-    minversion: '13.3.1'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
