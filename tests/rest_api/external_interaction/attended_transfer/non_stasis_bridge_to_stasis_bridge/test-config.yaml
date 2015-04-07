@@ -311,7 +311,7 @@ pluggable-config:
             conditions:
                 match:
                     Event: 'BridgeLeave'
-                    Channel: 'Local/_attended-.*;1'
+                    Channel: 'Local/_attended@transfer-.*;1'
                 nomatch:
                     BridgeUniqueid: 'test_bridge'
             count: 1
@@ -320,7 +320,7 @@ pluggable-config:
             conditions:
                 match:
                     Event: 'Hangup'
-                    Channel: 'Local/_attended-.*;1'
+                    Channel: 'Local/_attended@transfer-.*;1'
             count: 1
     # Ensure the local channel half in Stasis bridge with carol leaves the
     # bridge.
@@ -332,7 +332,7 @@ pluggable-config:
                 bridge:
                     id: 'test_bridge'
                 channel:
-                    name: 'Local/_attended-.*;2'
+                    name: 'Local/_attended@transfer-.*;2'
             count: 1
     # Ensure the local channel half in Stasis bridge with carol exits the
     # Stasis app. Then hang up carol.
@@ -342,7 +342,7 @@ pluggable-config:
                 type: StasisEnd
                 application: 'testsuite'
                 channel:
-                    name: 'Local/_attended-.*;2'
+                    name: 'Local/_attended@transfer-.*;2'
             count: 1
         ari-requests:
             method: 'delete'
@@ -393,6 +393,3 @@ properties:
     tags:
         - ARI
         - pjsip
-    # Expect test to fail until ASTERISK-24782 is resolved.
-    expected-result: False
-
