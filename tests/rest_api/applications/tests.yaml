@@ -6,3 +6,4 @@ tests:
     - test: 'subscribe-device-state'
     - test: 'double-subscribe-device-state'
     - dir: 'channel-subscriptions'
+    - test: 'stasisstatus'
