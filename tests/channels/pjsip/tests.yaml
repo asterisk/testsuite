@@ -36,4 +36,4 @@ tests:
     - test: 'endpoint_identify'
     - test: 'rpid_immediate'
     - test: 'in_dialog_options'
-
+    - dir: 'resolver'

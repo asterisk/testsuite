@@ -1,0 +1,48 @@
+testinfo:
+    summary: 'Test SRV resolution of an address with UDP transport specified'
+    description: |
+        This test verifies that an SRV record lookup successfully occurs using
+        the resolver and that traffic is sent to the resulting address. Since the
+        UDP transport is explicitly provided the only records that should be looked
+        up and used are UDP. Since sipp is listening only on UDP if TCP records are used
+        instead the call will fail.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: dns-server-config
+            typename: 'dns_server.DNSServer'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uas.xml', '-i': '127.0.0.1', '-p': '5061'} }
+
+originator:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'Local/s@default'
+    application: 'Echo'
+    async: 'True'
+
+dns-server-config:
+    port: 10053
+    python-zones:
+        -
+            example.com
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
