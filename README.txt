@@ -21,6 +21,7 @@
         5) Test Configuration
         6) Tests in Python
         7) Tests in Lua
+        8) Custom Tests
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -539,6 +540,20 @@ formatted according to PEP8: http://www.python.org/dev/peps/pep-0008/.
 of functionality to make it easy to write Asterisk tests in Lua.  Take a look at
 the asttest README as well as some of the existing Lua tests for more
 information.
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+--- 8) Custom Tests
+--------------------------------------------------------------------------------
+
+        The testsuite supports automatic use of custom tests.  This feature is
+activated by creating tests/custom/tests.yaml to list your tests and/or folders
+of tests.  Any files created in tests/custom will be ignored by the Asterisk
+testsuite repository.  This folder is designed to be used for tests that are
+not appropriate for inclusion in the common testsuite.  This can include tests
+specific for your business, clients or Asterisk based product.
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
