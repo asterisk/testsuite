@@ -152,6 +152,20 @@ class PjsuaPhone(object):
             raise Exception("Exception occurred while transferring: '%s'" %
                             str(err))
 
+    def hold_call(self):
+        """Place call on hold.
+
+        The first call will be placed on hold.
+        """
+        LOGGER.info("'%s' is putting '%s' on hold." %
+                    (self.name, self.calls[0].info().remote_uri))
+        try:
+            self.calls[0].hold()
+        except pj.Error as err:
+            msg = ("Exception occurred while putting call on hold: '%s'" %
+                    str(err))
+            raise Exception(msg)
+
 
 class AccCallback(pj.AccountCallback):
     """Derived callback class for accounts."""
@@ -278,6 +292,26 @@ def call(test_object, triggered_by, ari, event, args):
 
     try:
         phone.make_call(call_uri)
+    except:
+        test_object.stop_reactor()
+        raise Exception("Exception: '%s'" % str(sys.exc_info()))
+
+def hold(test_object, triggered_by, ari, event, args):
+    """Pluggable action module callback to place a call on hold"""
+    controller = PjsuaPhoneController.get_instance()
+    phone = controller.get_phone_obj(name=args['pjsua_account'])
+    if len(phone.calls) < 1:
+        msg = "'%s' must have 1 active call to put on hold!" % phone.name
+        test_object.stop_reactor()
+        raise Exception(msg)
+    if phone.calls[0].info().state != pj.CallState.CONFIRMED:
+        LOGGER.debug("Call is not fully established. Retrying hold shortly.")
+        reactor.callLater(.25, hold, test_object, triggered_by, ari, event,
+                          args)
+        return
+
+    try:
+        phone.hold_call()
     except:
         test_object.stop_reactor()
         raise Exception("Exception: '%s'" % str(sys.exc_info()))
