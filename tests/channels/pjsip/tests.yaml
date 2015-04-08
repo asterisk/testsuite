@@ -35,3 +35,4 @@ tests:
     - test: 'keep_alive'
     - test: 'endpoint_identify'
     - test: 'rpid_immediate'
+    - dir: 'resolver'

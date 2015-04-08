@@ -1,0 +1,45 @@
+testinfo:
+    summary: 'Test resolution of an address using an A record'
+    description: |
+        This test verifies that an A record lookup successfully occurs using
+        the resolver and that traffic is sent to the resulting address.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: dns-server-config
+            typename: 'dns_server.DNSServer'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uas.xml', '-i': '127.0.0.1', '-p': '5061'} }
+
+originator:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'Local/s@default'
+    application: 'Echo'
+    async: 'True'
+
+dns-server-config:
+    port: 10053
+    python-zones:
+        -
+            example.com
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
