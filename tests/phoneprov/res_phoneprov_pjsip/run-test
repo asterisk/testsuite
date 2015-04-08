@@ -65,6 +65,11 @@ class ResPhoneprovTest(TestCase):
 
         self.stop_reactor()
 
+    def stop_reactor(self):
+        self.con.close()
+        super(ResPhoneprovTest, self).stop_reactor()
+        
+
 def main():
     test = ResPhoneprovTest()
     reactor.run()
