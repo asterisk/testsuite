@@ -1,0 +1,246 @@
+#!/usr/bin/env python
+"""
+Copyright (C) 2015, Digium, Inc.
+Ashley Sanders <asanders@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+"""
+
+import sys
+import logging
+
+sys.path.append("lib/python")
+sys.path.append("tests/rest_api/applications")
+
+from stasisstatus.ari_client import AriClient
+from stasisstatus.monitor import ChannelVariableMonitor
+from stasisstatus.test_case import StasisStatusTestCase
+from stasisstatus.test_scenario import TestScenario
+
+LOGGER = logging.getLogger(__name__)
+
+
+def build_scenarios(ami, host, port, credentials):
+    """Builds the scenarios.
+
+    Keyword Arguments:
+    ami                   -- The AMI instance for this factory.
+    host                  -- The [bindaddr] of the Asterisk HTTP web
+                             server.
+    port                  -- The [bindport] of the Asterisk HTTP web
+                             server.
+    credentials           -- User credentials for ARI.
+                             A tuple. E.g. ('username', 'password').
+
+    Returns:
+    A list of TestScenario objects.
+    """
+
+    scenarios = list()
+
+    for name in ['Babs', 'Bugs', 'Buster']:
+        client = AriClient(host,
+                           port,
+                           credentials,
+                           name)
+        monitor = ChannelVariableMonitor(ami,
+                                         'STASISSTATUS',
+                                         name)
+        scenario = globals()[name + "TestScenario"](ami, client, monitor, name)
+        scenarios.append(scenario)
+    return scenarios
+
+
+class BabsTestScenario(TestScenario):
+    """The 'Babs' TestScenario.
+
+    This scenario tests for the case where a call is originated under
+    normal operating conditions and then hungup to determine if Stasis
+    correctly assigns STASISSTATUS=SUCCESS.
+    """
+
+    def __init__(self, ami, ari_client, monitor, name):
+        """Constructor.
+
+        Keyword Arguments:
+        ami                    -- The AMI instance for this TestScenario.
+        ari_client             -- The AriClient to use to for executing the
+                                  TestStrategy commands.
+        monitor                -- The ChannelVariableMonitor instance for this
+                                  TestScenario.
+        name                   -- The name for this TestScenario instance.
+        """
+
+        super(BabsTestScenario, self).__init__(ami,
+                                               ari_client,
+                                               monitor,
+                                               'SUCCESS',
+                                               name)
+
+        self.__channel = None
+        self.__stasis_started = False
+        self.ari_client.register_observers('on_stasisstart',
+                                           self.__on_stasisstart)
+
+    def __on_stasisstart(self, sender, message):
+        """Handles the AriClient 'on_stasisstart' event.
+
+        Keyword Arguments:
+        sender                 -- The object that raised the event.
+        message                -- The event payload.
+        """
+
+        if self.__stasis_started:
+            return
+
+        channel = message['channel']['id']
+        if channel == self.__channel:
+            self.__stasis_started = True
+            self.monitor.start(self.__channel)
+            self.ari_client.hangup_channel(self.__channel)
+
+    def run_strategy(self):
+        """Implements the run_strategy from the base class."""
+
+        msg = '{0} '.format(self)
+        LOGGER.debug(msg + 'About to originate a channel with an app that has \
+            been registered in Stasis.')
+        app = self.name
+        endpoint = 'LOCAL/{0}@Acme'.format(app)
+        resp = self.ari_client.originate(endpoint, app)
+        self.__channel = resp.json()['id']
+        LOGGER.debug(msg + 'Response was [%r].' % resp)
+
+
+class BugsTestScenario(TestScenario):
+    """The 'Bugs' TestScenario.
+
+    This scenario tests for the case where a call is originated for an
+    app that was never registered in Stasis to determine if Stasis correctly
+    identifies this as a failure and assigns STASISSTATUS=FAILED.
+    """
+
+    def __init__(self, ami, ari_client, monitor, name):
+        """Constructor.
+
+        Keyword Arguments:
+        ami                    -- The AMI instance for this TestScenario.
+        ari_client             -- The AriClient to use to for executing the
+                                  TestStrategy commands.
+        monitor                -- The ChannelVariableMonitor instance for this
+                                  TestScenario.
+        name                   -- The name for this TestScenario instance.
+        """
+
+        super(BugsTestScenario, self).__init__(ami,
+                                               ari_client,
+                                               monitor,
+                                               'FAILED',
+                                               name)
+
+    def run_strategy(self):
+        """Implements the run_strategy from the base class."""
+
+        msg = '{0} '.format(self)
+        LOGGER.debug('About to originate a channel with an app that was \
+            never registered in Stasis.')
+        app = self.name + 'alt'
+        endpoint = 'LOCAL/{0}@Acme'.format(app)
+        resp = self.ari_client.originate(endpoint, app)
+        self.monitor.start(resp.json()['id'])
+        LOGGER.debug(msg + 'Response was [%r].' % resp)
+
+
+class BusterTestScenario(TestScenario):
+    """The 'Buster' TestScenario.
+
+    This scenario tests for the case where a Stasis app that was
+    registered when channel A was originated, but is no longer registered
+    when channel B is originated, to determines if Stasis correctly identifies
+    this as a failure and assigns STASISSTATUS=FAILED.
+    """
+
+    def __init__(self, ami, ari_client, monitor, name):
+        """Constructor.
+
+        Keyword Arguments:
+        ami                    -- The AMI instance for this TestScenario.
+        ari_client             -- The AriClient to use to for executing the
+                                  TestStrategy commands.
+        monitor                -- The ChannelVariableMonitor instance for this
+                                  TestScenario.
+        name                   -- The name for this TestScenario instance.
+        """
+
+        super(BusterTestScenario, self).__init__(ami,
+                                                 ari_client,
+                                                 monitor,
+                                                 'FAILED',
+                                                 name)
+
+        self.__ws_closed = False
+        self.ari_client.register_observers('on_ws_closed',
+                                           self.__on_ws_closed)
+
+    def __on_ws_closed(self, sender, message):
+        """Handles the AriClient 'on_ws_closed' event.
+
+        Keyword Arguments:
+        sender                 -- The object that raised the event.
+        message                -- The event payload.
+        """
+
+        msg = '{0} '.format(self)
+
+        if self.suspended:
+            LOGGER.debug(msg + 'Scenario is suspended.')
+            return
+
+        if self.__ws_closed:
+            LOGGER.warn(msg + 'About to run duplicate scenario step.')
+
+        self.__ws_closed = True
+
+        msg = '{0} '.format(self)
+        LOGGER.debug(msg + 'In {0}; message={1}'.format('__on_ws_closed',
+                                                        message))
+        LOGGER.debug(msg + 'About to originate a channel after the web socket \
+            has been disconnected.')
+        app = self.name
+        endpoint = 'LOCAL/{0}@Acme'.format(app)
+        resp = self.ari_client.originate(endpoint, app)
+        self.monitor.start(resp.json()['id'])
+        LOGGER.debug(msg + 'Response was [%r].' % resp)
+
+    def run_strategy(self):
+        """Implements the run_strategy from the base class."""
+
+        msg = '{0} '.format(self)
+        LOGGER.debug(msg + 'About to originate a channel with an app that has \
+            been registered in Stasis.')
+
+        app = self.name + 'alt'
+        endpoint = 'LOCAL/{0}@Acme'.format(app)
+        resp = self. ari_client.originate(endpoint, app)
+        LOGGER.debug(msg + 'Response was [%r].' % resp)
+        LOGGER.debug(msg + 'About to disconnect the web socket.')
+        self.ari_client.disconnect_websocket()
+
+
+def main():
+    """Entry point for the test.
+
+    Returns:
+          0 if the test passed, 1 otherwise.
+    """
+
+    test = StasisStatusTestCase(build_scenarios)
+
+    if test.passed:
+        return 0
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main())
+

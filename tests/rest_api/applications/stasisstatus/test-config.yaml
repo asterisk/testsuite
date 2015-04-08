@@ -1,0 +1,32 @@
+testinfo:
+    summary: |
+        Tests that Stasis correctly applies the STASISSTATUS channel
+        variable.
+    description: |
+        The test exercises Stasis in three ways to determine if is
+        functioning as advertised.
+        -   For the first case (Babs), a channel is originated under normal
+        conditions and then the channel is hungup. For this case, the
+        test verifies that Stasis correctly assigns SUCCESS to STASISSTATUS.
+        -   For the second case (Bugs), a channel is originated using an app
+        that was never registered with Stasis. The test verifies that Stasis
+        correctly assigns FAILED to STASISSTATUS.
+        -   For the third case (Buster), a channel is made under normal
+        conditions, but, before the channel is hungup and while the channel is
+        still active, the websocket is disconnected. A channel is then
+        originated using the app that was just unregistered. For this case,
+        the test verifies that Stasis correctly assigns FAILED to STASISSTATUS.
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - python: 'autobahn.websocket'
+        - python: 'requests'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_ari_applications'
+        - asterisk: 'res_ari_channels'
+    tags:
+        - ARI
+    issues:
+        - jira: 'ASTERISK-24802'
