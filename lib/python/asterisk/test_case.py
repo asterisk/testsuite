@@ -33,6 +33,7 @@ except:
 
 LOGGER = None
 
+
 def setup_logging(log_dir):
     """Initialize the logger"""
 
@@ -195,9 +196,9 @@ class TestCase(object):
 
         # Get those global conditions that are not in the self conditions
         for g_cond in global_conditions:
-            disallowed = [i for i in conditions \
-                if i[0].get_name() == g_cond[0].get_name() \
-                and i[1] == g_cond[1]]
+            disallowed = [i for i in conditions
+                          if i[0].get_name() == g_cond[0].get_name()
+                          and i[1] == g_cond[1]]
             if len(disallowed) == 0:
                 conditions.append(g_cond)
 
@@ -207,12 +208,11 @@ class TestCase(object):
             if pre_post_type == "PRE":
                 self.condition_controller.register_pre_test_condition(obj)
             elif pre_post_type == "POST":
-                self.condition_controller.register_post_test_condition(\
-                    obj, related_name)
+                self.condition_controller.register_post_test_condition(obj, related_name)
             else:
                 msg = "Unknown condition type [%s]" % pre_post_type
                 LOGGER.warning(msg)
-        self.condition_controller.register_observer(\
+        self.condition_controller.register_observer(
             self.handle_condition_failure, 'Failed')
 
     def create_asterisk(self, count=1, base_configs_path=None):
@@ -321,7 +321,7 @@ class TestCase(object):
         # port, while a general logger will want to watch more general traffic
         # which can be filtered later.
         return PcapListener(device, bpf_filter, dumpfile, self._pcap_callback,
-                snaplen, buffer_size)
+                            snaplen, buffer_size)
 
     def start_asterisk(self):
         """This method will be called when the reactor is running, but
@@ -539,7 +539,7 @@ class TestCase(object):
 
     def reset_timeout(self):
         """Resets the reactor timeout"""
-        if self.timeout_id != None:
+        if self.timeout_id is not None:
             original_time = datetime.fromtimestamp(self.timeout_id.getTime())
             self.timeout_id.reset(self.reactor_timeout)
             new_time = datetime.fromtimestamp(self.timeout_id.getTime())
@@ -624,7 +624,7 @@ class TestCase(object):
         A token that can be removed from the test at a later time, if the test
         should pass
         """
-        fail_token = {'uuid' : uuid.uuid4(), 'message' : message}
+        fail_token = {'uuid': uuid.uuid4(), 'message': message}
         self.fail_tokens.append(fail_token)
         return fail_token
 
@@ -647,7 +647,7 @@ class TestCase(object):
         If a test module has already claimed that the test has failed, then this
         method will ignore any further attempts to change the pass/fail status.
         """
-        if self.passed == False:
+        if not self.passed:
             return
         self.passed = value
 
@@ -685,15 +685,15 @@ class SimpleTestCase(TestCase):
 
         if test_config is None or 'test-iterations' not in test_config:
             # No special test configuration defined, use defaults
-            variables = {'testuniqueid': '%s' % (str(uuid.uuid1())),}
+            variables = {'testuniqueid': '%s' % (str(uuid.uuid1())), }
             defaults = {'channel': SimpleTestCase.default_channel,
                         'application': SimpleTestCase.default_application,
-                        'variable': variables,}
+                        'variable': variables, }
             self._test_runs.append(defaults)
         else:
             # Use the info in the test config to figure out what we want to run
             for iteration in test_config['test-iterations']:
-                variables = {'testuniqueid': '%s' % (str(uuid.uuid1())),}
+                variables = {'testuniqueid': '%s' % (str(uuid.uuid1())), }
                 iteration['variable'] = variables
                 self._test_runs.append(iteration)
             if 'expected_events' in test_config:
@@ -719,7 +719,6 @@ class SimpleTestCase(TestCase):
 
         # Kick off the test runs
         self.__start_new_call(ami)
-
 
     def __originate_call(self, ami, call_details):
         """Actually originate a call
@@ -750,7 +749,7 @@ class SimpleTestCase(TestCase):
             call_details['otherchannelid'] = None
         if 'application' in call_details:
             msg += " with application %s" % call_details['application']
-            deferred = ami.originate(\
+            deferred = ami.originate(
                 channel=call_details['channel'],
                 application=call_details['application'],
                 variable=call_details['variable'],
@@ -762,7 +761,7 @@ class SimpleTestCase(TestCase):
             msg += " to %s@%s at %s" % (call_details['exten'],
                                         call_details['context'],
                                         call_details['priority'],)
-            deferred = ami.originate(\
+            deferred = ami.originate(
                 channel=call_details['channel'],
                 context=call_details['context'],
                 exten=call_details['exten'],
@@ -777,7 +776,6 @@ class SimpleTestCase(TestCase):
         else:
             deferred.addErrback(self.handle_originate_failure)
         LOGGER.info(msg)
-
 
     def __varset_cb(self, ami, event):
         """VarSet event handler.  This event helps us tie back the channel
@@ -803,7 +801,6 @@ class SimpleTestCase(TestCase):
             LOGGER.debug("Tracking originated channel %s as %s (ID %s)" % (
                 originating_channel, event['channel'], event['value']))
 
-
     def __hangup_cb(self, ami, event):
         """Hangup Event handler.
 
@@ -819,7 +816,6 @@ class SimpleTestCase(TestCase):
                 self._current_run += 1
                 self.__start_new_call(ami)
 
-
     def __start_new_call(self, ami):
         """Kick off the next new call, or, if we've run out of calls to make,
         stop the test
@@ -830,7 +826,6 @@ class SimpleTestCase(TestCase):
         else:
             LOGGER.info("All calls executed, stopping")
             reactor.callLater(self._end_test_delay, self.stop_reactor)
-
 
     def __event_cb(self, ami, event):
         """UserEvent callback handler.
@@ -850,7 +845,6 @@ class SimpleTestCase(TestCase):
                 self._current_run += 1
                 self.__start_new_call(ami)
 
-
     def hangup(self, result):
         """Called when all channels are hung up"""
 
@@ -866,7 +860,6 @@ class SimpleTestCase(TestCase):
     def verify_event(self, event):
         """Virtual method used to verify values in the event."""
         return True
-
 
     def run(self):
         """Run the test!"""
@@ -902,4 +895,3 @@ class TestCaseModule(TestCase):
             self.create_ami_factory(count=self.asterisk_instances)
         if self.connect_agi:
             self.create_fastagi_factory(count=self.asterisk_instances)
-

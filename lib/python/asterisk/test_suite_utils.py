@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Asterisk testsuite utils 
+"""Asterisk testsuite utils
 
 This module provides access to Asterisk testsuite utility
 functions from within python code.
@@ -21,6 +21,7 @@ from shutil import move
 from tempfile import mkstemp
 
 LOGGER = logging.getLogger(__name__)
+
 
 def which(program):
     """Find the executable for a specified program
@@ -45,6 +46,7 @@ def which(program):
 
     return None
 
+
 def file_replace_string(file_name, pattern, subst):
     """Replace strings within a file with substr.
 
@@ -58,7 +60,7 @@ def file_replace_string(file_name, pattern, subst):
     """
     # Create temp file
     f_handle, abs_path = mkstemp()
-    new_file = open(abs_path,'w')
+    new_file = open(abs_path, 'w')
     old_file = open(file_name)
     for line in old_file:
         new_file.write(line.replace(pattern, subst))
@@ -71,6 +73,7 @@ def file_replace_string(file_name, pattern, subst):
     # Move new file
     move(abs_path, file_name)
 
+
 def all_match(pattern, message):
     """Match all items in a pattern to some message values
 
@@ -81,8 +84,7 @@ def all_match(pattern, message):
     :param message: Message to compare.
     :returns: True if message matches pattern; False otherwise.
     """
-    LOGGER.debug('Pattern: %s, message %s' %
-        (str(pattern), str(message)))
+    LOGGER.debug('Pattern: %s, message %s' % (str(pattern), str(message)))
     if pattern is None:
         # Empty pattern always matches
         return True
@@ -168,4 +170,3 @@ def get_bindable_ipv6_addr():
             return addr
 
     return None
-

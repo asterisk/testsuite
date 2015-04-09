@@ -33,23 +33,25 @@ class DNSServer(object):
     def __init__(self, config, test_obj):
         """Initialize and configure the DNS object."""
 
-	zones = []
-	port = config.get('port', 10053)
-	pyzones = config.get('python-zones', [])
-	bindzones = config.get('bind-zones', [])
+        zones = []
+        port = config.get('port', 10053)
+        pyzones = config.get('python-zones', [])
+        bindzones = config.get('bind-zones', [])
 
-	for pyzone in pyzones:
-		zones.append(authority.PySourceAuthority('%s/dns_zones/%s' % (test_obj.test_name, pyzone)))
-		LOGGER.info("Added Python zone file %s" % (pyzone))
+        for pyzone in pyzones:
+            zones.append(authority.PySourceAuthority(
+                '%s/dns_zones/%s' % (test_obj.test_name, pyzone)))
+            LOGGER.info("Added Python zone file %s" % (pyzone))
 
-	for bindzone in bindzones:
-		zones.append(authority.BindAuthority('%s/dns_zones/%s' % (test_obj.test_name, bindzone)))
-		LOGGER.info("Added BIND zone file %s" % (bindzone))
+        for bindzone in bindzones:
+            zones.append(authority.BindAuthority(
+                '%s/dns_zones/%s' % (test_obj.test_name, bindzone)))
+            LOGGER.info("Added BIND zone file %s" % (bindzone))
 
-	factory = server.DNSServerFactory(authorities=zones)
-	protocol = dns.DNSDatagramProtocol(controller=factory)
+        factory = server.DNSServerFactory(authorities=zones)
+        protocol = dns.DNSDatagramProtocol(controller=factory)
 
-	reactor.listenUDP(port, protocol)
-	reactor.listenTCP(port, factory)
+        reactor.listenUDP(port, protocol)
+        reactor.listenTCP(port, factory)
 
-	LOGGER.info("Started DNS server (UDP and TCP) on port %d" % (port))
+        LOGGER.info("Started DNS server (UDP and TCP) on port %d" % (port))

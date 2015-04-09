@@ -21,6 +21,7 @@ sys.path.append("lib/python")
 
 LOGGER = logging.getLogger(__name__)
 
+
 class ConfbridgeChannelObject(object):
     """A tracking object that ties together information about the channels
     involved in a ConfBridge
@@ -44,6 +45,7 @@ class ConfbridgeChannelObject(object):
         self.caller_channel = caller_channel
         self.caller_ami = caller_ami
         self.profile = profile_option
+
 
 class ConfbridgeTestState(TestState):
     """Base class test state for ConfBridge. Allows states to send DTMF tones,
@@ -181,7 +183,7 @@ class ConfbridgeTestState(TestState):
         call_id     The channel name, from the perspective of the ConfBridge app
         audio_file  The local path to the file to stream
         dtmf        The DTMF signal to send
-    
+
         Note that this is necessary so that when the audio file is finished, we
         close the audio recording cleanly; otherwise, Asterisk may detect the
         end of file as a hangup

@@ -16,7 +16,7 @@ import urllib
 
 from test_case import TestCase
 from pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
-                               PLUGGABLE_ACTION_REGISTRY, var_replace
+    PLUGGABLE_ACTION_REGISTRY, var_replace
 from test_suite_utils import all_match
 from twisted.internet import reactor
 try:
@@ -134,9 +134,10 @@ class AriBaseTestObject(TestCase):
         self.create_ami_factory(count=self.asterisk_instances)
 
     def stop_reactor(self):
-        if self._ws_connection != None:
+        if self._ws_connection is not None:
             self._ws_connection.dropConnection()
         super(AriBaseTestObject, self).stop_reactor()
+
 
 class AriTestObject(AriBaseTestObject):
     """Class that acts as a Test Object in the pluggable module framework"""
@@ -161,7 +162,6 @@ class AriTestObject(AriBaseTestObject):
         if self.iterations is None:
             self.iterations = [{'channel': 'Local/s@default',
                                 'application': 'Echo'}]
-
 
     def ami_connect(self, ami):
         """Override of AriBaseTestObject ami_connect
@@ -527,7 +527,8 @@ class ARIRequest(object):
         uri = var_replace(self.uri, values)
         url = self.ari.build_url(uri)
         requests_method = getattr(requests, self.method)
-        params = dict((key, var_replace(val, values)) for key, val in self.params.iteritems())
+        params = dict((key, var_replace(val, values))
+                      for key, val in self.params.iteritems())
 
         response = requests_method(
             url,
@@ -646,6 +647,7 @@ class EventMatcher(object):
             res = not all_match(nomatch, message)
         return res
 
+
 class Range(object):
     """Utility object to handle numeric ranges (inclusive)."""
 
@@ -685,6 +687,7 @@ def decode_range(yaml):
     else:
         # Need exactly this many events
         return Range(int(yaml), int(yaml))
+
 
 class ARIPluggableEventModule(object):
     """Subclass of ARIEventInstance that works with the pluggable event action
@@ -726,8 +729,7 @@ class ARIPluggableEventModule(object):
         :param args: Ignored arguments.
         """
         for event_desc in self.config:
-            if not event_desc["expected_count_range"]\
-                .contains(event_desc["event_count"]):
+            if not event_desc["expected_count_range"].contains(event_desc["event_count"]):
                 # max could be int or float('inf'); format with %r
                 LOGGER.error("Expected %d <= count <= %r; was %d (%r, !%r)",
                              event_desc["expected_count_range"].min_value,
@@ -738,6 +740,7 @@ class ARIPluggableEventModule(object):
                 self.test_object.set_passed(False)
             self.test_object.set_passed(True)
 PLUGGABLE_EVENT_REGISTRY.register("ari-events", ARIPluggableEventModule)
+
 
 class ARIPluggableRequestModule(object):
     """Pluggable ARI action module.

@@ -20,6 +20,7 @@ from twisted.internet import reactor
 
 LOGGER = logging.getLogger(__name__)
 
+
 class RegDetector(pj.AccountCallback):
     """
     Class that detects PJSUA account registration
@@ -232,9 +233,9 @@ class PJsua(object):
                 pj_acct_cfg.transport_id = transport_id
 
         LOGGER.info("Creating PJSUA account %s@%s" % (username, domain))
-        account = PJsuaAccount(self.lib.create_account(pj_acct_cfg, False,
-                                                       RegDetector(self)),
-                                                       self.lib)
+        account = PJsuaAccount(
+            self.lib.create_account(pj_acct_cfg, False, RegDetector(self)),
+            self.lib)
         account.add_buddies(acct_cfg.get('buddies', []))
         return account
 
@@ -268,4 +269,3 @@ class PJsua(object):
             callback_module = __import__(self.callback_module)
             callback_method = getattr(callback_module, self.callback_method)
             callback_method(self.test_object, self.pj_accounts)
-

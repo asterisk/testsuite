@@ -22,6 +22,7 @@ import test_suite_utils
 
 LOGGER = logging.getLogger(__name__)
 
+
 def parse_branch_name(branch_tokens):
     """Parse an Asterisk branch version"""
     name = branch_tokens[0]
@@ -29,13 +30,14 @@ def parse_branch_name(branch_tokens):
     for i in range(1, len(branch_tokens)):
         # Stop when we hit the revision
         if branch_tokens[i][0] == 'r':
-            candidate = branch_tokens[i].replace('r','')
-            candidate = candidate.replace('M','').replace('m','')
+            candidate = branch_tokens[i].replace('r', '')
+            candidate = candidate.replace('M', '').replace('m', '')
             if candidate.isdigit():
                 break
         name += '-' + branch_tokens[i]
         munched += 1
     return (name, munched)
+
 
 def parse_version(version_string):
     """Parse a 'standard' Asterisk version"""
@@ -52,13 +54,15 @@ def parse_version(version_string):
         count += 1
     return (parsed_numbers, True)
 
+
 def parse_revision(revision_string):
     """Parse a modified version of Asterisk"""
     candidate = revision_string.replace('M', '')
-    candidate = candidate.replace('r','').replace('m','')
+    candidate = candidate.replace('r', '').replace('m', '')
     if candidate.isdigit():
         return (int(candidate), True)
     return (0, False)
+
 
 def parse_feature(feature_string):
     """Parse a feature from a version"""
@@ -71,6 +75,7 @@ def parse_feature(feature_string):
             return (feature, iteration, True)
     return ('', -1, False)
 
+
 def parse_version_modifier(version_modifier):
     """Parse a version modifier"""
     for modifier in AsteriskVersion.supported_modifiers:
@@ -82,11 +87,13 @@ def parse_version_modifier(version_modifier):
             return (modifier, iteration, True)
     return ('', -1, False)
 
+
 def parse_parent_branch(parent_branch):
     """Parse a parent branch out of a version branch"""
     # Parent branch can be just about anything, so just accept it.
     # This should be the last thing called.
     return (parent_branch, True)
+
 
 def parse_version_string(raw_version):
     """Parse a raw version string into its parts"""
@@ -136,7 +143,7 @@ def parse_version_string(raw_version):
                 if not handled and not parent:
                     (parent, handled) = parse_parent_branch(token)
                 if not handled:
-                    LOGGER.error("Unable to parse token '%s' in version " \
+                    LOGGER.error("Unable to parse token '%s' in version "
                                  "string '%s'" % (token, raw_version))
         count += 1
     return (parsed_numbers[0], parsed_numbers[1], parsed_numbers[2],
@@ -150,9 +157,9 @@ class AsteriskVersion(object):
     This class handles Asterisk version strings.
     """
 
-    supported_features = [ 'cert', 'digiumphones', 'dfsg' ]
+    supported_features = ['cert', 'digiumphones', 'dfsg']
 
-    supported_modifiers = [ 'rc', 'beta' ]
+    supported_modifiers = ['rc', 'beta']
 
     def __init__(self, version=None):
         """Construct an Asterisk Version parser.
@@ -252,7 +259,7 @@ class AsteriskVersion(object):
 
             try:
                 process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                        stderr=None)
+                                           stderr=None)
                 version = process.stdout.read()
             except OSError as o_excep:
                 LOGGER.error("OSError [%d]: %s" % (o_excep.errno,
@@ -597,6 +604,7 @@ class AsteriskVersionTests(unittest.TestCase):
         version1 = AsteriskVersion("1.8.11-cert1")
         version2 = AsteriskVersion("Asterisk SVN-branch-1.8.11-cert-r368608")
         self.assertTrue(version1 < version2)
+
 
 def main():
     """Run the unit tests"""

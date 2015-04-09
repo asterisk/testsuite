@@ -12,6 +12,7 @@ the GNU General Public License Version 2.
 from twisted.internet import defer
 from test_conditions import TestCondition
 
+
 class SipChannelTestCondition(TestCondition):
     """Test condition that checks for the existence of SIP channels.
 
@@ -58,7 +59,7 @@ class SipChannelTestCondition(TestCondition):
         super(SipChannelTestCondition, self).pass_check()
 
         exec_list = [ast.cli_exec('sip show channels').addCallback(
-                        __channel_callback) for ast in self.ast]
+            __channel_callback) for ast in self.ast]
         defer.DeferredList(exec_list).addCallback(__raise_finished,
                                                   finished_deferred)
         return finished_deferred

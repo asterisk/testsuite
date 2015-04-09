@@ -26,6 +26,7 @@ from twisted.internet import reactor, protocol, defer, utils, error
 
 LOGGER = logging.getLogger(__name__)
 
+
 class AsteriskCliCommand(object):
     """Class that manages an Asterisk CLI command."""
 
@@ -419,8 +420,7 @@ class Asterisk(object):
                 cli_deferred = self.cli_exec("stop gracefully")
             else:
                 cli_deferred = self.cli_exec("core stop gracefully")
-            cli_deferred.addCallbacks(__stop_gracefully_callback,
-                __stop_gracefully_error)
+            cli_deferred.addCallbacks(__stop_gracefully_callback, __stop_gracefully_error)
 
         def __stop_gracefully_callback(cli_command):
             """Callback handler for the core stop gracefully CLI command"""
@@ -453,11 +453,9 @@ class Asterisk(object):
                 pass
             try:
                 if not self._stop_deferred.called:
-                    self._stop_deferred.callback("Asterisk %s KILLED" %
-                        self.host)
+                    self._stop_deferred.callback("Asterisk %s KILLED" % self.host)
             except defer.AlreadyCalledError:
-                LOGGER.warning("Asterisk %s stop deferred already called" %
-                    self.host)
+                LOGGER.warning("Asterisk %s stop deferred already called" % self.host)
 
         def __process_stopped(reason):
             """Generic callback that raises the stopped deferred subscribers
@@ -671,7 +669,8 @@ class Asterisk(object):
             raise_error = True
             LOGGER.error('Channel dial string must be in the form "tech/data".')
         if raise_error is True:
-            raise Exception("Cannot originate call!\n"
+            raise Exception(
+                "Cannot originate call!\n"
                 "Argument string must be in one of these forms:\n"
                 "<tech/data> application <appname> appdata\n"
                 "<tech/data> extension <exten>@<context>")
@@ -775,7 +774,7 @@ class Asterisk(object):
                     ast_file.write("%s = %s%s\n" % (var, self.base, val))
             elif cat.name == "options":
                 ast_file.write("#include \"%s/asterisk.options.conf.inc\"\n" %
-                        (self.astetcdir))
+                               (self.astetcdir))
                 if ast_conf_options:
                     for (var, val) in ast_conf_options.iteritems():
                         ast_file.write("%s = %s\n" % (var, val))

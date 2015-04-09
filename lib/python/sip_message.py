@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import re
 
+
 class SIPParseError(Exception):
     pass
+
 
 # This is not particularly efficient. I don't care.
 # Ok, I do, but I'm not going to do anything about it.
@@ -25,7 +27,8 @@ class SIPMessage:
             # Now, seperate Request/Response line from the rest of the data
             (self.first_line, rest) = data.split("\r\n", 1)
 
-            # Now convert any multi-line headers to a single line, and then split on newlines
+            # Now convert any multi-line headers to a single line, and then
+            # split on newlines
             header_array = re.sub(r'\r\n[ \t]+', ' ', rest).split("\r\n")
 
             # Now convert the headers into an array of (field, val) tuples
@@ -49,7 +52,12 @@ class SIPMessage:
         return res
 
     def __str__(self):
-        return "%s\r\n%s\r\n\r\n%s" % (self.first_line, "\r\n".join(["%s: %s" % (h[0].title(), h[1]) for h in self.headers]), self.body)
+        return "%s\r\n%s\r\n\r\n%s" % (
+            self.first_line,
+            "\r\n".join([
+                "%s: %s" % (h[0].title(), h[1])
+                for h in self.headers]),
+            self.body)
 
 
 class SIPMessageTest(object):
@@ -92,7 +100,6 @@ class SIPMessageTest(object):
             it = sipmsg.get_header_all(key)
 
         return self._match_val(regex, it)
-
 
     def test_sip_msg(self, sipmsg):
         if len(self.matches_left) > 0:

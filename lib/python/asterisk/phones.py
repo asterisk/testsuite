@@ -162,8 +162,7 @@ class PjsuaPhone(object):
         try:
             self.calls[0].hold()
         except pj.Error as err:
-            msg = ("Exception occurred while putting call on hold: '%s'" %
-                    str(err))
+            msg = ("Exception occurred while putting call on hold: '%s'" % str(err))
             raise Exception(msg)
 
 
@@ -216,7 +215,7 @@ class PhoneCallCallback(pj.CallCallback):
             LOGGER.info("Call disconnected: '%s'" % self.call)
             sip_call_id = self.call.info().sip_call_id
             obj = next((call for call in self.phone.calls
-                          if call.info().sip_call_id == sip_call_id), None)
+                        if call.info().sip_call_id == sip_call_id), None)
             try:
                 self.phone.calls.remove(obj)
             except ValueError:
@@ -280,6 +279,7 @@ def fmt_call_info(call_info):
                           call_info.remote_uri, call_info.state_text,
                           call_info.last_code, call_info.last_reason)
 
+
 def call(test_object, triggered_by, ari, event, args):
     """Pluggable action module callback to make a call"""
     controller = PjsuaPhoneController.get_instance()
@@ -295,6 +295,7 @@ def call(test_object, triggered_by, ari, event, args):
     except:
         test_object.stop_reactor()
         raise Exception("Exception: '%s'" % str(sys.exc_info()))
+
 
 def hold(test_object, triggered_by, ari, event, args):
     """Pluggable action module callback to place a call on hold"""
@@ -315,6 +316,7 @@ def hold(test_object, triggered_by, ari, event, args):
     except:
         test_object.stop_reactor()
         raise Exception("Exception: '%s'" % str(sys.exc_info()))
+
 
 def transfer(test_object, triggered_by, ari, event, args):
     """Pluggable action module callback to transfer a call"""
@@ -351,4 +353,3 @@ def transfer(test_object, triggered_by, ari, event, args):
     if not res:
         test_object.stop_reactor()
         raise Exception(msg)
-

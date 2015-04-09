@@ -19,6 +19,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 class AsteriskCSVLine(object):
     "A single Asterisk call detail record"
 
@@ -59,7 +60,7 @@ class AsteriskCSVLine(object):
         for key, value in self.iteritems():
             if None not in (value, other.get(key)) and not cmp_fn(value, other.get(key)):
                 if not silent:
-                    LOGGER.warn("CSV MATCH FAILED, Expected: %s: '%s' " \
+                    LOGGER.warn("CSV MATCH FAILED, Expected: %s: '%s' "
                                 "Got: %s: '%s'" % (key, value, key,
                                                    other.get(key)))
                 return False
@@ -124,7 +125,7 @@ class AsteriskCSV(object):
         each record"""
 
         if not partial and (len(self) != len(other)):
-            LOGGER.warn("CSV MATCH FAILED, different number of records, " \
+            LOGGER.warn("CSV MATCH FAILED, different number of records, "
                         "self=%d and other=%d" % (len(self), len(other)))
             return False
 
@@ -189,7 +190,7 @@ class AsteriskCSV(object):
             assert False
 
         elif len(matches) == 1:
-            pass # joy!
+            pass  # joy!
 
         elif len(matches) > 1:
             LOGGER.warn("More than one CSV permutation results in success")

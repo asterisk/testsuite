@@ -18,6 +18,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 class CELSniffer(object):
     """A pluggable module that sniffs AMI CEL events and dumps them into a YAML
     file. Useful during test writing to create a baseline of expected CEL events
@@ -110,7 +111,6 @@ class CELModule(object):
         self.match_cels()
         return callback_param
 
-
     def match_cels(self):
         """Called when all instances of Asterisk have exited.  Derived
         classes can override this to provide their own behavior for CEL
@@ -119,10 +119,8 @@ class CELModule(object):
         expectations_met = True
         for key in self.cel_records:
             cel_expect = AsteriskCSVCEL(records=self.cel_records[key])
-            cel_file = AsteriskCSVCEL(filename="%s/%s/cel-custom/%s.csv" %
-                (self.test_object.ast[0].base,
-                 self.test_object.ast[0].directories['astlogdir'],
-                 key))
+            cel_file = AsteriskCSVCEL(filename=self.test_object.ast[0].get_path(
+                "astlogdir", "cel-custom", "%s.csv" % key))
             if cel_expect.match(cel_file):
                 LOGGER.debug("%s.csv - CEL results met expectations" % key)
             else:
@@ -137,17 +135,19 @@ class CELModule(object):
 class AsteriskCSVCELLine(astcsv.AsteriskCSVLine):
     "A single Asterisk Call Event Log record"
 
-    fields = ['eventtype', 'eventtime', 'cidname', 'cidnum', 'ani', 'rdnis',
-    'dnid', 'exten', 'context', 'channel', 'app', 'appdata', 'amaflags',
-    'accountcode', 'uniqueid', 'linkedid', 'bridgepeer', 'userfield',
-    'userdeftype', 'eventextra']
+    fields = [
+        'eventtype', 'eventtime', 'cidname', 'cidnum', 'ani', 'rdnis',
+        'dnid', 'exten', 'context', 'channel', 'app', 'appdata', 'amaflags',
+        'accountcode', 'uniqueid', 'linkedid', 'bridgepeer', 'userfield',
+        'userdeftype', 'eventextra']
 
-    def __init__(self, eventtype=None, eventtime=None, cidname=None,
-                 cidnum=None, ani=None, rdnis=None, dnid=None, exten=None,
-                 context=None, channel=None, app=None, appdata=None,
-                 amaflags=None, accountcode=None, uniqueid=None, linkedid=None,
-                 bridgepeer=None, userfield=None, userdeftype=None,
-                 eventextra=None):
+    def __init__(
+            self, eventtype=None, eventtime=None, cidname=None,
+            cidnum=None, ani=None, rdnis=None, dnid=None, exten=None,
+            context=None, channel=None, app=None, appdata=None,
+            amaflags=None, accountcode=None, uniqueid=None, linkedid=None,
+            bridgepeer=None, userfield=None, userdeftype=None,
+            eventextra=None):
         """Construct an Asterisk CSV CEL.
 
         The arguments list definition must be in the same order that the
@@ -156,7 +156,8 @@ class AsteriskCSVCELLine(astcsv.AsteriskCSVLine):
         **dict.
         """
 
-        astcsv.AsteriskCSVLine.__init__(self, AsteriskCSVCELLine.fields,
+        astcsv.AsteriskCSVLine.__init__(
+            self, AsteriskCSVCELLine.fields,
             eventtype=eventtype, eventtime=eventtime, cidname=cidname,
             cidnum=cidnum, ani=ani, rdnis=rdnis, dnid=dnid, exten=exten,
             context=context, channel=channel, app=app, appdata=appdata,
@@ -164,13 +165,15 @@ class AsteriskCSVCELLine(astcsv.AsteriskCSVLine):
             linkedid=linkedid, bridgepeer=bridgepeer, userfield=userfield,
             userdeftype=userdeftype, eventextra=eventextra)
 
+
 class AsteriskCSVCEL(astcsv.AsteriskCSV):
     """A representation of an Asterisk CSV CEL file"""
 
     def __init__(self, filename=None, records=None):
         """Initialize CEL records from an Asterisk cel-csv file"""
 
-        astcsv.AsteriskCSV.__init__(self, filename, records,
+        astcsv.AsteriskCSV.__init__(
+            self, filename, records,
             AsteriskCSVCELLine.fields, AsteriskCSVCELLine)
 
 
@@ -182,13 +185,16 @@ class AsteriskCSVCELTests(unittest.TestCase):
 
         cel = AsteriskCSVCEL("self_test/CELMaster1.csv")
         self.assertEqual(len(cel), 16)
-        self.assertTrue(AsteriskCSVCELLine(eventtype="LINKEDID_END",
-                            channel="TinCan/string").match(cel[-1],
-                                silent=True, exact=(True, True)))
-        self.assertTrue(cel[-1].match(AsteriskCSVCELLine(
-                            eventtype="LINKEDID_END",
-                            channel="TinCan/string"),
-                                silent=True, exact=(True, True)))
+        self.assertTrue(AsteriskCSVCELLine(
+            eventtype="LINKEDID_END",
+            channel="TinCan/string").match(cel[-1],
+                                           silent=True,
+                                           exact=(True, True)))
+        self.assertTrue(cel[-1].match(
+            AsteriskCSVCELLine(eventtype="LINKEDID_END",
+                               channel="TinCan/string"),
+            silent=True,
+            exact=(True, True)))
 
         self.assertFalse(cel[1].match(cel[0], silent=True))
         self.assertFalse(cel[0].match(cel[1], silent=True))

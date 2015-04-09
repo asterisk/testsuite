@@ -151,7 +151,6 @@ class SIPpTestCase(TestCase):
         """
         self._scenario_stopped_observers.append(observer)
 
-
     def register_intermediate_obverver(self, observer):
         """Register a function to be called in between SIPp scenarios.
 
@@ -208,7 +207,7 @@ class SIPpTestCase(TestCase):
             sipp_scenarios = []
             for scenario in scenario_set:
                 if ("coordinated-sender" in scenario
-                    and "coordinated-receiver" in scenario):
+                        and "coordinated-receiver" in scenario):
                     sipp_scenarios.append(CoordinatedScenario(self.test_name,
                                                               scenario))
                 else:
@@ -234,10 +233,8 @@ class SIPpTestCase(TestCase):
                                              self._fail_on_any,
                                              self._intermediate_callback_fn,
                                              final_deferred)
-        sipp_sequence.register_scenario_start_callback(
-                        self._scenario_start_callback_fn)
-        sipp_sequence.register_scenario_stop_callback(
-                        self._scenario_stop_callback_fn)
+        sipp_sequence.register_scenario_start_callback(self._scenario_start_callback_fn)
+        sipp_sequence.register_scenario_stop_callback(self._scenario_stop_callback_fn)
         sipp_sequence.execute()
 
     def _intermediate_callback_fn(self, result):
@@ -255,7 +252,7 @@ class SIPpTestCase(TestCase):
                 observer(result)
             return result
 
-        # Allow some time for the SIPp process to come up 
+        # Allow some time for the SIPp process to come up
         reactor.callLater(.25, __run_callback, result)
 
     def _scenario_stop_callback_fn(self, result):
@@ -596,24 +593,24 @@ class SIPpScenario(object):
             method, then auto-fail the test if the scenario fails. """
             if not self.passed:
                 LOGGER.warning("SIPp Scenario %s Failed" %
-                    self.scenario['scenario'])
+                               self.scenario['scenario'])
                 self._test_case.passed = False
                 self._test_case.stop_reactor()
             return result
 
         sipp_args = [
-                self.sipp, self.target,
-                '-sf',
-                '%s/sipp/%s' % (self.test_dir, self.scenario['scenario']),
-                '-nostdin',
-                '-skip_rlimit',
+            self.sipp, self.target,
+            '-sf',
+            '%s/sipp/%s' % (self.test_dir, self.scenario['scenario']),
+            '-nostdin',
+            '-skip_rlimit',
         ]
 
         default_args = {
-            '-p' : str(self.default_port),
-            '-m' : '1',
-            '-i' : '127.0.0.1',
-            '-timeout' : '20s'
+            '-p': str(self.default_port),
+            '-m': '1',
+            '-i': '127.0.0.1',
+            '-timeout': '20s'
         }
 
         # Override and extend defaults
@@ -622,17 +619,15 @@ class SIPpScenario(object):
 
         # correct the path specified by -slave_cfg
         if '-slave_cfg' in default_args:
-            default_args['-slave_cfg'] = ('%s/sipp/%s' %
-                                            (self.test_dir,
-                                             default_args['-slave_cfg']))
+            default_args['-slave_cfg'] = ('%s/sipp/%s' % (
+                self.test_dir, default_args['-slave_cfg']))
 
         if '-inf' in default_args:
-            default_args['-inf'] = ('%s/sipp/%s' %
-                                        (self.test_dir,
-                                         default_args['-inf']))
+            default_args['-inf'] = ('%s/sipp/%s' % (
+                self.test_dir, default_args['-inf']))
 
         for (key, val) in default_args.items():
-            sipp_args.extend([ key, val ])
+            sipp_args.extend([key, val])
         sipp_args.extend(self.positional_args)
 
         LOGGER.info("Executing SIPp scenario: %s" % self.scenario['scenario'])
@@ -646,14 +641,16 @@ class SIPpScenario(object):
             self._test_case = test_case
             exit_deferred.addCallback(__evaluate_scenario_results)
 
-        self._process = SIPpProtocol(self.scenario['scenario'], exit_deferred, start_deferred)
+        self._process = SIPpProtocol(self.scenario['scenario'], exit_deferred,
+                                     start_deferred)
         reactor.spawnProcess(self._process,
                              sipp_args[0],
                              sipp_args,
-                             {"TERM" : "vt100", },
+                             {"TERM": "vt100", },
                              None,
                              None)
         return self._our_exit_deferred
+
 
 class CoordinatedScenario(object):
     """A SIPp based scenario for the Asterisk testsuite that handles basic 3PCC
@@ -697,15 +694,14 @@ class CoordinatedScenario(object):
         sender_config['key-args']['-3pcc'] = coordination_address
         target = sender_config.get('target', '127.0.0.1')
         self.sender = SIPpScenario(test_dir,
-                                     sender_config['key-args'],
-                                     sender_config.get('ordered-args', []),
-                                     target=target)
+                                   sender_config['key-args'],
+                                   sender_config.get('ordered-args', []),
+                                   target=target)
 
         self.exited = False
         self.passed = False
         self.results = []
         self.name = "Coordinated Scenario %d" % self.coordination_port
-
 
     def kill(self):
         """Kill the executing SIPp scenario"""
@@ -762,9 +758,8 @@ class CoordinatedScenario(object):
         # setup callback for receiver completion
         exit_deferred = defer.Deferred()
         receiver_deferred = self.receiver.run(test_case,
-                                                   receiver_start_deferred)
+                                              receiver_start_deferred)
         receiver_deferred.addCallback(__scenario_callback, exit_deferred)
-
 
         return exit_deferred
 
@@ -858,4 +853,3 @@ class SIPpTest(TestCase):
             deferds.append(deferred)
 
         defer.DeferredList(deferds).addCallback(__set_pass_fail)
-

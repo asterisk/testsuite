@@ -15,6 +15,7 @@ sys.path.append("lib/python")
 
 import test_suite_utils
 
+
 class SIPpVersion:
     """A SIPp Version.
 
@@ -36,14 +37,14 @@ class SIPpVersion:
         if version is None and feature is None:
             sipp = test_suite_utils.which("sipp")
             if sipp is None:
-               return
+                return
 
             cmd = [
                 sipp, "-v"
             ]
             try:
                 sipp_process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT)
+                                                stderr=subprocess.STDOUT)
             except OSError:
                 return
             for line in sipp_process.stdout:
@@ -123,6 +124,7 @@ class SIPpVersion:
             self.tls = True
         if value.find("PCAP") > -1:
             self.pcap = True
+
 
 class SIPpVersionTests(unittest.TestCase):
     def test_version(self):

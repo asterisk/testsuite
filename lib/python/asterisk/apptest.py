@@ -23,6 +23,7 @@ from ami import AMIEventInstance
 
 LOGGER = logging.getLogger(__name__)
 
+
 class AppTest(TestCase):
     """A pluggable test object suitable for orchestrating tests against long
         running Asterisk applications"""
@@ -59,7 +60,7 @@ class AppTest(TestCase):
 
         self.raw_test_config = test_config
         if 'app' in self.raw_test_config:
-            self._applications = [ self.raw_test_config['app'] ]
+            self._applications = [self.raw_test_config['app']]
         elif 'apps' in self.raw_test_config:
             self._applications = self.raw_test_config['apps']
         else:
@@ -222,18 +223,18 @@ class ChannelObject(object):
         self._channel_id = channel_def['channel-id']
         self._channel_name = channel_def['channel-name']
         self._applications = applications
-        self._controller_context = channel_def.get('context') or \
-                                   ChannelObject.default_context
-        self._controller_initial_exten = channel_def.get('exten') or \
-                                         ChannelObject.default_wait_exten
-        self._controller_hangup_exten = channel_def.get('hangup-exten') or \
-                                        ChannelObject.default_hangup_exten
-        self._controller_audio_exten = channel_def.get('audio-exten') or \
-                                       ChannelObject.default_audio_exten
-        self._controller_dtmf_exten = channel_def.get('dtmf-exten') or \
-                                      ChannelObject.default_dtmf_exten
-        self._controller_wait_exten = channel_def.get('wait-exten') or \
-                                      ChannelObject.default_wait_exten
+        self._controller_context = channel_def.get('context') \
+            or ChannelObject.default_context
+        self._controller_initial_exten = channel_def.get('exten') \
+            or ChannelObject.default_wait_exten
+        self._controller_hangup_exten = channel_def.get('hangup-exten') \
+            or ChannelObject.default_hangup_exten
+        self._controller_audio_exten = channel_def.get('audio-exten') \
+            or ChannelObject.default_audio_exten
+        self._controller_dtmf_exten = channel_def.get('dtmf-exten') \
+            or ChannelObject.default_dtmf_exten
+        self._controller_wait_exten = channel_def.get('wait-exten') \
+            or ChannelObject.default_wait_exten
         delay = channel_def.get('delay') or 0
 
         self.ami = ami
@@ -270,10 +271,10 @@ class ChannelObject(object):
         def __spawn_call_callback(spawn_call_deferred):
             """Actually perform the origination"""
             self.ami.originate(channel=self._channel_name,
-                    context=self._controller_context,
-                    exten=self._controller_initial_exten,
-                    priority='1',
-                    variable={'testuniqueid': '%s' % self._unique_id})
+                               context=self._controller_context,
+                               exten=self._controller_initial_exten,
+                               priority='1',
+                               variable={'testuniqueid': '%s' % self._unique_id})
             spawn_call_deferred.callback(self)
 
         spawn_call_deferred = defer.Deferred()
@@ -283,7 +284,7 @@ class ChannelObject(object):
 
     def __str__(self):
         return '(Controller: %s; Application %s)' % (self.controller_channel,
-                                                    self.app_channel)
+                                                     self.app_channel)
 
     def _handle_redirect_failure(self, reason):
         """If a redirect fails, complain loudly"""
@@ -362,8 +363,8 @@ class ChannelObject(object):
             dtmf, dtmf_deferred = param
             if (self._previous_dtmf != dtmf):
                 deferred = self.ami.setVar(channel=self.controller_channel,
-                                 variable='DTMF_TO_SEND',
-                                 value=dtmf)
+                                           variable='DTMF_TO_SEND',
+                                           value=dtmf)
                 deferred.addCallback(__send_dtmf_redirect, dtmf_deferred)
                 self._previous_dtmf = dtmf
             else:
@@ -401,8 +402,8 @@ class ChannelObject(object):
             sound_file, audio_deferred = param
             if (self._previous_sound_file != sound_file):
                 deferred = self.ami.setVar(channel=self.controller_channel,
-                                variable="TALK_AUDIO",
-                                value=sound_file)
+                                           variable="TALK_AUDIO",
+                                           value=sound_file)
                 deferred.addCallback(__stream_audio_redirect, audio_deferred)
                 self._previous_sound_file = sound_file
             else:
@@ -517,8 +518,8 @@ class ChannelObject(object):
         """Handler for test events"""
         if 'channel' not in event:
             return
-        if self.app_channel not in event['channel'] and \
-            self.controller_channel not in event['channel']:
+        if self.app_channel not in event['channel'] \
+                and self.controller_channel not in event['channel']:
             return
         for observer in self._test_observers:
             observer(self, event)
@@ -603,7 +604,7 @@ class ApplicationEventInstance(AMIEventInstance):
         # sure that this is actually for us by checking the Asterisk channel
         # names
         if (self.channel_obj.app_channel in event['channel']
-            or self.channel_obj.controller_channel in event['channel']):
+                or self.channel_obj.controller_channel in event['channel']):
             self.execute_next_action(actions=self.actions)
 
     def execute_next_action(self, result=None, actions=None):
@@ -714,10 +715,11 @@ class ActionStreamAudioWithDtmf(object):
             else int(action_config['sound-delay'])
 
     def __call__(self, channel_object):
-        return channel_object.stream_audio_with_dtmf(sound_file=self.sound_file,
-                                                dtmf=self.dtmf,
-                                                sound_delay=self.sound_delay,
-                                                dtmf_delay=self.dtmf_delay)
+        return channel_object.stream_audio_with_dtmf(
+            sound_file=self.sound_file,
+            dtmf=self.dtmf,
+            sound_delay=self.sound_delay,
+            dtmf_delay=self.dtmf_delay)
 
 
 class ActionSetExpectedResult(object):
@@ -803,9 +805,9 @@ class ActionSendMessage(object):
         self.add_app_channel = action_config.get('add-app-channel') or False
         self.add_control_channel = action_config.get('add-control-channel') or False
         self.channel_id = action_config.get('channel-id') or None
-        if ((self.add_app_channel and self.add_control_channel) or
-            (self.add_app_channel and self.channel_id) or
-            (self.add_control_channel and self.channel_id)):
+        if ((self.add_app_channel and self.add_control_channel)
+                or (self.add_app_channel and self.channel_id)
+                or (self.add_control_channel and self.channel_id)):
             raise Exception('Only one channel can be added to the message!')
         self.message_fields = action_config['fields']
 
@@ -816,7 +818,8 @@ class ActionSendMessage(object):
             self.message_fields['Channel'] = channel_object.controller_channel
         elif self.channel_id:
             test_object = AppTest.get_instance()
-            self.message_fields['Channel'] = test_object.get_channel_object(self.channel_id).app_channel
+            self.message_fields['Channel'] = test_object\
+                .get_channel_object(self.channel_id).app_channel
         LOGGER.debug('Sending message: %s' % str(self.message_fields))
         channel_object.ami.sendMessage(self.message_fields)
         return None
@@ -834,7 +837,7 @@ class ActionFactory(object):
                             'hangup': ActionHangup,
                             'fail-test': ActionFailTest,
                             'end-scenario': ActionEndScenario,
-                            'send-ami-message': ActionSendMessage,}
+                            'send-ami-message': ActionSendMessage, }
 
     @staticmethod
     def create_action(action_def):
