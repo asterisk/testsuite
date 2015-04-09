@@ -26,6 +26,7 @@ sys.path.append('lib/python')
 
 from version import AsteriskVersion
 
+
 class TestModuleFinder(object):
     """Determines if a module is a test module that can be loaded"""
 
@@ -82,12 +83,15 @@ class TestModuleLoader(object):
         if fullname in sys.modules:
             mod = sys.modules[fullname]
         else:
-            mod = sys.modules.setdefault(fullname,
+            mod = sys.modules.setdefault(
+                fullname,
                 imp.load_source(fullname, self._get_filename(fullname)))
 
         return mod
 
+
 sys.path_hooks.append(TestModuleFinder)
+
 
 def load_test_modules(test_config, test_object, ast_version):
     """Load the pluggable modules for a test
@@ -111,8 +115,8 @@ def load_test_modules(test_config, test_object, ast_version):
         if check_module_version(module_spec, ast_version):
             # If there's a specific portion of the config for this module,
             # use it
-            if ('config-section' in module_spec and
-                module_spec['config-section'] in test_config):
+            if ('config-section' in module_spec
+                    and module_spec['config-section'] in test_config):
                 module_config = test_config[module_spec['config-section']]
             else:
                 module_config = test_config
@@ -122,9 +126,10 @@ def load_test_modules(test_config, test_object, ast_version):
             # and the test object that they attach to
             module_type(module_config, test_object)
         else:
-            LOGGER.debug("Skipping the loading of test module %s due to it's " \
-                "minversion and/or maxversion not being met." %
-                module_spec['typename'])
+            LOGGER.debug("Skipping the loading of test module %s due to it's "
+                         "minversion and/or maxversion not being met." %
+                         module_spec['typename'])
+
 
 def check_module_version(module_spec, ast_version):
     """Check the module configuration for minversion and maxversion and check
@@ -142,13 +147,14 @@ def check_module_version(module_spec, ast_version):
     modminversion = module_spec.get('minversion')
     modmaxversion = module_spec.get('maxversion')
     if (modminversion is not None and
-        AsteriskVersion(ast_version) < AsteriskVersion(modminversion)):
+            AsteriskVersion(ast_version) < AsteriskVersion(modminversion)):
         return False
     if (modmaxversion is not None and
-        AsteriskVersion(ast_version) >= AsteriskVersion(modmaxversion)):
+            AsteriskVersion(ast_version) >= AsteriskVersion(modmaxversion)):
         return False
 
     return True
+
 
 def load_and_parse_module(type_name):
     """Take a qualified module/object name, load the module, and return
@@ -178,6 +184,7 @@ def load_and_parse_module(type_name):
         module = getattr(module, comp)
     return module
 
+
 def create_test_object(test_path, test_config):
     """Create the specified test object from the test configuration
 
@@ -206,8 +213,8 @@ def create_test_object(test_path, test_config):
         return None
 
     test_object_config = None
-    if ('config-section' in test_object_spec and
-        test_object_spec['config-section'] in test_config):
+    if ('config-section' in test_object_spec
+            and test_object_spec['config-section'] in test_config):
         test_object_config = test_config[test_object_spec['config-section']]
     else:
         test_object_config = test_config
@@ -217,6 +224,7 @@ def create_test_object(test_path, test_config):
     # config object, if none is specified)
     test_obj = module_obj(test_path, test_object_config)
     return test_obj
+
 
 def load_test_config(test_directory):
     """Load and parse the yaml test config specified by the test_directory
@@ -246,6 +254,7 @@ def load_test_config(test_directory):
 
     return test_config
 
+
 def read_module_paths(test_config, test_path):
     """Read additional paths required for loading modules for the test
 
@@ -273,7 +282,8 @@ def read_module_paths(test_config, test_path):
             TestModuleFinder.supported_paths.append(os.path.join(test_path, path))
             sys.path.append(os.path.join(test_path, path))
 
-def main(argv = None):
+
+def main(argv=None):
     """Main entry point for the test run
 
     Returns:
@@ -285,7 +295,7 @@ def main(argv = None):
         args = sys.argv
 
     if (len(args) < 2):
-        LOGGER.error("test_runner requires the full path to the test " \
+        LOGGER.error("test_runner requires the full path to the test "
                      "directory to execute")
         return 1
     test_directory = args[1]

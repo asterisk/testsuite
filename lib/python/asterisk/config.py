@@ -23,6 +23,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 def is_blank_line(line):
     """Is this a blank line?"""
     return re.match("\s*(?:;.*)?$", line) is not None
@@ -103,8 +104,8 @@ class ConfigFile(object):
         match = self.category_re.match(line)
         if match is not None:
             self.categories.append(
-                Category(match.group("name"), 
-                    template=match.group("template") == "!")
+                Category(match.group("name"),
+                         template=match.group("template") == "!")
             )
         elif len(self.categories) == 0:
             if not is_blank_line(line):
@@ -165,7 +166,7 @@ class ConfigFileTests(unittest.TestCase):
         self.assertEqual(conf.categories[1].options[1][1], "x|y|z")
         self.assertEqual(conf.categories[1].options[2][0], "1234")
         self.assertEqual(conf.categories[1].options[2][1],
-                "4242,Example Mailbox,root@localhost,,var=val")
+                         "4242,Example Mailbox,root@localhost,,var=val")
 
         self.assertEqual(conf.categories[2].name, "template")
         self.assertTrue(conf.categories[2].template)
@@ -174,7 +175,7 @@ class ConfigFileTests(unittest.TestCase):
         self.assertEqual(conf.categories[2].options[0][1], "bar")
         self.assertEqual(conf.categories[2].options[1][0], "exten")
         self.assertEqual(conf.categories[2].options[1][1],
-                "_NXX.,n,Wait(1)")
+                         "_NXX.,n,Wait(1)")
         self.assertEqual(conf.categories[2].options[2][0], "astetcdir")
         self.assertEqual(conf.categories[2].options[2][1], "/etc/asterisk")
 

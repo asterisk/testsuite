@@ -19,10 +19,11 @@ from twisted.internet import reactor
 from starpy import fastagi
 from test_runner import load_and_parse_module
 from pluggable_registry import PLUGGABLE_ACTION_REGISTRY,\
-                               PLUGGABLE_EVENT_REGISTRY,\
-                               PluggableRegistry
+    PLUGGABLE_EVENT_REGISTRY,\
+    PluggableRegistry
 
 LOGGER = logging.getLogger(__name__)
+
 
 class Originator(object):
     """Pluggable module class that originates calls in Asterisk"""
@@ -272,8 +273,8 @@ class HangupMonitor(object):
         LOGGER.debug("Channel %s hungup", event['channel'])
         self.channels.remove(event['channel'])
         self.num_calls += 1
-        if 'min_calls' in self.config\
-            and self.num_calls < self.config["min_calls"]:
+        if 'min_calls' in self.config \
+                and self.num_calls < self.config["min_calls"]:
             return (ami, event)
         if len(self.channels) == 0:
             LOGGER.info("All channels have hungup; stopping test")
@@ -416,8 +417,8 @@ class SoundChecker(object):
         tolerance = self.actions[self.action_index].get('tolerance')
         if ((filesize - size) > tolerance) or ((size - filesize) > tolerance):
             LOGGER.error("""File '%s' failed size check: expected %d, actual %d
-                          (tolerance +/- %d""" % (self.filepath, size, filesize,
-                                                tolerance))
+                          (tolerance +/- %d""" % (
+                         self.filepath, size, filesize, tolerance))
             self.test_object.set_passed(False)
             if self.auto_stop:
                 self.test_object.stop_reactor()
@@ -540,8 +541,8 @@ class SoundChecker(object):
         self.sound_file = config['sound-file']
         if not self.sound_file:
             raise Exception("No sound file parameters specified")
-        if (not self.sound_file.get('file-name') or
-            not self.sound_file.get('file-path-type')):
+        if (not self.sound_file.get('file-name')
+                or not self.sound_file.get('file-path-type')):
             raise Exception("No file or file path type specified")
         if self.sound_file.get('absolute-path'):
             file_name = self.sound_file['file-name']
@@ -559,7 +560,7 @@ class SoundChecker(object):
         if not os.path.exists(self.filepath):
             LOGGER.error("File '%s' does not exist!" % self.filepath)
             self.test_object.set_passed(False)
-            if self.auto_stop == True:
+            if self.auto_stop:
                 self.test_object.stop_reactor()
             return
         self.actions = self.sound_file.get('actions')
@@ -654,8 +655,9 @@ class FastAGIModule(object):
             return
 
         agi.sendCommand(self.commands[idx])\
-        .addCallback(self.on_command_success, agi, idx)\
-        .addErrback(self.on_command_failure, agi, idx)
+            .addCallback(self.on_command_success, agi, idx)\
+            .addErrback(self.on_command_failure, agi, idx)
+
 
 class EventActionModule(object):
     """A class that links arbitrary events with one or more actions.
@@ -779,6 +781,7 @@ class EventActionModule(object):
         for action_mod in triggered_set["actions"]:
             action_mod.run(triggered_by, source, extra)
 
+
 class TestStartEventModule(object):
     """An event module that triggers when the test starts."""
 
@@ -794,6 +797,7 @@ class TestStartEventModule(object):
         self.triggered_callback(self, ast)
 PLUGGABLE_EVENT_REGISTRY.register("test-start", TestStartEventModule)
 
+
 class LogActionModule(object):
     """An action module that logs a message when triggered."""
 
@@ -806,6 +810,7 @@ class LogActionModule(object):
         """Log a message."""
         LOGGER.info(self.message)
 PLUGGABLE_ACTION_REGISTRY.register("logger", LogActionModule)
+
 
 class CallbackActionModule(object):
     """An action module that calls the specified callback."""
@@ -823,6 +828,7 @@ class CallbackActionModule(object):
         self.test_object.set_passed(method(self.test_object, triggered_by,
                                            source, extra))
 PLUGGABLE_ACTION_REGISTRY.register("callback", CallbackActionModule)
+
 
 class StopTestActionModule(object):
     """Action module that stops a test"""
@@ -847,6 +853,7 @@ class StopTestActionModule(object):
         self.test_object.stop_reactor()
 PLUGGABLE_ACTION_REGISTRY.register("stop_test", StopTestActionModule)
 
+
 class PjsuaPhoneActionModule(object):
     """An action module that instructs a phone to perform an action."""
 
@@ -862,4 +869,3 @@ class PjsuaPhoneActionModule(object):
         method = getattr(self.module, self.method)
         method(self.test_object, triggered_by, source, extra, self.config)
 PLUGGABLE_ACTION_REGISTRY.register("pjsua_phone", PjsuaPhoneActionModule)
-

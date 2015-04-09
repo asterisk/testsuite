@@ -28,6 +28,7 @@ sys.path.append("lib/python")
 
 LOGGER = logging.getLogger(__name__)
 
+
 class TestCondition(object):
     """Class that holds the state of some test condition.
 
@@ -60,13 +61,14 @@ class TestCondition(object):
         Keyword Arguments:
         value    The value to evaluate
         """
-        if self._evaluate_fn != None:
+        if self._evaluate_fn is not None:
             self.current_state = self._evaluate_fn(value, self)
         else:
-            LOGGER.warn("No evaluate function defined, setting " \
+            LOGGER.warn("No evaluate function defined, setting "
                         "current_state to [%s]" % str(value))
             self.current_state = value
         return
+
 
 def handle_redirect_failure(reason):
     """Generic AMI redirect failure handler"""
@@ -105,14 +107,14 @@ class VoiceMailTest(TestCase):
         This should be called once ami_receiver and ami_sender have both been
         set by the test derived from this class.
         """
-        if (self.ami_receiver != None and self.ami_sender != None):
+        if (self.ami_receiver is not None and self.ami_sender is not None):
             self.test_state_controller = TestStateController(self,
                                                              self.ami_receiver)
 
     def hangup(self):
         """Hang up the current call"""
 
-        if self.ast_sender == None:
+        if self.ast_sender is None:
             msg = "Attempting to send hangup to non-existant Asterisk instance"
             LOGGER.error(msg)
             failure = FailureTestState(self.condition_controller)
@@ -132,7 +134,7 @@ class VoiceMailTest(TestCase):
         dtmf_to_send    The DTMF code to send
         """
         LOGGER.info("Attempting to send DTMF " + dtmf_to_send)
-        if self.ami_sender == None:
+        if self.ami_sender is None:
             LOGGER.error("Attempting to send DTMF to non-connected caller AMI")
             failure = FailureTestState(self.condition_controller)
             self.test_state_controller.change_state(failure)
@@ -158,7 +160,7 @@ class VoiceMailTest(TestCase):
         audio_file    The local path to the file to stream
         """
 
-        if self.ami_sender == None:
+        if self.ami_sender is None:
             msg = "Attempting to send sound file to non-connected caller AMI"
             LOGGER.error(msg)
             failure = FailureTestState(self.condition_controller)
@@ -189,7 +191,7 @@ class VoiceMailTest(TestCase):
         close the audio recording cleanly; otherwise, Asterisk will detect the
         end of file as a hangup
         """
-        if self.ami_sender == None:
+        if self.ami_sender is None:
             msg = "Attempting to send sound/DTMF to non-connected caller AMI"
             LOGGER.error(msg)
             failure = FailureTestState(self.condition_controller)
@@ -255,9 +257,10 @@ class VoiceMailTest(TestCase):
         ret_val = True
         for key, value in self._test_conditions.items():
             if not value.current_state:
-                LOGGER.warn("Test Condition [" + key + "] has not passed") 
+                LOGGER.warn("Test Condition [" + key + "] has not passed")
                 ret_val = False
         return ret_val
+
 
 class VoiceMailState(TestState):
     """Base class for VoiceMail TestEvent state machine handling
@@ -275,7 +278,7 @@ class VoiceMailState(TestState):
         """
         super(VoiceMailState, self).__init__(controller)
         self.voice_mail_test = voice_mail_test
-        if self.voice_mail_test == None:
+        if self.voice_mail_test is None:
             msg = "Failed to set voicemail test object"
             LOGGER.error(msg)
             raise RuntimeError(msg)
@@ -385,7 +388,7 @@ class VoiceMailMailboxManagement(object):
 
         except IOError as io_error:
             if io_error.errno == errno.EACCESS:
-                LOGGER.error("You do not have sufficient permissions to " \
+                LOGGER.error("You do not have sufficient permissions to "
                              "perform the necessary directory manipulations")
                 return False
 
@@ -588,7 +591,6 @@ class VoiceMailMailboxManagement(object):
                         return True
         return False
 
-
     class UserObject(object):
         """An object that holds voicemail user information"""
 
@@ -734,4 +736,3 @@ class VoiceMailMailboxManagement(object):
             os.rmdir(mailbox_path)
 
         return True
-

@@ -15,6 +15,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 def print_test_event(event):
     """Log a test event
 
@@ -54,16 +55,16 @@ class TestStateController(object):
         print_test_event(event)
 
         if event['type'] == 'StateChange':
-            if (self._current_state != None):
+            if (self._current_state is not None):
                 self._current_state.handle_state_change(ami, event)
             else:
                 LOGGER.error("No initial state set before TestEvent received")
                 self._current_state = FailureTestState(self)
         elif event['type'] == 'Assert':
-            if (self._assert_handler != None):
+            if (self._assert_handler is not None):
                 self._assert_handler(ami, event)
             else:
-                LOGGER.warn("ASSERT received but no handler defined; " \
+                LOGGER.warn("ASSERT received but no handler defined; "
                             "test will now fail")
                 self.fail_test()
 
@@ -109,7 +110,7 @@ class TestState(object):
         """
         self.controller = controller
 
-        if (self.controller == None):
+        if (self.controller is None):
             LOGGER.error("Controller is none")
             raise RuntimeError('Controller is none')
 
@@ -133,6 +134,7 @@ class TestState(object):
         new_state    The new TestState to change to
         """
         self.controller.change_state(new_state)
+
 
 class FailureTestState(TestState):
     """A generic failure state.
@@ -170,5 +172,3 @@ class FailureTestState(TestState):
         new_state    The new TestState to change to
         """
         return
-
-

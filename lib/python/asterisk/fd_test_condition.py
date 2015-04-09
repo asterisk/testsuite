@@ -15,6 +15,7 @@ from test_conditions import TestCondition
 
 LOGGER = logging.getLogger(__name__)
 
+
 class FileDescriptor(object):
     """A small object that tracks a file descriptor.
 
@@ -115,7 +116,7 @@ class FdPreTestCondition(FdTestCondition):
 
         finished_deferred = defer.Deferred()
         exec_list = [super(FdPreTestCondition, self).get_file_descriptors(ast)
-            for ast in self.ast]
+                     for ast in self.ast]
         defer.DeferredList(exec_list).addCallback(__raise_finished,
                                                   finished_deferred)
 
@@ -138,13 +139,19 @@ class FdPostTestCondition(FdTestCondition):
                 else:
                     # Find all file descriptors in pre-check not in post-check
                     for fd in related_test_condition.file_descriptors[ast_host]:
-                        if (len([f for f in self.file_descriptors[ast_host] if fd.number == f.number]) == 0):
+                        if (len([
+                                f for f
+                                in self.file_descriptors[ast_host]
+                                if fd.number == f.number]) == 0):
                             super(FdPostTestCondition, self).fail_check(
                                 "Failed to find file descriptor %d [%s] in "
                                 "post-test check" % (fd.number, fd.info))
                     # Find all file descriptors in post-check not in pre-check
                     for fd in self.file_descriptors[ast_host]:
-                        if (len([f for f in related_test_condition.file_descriptors[ast_host] if fd.number == f.number]) == 0):
+                        if (len([
+                                f for f
+                                in related_test_condition.file_descriptors[ast_host]
+                                if fd.number == f.number]) == 0):
                             super(FdPostTestCondition, self).fail_check(
                                 "Failed to find file descriptor %d [%s] in "
                                 "pre-test check" % (fd.number, fd.info))
@@ -152,7 +159,7 @@ class FdPostTestCondition(FdTestCondition):
             finished_deferred.callback(self)
             return finished_deferred
 
-        if related_test_condition == None:
+        if related_test_condition is None:
             msg = "No pre-test condition object provided"
             super(FdPostTestCondition, self).fail_check(msg)
             return
@@ -163,4 +170,3 @@ class FdPostTestCondition(FdTestCondition):
         defer.DeferredList(exec_list).addCallback(__file_descriptors_obtained,
                                                   finished_deferred)
         return finished_deferred
-

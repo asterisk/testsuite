@@ -17,6 +17,7 @@ from twisted.internet import defer
 
 LOGGER = logging.getLogger(__name__)
 
+
 class SipDialogTestCondition(TestCondition):
     """This class is a base class for the pre- and post-test condition
     classes that check for the existence of SIP dialogs in Asterisk. It provides
@@ -113,7 +114,7 @@ class SipDialogPreTestCondition(SipDialogTestCondition):
                 if ast.host == result.host:
                     __get_dialogs(ast)
                     return result
-            LOGGER.warning("Unable to determine Asterisk instance from CLI " \
+            LOGGER.warning("Unable to determine Asterisk instance from CLI "
                            "command run on host %s" % result.host)
             return result
 
@@ -128,8 +129,8 @@ class SipDialogPreTestCondition(SipDialogTestCondition):
             if len(dialog_history) > 0:
                 # If any dialogs are present before test execution, something
                 # funny is going on
-                super(SipDialogPreTestCondition, self).fail_check("%d dialogs " \
-                    "were detected in Asterisk %s before test execution" %
+                super(SipDialogPreTestCondition, self).fail_check(
+                    "%d dialogs were detected in Asterisk %s before test execution" %
                     (len(dialog_history), result.host))
             else:
                 super(SipDialogPreTestCondition, self).pass_check()
@@ -143,8 +144,9 @@ class SipDialogPreTestCondition(SipDialogTestCondition):
         self._finished_deferred = defer.Deferred()
         # Turn on history and check for dialogs
         for ast in self.ast:
-            ast.cli_exec("sip set history on").addCallback(__history_finished) 
+            ast.cli_exec("sip set history on").addCallback(__history_finished)
         return self._finished_deferred
+
 
 class SipDialogPostTestCondition(SipDialogTestCondition):
     """Check the post-test conditions for SIP dialogs.
@@ -209,13 +211,14 @@ class SipDialogPostTestCondition(SipDialogTestCondition):
                             history_requirements[dialog][req] = True
                 if not scheduled:
                     super(SipDialogPostTestCondition, self).fail_check(
-                        "Dialog %s in Asterisk instance %s not scheduled for " \
+                        "Dialog %s in Asterisk instance %s not scheduled for "
                         "destruction" % (dialog, self.ast[self._counter].host))
                 for req in history_requirements[dialog].keys():
-                    if history_requirements[dialog][req] == False:
+                    if history_requirements[dialog][req] is False:
                         super(SipDialogPostTestCondition, self).fail_check(
-                            "Dialog %s in Asterisk instance %s did not have " \
-                            "required step in history: %s" % (dialog,
+                            "Dialog %s in Asterisk instance %s did not have "
+                            "required step in history: %s" % (
+                                dialog,
                                 self.ast[self._counter].host, req))
             __get_dialogs()
             return result
@@ -224,6 +227,7 @@ class SipDialogPostTestCondition(SipDialogTestCondition):
         self._counter = -1
         __get_dialogs()
         return self._finished_deferred
+
 
 class TestConfig(object):
     """Mock TestConfig object"""
@@ -239,6 +243,7 @@ class TestConfig(object):
         self.related_condition = ""
         self.config = {}
 
+
 class TestConfigWithHistory(TestConfig):
     """Mock TestConfig object with history requirements"""
 
@@ -249,6 +254,7 @@ class TestConfigWithHistory(TestConfig):
         self.config['history_requirements'] = []
         self.config['history_requirements'].append('Hangup')
         self.config['history_requirements'].append('NewChan')
+
 
 class AstMockObjectPostTestNoDestructionFail(object):
     """Mock out CLI execution from Asterisk instance
@@ -313,6 +319,7 @@ class AstMockObjectPostTestNoDestructionFail(object):
             ret_string += "11. TxResp          SIP/2.0 / 102 BYE - 200 OK\n"
             ret_string += "12. Hangup          Cause Normal Clearing\n"
         return ret_string
+
 
 class AstMockObjectPostTestNoHangupFail(object):
     """Mock out CLI execution from Asterisk instance
@@ -379,6 +386,7 @@ class AstMockObjectPostTestNoHangupFail(object):
             ret_string += "13. Hangup          Cause Normal Clearing\n"
         return ret_string
 
+
 class AstMockObjectPostTestNoDialogsPass(object):
     """Mock out CLI execution from Asterisk instance
 
@@ -406,6 +414,7 @@ class AstMockObjectPostTestNoDialogsPass(object):
             ret_string += "-= Dialog objects:\n\n"
 
         return ret_string
+
 
 class AstMockObjectPostTestPass(object):
     """Mock out CLI execution from Asterisk instance
@@ -472,6 +481,7 @@ class AstMockObjectPostTestPass(object):
             ret_string += "13. Hangup          Cause Normal Clearing\n"
         return ret_string
 
+
 class AstMockObjectPreTestFail(object):
     """Mock out CLI execution from Asterisk instance
 
@@ -517,6 +527,7 @@ class AstMockObjectPreTestFail(object):
             ret_string += "12. TxResp          SIP/2.0 / 102 BYE - 200 OK\n"
             ret_string += "13. Hangup          Cause Normal Clearing\n"
         return ret_string
+
 
 class AstMockObjectPreTestPass(object):
     """Mock out CLI execution from Asterisk instance
@@ -625,6 +636,7 @@ class SipDialogTestConditionUnitTest(unittest.TestCase):
         obj.register_asterisk_instance(ast4)
         obj.evaluate()
         self.assertEqual(obj.get_status(), 'Failed')
+
 
 def main():
     """Execute the unit tests"""

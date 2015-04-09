@@ -29,6 +29,7 @@ import rlmi
 
 LOGGER = logging.getLogger(__name__)
 
+
 class PcapListener(object):
     '''
     A class that creates a pcap file from a test and optionally provides
@@ -79,6 +80,7 @@ class PcapListener(object):
         packets as they arrive from the listener '''
         pass
 
+
 class Packet():
     ''' Some IP packet. Base class for everything else '''
 
@@ -112,7 +114,7 @@ class RTCPPacket(Packet):
         self.sender_report = None
         self.receiver_report = None
         ports = factory_manager.get_global_data(self.ip_layer.header.source)
-        if ports == None:
+        if ports is None:
             raise Exception()
         if (ports['rtcp'] != self.ip_layer.next.header.source):
             raise Exception()
@@ -129,15 +131,20 @@ class RTCPPacket(Packet):
                             UBInt16('length'),
                             UBInt32('ssrc'))
         self.rtcp_header = header_def.parse(binary_blob)
-        report_block_def = GreedyRange(Struct('report_block',
-                                            UBInt32('ssrc'),
-                                            BitStruct('lost_counts',
-                                                      BitField('fraction_lost', 8),
-                                                      BitField('packets_lost', 24)),
-                                            UBInt32('sequence_number_received'),
-                                            UBInt32('interarrival_jitter'),
-                                            UBInt32('last_sr'),
-                                            UBInt32('delay_last_sr')))
+        report_block_def = GreedyRange(
+            Struct(
+                'report_block',
+                UBInt32('ssrc'),
+                BitStruct(
+                    'lost_counts',
+                    BitField('fraction_lost', 8),
+                    BitField('packets_lost', 24)),
+                UBInt32('sequence_number_received'),
+                UBInt32('interarrival_jitter'),
+                UBInt32('last_sr'),
+                UBInt32('delay_last_sr')
+            )
+        )
         if self.rtcp_header.packet_type == 200:
             sender_def = Struct('sr',
                                 Struct('sender_info',
@@ -155,9 +162,10 @@ class RTCPPacket(Packet):
             self.receiver_report = receiver_def.parse(binary_blob[8:])
 
     def __str__(self):
-        return 'Header: %s\n%s: %s' % (self.rtcp_header,
-            'SR' if self.sender_report is not None else 'RR',
-            self.sender_report if self.sender_report is not None else self.receiver_report)
+        if self.sender_report is not None:
+            return "Header: %s\n%s: %s" % (self.rtcp_header, 'SR', self.sender_report)
+        else:
+            return 'Header: %s\n%s: %s' % (self.rtcp_header, 'RR', self.receiver_report)
 
 
 class RTPPacket(Packet):
@@ -172,10 +180,11 @@ class RTPPacket(Packet):
         '''
         Packet.__init__(self, packet_type='RTP', raw_packet=raw_packet)
         ports = factory_manager.get_global_data(self.ip_layer.header.source)
-        if ports == None:
+        if ports is None:
             raise Exception()
         if (ports['rtp'] != self.ip_layer.next.header.source):
             raise Exception()
+
 
 class SDPPacket(Packet):
     ''' An SDP packet. Should be owned by a SIPPacket '''
@@ -214,6 +223,7 @@ class PIDFPacket(Packet):
         Packet.__init__(self, packet_type="PIDF", raw_packet=raw_packet)
         self.xml = ascii_packet.strip()
         self.content_id = content_id
+
 
 class MWIPacket(Packet):
     '''An MWI body. Owned by SIPPacket or a MultipartPacket.'''
@@ -382,9 +392,10 @@ class SIPPacketFactory():
                 ret_packet.body.packet_type == 'SDP' and \
                 ret_packet.sdp_packet.rtp_port != 0 and \
                 ret_packet.sdp_packet.rtcp_port != 0:
-            self._factory_manager.add_global_data(ret_packet.ip_layer.header.source,
-                                                  {'rtp': ret_packet.sdp_packet.rtp_port,
-                                                   'rtcp': ret_packet.sdp_packet.rtcp_port})
+            self._factory_manager.add_global_data(
+                ret_packet.ip_layer.header.source,
+                {'rtp': ret_packet.sdp_packet.rtp_port,
+                 'rtcp': ret_packet.sdp_packet.rtcp_port})
         return ret_packet
 
 
@@ -507,7 +518,7 @@ class PacketFactoryManager():
             except:
                 pass
             if interpreted_packet is not None:
-                break;
+                break
         return interpreted_packet
 
 
@@ -544,7 +555,8 @@ class VOIPListener(PcapListener):
             pass
         if packet is None:
             return
-        LOGGER.debug('Got packet %s from %s' % (str(packet), packet.ip_layer.header.source))
+        LOGGER.debug('Got packet %s from %s' % (
+            str(packet), packet.ip_layer.header.source))
         if packet.ip_layer.header.source not in self.traces:
             self.traces[packet.ip_layer.header.source] = []
         self.traces[packet.ip_layer.header.source].append(packet)
@@ -552,7 +564,6 @@ class VOIPListener(PcapListener):
             return
         for callback in self._callbacks[packet.packet_type]:
             callback(packet)
-
 
     def add_callback(self, packet_type, callback):
         ''' Add a callback function for when a packet of a particular type

@@ -38,6 +38,7 @@ NOTE: The author stated that this code was in the Public Domain
 '((NOT B) OR (NOT A))'
 """
 
+
 class QM:
   def __init__(self, variables):
     """
@@ -66,9 +67,9 @@ class QM:
 
     # Handle special case for functions that always evaluate to True or False.
     if len(ones) == 0:
-      return 0,'0'
-    if len(ones) + len(dc) == 1<<self.numvars:
-      return 0,'1'
+      return 0, '0'
+    if len(ones) + len(dc) == 1 << self.numvars:
+      return 0, '1'
 
     primes = self.compute_primes(ones + dc)
     return self.unate_cover(list(primes), ones)
@@ -82,10 +83,10 @@ class QM:
     """
 
     sigma = []
-    for i in xrange(self.numvars+1):
+    for i in xrange(self.numvars + 1):
       sigma.append(set())
     for i in cubes:
-      sigma[bitcount(i)].add((i,0))
+      sigma[bitcount(i)].add((i, 0))
 
     primes = set()
     while sigma:
@@ -96,7 +97,7 @@ class QM:
         for a in c1:
           for b in c2:
             m = merge(a, b)
-            if m != None:
+            if m is not None:
               nc.add(m)
               redundant |= set([a, b])
         nsigma.append(nc)
@@ -128,14 +129,14 @@ class QM:
     covers = []
     if len(chart) > 0:
       covers = [set([i]) for i in chart[0]]
-    for i in xrange(1,len(chart)):
+    for i in xrange(1, len(chart)):
       new_covers = []
       for cover in covers:
         for prime_index in chart[i]:
           x = set(cover)
           x.add(prime_index)
           append = True
-          for j in xrange(len(new_covers)-1,-1,-1):
+          for j in xrange(len(new_covers)-1, -1, -1):
             if x <= new_covers[j]:
               del new_covers[j]
             elif x > new_covers[j]:
@@ -152,7 +153,7 @@ class QM:
         min_complexity = complexity
         result = primes_in_cover
 
-    return min_complexity,result
+    return min_complexity, result
 
   def calculate_complexity(self, minterms):
     """
@@ -200,7 +201,7 @@ class QM:
     complexity = len(minterms)
     if complexity == 1:
       complexity = 0
-    mask = (1<<self.numvars)-1
+    mask = (1 << self.numvars) - 1
     for minterm in minterms:
       masked = ~minterm[1] & mask
       term_complexity = bitcount(masked)
@@ -221,12 +222,12 @@ class QM:
     NOT.
     """
 
-    if isinstance(minterms,str):
+    if isinstance(minterms, str):
       return minterms
 
     def parentheses(glue, array):
       if len(array) > 1:
-        return ''.join(['(',glue.join(array),')'])
+        return ''.join(['(', glue.join(array), ')'])
       else:
         return glue.join(array)
 
@@ -234,21 +235,23 @@ class QM:
     for minterm in minterms:
       and_terms = []
       for j in xrange(len(self.variables)):
-        if minterm[0] & 1<<j:
+        if minterm[0] & 1 << j:
           and_terms.append(self.variables[j])
-        elif not minterm[1] & 1<<j:
+        elif not minterm[1] & 1 << j:
           and_terms.append('(NOT %s)' % self.variables[j])
       or_terms.append(parentheses(' AND ', and_terms))
     return parentheses(' OR ', or_terms)
+
 
 def bitcount(i):
   """ Count set bits of the input. """
 
   res = 0
   while i > 0:
-    res += i&1
-    i>>=1
+    res += i & 1
+    i >>= 1
   return res
+
 
 def is_power_of_two_or_zero(x):
   """
@@ -258,6 +261,7 @@ def is_power_of_two_or_zero(x):
 
   return (x & (~x + 1)) == x
 
+
 def merge(i, j):
   """ Combine two minterms. """
 
@@ -266,5 +270,4 @@ def merge(i, j):
   y = i[0] ^ j[0]
   if not is_power_of_two_or_zero(y):
     return None
-  return (i[0] & j[0],i[1]|y)
-
+  return (i[0] & j[0], i[1] | y)

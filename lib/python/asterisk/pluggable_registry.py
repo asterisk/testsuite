@@ -12,6 +12,7 @@ import re
 
 LOGGER = logging.getLogger(__name__)
 
+
 class PluggableRegistry(object):
     """Registry for pluggable modules"""
 
@@ -34,6 +35,7 @@ class PluggableRegistry(object):
 
 PLUGGABLE_EVENT_REGISTRY = PluggableRegistry()
 PLUGGABLE_ACTION_REGISTRY = PluggableRegistry()
+
 
 def var_replace(text, values):
     """ perform variable replacement on text

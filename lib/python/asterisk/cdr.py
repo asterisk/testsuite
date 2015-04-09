@@ -17,9 +17,9 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 class CDRModule(object):
     """A module that checks a test for expected CDR results"""
-
 
     def __init__(self, module_config, test_object):
         """Constructor
@@ -67,7 +67,6 @@ class CDRModule(object):
                          sys.exc_info()[0])
         return callback_param
 
-
     def match_cdrs(self):
         """Called when all instances of Asterisk have exited.  Derived
         classes can override this to provide their own behavior for CDR
@@ -79,10 +78,8 @@ class CDRModule(object):
             for file_name in self.cdr_records[ast_id]:
                 records = self.cdr_records[ast_id][file_name]
                 cdr_expect = AsteriskCSVCDR(records=records)
-                cdr_file = AsteriskCSVCDR(filename="%s/%s/cdr-csv/%s.csv" %
-                    (ast_instance.base,
-                     ast_instance.directories['astlogdir'],
-                     file_name))
+                cdr_file = AsteriskCSVCDR(filename=ast_instance.get_path(
+                    "astlogdir", "cdr-csv", "%s.csv" % file_name))
                 if cdr_expect.match(cdr_file):
                     LOGGER.debug("%s.csv: CDR results met expectations" %
                                  file_name)
@@ -97,11 +94,13 @@ class CDRModule(object):
 class AsteriskCSVCDRLine(astcsv.AsteriskCSVLine):
     """A single Asterisk call detail record"""
 
-    fields = ['accountcode', 'source', 'destination', 'dcontext', 'callerid',
-    'channel', 'dchannel', 'lastapp', 'lastarg', 'start', 'answer', 'end',
-    'duration', 'billsec', 'disposition', 'amaflags', 'uniqueid', 'userfield']
+    fields = [
+        'accountcode', 'source', 'destination', 'dcontext', 'callerid',
+        'channel', 'dchannel', 'lastapp', 'lastarg', 'start', 'answer', 'end',
+        'duration', 'billsec', 'disposition', 'amaflags', 'uniqueid', 'userfield']
 
-    def __init__(self, accountcode=None, source=None, destination=None,
+    def __init__(
+            self, accountcode=None, source=None, destination=None,
             dcontext=None, callerid=None, channel=None, dchannel=None,
             lastapp=None, lastarg=None, start=None, answer=None, end=None,
             duration=None, billsec=None, disposition=None, amaflags=None,
@@ -114,8 +113,8 @@ class AsteriskCSVCDRLine(astcsv.AsteriskCSVLine):
         **dict.
         """
 
-        astcsv.AsteriskCSVLine.__init__(self,
-            AsteriskCSVCDRLine.fields, accountcode=accountcode,
+        astcsv.AsteriskCSVLine.__init__(
+            self, AsteriskCSVCDRLine.fields, accountcode=accountcode,
             source=source, destination=destination,
             dcontext=dcontext, callerid=callerid, channel=channel,
             dchannel=dchannel, lastapp=lastapp, lastarg=lastarg, start=start,
@@ -130,7 +129,8 @@ class AsteriskCSVCDR(astcsv.AsteriskCSV):
     def __init__(self, filename=None, records=None):
         """Initialize CDR records from an Asterisk cdr-csv file"""
 
-        astcsv.AsteriskCSV.__init__(self, filename, records,
+        astcsv.AsteriskCSV.__init__(
+            self, filename, records,
             AsteriskCSVCDRLine.fields, AsteriskCSVCDRLine)
 
 
@@ -142,11 +142,12 @@ class AsteriskCSVCDRTests(unittest.TestCase):
 
         cdr = AsteriskCSVCDR("self_test/Master.csv")
         self.assertEqual(len(cdr), 2)
-        self.assertTrue(AsteriskCSVCDRLine(duration=7,
-            lastapp="hangup").match(cdr[0],
-            exact=(True, True)))
-        self.assertTrue(cdr[0].match(AsteriskCSVCDRLine(duration=7,
-            lastapp="hangup"),
+        self.assertTrue(
+            AsteriskCSVCDRLine(duration=7, lastapp="hangup").match(
+                cdr[0],
+                exact=(True, True)))
+        self.assertTrue(cdr[0].match(
+            AsteriskCSVCDRLine(duration=7, lastapp="hangup"),
             exact=(True, True)))
 
         self.assertFalse(cdr[1].match(cdr[0]))

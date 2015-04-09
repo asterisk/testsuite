@@ -25,6 +25,7 @@ from asterisk import Asterisk
 from buildoptions import AsteriskBuildOptions
 from sippversion import SIPpVersion
 
+
 class TestConditionConfig(object):
     """This class creates a test condition config and will build up an
     object that derives from TestCondition based on that configuration
@@ -78,6 +79,7 @@ class TestConditionConfig(object):
             obj = mod(self)
             return obj
         return None
+
 
 class Dependency(object):
     """Class that checks and stores the dependencies for a particular Test."""
@@ -280,7 +282,7 @@ class TestConfig(object):
     def _process_global_settings(self):
         """Process settings in the top-level test-yaml config file"""
 
-        if self.global_test_config != None:
+        if self.global_test_config is not None:
             settings = self.global_test_config
             self.condition_definitions = settings.condition_definitions
             self.forced_version = settings.forced_version
@@ -295,10 +297,10 @@ class TestConfig(object):
                 if self.test_configuration in self.config:
                     self.config = self.config[self.test_configuration]
 
-                    if self.config != None and 'exclude-tests' in self.config:
+                    if self.config is not None and 'exclude-tests' in self.config:
                         self.excluded_tests = self.config['exclude-tests']
                 else:
-                    print ("WARNING - test configuration [%s] not found in " \
+                    print ("WARNING - test configuration [%s] not found in "
                            "config file" % self.test_configuration)
 
     def _process_testinfo(self):
@@ -306,7 +308,7 @@ class TestConfig(object):
 
         self.summary = "(none)"
         self.description = "(none)"
-        if self.config == None:
+        if self.config is None:
             return
         if "testinfo" not in self.config:
             return
@@ -363,7 +365,7 @@ class TestConfig(object):
 
         if not self.config:
             print "ERROR: Failed to load configuration for test '%s'" % \
-                    self.test_name
+                self.test_name
             return
 
         self._process_global_settings()
@@ -381,8 +383,8 @@ class TestConfig(object):
         """
         conditions = []
         conditions_temp = []
-        if (not self.config or 'properties' not in self.config or
-            'testconditions' not in self.config['properties']):
+        if (not self.config or 'properties' not in self.config
+                or 'testconditions' not in self.config['properties']):
             return conditions
 
         for conf in self.config['properties'].get('testconditions'):

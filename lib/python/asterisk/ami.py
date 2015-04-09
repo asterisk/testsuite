@@ -14,9 +14,10 @@ import logging
 import re
 import json
 from pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
-                               PLUGGABLE_ACTION_REGISTRY, var_replace
+    PLUGGABLE_ACTION_REGISTRY, var_replace
 
 LOGGER = logging.getLogger(__name__)
+
 
 class AMIEventInstance(object):
     """Base class for specific instances of AMI event observers
@@ -37,10 +38,8 @@ class AMIEventInstance(object):
         conditions = instance_config['conditions']
         self.match_conditions = conditions['match']
         self.nonmatch_conditions = conditions.get('nomatch', {})
-        self.ids = instance_config['id'].split(',') if 'id' in instance_config\
-	    else ['0']
-        self.action = instance_config['action'] if 'action' in instance_config\
-            else 'none'
+        self.ids = instance_config['id'].split(',') if 'id' in instance_config else ['0']
+        self.action = instance_config['action'] if 'action' in instance_config else 'none'
         self.config = instance_config
         self.passed = True
         self._registered = False
@@ -75,7 +74,7 @@ class AMIEventInstance(object):
             # test's yaml then create the dict with setting the Event to 'CEL'.
             # Otherwise set Event to 'CEL' since it's the only Event we want.
             if instance_config['conditions']['match'] is None:
-                instance_config['conditions']['match'] = {'Event' : 'CEL'}
+                instance_config['conditions']['match'] = {'Event': 'CEL'}
                 self.match_conditions = instance_config['conditions']['match']
             else:
                 instance_config['conditions']['match']['Event'] = 'CEL'
@@ -118,7 +117,7 @@ class AMIEventInstance(object):
     def dispose(self, ami):
         """Dispose of this object's AMI event registrations"""
         if str(ami.id) not in self.ids:
-            LOGGER.warning("Unable to dispose of AMIEventInstance - " \
+            LOGGER.warning("Unable to dispose of AMIEventInstance - "
                            "unknown AMI object %d", ami.id)
             return
         ami.deregisterEvent(self.match_conditions['Event'],
@@ -209,9 +208,9 @@ class AMIHeaderMatchInstance(AMIEventInstance):
         LOGGER.debug("Initializing an AMIHeaderMatchInstance")
         if 'requirements' in instance_config:
             self.match_requirements =\
-                    instance_config['requirements'].get('match', {})
+                instance_config['requirements'].get('match', {})
             self.nonmatch_requirements =\
-                    instance_config['requirements'].get('nomatch', {})
+                instance_config['requirements'].get('nomatch', {})
         else:
             self.match_requirements = {}
             self.nonmatch_requirements = {}
@@ -224,7 +223,7 @@ class AMIHeaderMatchInstance(AMIEventInstance):
                                key, event['event'])
                 self.passed = False
             elif not re.match(value, event.get(key.lower())):
-                LOGGER.warning("Requirement %s: %s does not match %s: %s in " \
+                LOGGER.warning("Requirement %s: %s does not match %s: %s in "
                                "event", key, value, key,
                                event.get(key.lower(), ''))
                 self.passed = False
@@ -242,7 +241,7 @@ class AMIHeaderMatchInstance(AMIEventInstance):
                                key, value, key, event.get(key.lower(), ''))
                 self.passed = False
             else:
-                LOGGER.debug("Requirement %s: %s does not match %s: %s " \
+                LOGGER.debug("Requirement %s: %s does not match %s: %s "
                              "in event", key, value, key,
                              event.get(key.lower(), ''))
 
@@ -292,7 +291,7 @@ class AMIOrderedHeaderMatchInstance(AMIEventInstance):
                                key, event['event'])
                 self.passed = False
             elif not re.match(value, event.get(key.lower())):
-                LOGGER.warning("Requirement %s: %s does not match %s: " \
+                LOGGER.warning("Requirement %s: %s does not match %s: "
                                "%s in event", key, value, key,
                                event.get(key.lower()))
                 self.passed = False
@@ -340,8 +339,8 @@ class CelRequirement(object):
         for key, value in requirements['match'].items():
             lower_key = key.lower()
             if lower_key == 'extra':
-                value = dict((key.lower(), value)\
-                    for key, value in value.iteritems())
+                value = dict((key.lower(), value)
+                             for key, value in value.iteritems())
             self.requirements[lower_key] = value
         self.orderings = requirements.get('partialorder') or []
         self.named_id = requirements.get('id')
@@ -364,8 +363,8 @@ class CelRequirement(object):
                     if extra_item is None:
                         continue
                     extra_match = re.match(extra_item, str(extra_value))
-                    if extra_match is None or\
-                        extra_match.end() != len(str(extra_value)):
+                    if extra_match is None \
+                            or extra_match.end() != len(str(extra_value)):
                         LOGGER.debug('Skipping %s - %s does not equal %s for '
                                      'extra-subfield %s', event['eventname'],
                                      extra_item, str(extra_value), extra_key)
@@ -419,8 +418,8 @@ class AMICelInstance(AMIEventInstance):
 
         # Add of all our named events to the lists of events that haven't
         # occurred yet
-        named_events = [ev for ev in self.match_requirements if\
-            ev.named_id is not None]
+        named_events = [ev for ev in self.match_requirements
+                        if ev.named_id is not None]
         AMICelInstance.unmatched_cel_events.extend(named_events)
 
         AMICelInstance.ami_cel_instances.append(self)
@@ -470,15 +469,15 @@ class AMICelInstance(AMIEventInstance):
         for order_type, named_event in cel_requirement.orderings.items():
             order_type = order_type.lower()
             if order_type == 'after':
-                matches = [ev for ev in AMICelInstance.matched_cel_events if\
-                    ev.named_id == named_event]
+                matches = [ev for ev in AMICelInstance.matched_cel_events
+                           if ev.named_id == named_event]
                 if len(matches) == 0:
                     LOGGER.warning('Event %s did not occur after %s; failing',
                                    str(cel_requirement), named_event)
                     self.test_object.set_passed(False)
             elif order_type == 'before':
-                matches = [ev for ev in AMICelInstance.unmatched_cel_events if\
-                    ev.named_id == named_event]
+                matches = [ev for ev in AMICelInstance.unmatched_cel_events
+                           if ev.named_id == named_event]
                 if len(matches) == 0:
                     LOGGER.warning('Event %s did not occur before %s; failing',
                                    str(cel_requirement), named_event)
@@ -512,7 +511,7 @@ class AMICallbackInstance(AMIEventInstance):
         callback_module = __import__(self.callback_module)
         method = getattr(callback_module, self.callback_method)
         self.passed = method(ami, event)
-        if self.passed == None:
+        if self.passed is None:
             LOGGER.error("Callback %s.%s returned None instead of a boolean",
                          self.callback_module, self.callback_method)
             self.passed = False
@@ -521,6 +520,7 @@ class AMICallbackInstance(AMIEventInstance):
         """Deferred callback called when this object should verify pass/fail"""
         self.test_object.set_passed(self.passed)
         return callback_param
+
 
 class AMIEventInstanceFactory:
     """Factory object that builds concrete instances of various AMIEventModules.
@@ -558,6 +558,7 @@ class AMIEventInstanceFactory:
                          instance_type)
             raise Exception
 
+
 class AMIEventModule(object):
     """Pluggable module for AMI event matching
 
@@ -580,6 +581,7 @@ class AMIEventModule(object):
             event_instance = AMIEventInstanceFactory\
                 .create_instance(instance, test_object)
             self.ami_instances.append(event_instance)
+
 
 class AMI(object):
     """Class that manages a connection to Asterisk over AMI"""
@@ -649,6 +651,7 @@ class AMI(object):
         reactor.callLater(delay, self.login)
         return reason
 
+
 class AMIStartEventModule(object):
     """An event module that triggers when the test starts."""
 
@@ -664,6 +667,7 @@ class AMIStartEventModule(object):
         self.triggered_callback(self, ami)
 PLUGGABLE_EVENT_REGISTRY.register("ami-start", AMIStartEventModule)
 
+
 class AMIPluggableEventInstance(AMIHeaderMatchInstance):
     """Subclass of AMIEventInstance that works with the pluggable event action
     module.
@@ -677,13 +681,13 @@ class AMIPluggableEventInstance(AMIHeaderMatchInstance):
     def __init__(self, test_object, triggered_callback, config, data):
         """Setup the AMI event observer"""
         self.triggered_callback = triggered_callback
-	self.data = data
+        self.data = data
         self.trigger_on_count = config.get('trigger-on-count', False)
         super(AMIPluggableEventInstance, self).__init__(config, test_object)
 
     def event_callback(self, ami, event):
         """Callback called when an event is received from AMI"""
-	super(AMIPluggableEventInstance, self).event_callback(ami, event)
+        super(AMIPluggableEventInstance, self).event_callback(ami, event)
         if self.passed and (not self.trigger_on_count or
                             self.count['event'] == self.count['min']):
             self.triggered_callback(self.data, ami, event)
@@ -705,12 +709,14 @@ class AMIPluggableEventModule(object):
                                                             self))
 PLUGGABLE_EVENT_REGISTRY.register("ami-events", AMIPluggableEventModule)
 
+
 def replace_ami_vars(mydict, values):
     outdict = {}
     for key, value in mydict.iteritems():
         outdict[key] = var_replace(value, values)
 
     return outdict
+
 
 class AMIPluggableActionModule(object):
     """Pluggable AMI action module.

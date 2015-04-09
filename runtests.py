@@ -129,14 +129,18 @@ class TestRun:
                 try:
                     (run_num, run_dir, archive_dir) = self._find_run_dirs()
                     symlink_dir = os.path.dirname(run_dir)
-                    absolute_dir = os.path.join(os.path.dirname(symlink_dir), os.readlink(symlink_dir))
+                    absolute_dir = os.path.join(os.path.dirname(symlink_dir),
+                                                os.readlink(symlink_dir))
                     shutil.rmtree(absolute_dir)
                     os.remove(symlink_dir)
                 except:
-                    print "Unable to clean up directory for test %s (non-fatal)" % self.test_name
+                    print "Unable to clean up directory for" \
+                          "test %s (non-fatal)" % self.test_name
 
             self.__parse_run_output(self.stdout)
-            print 'Test %s %s\n' % (cmd, 'timedout' if timedout else 'passed' if self.passed else 'failed')
+            print 'Test %s %s\n' % (
+                cmd,
+                'timedout' if timedout else 'passed' if self.passed else 'failed')
 
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
@@ -160,7 +164,12 @@ class TestRun:
             if not os.path.exists(dest_dir):
                 os.makedirs(dest_dir)
             dest_file = open(dest_dir + "/backtrace_%s.txt" % str(random_num), "w")
-            gdb_cmd = ["gdb", "-se", "asterisk", "-ex", "bt full", "-ex", "thread apply all bt", "--batch", "-c", core]
+            gdb_cmd = ["gdb",
+                       "-se", "asterisk",
+                       "-ex", "bt full",
+                       "-ex", "thread apply all bt",
+                       "--batch",
+                       "-c", core]
             print "Running %s" % (" ".join(gdb_cmd),)
             try:
                 res = subprocess.call(gdb_cmd, stdout=dest_file, stderr=subprocess.STDOUT)
@@ -168,7 +177,8 @@ class TestRun:
                     print "error analyzing core dump; gdb exited with %d" % res
                 # Copy the backtrace over to the logs
             except OSError, ose:
-                print "OSError ([%d]: %s) occurred while executing %r" % (ose.errno, ose.strerror, gdb_cmd)
+                print "OSError ([%d]: %s) occurred while executing %r" % \
+                    (ose.errno, ose.strerror, gdb_cmd)
                 return
             except:
                 print "Unknown exception occurred while executing %r" % (gdb_cmd,)
@@ -178,7 +188,8 @@ class TestRun:
                 try:
                     os.unlink(core)
                 except OSError, e:
-                    print "Error removing core file: %s: Beware of the stale core file in CWD!" % (e,)
+                    print "Error removing core file: %s: " \
+                          "Beware of the stale core file in CWD!" % (e,)
 
     def _find_run_dirs(self):
         test_run_dir = os.path.join(Asterisk.test_suite_root,
@@ -236,7 +247,8 @@ class TestRun:
         if (run_num == 0):
             return
 
-        refcounter_py = os.path.join(run_dir, "ast1/var/lib/asterisk/scripts/refcounter.py")
+        refcounter_py = os.path.join(run_dir,
+                                     "ast1/var/lib/asterisk/scripts/refcounter.py")
         if not os.path.exists(refcounter_py):
             return
 
@@ -267,9 +279,9 @@ class TestRun:
                     if not os.path.exists(dest_dir):
                         os.makedirs(dest_dir)
                     hardlink_or_copy(refs_txt,
-                        os.path.join(dest_dir, "refs.txt"))
+                                     os.path.join(dest_dir, "refs.txt"))
                     hardlink_or_copy(refs_in,
-                        os.path.join(dest_dir, "refs"))
+                                     os.path.join(dest_dir, "refs"))
                     self.stdout_print("REF_DEBUG identified leaks, mark test as failure")
                     self.passed = False
             i += 1
@@ -299,8 +311,8 @@ class TestRun:
             dest_dir = os.path.join(archive_dir,
                                     'ast%d/var/log/asterisk' % i)
             self._archive_files(ast_dir, dest_dir,
-                'messages.txt', 'full.txt', 'mmlog',
-                'valgrind.xml', 'valgrind-summary.txt')
+                                'messages.txt', 'full.txt', 'mmlog',
+                                'valgrind.xml', 'valgrind-summary.txt')
             i += 1
 
     def _archive_pcap_dump(self, run_dir, archive_dir):
@@ -322,7 +334,8 @@ class TestSuite:
 
         self.tests = []
         self.global_config = self._parse_global_config()
-        self.tests = sorted(self._parse_test_yaml("tests", ast_version), key=lambda test: test.test_name)
+        self.tests = sorted(self._parse_test_yaml("tests", ast_version),
+                            key=lambda test: test.test_name)
         self.total_time = 0.0
         self.total_count = 0
         self.total_failures = 0
@@ -349,13 +362,15 @@ class TestSuite:
             for val in t:
                 path = "%s/%s" % (test_dir, t[val])
                 if val == "test":
-                    # If we specified a subset of tests, there's no point loading the others.
+                    # If we specified a subset of tests, there's no point loading
+                    # the others.
                     if (self.options.tests and
                             not any((path + '/').startswith(test)
                                     for test in self.options.tests)):
                         continue
 
-                    tests.append(TestRun(path, ast_version, self.options, self.global_config, self.options.timeout))
+                    tests.append(TestRun(path, ast_version, self.options,
+                                         self.global_config, self.options.timeout))
                 elif val == "dir":
                     tests += self._parse_test_yaml(path, ast_version)
 
@@ -404,11 +419,9 @@ class TestSuite:
             for d in t.test_config.deps:
                 if d.version:
                     print "      --> Dependency: %s" % (d.name)
-                    print "        --> Version: %s -- Met: %s" % (d.version,
-                            str(d.met))
+                    print "        --> Version: %s -- Met: %s" % (d.version, str(d.met))
                 else:
-                    print "      --> Dependency: %s -- Met: %s" % (d.name,
-                             str(d.met))
+                    print "      --> Dependency: %s -- Met: %s" % (d.name, str(d.met))
 
             i += 1
 
@@ -418,12 +431,13 @@ class TestSuite:
         for t in self.tests:
             if t.can_run is False:
                 continue
-            if self.global_config != None:
+            if self.global_config is not None:
                 for excluded in self.global_config.excluded_tests:
                     if excluded in t.test_name:
                         continue
             i += 1
-        print "Tests to run: %d,  Maximum test inactivity time: %d sec." % (i, (self.options.timeout / 1000))
+        print "Tests to run: %d,  Maximum test inactivity time: %d sec." % \
+            (i, (self.options.timeout / 1000))
 
         for t in self.tests:
             if t.can_run is False:
@@ -442,7 +456,8 @@ class TestSuite:
                            (", ".join([str(v) for v in t.test_config.maxversion]),
                             t.test_config.maxversion_check))
                 for f in t.test_config.features:
-                    print "--- --> Version Feature: %s - %s" % (f, str(t.test_config.feature_check[f]))
+                    print "--- --> Version Feature: %s - %s" % (
+                        f, str(t.test_config.feature_check[f]))
                 print "--- --> Tags: %s" % (t.test_config.tags)
                 for d in t.test_config.deps:
                     print "--- --> Dependency: %s - %s" % (d.name, str(d.met))
@@ -464,12 +479,14 @@ class TestSuite:
             else:
                 # Establish Preconditions
                 print "Making sure Asterisk isn't running ..."
-                if os.system("if pidof asterisk >/dev/null; then killall -9 asterisk >/dev/null 2>&1; "
-                         "sleep 1; ! pidof asterisk >/dev/null; fi"):
+                if os.system("if pidof asterisk >/dev/null; then "
+                             "killall -9 asterisk >/dev/null 2>&1; "
+                             "sleep 1; ! pidof asterisk >/dev/null; fi"):
                     print "Could not kill asterisk."
                 print "Making sure SIPp isn't running..."
-                if os.system("if pidof sipp >/dev/null; then killall -9 sipp >/dev/null 2>&1; "
-                         "sleep 1; ! pidof sipp >/dev/null; fi"):
+                if os.system("if pidof sipp >/dev/null; then "
+                             "killall -9 sipp >/dev/null 2>&1; "
+                             "sleep 1; ! pidof sipp >/dev/null; fi"):
                     print "Could not kill sipp."
                 # XXX TODO Hard coded path, gross.
                 os.system("rm -f /var/run/asterisk/asterisk.ctl")
@@ -539,7 +556,8 @@ class TestSuite:
                 continue
 
             failure = doc.createElement("failure")
-            failure.appendChild(doc.createTextNode(self.__strip_illegal_xml_chars(t.failure_message)))
+            failure.appendChild(doc.createTextNode(
+                self.__strip_illegal_xml_chars(t.failure_message)))
             tc.appendChild(failure)
 
         doc.writexml(f, addindent="  ", newl="\n", encoding="utf-8")
@@ -557,33 +575,33 @@ def main(argv=None):
 
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-l", "--list-tests", action="store_true",
-            dest="list_tests", default=False,
-            help="List tests instead of running them.")
+                      dest="list_tests", default=False,
+                      help="List tests instead of running them.")
     parser.add_option("-t", "--test", action="append", default=[],
-            dest="tests",
-            help=("Run a single specified test (directory) instead of all tests.  "
-                  "May be specified more than once."))
+                      dest="tests",
+                      help=("Run a single specified test (directory) instead "
+                            "of all tests.  May be specified more than once."))
     parser.add_option("-g", "--tag", action="append",
-            dest="tags",
-            help="Specify one or more tags to select a subset of tests.")
+                      dest="tags",
+                      help="Specify one or more tags to select a subset of tests.")
     parser.add_option("-v", "--version",
-            dest="version", default=None,
-            help="Specify the version of Asterisk rather then detecting it.")
+                      dest="version", default=None,
+                      help="Specify the version of Asterisk rather then detecting it.")
     parser.add_option("-L", "--list-tags", action="store_true",
-            dest="list_tags", default=False,
-            help="List available tags")
+                      dest="list_tags", default=False,
+                      help="List available tags")
     parser.add_option("-n", "--dry-run", action="store_true",
-            dest="dry_run", default=False,
-            help="Only show which tests would be run.")
+                      dest="dry_run", default=False,
+                      help="Only show which tests would be run.")
     parser.add_option("--timeout", metavar='int', type=int,
-            dest="timeout", default=-1,
-            help="Abort test after n seconds of no output.")
+                      dest="timeout", default=-1,
+                      help="Abort test after n seconds of no output.")
     parser.add_option("-V", "--valgrind", action="store_true",
-            dest="valgrind", default=False,
-            help="Run Asterisk under Valgrind")
+                      dest="valgrind", default=False,
+                      help="Run Asterisk under Valgrind")
     parser.add_option("-c", "--cleanup", action="store_true",
-            dest="cleanup", default=False,
-            help="Cleanup tmp directory after each successful test")
+                      dest="cleanup", default=False,
+                      help="Cleanup tmp directory after each successful test")
     (options, args) = parser.parse_args(argv)
 
     ast_version = AsteriskVersion(options.version)
@@ -609,7 +627,8 @@ def main(argv=None):
 
     if options.valgrind:
         if not ET:
-            print "python lxml module not loaded, text summaries from valgrind will not be produced.\n"
+            print "python lxml module not loaded, text summaries " \
+                  "from valgrind will not be produced.\n"
         os.environ["VALGRIND_ENABLE"] = "true"
 
     print "Running tests for Asterisk %s ...\n" % str(ast_version)
@@ -627,8 +646,7 @@ def main(argv=None):
             if t.did_run is False:
                 print "SKIPPED"
                 for d in t.test_config.deps:
-                    print "      --> Dependency: %s -- Met: %s" % (d.name,
-                                 str(d.met))
+                    print "      --> Dependency: %s -- Met: %s" % (d.name, str(d.met))
                 if options.tags:
                     for t in t.test_config.tags:
                         print "      --> Tag: %s -- Met: %s" % (t, str(t in options.tags))

@@ -91,5 +91,3 @@ class SyncAMI(object):
         parser = HeaderParser()
 
         return parser.parsestr(data)
-
-

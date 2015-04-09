@@ -17,6 +17,7 @@ from test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
 
+
 class BridgeTestCase(TestCase):
     """A test object for bridging tests"""
 
@@ -24,17 +25,17 @@ class BridgeTestCase(TestCase):
     BOB_CONNECTED = '"Alice" <1234>'
 
     FEATURE_MAP = {
-            'blindxfer' : 1,
-            'atxfer' : 2,
-            'disconnect' : 3,
-            'automon' : 4,
-            'automixmon' : 5,
-            'parkcall' : 6,
-            'atxferthreeway' : 7,
-            # other arbitrary DTMF features can be matched under DTMF code 8
-            # as "unknown"
-            'unknown' : 8
-            }
+        'blindxfer': 1,
+        'atxfer': 2,
+        'disconnect': 3,
+        'automon': 4,
+        'automixmon': 5,
+        'parkcall': 6,
+        'atxferthreeway': 7,
+        # other arbitrary DTMF features can be matched under DTMF code 8
+        # as "unknown"
+        'unknown': 8
+    }
 
     def __init__(self, test_path='', test_config=None):
         """Class that handles tests involving two-party bridges.
@@ -193,13 +194,12 @@ class BridgeTestCase(TestCase):
 
         # Step 1: Initiate a call from Alice to Bob
         LOGGER.info("Originating call")
-        self.ami_alice.originate(channel=test_run['originate_channel'],
-                                 exten='test_call',
-                                 context='default',
-                                 priority='1',
-                                 variable={'TALK_AUDIO': ('%s' %
-                                    os.path.join(os.getcwd(),
-                                    'lib/python/asterisk/audio'))})
+        self.ami_alice.originate(
+            channel=test_run['originate_channel'],
+            exten='test_call', context='default', priority='1',
+            variable={
+                'TALK_AUDIO': os.path.join(os.getcwd(), 'lib/python/asterisk/audio')
+            })
 
     def user_callback(self, ami, event):
         """UserEvent AMI event callback"""
@@ -378,18 +378,22 @@ class BridgeTestCase(TestCase):
             self.execute_features()
 
         if alice_connected_line is not None:
-            self.ami_uut.getVar(self.uut_alice_channel,
+            self.ami_uut.getVar(
+                self.uut_alice_channel,
                 'CONNECTEDLINE(all)').addCallback(alice_connected,
                                                   alice_connected_line)
         if bob_connected_line is not None:
-            self.ami_uut.getVar(self.uut_bob_channel,
+            self.ami_uut.getVar(
+                self.uut_bob_channel,
                 'CONNECTEDLINE(all)').addCallback(bob_connected,
                                                   bob_connected_line)
         if alice_bridge_peer is not None:
-            self.ami_uut.getVar(self.uut_alice_channel,
+            self.ami_uut.getVar(
+                self.uut_alice_channel,
                 'BRIDGEPEER').addCallback(alice_bridgepeer, alice_bridge_peer)
         if bob_bridge_peer is not None:
-            self.ami_uut.getVar(self.uut_bob_channel,
+            self.ami_uut.getVar(
+                self.uut_bob_channel,
                 'BRIDGEPEER').addCallback(bob_bridgepeer, bob_bridge_peer)
 
     def execute_features(self):
@@ -408,9 +412,9 @@ class BridgeTestCase(TestCase):
     def execute_feature(self, feature):
         """Execute the specified feature"""
 
-        if (not 'who' in feature or
-            not 'what' in feature or
-            not 'success' in feature):
+        if (not 'who' in feature
+                or not 'what' in feature
+                or not 'success' in feature):
             LOGGER.warning("Missing necessary feature information")
             self.set_passed(False)
         if feature['who'] == 'alice':
@@ -435,16 +439,15 @@ class BridgeTestCase(TestCase):
         for observer in self.feature_start_observers:
             observer(self, self.features[self.current_feature])
 
-        LOGGER.info("Sending feature %s from %s" % (feature['what'],
-            feature['who']))
+        LOGGER.info("Sending feature %s from %s" % (feature['what'], feature['who']))
         # make sure to put a gap between DTMF digits to ensure that events
         # headed to the UUT are not ignored because they occur too quickly
         sleep(0.25)
         ami.playDTMF(channel, BridgeTestCase.FEATURE_MAP[feature['what']])
         sleep(0.25)
 
-        if ((feature['what'] == 'blindxfer' or feature['what'] == 'atxfer') and
-            'exten' in feature):
+        if ((feature['what'] == 'blindxfer' or feature['what'] == 'atxfer')
+                and 'exten' in feature):
             # playback the extension requested
             for digit in list(feature['exten']):
                 sleep(0.25)

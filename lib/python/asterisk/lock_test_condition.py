@@ -17,6 +17,7 @@ from test_conditions import TestCondition
 
 LOGGER = logging.getLogger(__name__)
 
+
 class LockSequence(object):
     """This class represents a sequence of lock objects"""
 
@@ -75,6 +76,7 @@ class LockSequence(object):
                 elif i == 6:
                     self.thread_func = thread_token.rstrip("())")
                 i += 1
+
 
 class LockObject(object):
     """This class represents a detected sequence of locks in the system"""
@@ -144,6 +146,7 @@ class LockObject(object):
         self.name = lock_tokens[5]
         self.addr = lock_tokens[6]
         self.lock_count = int(lock_tokens[7].lstrip("(").rstrip(")"))
+
 
 class LockTestCondition(TestCondition):
     """Class that performs checking of locks during test execution.  Note that
@@ -226,6 +229,7 @@ class LockTestCondition(TestCondition):
                                          finished_deferred)
         return finished_deferred
 
+
 class AstMockObjectPassed(object):
     """A lock output that passed"""
 
@@ -244,6 +248,7 @@ class AstMockObjectPassed(object):
         lock_lines += "===\n"
         lock_lines += "=======================================================================\n"
         return lock_lines
+
 
 class AstMockObjectFailure(object):
     """A lock object that failed"""
@@ -308,6 +313,7 @@ class AstMockObjectFailure(object):
         lock_lines += "=======================================================================\n"
         return lock_lines
 
+
 class TestConfig(object):
     """Fake TestConfig object"""
 
@@ -318,6 +324,7 @@ class TestConfig(object):
         self.type = "Post"
         self.related_condition = ""
         self.config = {}
+
 
 class LockTestConditionUnitTest(unittest.TestCase):
     """Unit tests for LockTestCondition"""
@@ -347,6 +354,7 @@ class LockTestConditionUnitTest(unittest.TestCase):
         obj.register_asterisk_instance(ast2)
         obj.evaluate()
         self.assertEqual(obj.get_status(), 'Failed')
+
 
 class LockSequenceUnitTest(unittest.TestCase):
     """Tests for parsing a lock sequence"""
@@ -463,6 +471,7 @@ class LockSequenceUnitTest(unittest.TestCase):
         self.assertEqual(obj.locks[0].lock_count, 1)
         self.assertTrue(obj.locks[0].held)
         self.assertTrue(len(obj.locks[0].backtrace) == 0)
+
 
 class LockObjectUnitTest(unittest.TestCase):
     """Unit tests for LockObject"""

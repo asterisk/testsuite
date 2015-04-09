@@ -15,6 +15,7 @@ the GNU General Public License Version 2.
 import sys
 import unittest
 
+
 class AsteriskBuildOptions(object):
     """Tracks the build options for an instance of Asterisk"""
 
@@ -37,7 +38,6 @@ class AsteriskBuildOptions(object):
             if (self.__parse_buildopts_file(hdr_path)):
                 return
         raise Exception("Failed to open any build options files")
-
 
     def __parse_buildopts_file(self, path):
         """Extract and parse the build options"""
@@ -103,6 +103,7 @@ def main():
     """Main entry point for unit tests"""
 
     unittest.main()
+
 
 if __name__ == "__main__":
     main()

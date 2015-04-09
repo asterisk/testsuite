@@ -1,6 +1,7 @@
 from twisted.internet import abstract, protocol
 from yappcap import PcapLive, findalldevs, PcapTimeout
 
+
 class PcapFile(abstract.FileDescriptor):
     """Treat a live pcap capture as a file for Twisted to call select() on"""
     def __init__(self, protocol, interface, xfilter=None, dumpfile=None,
@@ -8,7 +9,7 @@ class PcapFile(abstract.FileDescriptor):
         abstract.FileDescriptor.__init__(self)
 
         p = PcapLive(interface, autosave=dumpfile, snaplen=snaplen,
-                buffer_size=buffer_size)
+                     buffer_size=buffer_size)
         p.activate()
         p.blocking = False
 
@@ -63,7 +64,7 @@ class PcapListener(protocol.Protocol):
         if snaplen is None:
             snaplen = 65535
         self.pf = PcapFile(self, interface, bpf_filter, dumpfile, snaplen,
-                buffer_size)
+                           buffer_size)
         self.callback = callback
 
     def makeConnection(self, transport):

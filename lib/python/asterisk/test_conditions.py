@@ -24,9 +24,11 @@ from twisted.internet import defer
 
 LOGGER = logging.getLogger(__name__)
 
+
 def enum(**enums):
     """Make an enumeration out of the passed in values"""
     return type('Enum', (), enums)
+
 
 def handle_condition_failure(test_condition):
     """Handle a failure in a test condition.
@@ -116,7 +118,7 @@ class TestConditionController(object):
                 if pre[0].get_name() == matching_pre_condition_name:
                     matching_pre_condition = pre[0]
                     break
-            if (matching_pre_condition == None):
+            if (matching_pre_condition is None):
                 err_msg = ("No pre condition found matching %s" %
                            matching_pre_condition_name)
                 LOGGER.error(err_msg)
@@ -227,7 +229,7 @@ class TestConditionController(object):
                 observer(test_condition)
 
         if (test_condition.get_status() == 'Failed' and
-                self._stop_test_callback != None):
+                self._stop_test_callback is not None):
             self._stop_test_callback()
 
 
@@ -281,7 +283,7 @@ class TestCondition(object):
             build_option, expected_value = option
             if not TestCondition.build_options.check_option(build_option,
                                                             expected_value):
-                LOGGER.debug("Build option %s not set to %s; test condition " \
+                LOGGER.debug("Build option %s not set to %s; test condition "
                              "[%s] will not be checked" % (build_option,
                                                            expected_value,
                                                            self._name))
@@ -355,7 +357,7 @@ class TestCondition(object):
         if (self._test_status == TEST_STATUSES.Inconclusive):
             self._test_status = TEST_STATUSES.Passed
 
-    def fail_check(self, reason = ""):
+    def fail_check(self, reason=""):
         """Mark that the test condition has failed.
 
         Note that the test condition cannot be changed once placed in this
@@ -367,5 +369,3 @@ class TestCondition(object):
         self._test_status = TEST_STATUSES.Failed
         if (reason != ""):
             self.failure_reasons.append(reason)
-
-
