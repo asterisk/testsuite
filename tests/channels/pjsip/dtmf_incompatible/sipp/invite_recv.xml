@@ -56,6 +56,8 @@
 
   <recv request="ACK" rtd="true" crlf="true" />
 
+  <pause milliseconds="1000" />
+
   <send retrans="500">
     <![CDATA[
 
