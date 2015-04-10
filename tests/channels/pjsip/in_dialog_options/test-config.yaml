@@ -1,0 +1,27 @@
+testinfo:
+    summary:     'Tests handling of an in-dialog OPTIONS'
+    description: |
+        This test runs a SIPp scenario which establishes a session with Asterisk.
+        Once the session has been established an OPTIONS request is sent in-dialog.
+        Asterisk is expected to respond with a 200 OK. If this does not occur then
+        the test fails.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'invite_with_options.xml', '-i': '127.0.0.1', '-p': '5061', '-d': '5000', '-s': 'call'} }
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
