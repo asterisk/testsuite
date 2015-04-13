@@ -23,8 +23,8 @@ import test_suite_utils
 LOGGER = logging.getLogger(__name__)
 
 
-def parse_branch_name(branch_tokens):
-    """Parse an Asterisk branch version"""
+def parse_svn_branch_name(branch_tokens):
+    """Parse an Asterisk SVN branch version"""
     name = branch_tokens[0]
     munched = 0
     for i in range(1, len(branch_tokens)):
@@ -95,66 +95,29 @@ def parse_parent_branch(parent_branch):
     return (parent_branch, True)
 
 
-def parse_version_string(raw_version):
-    """Parse a raw version string into its parts"""
-    branch = False
-    svn = False
-    feature = ''
-    parsed_numbers = [0, 0, 0]
-    name = ''
-    revision = 0
-    parent = ''
-    iteration = 0
-    modifier = ''
-
-    raw_version = raw_version.replace('Asterisk ', '')
-
-    tokens = re.split('[-~]', raw_version)
-    count = 0
-    while (count < len(tokens)):
-        token = tokens[count]
-        # Determine if we're a subversion branch
-        if 'SVN' == token:
-            svn = True
-        elif 'branch' == token:
-            branch = True
-        else:
-            if svn and not branch and not name:
-                # Team branch or trunk.  This will modify the current
-                # position based on the number of tokens consumed
-                (name, munched) = parse_branch_name(tokens[count:])
-                count += munched
-            else:
-                handled = False
-                if (len([num for num in parsed_numbers if num != 0]) == 0):
-                    (parsed_numbers, handled) = parse_version(token)
-                if not handled and revision == 0:
-                    (revision, handled) = parse_revision(token)
-                if not handled and not feature:
-                    # If a feature returns back a number, its actually the
-                    # 'patch' version number (e.g., 1.8.11-cert3)
-                    (feature, temp, handled) = parse_feature(token)
-                    if (temp > 0):
-                        parsed_numbers[2] = temp
-                if not handled and not modifier:
-                    (modifier,
-                     iteration,
-                     handled) = parse_version_modifier(token)
-                if not handled and not parent:
-                    (parent, handled) = parse_parent_branch(token)
-                if not handled:
-                    LOGGER.error("Unable to parse token '%s' in version "
-                                 "string '%s'" % (token, raw_version))
-        count += 1
-    return (parsed_numbers[0], parsed_numbers[1], parsed_numbers[2],
-            iteration, revision, branch, svn, name, feature, modifier,
-            parent)
-
-
 class AsteriskVersion(object):
     """An Asterisk Version.
 
     This class handles Asterisk version strings.
+
+    Attributes:
+    raw_version - The pre-parsed version string
+    branch      - If true, this is a branch and not a tag. Note that
+                  if svn is True, then this implies that we think this
+                  must be 'trunk'. This is always True if git is True.
+    svn         - The Asterisk version is derived from Subversion
+    git         - The Asterisk version is derived from Git
+    major       - The major version number
+    minor       - The minor version number
+    patch       - The patch version number
+    feature     - Asterisk specific branch/tag features, e.g., 'cert'
+    modifier    - Asterisk tag release modifiers, e.g., 'rc'
+    iteration   - Iteration of the modifier, e.g., 1 for 'rc1'
+    parent      - If a parent SVN branch exists, what branch this was
+                  derived from
+    name        - The name of the team branch or 'trunk' for SVN, or
+                  'master' for Git. If None, then a major/minor/patch
+                  version should be available.
     """
 
     supported_features = ['cert', 'digiumphones', 'dfsg']
@@ -172,18 +135,79 @@ class AsteriskVersion(object):
             version = AsteriskVersion.get_version_from_binary()
 
         self.raw_version = version
+        self.branch = False
+        self.svn = False
+        self.git = False
+        self.major = 0
+        self.minor = 0
+        self.patch = 0
+        self.iteration = 0
+        self.revision = None
+        self.feature = None
+        self.modifier = None
+        self.parent = None
+        self.name = None
 
-        (self.major,
-         self.minor,
-         self.patch,
-         self.iteration,
-         self.revision,
-         self.branch,
-         self.svn,
-         self.name,
-         self.feature,
-         self.modifier,
-         self.parent) = parse_version_string(self.raw_version)
+        self.parse_version_string(self.raw_version)
+
+    def parse_version_string(self, raw_version):
+        """Parse a raw version string into its parts"""
+        parsed_numbers = [0, 0, 0]
+        raw_version = raw_version.replace('Asterisk ', '')
+
+        tokens = re.split('[-~]', raw_version)
+        count = 0
+        while (count < len(tokens)):
+            token = tokens[count]
+            # Determine if we're a subversion branch
+            if 'SVN' == token:
+                self.svn = True
+            elif 'GIT' == token:
+                # All Git versions are branches
+                self.git = True
+                self.branch = True
+            elif 'branch' == token:
+                self.branch = True
+            else:
+                if self.svn and not self.branch and not self.name:
+                    # Team branch or trunk.  This will modify the current
+                    # position based on the number of tokens consumed
+                    (self.name,
+                     munched) = parse_svn_branch_name(tokens[count:])
+                    count += munched
+                elif self.git and token == 'master':
+                    # It's a Git branch! This should contain our upstream
+                    # major branch, so we only care if the current token
+                    # says this is master.
+                    self.name = token
+                else:
+                    handled = False
+                    if (len([num for num in parsed_numbers if num != 0]) == 0):
+                        (parsed_numbers, handled) = parse_version(token)
+                        self.major = parsed_numbers[0]
+                        self.minor = parsed_numbers[1]
+                        self.patch = parsed_numbers[2]
+                    if not handled and not self.feature:
+                        # If a feature returns back a number, its actually the
+                        # 'patch' version number (e.g., 1.8.11-cert3)
+                        (self.feature, temp, handled) = parse_feature(token)
+                        if (temp > 0):
+                            self.patch = temp
+                    if not handled and not self.modifier:
+                        (self.modifier,
+                         self.iteration,
+                         handled) = parse_version_modifier(token)
+                    if not handled and not self.revision:
+                        if not self.git:
+                            (self.revision, handled) = parse_revision(token)
+                        else:
+                            self.revision = token
+                    if not handled and not self.parent:
+                        (self.parent, handled) = parse_parent_branch(token)
+                    if not handled:
+                        LOGGER.error("Unable to parse token '%s' in version "
+                                     "string '%s'" % (token, raw_version))
+            count += 1
 
     def __str__(self):
         """Return the raw Asterisk version as a string"""
@@ -212,14 +236,58 @@ class AsteriskVersion(object):
             return (self._modifier_weight() + self.patch * 1000 +
                     self.minor * 100000 + self.major * 100000000)
 
-    def __cmp__(self, other):
-        """Compare this AsteriskVersion instance to another"""
-        res = cmp(int(self), int(other))
-        if res == 0:
-            if self.svn and other.svn:
-                res = cmp(self.revision, other.revision)
+    def __lt__(self, other):
+        """Test if self < other """
+        if int(self) < int(other):
+            return True
+        elif self.svn and other.svn:
+            return self.revision < other.revision
+        else:
+            return False
 
-        return res
+    def __le__(self, other):
+        """Test if self <= other"""
+        if int(self) <= int(other):
+            return True
+        elif self.svn and other.svn:
+            return self.revision <= other.revision
+        else:
+            return False
+
+    def __eq__(self, other):
+        """Test if self == other"""
+        if int(self) != int(other):
+            return False
+        if (self.svn and other.svn) or (self.git and other.git):
+            return self.revision == other.revision
+        return True
+
+    def __ne__(self, other):
+        """Test if self != other"""
+        if int(self) == int(other):
+            if (self.svn and other.svn) or (self.git and other.git):
+                return self.revision != other.revision
+            else:
+                return False
+        return True
+
+    def __gt__(self, other):
+        """Test if self > other"""
+        if int(self) > int(other):
+            return True
+        elif self.svn and other.svn:
+            return self.revision > other.revision
+        else:
+            return False
+
+    def __ge__(self, other):
+        """Test if self >= other"""
+        if int(self) >= int(other):
+            return True
+        elif self.svn and other.svn:
+            return self.revision >= other.revision
+        else:
+            return False
 
     def _modifier_weight(self):
         """Determine the relative weight due to a modifier"""
@@ -247,7 +315,14 @@ class AsteriskVersion(object):
 
     @classmethod
     def get_version_from_binary(cls):
-        """Obtain the version from Asterisk and return a cached version of it"""
+        """Obtain the version from the installed instance of Asterisk
+
+        This method will invoke Asterisk, get the version, parse the
+        result, and cache it. Once cached, the cached version will
+        always be returned.
+
+        Returns: The installed Asterisk version
+        """
         if not hasattr(cls, "_asterisk_version_from_binary"):
             version = ""
             ast_binary = (test_suite_utils.which("asterisk") or
@@ -266,7 +341,8 @@ class AsteriskVersion(object):
                                                    o_excep.strerror))
                 raise
             process.wait()
-            cls._asterisk_version_from_binary = version.replace("Asterisk ", "")
+            cls._asterisk_version_from_binary = version.replace(
+                "Asterisk ", "")
         return cls._asterisk_version_from_binary
 
 
@@ -393,7 +469,8 @@ class AsteriskVersionTests(unittest.TestCase):
 
     def test_svn_branch_18_features_1(self):
         """Test parsing a 1.8 branch with features"""
-        version = AsteriskVersion("SVN-branch-1.8-digiumphones-r357808-/branches/1.8")
+        ver = "SVN-branch-1.8-digiumphones-r357808-/branches/1.8"
+        version = AsteriskVersion(ver)
         self.assertTrue(version.svn)
         self.assertTrue(version.branch)
         self.assertEqual(version.major, 8)
@@ -405,7 +482,8 @@ class AsteriskVersionTests(unittest.TestCase):
 
     def test_svn_branch_10_features_1(self):
         """Test parsing a 10 branch with features"""
-        version = AsteriskVersion("SVN-branch-10-digiumphones-r365402-/branches/10")
+        ver = "SVN-branch-10-digiumphones-r365402-/branches/10"
+        version = AsteriskVersion(ver)
         self.assertTrue(version.svn)
         self.assertTrue(version.branch)
         self.assertEqual(version.major, 10)
@@ -417,7 +495,8 @@ class AsteriskVersionTests(unittest.TestCase):
 
     def test_svn_branch_10_features_2(self):
         """Test parsing another 10 feature branch"""
-        version = AsteriskVersion("Asterisk SVN-branch-10-digiumphones-r365402")
+        ver = "Asterisk SVN-branch-10-digiumphones-r365402"
+        version = AsteriskVersion(ver)
         self.assertTrue(version.svn)
         self.assertTrue(version.branch)
         self.assertEqual(version.major, 10)
@@ -480,6 +559,40 @@ class AsteriskVersionTests(unittest.TestCase):
         self.assertEqual(version.patch, 0)
         self.assertEqual(version.feature, 'cert')
         self.assertEqual(version.revision, 368608)
+
+    def test_git_11_branch(self):
+        """Test a Git checkout from master"""
+        version = AsteriskVersion("Asterisk GIT-11-a987f3")
+        self.assertFalse(version.svn)
+        self.assertTrue(version.git)
+        self.assertTrue(version.branch)
+        self.assertEqual(version.major, 11)
+        self.assertEqual(version.minor, 0)
+        self.assertEqual(version.patch, 0)
+        self.assertEqual(version.revision, "a987f3")
+
+    def test_git_116_certified_branch(self):
+        """Test a Git checkout from master"""
+        version = AsteriskVersion("Asterisk GIT-11.6-cert-a987f3")
+        self.assertFalse(version.svn)
+        self.assertTrue(version.git)
+        self.assertTrue(version.branch)
+        self.assertTrue(version.branch)
+        self.assertEqual(version.major, 11)
+        self.assertEqual(version.minor, 6)
+        self.assertEqual(version.patch, 0)
+        self.assertEqual(version.feature, 'cert')
+        self.assertEqual(version.name, None)
+        self.assertEqual(version.revision, "a987f3")
+
+    def test_git_master(self):
+        """Test a Git checkout from master"""
+        version = AsteriskVersion("Asterisk GIT-master-a987f3")
+        self.assertFalse(version.svn)
+        self.assertTrue(version.git)
+        self.assertTrue(version.branch)
+        self.assertEqual(version.name, "master")
+        self.assertEqual(version.revision, "a987f3")
 
     def test_cmp1(self):
         """Compare two trunk versions, an 11 tag, and a 1.8 branch"""
@@ -603,6 +716,27 @@ class AsteriskVersionTests(unittest.TestCase):
         """Compare a CA version against a CA branch"""
         version1 = AsteriskVersion("1.8.11-cert1")
         version2 = AsteriskVersion("Asterisk SVN-branch-1.8.11-cert-r368608")
+        self.assertTrue(version1 < version2)
+
+    def test_cmp_git_18_11(self):
+        """Compare a Git 1.8 branch to an 11 branch"""
+        version1 = AsteriskVersion("Asterisk GIT-1.8-18has09")
+        version2 = AsteriskVersion("Asterisk GIT-11-81yhas90")
+        self.assertTrue(version1 < version2)
+
+    def test_cmp_git_11(self):
+        """Compare two Git 11 branch versions"""
+        version1 = AsteriskVersion("Asterisk GIT-11-a9suh193")
+        version2 = AsteriskVersion("Asterisk GIT-11-aj981bnd")
+        self.assertTrue(version1 != version2)
+        self.assertFalse(version1 < version2)
+        self.assertFalse(version1 > version2)
+        self.assertFalse(version1 == version2)
+
+    def test_cmp_git_1811_1811branch(self):
+        """Compare a CA version against a Git CA branch"""
+        version1 = AsteriskVersion("1.8.11-cert2")
+        version2 = AsteriskVersion("Asterisk GIT-1.8.11-cert-89haskljh")
         self.assertTrue(version1 < version2)
 
 
