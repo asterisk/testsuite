@@ -1,0 +1,6 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'basic'
+    - test: 'auth'
+    - test: 'max_initial_qualify_time'
+    - test: 'qualify_timeout'

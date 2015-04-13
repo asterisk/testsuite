@@ -19,7 +19,7 @@ tests:
     - dir: 'subscriptions'
     - test: 'hold_ice'
     - test: 'refer_send_to_vm'
-    - test: 'qualify'
+    - dir: 'qualify'
     - test: 'headers'
     - dir: 'transfers'
     - test: 'info_dtmf'
