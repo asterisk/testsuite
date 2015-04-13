@@ -1,0 +1,50 @@
+testinfo:
+    summary:     'Test qualify timeout'
+    description: |
+        'With qualify_timeout = 2, and sipp pausing for 3 seconds, send a qualify to a
+        contact and verify that the contact is marked Unavailable.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    fail-on-any: False
+    reactor-timeout: 10
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'options.xml', '-i': '127.0.0.1', '-d': '3000', '-p': '5061'} }
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_QUALIFY_RESULT'
+        requirements:
+            match:
+                Contact: 'sip:127.0.0.1:5061'
+                Status: 'Unavailable'
+                RTT: '0'
+        count: '1'
+
+properties:
+    minversion: '13.3.0'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python: 'twisted'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.3'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+
