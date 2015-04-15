@@ -1,0 +1,62 @@
+testinfo:
+    summary: 'Ensure that infinite loops of SIP forwards cannot happen.'
+    description: |
+        'This test originates a call to an extension that sets the max forwards
+        for the call to 10. The extension then dials a PJSIP channel that calls
+        a SIPp scenario that will send a 302 response indicating to redirect the
+        call to itself. The test ensures that after 10 Dials, all of the calls
+        are hung up.'
+
+test-modules:
+    test-object:
+        typename: sipp.SIPpTestCase
+        config-section: sipp-config
+    modules:
+        -
+            config-section: originator-config
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: hangup-config
+            typename: 'pluggable_modules.HangupMonitor'
+
+sipp-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'redirect.xml', '-m': '11'} }
+
+originator-config:
+    channel: 'Local/loop@default'
+    application: 'Echo'
+    ignore-originate-failure: 'yes'
+    trigger: 'ami_connect'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialBegin'
+                DestChannel: 'PJSIP/redirect-.*'
+        count: 10
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialEnd'
+                DestChannel: 'PJSIP/redirect-.*'
+        count: 10
+
+hangup-config:
+    ids: ['0']
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+    tags:
+        - pjsip
