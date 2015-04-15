@@ -4,3 +4,4 @@ tests:
     - test: 'local_call'
     - test: 'local_holding_bridge'
     - test: 'local_optimize_away'
+    - test: 'local_loop'
