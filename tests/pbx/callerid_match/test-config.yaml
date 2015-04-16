@@ -3,7 +3,8 @@ testinfo:
     description: 'Sends calls into test context with various callerid'
 
 properties:
-    minversion: '1.8.0.0'
+    # 12.x crashes on this test, never received the fix from ASTERISK-24774
+    minversion: ['11.18.0', '12.99.0', '13.4.0']
     dependencies:
         - python: 'twisted'
         - python: 'starpy'
