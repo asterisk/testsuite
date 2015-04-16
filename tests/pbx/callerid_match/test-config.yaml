@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'See ASTERISK-24774'
     summary:     'Test callerid pattern matching'
     description: 'Sends calls into test context with various callerid'
 
