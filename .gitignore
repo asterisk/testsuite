@@ -4,3 +4,4 @@ asterisk-test-suite-report.xml
 /contrib/valgrind/suppressions.txt
 /logs
 /tests/custom
+/fastagi
