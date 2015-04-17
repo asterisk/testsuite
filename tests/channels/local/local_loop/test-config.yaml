@@ -1,0 +1,58 @@
+testinfo:
+    summary: 'Ensure that infinite loops of Local channels cannot happen.'
+    description: |
+        'This test originates a call to a Local extension, which sets the max
+        forwards for the call to 10. The extension then goes to an extension which
+        dials itself. The test ensures that after 10 Dials, all of the calls are
+        hung up.'
+
+test-modules:
+    test-object:
+        typename: test_case.TestCaseModule
+        config-section: test-config
+    modules:
+        -
+            config-section: originator-config
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: hangup-config
+            typename: 'pluggable_modules.HangupMonitor'
+
+test-config:
+    connect-ami: True
+
+originator-config:
+    channel: 'Local/loop@default'
+    application: 'Echo'
+    ignore-originate-failure: 'yes'
+    trigger: 'ami_connect'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialBegin'
+                DestChannel: 'Local/loop1@default.*'
+        count: 10
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialEnd'
+                DestChannel: 'Local/loop1@default.*'
+        count: 10
+
+hangup-config:
+    ids: ['0']
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+    tags:
+        - chan_local
