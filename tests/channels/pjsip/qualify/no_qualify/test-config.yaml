@@ -1,0 +1,43 @@
+testinfo:
+    summary: 'Test contact with qualify_timeout=0'
+    description: |
+        Make sure that contacts with qualify_frequency=0 are marked
+        as Available.
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - asterisk : 'res_pjsip'
+
+    tags:
+        - pjsip
+
+test-modules:
+    # allow test_runner to find and run the local test
+    add-test-to-search-path: 'True'
+    add-relative-to-search-path: ['../']
+    test-object:
+        config-section: object-config
+        typename: 'AMISendTest.AMISendTest'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+object-config:
+    reactor-timeout: 15
+    ACTION: { "Action": "PJSIPShowEndpoint", "ActionID": "12345", "Endpoint": "sipp" }
+
+ami-config:
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'EndpointDetail'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: 'endpoint'
+                    ObjectName: 'sipp'
+                    DeviceState: 'Not in use'
+            count: 1

@@ -4,3 +4,4 @@ tests:
     - test: 'auth'
     - test: 'max_initial_qualify_time'
     - test: 'qualify_timeout'
+    - test: 'no_qualify'
