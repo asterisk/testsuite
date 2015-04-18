@@ -33,7 +33,7 @@ ami-config:
         requirements:
             match:
                 Contact: 'sipp@@sip:127.0.0.1:5061'
-                Status: 'Available'
+                Status: 'Reachable'
         count: '1'
     -
         type: 'headermatch'
@@ -45,7 +45,7 @@ ami-config:
         requirements:
             match:
                 Contact: 'sipp@@sip:127.0.0.1:5061'
-                Status: 'Available'
+                Status: 'Reachable'
         count: '1'
 
 properties:
