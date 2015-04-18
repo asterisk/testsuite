@@ -1,0 +1,5 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'mailbox_count_changes'
+    - test: 'initial_notify'
+    - test: 'notify_after_register'
