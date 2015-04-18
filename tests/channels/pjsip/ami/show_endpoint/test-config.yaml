@@ -405,8 +405,8 @@ ami-config-13:
                 match:
                     AOR: 'user1'
                     URI: '(sip:user1@127.0.0.1:5062|sip:user1@127.0.0.2:5063)'
-                    Status: 'Unknown'
-                    RoundtripUsec: 'N/A'
+                    Status: '(Unknown|Reachable)'
+                    RoundtripUsec: '(N/A|0)'
                     EndpointName: 'user1'
             count: 2
         -
