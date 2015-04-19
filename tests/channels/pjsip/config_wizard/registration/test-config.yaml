@@ -18,25 +18,38 @@ properties:
 test-modules:
     # allow test_runner to find and run the local test
     add-test-to-search-path: 'True'
-    add-relative-to-search-path: ['../']
     test-object:
         config-section: object-config
-        typename: 'AMISendTest.AMISendTest'
+        typename: 'test_case.TestCaseModule'
     modules:
         -
             config-section: 'ami-config'
-            typename: 'ami.AMIEventModule'
+            typename: 'pluggable_modules.EventActionModule'
 
 object-config:
     reactor-timeout: 15
-    ACTION: { "Action": "PJSIPShowRegistrationsOutbound", "ActionID": "12345" }
+    connect-ami: True
 
 ami-config:
-        -
-            type: 'headermatch'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'FullyBooted'
+            requirements:
+                match:
+                    Status: 'Fully Booted'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'PJSIPShowRegistrationsOutbound'
+                ActionID: '12345'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'OutboundRegistrationDetail'
+                    ClientUri: 'sip:testuser@127.0.0.5:41060'
             requirements:
                 match:
                     ActionID: '12345'
@@ -51,13 +64,36 @@ ami-config:
                     OutboundProxy: ''
                     Transport: 'ipv4'
                     ContactUser: ''
-                    ClientUri: 'sip:testuser@127.*'
                     ServerUri: 'sip:127.*'
                     Status: 'Unregistered|Rejected'
                     NextReg: '0'
-            count: 2
-        -
-            type: 'headermatch'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'OutboundRegistrationDetail'
+                    ClientUri: 'sip:testuser@127.0.0.6:41070'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: 'registration'
+                    ObjectName: 'trunk1-reg-*'
+                    OutboundAuth: 'trunk1-oauth'
+                    AuthRejectionPermanent: 'true'
+                    MaxRetries: '10'
+                    ForbiddenRetryInterval: '0'
+                    RetryInterval: '38'
+                    Expiration: '3600'
+                    OutboundProxy: ''
+                    Transport: 'ipv4'
+                    ContactUser: ''
+                    ServerUri: 'sip:127.*'
+                    Status: 'Unregistered|Rejected'
+                    NextReg: '0'
+            count: 1
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'AuthDetail'
@@ -74,8 +110,8 @@ ami-config:
                     Username: 'testuser'
 
             count: 2
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'OutboundRegistrationDetailComplete'
@@ -86,3 +122,4 @@ ami-config:
                     Registered: '0'
                     NotRegistered: '2'
             count: 1
+        stop_test:
