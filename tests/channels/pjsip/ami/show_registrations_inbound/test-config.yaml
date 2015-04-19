@@ -7,6 +7,7 @@ testinfo:
 properties:
     minversion: '12.0.0'
     dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
         - sipp :
             version : 'v3.0'
         - asterisk : 'res_pjsip'
@@ -18,20 +19,39 @@ test-modules:
     # allow test_runner to find and run the local test
     add-test-to-search-path: 'True'
     test-object:
-        config-section: object-config
-        typename: 'AMISendTest.AMISendTest'
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
     modules:
         -
             minversion: '12.0.0'
             config-section: 'ami-config'
-            typename: 'ami.AMIEventModule'
+            typename: 'pluggable_modules.EventActionModule'
 
-object-config:
+sipp-config:
+    connect-ami: True
     reactor-timeout: 15
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'register.xml', '-p': '5061'} }
 
 ami-config:
-        -
-            type: 'headermatch'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'AOR_CONTACT_ADDED'
+            requirements:
+                match:
+                    AOR: 'user1'
+        ami-actions:
+            action:
+                Action: 'PJSIPShowRegistrationsInbound'
+                ActionID: '12345'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'InboundRegistrationDetail'
@@ -50,16 +70,4 @@ ami-config:
                     MinimumExpiration: '60'
                     Contacts: user1/sip:user1@127.0.0.1:5061|user2/sip:user2@127.0.0.1:5062
             count: 2
-        -
-            type: 'headermatch'
-            conditions:
-                match:
-                    Event: 'InboundRegistrationDetailComplete'
-            requirements:
-                match:
-                    ActionID: '12345'
-                    EventList: 'Complete'
-                    ListItems: '2'
-            count: 1
-
-
+        stop_test:

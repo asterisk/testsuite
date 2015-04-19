@@ -19,27 +19,34 @@ test-modules:
     add-test-to-search-path: 'True'
     test-object:
         config-section: object-config
-        typename: 'AMISendTest.AMISendTest'
+        typename: 'test_case.TestCaseModule'
     modules:
         -
             minversion: '12.0.0'
             config-section: 'ami-config'
-            typename: 'ami.AMIEventModule'
+            typename: 'pluggable_modules.EventActionModule'
 
 object-config:
     reactor-timeout: 15
+    connect-ami: True
 
 ami-config:
-        -
-            type: 'headermatch'
+    -
+        ami-start:
+        ami-actions:
+            action:
+                Action: 'PJSIPShowRegistrationsOutbound'
+                ActionID: '12345'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'OutboundRegistrationDetail'
+                    ObjectName: 'user0'
             requirements:
                 match:
                     ActionID: '12345'
                     ObjectType: 'registration'
-                    ObjectName: 'user.*'
                     OutboundAuth: 'reg-auth'
                     AuthRejectionPermanent: 'true'
                     MaxRetries: '10'
@@ -49,13 +56,109 @@ ami-config:
                     OutboundProxy: ''
                     Transport: 'local'
                     ContactUser: ''
-                    ClientUri: 'sip:user.*'
+                    ClientUri: 'sip:user0'
                     ServerUri: 'sip:localhost'
                     Status: 'Unregistered|Rejected'
                     NextReg: '0'
-            count: 5
-        -
-            type: 'headermatch'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'OutboundRegistrationDetail'
+                    ObjectName: 'user1'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: 'registration'
+                    OutboundAuth: 'reg-auth'
+                    AuthRejectionPermanent: 'true'
+                    MaxRetries: '10'
+                    ForbiddenRetryInterval: '0'
+                    RetryInterval: '60'
+                    Expiration: '3600'
+                    OutboundProxy: ''
+                    Transport: 'local'
+                    ContactUser: ''
+                    ClientUri: 'sip:user1'
+                    ServerUri: 'sip:localhost'
+                    Status: 'Unregistered|Rejected'
+                    NextReg: '0'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'OutboundRegistrationDetail'
+                    ObjectName: 'user2'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: 'registration'
+                    OutboundAuth: 'reg-auth'
+                    AuthRejectionPermanent: 'true'
+                    MaxRetries: '10'
+                    ForbiddenRetryInterval: '0'
+                    RetryInterval: '60'
+                    Expiration: '3600'
+                    OutboundProxy: ''
+                    Transport: 'local'
+                    ContactUser: ''
+                    ClientUri: 'sip:user2'
+                    ServerUri: 'sip:localhost'
+                    Status: 'Unregistered|Rejected'
+                    NextReg: '0'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'OutboundRegistrationDetail'
+                    ObjectName: 'user3'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: 'registration'
+                    OutboundAuth: 'reg-auth'
+                    AuthRejectionPermanent: 'true'
+                    MaxRetries: '10'
+                    ForbiddenRetryInterval: '0'
+                    RetryInterval: '60'
+                    Expiration: '3600'
+                    OutboundProxy: ''
+                    Transport: 'local'
+                    ContactUser: ''
+                    ClientUri: 'sip:user3'
+                    ServerUri: 'sip:localhost'
+                    Status: 'Unregistered|Rejected'
+                    NextReg: '0'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'OutboundRegistrationDetail'
+                    ObjectName: 'user4'
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: 'registration'
+                    OutboundAuth: 'reg-auth'
+                    AuthRejectionPermanent: 'true'
+                    MaxRetries: '10'
+                    ForbiddenRetryInterval: '0'
+                    RetryInterval: '60'
+                    Expiration: '3600'
+                    OutboundProxy: ''
+                    Transport: 'local'
+                    ContactUser: ''
+                    ClientUri: 'sip:user4'
+                    ServerUri: 'sip:localhost'
+                    Status: 'Unregistered|Rejected'
+                    NextReg: '0'
+            count: 1
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'AuthDetail'
@@ -72,8 +175,8 @@ ami-config:
                     Username: 'xxx'
 
             count: 5
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'OutboundRegistrationDetailComplete'
@@ -84,3 +187,4 @@ ami-config:
                     Registered: '0'
                     NotRegistered: '5'
             count: 1
+        stop_test:

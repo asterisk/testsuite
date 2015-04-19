@@ -42,13 +42,13 @@
   <send retrans="500">
     <![CDATA[
 
-      SUBSCRIBE sip:user1@[remote_ip]:[remote_port] SIP/2.0
+      SUBSCRIBE sip:user2@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: user1 <sip:user1@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
-      To: user1 <sip:user1@[remote_ip]:[remote_port]>
+      From: user2 <sip:user2@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: user2 <sip:user2@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: 1 SUBSCRIBE
-      Contact: sip:user1@[local_ip]:[local_port]
+      Contact: sip:user2@[local_ip]:[local_port]
       Event: presence
       Accept: application/pidf+xml
       Expires: 3600
