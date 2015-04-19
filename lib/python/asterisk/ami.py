@@ -15,6 +15,7 @@ import re
 import json
 from pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
     PLUGGABLE_ACTION_REGISTRY, var_replace
+from test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
 
@@ -321,6 +322,25 @@ class AMIOrderedHeaderMatchInstance(AMIEventInstance):
         self.test_object.set_passed(self.passed)
         return callback_param
 
+class AMISendAction(TestCase):
+    def __init__(self, path=None, config=None):
+        super(AMISendAction, self).__init__(path, config)
+        self.config = config
+        self.action = config.get('ACTION')
+        if not self.action:
+            raise Exception('"ACTION" was not defined in test-config.yaml')
+        self.create_asterisk()
+
+    def run(self):
+        super(AMISendAction, self).run()
+        self.create_ami_factory()
+
+    def ami_connect(self, ami):
+        ami.sendDeferred(self.action).addCallback(self.__on_response)
+
+    def __on_response(self, result):
+        # stop test since done
+        self.stop_reactor()
 
 class CelRequirement(object):
     """A particular set of requirements that should be matched on for CEL

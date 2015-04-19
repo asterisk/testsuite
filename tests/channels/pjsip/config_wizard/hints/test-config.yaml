@@ -16,22 +16,36 @@ properties:
 test-modules:
     # allow test_runner to find and run the local test
     add-test-to-search-path: 'True'
-    add-relative-to-search-path: ['../']
     test-object:
         config-section: object-config
-        typename: 'AMISendTest.AMISendTest'
+        typename: 'test_case.TestCaseModule'
     modules:
         -
             config-section: 'ami-config'
-            typename: 'ami.AMIEventModule'
+            typename: 'pluggable_modules.EventActionModule'
 
 object-config:
     reactor-timeout: 15
-    ACTION: { "Action": "ShowDialPlan", "ActionID": "12345", "Context": "default_hints", "Extension": "9090" }
+    connect-ami: True
 
 ami-config:
-        -
-            type: 'headermatch'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'FullyBooted'
+            requirements:
+                match:
+                    Status: 'Fully Booted'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'ShowDialPlan'
+                ActionID: '12345'
+                Context: 'default_hints'
+                Extenxion: '9090'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'ListDialplan'
@@ -45,8 +59,8 @@ ami-config:
                     Application: 'PJSIP/phone1'
                     Registrar: 'res_pjsip_config_wizard'
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'ListDialplan'
@@ -61,3 +75,4 @@ ami-config:
                     AppData: '\${HINT}/0000'
                     Registrar: 'res_pjsip_config_wizard'
             count: 1
+        stop_test:

@@ -15,22 +15,36 @@ properties:
 test-modules:
     # allow test_runner to find and run the local test
     add-test-to-search-path: 'True'
-    add-relative-to-search-path: ['../']
     test-object:
         config-section: object-config
-        typename: 'AMISendTest.AMISendTest'
+        typename: 'test_case.TestCaseModule'
     modules:
         -
+            minversion: '12.0.0'
             config-section: 'ami-config'
-            typename: 'ami.AMIEventModule'
+            typename: 'pluggable_modules.EventActionModule'
 
 object-config:
     reactor-timeout: 15
-    ACTION: { "Action": "PJSIPShowEndpoint", "ActionID": "12345", "Endpoint": "sipp" }
+    connect-ami: True
 
 ami-config:
-        -
-            type: 'headermatch'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'FullyBooted'
+            requirements:
+                match:
+                    Status: 'Fully Booted'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'PJSIPShowEndpoint'
+                ActionID: '12345'
+                Endpoint: 'sipp'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'EndpointDetail'
@@ -41,3 +55,4 @@ ami-config:
                     ObjectName: 'sipp'
                     DeviceState: 'Not in use'
             count: 1
+        stop_test:
