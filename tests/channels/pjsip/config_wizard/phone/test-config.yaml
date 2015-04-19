@@ -16,22 +16,28 @@ properties:
 test-modules:
     # allow test_runner to find and run the local test
     add-test-to-search-path: 'True'
-    add-relative-to-search-path: ['../']
     test-object:
         config-section: object-config
-        typename: 'AMISendTest.AMISendTest'
+        typename: 'test_case.TestCaseModule'
     modules:
         -
             config-section: 'ami-config'
-            typename: 'ami.AMIEventModule'
+            typename: 'pluggable_modules.EventActionModule'
 
 object-config:
     reactor-timeout: 15
-    ACTION: { "Action": "PJSIPShowEndpoint", "ActionID": "12345", "Endpoint": "phone1" }
+    connect-ami: True
 
 ami-config:
-        -
-            type: 'headermatch'
+    -
+        ami-start:
+        ami-actions:
+            action:
+                Action: 'PJSIPShowEndpoint'
+                ActionID: '12345'
+                Endpoint: 'phone1'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'EndpointDetail'
@@ -119,8 +125,8 @@ ami-config:
                     DeviceState: 'Invalid|Not in use|Unavailable'
                     ActiveChannels: ''
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'AorDetail'
@@ -142,8 +148,8 @@ ami-config:
                     ContactsRegistered: '0'
                     EndpointName: 'phone1'
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'AuthDetail'
@@ -160,8 +166,8 @@ ami-config:
                     Username: 'testuser'
                     EndpointName: 'phone1'
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'TransportDetail'
@@ -191,8 +197,8 @@ ami-config:
                     Protocol: 'udp'
                     EndpointName: 'phone1'
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'EndpointDetailComplete'
@@ -202,4 +208,4 @@ ami-config:
                     EventList: 'Complete'
                     ListItems: '4'
             count: 1
-
+        stop_test:
