@@ -18,45 +18,78 @@ test-modules:
     # allow test_runner to find and run the local test
     add-test-to-search-path: 'True'
     test-object:
-        config-section: object-config
-        typename: 'AMISendTest.AMISendTest'
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
     modules:
         -
             minversion: '12.0.0'
             config-section: 'ami-config'
-            typename: 'ami.AMIEventModule'
+            typename: 'pluggable_modules.EventActionModule'
 
-object-config:
+sipp-config:
+    connect-ami: True
     reactor-timeout: 15
+    fail-on-any: True
     test-iterations:
         -
-             scenarios:
+            scenarios:
                 - { 'key-args': { 'scenario':'subscribe.xml', '-p':'5061' } }
 
 ami-config:
-        -
-            type: 'headermatch'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_STATE_SET'
+                    Endpoint: 'user1'
+            requirements:
+                match:
+                    StateText: 'ACTIVE'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_STATE_SET'
+                    Endpoint: 'user2'
+            requirements:
+                match:
+                    StateText: 'ACTIVE'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'PJSIPShowSubscriptionsInbound'
+                ActionID: '12345'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'InboundSubscriptionDetail'
+                    Endpoint: 'user1'
             requirements:
                 match:
                     ActionID: '12345'
                     Role: Notifier
-                    Endpoint: 'user.*'
                     Callid: '.*'
                     State: 'ACTIVE'
                     Callerid: 'Unknown'
-                    SubscriptionType: mwi|extension_state
-            count: 2
-        -
-            type: 'headermatch'
+                    SubscriptionType: mwi
+            count: 1
+    -
+        ami-events:
             conditions:
                 match:
-                    Event: 'InboundSubscriptionDetailComplete'
+                    Event: 'InboundSubscriptionDetail'
+                    Endpoint: 'user2'
             requirements:
                 match:
                     ActionID: '12345'
-                    EventList: 'Complete'
-                    ListItems: '2'
+                    Role: Notifier
+                    Callid: '.*'
+                    State: 'ACTIVE'
+                    Callerid: 'Unknown'
+                    SubscriptionType: extension_state
             count: 1
+        stop_test:
