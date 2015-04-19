@@ -15,6 +15,7 @@ import re
 import json
 from pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
     PLUGGABLE_ACTION_REGISTRY, var_replace
+from test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
 
@@ -320,7 +321,6 @@ class AMIOrderedHeaderMatchInstance(AMIEventInstance):
         """Deferred callback called when this object should verify pass/fail"""
         self.test_object.set_passed(self.passed)
         return callback_param
-
 
 class CelRequirement(object):
     """A particular set of requirements that should be matched on for CEL

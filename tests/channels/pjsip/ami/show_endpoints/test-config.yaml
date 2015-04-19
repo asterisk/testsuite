@@ -15,26 +15,32 @@ properties:
         - pjsip
 
 test-modules:
-    # allow test_runner to find and run the local test
-    add-test-to-search-path: 'True'
     test-object:
         config-section: object-config
-        typename: 'AMISendTest.AMISendTest'
+        typename: 'test_case.TestCaseModule'
     modules:
         -
             minversion: '12.0.0'
             config-section: 'ami-config'
-            typename: 'ami.AMIEventModule'
+            typename: 'pluggable_modules.EventActionModule'
 
 object-config:
     reactor-timeout: 15
+    connect-ami: True
 
 ami-config:
-        -
-            type: 'headermatch'
+    -
+        ami-start:
+        ami-actions:
+            action:
+                Action: 'PJSIPShowEndpoints'
+                ActionID: '12345'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'EndpointList'
+                    Contacts: user1/sip:user1@127.0.0.1:5062
             requirements:
                 match:
                     ActionID: '12345'
@@ -44,12 +50,29 @@ ami-config:
                     Aor: 'user.*'
                     Auths: 'user.*'
                     OutboundAuths: ''
-                    Contacts: user1/sip:user1@127.0.0.1:5062|user2/sip:user2@127.0.0.1:5063
                     DeviceState: 'Invalid|Not in use|Unavailable'
                     ActiveChannels: ''
-            count: 2
-        -
-            type: 'headermatch'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'EndpointList'
+                    Contacts: user2/sip:user2@127.0.0.1:5063
+            requirements:
+                match:
+                    ActionID: '12345'
+                    ObjectType: 'endpoint'
+                    ObjectName: 'user.*'
+                    Transport: 'local'
+                    Aor: 'user.*'
+                    Auths: 'user.*'
+                    OutboundAuths: ''
+                    DeviceState: 'Invalid|Not in use|Unavailable'
+                    ActiveChannels: ''
+            count: 1
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'EndpointListComplete'
@@ -59,4 +82,4 @@ ami-config:
                     EventList: 'Complete'
                     ListItems: '2'
             count: 1
-
+        stop_test:
