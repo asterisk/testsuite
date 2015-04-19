@@ -14,11 +14,19 @@ properties:
         - pjsip
 
 test-modules:
-    # allow test_runner to find and run the local test
-    add-test-to-search-path: 'True'
     test-object:
-        config-section: object-config
-        typename: 'AMISendTest.AMISendTest'
+        config-section: sipp-config
+        typename: 'sipp.SIPpAMIActionTestCase'
 
-object-config:
+sipp-config:
     reactor-timeout: 15
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'options.xml', '-p': '5062'} }
+    ami-action:
+        delay: 1
+        args:
+            Action: "PJSIPQualify"
+            Endpoint: "user1"
