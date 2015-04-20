@@ -8,3 +8,4 @@ tests:
     - test: 'below_min_expiry'
     - dir: 'rls'
     - test: 'mismatch'
+    - test: 'nat_notify'
