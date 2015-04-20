@@ -28,6 +28,7 @@ class AsteriskBuildOptions(object):
         self._flags = {}
 
         buildopts_hdr_paths = [
+            "./astroot/usr/include/asterisk/buildopts.h",
             "../include/asterisk/buildopts.h",
             "/usr/include/asterisk/buildopts.h",
             "/usr/local/include/asterisk/buildopts.h"
