@@ -1,0 +1,54 @@
+testinfo:
+    summary: 'Ensure that in-dialog NOTIFY is sent to expected address when NAT is involved'
+    description: |
+        'This test runs a SIPp scenario that simulates a device behind a NAT by using a bogus
+        Contact header address. What we want to ensure is that the rewrite_contact option results
+        in Asterisk sending all in-dialog traffic to the address that rewrite_contact writes.
+
+        The actual SIPp scenario subscribes to MWI, expects a NOTIFY after a single mailbox change
+        and then unsubscribes from MWI. If Asterisk sends any requests or responses to the wrong
+        address, then the SIPp scenario will fail.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-action-config
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    test-iterations:
+        -
+            scenarios:
+                - {'key-args': { 'scenario': 'subscribe.xml', '-s': 'sipp' }}
+
+ami-action-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_ESTABLISHED'
+        ami-actions:
+            -
+                action:
+                    Action: 'MWIUpdate'
+                    Mailbox: 'sipp'
+                    OldMessages: '0'
+                    NewMessages: '1'
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+        - asterisk: 'res_pjsip_mwi'
+        - asterisk: 'res_mwi_external'
+        - asterisk: 'res_mwi_external_ami'
+    tags:
+        - pjsip
+        - mwi_external
