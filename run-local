@@ -60,7 +60,9 @@ run() {
 	export PATH="$HERE/astroot/usr/local/bin:$HERE/astroot/usr/sbin:$PATH"
         # Preprend ':' if LD_LIBRARY_PATH is not empty:
 	LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-	export LD_LIBRARY_PATH="$HERE/astroot/usr/lib${LD_LIBRARY_PATH}"
+	# Libraries could be in lib or lib64 so search for libasteriskssl.so
+	LIBDIR=`dirname $HERE/astroot/usr/lib*/libasteriskssl.so`
+	export LD_LIBRARY_PATH="${LIBDIR}${LD_LIBRARY_PATH}"	
 	set +e
 	./runtests.py "$@"
 	status=$?
