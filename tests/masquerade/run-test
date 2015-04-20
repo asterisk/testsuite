@@ -98,9 +98,9 @@ class MasqueradeTest(TestCase):
                 ).addErrback(TestCase.handle_originate_failure)
             return
         self.ami[0].originate(
-            channel="Local/" + str(exten) + "@outgoing",
+            channel="Local/start@outgoing",
             context="parked", exten="parkme12", priority=1,
-            timeout=900, async=True
+            timeout=900, async=True, variable={'DEST': str(exten)}
             ).addErrback(TestCase.handle_originate_failure)
 
     def get_parkedcall(self):
