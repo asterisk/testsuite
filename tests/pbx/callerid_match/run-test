@@ -49,9 +49,10 @@ class CallFilesTest(TestCase):
     def fastagi_connect(self, agi):
         LOGGER.info("sample%s.call file executed." % (self.test))
 
+        reactor.callLater(2, agi.finish)
         if self.test < self.num_tests:
             self.launch_test()
-        else: self.finalize()
+        else: reactor.callLater(4, self.finalize)
 
     def move_file(self, i):
         LOGGER.info("Moving the sample%s.call file to the spool dir..." % (i))
