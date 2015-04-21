@@ -41,5 +41,6 @@ properties:
     dependencies:
         - app : 'sipp'
         - asterisk : 'res_pjsip'
+        - asterisk : 'res_resolver_unbound'
     tags:
         - pjsip
