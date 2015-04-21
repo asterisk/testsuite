@@ -37,3 +37,4 @@ tests:
     - test: 'rpid_immediate'
     - test: 'in_dialog_options'
     - dir: 'resolver'
+    - test: 'forward_loop'
