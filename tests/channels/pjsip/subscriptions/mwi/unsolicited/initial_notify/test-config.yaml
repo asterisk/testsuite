@@ -1,0 +1,35 @@
+testinfo:
+    summary:     'Ensures an unsolicited MWI notification is sent upon startup'
+    description: |
+        "This test starts up Asterisk and sipp. The scenario given to sipp is configured to
+        expect a NOTIFY message from Asterisk. Upon startup Asterisk should send a NOTIFY
+        message with MWI to all endpoints configured with unsolicited MWI. If this NOTIFY is
+        not received the test fails."
+
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_mwi'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    reactor-timeout: 30
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'initial_notify.xml', '-p': '5061'} }
+
