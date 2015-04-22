@@ -1,0 +1,39 @@
+testinfo:
+    summary: |
+        Ensures Asterisk does not reject a correct pjsip configuration.
+    description: |
+        This test uses a pjsip.conf that represents the unique sections from
+        the base configuration for the [duplicate_sections] test, to ensure
+        Asterisk does not misidentify and reject a correct configuration.
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - asterisk: 'res_pjsip'
+        - python: 'autobahn.websocket'
+        - python: 'starpy'
+        - python: 'twisted'
+        - sipp:
+            version: 'v3.0'
+    tags:
+        - pjsip
+    issues:
+        - jira: 'ASTERISK-24996'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: 'happy-config'
+            typename: 'happy_config.HappyConfigTestHarness'
+
+test-object-config:
+    asterisk-instances: 1
+    connect-ami: 'True'
+
+happy-config:
+    cli_command: 'module show like res_pjsip.so'
+    re_query: 'res_pjsip\.so[^\n]+\n[1-9][0-9]*\smodules\sloaded'
