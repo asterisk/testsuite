@@ -89,8 +89,12 @@ class StasisStatusTestCase(TestCase):
         self.__iterator = iter(self.__scenarios)
 
         for scenario in self.__scenarios:
-            deferred.addCallback(self.__try_run_scenario)
+            scenario.register_observers('on_start',
+                                        self.__on_scenario_start)
+            scenario.register_observers('on_complete',
+                                        self.__on_scenario_complete)
 
+        deferred.addCallback(self.__try_run_scenario)
         deferred.callback(self.__get_next_scenario())
 
     def on_reactor_timeout(self):
@@ -116,6 +120,18 @@ class StasisStatusTestCase(TestCase):
         LOGGER.debug('{0} Test case execution is complete.'.format(self))
         self.stop_reactor()
 
+    def __on_scenario_start(self, sender, message):
+        """Tries to start the next scenario returned from the iterator.
+
+        Keyword Arguments:
+        sender                 -- The object that raised the event.
+        message                -- The event payload.
+        """
+
+        scenario = self.__get_next_scenario()
+        if scenario is not None:
+            self.__try_run_scenario(scenario)
+
     def run(self):
         """Executes the test case.
 
@@ -124,7 +140,6 @@ class StasisStatusTestCase(TestCase):
 
         LOGGER.debug('{0} Starting test case execution.'.format(self))
         super(StasisStatusTestCase, self).run()
-
         self.create_ami_factory()
 
     def stop_reactor(self):
@@ -147,26 +162,14 @@ class StasisStatusTestCase(TestCase):
 
         Keyword Arguments:
         scenario               -- The scenario to try to start.
-
-        Returns:
-        If the self.__iterator has not yet finished traversing the list,
-        returns the next scenario in self.__scenarios.
-
-        Otherwise,returns None.
         """
 
-        msg = '{0} {1} scenario [{2}]'
+        msg = '{0} {1} scenario [{2}].'
 
-        if scenario is not None:
-            LOGGER.debug((msg + '.').format(self,
-                                            'Starting',
-                                            scenario.name))
-            scenario.start(self.__on_scenario_complete)
-            return self.__get_next_scenario()
+        if scenario is None:
+            LOGGER.warn(msg.format(self, 'Cannot start', type(scenario)))
+            return
 
-        msg = msg + '; {3}.'
-        LOGGER.warn(msg.format(self,
-                               'Cannot connect',
-                               None,
-                               'scenario has not been assigned a value.'))
-        return None
+        LOGGER.debug(msg.format(self, 'Starting', scenario.name))
+        scenario.start()
+        return
