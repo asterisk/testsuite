@@ -28,11 +28,11 @@ ami-config:
         conditions:
             match:
                 Event: 'TestEvent'
-                State: 'AOR_CONTACT_UPDATE'
+                State: 'AOR_CONTACT_QUALIFY_RESULT'
+                Status: 'Reachable'
         requirements:
             match:
                 Contact: 'sipp@@sip:127.0.0.1:5061'
-                Status: 'Reachable'
         count: '1'
     -
         type: 'headermatch'
@@ -40,11 +40,11 @@ ami-config:
         conditions:
             match:
                 Event: 'TestEvent'
-                State: 'AOR_CONTACT_QUALIFY_RESULT'
+                State: 'AOR_CONTACT_UPDATE'
+                Status: 'Reachable'
         requirements:
             match:
                 Contact: 'sipp@@sip:127.0.0.1:5061'
-                Status: 'Reachable'
         count: '1'
 
 properties:
