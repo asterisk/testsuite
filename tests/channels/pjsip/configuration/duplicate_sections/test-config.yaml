@@ -1,0 +1,55 @@
+testinfo:
+    summary: |
+        Ensures Asterisk correctly handles the situation where duplicate
+        entries are defined in pjsip.conf.
+    description: |
+        This test ensures Asterisk gracefully handles the situation where
+        duplicate sections are defined in pjsip.conf. Eleven (11) test
+        scenarios are utilized to confirm configuring pjsip.conf with sections
+        containing an identical id/type combination as another section in the
+        file, results in Asterisk rejecting the configuration. Each test
+        scenario uses its own Asterisk instance to exercise a different id/type
+        combination. The test scenarios:
+        Scenario [1]  -> ast1:  Tests duplicate [id=siptrunk, type=global] sections
+        Scenario [2]  -> ast2:  Tests duplicate [id=siptrunk, type=acl-template] sections
+        Scenario [3]  -> ast3:  Tests duplicate [id=siptrunk, type=aor-template] sections
+        Scenario [4]  -> ast4:  Tests duplicate [id=siptrunk, type=auth-template] sections
+        Scenario [5]  -> ast5:  Tests duplicate [id=siptrunk, type=contact-template] sections
+        Scenario [6]  -> ast6:  Tests duplicate [id=siptrunk, type=domain-alias-template] sections
+        Scenario [7]  -> ast7:  Tests duplicate [id=siptrunk, type=endpoint-template] sections
+        Scenario [8]  -> ast8:  Tests duplicate [id=siptrunk, type=identify-template] sections
+        Scenario [9]  -> ast9:  Tests duplicate [id=siptrunk, type=registration-template] sections
+        Scenario [10] -> ast10: Tests duplicate [id=siptrunk, type=system-template] sections
+        Scenario [11] -> ast11: Tests duplicate [id=siptrunk, type=transport-template] sections
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - asterisk: 'res_pjsip'
+        - python: 'autobahn.websocket'
+        - python: 'starpy'
+        - python: 'twisted'
+        - sipp:
+            version: 'v3.0'
+    tags:
+        - pjsip
+    issues:
+        - jira: 'ASTERISK-24996'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: 'duplicate-sections'
+            typename: 'duplicate_sections.DuplicateSectionsTestHarness'
+
+test-object-config:
+    asterisk-instances: 11
+    connect-ami: 'True'
+
+duplicate-sections:
+    cli_command: 'module show like res_pjsip.so'
+    re_query: '0\smodules\sloaded'
