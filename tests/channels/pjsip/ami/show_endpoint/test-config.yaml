@@ -15,28 +15,34 @@ properties:
         - pjsip
 
 test-modules:
-    # allow test_runner to find and run the local test
-    add-test-to-search-path: 'True'
     test-object:
         config-section: object-config
-        typename: 'AMISendTest.AMISendTest'
+        typename: 'test_case.TestCaseModule'
     modules:
         -
             minversion: '12.0.0'
             maxversion: '13.0.0'
             config-section: 'ami-config'
-            typename: 'ami.AMIEventModule'
+            typename: 'pluggable_modules.EventActionModule'
         -
             minversion: '13.0.0'
             config-section: 'ami-config-13'
-            typename: 'ami.AMIEventModule'
+            typename: 'pluggable_modules.EventActionModule'
 
 object-config:
     reactor-timeout: 15
+    connect-ami: True
 
 ami-config:
-        -
-            type: 'headermatch'
+    -
+        ami-start:
+        ami-actions:
+            action:
+                Action: 'PJSIPShowEndpoint'
+                ActionID: '12345'
+                Endpoint: 'user1'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'EndpointDetail'
@@ -124,8 +130,8 @@ ami-config:
                     DeviceState: 'Invalid|Not in use|Unavailable'
                     ActiveChannels: ''
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'AorDetail'
@@ -147,8 +153,8 @@ ami-config:
                     ContactsRegistered: '0'
                     EndpointName: 'user1'
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'AuthDetail'
@@ -165,8 +171,8 @@ ami-config:
                     Username: 'user1'
                     EndpointName: 'user1'
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'TransportDetail'
@@ -196,8 +202,8 @@ ami-config:
                     Protocol: 'udp'
                     EndpointName: 'user1'
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'IdentifyDetail'
@@ -209,8 +215,8 @@ ami-config:
                     Endpoint: 'user1'
                     Match: '127.0.0.1/255.255.255.255'
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'EndpointDetailComplete'
@@ -222,8 +228,15 @@ ami-config:
             count: 1
 
 ami-config-13:
-        -
-            type: 'headermatch'
+    -
+        ami-start:
+        ami-actions:
+            action:
+                Action: 'PJSIPShowEndpoint'
+                ActionID: '12345'
+                Endpoint: 'user1'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'EndpointDetail'
@@ -311,8 +324,8 @@ ami-config-13:
                     DeviceState: 'Invalid|Not in use|Unavailable'
                     ActiveChannels: ''
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'AorDetail'
@@ -334,8 +347,8 @@ ami-config-13:
                     ContactsRegistered: '0'
                     EndpointName: 'user1'
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'AuthDetail'
@@ -352,8 +365,8 @@ ami-config-13:
                     Username: 'user1'
                     EndpointName: 'user1'
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'TransportDetail'
@@ -383,8 +396,8 @@ ami-config-13:
                     Protocol: 'udp'
                     EndpointName: 'user1'
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'IdentifyDetail'
@@ -396,8 +409,8 @@ ami-config-13:
                     Endpoint: 'user1'
                     Match: '127.0.0.1/255.255.255.255'
             count: 1
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'ContactStatusDetail'
@@ -409,8 +422,8 @@ ami-config-13:
                     RoundtripUsec: '(N/A|0)'
                     EndpointName: 'user1'
             count: 2
-        -
-            type: 'headermatch'
+    -
+        ami-events:
             conditions:
                 match:
                     Event: 'EndpointDetailComplete'
@@ -420,3 +433,4 @@ ami-config-13:
                     EventList: 'Complete'
                     ListItems: '7'
             count: 1
+        stop_test:
