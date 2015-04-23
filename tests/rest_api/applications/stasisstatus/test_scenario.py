@@ -44,6 +44,7 @@ class TestScenario(ObservableObject):
         """
 
         super(TestScenario, self).__init__(name, ['on_complete',
+                                                  'on_start',
                                                   'on_stop'])
         self.__ami = ami
         self.__ari_client = ari_client
@@ -51,7 +52,7 @@ class TestScenario(ObservableObject):
         self.__expected_value = expected
         self.__monitor = monitor
         self.__passed = None
-
+        self.__delayed = False
         self.__monitor.suspend()
         self.ari_client.register_observers('on_client_start',
                                            self.on_ari_client_start)
@@ -97,9 +98,8 @@ class TestScenario(ObservableObject):
         """
 
         LOGGER.debug('{0} AriClient started successfully.'.format(self))
-        if not self.suspended:
-            LOGGER.debug('{0} Running scenario.'.format(self))
-            self.run_strategy()
+        self.notify_observers('on_start', None, True)
+        self.__try_run()
 
     def on_ari_client_stop(self, sender, message):
         """Handler for the AriClient on_client_stop event.
@@ -137,11 +137,13 @@ class TestScenario(ObservableObject):
         """Overrides the default behavior of resetting the value of the
         suspended flag."""
 
-        if not self.suspended:
-            return
+        #Run the 'resume' logic first, then do the delayed check.
+        if self.suspended:
+            super(TestScenario, self).resume()
+            self.__monitor.resume()
 
-        super(TestScenario, self).resume()
-        self.__monitor.resume()
+        if not self.suspended and self.__delayed:
+            self.__try_run()
 
     @abstractmethod
     def run_strategy(self):
@@ -149,33 +151,19 @@ class TestScenario(ObservableObject):
 
         return
 
-    def start(self, on_scenario_complete=None):
-        """Starts the test scenario.
-
-        Keyword Arguments:
-        on_scenario_complete   -- A callback (or a list of callbacks) to invoke
-                                  after the scenario completes (optional)
-                                  (default None).
-        """
+    def start(self):
+        """Starts the test scenario."""
 
         LOGGER.debug('{0} Starting scenario.'.format(self))
-        self.register_observers('on_complete', on_scenario_complete)
         self.ari_client.start()
 
-    def stop(self, on_scenario_stop=None):
-        """Stops the scenario execution and tears down its state.
-
-        Keyword Arguments:
-        on_scenario_stop       -- A callback (or a list of callbacks) to invoke
-                                  after the scenario stops (optional)
-                                  (default None).
-        """
+    def stop(self):
+        """Stops the scenario execution and tears down its state."""
 
         if self.ari_client.suspended:
             return
 
         LOGGER.debug('{0} Stopping the scenario.'.format(self))
-        self.register_observers('on_stop', on_scenario_stop)
         self.suspend()
         self.ari_client.stop()
 
@@ -188,6 +176,17 @@ class TestScenario(ObservableObject):
 
         super(TestScenario, self).suspend()
         self.__monitor.suspend()
+
+    def __try_run(self):
+        """Runs this strategy. Only to be called when this scenario is not
+        suspended and after the ARI client has connected."""
+
+        if not self.suspended:
+            self.__delayed = False
+            LOGGER.debug('{0} Running scenario.'.format(self))
+            self.run_strategy()
+        else:
+            self.__delayed = True
 
     @property
     def actual_value(self):
