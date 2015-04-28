@@ -1,0 +1,71 @@
+testinfo:
+    summary: |
+        Ensures Asterisk correctly handles the situation where duplicate
+        entries are defined in pjsip.conf.
+    description: |
+        This test ensures Asterisk gracefully handles the situation where
+        duplicate sections are defined in pjsip.conf. Seven (7) test
+        scenarios are utilized to confirm configuring pjsip.conf with sections
+        containing an identical id/type combination as another section in the
+        file, results in Asterisk rejecting the configuration. Each test
+        scenario uses its own Asterisk instance to exercise a different id/type
+        combination. The test scenarios:
+        Scenario [1] -> ast1: Tests duplicate [id=siptrunk, type=aor] sections
+        Scenario [2] -> ast2: Tests duplicate [id=siptrunk, type=auth] sections
+        Scenario [3] -> ast3: Tests duplicate [id=siptrunk, type=contact] sections
+        Scenario [4] -> ast4: Tests duplicate [id=siptrunk, type=endpoint] sections
+        Scenario [5] -> ast5: Tests duplicate [id=siptrunk, type=identify] sections
+        Scenario [6] -> ast6: Tests duplicate [id=siptrunk, type=registration] sections
+        Scenario [7] -> ast7: Tests duplicate [id=siptrunk, type=transport] sections
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - asterisk: 'res_pjsip'
+        - python: 'autobahn.websocket'
+        - python: 'starpy'
+        - python: 'twisted'
+        - sipp:
+            version: 'v3.0'
+    tags:
+        - pjsip
+    issues:
+        - jira: 'ASTERISK-24996'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: 'duplicate-sections'
+            typename: 'duplicate_sections.DuplicateSectionsTestHarness'
+
+test-object-config:
+    asterisk-instances: 7
+    connect-ami: 'True'
+
+duplicate-sections:
+    test-scenarios:
+        -
+            cli_command: 'pjsip show aors'
+            output_query: 'No\sobjects\sfound\.'
+        -
+            cli_command: 'pjsip show auths'
+            output_query: 'No\sobjects\sfound\.'
+        -
+            cli_command: 'pjsip show contacts'
+            output_query: 'No\sobjects\sfound\.'
+        -
+            cli_command: 'pjsip show endpoints'
+            output_query: 'No\sobjects\sfound\.'
+        -
+            cli_command: 'pjsip show identifies'
+            output_query: 'No\sobjects\sfound\.'
+        -
+            cli_command: 'pjsip show registrations'
+            output_query: 'No\sobjects\sfound\.'
+        -
+            cli_command: 'pjsip show transports'
+            output_query: 'No\sobjects\sfound\.'
