@@ -3,3 +3,4 @@ tests:
     - test: 'forbidden_retry'
     - dir: 'unregister'
     - test: 'auth_loop'
+    - test: 'line_parameter'
