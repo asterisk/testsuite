@@ -1,0 +1,34 @@
+testinfo:
+    summary: 'Send an outbound registration with line parameter'
+    description: |
+        'This test performs an outbound registration with the line parameter
+         option set to a SIPP scenario. Once the registration is complete SIPP
+         places a call to Asterisk using the Contact header provided in the
+         registration. Asterisk matches the call using the line parameter and
+         directs it to the expected position in the dialplan.'
+
+properties:
+    minversion: '13.4.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_outbound_registration'
+        - sipp:
+            version: 'v3.0'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'register.xml', '-i': '127.0.0.1',
+                                    '-p': '5061'} }
