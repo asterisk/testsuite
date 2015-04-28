@@ -38,3 +38,4 @@ tests:
     - test: 'in_dialog_options'
     - dir: 'resolver'
     - test: 'forward_loop'
+    - dir: 'configuration'
