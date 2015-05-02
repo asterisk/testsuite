@@ -33,9 +33,14 @@ class DialplanReloadTest(TestCase):
 
         def callback(defer):
             LOGGER.info("DIALPLAN SHOW = %s" % defer.output)
-            print defer.output.strip()
-            if defer.output.find("CID match ''") == -1:
-                print "Dialplan did not load correctly"
+            if "CID match ''" not in defer.output:
+                LOGGER.error("Dialplan did not load correctly")
+                self.failure()
+            elif "hint: Local/60@incoming_1" not in defer.output:
+                LOGGER.error("Dialplan failed to load static hint")
+                self.failure()
+            elif "hint: Local/${EXTEN}@incoming_1" not in defer.output:
+                LOGGER.error("Dialplan failed to load dynamic hint")
                 self.failure()
             else:
                 self.reload()
