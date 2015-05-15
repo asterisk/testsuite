@@ -1,3 +1,4 @@
 tests:
     - dir: 'unauthed'
     - dir: 'authed'
+    - test: 'peer_in_dialog_auths'
