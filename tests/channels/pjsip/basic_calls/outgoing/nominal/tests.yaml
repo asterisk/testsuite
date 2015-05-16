@@ -3,3 +3,4 @@ tests:
     - test: 'echo'
     - test: 'auth'
     - test: 'nat'
+    - test: 'peer_in_dialog_auths'
