@@ -10,7 +10,7 @@ the GNU General Public License Version 2.
 
 import sys
 import logging
-from twisted.internet import reactor
+from twisted.internet import reactor, task
 import pjsua as pj
 
 import pjsua_mod
@@ -102,6 +102,10 @@ class PjsuaPhone(object):
         self.pj_lib = controller.pj_accounts[self.name].pj_lib
         # List of Call objects
         self.calls = []
+        # Track calls with operations that are in progress. The tracking is to
+        # prevent the same operation from being attempted on a call when it's
+        # already in progress.
+        self.__op_calls = {'hold': [], 'transfer': []}
 
     def make_call(self, uri):
         """Place a call.
@@ -120,50 +124,97 @@ class PjsuaPhone(object):
         except pj.Error as err:
             raise Exception("Exception occurred while making call: '%s'" %
                             str(err))
+        except:
+            raise
 
         return call
 
     def blind_transfer(self, transfer_uri):
         """Do a blind transfer.
 
+        Attempt to transfer the call to the specified URI.
+
         Keyword Arguments:
         transfer_uri SIP URI of transfer target.
         """
         LOGGER.info("'%s' is transfering (blind) '%s' to '%s'." %
                     (self.name, self.calls[0].info().remote_uri, transfer_uri))
+        self.__op_calls['transfer'].append(self.calls[0])
+
         try:
             self.calls[0].transfer(transfer_uri)
         except pj.Error as err:
             raise Exception("Exception occurred while transferring: '%s'" %
                             str(err))
+        except:
+            self.remove_call_op_tracking(self.calls[0], operation='transfer')
+            raise
 
     def attended_transfer(self):
         """Do an attended transfer.
 
-        The first call will be transfered to the second call.
+        Attempt to transfer the first call to the second call.
         """
         LOGGER.info("'%s' is transfering (attended) '%s' to '%s'." %
                     (self.name, self.calls[0].info().remote_uri,
                      self.calls[1].info().remote_uri))
+        self.__op_calls['transfer'].append(self.calls[0])
+
         try:
             self.calls[0].transfer_to_call(self.calls[1], hdr_list=None,
                                            options=0)
         except pj.Error as err:
             raise Exception("Exception occurred while transferring: '%s'" %
                             str(err))
+        except:
+            self.remove_call_op_tracking(self.calls[0], operation='transfer')
+            raise
 
     def hold_call(self):
         """Place call on hold.
 
-        The first call will be placed on hold.
+        Attempt to place the first call on hold.
         """
         LOGGER.info("'%s' is putting '%s' on hold." %
                     (self.name, self.calls[0].info().remote_uri))
+        self.__op_calls['hold'].append(self.calls[0])
+
         try:
             self.calls[0].hold()
         except pj.Error as err:
-            msg = ("Exception occurred while putting call on hold: '%s'" % str(err))
-            raise Exception(msg)
+            msg = ("Exception occurred while putting call on hold: '%s'" %
+                    str(err))
+            LOGGER.debug(msg)
+            raise
+        except:
+            self.remove_call_op_tracking(self.calls[0], operation='hold')
+            raise
+
+    def is_call_op_tracked(self, call, operation=None):
+        """Check if a call is being tracked for a specific operation
+
+        Keyword Arguments:
+        call Object of call.
+        operation String of call operation.
+
+        Returns True if found. False otherwise.
+        """
+        if operation is None:
+            raise Exception("No operation specified.")
+        return call in self.__op_calls[operation]
+
+    def remove_call_op_tracking(self, call, operation=None):
+        """Remove channel from operation tracking
+
+        Keyword Arguments:
+        call Object of call.
+        operation String of call operation.
+        """
+        if operation is None:
+            raise Exception("No operation specified.")
+        self.__op_calls[operation] = \
+                [x for x in self.__op_calls[operation] if x != call]
+        LOGGER.debug("Removed call from %s operation tracking." % operation)
 
 
 class AccCallback(pj.AccountCallback):
@@ -221,6 +272,13 @@ class PhoneCallCallback(pj.CallCallback):
             except ValueError:
                 pass
 
+    def on_media_state(self):
+        """Callback for call media state changes."""
+        if self.call.info().media_state == pj.MediaState.LOCAL_HOLD:
+            self.phone.remove_call_op_tracking(self.call, operation='hold')
+        LOGGER.debug(fmt_call_info(self.call.info()))
+        LOGGER.debug("Call media state: %s" % self.call.info().media_state)
+
     def on_transfer_status(self, code, reason, final, cont):
         """Callback for the status of a previous call transfer request."""
         LOGGER.debug(fmt_call_info(self.call.info()))
@@ -238,6 +296,8 @@ class PhoneCallCallback(pj.CallCallback):
             LOGGER.info("Transfer target answered the call.")
         else:
             LOGGER.warn("Transfer failed!")
+
+        self.phone.remove_call_op_tracking(self.call, operation='transfer')
 
         try:
             LOGGER.info("Hanging up '%s'" % self.call)
@@ -299,20 +359,73 @@ def call(test_object, triggered_by, ari, event, args):
 
 def hold(test_object, triggered_by, ari, event, args):
     """Pluggable action module callback to place a call on hold"""
+    def __handle_error(reason):
+        """Callback handler for twisted deferred errors.
+
+        Handle twisted deferred errors. If it's due to a PJsua invalid
+        operation then retry the hold. Otherwise stop the reactor and raise the
+        error.
+
+        Keyword Arguments:
+        reason Instance of Failure for the reason of the error
+        """
+        if reason.check(pj.Error):
+            if "PJ_EINVALIDOP" in reason.value.err_msg():
+                __retry()
+            else:
+                test_object.stop_reactor()
+                raise Exception("Exception: '%s'" % str(reason))
+        else:
+            test_object.stop_reactor()
+            raise Exception("Exception: '%s'" % str(reason))
+
+    def __retry():
+        """Retry placing the call on hold.
+
+        Create a deferred to handle errors and schedule retry.
+        """
+        task.deferLater(reactor, .25,
+                        phone.hold_call).addErrback(__handle_error)
+
     controller = PjsuaPhoneController.get_instance()
     phone = controller.get_phone_obj(name=args['pjsua_account'])
     if len(phone.calls) < 1:
         msg = "'%s' must have 1 active call to put on hold!" % phone.name
         test_object.stop_reactor()
         raise Exception(msg)
+
+    if phone.calls[0].info().media_state == pj.MediaState.LOCAL_HOLD:
+        LOGGER.debug("Call is already on local hold. Ignoring...")
+        return
+
+    if phone.is_call_op_tracked(phone.calls[0], operation='hold'):
+        LOGGER.debug("Call hold operation is already in progress. Ignoring...")
+        return
+
     if phone.calls[0].info().state != pj.CallState.CONFIRMED:
         LOGGER.debug("Call is not fully established. Retrying hold shortly.")
         reactor.callLater(.25, hold, test_object, triggered_by, ari, event,
                           args)
         return
 
+    if phone.calls[0].info().media_state != pj.MediaState.ACTIVE:
+        LOGGER.debug("Call media is not active. Ignoring...")
+        return
+
+    # Try putting the call on hold. If a pj.Error exception is caught due to an
+    # invalid operation then schedule another attempt to put the call on hold.
+    # Even when the CallState is CONFIRMED and the MediaState is ACTIVE, the
+    # hold may fail due to a reinvite that is in progress.
     try:
         phone.hold_call()
+    except pj.Error as err:
+        if "PJ_EINVALIDOP" in err.err_msg():
+            # Create a deferred to handle errors and schedule another attempt.
+            task.deferLater(reactor, .25,
+                            phone.hold_call).addErrback(__handle_error)
+        else:
+            test_object.stop_reactor()
+            raise Exception("Exception: '%s'" % str(err))
     except:
         test_object.stop_reactor()
         raise Exception("Exception: '%s'" % str(sys.exc_info()))
@@ -327,26 +440,42 @@ def transfer(test_object, triggered_by, ari, event, args):
     res = False
     msg = None
 
+    if phone.calls:
+        if phone.is_call_op_tracked(phone.calls[0], operation='transfer'):
+            LOGGER.debug("Call transfer operation is already in progress.")
+            return
+
     if transfer_type == "attended":
-        if len(phone.calls) == 2:
+        if len(phone.calls) != 2:
+            msg = "'%s' must have 2 active calls to transfer" % phone.name
+        elif (phone.calls[0].info().state != pj.CallState.CONFIRMED or
+              phone.calls[1].info().state != pj.CallState.CONFIRMED):
+            LOGGER.debug("Call is not fully established. Retrying transfer.")
+            reactor.callLater(.25, transfer, test_object, triggered_by, ari,
+                              event, args)
+            return
+        else:
             try:
                 phone.attended_transfer()
                 res = True
             except:
                 msg = "Exception: '%s'" % str(sys.exc_info())
-        else:
-            msg = "'%s' must have 2 active calls to transfer" % phone.name
     elif transfer_type == "blind":
         if transfer_uri is None:
             msg = "Transfer URI not found!"
-        elif len(phone.calls) == 1:
+        elif len(phone.calls) != 1:
+            msg = "'%s' must have 1 active call to transfer" % phone.name
+        elif (phone.calls[0].info().state != pj.CallState.CONFIRMED):
+            LOGGER.debug("Call is not fully established. Retrying transfer.")
+            reactor.callLater(.25, transfer, test_object, triggered_by, ari,
+                              event, args)
+            return
+        else:
             try:
                 phone.blind_transfer(transfer_uri)
                 res = True
             except:
                 msg = "Exception: '%s'" % str(sys.exc_info())
-        else:
-            msg = "'%s' must have 1 active call to transfer" % phone.name
     else:
         msg = "Unknown transfer type"
 
