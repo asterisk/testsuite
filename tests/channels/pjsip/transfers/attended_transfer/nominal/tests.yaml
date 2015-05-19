@@ -5,3 +5,5 @@ tests:
     - test: 'callee_remote'
     - test: 'caller_local_app'
     - test: 'callee_local_app'
+    - test: 'caller_local_direct_media'
+    - test: 'callee_local_direct_media'

@@ -1,0 +1,251 @@
+testinfo:
+    summary: "Callee initiated attended transfer w/Replaces, direct media, hold"
+    description: |
+        "This verifies a callee initiated local attended transfer with
+         REFER/Replaces, hold, and direct media. This uses a specialized packet
+         sniffer module that generates AMI UserEvents that are then checked to
+         determine the result of this test.
+
+         Alice calls bob via extension '101' and bob answers. Upon alice and
+         bob being remotely bridged, bob places alice on hold. Upon alices's
+         remote bridge being torn down, bob places a second call to charlie.
+         Charlie answers and once bob's second call and charlie are remotely
+         bridged, bob transfers alice to charlie via an attended transfer.
+
+         This then checks some data from the REFER and NOTIFY sipfrag. It
+         also ensures MOH is stopped on alice and that alice and charlie are
+         remotely bridged. If a race condition occurs between pjsua putting a
+         call on hold and Asterisk setting up direct media, the resulting 491
+         Request Pending message is examined and hold is attempted again."
+
+test-modules:
+    add-relative-to-search-path: ['..']
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: packet-listener
+            typename: 'packet_sniffer.Sniffer'
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+        -
+            config-section: pjsua-config
+            typename: 'phones.PjsuaPhoneController'
+
+test-object-config:
+    connect-ami: True
+
+packet-listener:
+    register-observer: True
+    device: 'lo'
+    bpf-filter: 'udp and port 5060'
+    debug-packets: False
+
+pjsua-config:
+    transports:
+        -
+            name: 'local-ipv4-1'
+            bind: '127.0.0.1'
+            bindport: '5061'
+        -
+            name: 'local-ipv4-2'
+            bind: '127.0.0.1'
+            bindport: '5062'
+        -
+            name: 'local-ipv4-3'
+            bind: '127.0.0.1'
+            bindport: '5063'
+    accounts:
+        -
+            name: 'alice'
+            username: 'alice'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-1'
+        -
+            name: 'bob'
+            username: 'bob'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-2'
+        -
+            name: 'charlie'
+            username: 'charlie'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-3'
+
+pluggable-config:
+    # Ensure our pjsua phones are ready. Then alice calls bob via exten 101.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'PJsuaPhonesReady'
+            count: 1
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'alice'
+            call_uri: 'sip:101@127.0.0.1'
+    # Ensure alice and bob are remotely bridged. Then bob places alice on hold.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'RemoteRTPBridgeStarted'
+                    Endpoint1: '(bob|alice)'
+                    Endpoint2: '(bob|alice)'
+            count: 1
+        pjsua_phone:
+            action: 'hold'
+            pjsua_account: 'bob'
+    # If this is received then there was a race condition with our hold and a
+    # reinvite. Therefore try hold again but use override method.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: '491RequestPending'
+            count: <3
+        callback:
+            module: packet_sniffer
+            method: hold
+    # Ensure MOH starts on alice.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'MusicOnHoldStart'
+                    Channel: 'PJSIP/alice-.*'
+            count: 1
+    # Ensure remote bridge is torn down for alice since she's on hold. Then bob
+    # makes a call to charlie.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'RemoteRTPBridgeStopped'
+                    Endpoint1: 'alice'
+            count: 1
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'bob'
+            call_uri: 'sip:102@127.0.0.1'
+    # Ensure bob and charlie are remotely bridged. Then bob transfers alice
+    # to charlie via an attended transfer.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'RemoteRTPBridgeStarted'
+                    Endpoint1: '(charlie|bob)'
+                    Endpoint2: '(charlie|bob)'
+            count: 1
+        pjsua_phone:
+            action: 'transfer'
+            pjsua_account: 'bob'
+            transfer_type: 'attended'
+    # Ensure the REFER contains correct info
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'ReferInfo'
+                    ReferTo: '.*102@127.0.0.1.*Replaces=.*'
+                    ReferredBy: '.*sip:bob@127.0.0.1.*'
+            count: 1
+    # Ensure MOH stops on alice's channel.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'MusicOnHoldStop'
+                    Channel: 'PJSIP/alice-.*'
+            count: 1
+    # Ensure the transfer is successful.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'AttendedTransfer'
+                    OrigTransfererChannel: 'PJSIP/bob-.*'
+                    SecondTransfererChannel: 'PJSIP/bob-.*'
+                    TransfereeChannel: 'PJSIP/alice-.*'
+                    TransferTargetChannel: 'PJSIP/charlie-.*'
+                    Result: 'Success'
+            count: 1
+    # Ensure a 200 OK sipfrag NOTIFY occurred.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'NotifySIPFrag'
+                    NotifyBody: 'SIP/2.0 200 OK'
+            count: 1
+    # Ensure each bob channel leaves the bridge it was in.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'BridgeLeave'
+                    Channel: 'PJSIP/bob-.*'
+            count: 2
+    # Ensure bob's second call to charlie is hung up.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'PJSIP/bob-.*'
+                    Exten: '102'
+            count: 1
+    # Ensure bob's first call to alice is hung up.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'PJSIP/bob-.*'
+                nomatch:
+                    Exten: '102'
+            count: 1
+    # The remote bridge for charlie's call may or may not be torn down due to
+    # how fast things occur.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'RemoteRTPBridgeStopped'
+                    Endpoint1: 'charlie'
+            count: <1
+    # The remote bridge may be setup twice depending on how fast things occur.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'RemoteRTPBridgeStarted'
+                    Endpoint1: '(charlie|alice)'
+                    Endpoint2: '(charlie|alice)'
+            count: <2
+        stop_test:
+
+properties:
+    minversion: '13.0.0'
+    dependencies:
+        - python : twisted
+        - python : starpy
+        - python : yappcap
+        - python : pyxb
+        - python : pjsua
+        - asterisk : res_pjsip
+    tags:
+        - pjsip
+

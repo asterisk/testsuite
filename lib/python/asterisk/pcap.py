@@ -333,7 +333,7 @@ class SIPPacket(Packet):
         self.request_line = ''
         self.ascii_packet = ascii_packet
 
-        ascii_packet = ascii_packet.strip()
+        ascii_packet = ascii_packet.lstrip()
         last_pos = ascii_packet.find('\r\n',
                                      ascii_packet.find('Content-Length'))
         header_count = 0
@@ -390,12 +390,12 @@ class SIPPacketFactory():
         # interpret packets correctly
         if ret_packet and ret_packet.body and \
                 ret_packet.body.packet_type == 'SDP' and \
-                ret_packet.sdp_packet.rtp_port != 0 and \
-                ret_packet.sdp_packet.rtcp_port != 0:
+                ret_packet.body.rtp_port != 0 and \
+                ret_packet.body.rtcp_port != 0:
             self._factory_manager.add_global_data(
                 ret_packet.ip_layer.header.source,
-                {'rtp': ret_packet.sdp_packet.rtp_port,
-                 'rtcp': ret_packet.sdp_packet.rtcp_port})
+                {'rtp': ret_packet.body.rtp_port,
+                 'rtcp': ret_packet.body.rtcp_port})
         return ret_packet
 
 
