@@ -1,0 +1,70 @@
+testinfo:
+    summary: 'Test SRV priority using a UDP transport'
+    description: |
+        'This test verifies that an SRV record lookup resulting in multiple
+        results with different priorities will use the record with the highest
+        priority (lowest number).
+
+        A call is placed to example.com over IPv4 & IPv6 resulting in a SRV
+        lookup. If the highest priority SRV record is used for both calls then
+        the IP address of main.example.com and port 5061 is used to reach the
+        SIPp instances. Otherwise the IP address of backup.example.com and port
+        5062 is used and the test will fail to due a SIPp instance not
+        receiving a call.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator-ipv4
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: originator-ipv6
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: dns-server-config
+            typename: 'dns_server.DNSServer'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uas-ipv4.xml', '-i': '127.0.0.1',
+                                 '-p': '5061'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'uas-ipv6.xml',
+                                                    '-i': '[::1]', '-p': '5061'} }
+
+originator-ipv4:
+    trigger: 'scenario_start'
+    scenario-name: 'uas-ipv4.xml'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'Local/s-ipv4@default'
+    application: 'Echo'
+    async: 'True'
+
+originator-ipv6:
+    trigger: 'scenario_start'
+    scenario-name: 'uas-ipv6.xml'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'Local/s-ipv6@default'
+    application: 'Echo'
+    async: 'True'
+
+dns-server-config:
+    port: 10053
+    python-zones:
+        -
+            example.com
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_resolver_unbound'
+    tags:
+        - pjsip
