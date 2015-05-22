@@ -38,11 +38,11 @@ class PJMWICallback(pj.AccountCallback):
         if not waiting in body:
             LOGGER.error("Could not find pattern %s in MWI body %s" %
                          (waiting, body))
-            controller.fail_test()
+            self.controller.fail_test()
         if not msgs in body:
             LOGGER.error("Could not find pattern %s in MWI body %s" %
                          (msgs, body))
-            controller.fail_test()
+            self.controller.fail_test()
             self.test_object.set_passed(False)
             self.test_object.stop_reactor()
 
