@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+"""Pluggable modules for the mwi_aggregate test
+
+Copyright (C) 2014, Digium, Inc.
+John Bigelow <jbigelow@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+"""
 
 import sys
 import logging
@@ -20,6 +28,7 @@ BOB_RESULTS = [
     {'waiting': 'yes', 'msgs': '3/3'},
 ]
 
+
 class PJMWICallback(pj.AccountCallback):
     def __init__(self, account, results, controller):
         pj.AccountCallback.__init__(self, account)
@@ -35,11 +44,11 @@ class PJMWICallback(pj.AccountCallback):
         msgs = "Voice-Message: %s (0/0)\r\n" % \
             self.results[self.result_pos]['msgs']
 
-        if not waiting in body:
+        if waiting not in body:
             LOGGER.error("Could not find pattern %s in MWI body %s" %
                          (waiting, body))
             self.controller.fail_test()
-        if not msgs in body:
+        if msgs not in body:
             LOGGER.error("Could not find pattern %s in MWI body %s" %
                          (msgs, body))
             self.controller.fail_test()
@@ -71,7 +80,7 @@ class MWICallback(object):
         bob.account.set_callback(self.bob_cb)
 
     def next_mwi(self, account):
-        reactor.callFromThread(self._next_mwi_reactor, account);
+        reactor.callFromThread(self._next_mwi_reactor, account)
 
     def _next_mwi_reactor(self, account):
         account.checked_in = True
@@ -102,6 +111,7 @@ class MWICallback(object):
     def fail_test(self):
         self.test_object.set_passed(False)
         self.test_object.stop_reactor()
+
 
 def mwi_callback(test_object, accounts):
     cb = MWICallback(test_object, accounts)
