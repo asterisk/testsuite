@@ -11,7 +11,13 @@ test-modules:
         typename: 'sipp.SIPpTestCase'
     modules:
         -
+            minversion: '13.4.0'
+            maxversion: '13.5.0'
             config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+        -
+            minversion: '13.5.0'
+            config-section: 'ami-config-13.5'
             typename: 'pluggable_modules.EventActionModule'
 
 test-object-config:
@@ -48,6 +54,21 @@ ami-config:
                     Contact: 'sipp@@sip:127.0.0.1:5061'
                     Status: 'Reachable'
             count: '1'
+        stop_test:
+
+ami-config-13.5:
+    -
+        ami-start:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'ContactStatus'
+                    ContactStatus: 'Reachable'
+            requirements:
+                match:
+                    URI: 'sip:127.0.0.1:5061'
+            count: '>1'
         stop_test:
 
 properties:
