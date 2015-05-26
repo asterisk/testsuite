@@ -10,7 +10,13 @@ test-modules:
         typename: 'sipp.SIPpTestCase'
     modules:
         -
+            minversion: '13.4.0'
+            maxversion: '13.5.0'
             config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+        -
+            minversion: '13.5.0'
+            config-section: 'ami-config-13.5'
             typename: 'ami.AMIEventModule'
 
 test-object-config:
@@ -46,6 +52,19 @@ ami-config:
             match:
                 Contact: 'sipp@@sip:127.0.0.1:5061'
         count: '1'
+
+ami-config-13.5:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'ContactStatus'
+                ContactStatus: 'Reachable'
+        requirements:
+            match:
+                URI: 'sip:127.0.0.1:5061'
+        count: '>1'
 
 properties:
     minversion: '13.4.0'
