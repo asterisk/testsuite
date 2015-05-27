@@ -33,3 +33,5 @@ tests:
     - dir: 'hep'
     - dir: 'realtime'
     - dir: 'http_server'
+    - dir: 'sorcery'
+
