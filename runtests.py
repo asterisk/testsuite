@@ -116,8 +116,11 @@ class TestRun:
 
             core_dumps = self._check_for_core()
             if (len(core_dumps)):
-                self.stdout_print("Core dumps detected; failing test")
-                self.passed = False
+                if self.passed:
+                    self.stdout_print("Core dumps detected; failing test")
+                    self.passed = False
+                else:
+                    self.stdout_print("Core dumps detected; test was already failed")
                 self._archive_core_dumps(core_dumps)
 
             self._process_valgrind()
@@ -282,8 +285,12 @@ class TestRun:
                                      os.path.join(dest_dir, "refs.txt"))
                     hardlink_or_copy(refs_in,
                                      os.path.join(dest_dir, "refs"))
-                    self.stdout_print("REF_DEBUG identified leaks, mark test as failure")
-                    self.passed = False
+                    if self.passed:
+                        self.stdout_print("REF_DEBUG identified leaks, mark test as failure")
+                        self.passed = False
+                    else:
+                        self.stdout_print("REF_DEBUG identified leaks, "
+                                          "test was already marked as failure");
             i += 1
 
     def _archive_files(self, src_dir, dest_dir, *filenames):
