@@ -150,11 +150,18 @@ class TestRun:
         self.time = time.time() - start_time
 
     def _check_for_core(self):
-        contents = os.listdir('.')
         core_files = []
+
+        contents = os.listdir('.')
         for item in contents:
-            if item.startswith('core'):
+            if item.startswith('core') or item.startswith('vgcore'):
                 core_files.append(item)
+
+        contents = os.listdir(self.test_name)
+        for item in contents:
+            if item.startswith('core') or item.startswith('vgcore'):
+                core_files.append(os.path.join(self.test_name, item))
+
         return core_files
 
     def _archive_core_dumps(self, core_dumps):
