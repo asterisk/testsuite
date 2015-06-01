@@ -21,4 +21,5 @@ tests:
     - test: 'userevent'
     - test: 'connected_line'
     - test: 'response-time'
+    - test: 'escaped_values'
     - dir:  'redirect'

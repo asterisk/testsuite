@@ -46,6 +46,12 @@ class AMIEventInstance(object):
         self._event_observers = []
         self.count = {}
 
+        if instance_config.get('escape-pattern', True):
+            self.match = (lambda pattern, s, flags=0:
+                          re.match(re.escape(pattern), s, flags))
+        else:
+            self.match = (re.match)
+
         if 'count' in instance_config:
             count = instance_config['count']
             if isinstance(count, int):
@@ -134,7 +140,7 @@ class AMIEventInstance(object):
             if key.lower() not in event:
                 LOGGER.debug("Condition %s not in event, returning", key)
                 return
-            if not re.match(value, event.get(key.lower())):
+            if not self.match(value, event.get(key.lower())):
                 LOGGER.debug("Condition %s: %s does not match %s: %s in event",
                              key, value, key, event.get(key.lower()))
                 return
@@ -146,7 +152,7 @@ class AMIEventInstance(object):
             if key.lower() not in event:
                 LOGGER.debug("Condition %s not in event, returning", key)
                 return
-            if re.match(value, event.get(key.lower())):
+            if self.match(value, event.get(key.lower())):
                 LOGGER.debug("Condition %s: %s matches %s: %s in event",
                              key, value, key, event.get(key.lower()))
                 return
@@ -222,7 +228,7 @@ class AMIHeaderMatchInstance(AMIEventInstance):
                 LOGGER.warning("Requirement %s does not exist in event %s",
                                key, event['event'])
                 self.passed = False
-            elif not re.match(value, event.get(key.lower())):
+            elif not self.match(value, event.get(key.lower())):
                 LOGGER.warning("Requirement %s: %s does not match %s: %s in "
                                "event", key, value, key,
                                event.get(key.lower(), ''))
@@ -236,7 +242,7 @@ class AMIHeaderMatchInstance(AMIEventInstance):
                 LOGGER.warning("Requirement %s does not exist in event %s",
                                key, event['event'])
                 self.passed = False
-            elif re.match(value, event.get(key.lower(), '')):
+            elif self.match(value, event.get(key.lower(), '')):
                 LOGGER.warning("Requirement %s: %s matches %s: %s in event",
                                key, value, key, event.get(key.lower(), ''))
                 self.passed = False
@@ -290,7 +296,7 @@ class AMIOrderedHeaderMatchInstance(AMIEventInstance):
                 LOGGER.warning("Requirement %s does not exist in event %s",
                                key, event['event'])
                 self.passed = False
-            elif not re.match(value, event.get(key.lower())):
+            elif not self.match(value, event.get(key.lower())):
                 LOGGER.warning("Requirement %s: %s does not match %s: "
                                "%s in event", key, value, key,
                                event.get(key.lower()))
@@ -304,7 +310,7 @@ class AMIOrderedHeaderMatchInstance(AMIEventInstance):
                 LOGGER.warning("Requirement %s does not exist in event %s",
                                key, event['event'])
                 self.passed = False
-            elif re.match(value, event.get(key.lower(), '')):
+            elif self.match(value, event.get(key.lower(), '')):
                 LOGGER.warning("Requirement %s: %s matches %s: %s in event",
                                key, value, key, event.get(key.lower(), ''))
                 self.passed = False
@@ -362,7 +368,7 @@ class CelRequirement(object):
                     extra_item = item.get(extra_key.lower())
                     if extra_item is None:
                         continue
-                    extra_match = re.match(extra_item, str(extra_value))
+                    extra_match = self.match(extra_item, str(extra_value))
                     if extra_match is None \
                             or extra_match.end() != len(str(extra_value)):
                         LOGGER.debug('Skipping %s - %s does not equal %s for '
@@ -370,7 +376,7 @@ class CelRequirement(object):
                                      extra_item, str(extra_value), extra_key)
                         return False
             else:
-                match = re.match(item, value)
+                match = self.match(item, value)
                 if match is None or match.end() != len(value):
                     LOGGER.debug('Skipping %s - %s does not equal %s '
                                  'for field %s', event['eventname'], item,
