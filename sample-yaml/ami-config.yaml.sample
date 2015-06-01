@@ -2,6 +2,11 @@
 
 ami-config:
     -
+        # When set to "True" the pattern to match values against is escaped
+        # (all non-alphanumerics are backslashed) prior to matching. Defaults
+        # to "False".
+        escape-pattern: False
+
         # The type of the instance. 'headermatch' means that when
         # certain events with certain headers are encountered,
         # Then regexes should be applied to the event to ensure that
