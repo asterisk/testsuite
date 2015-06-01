@@ -1,0 +1,47 @@
+testinfo:
+    summary: 'Test that AMI values are escaped for C sequences.'
+    description: |
+        "AMI values may contain characters, for instance \r\n, within them
+         that need to be escaped or else they could cause problems. This test
+         makes sure those sequences are properly escaped."
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_manager_presencestate'
+    tags:
+        - AMI
+
+test-modules:
+    test-object:
+        config-section: object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+object-config:
+    reactor-timeout: 15
+    connect-ami: True
+
+ami-config:
+    -
+        ami-start:
+        ami-actions:
+            action:
+                Action: 'SetVar'
+                Variable: 'PRESENCE_STATE(CustomPresence:Stuff)'
+                Value: 'away,things,stuff\r\nthings'
+    -
+        ami-events:
+            escape-pattern: True
+            conditions:
+                match:
+                    Event: 'PresenceStateChange'
+            requirements:
+                match:
+                    Message: 'stuff\\r\\nthings'
+

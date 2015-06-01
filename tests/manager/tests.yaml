@@ -20,6 +20,7 @@ tests:
     - test: 'status_all_vars'
     - test: 'userevent'
     - test: 'connected_line'
+    - test: 'escaped_values'
     # Temporarily disabled while failures are debugged
     #- test: 'response-time'
     - dir:  'redirect'
