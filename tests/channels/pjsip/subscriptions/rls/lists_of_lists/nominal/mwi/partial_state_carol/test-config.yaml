@@ -23,6 +23,7 @@ properties:
     tags:
         - rls
         - pjsip
+        - mwi_external
 
 test-modules:
     add-to-search-path:

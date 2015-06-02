@@ -13,11 +13,15 @@ properties:
         - python: 'starpy'
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_pubsub'
+        - asterisk: 'res_pjsip_mwi'
+        - asterisk: 'res_mwi_external'
+        - asterisk: 'res_mwi_external_ami'
         - sipp:
             version: 'v3.0'
     tags:
         - rls
         - pjsip
+        - mwi_external
 
 test-modules:
     test-object:
