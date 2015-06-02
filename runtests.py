@@ -348,8 +348,11 @@ class TestSuite:
 
         self.tests = []
         self.global_config = self._parse_global_config()
-        self.tests = sorted(self._parse_test_yaml("tests", ast_version),
-                            key=lambda test: test.test_name)
+        self.tests = self._parse_test_yaml("tests", ast_version)
+        if self.options.randomorder:
+            random.shuffle(self.tests)
+        else:
+            self.tests = sorted(self.tests, key=lambda test: test.test_name)
         self.total_time = 0.0
         self.total_count = 0
         self.total_failures = 0
@@ -616,6 +619,9 @@ def main(argv=None):
     parser.add_option("-c", "--cleanup", action="store_true",
                       dest="cleanup", default=False,
                       help="Cleanup tmp directory after each successful test")
+    parser.add_option("--random-order", action="store_true",
+                      dest="randomorder", default=False,
+                      help="Shuffle the tests so they are run in random order")
     (options, args) = parser.parse_args(argv)
 
     ast_version = AsteriskVersion(options.version)
