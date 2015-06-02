@@ -1,0 +1,57 @@
+testinfo:
+    summary:     'Tests outgoing calls with outbound in-dialog authentication'
+    description: |
+        'Run a SIPp scenario that sends various calls from res_pjsip,
+        that need authentication when requests are made to the peer.
+        Specifically in-dialog MESSAGE and re-INVITE.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'originator-alice-ipv4-udp'
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: 'originator-alice-ipv6-udp'
+            typename: 'pluggable_modules.Originator'
+
+originator-alice-ipv4-udp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/alice-ipv4-udp/sip:test@127.0.0.1:5061;transport=udp'
+    context: 'default'
+    exten: 'in_dialog_auths'
+    priority: '1'
+    async: 'True'
+
+originator-alice-ipv6-udp:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/alice-ipv6-udp/sip:test@[::1]:5071;transport=udp'
+    context: 'default'
+    exten: 'in_dialog_auths'
+    priority: '1'
+    async: 'True'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'outgoing_in_dialog_auths.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-ipv4-udp'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'outgoing_in_dialog_auths.xml', '-i': '[::1]', '-p': '5071', '-s': 'alice-ipv6-udp'} }
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_sendtext'
+        - asterisk : 'func_callerid'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
