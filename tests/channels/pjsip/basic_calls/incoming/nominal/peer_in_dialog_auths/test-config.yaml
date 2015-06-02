@@ -1,0 +1,45 @@
+testinfo:
+    summary:     'Tests incoming calls with outbound in-dialog authentication'
+    description: |
+        'Run a SIPp scenario that sends various calls to res_pjsip,
+        that need authentication when requests are made to the caller.
+        Specifically in-dialog MESSAGE and re-INVITE.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        # IPv4 & UDP
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'incoming_in_dialog_auths.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-ipv4-udp'} }
+
+        # IPv4 & TCP
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'incoming_in_dialog_auths.xml', '-i': '127.0.0.1', '-p': '5062', '-t': 't1', '-s': 'alice-ipv4-tcp'} }
+
+        # IPv6 & UDP
+        -
+            scenarios:
+                - { 'target': '[::1]', 'key-args': {'scenario': 'incoming_in_dialog_auths.xml', '-i': '[::1]', '-p': '5071', '-s': 'alice-ipv6-udp'} }
+
+        # IPv6 & TCP
+        -
+            scenarios:
+                - { 'target': '[::1]', 'key-args': {'scenario': 'incoming_in_dialog_auths.xml', '-i': '[::1]', '-p': '5072', '-t': 't1', '-s': 'alice-ipv6-tcp'} }
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_sendtext'
+        - asterisk : 'func_callerid'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
