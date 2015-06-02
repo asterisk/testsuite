@@ -36,8 +36,9 @@ properties:
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_pubsub'
         - asterisk: 'res_mwi_external'
+        - asterisk: 'res_mwi_external_ami'
     tags:
-        - mwi
+        - mwi_external
         - rls
         - pjsip
 
