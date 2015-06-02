@@ -48,10 +48,29 @@ class PjsuaPhoneController(pjsua_mod.PJsua):
             PjsuaPhoneController.__singleton_instance = self
         LOGGER.info("Pluggable module initialized.")
 
+    def acct_success(self):
+        """Override of parent method.
+
+        If accounts will not be registering and all accounts have been created,
+        instantiate a phone for each.
+        """
+        self.num_accts_created += 1
+        if (self.num_accts_created != self.num_accts or
+                self.config.get('register', True)):
+            return
+
+        for account in self.config['accounts']:
+            pjsua_phone = PjsuaPhone(self, account)
+            self.__pjsua_phones[account['name']] = pjsua_phone
+
+        LOGGER.info("PJSUA Accounts Created.")
+        self.__setup_pjsua_acc_cb()
+
     def reg_success(self):
         """Override of parent callback method.
 
-        Callback for when all PJSUA accounts have registered to Asterisk.
+        Callback for when all PJSUA accounts have registered to Asterisk. This
+        will instantiate a phone for each.
         """
         self.num_regs += 1
         if self.num_regs != self.num_accts:

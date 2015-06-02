@@ -2,6 +2,7 @@
 tests:
     - test: 'caller_local'
     - test: 'callee_local'
+    - test: 'caller_remote'
     - test: 'callee_remote'
     - test: 'caller_local_app'
     - test: 'callee_local_app'

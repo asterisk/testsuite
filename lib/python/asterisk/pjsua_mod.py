@@ -32,9 +32,6 @@ class RegDetector(pj.AccountCallback):
     called when the registration state of an account changes. When all
     configured accounts have registered, then the configured callback method
     for the test is called into.
-
-    This means that as written, all PJSUA tests require registration to be
-    performed.
     """
     def __init__(self, test_plugin):
         self.test_plugin = test_plugin
@@ -100,6 +97,12 @@ class PJsua(object):
     This class will initiate PJLIB, create any configured accounts, and wait
     for the accounts to register. Once registered, this will call into user
     code so that manipulation of the endpoints may be performed if specified.
+
+    This class will initiate PJLIB and create any configured accounts. Accounts
+    can be configured to register or not register on an overall basis (not per
+    account). If configured to register (the default), this will call into user
+    code once all accounts have registered. If configured not to register, this
+    will call into user code once all accounts have been created.
     """
 
     def __init__(self, instance_config, test_object):
@@ -114,6 +117,7 @@ class PJsua(object):
         self.lib = None
         self.num_regs = 0
         self.num_accts = 0
+        self.num_accts_created = 0
         self.ami_connected = 0
         self.callback_module = instance_config.get('callback_module')
         self.callback_method = instance_config.get('callback_method')
@@ -218,12 +222,21 @@ class PJsua(object):
 
     def __create_account(self, acct_cfg):
         """Create a PJSuaAccount from configuration"""
+        account_cb = None
         name = acct_cfg['name']
         username = acct_cfg.get('username', name)
         domain = acct_cfg.get('domain', '127.0.0.1')
         password = acct_cfg.get('password', '')
 
-        pj_acct_cfg = pj.AccountConfig(domain, username, password, name)
+        # If account is not to register to a server then create the config
+        # without specifying a domain and set the ID using the domain ourself.
+        if not self.config.get('register', True):
+            pj_acct_cfg = pj.AccountConfig()
+            pj_acct_cfg.id = "%s <sip:%s@%s>" % (name, username, domain)
+        else:
+            account_cb = RegDetector(self)
+            pj_acct_cfg = pj.AccountConfig(domain, username, password, name)
+
         if acct_cfg.get('mwi-subscribe'):
             pj_acct_cfg.mwi_enabled = 1
         if acct_cfg.get('transport'):
@@ -233,9 +246,8 @@ class PJsua(object):
                 pj_acct_cfg.transport_id = transport_id
 
         LOGGER.info("Creating PJSUA account %s@%s" % (username, domain))
-        account = PJsuaAccount(
-            self.lib.create_account(pj_acct_cfg, False, RegDetector(self)),
-            self.lib)
+        account = PJsuaAccount(self.lib.create_account(pj_acct_cfg, False,
+                                                       account_cb), self.lib)
         account.add_buddies(acct_cfg.get('buddies', []))
         return account
 
@@ -258,14 +270,42 @@ class PJsua(object):
                 LOGGER.error("Account configuration has no name")
                 self.test_object.stop_reactor()
             self.pj_accounts[name] = self.__create_account(acct)
+            self.acct_success()
+
+    def acct_success(self):
+        """Count & check number of created PJSUA accounts.
+
+        If accounts will not be registering and all accounts have been created,
+        call the configured callback module/method.
+        """
+        self.verify_callback_config()
+        self.num_accts_created += 1
+        # Only execute callback when accounts won't be registering. The
+        # callback will be executed else where if accounts will be registering.
+        if (self.num_accts_created == self.num_accts and
+                not self.config.get('register', True)):
+            self.do_callback()
 
     def reg_success(self):
+        """Count & check number of registered PJSUA accounts.
+
+        If all accounts have registered, call the configured callback
+        module/method.
+        """
+        self.verify_callback_config()
+        self.num_regs += 1
+        if self.num_regs == self.num_accts:
+            self.do_callback()
+
+    def verify_callback_config(self):
+        """Stop the reactor if no callback module or method is configured"""
         if self.callback_module is None or self.callback_method is None:
             LOGGER.error("No callback configured.")
             self.test_object.stop_reactor()
             return
-        self.num_regs += 1
-        if self.num_regs == self.num_accts:
-            callback_module = __import__(self.callback_module)
-            callback_method = getattr(callback_module, self.callback_method)
-            callback_method(self.test_object, self.pj_accounts)
+
+    def do_callback(self):
+        """Call the configured callback module/method"""
+        callback_module = __import__(self.callback_module)
+        callback_method = getattr(callback_module, self.callback_method)
+        callback_method(self.test_object, self.pj_accounts)
