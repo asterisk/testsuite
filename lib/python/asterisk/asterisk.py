@@ -325,6 +325,13 @@ class Asterisk(object):
 
             if "Asterisk has fully booted" in cli_command.output:
                 msg = "Successfully started Asterisk %s" % self.host
+                # Asterisk does not dlclose modules at shutdown in previous
+                # versions, do not waste the space for this copy in those versions.
+                if self.ast_version >= AsteriskVersion("14.0.0"):
+                    shutil.copyfile(
+                        os.path.join('/proc', '%d' % self.process.pid, 'maps'),
+                        self.get_path('astlogdir', 'proc-maps.txt')
+                    )
                 self._start_deferred.callback(msg)
             else:
                 LOGGER.debug("Asterisk core waitfullybooted failed " +

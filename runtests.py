@@ -52,6 +52,7 @@ class TestRun:
         self.can_run = False
         self.did_run = False
         self.time = 0.0
+        self.using_valgrind = False
         self.test_name = test_name
         self.ast_version = ast_version
         self.options = options
@@ -114,15 +115,7 @@ class TestRun:
 
             self.passed = (did_pass == self.test_config.expect_pass)
 
-            core_dumps = self._check_for_core()
-            if (len(core_dumps)):
-                if self.passed:
-                    self.stdout_print("Core dumps detected; failing test")
-                    self.passed = False
-                else:
-                    self.stdout_print("Core dumps detected; test was already failed")
-                self._archive_core_dumps(core_dumps)
-
+            self._process_core_dumps()
             self._process_valgrind()
             self._process_ref_debug()
 
@@ -149,7 +142,7 @@ class TestRun:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
         self.time = time.time() - start_time
 
-    def _check_for_core(self):
+    def _process_core_dumps(self):
         core_files = []
 
         contents = os.listdir('.')
@@ -162,10 +155,17 @@ class TestRun:
             if item.startswith('core') or item.startswith('vgcore'):
                 core_files.append(os.path.join(self.test_name, item))
 
-        return core_files
+        self.core_files = core_files
+        if not len(self.core_files):
+            return
 
-    def _archive_core_dumps(self, core_dumps):
-        for core in core_dumps:
+        if self.passed:
+            self.stdout_print("Core dumps detected; failing test")
+            self.passed = False
+        else:
+            self.stdout_print("Core dumps detected; test was already failed")
+
+        for core in core_files:
             if not os.path.exists(core):
                 print "Unable to find core dump file %s, skipping" % core
                 continue
@@ -233,6 +233,7 @@ class TestRun:
             if not os.path.exists(valgrind_xml):
                 return
 
+            self.using_valgrind = True
             dom = ET.parse(valgrind_xml)
             xslt = ET.parse('contrib/valgrind/summary-lines.xsl')
             transform = ET.XSLT(xslt)
@@ -324,9 +325,11 @@ class TestRun:
             ast_dir = "%s/ast%d/var/log/asterisk" % (run_dir, i)
             dest_dir = os.path.join(archive_dir,
                                     'ast%d/var/log/asterisk' % i)
-            self._archive_files(ast_dir, dest_dir,
-                                'messages.txt', 'full.txt', 'mmlog',
-                                'valgrind.xml', 'valgrind-summary.txt')
+            logfiles = ['messages.txt', 'full.txt', 'mmlog',
+                        'valgrind.xml', 'valgrind-summary.txt']
+            if len(self.core_files) or self.using_valgrind:
+                logfiles.append('proc-maps.txt')
+            self._archive_files(ast_dir, dest_dir, *logfiles)
             i += 1
 
     def _archive_pcap_dump(self, run_dir, archive_dir):
