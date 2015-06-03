@@ -237,9 +237,10 @@ ari-config:
             count: 1
             # end of test, delete the test channel
             requests:
-                method: 'delete'
+            -   method: 'delete'
                 uri: 'channels/testsuite-default-id'
-
+            -   method: 'delete'
+                uri: 'bridges/GeorgeWashington'
 
 
 
