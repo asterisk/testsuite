@@ -1,0 +1,5 @@
+tests:
+    - test: 'memory_cache_expire'
+    - test: 'memory_cache_expire_object'
+    - test: 'memory_cache_stale'
+    - test: 'memory_cache_stale_object'
