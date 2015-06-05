@@ -675,7 +675,10 @@ class AMIPluggableEventInstance(AMIHeaderMatchInstance):
     Events can be set to 'trigger-on-count' meaning (when set to True) the
     trigger callback will not be called until the min count is reached. For
     event/actions this means actions won't be executed until an event reaches
-    its specified count.
+    its specified count. If the configured count allows for an infinite max
+    (ie. '>1'), the actions will only be executed upon the minimum count being
+    reached. Additional occurrences of the event will not trigger the actions
+    again.
     """
 
     def __init__(self, test_object, triggered_callback, config, data):
