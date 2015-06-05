@@ -20,7 +20,10 @@ setup() {
 		make install DESTDIR="$HERE/astroot"
 	)
 	(
-		cd ..
+		if test -z $ASTSRCDIR; then
+			ASTSRCDIR=..
+		fi
+		cd $ASTSRCDIR
 		# The user may have already run ./configure and make
 		if [ ! -f config.status ]; then
 			./configure --enable-dev-mode
@@ -30,6 +33,9 @@ setup() {
 		make
 		make install samples DESTDIR="$HERE/astroot"
 	)
+	if [ -x tests/custom/custom-setup ]; then
+		./tests/custom/custom-setup
+	fi
 }
 
 mktemp_symlink() {
