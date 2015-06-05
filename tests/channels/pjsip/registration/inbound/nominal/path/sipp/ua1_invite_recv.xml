@@ -29,7 +29,7 @@
               search_in="hdr"
               check_it="true"
               assign_to="remote"/>
-          <ereg regexp=".*<sip:localhost:5062;lr>.*"
+          <ereg regexp=".*<sip:127.0.0.1:5062;lr>.*"
               header="Route:"
               search_in="hdr"
               check_it="true"
@@ -54,7 +54,7 @@
       [last_To:];tag=[pid]SIPpTag01[call_number]
       [last_Call-ID:]
       [last_CSeq:]
-      Route: <sip:localhost:5062;lr>,<sip:P1.EXAMPLEVISITED.COM;lr>
+      Route: <sip:127.0.0.1:5062;lr>,<sip:P1.EXAMPLEVISITED.COM;lr>
       Contact: <sip:[local_ip]:[local_port];transport=[transport]>
       Content-Length: 0
 
@@ -70,7 +70,7 @@
       [last_To:];tag=[pid]SIPpTag01[call_number]
       [last_Call-ID:]
       [last_CSeq:]
-      Route: <sip:localhost:5062;lr>,<sip:P1.EXAMPLEVISITED.COM;lr>
+      Route: <sip:127.0.0.1:5062;lr>,<sip:P1.EXAMPLEVISITED.COM;lr>
       Contact: <sip:[local_ip]:[local_port];transport=[transport]>
       Content-Type: application/sdp
       Content-Length: [len]
@@ -101,7 +101,7 @@
       [last_Call-ID:]
       CSeq: [cseq] BYE
       Contact: ua1 <sip:ua1@[local_ip]:[local_port]>
-      Route: <sip:localhost:5062;lr>,<sip:P1.EXAMPLEVISITED.COM;lr>
+      Route: <sip:127.0.0.1:5062;lr>,<sip:P1.EXAMPLEVISITED.COM;lr>
       Max-Forwards: 70
       Subject: Path Test
       Content-Length: 0
