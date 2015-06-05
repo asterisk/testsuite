@@ -88,6 +88,8 @@ pluggable-config:
             pjsua_account: 'alice'
             call_uri: 'sip:101@127.0.0.1'
     # Ensure alice and bob are remotely bridged. Then bob places alice on hold.
+    # The remote bridge may be setup twice depending on how fast things occur
+    # but the hold is only executed upon the first occurrence of the event.
     -
         ami-events:
             conditions:
@@ -96,7 +98,8 @@ pluggable-config:
                     UserEvent: 'RemoteRTPBridgeStarted'
                     Endpoint1: '(bob|alice)'
                     Endpoint2: '(bob|alice)'
-            count: 1
+            count: '>1'
+            trigger-on-count: True
         pjsua_phone:
             action: 'hold'
             pjsua_account: 'bob'
