@@ -20,6 +20,5 @@ tests:
     - test: 'status_all_vars'
     - test: 'userevent'
     - test: 'connected_line'
-    # Temporarily disabled while failures are debugged
-    #- test: 'response-time'
+    - test: 'response-time'
     - dir:  'redirect'

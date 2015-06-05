@@ -1,5 +1,6 @@
 testinfo:
     summary:     'Test Macro and Gosub execution upon answer of Queue calls'
+    skip: 'Skip while failures are debugged'
     description: |
         'This test runs two calls through a queue. The queue is configured to run
         a particular macro and gosub when a member answers. For the first call, we

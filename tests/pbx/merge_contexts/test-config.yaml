@@ -1,8 +1,8 @@
 testinfo:
     summary: 'Test mixing pbx_ael, pbx_config, and pbx_lua extensions in the same context.'
+    skip: 'Skip while failures are debugged'
     description: |
         This test verifies pbx_lua, pbx_ael, and pbx_config can be used in the same context.
-
     issues:
         - jira : ASTERISK-18230
 

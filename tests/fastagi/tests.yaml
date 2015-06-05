@@ -16,5 +16,4 @@ tests:
     - test: 'say-digits'
     - test: 'say-number'
     - test: 'say-phonetic'
-    # Requires patch to StarPy.
-    #- test: 'wait-for-digit'
+    - test: 'wait-for-digit'

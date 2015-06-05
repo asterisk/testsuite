@@ -15,7 +15,5 @@ tests:
     - test: 'pbx_lua_goto'
     - test: 'pbx_lua_background'
     - test: 'manager_extensions'
-    # this test currently doesn't work due to a bug (ASTERISK-18230)
-    #- test: 'merge_contexts'
-    # Temporarily disabled while failures are debugged
-    #- test: 'call-files2'
+    - test: 'merge_contexts'
+    - test: 'call-files2'

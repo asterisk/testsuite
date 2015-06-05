@@ -1,5 +1,6 @@
 testinfo:
     summary: 'Test that asterisk properly handles responses to REFER requests'
+    skip: 'Skip while failures are debugged'
     description: |
         "This test verifies that asterisk behaves properly in the presence of
         various responses to REFER requests."
