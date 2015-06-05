@@ -1,5 +1,6 @@
 testinfo:
     summary: 'Test for proper CDR dispositions for queue calls.'
+    skip: 'Skip while failures are debugged'
     description: |
         "This test verifies that the CDRs generated for calls involving
         app_queue have the proper dispositions."

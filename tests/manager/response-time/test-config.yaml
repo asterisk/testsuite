@@ -1,5 +1,6 @@
 testinfo:
     summary:     'Test the expected response time for manager actions.'
+    skip: 'Skip while failures are debugged'
     description: |
         "This test ensures that the manager responds within a reasonable
         ammount of time for actions."

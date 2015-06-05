@@ -1,7 +1,6 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
-    # Temporarily disabled until random failures are debugged.
-    #- test: 'handle_response_refer'
+    - test: 'handle_response_refer'
     - test: 'acl_call'
     - test: 'options'
     - test: 'refer_replaces_to_self'

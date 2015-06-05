@@ -1,5 +1,6 @@
 testinfo:
     summary:     'Test AGI WAIT FOR DIGIT command using FastAGI.'
+    skip: 'Requires patch to StarPy'
     description: |
         'Test AGI WAIT FOR DIGIT command using FastAGI.'
 

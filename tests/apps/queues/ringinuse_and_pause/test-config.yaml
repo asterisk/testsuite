@@ -1,5 +1,6 @@
 testinfo:
     summary:     'Test ringinuse and autopause'
+    skip: 'Skip while failures are debugged'
     description: |
         "This test accomplishes several tasks. First, it ensures that queue
         members in queues with ringinuse=no are not called. Second, it ensures

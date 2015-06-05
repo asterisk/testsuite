@@ -419,6 +419,8 @@ class TestSuite:
         for t in self.tests:
             print "%.3d) %s" % (i, t.test_config.test_name)
             print "      --> Summary: %s" % t.test_config.summary
+            if t.test_config.skip is not None:
+                print  "      --> Skip: %s" % t.test_config.skip
             print ("      --> Minimum Version: %s (%s)" %
                    (", ".join([str(v) for v in t.test_config.minversion]),
                     t.test_config.minversion_check))
