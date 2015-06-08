@@ -14,44 +14,43 @@ from starpy import fastagi
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
+from asterisk.test_case import TestCase
 
-workingdir = "fastagi/sounds"
 testdir = "tests/fastagi"
 
 
-class FastAGIRecordFileTest:
+class FastAGIRecordFileTest(TestCase):
     def __init__(self):
-        self.passed = {
+        super(FastAGIRecordFileTest, self).__init__()
+
+        self.passed = False
+        self.results = {
             "DTMF": False,
             "HANGUP": False
         }
         self.test = "DTMF"
         self.timeout = 30
-        self.key = "fastagitest"
-        self.overall_result = True
-        self.agi = ""
 
         # Listen for results from dialplan
-        self.agi_factory = fastagi.FastAGIFactory(self.do_test)
-        reactor.listenTCP(4573, self.agi_factory, self.timeout, '127.0.0.1')
-        reactor.callWhenRunning(self.run)
+        self.create_fastagi_factory()
+        self.agi = None
 
-        self.ast1 = Asterisk(base=workingdir)
-        self.ast1.install_configs("%s/configs/ast1" % (testdir))
-        self.audio_file = "%s/talking.ulaw" % (workingdir)
+        self.create_asterisk(base_configs_path="%s/configs" % testdir)
+        self.audio_name = self.ast[0].get_path('astspooldir', 'tmp', 'talking')
+        self.audio_file = "%s.ulaw" % (self.audio_name)
 
     def on_record_failure(self, reason):
         if os.path.exists(self.audio_file):
             print "file exists"
+            print "file size is", os.path.getsize(self.audio_file)
 
-        print "file size is", os.path.getsize(self.audio_file)
-        self.passed[self.test] = False
+        self.results[self.test] = False
         print 'Could not record file:', reason.getTraceback()
         if self.test is "DTMF":
             self.test = "HANGUP"
-            reactor.callLater(0, self.launch_test())
+            reactor.callLater(0, self.launch_test)
         else:
-            self.result_changed()
+            reactor.callLater(0, self.stop_reactor)
 
     def on_record_success(self, result):
         try:
@@ -65,83 +64,61 @@ class FastAGIRecordFileTest:
             file_size = os.path.getsize(self.audio_file)
             if file_size == 0:
                 print "The file was created, but it is empty."
-                self.passed[self.test] = False
+                self.results[self.test] = False
             elif result[2] == file_size:
                 print "Data was recorded, and data length matches what was", \
                     "reported during the %s test." % self.test
-                self.passed[self.test] = True
+                self.results[self.test] = True
             else:
                 print "Some data was recorded, but the data length does not", \
                     "match what was reported during the %s test." % self.test
-                self.passed[self.test] = False
+                self.results[self.test] = False
         else:
             print "The file doesn't exist."
-            self.passed[self.test] = False
+            self.results[self.test] = False
+
+        self.agi.finish()
 
         if self.test is "DTMF":
             self.test = "HANGUP"
             reactor.callLater(0, self.launch_test)
         else:
-            self.result_changed()
+            reactor.callLater(0, self.stop_reactor)
 
     # This gets invoked by the dialplan when the call is answered
-    def do_test(self, agi):
+    def fastagi_connect(self, agi):
         self.agi = agi
-        return agi.recordFile("%s/talking" % (workingdir), "ulaw", "#", "3"
+        return agi.recordFile(self.audio_name, "ulaw", "#", "3"
             ).addCallback(self.on_record_success).addErrback(self.on_record_failure)
 
-    def read_result(self):
-        self.agi.finish()
-        self.stop_reactor()
-        for t, r in self.passed.iteritems():
-            if self.passed[t] is False:
-                self.overall_result = False
-
-        if self.overall_result is True:
-            print "Success"
-        else:
-            print "Failed"
-
     def stop_reactor(self):
-        def __finish_stop(result):
-            print "Stopping Reactor ..."
-            if reactor.running:
-                reactor.stop()
-            return result
+        if self.results['HANGUP'] and self.results['DTMF']:
+            self.passed = True
 
-        df = self.ast1.stop()
-        df.addCallback(__finish_stop)
+        super(FastAGIRecordFileTest, self).stop_reactor()
 
     def launch_test(self):
+        if os.path.exists(self.audio_file):
+            os.unlink(self.audio_file)
+
         print "Originating call to begin test which terminates recording",\
             "with", self.test
         if self.test is "DTMF":
-            self.ast1.cli_originate("Local/508@agitest extension 1@record-file")
+            self.ast[0].cli_originate("Local/508@agitest extension 1@record-file")
         elif self.test is "HANGUP":
-            self.ast1.cli_originate("Local/509@agitest extension 2@record-file")
+            self.ast[0].cli_originate("Local/509@agitest extension 2@record-file")
         else:
-            self.result_changed()
-
-    # Read result before timeout
-    def result_changed(self):
-        if self.passed['DTMF'] is True and self.passed['HANGUP'] is True:
-            self.read_result()
+            reactor.callLater(0, self.stop_reactor)
 
     def run(self):
-        def __finish_start_ops(result):
-            self.launch_test()
-            reactor.callLater(self.timeout, self.stop_reactor)
-            return result
-
-        print "Starting Asterisk"
-        df = self.ast1.start()
-        df.addCallback(__finish_start_ops)
+        super(FastAGIRecordFileTest, self).run()
+        self.launch_test()
 
 
 def main():
     test = FastAGIRecordFileTest()
     reactor.run()
-    if test.overall_result is not True:
+    if test.passed is not True:
         return 1
 
     return 0
