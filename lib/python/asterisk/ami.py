@@ -46,7 +46,7 @@ class AMIEventInstance(object):
         self._event_observers = []
         self.count = {}
 
-        if instance_config.get('escape-pattern', True):
+        if instance_config.get('escape-pattern', False):
             self.match = (lambda pattern, s, flags=0:
                           re.match(re.escape(pattern), s, flags))
         else:
