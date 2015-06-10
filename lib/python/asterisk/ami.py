@@ -368,7 +368,7 @@ class CelRequirement(object):
                     extra_item = item.get(extra_key.lower())
                     if extra_item is None:
                         continue
-                    extra_match = self.match(extra_item, str(extra_value))
+                    extra_match = re.match(extra_item, str(extra_value))
                     if extra_match is None \
                             or extra_match.end() != len(str(extra_value)):
                         LOGGER.debug('Skipping %s - %s does not equal %s for '
@@ -376,7 +376,7 @@ class CelRequirement(object):
                                      extra_item, str(extra_value), extra_key)
                         return False
             else:
-                match = self.match(item, value)
+                match = re.match(item, value)
                 if match is None or match.end() != len(value):
                     LOGGER.debug('Skipping %s - %s does not equal %s '
                                  'for field %s', event['eventname'], item,
