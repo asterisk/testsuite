@@ -1,0 +1,55 @@
+testinfo:
+    summary: 'Test NAPTR record order to ensure lowest order is used.'
+    description: |
+        'This test verifies that when a NAPTR record results in a failed SRV
+        lookup, that Asterisk fails over to the NAPTR record with the next
+        highest preference value.
+
+        A call is placed to example.com without a transport specified resulting
+        in a NAPTR lookup. The lowest preference record points to an SRV entry
+        that does not exist. Asterisk should attempt to look up this SRV record,
+        and fail. The next lowest preference NAPTR record points to an SRV entry
+        that does exist, and that SRV record points to a UDP transport. A SIPp
+        instance is listening on UDP, so the test will succeed if UDP is used.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: dns-server-config
+            typename: 'dns_server.DNSServer'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uas.xml', '-i': '127.0.0.1',
+                                 '-p': '5061'} }
+
+originator:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'Local/s@default'
+    application: 'Echo'
+    async: 'True'
+
+dns-server-config:
+    port: 10053
+    python-zones:
+        -
+            example.com
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_resolver_unbound'
+    tags:
+        - pjsip
