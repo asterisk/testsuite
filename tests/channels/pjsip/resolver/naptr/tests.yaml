@@ -6,3 +6,4 @@ tests:
     - test: 'order'
     - test: 'preference'
     - test: 'preference_failover'
+    - test: 'restricted_transport'
