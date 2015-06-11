@@ -5,3 +5,4 @@ tests:
     - test: 'transport_unspecified'
     - test: 'order'
     - test: 'preference'
+    - test: 'preference_failover'
