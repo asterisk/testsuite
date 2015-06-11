@@ -4,3 +4,4 @@ tests:
     - test: 'transport_udp'
     - test: 'transport_unspecified'
     - test: 'order'
+    - test: 'preference'
