@@ -1,0 +1,40 @@
+testinfo:
+    summary: 'Test SIP blind transfer using BYE with Also header'
+    description: |
+        'This test performs the following test:
+            * A SIPp scenario establishes a call to Asterisk
+            * The incoming call calls a Local channel
+            * The Local channel executes the Echo application
+            * The SIPp scenario sends a BYE with Also header to
+              blind transfer one side of the Local channel to the
+              Echo application
+         The scenario is run ten times in parallel. This establishes
+         that the test works, and it also ensures that a previously
+         observed deadlock in this code path does not occur.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpAMIActionTestCase'
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-bye-also.xml', '-p': '5061', '-m': '10', '-s': '200'} }
+    ami-action:
+        delay: 1
+        args:
+            Action: 'Hangup'
+            Channel: '/Local.*;1/'
+
+properties:
+    minversion: ''
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'chan_sip'
+    tags:
+        - SIP
