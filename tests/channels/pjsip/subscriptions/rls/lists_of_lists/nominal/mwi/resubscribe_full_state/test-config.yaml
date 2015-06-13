@@ -16,7 +16,7 @@ properties:
         - python: 'twisted'
         - python: 'starpy'
         - python: 'yappcap'
-        - python: 'pyxb'
+        - python: 'lxml'
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_pubsub'
         - asterisk: 'res_mwi_external'

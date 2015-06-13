@@ -247,7 +247,7 @@ class RLMIPacket(Packet):
 
     def __init__(self, ascii_packet, raw_packet):
         Packet.__init__(self, packet_type="RLMI", raw_packet=raw_packet)
-        self.list_elem = rlmi.CreateFromDocument(ascii_packet.strip())
+        self.list_elem = rlmi.parseString(ascii_packet.strip(), silence=True)
 
 
 class MultipartPart:

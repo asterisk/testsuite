@@ -139,20 +139,21 @@ class RLSValidator(object):
         element in the list.
 
         Arguments:
-        list_elem The XML <list> element in the RLMI body, as parsed by pyxb
+        list_elem The XML <list> element in the RLMI body, as parsed by lxml
         resources The expected resources dictionary relevant to this RLMI body
         """
 
-        if list_elem.version != self.version:
+        if list_elem.get_version() != self.version:
             self.fail_test("Unexpected RLMI version %d" % list_elem.version)
             return False
 
-        if list_elem.fullState != self.full_state:
+        if list_elem.get_fullState() != self.full_state:
             self.fail_test("Unexpected fullState value %s" %
                            str(list_elem.fullState))
             return False
 
-        if len(list_elem.name) != 1:
+        name = list_elem.get_name()
+        if len(name) != 1:
             self.fail_test("Unexpected number of names (%d) in RLMI list" %
                            len(list_elem.name))
             return False
@@ -162,7 +163,7 @@ class RLSValidator(object):
                            len(list_elem.resource))
             return False
 
-        if list_elem.name[0].value() != list_name:
+        if name[0].get_valueOf_() != list_name:
             self.fail_test("Unexpected list name: %s" %
                            list_elem.name[0].value())
             return False
@@ -180,7 +181,7 @@ class RLSValidator(object):
 
         Arguments:
         rlmi_resource The XML <resource> element in the RLMI <list>, as parsed
-        by pyxb
+        by lxml
         resources The expected resources dictionary relevant to this RLMI
             resource
         """
@@ -188,7 +189,8 @@ class RLSValidator(object):
             self.fail_test("Resource is missing a URI")
             return False
 
-        if len(rlmi_resource.name) != 1:
+        name = rlmi_resource.get_name()
+        if len(name) != 1:
             self.fail_test("Unexpected number of names (%d) in resource" %
                            len(rlmi_resource.name))
             return False
@@ -198,8 +200,8 @@ class RLSValidator(object):
                            len(rlmi_resource.instance))
             return False
 
-        name = rlmi_resource.name[0].value()
-        if name not in resources:
+        name_sought = name[0].valueOf_
+        if name_sought not in resources:
             self.fail_test("Unexpected resource name %s" % name)
             return False
 
@@ -214,7 +216,7 @@ class RLSValidator(object):
             self.fail_test("Resource instance has no cid")
             return False
 
-        if instance.state != resources[name]['state']:
+        if instance.state != resources[name_sought]['state']:
             self.fail_test("Unexpected instance state %s" % instance.state)
             return False
 
@@ -271,6 +273,7 @@ class RLSValidator(object):
         True if the mwi_part matched the expectations in resources
         False if the mwi_part did not match the expectations in resources
         """
+
         if not mwi_part.content_id:
             self.fail_test("MWI part does not have a Content-ID")
             return False
@@ -282,10 +285,9 @@ class RLSValidator(object):
         my_name = None
         my_uri = None
 
-        # Yeargh, who the heck am I anyway?
         for resource in rlmi.body.list_elem.resource:
             if resource.instance[0].cid == mwi_part.content_id:
-                my_name = resource.name[0].value()
+                my_name = resource.name[0].valueOf_
                 my_uri = resource.uri
                 break
 
@@ -346,7 +348,7 @@ class RLSValidator(object):
         for part in multi_part.body.parts:
             if part.body.packet_type == 'RLMI':
                 rlmi = part
-                name = part.body.list_elem.name[0].value()
+                name = part.body.list_elem.name[0].valueOf_
                 uri = part.body.list_elem.uri
 
         self.resource_cids[uri] = multi_part.content_id
