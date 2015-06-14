@@ -6,11 +6,14 @@ testinfo:
 
         The four SIPp scenarios involved perform the following actions:
         SIPp #1 (referer.xml) calls through Asterisk to SIPp #2 (uas.xml)
-        SIPp #1 kicks off SIPp #3 (referee.xml) which calls SIPp #4 (uas.xml).
+        SIPp #1 kicks off SIPp #3 (referee.xml) which calls SIPp #4 (uas_hangup.xml).
         SIPp #3 passes call information back to SIPp #1.
-        SIPp #1 initiates an attended transfer via REFER with Replaces information from SIPp #3.
+        Before SIPp #4 answers SIPp #1 initiates an attended transfer via REFER with Replaces information from SIPp #3.
+        SIPp #4 continues to ring until it answers.
+        SIPp #2 receives a connected line update and the values are checked.
+        SIPp #4 answers.
         SIPp #2 and SIPp #4 are bridged.
-        SIPp #2 and SIPp #4 receive connected line updates and the values are checked.
+        SIPp #4 receives a connected line update and the values are checked.
         SIPp #1 and SIPp #3 are hung up.
         SIPp #2 and SIPp #4 are hung up."
 
@@ -30,6 +33,7 @@ test-object-config:
         -
             scenarios:
                 - { 'key-args': {'scenario':'uas.xml', '-p':'5067', '-m':'2'} }
+                - { 'key-args': {'scenario':'uas_hangup.xml', '-p':'5068', '-m':'2'} }
                 - { 'coordinated-sender': {'key-args': {'scenario':'referer.xml', '-p':'5066'} },
                     'coordinated-receiver': {'key-args': {'scenario':'referee.xml', '-p':'5065'} } }
 
@@ -41,13 +45,6 @@ ami-config:
                 Event: 'AttendedTransfer'
                 Result: 'Success'
         count: 1
-    -
-        type: 'callback'
-        conditions:
-            match:
-                Event: 'Hangup'
-        callbackModule: 'attended_transfer'
-        callbackMethod: 'transfer_complete'
 
 properties:
     minversion: '12.0.0'
