@@ -4,3 +4,5 @@ tests:
     - test: 'console_fork_before_dial'
     - test: 'cdr_fork_end_time'
     - test: 'nocdr'
+    - test: 'cdr_prop_disable'
+
