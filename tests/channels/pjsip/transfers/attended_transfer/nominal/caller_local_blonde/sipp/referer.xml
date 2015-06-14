@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<!-- This program is free software; you can redistribute it and/or      -->
+<!-- modify it under the terms of the GNU General Public License as     -->
+<!-- published by the Free Software Foundation; either version 2 of the -->
+<!-- License, or (at your option) any later version.                    -->
+<!--                                                                    -->
+<!-- This program is distributed in the hope that it will be useful,    -->
+<!-- but WITHOUT ANY WARRANTY; without even the implied warranty of     -->
+<!-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the      -->
+<!-- GNU General Public License for more details.                       -->
+<!--                                                                    -->
+<!-- You should have received a copy of the GNU General Public License  -->
+<!-- along with this program; if not, write to the                      -->
+<!-- Free Software Foundation, Inc.,                                    -->
+<!-- 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA             -->
+<!--                                                                    -->
+
+<scenario name="Referer Leg">
+
+  <send retrans="500">
+    <![CDATA[
+
+      INVITE sip:call_c@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:bob@[local_ip]:[local_port]>;tag=[call_number]
+      To: <sip:transfer@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: [cseq] INVITE
+      Contact: <sip:bob@[local_ip]:[local_port]>
+      Content-Type: application/sdp
+      Max-Forwards: 70
+      Content-Length: [len]
+
+      v=0
+      o=- 1324901698 1324901698 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0 101
+      a=sendrecv
+      a=rtpmap:0 PCMU/8000
+      a=rtpmap:101 telephone-event/8000
+
+    ]]>
+  </send>
+
+  <recv response="100" optional="true" />
+  <recv response="101" optional="true" />
+  <recv response="180" optional="true" />
+  <recv response="200" rtd="true" crlf="true" />
+
+  <send>
+    <![CDATA[
+
+      ACK sip:call_c@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];rport;branch=[branch]
+      [last_From]
+      [last_To]
+      Call-ID: [call_id]
+      CSeq: [cseq] ACK
+      Contact: sip:bob@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Put this leg on hold -->
+  <send retrans="500">
+    <![CDATA[
+
+      INVITE sip:call_c@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      [last_From]
+      [last_To]
+      Call-ID: [call_id]
+      CSeq: [cseq] INVITE
+      Contact: <sip:bob@[local_ip]:[local_port]>
+      Content-Type: application/sdp
+      Max-Forwards: 70
+      Content-Length: [len]
+
+      v=0
+      o=- 1324901698 1324901698 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0 101
+      a=sendonly
+      a=rtpmap:0 PCMU/8000
+      a=rtpmap:101 telephone-event/8000
+
+    ]]>
+  </send>
+
+  <recv response="100" optional="true" />
+  <recv response="101" optional="true" />
+  <recv response="180" optional="true" />
+  <recv response="200" rtd="true" crlf="true" />
+
+  <send>
+    <![CDATA[
+
+      ACK sip:call_c@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];rport;branch=[branch]
+      [last_From]
+      [last_To]
+      Call-ID: [call_id]
+      CSeq: [cseq] ACK
+      Contact: sip:bob@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <sendCmd>
+    <![CDATA[
+      Call-ID: REMOTE[call_id]
+      Start the Echo Leg
+    ]]>
+  </sendCmd>
+
+  <recvCmd>
+    <action>
+      <ereg regexp=" (.+)"
+        search_in="hdr"
+        header="Remote-URI:"
+        check_it="true"
+        assign_to="1,remote_contact" />
+      <ereg regexp=" (.+)"
+        search_in="hdr"
+        header="Remote-To-Tag:"
+        check_it="true"
+        assign_to="2,remote_to_tag" />
+      <ereg regexp=" (.+)"
+        search_in="hdr"
+        header="Remote-From-Tag:"
+        check_it="true"
+        assign_to="3,remote_from_tag" />
+      <ereg regexp=" (.+)@(.+)"
+        search_in="hdr"
+        header="Call-ID:"
+        check_it="true"
+        assign_to="4,callid_chunk_1,callid_chunk_2"/>
+     </action>
+  </recvCmd>
+  <Reference variables="1,2,3,4" />
+
+  <send>
+    <![CDATA[
+
+      REFER sip:call_c@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      [last_From:]
+      [last_To]
+      [last_Call-ID:]
+      CSeq: [cseq] REFER
+      Contact: <sip:bob@[local_ip]:[local_port]>
+      Max-Forwards: 70
+      Refer-to: <[$remote_contact]?Replaces=REMOTE[$callid_chunk_1]%40[$callid_chunk_2]%3Bto-tag%3D[$remote_to_tag]%3Bfrom-tag%3D[$remote_from_tag]>
+      Referred-By: sip:bob@[local_ip]
+      Content-Length: 0
+
+    ]]>
+  </send>
+  <recv response="202" rtd="true" crlf="true" />
+
+  <recv request="NOTIFY" />
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:bob@[local_ip]:[local_port]>
+      Content-Length:0
+
+    ]]>
+  </send>
+
+  <recv request="NOTIFY" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:bob@[local_ip]:[local_port]>
+      Content-Length:0
+
+    ]]>
+  </send>
+
+  <send retrans="500">
+    <![CDATA[
+
+      BYE sip:[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/UDP [local_ip]:[local_port];rport;received=127.0.0.1;branch=[branch]
+      [last_From:]
+      [last_To]
+      [last_Call-ID:]
+      CSeq: [cseq] BYE
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Max-Forwards: 70
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- definition of the response time repartition table (unit is ms)   -->
+  <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
+
+  <!-- definition of the call length repartition table (unit is ms)     -->
+  <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+
+</scenario>
+
