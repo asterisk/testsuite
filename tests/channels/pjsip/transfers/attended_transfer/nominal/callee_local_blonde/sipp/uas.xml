@@ -52,6 +52,8 @@
     ]]>
   </send>
 
+  <pause milliseconds="5000" />
+
   <send retrans="500">
     <![CDATA[
 
@@ -84,16 +86,28 @@
 
   <recv request="INVITE">
       <action>
-          <ereg regexp="\"Charlie\" <sip:charlie@127.0.0.1>"
+          <ereg regexp="\"Alice\" <sip:alice@127.0.0.1>"
               header="P-Asserted-Identity"
               search_in="hdr"
               check_it="true"
               assign_to="asserted_identity"/>
-          <ereg regexp="\"Charlie\" <sip:charlie@127.0.0.1>"
+          <ereg regexp="\"Alice\" <sip:alice@127.0.0.1>"
               header="Remote-Party-ID"
               search_in="hdr"
               check_it="true"
               assign_to="remote_party_id"/>
+          <!-- Save the From tag. We'll need it when we send our BYE -->
+          <ereg regexp="(;tag=.*)"
+              header="From:"
+              search_in="hdr"
+              check_it="true"
+              assign_to="remote_tag"/>
+          <!-- Save the From user portion of URI. We'll need it when we send our BYE -->
+          <ereg regexp="(sip:bob)"
+              header="From:"
+              search_in="hdr"
+              check_it="true"
+              assign_to="remote_user"/>
       </action>
   </recv>
 
@@ -124,28 +138,25 @@
   <recv request="ACK">
   </recv>
 
-  <recv request="BYE">
-  </recv>
-
-  <send>
+  <send retrans="500">
     <![CDATA[
 
-      SIP/2.0 200 OK
-      [last_Via:]
-      [last_From:]
-      [last_To:]
-      [last_Call-ID:]
-      [last_CSeq:]
-      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      BYE [$remote_user]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:charlie@[local_ip]:[local_port]>;tag=[call_number]
+      To: <[$remote_user]@[remote_ip]:[remote_port]>[$remote_tag]
+      Call-ID: [call_id]
+      CSeq: [cseq] BYE
+      Contact: sip:charlie@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Performance Test
       Content-Length: 0
 
     ]]>
   </send>
 
-  <!-- Keep the call open for a while in case the 200 is lost to be     -->
-  <!-- able to retransmit it if we receive the BYE again.               -->
-  <pause milliseconds="4000"/>
-
+  <recv response="200" crlf="true">
+  </recv>
 
   <!-- definition of the response time repartition table (unit is ms)   -->
   <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
