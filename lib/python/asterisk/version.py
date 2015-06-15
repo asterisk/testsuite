@@ -42,6 +42,9 @@ def parse_svn_branch_name(branch_tokens):
 def parse_version(version_string):
     """Parse a 'standard' Asterisk version"""
     parsed_numbers = [0, 0, 0]
+    if '/' in version_string:
+        # Strip off any prefix
+        version_string = version_string[version_string.index('/') + 1:]
     version_tokens = version_string.split('.')
     count = 0
     if not version_tokens[0].isdigit():
@@ -187,6 +190,10 @@ class AsteriskVersion(object):
                         self.major = parsed_numbers[0]
                         self.minor = parsed_numbers[1]
                         self.patch = parsed_numbers[2]
+                    if not handled and '/' in token and not self.feature and not self.revision:
+                        # Strip off any prefix and update the version numbers
+                        token = token[token.index('/') + 1:]
+                        ((self.major, self.minor, self.patch), handled) = parse_version(token)
                     if not handled and not self.feature:
                         # If a feature returns back a number, its actually the
                         # 'patch' version number (e.g., 1.8.11-cert3)
@@ -197,13 +204,16 @@ class AsteriskVersion(object):
                         (self.modifier,
                          self.iteration,
                          handled) = parse_version_modifier(token)
-                    if not handled and not self.revision:
-                        if not self.git:
-                            (self.revision, handled) = parse_revision(token)
+                    if not handled and not self.revision and not self.git:
+                        (self.revision, handled) = parse_revision(token)
+                    if not handled and not self.parent and not self.git:
+                        (self.parent, handled) = parse_parent_branch(token)
+                    if not handled and self.git:
+                        if self.revision:
+                            self.revision = '{0}-{1}'.format(self.revision, token)
                         else:
                             self.revision = token
-                    if not handled and not self.parent:
-                        (self.parent, handled) = parse_parent_branch(token)
+                        self.handled = True
                     if not handled:
                         LOGGER.error("Unable to parse token '%s' in version "
                                      "string '%s'" % (token, raw_version))
@@ -584,6 +594,38 @@ class AsteriskVersionTests(unittest.TestCase):
         self.assertEqual(version.feature, 'cert')
         self.assertEqual(version.name, None)
         self.assertEqual(version.revision, "a987f3")
+
+    def test_git_131_certified_branch(self):
+        """Test a Git checkout from certified/13.1 branch
+
+        Note that in this test, the last known tag is 13.1-cert3, but
+        modifications have been made since then on the branch
+        """
+        version = AsteriskVersion("Asterisk GIT-13-certified/13.1-cert3-1-hsd81h23")
+        self.assertFalse(version.svn)
+        self.assertTrue(version.git)
+        self.assertTrue(version.branch)
+        self.assertEqual(version.major, 13)
+        self.assertEqual(version.minor, 1)
+        self.assertEqual(version.patch, 3)
+        self.assertEqual(version.feature, 'cert')
+        self.assertEqual(version.name, None)
+        self.assertEqual(version.revision, '1-hsd81h23')
+
+    def test_git_131_certified_tag(self):
+        """Test a Git created tag from the certified/13.1 branch"""
+        version = AsteriskVersion("Asterisk certified/13.1-cert3-rc1")
+        self.assertFalse(version.svn)
+        # This is just a tag that happened to be made from git
+        self.assertFalse(version.git)
+        self.assertFalse(version.branch)
+        self.assertEqual(version.major, 13)
+        self.assertEqual(version.minor, 1)
+        self.assertEqual(version.patch, 3)
+        self.assertEqual(version.feature, 'cert')
+        self.assertEqual(version.name, None)
+        self.assertEqual(version.modifier, 'rc')
+        self.assertEqual(version.iteration, 1)
 
     def test_git_master(self):
         """Test a Git checkout from master"""
