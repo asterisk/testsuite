@@ -1,0 +1,65 @@
+testinfo:
+    summary: 'Test the CDR_PROP function "disable" attribute'
+    description: |
+        'This test verifies that the CDR_PROP function can disable CDRs under
+        a variety of conditions. This includes:
+
+        1. A simple Dial of a single channel. No CDR is expected.
+        2. A parallel Dial of multiple channels. No CDRs for any of the
+           channels are expected.
+        3. A re-enabling of CDRs. The first Dial operation should produce
+           no CDRs. The "g" flag is used to continue dialplan execution,
+           which includes re-enabling CDRs. The second Dial operation should
+           produce a single CDR.'
+
+test-modules:
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -
+            channel: 'Local/single@default'
+            context: 'default'
+            exten: 'echo'
+            priority: '1'
+        -
+            channel: 'Local/multiple@default'
+            context: 'default'
+            exten: 'echo'
+            priority: '1'
+        -
+            channel: 'Local/reenable@default'
+            context: 'default'
+            exten: 'echo'
+            priority: '1'
+
+cdr-config:
+    -
+        file: 'Master'
+        lines:
+            -
+                destination: 'reenable'
+                dcontext: 'default'
+                channel: 'Local/reenable@default-.*'
+                dchannel: 'Local/valid@default-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_echo'
+        - asterisk: 'app_dial'
+        - asterisk: 'func_cdr'
+    tags:
+        - CDR
+
