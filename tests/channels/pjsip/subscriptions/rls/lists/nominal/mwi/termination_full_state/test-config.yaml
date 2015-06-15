@@ -19,9 +19,12 @@ properties:
         - python: 'lxml'
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_pubsub'
+        - asterisk: 'res_mwi_external'
+        - asterisk: 'res_mwi_external_ami'
     tags:
         - rls
         - pjsip
+        - mwi_external
 
 test-modules:
     add-to-search-path:
