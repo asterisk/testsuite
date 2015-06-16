@@ -1,7 +1,3 @@
-[modules]
-
-autoload = yes
-
 ; Minimize open fds in this test by not loading other VoIP channel drivers
 noload => chan_iax2.so
 noload => chan_mgcp.so
