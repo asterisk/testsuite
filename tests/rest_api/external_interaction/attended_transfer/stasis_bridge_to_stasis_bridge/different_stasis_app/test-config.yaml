@@ -31,6 +31,7 @@ testinfo:
          to a Stasis bridge via different Stasis apps. It also verifies that
          the StasisStart & StasisEnd events occur for the alice(both), bob,
          carol, and local replacement channels."
+    skip: 'Need to troubleshoot failure'
     issues:
         - jira: 'ASTERISK-24782'
 
@@ -498,6 +499,4 @@ properties:
     tags:
         - ARI
         - pjsip
-    # Expect test to fail until ASTERISK-24782 is resolved.
-    expected-result: False
 

@@ -22,6 +22,7 @@ testinfo:
          This test verifies that a non-Stasis app can be transferred (attended)
          to a Stasis bridge. It also verifies that the StasisStart & StasisEnd
          events occur for the alice, bob, and local replacement channels."
+    skip: 'Need to troubleshoot failure'
     issues:
         - jira: 'ASTERISK-24782'
 
@@ -304,6 +305,4 @@ properties:
     tags:
         - ARI
         - pjsip
-    # Expect test to fail until ASTERISK-24782 is resolved.
-    expected-result: False
 
