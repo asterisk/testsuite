@@ -1,16 +1,9 @@
-[modules]
-
-autoload => yes
 ;We need to preload chan_local and pbx_config
 ;so that the lone queue member doesn't appear as "Invalid"
 ;and thus prevent the caller from entering the queue.
 preload => chan_local.so
 preload => pbx_config.so
 
-noload => chan_alsa.so
-noload => chan_oss.so
-
 noload => app_directory.so
-noload => app_voicemail_odbcstorage.so
 
 
