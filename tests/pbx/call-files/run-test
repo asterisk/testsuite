@@ -40,6 +40,8 @@ class CallFilesTest(TestCase):
     def fastagi_connect(self, agi):
         LOGGER.info("sample%s.call file executed." % (self.test))
 
+        agi.finish()
+
         if self.test < self.num_tests:
             self.launch_test()
         else: self.finalize()
