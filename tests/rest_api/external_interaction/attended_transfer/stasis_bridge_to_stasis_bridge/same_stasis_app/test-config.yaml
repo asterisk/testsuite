@@ -24,14 +24,12 @@ testinfo:
          that was in the Stasis bridge with bob. This causes the other local
          replacement channel half that was in the Stasis bridge with carol to
          be hung up and triggers the hang up of the kick off local channel and
-         the destruction of the stasis bridge.
+         the destruction of the stasis bridges.
 
          This test verifies that a Stasis bridge can be transferred (attended)
          to a Stasis bridge in the same Stasis app. It also verifies that the
          StasisStart & StasisEnd events occur for the alice(both), bob, carol,
          and local replacement channels."
-    issues:
-        - jira: 'ASTERISK-24782'
 
 test-modules:
     test-object:
@@ -453,7 +451,7 @@ pluggable-config:
                 channel:
                     name: 'Local/_attended@transfer-.*;1'
                     dialplan:
-                        exten: 'stasis_one'
+                        exten: '_attended'
             count: 1
     # Ensure the other local channel half that was bridged with carol in the
     # Stasis bridge leaves the bridge.
@@ -478,7 +476,7 @@ pluggable-config:
                 channel:
                     name: 'Local/_attended@transfer-.*;2'
                     dialplan:
-                        exten: 'stasis_two'
+                        exten: '_attended'
             count: 1
         ami-actions:
             action:
@@ -486,10 +484,12 @@ pluggable-config:
                channel: '/^Local/dummy@default-.*;2$/'
         ari-requests:
             method: 'delete'
-            uri: 'bridges/test_bridge'
+            uri: 'bridges/test_bridge_a'
+            method: 'delete'
+            uri: 'bridges/test_bridge_b'
 
 properties:
-    minversion: '13.1.0'
+    minversion: '13.5.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests
@@ -503,6 +503,3 @@ properties:
     tags:
         - ARI
         - pjsip
-    # Expect test to fail until ASTERISK-24782 is resolved.
-    expected-result: False
-
