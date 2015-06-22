@@ -3,3 +3,4 @@ tests:
     - test: 'mailbox_count_changes'
     - test: 'initial_notify'
     - test: 'notify_after_register'
+    - test: 'notify_after_register_realtime'
