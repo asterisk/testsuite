@@ -39,3 +39,4 @@ tests:
     - dir: 'resolver'
     - test: 'forward_loop'
     - dir: 'configuration'
+    - dir: 'nat'

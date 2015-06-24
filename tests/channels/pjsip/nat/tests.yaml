@@ -1,0 +1,2 @@
+tests:
+    - dir: 'rewrite_contact'
