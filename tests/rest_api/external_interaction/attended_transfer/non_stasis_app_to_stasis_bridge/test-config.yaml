@@ -22,8 +22,6 @@ testinfo:
          This test verifies that a non-Stasis app can be transferred (attended)
          to a Stasis bridge. It also verifies that the StasisStart & StasisEnd
          events occur for the alice, bob, and local replacement channels."
-    issues:
-        - jira: 'ASTERISK-24782'
 
 test-modules:
     test-object:
@@ -214,6 +212,7 @@ pluggable-config:
                     name: 'PJSIP/alice-.*'
             count: 1
     # Ensure the local channel half for the transfer enters the Stasis bridge.
+    # Then hang up bob.
     -
         ari-events:
             match:
@@ -224,7 +223,11 @@ pluggable-config:
                 channel:
                     name: 'Local/_attended@transfer-.*'
             count: 1
-    # Ensure the alice channel exits the Stasis app. Then hang up bob.
+        ami-actions:
+            action:
+               action: 'Hangup'
+               channel: '/^PJSIP/bob-.*$/'
+    # Ensure the alice channel exits the Stasis app.
     -
         ari-events:
             match:
@@ -233,11 +236,8 @@ pluggable-config:
                 channel:
                     name: 'PJSIP/alice-.*'
             count: 1
-        ami-actions:
-            action:
-               action: 'Hangup'
-               channel: '/^PJSIP/bob-.*$/'
     # Upon hanging up bob, ensure bob leaves the bridge.
+    # Also hangup the transfer channel.
     -
         ari-events:
             match:
@@ -248,6 +248,10 @@ pluggable-config:
                 channel:
                     name: 'PJSIP/bob-.*'
             count: 1
+        ami-actions:
+            action:
+               action: 'Hangup'
+               channel: 'Local/_attended@transfer-00000001;1'
     # Ensure bob exits the Stasis app.
     -
         ari-events:
@@ -289,7 +293,7 @@ pluggable-config:
             uri: 'bridges/test_bridge'
 
 properties:
-    minversion: '13.1.0'
+    minversion: '13.5.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests
@@ -304,6 +308,3 @@ properties:
     tags:
         - ARI
         - pjsip
-    # Expect test to fail until ASTERISK-24782 is resolved.
-    expected-result: False
-
