@@ -1,2 +1,3 @@
 tests:
     - test: 'route_set_response'
+    - test: 'route_set_request'
