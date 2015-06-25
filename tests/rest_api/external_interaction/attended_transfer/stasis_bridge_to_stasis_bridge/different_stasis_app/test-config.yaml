@@ -3,7 +3,12 @@ testinfo:
         "Transfer (attended) Stasis bridge to Stasis bridge in different Stasis
          apps"
     description: |
-        "Upon the kick off local channel entering into the Stasis(testsuite)
+        "This test verifies that a Stasis bridge can be transferred (attended)
+         to a Stasis bridge via different Stasis apps. It also verifies that
+         the StasisStart & StasisEnd events occur for the alice(both), bob,
+         carol, and local replacement channels.
+
+         Upon the kick off local channel entering into the Stasis(testsuite)
          app, a call is made from the 'alice' PJSUA account that is put into
          Stasis(app_A). The Stasis bridge 'test_bridge_a' is created and
          alice is added to it. A channel is originated to the 'bob' PJSUA
@@ -15,22 +20,23 @@ testinfo:
          PJSUA account and put into the same Stasis(app_B) app and bridge
          with the second alice channel.
 
-         Alice then completes the attended transfer essentially transferring
-         the Stasis bridge to the other Stasis bridge via different Stasis
-         apps. Asterisk does this by creating a Local channel where each half
-         is swapped in place of the two alice channels. After the transfer is
-         successful with a local replacement channel half in the Stasis bridge
-         with bob via app_A and another in the Stasis bridge with carol via
-         app_B, bob is hung up. Carol is then hung up and so is the local
-         replacement channel half that was in the Stasis bridge with bob. This
-         causes the other local replacement channel half that was in the Stasis
-         bridge with carol to be hung up and triggers the hang up of the kick
-         off local channel and the destruction of the stasis bridges.
+         In the nominal scenario, Alice then completes the attended transfer
+         essentially transferring the Stasis bridge to the other Stasis bridge
+         via different Stasis apps. Asterisk does this by creating a Local
+         channel where each half is swapped in place of the two alice channels.
+         After the transfer is successful with a local replacement channel half
+         in the Stasis bridge with bob via app_A and another in the Stasis
+         bridge with carol via app_B, bob is hung up. Carol is then hung up and
+         so is the local replacement channel half that was in the Stasis bridge
+         with bob. This causes the other local replacement channel half that was
+         in the Stasis bridge with carol to be hung up and triggers the hang up
+         of the kick off local channel and the destruction of the stasis bridges.
 
-         This test verifies that a Stasis bridge can be transferred (attended)
-         to a Stasis bridge via different Stasis apps. It also verifies that
-         the StasisStart & StasisEnd events occur for the alice(both), bob,
-         carol, and local replacement channels."
+         However, it is possible, and valid, for alice to send a 'bye' to bob
+         immediately after the refer has been received. If this occurs bob is
+         hung up and the transfer process stops. The expected transfer events
+         are thus not raised and received. This test accounts for this
+         possibility."
 
 test-modules:
     test-object:
@@ -286,7 +292,7 @@ pluggable-config:
                     name: 'Local/_attended@transfer-.*;1'
                 replace_channel:
                     name: 'PJSIP/alice-.*'
-            count: 1
+            count: <1
     # Ensure alice's first channel leaves the Stasis bridge.
     -
         ari-events:
@@ -309,7 +315,7 @@ pluggable-config:
                     id: 'test_bridge_a'
                 channel:
                     name: 'Local/_attended@transfer-.*;1'
-            count: 1
+            count: <1
     # Ensure alice's first channel exits the Stasis app.
     -
         ari-events:
@@ -332,7 +338,7 @@ pluggable-config:
                     name: 'Local/_attended@transfer-.*;2'
                 replace_channel:
                     name: 'PJSIP/alice-.*'
-            count: 1
+            count: <1
     # Ensure alice's second channel leaves the Stasis bridge.
     -
         ari-events:
@@ -355,7 +361,7 @@ pluggable-config:
                     id: 'test_bridge_b'
                 channel:
                     name: 'Local/_attended@transfer-.*;2'
-            count: 1
+            count: <1
     # Ensure alice's second channel exits the Stasis app. Then hang up bob.
     -
         ari-events:
@@ -409,7 +415,7 @@ pluggable-config:
                     name: 'PJSIP/carol-.*'
             count: 1
     # Ensure carol exits the Stasis app. Then hang up the local replacement
-    # channel half in Stasis bridge 'test_bridge_a'.
+    # channel half in Stasis bridge 'test_bridge_a. Also destroy the bridge.
     -
         ari-events:
             match:
@@ -424,6 +430,10 @@ pluggable-config:
             action:
                action: 'Hangup'
                channel: '/^Local/_attended@transfer-.*;1$/'
+        ari-requests:
+            method: 'delete'
+            uri: 'bridges/test_bridge_b'
+
     # Ensure the local channel half that was bridged with bob in the Stasis
     # bridge leaves the bridge.
     -
@@ -435,7 +445,7 @@ pluggable-config:
                     id: 'test_bridge_a'
                 channel:
                     name: 'Local/_attended@transfer-.*;1'
-            count: 1
+            count: <1
     # Ensure the local channel half that was bridged with bob exits the Stasis
     # app.
     -
@@ -447,7 +457,7 @@ pluggable-config:
                     name: 'Local/_attended@transfer-.*;1'
                     dialplan:
                         exten: '_attended'
-            count: 1
+            count: <1
     # Ensure the other local channel half that was bridged with carol in the
     # Stasis bridge leaves the bridge.
     -
@@ -459,10 +469,9 @@ pluggable-config:
                     id: 'test_bridge_b'
                 channel:
                     name: 'Local/_attended@transfer-.*;2'
-            count: 1
+            count: <1
     # Ensure the local channel half that was bridged with carol exits the
-    # Stasis app. Then hang up the kickoff local channel halves and destroy the
-    # Stasis bridge.
+    # Stasis app.
     -
         ari-events:
             match:
@@ -472,17 +481,20 @@ pluggable-config:
                     name: 'Local/_attended@transfer-.*;2'
                     dialplan:
                         exten: '_attended'
-            count: 1
+            count: <1
+    # Once the bridge has been destroyed hang up the kickoff local
+    # channel halves.
+    -
+        ari-events:
+            match:
+                type: BridgeDestroyed
+                application: 'app_B'
+                bridge:
+                    id: 'test_bridge_b'
         ami-actions:
             action:
                action: 'Hangup'
                channel: '/^Local/dummy@default-.*;2$/'
-        ari-requests:
-            method: 'delete'
-            uri: 'bridges/test_bridge_a'
-        ari-requests:
-            method: 'delete'
-            uri: 'bridges/test_bridge_b'
 
 properties:
     minversion: '13.5.0'
