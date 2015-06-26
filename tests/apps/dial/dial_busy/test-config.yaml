@@ -9,7 +9,13 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - app : 'sipp'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_stack'
+        - asterisk : 'app_userevent'
         - asterisk : 'chan_sip'
+        - asterisk : 'func_channel'
+        - asterisk : 'func_strings'
     tags:
         - SIP
         - dial
@@ -31,7 +37,12 @@ test-modules:
             typename: 'cdr.CDRModule'
         -
             minversion: '12.0.0'
+            maxversion: '13.5.0'
             config-section: ami-config-12
+            typename: 'ami.AMIEventModule'
+        -
+            minversion: '13.5.0'
+            config-section: ami-config-13-5
             typename: 'ami.AMIEventModule'
         -
             config-section: originator-config
@@ -108,6 +119,61 @@ ami-config-12:
                 Channel: 'Local/s@default-.*'
                 Uniqueid: '.*'
                 DestUniqueid: '.*'
+                CallerIDNum: '<unknown>'
+                CallerIDName: '<unknown>'
+                ConnectedLineNum: '<unknown>'
+                ConnectedLineName: '<unknown>'
+                DialStatus: 'BUSY'
+        count: '1'
+
+# Add Linkedid/DestLinkedid header requirements
+# to the DialBegin/DialEnd events over the ami-config-12 version.
+#
+ami-config-13-5:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'HangupCause'
+        requirements:
+            match:
+                HangupChannel: 'SIP/bob-.*'
+                TechCause: 'SIP 486 Busy Here'
+                AsteriskCause: 'User busy'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialBegin'
+                DestChannel: 'SIP/bob-.*'
+        requirements:
+            match:
+                Channel: 'Local/s@default-.*'
+                Uniqueid: '.*'
+                Linkedid: '.*'
+                DestUniqueid: '.*'
+                DestLinkedid: '.*'
+                CallerIDNum: '<unknown>'
+                CallerIDName: '<unknown>'
+                ConnectedLineNum: '<unknown>'
+                ConnectedLineName: '<unknown>'
+                Dialstring: 'bob'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialEnd'
+                DestChannel: 'SIP/bob-.*'
+        requirements:
+            match:
+                Channel: 'Local/s@default-.*'
+                Uniqueid: '.*'
+                Linkedid: '.*'
+                DestUniqueid: '.*'
+                DestLinkedid: '.*'
                 CallerIDNum: '<unknown>'
                 CallerIDName: '<unknown>'
                 ConnectedLineNum: '<unknown>'
