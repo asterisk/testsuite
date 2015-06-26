@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic UAS responder">
+  <!-- By adding rrs="true" (Record Route Sets), the route sets         -->
+  <!-- are saved and used for following messages sent. Useful to test   -->
+  <!-- against stateful SIP proxies/B2BUAs.                             -->
+  <Global variables="remote_tag" />
+  <recv request="INVITE" crlf="true">
+      <!-- Save the from tag. We'll need it when we send our BYE -->
+      <action>
+          <ereg regexp=".*(;tag=.*)"
+              header="From:"
+              search_in="hdr"
+              check_it="true"
+              assign_to="remote_tag"/>
+	  </action>
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Record-Route: <sip:127.0.0.1:5062;lr>
+      Record-Route: <sip:127.0.0.1:5061;lr>
+      Contact: <sip:127.0.0.1:5063>
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=user1 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+
+    ]]>
+  </send>
+
+  <recv request="ACK"
+        rtd="true"
+        crlf="true">
+        <action>
+            <ereg regexp="ACK sip:127.0.0.1:5063.*"
+                search_in="msg"
+                check_it="true"
+                assign_to="1"/>
+            <ereg regexp="Route: &lt;sip:127.0.0.1:5061;lr&gt;\r\nRoute: &lt;sip:127.0.0.1:5062;lr&gt;"
+                search_in="msg"
+                check_it="true"
+                assign_to="2"/>
+        </action>
+  </recv>
+
+  <Reference variables="1,2" />
+
+  <pause/>
+
+  <send retrans="500">
+    <![CDATA[
+
+      BYE sip:[service]@127.0.0.1:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: sipp <sip:sipp@[local_ip]:[local_port]>;tag=[pid]SIPpTag01[call_number]
+      To: [$remote_tag]
+      [last_Call-ID:]
+      CSeq: [cseq] BYE
+      Contact: sip:sipp@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Performance Test
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200">
+  </recv>
+
+  <!-- Keep the call open for a while in case the 200 is lost to be     -->
+  <!-- able to retransmit it if we receive the BYE again.               -->
+  <timewait milliseconds="4000"/>
+
+
+  <!-- definition of the response time repartition table (unit is ms)   -->
+  <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
+
+  <!-- definition of the call length repartition table (unit is ms)     -->
+  <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+
+</scenario>
+
