@@ -25,9 +25,12 @@ zone = [
         minimum = "1H"
     ),
 
-    SRV('_sip._udp.example.com', 0, 3, 5061, 'fast.pbx.example.com'),
-    SRV('_sip._udp.example.com', 0, 1, 5062, 'slow.pbx.example.com'),
-    SRV('_sip._udp.example.com', 1, 100, 5063, 'backup.pbx.example.com'),
+    SRV('_sip._udp.example.com', 0, 10, 5062, 'fast.pbx.example.com'),
+    SRV('_sip._udp.example.com', 1, 0, 5063, 'slow.pbx.example.com'),
+
+    SRV('_sip._tcp.example.com', 0, 0, 5064, 'fast.pbx.example.com'),
+    SRV('_sip._tcp.example.com', 1, 10, 5065, 'slow.pbx.example.com'),
+
     A('fast.pbx.example.com', '127.0.0.1'),
     A('slow.pbx.example.com', '127.0.0.1'),
 ]

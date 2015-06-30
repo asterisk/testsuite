@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <!DOCTYPE scenario SYSTEM "sipp.dtd">
 
-<scenario name="Receive INVITE with audio, ignore">
-  <recv request="INVITE" crlf="true">
+<scenario name="Receive MESSAGE, ignore">
+  <recv request="MESSAGE" crlf="true">
   </recv>
 </scenario>
