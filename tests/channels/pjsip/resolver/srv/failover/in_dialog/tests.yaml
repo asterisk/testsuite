@@ -3,5 +3,3 @@ tests:
     - test: 'transport_tcp'
     - test: 'transport_udp'
     - test: 'transport_unspecified'
-    - test: 'priority'
-    - dir: 'failover'
