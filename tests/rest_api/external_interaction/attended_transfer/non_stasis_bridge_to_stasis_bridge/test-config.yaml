@@ -17,23 +17,17 @@ testinfo:
          Stasis(testsuite) app and added to the Stasis bridge 'test_bridge'
          with the second alice channel.
 
-         In the nominal scenario, alice then completes the attended transfer
-         essentially transferring the non-Stasis bridge to the Stasis bridge.
-         Asterisk does this by creating a Local channel where each half is
-         swapped in place of the two alice channels. After the transfer is
-         successful with a local replacement channel half in the non-Stasis
-         bridge with bob and another in the Stasis bridge with carol, bob is
-         hung up. This then initiates the hang up of the local replacement
-         channel half that was in the non-Stasis bridge with bob and the hang
-         up of the local replacement channel half that was in the Stasis bridge
-         with carol. Carol is also hung up which initiates the hung up of the
-         kick off local channel and the destruction of the stasis bridge.
-
-         However, it is possible, and valid, for alice to send a 'bye' to bob
-         immediately after the refer has been received. If this occurs bob is
-         hung up and the transfer process stops. The expected transfer events
-         are thus not raised and received. This test accounts for this
-         possibility."
+         Alice then completes the attended transfer essentially transferring the
+         non-Stasis bridge to the Stasis bridge. Asterisk does this by creating
+         a Local channel where each half is swapped in place of the two alice
+         channels. After the transfer is successful with a local replacement
+         channel half in the non-Stasis bridge with bob and another in the
+         Stasis bridge with carol, bob is hung up. This then initiates the hang
+         up of the local replacement channel half that was in the non-Stasis
+         bridge with bob and the hang up of the local replacement channel half
+         that was in the Stasis bridge with carol. Carol is also hung up which
+         initiates the hung up of the kick off local channel and the destruction
+         of the stasis bridge."
 
 test-modules:
     test-object:
@@ -222,7 +216,7 @@ pluggable-config:
                 destination_link_second_leg:
                     name: 'Local/_attended@transfer-.*;2'
                 result: 'Success'
-            count: <1
+            count: 1
     # Ensure alice's first channel leaves the non-Stasis bridge.
     -
         ami-events:
@@ -254,7 +248,7 @@ pluggable-config:
                     name: 'Local/_attended@transfer-.*;2'
                 replace_channel:
                     name: 'PJSIP/alice-.*'
-            count: <1
+            count: 1
     # Ensure alice's second channel leaves the Stasis bridge.
     -
         ari-events:
@@ -276,7 +270,7 @@ pluggable-config:
                     id: 'test_bridge'
                 channel:
                     name: 'Local/_attended@transfer-.*;2'
-            count: <1
+            count: 1
     # Ensure alice's second channel exits the Stasis app. Then hang up bob.
     -
         ari-events:
@@ -322,14 +316,14 @@ pluggable-config:
                     Channel: 'Local/_attended@transfer-.*;1'
                 nomatch:
                     BridgeUniqueid: 'test_bridge'
-            count: <1
+            count: 1
     -
         ami-events:
             conditions:
                 match:
                     Event: 'Hangup'
                     Channel: 'Local/_attended@transfer-.*;1'
-            count: <1
+            count: 1
     # Ensure the local channel half in Stasis bridge with carol leaves the
     # bridge.
     -
@@ -341,7 +335,7 @@ pluggable-config:
                     id: 'test_bridge'
                 channel:
                     name: 'Local/_attended@transfer-.*;2'
-            count: <1
+            count: 1
     # Ensure the local channel half in Stasis bridge with carol exits the
     # Stasis app.
     -
@@ -351,7 +345,7 @@ pluggable-config:
                 application: 'testsuite'
                 channel:
                     name: 'Local/_attended@transfer-.*;2'
-            count: <1
+            count: 1
     # Ensure carol leaves the Stasis bridge.
     -
         ari-events:
