@@ -511,6 +511,7 @@ class ARIRequest(object):
         self.ari = ari
         self.method = config['method']
         self.uri = config['uri']
+        self.response_body = config.get('response_body')
         self.params = config.get('params') or {}
         self.body = config.get('body')
         self.instance = config.get('instance')
@@ -537,6 +538,11 @@ class ARIRequest(object):
             headers=self.headers,
             auth=self.ari.userpass)
 
+        if self.response_body:
+            match = self.response_body.get('match')
+            res = all_match(match, response.json())
+            return res
+
         if self.expect:
             if response.status_code != self.expect:
                 LOGGER.error('sent %s %s %s expected %s response %d %s',
@@ -553,8 +559,8 @@ class ARIRequest(object):
         LOGGER.info('sent %s %s %s response %d %s',
                     self.method, self.uri, self.params,
                     response.status_code, response.text)
-        return response
 
+        return response
 
 class EventMatcher(object):
     """Object to observe incoming events and match them against a config"""
@@ -687,7 +693,6 @@ def decode_range(yaml):
     else:
         # Need exactly this many events
         return Range(int(yaml), int(yaml))
-
 
 class ARIPluggableEventModule(object):
     """Subclass of ARIEventInstance that works with the pluggable event action
