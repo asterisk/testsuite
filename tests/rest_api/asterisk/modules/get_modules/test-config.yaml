@@ -1,0 +1,220 @@
+testinfo:
+    summary: 'Test for getting the list of modules using ARI'
+    description: |
+        * Receives list of all modules
+
+test-modules:
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            requests:
+                -
+                    method: 'get'
+                    uri: 'asterisk/modules'
+                    response_body:
+                        match:
+                            -
+                                {
+                                  "name": "app_echo.so",
+                                  "description": "Simple Echo Application",
+                                  "use_count": 1,
+                                  "status": "Running",
+                                  "support_level": "core",
+                                }
+                            -
+                                {
+                                  "name": "app_stasis.so",
+                                  "description": "Stasis dialplan application",
+                                  "use_count": 1,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "pbx_config.so",
+                                  "description": "Text Extension Configuration",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_ari.so",
+                                  "description": "Asterisk RESTful Interface",
+                                  "use_count": 10,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_ari_applications.so",
+                                  "description": "RESTful API module - Stasis application resources",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_ari_asterisk.so",
+                                  "description": "RESTful API module - Asterisk resources",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_ari_bridges.so",
+                                  "description": "RESTful API module - Bridge resources",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_ari_channels.so",
+                                  "description": "RESTful API module - Channel resources",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_ari_device_states.so",
+                                  "description": "RESTful API module - Device state resources",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_ari_endpoints.so",
+                                  "description": "RESTful API module - Endpoint resources",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_ari_events.so",
+                                  "description": "RESTful API module - WebSocket resource",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_ari_model.so",
+                                  "description": "ARI Model validators",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_ari_playbacks.so",
+                                  "description": "RESTful API module - Playback control resources",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_ari_recordings.so",
+                                  "description": "RESTful API module - Recording resources",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_ari_sounds.so",
+                                  "description": "RESTful API module - Sound resources",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_http_websocket.so",
+                                  "description": "HTTP WebSocket Support",
+                                  "use_count": 2,
+                                  "status": "Running",
+                                  "support_level": "extended"
+                                }
+                            -
+                                {
+                                  "name": "res_stasis.so",
+                                  "description": "Stasis application support",
+                                  "use_count": 13,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_stasis_answer.so",
+                                  "description": "Stasis application answer support",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_stasis_device_state.so",
+                                  "description": "Stasis application device state support",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_stasis_playback.so",
+                                  "description": "Stasis application playback support",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_stasis_recording.so",
+                                  "description": "Stasis application recording support",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_stasis_snoop.so",
+                                  "description": "Stasis application snoop support",
+                                  "use_count": 0,
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                    expect: 200
+                -
+                    method: 'delete'
+                    uri: 'channels/{channel.id}'
+
+
+properties:
+    minversion: '13.1.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk: res_ari_asterisk
+        - asterisk: res_ari_channels
+    tags:
+        - ARI
