@@ -4,6 +4,7 @@ tests:
     - test: 'authentication'
     - test: 'CORS'
     - dir:  'applications'
+    - dir:  'asterisk'
     - dir:  'bridges'
     - dir:  'channels'
     - dir:  'recording'
