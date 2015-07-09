@@ -1,0 +1,55 @@
+testinfo:
+    summary: 'Test for getting a single module using ARI'
+    description: |
+        Test that returns a single requested module that is to be
+        autoloaded based on the modules.conf configuration. The test
+        checks the response body of the module, so that it matches
+        that of the expected response body specified within the yaml
+        configuration. It also checks to make sure that a '200 OK' was
+        received back as a response from the request.
+
+test-modules:
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            requests:
+                -
+                    method: 'get'
+                    uri: 'asterisk/modules/app_echo.so'
+                    response_body:
+                        match:
+                            {
+                                "name": "app_echo.so",
+                                "description": "Simple Echo Application",
+                                "use_count": 1,
+                                "status": "Running",
+                                "support_level": "core"
+                            }
+                    expect: 200
+                -
+                    method: 'delete'
+                    uri: 'channels/{channel.id}'
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - asterisk: app_echo
+        - asterisk: res_ari_asterisk
+        - asterisk: res_ari_channels
+    tags:
+        - ARI
