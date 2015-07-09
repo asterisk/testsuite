@@ -1,2 +1,3 @@
 tests:
     - dir: 'modules'
+    - dir: 'config'
