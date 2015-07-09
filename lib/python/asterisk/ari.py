@@ -742,6 +742,26 @@ class ARIPluggableEventModule(object):
 PLUGGABLE_EVENT_REGISTRY.register("ari-events", ARIPluggableEventModule)
 
 
+class ARIPluggableStartModule(object):
+    """Pluggable ARI module that kicks off when Asterisk starts
+    """
+
+    def __init__(self, test_object, triggered_callback, config):
+        """Constructor"""
+
+        self.triggered_callback = triggered_callback
+        self.test_object = test_object
+
+        # AMI connects after ARI, so this should call back once we're
+        # good and ready
+        test_object.register_ami_observer(self.on_ami_connect)
+
+    def on_ami_connect(self, ami):
+        """AMI connect handler"""
+        self.triggered_callback(self, self.test_object.ari, None)
+PLUGGABLE_EVENT_REGISTRY.register("ari-start", ARIPluggableStartModule)
+
+
 class ARIPluggableRequestModule(object):
     """Pluggable ARI action module.
     """
@@ -764,7 +784,11 @@ class ARIPluggableRequestModule(object):
             if request.delay:
                 reactor.callLater(request.delay, request.send, extra)
             else:
-                request.send(extra)
+                result = request.send(extra)
+                if isinstance(result, bool) and not result:
+                    self.test_object.set_passed(False)
+                else:
+                    self.test_object.set_passed(True)
 PLUGGABLE_ACTION_REGISTRY.register("ari-requests", ARIPluggableRequestModule)
 
 # vim:sw=4:ts=4:expandtab:textwidth=79
