@@ -1,0 +1,91 @@
+testinfo:
+    summary: 'Test deletion of a dynamic configuration objects'
+    description: |
+        'This test covers deleting a dynamic config object using ARI.
+        This includes both off-nominal and nominal scenarios, specifically:
+        - Off-nominal requests with bad path parameters
+        - Off-nominal requests to delete an unknown object
+        - Off-nominal requests that attempt to delete a dynamic object
+          that is not supported by the configuration
+        - Nominal deletion of a previously created dynamic object
+
+properties:
+    minversion: '13.6.0'
+    dependencies:
+        - python: autobahn.websocket
+        - python: requests
+        - python: twisted
+        - python: starpy
+        - asterisk: res_ari_asterisk
+        - asterisk: res_pjsip
+        - asterisk: res_sorcery_memory
+    tags:
+        - ARI
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: ari.AriBaseTestObject
+    modules:
+        -
+            config-section: pluggable-config
+            typename: pluggable_modules.EventActionModule
+
+
+test-config:
+    apps: testsuite
+
+
+pluggable-config:
+    -
+        ari-start:
+        ari-requests:
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/alice'
+                body: { 'fields': [ { 'attribute': 'allow', 'value': '!all,ulaw,alaw' },
+                                    { 'attribute': 'context', 'value': 'local' } ] }
+                expect: 200
+            -
+                method: 'get'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/alice'
+                expect: 200
+            -
+                method: 'delete'
+                uri: 'asterisk/BAD/dynamic/res_pjsip/endpoint/alice'
+                expect: 404
+            -
+                method: 'delete'
+                uri: 'asterisk/config/BAD/res_pjsip/endpoint/alice'
+                expect: 404
+            -
+                method: 'delete'
+                uri: 'asterisk/config/dynamic/BAD/endpoint/alice'
+                expect: 404
+            -
+                method: 'delete'
+                uri: 'asterisk/config/dynamic/res_pjsip/BAD/alice'
+                expect: 404
+            -
+                method: 'delete'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/bob'
+                expect: 404
+            -
+                method: 'delete'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/'
+                expect: 404
+            -
+                method: 'delete'
+                uri: 'asterisk/config/dynamic/res_pjsip/auth/alice'
+                expect: 403
+            -
+                method: 'delete'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/alice'
+                expect: 204
+            -
+                method: 'get'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/alice'
+                expect: 404
+        stop_test:
+
