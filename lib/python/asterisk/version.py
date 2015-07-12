@@ -213,7 +213,7 @@ class AsteriskVersion(object):
                             self.revision = '{0}-{1}'.format(self.revision, token)
                         else:
                             self.revision = token
-                        self.handled = True
+                        handled = True
                     if not handled:
                         LOGGER.error("Unable to parse token '%s' in version "
                                      "string '%s'" % (token, raw_version))
@@ -784,6 +784,7 @@ class AsteriskVersionTests(unittest.TestCase):
 
 def main():
     """Run the unit tests"""
+    logging.basicConfig()
     unittest.main()
 
 
