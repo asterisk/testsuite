@@ -1,0 +1,43 @@
+testinfo:
+    summary: 'Test for reloading an unloaded module using ARI'
+    description: |
+        Test that reloads an unloaded module. The reloaded module that
+        was noloaded in the modules.conf should receive a '404 Not Found'
+        as the response to the request.
+
+test-modules:
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            requests:
+                -
+                    method: 'put'
+                    uri: 'asterisk/modules/app_playback.so'
+                    expect: 404
+                -
+                    method: 'delete'
+                    uri: 'channels/{channel.id}'
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - asterisk: app_playback
+        - asterisk: res_ari_asterisk
+        - asterisk: res_ari_channels
+    tags:
+        - ARI
