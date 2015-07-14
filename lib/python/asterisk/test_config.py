@@ -277,6 +277,7 @@ class TestConfig(object):
             self.can_run = False
         except:
             print("Exception occurred while parsing config:", sys.exc_info()[0])
+            print(traceback.format_exc())
             self.can_run = False
 
     def _process_global_settings(self):
