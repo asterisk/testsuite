@@ -1,0 +1,44 @@
+testinfo:
+    summary: 'Test for loading a module using ARI'
+    description: |
+        Test that loads a module. The module is configured as a
+        noloaded module in the modules.conf configuration. It also
+        checks to make sure that a '204 No Content' was received back
+        as a response from the request.
+
+test-modules:
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'asterisk/modules/app_playback.so'
+                    expect: 204
+                -
+                    method: 'delete'
+                    uri: 'channels/{channel.id}'
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - asterisk: app_playback
+        - asterisk: res_ari_asterisk
+        - asterisk: res_ari_channels
+    tags:
+        - ARI
