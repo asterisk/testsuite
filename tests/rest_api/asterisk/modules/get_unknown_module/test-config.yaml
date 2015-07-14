@@ -1,0 +1,56 @@
+testinfo:
+    summary: 'Offnominal get_module test that receives invalid modules using ARI'
+    description: |
+        Test that checks when someone tries to get a module that is
+        noloaded in the modules.conf configuration, and when someone
+        has entered in an invalid module name. The test also checks
+        to make sure that a '404 Not Found' was received back as the
+        response from the requests.
+
+        * Receives 404 for noloaded module that doesn't exist
+        * Receives 404 for module name that doesn't exist
+
+test-modules:
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            requests:
+                # chan_oss.so is noloaded in the default testsuite modules.conf
+                # test to check that the noloaded module doesn't exist
+                -
+                    method: 'get'
+                    uri: 'asterisk/modules/chan_oss.so'
+                    expect: 404
+                # test to check that module name doesn't exist
+                -
+                    method: 'get'
+                    uri: 'asterisk/modules/blah.so'
+                    expect: 404
+                -
+                    method: 'delete'
+                    uri: 'channels/{channel.id}'
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk: res_ari_asterisk
+        - asterisk: res_ari_channels
+    tags:
+        - ARI
+
