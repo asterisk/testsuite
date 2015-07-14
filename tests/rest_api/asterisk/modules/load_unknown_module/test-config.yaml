@@ -1,0 +1,42 @@
+testinfo:
+    summary: 'Test for loading an unknown module using ARI'
+    description: |
+        Test that attempts to load a module that doesn't exist or
+        is unknown. The unknown module should receive a '409 Conflict'
+        as the response from the request.
+
+test-modules:
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'asterisk/modules/blah.so'
+                    expect: 409
+                -
+                    method: 'delete'
+                    uri: 'channels/{channel.id}'
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - asterisk: res_ari_asterisk
+        - asterisk: res_ari_channels
+    tags:
+        - ARI
