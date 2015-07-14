@@ -1,0 +1,52 @@
+testinfo:
+    summary: 'Test for loading an already loaded module using ARI'
+    description: |
+        Test that attempts to load an already loaded module, and also
+        attempts to load a module that has invalid configuration.
+        The already loaded module and the module with the invalid
+        configuration will both receive a '409 Conflict' as the
+        response from the requests.
+
+test-modules:
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            requests:
+                # Test to check that module is already loaded
+                -
+                    method: 'post'
+                    uri: 'asterisk/modules/app_playback.so'
+                    expect: 409
+                # Test to check for invalid configuration in res_parking.conf
+                -
+                    method: 'post'
+                    uri: 'asterisk/modules/res_parking.so'
+                    expect: 409
+                -
+                    method: 'delete'
+                    uri: 'channels/{channel.id}'
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - asterisk: app_playback
+        - asterisk: res_parking
+        - asterisk: res_ari_asterisk
+        - asterisk: res_ari_channels
+    tags:
+        - ARI

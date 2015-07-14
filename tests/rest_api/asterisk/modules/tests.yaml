@@ -9,3 +9,4 @@ tests:
     - test: 'reload_unloaded_module'
     - test: 'reload_module'
     - test: 'load_unknown_module'
+    - test: 'load_already_loaded_module'
