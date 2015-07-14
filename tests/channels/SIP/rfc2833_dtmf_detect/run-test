@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-set -e
-
-asttest -a /$AST_TEST_ROOT -s tests/channels/SIP/rfc2833_dtmf_detect
-

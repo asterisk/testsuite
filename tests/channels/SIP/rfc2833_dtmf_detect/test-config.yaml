@@ -21,16 +21,56 @@ testinfo:
     issues:
         - mantis : '15811'
 
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'ami.AMIEventModule'
+            config-section: 'ami-config'
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'dtmf_baseline.xml', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'broken_dtmf.xml', '-p': '5062'} }
+                - { 'key-args': {'scenario': 'dtmf_noend.xml', '-p': '5063'} }
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: 'READRESULT'
+                Value: '1234567890*'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: 'READRESULT'
+                Value: '1000'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: 'READRESULT'
+                Value: '1234'
+
+
 properties:
     minversion: '1.8.0.0'
     dependencies:
-        - app : 'bash'
-        - app : 'asttest'
+        - python : 'twisted'
+        - python : 'starpy'
         - sipp :
             version : 'v3.0'
             feature : 'PCAP'
         - asterisk : 'chan_sip'
-        - custom : 'rawsocket'
     tags:
         - SIP
         - DTMF
