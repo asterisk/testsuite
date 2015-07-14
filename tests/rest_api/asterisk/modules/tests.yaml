@@ -8,3 +8,4 @@ tests:
     - test: 'reload_unknown_module'
     - test: 'reload_unloaded_module'
     - test: 'reload_module'
+    - test: 'load_unknown_module'
