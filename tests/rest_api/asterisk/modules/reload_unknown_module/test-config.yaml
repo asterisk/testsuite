@@ -1,0 +1,42 @@
+testinfo:
+    summary: 'Test for reloading an unknown module using ARI'
+    description: |
+        Test that attempts to reload a module that doesn't exist.
+        The attempt should receive a '404 Not Found' as the response
+        to the request.
+
+test-modules:
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            requests:
+                -
+                    method: 'put'
+                    uri: 'asterisk/modules/blah.so'
+                    expect: 404
+                -
+                    method: 'delete'
+                    uri: 'channels/{channel.id}'
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - asterisk: res_ari_asterisk
+        - asterisk: res_ari_channels
+    tags:
+        - ARI

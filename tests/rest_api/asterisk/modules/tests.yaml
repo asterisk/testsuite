@@ -5,3 +5,4 @@ tests:
     - test: 'load_module'
     - test: 'unload_module'
     - test: 'unload_already_unloaded_module'
+    - test: 'reload_unknown_module'
