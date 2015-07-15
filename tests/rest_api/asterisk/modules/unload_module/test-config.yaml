@@ -1,0 +1,48 @@
+testinfo:
+    summary: 'Test for loading a module using ARI'
+    description: |
+        Test that unloads a module. A '204 No Content' should
+        be the response to the request. Then, a GET request is
+        made that should return a '404 Not Found' to ensure the
+        module was unloaded.
+
+test-modules:
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            requests:
+                -
+                    method: 'delete'
+                    uri: 'asterisk/modules/app_confbridge.so'
+                    expect: 204
+                -
+                    method: 'get'
+                    uri: 'asterisk/modules/app_confbridge.so'
+                    expect: 404
+                -
+                    method: 'delete'
+                    uri: 'channels/{channel.id}'
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - asterisk: app_confbridge
+        - asterisk: res_ari_asterisk
+        - asterisk: res_ari_channels
+    tags:
+        - ARI

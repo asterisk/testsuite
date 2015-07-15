@@ -2,3 +2,4 @@ tests:
     - test: 'get_modules'
     - test: 'get_module'
     - test: 'get_unknown_module'
+    - test: 'unload_module'
