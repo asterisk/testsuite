@@ -1,0 +1,50 @@
+testinfo:
+    summary: 'Test for unloading an invalid module using ARI'
+    description: |
+        Test that unloads an invalid module and a dependent module
+        that is already in use. The test checks that a '404 Not Found'
+        is received for an invalid module name, and a '409 Conflict'
+        is recieved for a dependency module that is already in use.
+
+test-modules:
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            requests:
+                # Test that checks for invalid module name
+                -
+                    method: 'delete'
+                    uri: 'asterisk/modules/blah.so'
+                    expect: 404
+                # Test that checks for dependency module that is in use
+                -
+                    method: 'delete'
+                    uri: 'asterisk/modules/res_stasis.so'
+                    expect: 409 
+                -
+                    method: 'delete'
+                    uri: 'channels/{channel.id}'
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - asterisk: res_stasis
+        - asterisk: res_ari_asterisk
+        - asterisk: res_ari_channels
+    tags:
+        - ARI
