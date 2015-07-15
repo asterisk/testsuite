@@ -1,0 +1,35 @@
+testinfo:
+    summary: 'Ensure that Asterisk does not send RTP keepalives during direct media'
+    description: |
+        'A SIPp test scenario calls another SIPp scenario through Asterisk. The endpoints
+        are capable of direct media and so should end up in a remote native RTP bridge.
+        Because of this, Asterisk should not attempt to send RTP keepalive packets to the
+        endpoints. If any RTP keepalive packets are detected, then the test has failed.'
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'rtp.KeepaliveCheck'
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5062'}}
+                - { 'key-args': {'scenario': 'alice.xml', '-s': 'call_bob', '-d': '10000', '-p': '5061'} }
+
+properties:
+    minversion: '13.6.0'
+    dependencies:
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+        - asterisk: 'res_pjsip_sdp_rtp'
+    tags:
+        - pjsip
