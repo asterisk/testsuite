@@ -61,7 +61,7 @@
 
     <nop>
         <action>
-            <exec play_pcap_audio="sipp/dtmf_2833_1_noend.pcap" />
+            <exec play_pcap_audio="tests/channels/SIP/rfc2833_dtmf_detect/sipp/dtmf_2833_1_noend.pcap" />
         </action>
     </nop>
 
@@ -70,7 +70,7 @@
 
     <nop>
         <action>
-            <exec play_pcap_audio="sipp/dtmf_2833_2_noend.pcap" />
+            <exec play_pcap_audio="tests/channels/SIP/rfc2833_dtmf_detect/sipp/dtmf_2833_2_noend.pcap" />
         </action>
     </nop>
 
@@ -79,7 +79,7 @@
 
     <nop>
         <action>
-            <exec play_pcap_audio="sipp/dtmf_2833_3_noend.pcap" />
+            <exec play_pcap_audio="tests/channels/SIP/rfc2833_dtmf_detect/sipp/dtmf_2833_3_noend.pcap" />
         </action>
     </nop>
 
@@ -88,7 +88,7 @@
 
     <nop>
         <action>
-            <exec play_pcap_audio="sipp/dtmf_2833_4.pcap" />
+            <exec play_pcap_audio="tests/channels/SIP/rfc2833_dtmf_detect/sipp/dtmf_2833_4.pcap" />
         </action>
     </nop>
 

@@ -61,7 +61,7 @@
 
     <nop>
         <action>
-            <exec play_pcap_audio="sipp/broken_dtmf.pcap" />
+            <exec play_pcap_audio="tests/channels/SIP/rfc2833_dtmf_detect/sipp/broken_dtmf.pcap" />
         </action>
     </nop>
 
