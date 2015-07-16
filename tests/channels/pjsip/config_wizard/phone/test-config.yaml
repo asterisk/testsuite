@@ -84,7 +84,7 @@ ami-config:
                     InbandProgress: 'false'
                     OneTouchRecording: 'false'
                     UseAvpf: 'false'
-                    MediaEncryption: 'none'
+                    MediaEncryption: 'no'
                     AggregateMwi: 'true'
                     Mailboxes: ''
                     SendDiversion: 'true'
