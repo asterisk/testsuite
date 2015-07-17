@@ -3,3 +3,4 @@ tests:
     - test: 'create'
     - test: 'delete'
     - test: 'get'
+    - test: 'update'

@@ -1,0 +1,101 @@
+testinfo:
+    summary: 'Test updating of a dynamic configuration objects'
+    description: |
+        'This test covers updating a dynamic config object using ARI.
+        This includes both off-nominal and nominal scenarios, specifically:
+        - Off-nominal requests with bad path parameters
+        - Off-nominal requests with no provided attributes to update
+        - Off-nominal requests with invalid provided attributes
+        - Off-nominal requests that attempt to update a dynamic object
+          that is not supported by the configuration
+        - Nominal updating of a previously created dynamic object
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python: autobahn.websocket
+        - python: requests
+        - python: twisted
+        - python: starpy
+        - asterisk: res_ari_asterisk
+        - asterisk: res_pjsip
+        - asterisk: res_sorcery_memory
+    tags:
+        - ARI
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: ari.AriBaseTestObject
+    modules:
+        -
+            config-section: pluggable-config
+            typename: pluggable_modules.EventActionModule
+
+
+test-config:
+    apps: testsuite
+
+
+pluggable-config:
+    -
+        ari-start:
+        ari-requests:
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/alice'
+                body: { 'fields': [ { 'attribute': 'allow', 'value': '!all,ulaw,alaw' },
+                                    { 'attribute': 'context', 'value': 'local' } ] }
+                expect: 200
+            -
+                method: 'put'
+                uri: 'asterisk/BAD/dynamic/res_pjsip/endpoint/alice'
+                body: { 'fields': [ { 'attribute': 'allow', 'value': '!all,ulaw,alaw' },
+                                    { 'attribute': 'context', 'value': 'local' } ] }
+                expect: 404
+            -
+                method: 'put'
+                uri: 'asterisk/config/BAD/res_pjsip/endpoint/alice'
+                body: { 'fields': [ { 'attribute': 'allow', 'value': '!all,ulaw,alaw' },
+                                    { 'attribute': 'context', 'value': 'local' } ] }
+                expect: 404
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/BAD/endpoint/alice'
+                body: { 'fields': [ { 'attribute': 'allow', 'value': '!all,ulaw,alaw' },
+                                    { 'attribute': 'context', 'value': 'local' } ] }
+                expect: 404
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/BAD/alice'
+                body: { 'fields': [ { 'attribute': 'allow', 'value': '!all,ulaw,alaw' },
+                                    { 'attribute': 'context', 'value': 'local' } ] }
+                expect: 404
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/alice'
+                body: { 'fields': [ { 'attribute': 'allow', 'value': 'BLECH' },
+                                    { 'attribute': 'context', 'value': 'local' } ] }
+                expect: 400
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/alice'
+                expect: 400
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/auth/alice'
+                body: { 'fields': [ { 'attribute': 'username', 'value': 'bob' } ] }
+                expect: 403
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/alice'
+                body: { 'fields': [ { 'attribute': 'context', 'value': 'remote' },
+                                    { 'attribute': 'auth', 'value': 'alice' } ] }
+                expect: 200
+            -
+                method: 'get'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/alice'
+                expect: 200
+        stop_test:
+
