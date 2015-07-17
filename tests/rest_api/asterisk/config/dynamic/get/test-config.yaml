@@ -1,0 +1,78 @@
+testinfo:
+    summary: 'Test retrieval of a dynamic configuration objects'
+    description: |
+        'This test covers retrieving a dynamic config object using ARI.
+        This includes both off-nominal and nominal scenarios, specifically:
+        - Off-nominal requests with bad path parameters
+        - Off-nominal requests with an unknown dynamic object ID
+        - Nominal retrieval of a previously created dynamic object
+        - Nominal retrieval of an object statically created
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python: autobahn.websocket
+        - python: requests
+        - python: twisted
+        - python: starpy
+        - asterisk: res_ari_asterisk
+        - asterisk: res_pjsip
+        - asterisk: res_sorcery_memory
+    tags:
+        - ARI
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: ari.AriBaseTestObject
+    modules:
+        -
+            config-section: pluggable-config
+            typename: pluggable_modules.EventActionModule
+
+
+test-config:
+    apps: testsuite
+
+
+pluggable-config:
+    -
+        ari-start:
+        ari-requests:
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/alice'
+                body: { 'fields': [ { 'attribute': 'allow', 'value': '!all,ulaw,alaw' },
+                                    { 'attribute': 'auth', 'value': 'alice' } ] }
+                expect: 200
+            -
+                method: 'get'
+                uri: 'asterisk/BAD/dynamic/res_pjsip/endpoint/alice'
+                expect: 404
+            -
+                method: 'get'
+                uri: 'asterisk/config/BAD/res_pjsip/endpoint/alice'
+                expect: 404
+            -
+                method: 'get'
+                uri: 'asterisk/config/dynamic/BAD/endpoint/alice'
+                expect: 404
+            -
+                method: 'get'
+                uri: 'asterisk/config/dynamic/res_pjsip/BAD/alice'
+                expect: 404
+            -
+                method: 'get'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/bob'
+                expect: 404
+            -
+                method: 'get'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/alice'
+                expect: 200
+            -
+                method: 'get'
+                uri: 'asterisk/config/dynamic/res_pjsip/auth/alice'
+                expect: 200
+        stop_test:
+
