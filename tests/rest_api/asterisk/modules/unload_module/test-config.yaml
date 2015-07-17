@@ -1,5 +1,5 @@
 testinfo:
-    summary: 'Test for loading a module using ARI'
+    summary: 'Test for unloading a module using ARI'
     description: |
         Test that unloads a module. A '204 No Content' should
         be the response to the request. Then, a GET request is
