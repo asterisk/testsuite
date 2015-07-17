@@ -3,6 +3,7 @@ tests:
     - test: 'continue'
     - test: 'authentication'
     - test: 'CORS'
+    - dir:  'asterisk'
     - dir:  'applications'
     - dir:  'asterisk'
     - dir:  'bridges'
