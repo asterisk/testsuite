@@ -3,3 +3,4 @@ tests:
     - test: 'get_module'
     - test: 'get_unknown_module'
     - test: 'load_module'
+    - test: 'unload_module'
