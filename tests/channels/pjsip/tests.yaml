@@ -40,3 +40,5 @@ tests:
     - test: 'forward_loop'
     - dir: 'configuration'
     - dir: 'nat'
+    - test: 'rtp_timeout'
+    - test: 'rtp_timeout_hold'
