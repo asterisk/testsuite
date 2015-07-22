@@ -1,0 +1,36 @@
+testinfo:
+    summary: 'Ensure that Asterisk sends RTP CNG packets'
+    description: |
+        'A SIPp test scenario calls into Asterisk and lands in an extension that
+        runs the "Echo" application. The SIPp endpoint is configured to have RTP
+        keepalives sent every three seconds. Since the SIPp scenario sends no RTP
+        to Asterisk, Asterisk should send RTP keepalives to the SIPp scenario. This
+        test ensures that the RTP keepalive packets are received and that they are
+        spaced out approximately according to the specified interval.'
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'rtp.KeepaliveCheck'
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac.xml', '-s': 'echo', '-d': '10000'} }
+
+properties:
+    minversion: '13.6.0'
+    dependencies:
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+        - asterisk: 'res_pjsip_sdp_rtp'
+    tags:
+        - pjsip
