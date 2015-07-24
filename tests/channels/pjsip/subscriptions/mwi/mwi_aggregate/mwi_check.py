@@ -2,7 +2,7 @@
 """Pluggable modules for the mwi_aggregate test
 
 Copyright (C) 2014, Digium, Inc.
-John Bigelow <jbigelow@digium.com>
+Mark Michelson <mmichelson@digium.com>
 
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
