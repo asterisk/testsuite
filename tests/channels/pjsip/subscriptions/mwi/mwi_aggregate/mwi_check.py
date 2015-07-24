@@ -45,10 +45,27 @@ class PJMWICallback(pj.AccountCallback):
             self.results[self.result_pos]['msgs']
 
         if waiting not in body:
+            # On the first MWI NOTIFY it is possible for the contents to not be
+            # what we expect as Asterisk will send an initial NOTIFY on REGISTER.
+            # Since we attach our MWI callback after the registration has started
+            # we may or may not even get the NOTIFY (depending on timing).
+            # Due to this we don't treat the match failure as fatal when expecting
+            # the first result. If it is indeed incorrect then either the next
+            # NOTIFY will also fail to match or the reactor will time out.
+            if self.result_pos == 0:
+                LOGGER.info("Could not find pattern %s in MWI body %s but treating as initial" %
+                            (waiting, body))
+                return
+
             LOGGER.error("Could not find pattern %s in MWI body %s" %
                          (waiting, body))
             self.controller.fail_test()
         if msgs not in body:
+            if self.result_pos == 0:
+                LOGGER.info("Could not find pattern %s in MWI body %s but treating as initial" %
+                            (msgs, body))
+                return
+
             LOGGER.error("Could not find pattern %s in MWI body %s" %
                          (msgs, body))
             self.controller.fail_test()
