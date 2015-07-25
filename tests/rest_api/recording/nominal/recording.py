@@ -56,6 +56,7 @@ def on_start(ari, event, test_object):
 
     return True
 
+
 def on_recording_started(ari, event, test_object):
     LOGGER.info("Recording started")
 
@@ -96,6 +97,7 @@ def on_recording_started(ari, event, test_object):
     LOGGER.info("All tests complete: The channel should be out of stasis.")
 
     return True
+
 
 def on_recording_finished(ari, event, test_object):
     LOGGER.info("Recording finished")

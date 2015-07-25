@@ -30,7 +30,7 @@ def on_start(ari, event, test_object):
 
 
 def on_stop(ari, event, test_object):
-    LOGGER.debug("on_stop(%r)" %event)
+    LOGGER.debug("on_stop(%r)" % event)
     ari.delete('bridges', TEST.bridge_id)
     return True
 

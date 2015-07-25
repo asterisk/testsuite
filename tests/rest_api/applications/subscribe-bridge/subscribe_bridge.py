@@ -10,6 +10,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 class SubscribeBridge(object):
     def __init__(self):
         self.channels = None
@@ -17,6 +18,7 @@ class SubscribeBridge(object):
 
 
 TEST = SubscribeBridge()
+
 
 def on_start(ari, event, test_object):
     TEST.channel_id = event['channel']['id']
@@ -33,6 +35,7 @@ def on_start(ari, event, test_object):
              channel=TEST.channel_id)
     return True
 
+
 def on_enter_testsuite(ari, event, test_object):
     # the testsuite application received a ChannelEnteredBridge event
     assert TEST.bridge_id == event['bridge']['id']
@@ -40,13 +43,14 @@ def on_enter_testsuite(ari, event, test_object):
 
     # now unsubscribe testsuite from the bridge-watching-app
     ari.delete('applications', 'bridge-watching-app', 'subscription',
-             eventSource='bridge:%s' % TEST.bridge_id)
+               eventSource='bridge:%s' % TEST.bridge_id)
 
     # upon removing the channel testsuite should receive no event, but
     # the still subscribed bridge-watching-app should
     ari.post('bridges', TEST.bridge_id, 'removeChannel',
              channel=TEST.channel_id)
     return True
+
 
 def on_channel_left_bridge(ari, event, test_object):
     # bridge-watching-app received a ChannelLeftBridge event

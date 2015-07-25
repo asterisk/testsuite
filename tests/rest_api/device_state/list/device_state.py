@@ -13,6 +13,7 @@ DEVICE1 = 'Stasis:Test1'
 DEVICE2 = 'Stasis:Test2'
 INITIAL_STATE = 'NOT_INUSE'
 
+
 def on_start(ari, event, obj):
     ari.put(URL, DEVICE1, deviceState=INITIAL_STATE)
     ari.put(URL, DEVICE2, deviceState=INITIAL_STATE)

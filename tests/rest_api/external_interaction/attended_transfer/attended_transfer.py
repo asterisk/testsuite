@@ -14,6 +14,7 @@ from sipp import SIPpScenario
 
 LOGGER = logging.getLogger(__name__)
 
+
 def on_kickoff_start(test_object, triggered_by, ari, event):
     LOGGER.debug("on_kickoff_start(%r)" % event)
 
@@ -21,9 +22,15 @@ def on_kickoff_start(test_object, triggered_by, ari, event):
         referer_scenario.run(test_object)
 
     sipp_referer = SIPpScenario(test_object.test_name,
-        {'scenario':'referer.xml', '-p':'5065', '-3pcc':'127.0.0.1:5064'}, target='127.0.0.1')
+                                {'scenario': 'referer.xml',
+                                 '-p': '5065',
+                                 '-3pcc': '127.0.0.1:5064'},
+                                target='127.0.0.1')
     sipp_referee = SIPpScenario(test_object.test_name,
-        {'scenario':'referee.xml', '-p':'5066', '-3pcc':'127.0.0.1:5064'}, target='127.0.0.1')
+                                {'scenario': 'referee.xml',
+                                 '-p': '5066',
+                                 '-3pcc': '127.0.0.1:5064'},
+                                target='127.0.0.1')
 
     sipp_referee.run(test_object)
 
@@ -35,4 +42,3 @@ def on_kickoff_start(test_object, triggered_by, ari, event):
     reactor.callLater(3, _start_referer_scenario, sipp_referer, test_object)
 
     return True
-

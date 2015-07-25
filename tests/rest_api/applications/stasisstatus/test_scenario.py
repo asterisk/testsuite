@@ -72,10 +72,10 @@ class TestScenario(ObservableObject):
         passed = self.actual_value == self.expected_value
 
         LOGGER.debug('{0} Test strategy is complete.'.format(self))
-        LOGGER.debug('{0} Test values: Expected [{1}]; Actual [{2}].' \
-            .format(self, self.expected_value, self.actual_value))
-        LOGGER.debug('{0} Test results: Test {1}.' \
-            .format(self, 'Passed' if passed else 'Did Not Pass'))
+        LOGGER.debug('{0} Test values: Expected [{1}]; Actual [{2}].'
+                     .format(self, self.expected_value, self.actual_value))
+        LOGGER.debug('{0} Test results: Test {1}.'
+                     .format(self, 'Passed' if passed else 'Did Not Pass'))
 
         self.passed = passed
 
@@ -137,7 +137,7 @@ class TestScenario(ObservableObject):
         """Overrides the default behavior of resetting the value of the
         suspended flag."""
 
-        #Run the 'resume' logic first, then do the delayed check.
+        # Run the 'resume' logic first, then do the delayed check.
         if self.suspended:
             super(TestScenario, self).resume()
             self.__monitor.resume()

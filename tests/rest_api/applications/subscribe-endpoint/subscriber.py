@@ -11,6 +11,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 class ResourceSubscription(object):
     """Pluggable module that subscribes to a resource"""
 
@@ -54,11 +55,11 @@ class ResourceSubscription(object):
             if expected_response:
                 if resp.status_code != expected_response:
                     LOGGER.error('Failed to get expected response %d: Got %d' %
-                        (expected_response, resp.status_code))
+                                 (expected_response, resp.status_code))
                     self.test_object.set_passed(False)
                 else:
                     LOGGER.info('Got expected response %d for %s' %
-                        (expected_response, sub['event-source']))
+                                (expected_response, sub['event-source']))
                     self.test_object.set_passed(True)
             ari.set_allow_errors(False)
 

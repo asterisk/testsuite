@@ -13,6 +13,7 @@ INVALID_DEVICE = 'Invalid:Test'
 MISSING_DEVICE = 'Stasis:'
 INITIAL_STATE = 'NOT_INUSE'
 
+
 def on_start(ari, event, obj):
     try:
         ari.put(URL, INVALID_DEVICE, deviceState=INITIAL_STATE)

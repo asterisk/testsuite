@@ -8,6 +8,7 @@ the GNU General Public License Version 2.
 
 import requests
 
+
 def on_start(ari, event, obj):
     channel_id = event['channel']['id']
 

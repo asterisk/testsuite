@@ -10,6 +10,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 class TestData(object):
     def __init__(self):
         self.channel_id = None
