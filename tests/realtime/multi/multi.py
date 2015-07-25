@@ -64,7 +64,7 @@ class MultiTest(object):
         if self.retrieved_mailboxes != EXPECTED_MAILBOXES:
             LOGGER.error("Did not retrieve the expected number of mailboxes,"
                          " %d != %d" % (self.retrieved_mailboxes,
-                                       EXPECTED_MAILBOXES))
+                                        EXPECTED_MAILBOXES))
             self.fail_test()
         else:
             self.pass_test()
