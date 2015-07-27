@@ -316,7 +316,7 @@ class AriClientFactory(WebSocketClientFactory):
                urllib.urlencode({'app': apps, 'api_key': '%s:%s' % userpass}))
         LOGGER.info("WebSocketClientFactory(url=%s)", url)
         WebSocketClientFactory.__init__(self, url, debug=True,
-                                        protocols=['ari'])
+                                        protocols=['ari'], debugCodePaths=True)
         self.timeout_secs = timeout_secs
         self.attempts = 0
         self.start = None
