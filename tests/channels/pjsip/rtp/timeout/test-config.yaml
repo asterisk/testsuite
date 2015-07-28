@@ -1,0 +1,44 @@
+testinfo:
+    summary: 'Ensure channel is hung up when RTP timeout is reached.'
+    description: |
+        'A SIPp scenario places a call into Asterisk. The call is immediately answered and
+        media is sent to the address provided in the SDP. SIPp is not configured to echo
+        or send RTP. The endpoint the SIPp scenario uses is configured to have an RTP timeout
+        of 5 seconds. After 5 seconds the channel should be hung up as a result of the
+        RTP timeout.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+sipp-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac.xml'}}
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'SoftHangupRequest'
+                Channel: 'PJSIP/sipp-*'
+        count: '2'
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - app: 'sipp'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+    tags:
+        - pjsip
