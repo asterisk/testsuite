@@ -33,7 +33,7 @@ class ChannelVariableMonitor(ObservableObject):
         """
 
         super(ChannelVariableMonitor, self).__init__(name,
-                                                    ['on_value_changed'])
+                                                     ['on_value_changed'])
         self.__ami = ami
         self.__captured_value = None
         self.__channel_variable = variable
@@ -120,4 +120,3 @@ class ChannelVariableMonitor(ObservableObject):
                                            self.__channel_variable,
                                            self.__captured_value))
         self.notify_observers('on_value_changed', None, False)
-

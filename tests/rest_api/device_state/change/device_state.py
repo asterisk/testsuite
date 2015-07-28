@@ -13,6 +13,7 @@ DEVICE = 'Stasis:Test'
 INITIAL_STATE = 'NOT_INUSE'
 CHANGED_STATE = 'INUSE'
 
+
 def on_start(ari, event, obj):
     ari.put(URL, DEVICE, deviceState=INITIAL_STATE)
     assert ari.get(URL, DEVICE).json()['state'] == INITIAL_STATE

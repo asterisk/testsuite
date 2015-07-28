@@ -83,13 +83,14 @@ EXPECTATIONS = [
 
 CURRENT_EVENT = 0
 
+
 def on_start(ari, event, test_object):
     location = event['args'][0]
     global CURRENT_EVENT
 
     if location != EXPECTATIONS[CURRENT_EVENT]:
         LOGGER.error("Stasis entered from {0}, expected {1}".format(location,
-            EXPECTATIONS[CURRENT_EVENT]))
+                     EXPECTATIONS[CURRENT_EVENT]))
         return False
 
     LOGGER.info("Stasis entered from expected location {0}".format(location))
@@ -101,6 +102,7 @@ def on_start(ari, event, test_object):
     ari.post('channels', event['channel']['id'], 'continue',
              **CONTINUATIONS[CURRENT_EVENT])
     return True
+
 
 def on_end(ari, event, test_object):
     # We don't really care about StasisEnd until the final one

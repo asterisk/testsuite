@@ -20,6 +20,7 @@ from sipp import SIPpScenario
 
 LOGGER = logging.getLogger(__name__)
 
+
 class MessageCoordinator(object):
     """Coordinater for sending/receiving messages
 
@@ -96,17 +97,16 @@ class MessageSubscriber(object):
             if expected_response:
                 if resp.status_code != expected_response:
                     LOGGER.error('Failed to get expected response %d: Got %d' %
-                        (expected_response, resp.status_code))
+                                 (expected_response, resp.status_code))
                     self.test_object.set_passed(False)
                 else:
                     LOGGER.info('Got expected response %d for sub to %s' %
-                        (expected_response, sub['event-source']))
+                                (expected_response, sub['event-source']))
                     self.test_object.set_passed(True)
             ari.set_allow_errors(False)
 
         coordinator = MessageCoordinator.get_instance()
         coordinator.poke_observers()
-
 
 
 class MessageSender(object):
@@ -147,13 +147,13 @@ class MessageSender(object):
             headers = None
             params = message.get('params')
             if 'variables' in message:
-                data = json.dumps({ 'variables': message['variables'] })
-                headers = { 'Content-Type': 'application/json' }
+                data = json.dumps({'variables': message['variables']})
+                headers = {'Content-Type': 'application/json'}
 
             LOGGER.info('PUT %s %s %s' %
-                (url, params, data if data else ""))
+                        (url, params, data if data else ""))
             resp = requests.put(url, params=params, data=data,
-                                 headers=headers, auth=ari.userpass)
+                                headers=headers, auth=ari.userpass)
 
 
 class SIPMessageRunner(object):
@@ -185,7 +185,7 @@ class SIPMessageRunner(object):
         """
         if len(self.scenarios):
             LOGGER.error("We still have %d SIPp scenarios running!" %
-                len(self.scenarios))
+                         len(self.scenarios))
             self.test_object.set_passed(False)
         for scenario in self.scenarios:
             try:

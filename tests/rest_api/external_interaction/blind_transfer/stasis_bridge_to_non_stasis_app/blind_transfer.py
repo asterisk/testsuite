@@ -11,24 +11,29 @@ import subprocess
 
 LOGGER = logging.getLogger(__name__)
 
+
 class TestLogic(object):
     def __init__(self):
         self.channels = 0
         self.bridge_id = None
         self.originated_id = None
         self.pja = subprocess.Popen(['pjsua', '--local-port=5065', '--null-audio',
-            '--id=sip:bob@127.0.0.1'],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                                     '--id=sip:bob@127.0.0.1'],
+                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+
 
 TEST = TestLogic()
+
 
 def a_call_stasis():
     TEST.pja.stdin.write("m\n")
     TEST.pja.stdin.write("sip:stasis@127.0.0.1:5060\n")
 
+
 def a_call_transfer():
     TEST.pja.stdin.write("x\n")
     TEST.pja.stdin.write("sip:1000@127.0.0.1:5060\n")
+
 
 def on_kickoff_start(ari, event, test_object):
     LOGGER.debug("on_kickoff_start(%r)" % event)
@@ -40,11 +45,13 @@ def on_kickoff_start(ari, event, test_object):
     a_call_stasis()
     return True
 
+
 def on_test_start(ari, event, test_object):
     LOGGER.debug("on_test_start(%r)" % event)
     ari.post('bridges', TEST.bridge_id, 'addChannel', channel=event['channel']['id'])
 
     return True
+
 
 def on_channel_entered_bridge(ari, event, test_object):
 
@@ -54,11 +61,13 @@ def on_channel_entered_bridge(ari, event, test_object):
 
     return True
 
+
 def on_replace_channel_enter(ari, event, test_object):
     ari.delete('channels', event['channel']['id'])
     ari.delete('channels', TEST.originated_id)
     ari.delete('bridges', TEST.bridge_id)
     return True
+
 
 def on_blind_transfer(ari, event, test_object):
     LOGGER.debug("on_blind_transfer(%r)" % event)
@@ -80,4 +89,3 @@ def on_blind_transfer(ari, event, test_object):
         return False
 
     return True
-

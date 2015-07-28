@@ -11,6 +11,7 @@ DEVICE = 'Stasis:Test'
 INITIAL_STATE = 'NOT_INUSE'
 CHANGED_STATE = 'INUSE'
 
+
 def on_start(ari, event, obj):
     # add a device state
     ari.put(URL, DEVICE, deviceState=INITIAL_STATE)
@@ -28,13 +29,14 @@ def on_start(ari, event, obj):
 
     # unsubscribe from device
     ari.delete("applications", "testsuite", "subscription",
-             eventSource="deviceState:%s" % DEVICE)
+               eventSource="deviceState:%s" % DEVICE)
 
     # remove device
     ari.delete(URL, DEVICE)
 
     ari.delete('channels', event['channel']['id'])
     return True
+
 
 def on_state_change(ari, event, obj):
     assert event['device_state']['name'] == DEVICE

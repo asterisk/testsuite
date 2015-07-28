@@ -10,10 +10,12 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 def eq(expected, actual):
     if expected != actual:
         LOGGER.error("Unexpected response '%s' != '%s'" % (expected, actual))
         raise ValueError("Test failed")
+
 
 def get_vars(ari, channel_id):
     resp = ari.get('channels', channel_id, 'variable', variable='DP_SHELL')

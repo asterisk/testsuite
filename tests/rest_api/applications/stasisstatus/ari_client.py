@@ -42,8 +42,6 @@ class AriClient(ObservableObject):
         name                  -- The name of the app to register in Stasis via
                                  ARI (optional) (default 'testsuite').
         """
-
-
         super(AriClient, self).__init__(name, ['on_channelcreated',
                                                'on_channeldestroyed',
                                                'on_channelvarset',

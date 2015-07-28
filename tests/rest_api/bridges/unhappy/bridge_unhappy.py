@@ -151,8 +151,8 @@ class BridgeUnhappy(object):
         resp = ari.post('bridges', bridge_id, 'removeChannel',
                         channel=self.stasis_channel_id)
         resp.raise_for_status()
-        ari.delete('bridges', bridge_id);
-        ari.delete('bridges', other_bridge_id);
+        ari.delete('bridges', bridge_id)
+        ari.delete('bridges', other_bridge_id)
 
 
 TEST = BridgeUnhappy()

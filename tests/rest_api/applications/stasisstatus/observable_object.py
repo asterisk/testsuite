@@ -15,6 +15,7 @@ sys.path.append("tests/rest_api/applications")
 
 LOGGER = logging.getLogger(__name__)
 
+
 class ObservableObject(object):
     """Definition for an observable object."""
 

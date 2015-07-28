@@ -9,12 +9,13 @@ the GNU General Public License Version 2.
 import json
 import requests
 
+
 def on_start(ari, event, obj):
     url = ari.build_url('channels')
 
     params = {
         'endpoint': 'Local/1000@default',
-        'app':'testsuite',
+        'app': 'testsuite',
         'appArgs': 'with_vars'}
 
     data = {'variables': {'CALLERID(name)': 'foo'}}

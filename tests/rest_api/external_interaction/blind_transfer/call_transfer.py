@@ -52,7 +52,7 @@ class InitMod(object):
                 URI[account['name']]['call_uri'] = account.get('call_uri')
             if account.get('transfer_uri') is not None:
                 URI[account['name']]['transfer_uri'] = \
-                        account.get('transfer_uri')
+                    account.get('transfer_uri')
         LOGGER.info("Pluggable module initialized.")
 
 
@@ -74,7 +74,7 @@ class AlicePhoneCallCallback(pj.CallCallback):
         """Transfer the call."""
         try:
             LOGGER.info("'%s' is blind transfering the call to '%s'." %
-                    (self.call.info().uri, URI['alice']['transfer_uri']))
+                        (self.call.info().uri, URI['alice']['transfer_uri']))
             self.call.transfer(URI['alice']['transfer_uri'])
         except:
             LOGGER.warn("Failed to transfer the call! Retrying...")
@@ -174,6 +174,7 @@ def make_call(obj, acc, uri):
     except pj.Error, err:
         LOGGER.error("Exception: %s" % str(err))
 
+
 def log_call_info(call_info):
     """Log call info."""
     LOGGER.debug("Call '%s' <-> '%s'" % (call_info.uri, call_info.remote_uri))
@@ -181,6 +182,7 @@ def log_call_info(call_info):
                  (call_info.state_text,
                   call_info.last_code,
                   call_info.last_reason))
+
 
 def exec_pjsua(test_object, triggered_by, ari, events):
     """Callback method upon ARI event trigger.
@@ -205,6 +207,7 @@ def exec_pjsua(test_object, triggered_by, ari, events):
         del lock
 
     return True
+
 
 def pjsua_initialized(test_object, accounts):
     """Callback method upon all PJSUA endpoints being registered.

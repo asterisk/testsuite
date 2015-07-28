@@ -18,6 +18,7 @@ class SubscribeBridge(object):
 BRIDGE_ID = 'test-tones-bridge'
 TEST = SubscribeBridge()
 
+
 def on_start(ari, event, test_object):
     """ When the channel enters stasis, create a bridge and add the channel. """
     TEST.channel_id = event['channel']['id']

@@ -6,11 +6,11 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 '''
 
-import requests
 import logging
 import operator
 
 LOGGER = logging.getLogger(__name__)
+
 
 def on_start(ari, event, obj):
     mailboxes = ari.get('mailboxes').json()
@@ -21,7 +21,7 @@ def on_start(ari, event, obj):
     ari.put('mailboxes', 'alice_mailbox', oldMessages='3', newMessages='4')
     ari.put('mailboxes', 'bob_mailbox', oldMessages='5', newMessages='6')
 
-    LOGGER.info("Successfully added mailboxes");
+    LOGGER.info("Successfully added mailboxes")
 
     # Get a specific mailbox
     mailbox = ari.get('mailboxes', 'alice_mailbox').json()

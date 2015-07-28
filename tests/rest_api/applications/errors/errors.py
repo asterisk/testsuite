@@ -30,7 +30,6 @@ def on_start(ari, event, test_object):
     assert 1 == len(app_list)
     assert 'testsuite' == app_list[0].get('name')
 
-
     ari.set_allow_errors(True)
 
     resp = ari.get('applications', 'notanapp')
@@ -43,19 +42,19 @@ def on_start(ari, event, test_object):
     validate('bad_request', resp)
 
     resp = ari.post('applications', 'testsuite', 'subscription',
-             eventSource='notascheme:foo')
+                    eventSource='notascheme:foo')
     validate('bad_request', resp)
 
     resp = ari.delete('applications', 'testsuite', 'subscription',
-             eventSource='notascheme:foo')
+                      eventSource='notascheme:foo')
     validate('bad_request', resp)
 
     resp = ari.post('applications', 'testsuite', 'subscription',
-             eventSource='channel:notachannel')
+                    eventSource='channel:notachannel')
     validate('unprocessable_entity', resp)
 
     resp = ari.delete('applications', 'testsuite', 'subscription',
-             eventSource='channel:notachannel')
+                      eventSource='channel:notachannel')
     validate('unprocessable_entity', resp)
 
     ari.post('channels', channel_id, 'continue')

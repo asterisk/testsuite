@@ -13,6 +13,7 @@ from twisted.internet import reactor
 
 LOGGER = logging.getLogger(__name__)
 
+
 class TestLogic(object):
     """A small object used to hold test data between events"""
 
@@ -58,6 +59,7 @@ def on_start(ari, event, test_object):
     LOGGER.info("Baseline recording started successfully.")
     return True
 
+
 def on_recording_started(ari, event, test_object):
     """Handler for the RecordingStarted event
 
@@ -86,6 +88,7 @@ def on_recording_started(ari, event, test_object):
     reactor.callLater(2, _stop_recording, TEST.ari)
     return True
 
+
 def on_recording_finished(ari, event, test_object):
     """Handler for the RecordingFinished
 
@@ -108,7 +111,7 @@ def on_recording_finished(ari, event, test_object):
 
     try:
         superfreak = TEST.ari.post('recordings/stored', 'superfly', 'copy',
-            destinationRecordingName='copy/superfreak').json()
+                                   destinationRecordingName='copy/superfreak').json()
     except requests.exceptions.HTTPError:
         LOGGER.error('Failed to get copied recording superfreak')
         fail_test()
@@ -118,14 +121,14 @@ def on_recording_finished(ari, event, test_object):
     TEST.ari.set_allow_errors(True)
 
     bad_recording = TEST.ari.post('recordings/stored', 'superfly', 'copy',
-        destinationRecordingName='copy/superfreak')
+                                  destinationRecordingName='copy/superfreak')
     if bad_recording.status_code != 409:
         LOGGER.error('Expected to get response 409, got %d' % bad_recording.status_code)
         fail_test()
         return
 
     bad_recording = TEST.ari.post('recordings/stored', 'not-superfly', 'copy',
-        destinationRecordingName='copy/super-duper-freak')
+                                  destinationRecordingName='copy/super-duper-freak')
     if bad_recording.status_code != 404:
         LOGGER.error('Expected to get response 404, got %d' % bad_recording.status_code)
         fail_test()
@@ -154,4 +157,3 @@ def on_stasis_end(ari, event, test_object):
     LOGGER.info("Test finished")
     test_object.stop_reactor()
     return True
-
