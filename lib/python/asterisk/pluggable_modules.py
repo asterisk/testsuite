@@ -812,6 +812,34 @@ class LogActionModule(object):
 PLUGGABLE_ACTION_REGISTRY.register("logger", LogActionModule)
 
 
+class ValidateLogActionModule(object):
+    """An action module that validates a log files existence."""
+
+    def __init__(self, test_object, config):
+        self.test_object = test_object
+        self.logfile = config["logfile"]
+        self.pass_if_present = config["pass-if-present"]
+
+    def run(self, triggered_by, source, extra):
+        """Check to see if log file is present or not."""
+        files = []
+        testpath = ('%s/var/log/asterisk' %
+                    (self.test_object.ast[0].base))
+        for (dirpath, dirnames, filenames) in os.walk(testpath):
+            files.extend(filenames)
+            break
+        if self.logfile in files:
+            if (self.pass_if_present):
+                self.test_object.set_passed(True)
+            else:
+                self.test_object.set_passed(False)
+        else:
+            if (self.pass_if_present):
+                self.test_object.set_passed(False)
+            else:
+                self.test_object.set_passed(True)
+PLUGGABLE_ACTION_REGISTRY.register("validate-log", ValidateLogActionModule)
+
 class CallbackActionModule(object):
     """An action module that calls the specified callback."""
 
