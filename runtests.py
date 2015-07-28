@@ -293,11 +293,12 @@ class TestRun:
                     hardlink_or_copy(refs_in,
                                      os.path.join(dest_dir, "refs"))
                     if self.passed:
-                        self.stdout_print("REF_DEBUG identified leaks, mark test as failure")
+                        self.stdout_print("REF_DEBUG identified leaks, "
+                                          "mark test as failure")
                         self.passed = False
                     else:
                         self.stdout_print("REF_DEBUG identified leaks, "
-                                          "test was already marked as failure");
+                                          "test was already marked as failure")
             i += 1
 
     def _archive_files(self, src_dir, dest_dir, *filenames):
@@ -420,7 +421,7 @@ class TestSuite:
             print "%.3d) %s" % (i, t.test_config.test_name)
             print "      --> Summary: %s" % t.test_config.summary
             if t.test_config.skip is not None:
-                print  "      --> Skip: %s" % t.test_config.skip
+                print "      --> Skip: %s" % t.test_config.skip
             print ("      --> Minimum Version: %s (%s)" %
                    (", ".join([str(v) for v in t.test_config.minversion]),
                     t.test_config.minversion_check))
