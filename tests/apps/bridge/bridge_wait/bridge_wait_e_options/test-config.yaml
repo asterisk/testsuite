@@ -217,9 +217,9 @@ test-object-config:
               type: 'headermatch'
               conditions:
                 match:
-                  Event: 'Newstate'
+                  Event: 'TestEvent'
+                  State: 'RINGING_INBAND'
                   Channel: 'Local/er_option@holding_bridge-.*'
-                  ChannelStateDesc: 'Ringing'
               actions:
                 -
                   action-type: 'set-expected-result'
