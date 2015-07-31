@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Subscribe">
+  <send retrans="500">
+    <![CDATA[
+      SUBSCRIBE sip:bob@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:bob@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 SUBSCRIBE
+      Contact: "alice" <sip:alice@[local_ip]:[local_port]>
+      Expires: 600
+      Max-Forwards: 70
+      Event: presence
+      Supported: replaces, 100rel, timer, norefersub
+      Accept: application/xpidf+xml
+      Allow-Events: presence, message-summary, refer
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" rtd="true" />
+
+  <recv request="NOTIFY" crlf="true">
+    <action>
+      <ereg regexp="<presence>
+ <presentity uri=\"sip:bob@127.0.0.1(:5060)?\;method=SUBSCRIBE\" />
+ <atom atomid=\".*\" id=\"bob\">
+  <address uri=\"&quot\;alice&quot\; &lt\;sip:alice@127.0.0.1&gt\;\;user=ip\" priority=\"0.80000\">
+   <status status=\"open\" />
+   <msnsubstatus substatus=\"online\" />
+  </address>
+ </atom>
+</presence>" check_it="true" search_in="body" assign_to="body1" />
+    </action>
+  </recv>
+
+  <Reference variables="body1" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv request="NOTIFY" crlf="true">
+    <action>
+      <ereg regexp="<presence>
+ <presentity uri=\"sip:bob@127.0.0.1(:5060)?\;method=SUBSCRIBE\" />
+ <atom atomid=\".*\" id=\"bob\">
+  <address uri=\"&quot\;alice&quot\; &lt\;sip:alice@127.0.0.1&gt\;\;user=ip\" priority=\"0.80000\">
+   <status status=\"inuse\" />
+   <msnsubstatus substatus=\"onthephone\" />
+  </address>
+ </atom>
+</presence>" check_it="true" search_in="body" assign_to="body2" />
+    </action>
+  </recv>
+
+  <Reference variables="body2" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv request="NOTIFY" crlf="true">
+    <action>
+      <ereg regexp="<presence>
+ <presentity uri=\"sip:bob@127.0.0.1(:5060)?\;method=SUBSCRIBE\" />
+ <atom atomid=\".*\" id=\"bob\">
+  <address uri=\"&quot\;alice&quot\; &lt\;sip:alice@127.0.0.1&gt\;\;user=ip\" priority=\"0.80000\">
+   <status status=\"inuse\" />
+   <msnsubstatus substatus=\"onthephone\" />
+  </address>
+ </atom>
+</presence>" check_it="true" search_in="body" assign_to="body3" />
+    </action>
+  </recv>
+
+  <Reference variables="body3" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv request="NOTIFY" crlf="true">
+    <action>
+      <ereg regexp="<presence>
+ <presentity uri=\"sip:bob@127.0.0.1(:5060)?\;method=SUBSCRIBE\" />
+ <atom atomid=\".*\" id=\"bob\">
+  <address uri=\"&quot\;alice&quot\; &lt\;sip:alice@127.0.0.1&gt\;\;user=ip\" priority=\"0.80000\">
+   <status status=\"closed\" />
+   <msnsubstatus substatus=\"offline\" />
+  </address>
+ </atom>
+</presence>" check_it="true" search_in="body" assign_to="body4" />
+    </action>
+  </recv>
+
+  <Reference variables="body4" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv request="NOTIFY" crlf="true">
+    <action>
+      <ereg regexp="<presence>
+ <presentity uri=\"sip:bob@127.0.0.1(:5060)?\;method=SUBSCRIBE\" />
+ <atom atomid=\".*\" id=\"bob\">
+  <address uri=\"&quot\;alice&quot\; &lt\;sip:alice@127.0.0.1&gt\;\;user=ip\" priority=\"0.80000\">
+   <status status=\"closed\" />
+   <msnsubstatus substatus=\"offline\" />
+  </address>
+ </atom>
+</presence>" check_it="true" search_in="body" assign_to="body5" />
+    </action>
+  </recv>
+
+  <Reference variables="body5" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv request="NOTIFY" crlf="true">
+    <action>
+      <ereg regexp="<presence>
+ <presentity uri=\"sip:bob@127.0.0.1(:5060)?\;method=SUBSCRIBE\" />
+ <atom atomid=\".*\" id=\"bob\">
+  <address uri=\"&quot\;alice&quot\; &lt\;sip:alice@127.0.0.1&gt\;\;user=ip\" priority=\"0.80000\">
+   <status status=\"closed\" />
+   <msnsubstatus substatus=\"offline\" />
+  </address>
+ </atom>
+</presence>" check_it="true" search_in="body" assign_to="body6" />
+    </action>
+  </recv>
+
+  <Reference variables="body6" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv request="NOTIFY" crlf="true">
+    <action>
+      <ereg regexp="<presence>
+ <presentity uri=\"sip:bob@127.0.0.1(:5060)?\;method=SUBSCRIBE\" />
+ <atom atomid=\".*\" id=\"bob\">
+  <address uri=\"&quot\;alice&quot\; &lt\;sip:alice@127.0.0.1&gt\;\;user=ip\" priority=\"0.80000\">
+   <status status=\"open\" />
+   <msnsubstatus substatus=\"online\" />
+  </address>
+ </atom>
+</presence>" check_it="true" search_in="body" assign_to="body7" />
+    </action>
+  </recv>
+
+  <Reference variables="body7" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+</scenario>
