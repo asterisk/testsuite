@@ -1,0 +1,69 @@
+testinfo:
+    summary: 'Test for getting the list of logs using ARI'
+    description: |
+        Test that returns a list of all log channels that are
+        configured for the testsuite. A '200 OK' should be
+        the response to the request, and the response body should
+        include the log channels and their levels.
+
+test-modules:
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            requests:
+                -
+                    method: 'get'
+                    uri: 'asterisk/logging'
+                    response_body:
+                        match:
+                            -
+                                {
+                                  "channel": ".*/ast1/var/log/asterisk/full.txt",
+                                  "type": "File",
+                                  "status": "Enabled",
+                                  "configuration": "DEBUG ---EVENT--- NOTICE WARNING ERROR VERBOSE DTMF CC FAX SECURITY "
+                                }
+                            -
+                                {
+                                  "channel": ".*/ast1/var/log/asterisk/messages.txt",
+                                  "type": "File",
+                                  "status": "Enabled",
+                                  "configuration": "NOTICE WARNING ERROR VERBOSE DTMF "
+                                }
+                            -
+                                {
+                                  "channel": "",
+                                  "type": "Console",
+                                  "status": "Enabled",
+                                  "configuration": "VERBOSE "
+                                }
+                    expect: 200
+                -
+                    method: 'delete'
+                    uri: 'channels/{channel.id}'
+
+properties:
+    minversion: '13.6.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk: res_ari_asterisk
+        - asterisk: res_ari_channels
+    tags:
+        - ARI
