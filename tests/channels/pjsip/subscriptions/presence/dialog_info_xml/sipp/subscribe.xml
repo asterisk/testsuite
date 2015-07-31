@@ -28,11 +28,11 @@
  <dialog id=\"presence\">
   <state>terminated</state>
  </dialog>
-</dialog-info>" check_it="true" search_in="body" assign_to="body" />
+</dialog-info>" check_it="true" search_in="body" assign_to="body1" />
     </action>
   </recv>
 
-  <Reference variables="body" />
+  <Reference variables="body1" />
 
   <send>
     <![CDATA[
@@ -55,11 +55,11 @@
  <dialog id=\"presence\">
   <state>early</state>
  </dialog>
-</dialog-info>" check_it="true" search_in="body" assign_to="body" />
+</dialog-info>" check_it="true" search_in="body" assign_to="body2" />
     </action>
   </recv>
 
-  <Reference variables="body" />
+  <Reference variables="body2" />
 
   <send>
     <![CDATA[
@@ -78,15 +78,15 @@
 
   <recv request="NOTIFY" crlf="true">
     <action>
-      <ereg regexp="<dialog-info xmlns=\"urn:ietf:params:xml:ns:dialog-info\" version=\"1\" state=\"full\" entity=\"sip:presence@127.0.0.1(:5060)?\">
+      <ereg regexp="<dialog-info xmlns=\"urn:ietf:params:xml:ns:dialog-info\" version=\"2\" state=\"full\" entity=\"sip:presence@127.0.0.1(:5060)?\">
  <dialog id=\"presence\">
   <state>confirmed</state>
  </dialog>
-</dialog-info>" check_it="true" search_in="body" assign_to="body" />
+</dialog-info>" check_it="true" search_in="body" assign_to="body3" />
     </action>
   </recv>
 
-  <Reference variables="body" />
+  <Reference variables="body3" />
 
   <send>
     <![CDATA[
@@ -109,16 +109,16 @@
  <dialog id=\"presence\">
   <state>confirmed</state>
   <local>
-   <target uri=\"sip:presence@127.0.0.1\">
+   <target uri=\"sip:presence@127.0.0.1(:5060)?\">
     <param pname=\"\+sip.rendering\" pvalue=\"no\" />
    </target>
   </local>
  </dialog>
-</dialog-info>" check_it="true" search_in="body" assign_to="body" />
+</dialog-info>" check_it="true" search_in="body" assign_to="body4" />
     </action>
   </recv>
 
-  <Reference variables="body" />
+  <Reference variables="body4" />
 
   <send>
     <![CDATA[
