@@ -1,3 +1,4 @@
 tests:
     - test: 'get_logging'
     - test: 'rotate_log'
+    - test: 'add_log'

@@ -1,0 +1,53 @@
+testinfo:
+    summary: 'Test for adding logs using ARI'
+    description: |
+        Test that adds a log channel. A '204 No Content' should be
+        the response, and the test should verify that the log
+        channel was added successfully.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: pluggable_modules.EventActionModule
+
+ari-config:
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+            count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'asterisk/logging/testlog?configuration=notice,warning'
+                expect: 204
+            -
+                method: 'delete'
+                uri: 'channels/{channel.id}'
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: testsuite
+            count: 1
+        validate-log:
+            logfile: 'testlog'
+            pass-if-present: True
+        stop_test:
+
+properties:
+    minversion: '13.6.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk: res_ari_asterisk
+        - asterisk: res_ari_channels
+    tags:
+        - ARI
