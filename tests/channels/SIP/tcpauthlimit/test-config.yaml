@@ -1,19 +1,99 @@
 testinfo:
-    summary:     'Test the tcpauthlimit sip config option.'
+    summary: Test the tcpauthlimit sip config option.
     description: |
-        "This test ensures that chan_sip respects the tcpauthlimit config
-        option."
-    issues:
-        -mantis: 18996
-        -jira: SWP-3248
+        This test ensures that chan_sip respects the tcpauthlimit config
+        option by running two scenarios:
+            * The SipClientScenario: Attempts to create n+1 TCP socket
+        connections to Asterisk, where n is the value of the 'tcpauthlimit'
+        property in sip.conf. If the 'tcpauthlimit' property is honored, the
+        (n+1)th socket connection will fail to connect. After the scenario is
+        executed, the TCP connections are destroyed.
+            * The SIPpScenario: attempt to create n*2 SIPp processes, where n
+        is the value of the 'tcpauthlimit' property in sip.conf. Each SIPp
+        scenario is configured to connect to the same Asterisk host. If the
+        'tcpauthlimit' property is honored, only n of these scenarios will
+        pass, while the remaining n will fail.
 
 properties:
     minversion: '1.8.0.0'
     dependencies:
-        - app : 'bash'
-        - app : 'asttest'
-        - sipp :
-            version : 'v3.0'
+        - asterisk: 'chan_sip'
+        - python: 'autobahn.websocket'
+        - python: 'starpy'
+        - python: 'twisted'
+        - sipp:
+            version: 'v3.0'
     tags:
         - SIP
+    issues:
+        - mantis: '18996'
+        - jira: 'SWP-3248'
+        - jira: 'ASTERISK-25225'
 
+test-modules:
+    add-test-to-search-path: 'True'
+    add-relative-to-search-path: ['..']
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: 'tcpauthlimit_config'
+            typename: 'tcpauthlimit.TcpAuthLimitTestModule'
+
+test-object-config:
+    connect-ami: 'True'
+    reactor-timeout: 20
+    fail-on-any: 'False'
+
+tcpauthlimit_config:
+    tcpauthlimit: 5
+    remote-host:
+        -
+            address: '127.0.0.1'
+            port: 5060
+    test-scenarios:
+        -
+            type: 'sip-client'
+            scenario-id: 'scarlett-overkills'
+            skip: 'Skipping while TCP connection issues are debugged.'
+        -
+            type: 'sipp-scenario'
+            scenario-id: 'minion_bob'
+            key-args: {'scenario': 'uac.xml', '-i': '127.0.0.2', '-s': 'echo', '-d': '10000', '-p': '5062', '-t': 't1', '-inf':'inject_minion_bob.csv'}
+        -
+            type: 'sipp-scenario'
+            scenario-id: 'minion_dave'
+            key-args: {'scenario': 'uac.xml', '-i': '127.0.0.3', '-s': 'echo', '-d': '10000', '-p': '5063', '-t': 't1', '-inf':'inject_minion_dave.csv'}
+        -
+            type: 'sipp-scenario'
+            scenario-id: 'minion_jerry'
+            key-args: {'scenario': 'uac.xml', '-i': '127.0.0.4', '-s': 'echo', '-d': '10000', '-p': '5064', '-t': 't1', '-inf':'inject_minion_jerry.csv'}
+        -
+            type: 'sipp-scenario'
+            scenario-id: 'minion_jon'
+            key-args: {'scenario': 'uac.xml', '-i': '127.0.0.5', '-s': 'echo', '-d': '10000', '-p': '5065', '-t': 't1', '-inf':'inject_minion_jon.csv'}
+        -
+            type: 'sipp-scenario'
+            scenario-id: 'minion_jorge'
+            key-args: {'scenario': 'uac.xml', '-i': '127.0.0.6', '-s': 'echo', '-d': '10000', '-p': '5066', '-t': 't1', '-inf':'inject_minion_jorge.csv'}
+        -
+            type: 'sipp-scenario'
+            scenario-id: 'minion_kevin'
+            key-args: {'scenario': 'uac.xml', '-i': '127.0.0.7', '-s': 'echo', '-d': '10000', '-p': '5067', '-t': 't1', '-inf':'inject_minion_kevin.csv'}
+        -
+            type: 'sipp-scenario'
+            scenario-id: 'minion_mark'
+            key-args: {'scenario': 'uac.xml', '-i': '127.0.0.8', '-s': 'echo', '-d': '10000', '-p': '5068', '-t': 't1', '-inf':'inject_minion_mark.csv'}
+        -
+            type: 'sipp-scenario'
+            scenario-id: 'minion_phil'
+            key-args: {'scenario': 'uac.xml', '-i': '127.0.0.9', '-s': 'echo', '-d': '10000', '-p': '5069', '-t': 't1', '-inf':'inject_minion_phil.csv'}
+        -
+            type: 'sipp-scenario'
+            scenario-id: 'minion_stuart'
+            key-args: {'scenario': 'uac.xml', '-i': '127.0.0.10', '-s': 'echo', '-d': '10000', '-p': '5070', '-t': 't1', '-inf':'inject_minion_stuart.csv'}
+        -
+            type: 'sipp-scenario'
+            scenario-id: 'minion_tim'
+            key-args: {'scenario': 'uac.xml', '-i': '127.0.0.11', '-s': 'echo', '-d': '10000', '-p': '5071', '-t': 't1', '-inf':'inject_minion_tim.csv'}
