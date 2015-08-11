@@ -72,3 +72,4 @@ tests:
     - test: 'no_ack_dialog_cleanup'
     - test: 'no_reinvite_after_491'
     - test: 'sip_bye_also'
+    - test: 'redirecting_reason'
