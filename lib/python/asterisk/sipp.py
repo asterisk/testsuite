@@ -484,7 +484,7 @@ class SIPpProtocol(protocol.ProcessProtocol):
             for msg in self.stderr:
                 LOGGER.warn(msg)
         else:
-            message = "SIPp scenario %s ended " % self._name
+            message = "SIPp scenario %s ended" % self._name
         try:
             if not self._stop_deferred.called:
                 self._stop_deferred.callback(self)
@@ -546,6 +546,7 @@ class SIPpScenario(object):
         self.sipp = test_suite_utils.which("sipp")
         self.passed = False
         self.exited = False
+        self.result = None
         self._process = None
         self.target = target
         self._our_exit_deferred = None
@@ -578,6 +579,7 @@ class SIPpScenario(object):
         def __scenario_callback(result):
             """Callback called when a scenario completes"""
             self.exited = True
+            self.result = result
             if (result.exitcode == 0):
                 self.passed = True
                 LOGGER.info("SIPp Scenario %s Exited" %
@@ -598,6 +600,7 @@ class SIPpScenario(object):
                 self._test_case.stop_reactor()
             return result
 
+        self.result = None
         sipp_args = [
             self.sipp, self.target,
             '-sf',
