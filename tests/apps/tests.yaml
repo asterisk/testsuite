@@ -13,6 +13,7 @@ tests:
     - dir: 'directed_pickup'
     - dir: 'macro'
     - test: 'mixmonitor'
+    - test: 'mixmonitor_rxtx'
     - test: 'mixmonitor_audiohook_inherit'
     - test: 'mixmonitor_func'
     - dir: 'control_playback'

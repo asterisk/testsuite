@@ -1,0 +1,17 @@
+testinfo:
+    summary:     'Test MixMonitor and StopMixMonitor applications'
+    description: |
+        'This test verifies basic functionality of both the MixMonitor
+         and StopMixMonitor applications.'
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_mixmonitor'
+        - asterisk : 'app_playback'
+        - asterisk : 'app_userevent'
+    tags:
+        - mixmonitor
