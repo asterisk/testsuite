@@ -2,17 +2,50 @@ testinfo:
     summary:     'Test Retrieval of SIP CHANNEL parameters'
     description: |
         "This test places a call to Asterisk using SIPp. Asterisk
-        answers the call and then goes into a Wait() application. During
-        this time, we connect to Asterisk using AMI and request various
-        parameters of the channel that has been created. We ensure that
-        the values of the variables match what we expect them to.
-
-        Note that for now, the minimum version of this test is Asterisk
-        trunk. This is because there are fields referenced in the test
-        which do not exist in other branches of Asterisk."
+        answers the call and then checks the various values on the
+        SIP channel. If all values are as expected a UserEvent of
+        passed is raised. If any values differ from what is expected
+        then a UserEvent of failed is raised. The test is considered
+        failed if the failed UserEvent is seen."
     issues:
         -jira : SWP-1016
         -jira : ABE-2103
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'call.xml', '-i': '127.0.0.1', '-p': '5061'} }
+
+ami-config:
+    -
+        id: '0'
+        type: 'headermatch'
+        count: '1'
+        conditions:
+            match:
+                Event: 'UserEvent'
+        requirements:
+            match:
+                Status: 'passed'
+    -
+        id: '0'
+        type: 'headermatch'
+        count: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                Status: 'failed'
 
 properties:
     minversion: '1.8.0.0'
