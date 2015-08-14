@@ -2,10 +2,10 @@ testinfo:
     summary:     'Test MixMonitor and StopMixMonitor applications'
     description: |
         'This test verifies basic functionality of both the MixMonitor
-         and StopMixMonitor applications.'
+         and StopMixMonitor applications for mixed/rx/tx file generation.'
 
 properties:
-    minversion: '1.8.0.0'
+    minversion: '13.6.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

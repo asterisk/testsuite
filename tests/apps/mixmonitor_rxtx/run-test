@@ -41,8 +41,14 @@ class MixMonitorTest(TestCase):
 
         # Remove any output files from a previous run
         self.unlink_file(self.audiofile1 + ".raw")
+        self.unlink_file(self.audiofile1 + "_rx.raw")
+        self.unlink_file(self.audiofile1 + "_tx.raw")
         self.unlink_file(self.audiofile2 + ".raw")
+        self.unlink_file(self.audiofile2 + "_rx.raw")
+        self.unlink_file(self.audiofile2 + "_tx.raw")
         self.unlink_file(self.audiofile3 + ".raw")
+        self.unlink_file(self.audiofile3 + "_rx.raw")
+        self.unlink_file(self.audiofile3 + "_tx.raw")
 
         self.talkingaudio = os.path.join(os.getcwd(), testdir + "/sounds/talking")
 
@@ -72,14 +78,20 @@ class MixMonitorTest(TestCase):
         LOGGER.info("Checking MixMonitor recorded files...")
 
         self.check_file("audiofile1", self.audiofile1 + ".raw")
+        self.check_file("audiofile1_rx", self.audiofile1 + "_rx.raw")
+        self.check_file("audiofile1_tx", self.audiofile1 + "_tx.raw")
 
         # If this fails it is likely because StopMixMonitor never
         # let go of audiofile1.
         self.check_file("audiofile2", self.audiofile2 + ".raw")
+        self.check_file("audiofile2_rx", self.audiofile2 + "_rx.raw")
+        self.check_file("audiofile2_tx", self.audiofile2 + "_tx.raw")
 
         # If this fails it is likely because MixMonitor never let
         # go of audiofile2 on hangup.
         self.check_file("audiofile3", self.audiofile3 + ".raw")
+        self.check_file("audiofile3_rx", self.audiofile3 + "_rx.raw")
+        self.check_file("audiofile3_tx", self.audiofile3 + "_tx.raw")
 
         if self.passed:
             LOGGER.info("Test Passed... All audio files are correct.")
@@ -123,13 +135,19 @@ class MixMonitorTest(TestCase):
 
         self.read_result()
 
+    def set_test_audio_vars(self, varname, filename):
+        self.ami.setVar(channel="", variable=varname, value=filename)
+        self.ami.setVar(channel="", variable=varname + "_RX", value=filename + "_rx")
+        self.ami.setVar(channel="", variable=varname + "_TX", value=filename + "_tx")
+
     def ami_connect(self, ami):
         self.ami = ami
         self.ami.registerEvent("UserEvent", self.check_test1)
 
-        self.ami.setVar(channel="", variable="TESTAUDIO1", value=self.audiofile1)
-        self.ami.setVar(channel="", variable="TESTAUDIO2", value=self.audiofile2)
-        self.ami.setVar(channel="", variable="TESTAUDIO3", value=self.audiofile3)
+        self.set_test_audio_vars(varname="TESTAUDIO1", filename=self.audiofile1)
+        self.set_test_audio_vars(varname="TESTAUDIO2", filename=self.audiofile2)
+        self.set_test_audio_vars(varname="TESTAUDIO3", filename=self.audiofile3)
+
         self.ami.setVar(channel="", variable="TALK_AUDIO", value=self.talkingaudio)
 
         self.launch_test1()
