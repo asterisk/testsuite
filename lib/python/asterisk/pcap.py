@@ -225,6 +225,15 @@ class PIDFPacket(Packet):
         self.content_id = content_id
 
 
+class XPIDFPacket(Packet):
+    '''A XPIDF presence body. Owned by SIPPacket or a MultipartPacket.'''
+
+    def __init__(self, ascii_packet, raw_packet, content_id):
+        Packet.__init__(self, packet_type="XPIDF", raw_packet=raw_packet)
+        self.xml = ascii_packet.strip()
+        self.content_id = content_id
+
+
 class MWIPacket(Packet):
     '''An MWI body. Owned by SIPPacket or a MultipartPacket.'''
 
@@ -309,6 +318,8 @@ class BodyFactory(object):
             return RLMIPacket(ascii_packet, raw_packet)
         elif (body_type == 'application/pidf+xml'):
             return PIDFPacket(ascii_packet, raw_packet, content_id)
+        elif (body_type == 'application/xpidf+xml'):
+            return XPIDFPacket(ascii_packet, raw_packet, content_id)
         elif (body_type == 'application/simple-message-summary'):
             return MWIPacket(ascii_packet, raw_packet, content_id)
         else:
