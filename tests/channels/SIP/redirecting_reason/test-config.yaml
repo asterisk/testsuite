@@ -52,7 +52,7 @@ ami-config:
         count: '3'
 
 properties:
-    minversion: 1.8.15.0-cert
+    minversion: '13.0.0'
     dependencies:
         - python: 'starpy'
         - sipp:
