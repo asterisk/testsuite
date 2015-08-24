@@ -1,0 +1,72 @@
+testinfo:
+    summary:     'Test that feature timeout does not cause a hangup to get dropped'
+    description: |
+        'This test creates a small chain of Local channels with the DTMF based transfer
+         features enabled. The features are configured to require a # DTMF and a digit in
+         order to trigger the transfers. Once the chain is answered SendDTMF is used to
+         send a single # which causes a feature timeout to occur. The # DTMF is streamed
+         out to the called dialplan logic. This dialplan logic immediately hangs up when
+         a single DTMF digit is received. This test confirms that all channels involved
+         are hung up when this leg of the chain is hung up.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            typename: 'pluggable_modules.HangupMonitor'
+            config-section: 'hangup-monitor'
+        -
+            typename: 'ami.AMIEventModule'
+            config-section: 'ami-config'
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -
+            channel: 'Local/playback@outgoing_context'
+            exten: 'dtmf'
+            context: 'dtmf_context'
+            priority: '1'
+
+hangup-monitor:
+    ids: '0'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'OutgoingResult'
+        requirements:
+            match:
+                Result: 'pass'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'DTMFResult'
+        requirements:
+            match:
+                Result: 'pass'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'CollectResult'
+        requirements:
+            match:
+                Result: 'pass'
+        count: 1
+
+properties:
+    minversion: '13.6.0'
+    tags:
+        - bridge
+

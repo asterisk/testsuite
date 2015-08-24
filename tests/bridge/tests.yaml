@@ -23,3 +23,4 @@ tests:
     - test: 'bridge_action'
     - test: 'atxfer_threeway_nominal'
     - test: 'atxfer_retries'
+    - test: 'feature_timeout_hangup'
