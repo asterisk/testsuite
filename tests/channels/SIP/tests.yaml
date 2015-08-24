@@ -5,7 +5,7 @@ tests:
     - test: 'options'
     - test: 'refer_replaces_to_self'
     - test: 'info_dtmf'
-    - test: 'tcpauthlimit'
+    - dir: 'tcpauthlimit'
     - dir: 'tcpauthtimeout'
     - test: 'sip_outbound_address'
     - test: 'sip_attended_transfer'

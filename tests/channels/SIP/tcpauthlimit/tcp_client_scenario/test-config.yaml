@@ -1,0 +1,54 @@
+testinfo:
+    summary: Test the tcpauthlimit sip config option.
+    description: |
+        This test ensures that chan_sip respects the tcpauthlimit config
+        option by running the following scenario:
+            * The TcpClientScenario: Attempts to create n+1 TCP
+        unauthenticated socket connections to Asterisk, where n is the value
+        of the 'tcpauthlimit' property in sip.conf. If the 'tcpauthlimit'
+        property is honored, the (n+1)th socket connection will fail to
+        connect. After the scenario is executed, the TCP connections are
+        destroyed.
+
+properties:
+    minversion: '1.8.0.0'
+    dependencies:
+        - asterisk: 'chan_sip'
+        - python: 'autobahn.websocket'
+        - python: 'starpy'
+        - python: 'twisted'
+        - sipp:
+            version: 'v3.0'
+    tags:
+        - SIP
+    issues:
+        - mantis: '18996'
+        - jira: 'SWP-3248'
+        - jira: 'ASTERISK-25225'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    add-relative-to-search-path: ['..']
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: 'tcpauthlimit_config'
+            typename: 'tcpauthlimit.TcpAuthLimitTestModule'
+
+test-object-config:
+    connect-ami: 'True'
+    reactor-timeout: 25
+    fail-on-any: 'True'
+
+tcpauthlimit_config:
+    tcpauthlimit: 5
+    remote-host:
+        -
+            address: '127.0.0.1'
+            port: 5060
+    test-scenarios:
+        -
+            type: 'tcp-client'
+            scenario-id: 'felonius-gru'
