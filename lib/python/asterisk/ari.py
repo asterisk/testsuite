@@ -361,6 +361,7 @@ class AriClientProtocol(WebSocketClientProtocol):
 
         :param receiver The event receiver
         """
+        super(AriClientProtocol, self).__init__()
         LOGGER.debug("Made me a client protocol!")
         self.receiver = receiver
         self.factory = factory
