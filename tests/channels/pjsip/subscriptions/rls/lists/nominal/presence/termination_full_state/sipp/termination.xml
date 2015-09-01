@@ -80,14 +80,14 @@
     ]]>
   </send>
 
-  <!-- NOTIFY upon termination -->
-  <recv request="NOTIFY" crlf="true">
+  <recv response="200" rtd="true">
       <action>
           <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
       </action>
   </recv>
 
-  <recv response="200" rtd="true">
+  <!-- NOTIFY upon termination -->
+  <recv request="NOTIFY" crlf="true">
       <action>
           <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
       </action>

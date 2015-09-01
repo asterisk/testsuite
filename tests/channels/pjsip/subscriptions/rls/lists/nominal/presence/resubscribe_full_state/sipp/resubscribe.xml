@@ -80,14 +80,14 @@
     ]]>
   </send>
 
-  <!-- NOTIFY upon resubscription -->
-  <recv request="NOTIFY" crlf="true">
+  <recv response="200" crlf="true">
       <action>
           <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
       </action>
   </recv>
 
-  <recv response="200" crlf="true">
+  <!-- NOTIFY upon resubscription -->
+  <recv request="NOTIFY" crlf="true">
       <action>
           <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
       </action>

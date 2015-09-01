@@ -102,6 +102,12 @@
     ]]>
   </send>
 
+  <recv response="200" crlf="true">
+      <action>
+          <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
+      </action>
+  </recv>
+
   <!-- NOTIFY upon resubscription -->
   <recv request="NOTIFY" crlf="true">
       <action>
@@ -110,12 +116,6 @@
           <ereg regexp=".*" search_in="hdr" header="To:" assign_to="notify_to" />
           <ereg regexp=".*" search_in="hdr" header="Via:" assign_to="notify_via" />
           <ereg regexp=".*" search_in="hdr" header="CSeq:" assign_to="notify_cseq" />
-      </action>
-  </recv>
-
-  <recv response="200" crlf="true">
-      <action>
-          <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
       </action>
   </recv>
 
@@ -179,14 +179,14 @@
     ]]>
   </send>
 
-  <!-- NOTIFY upon termination -->
-  <recv request="NOTIFY" crlf="true">
+  <recv response="200" crlf="true">
       <action>
           <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
       </action>
   </recv>
 
-  <recv response="200" crlf="true">
+  <!-- NOTIFY upon termination -->
+  <recv request="NOTIFY" crlf="true">
       <action>
           <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
       </action>
