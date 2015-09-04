@@ -72,6 +72,7 @@ class AriBaseTestObject(TestCase):
 
         self._ws_connection = None
         self._ws_event_handlers = []
+        self._ws_open_handlers = []
         self.timed_out = False
 
         self.asterisk_instances = test_config.get('asterisk-instances', 1)
@@ -119,7 +120,16 @@ class AriBaseTestObject(TestCase):
         :param protocol The WS Client protocol object
         """
         self._ws_connection = protocol
+        for observer in self._ws_open_handlers:
+            observer(self)
         reactor.callLater(0, self._create_ami_connection)
+
+    def register_ari_observer(self, observer):
+        """Register an observer for ARI WS connection
+
+        :param observer The WS observer. This will be called with this object.
+        """
+        self._ws_open_handlers.append(observer)
 
     def on_ws_closed(self, protocol):
         """Handler for WebSocket Client Protocol closed
