@@ -1,0 +1,216 @@
+testinfo:
+    summary: Test subscribing to all resources
+    description: |
+        This test verifies that we can subscribe to
+        all channels, bridges, endpoints, and device
+        states using the applications resource.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriBaseTestObject
+    modules:
+        -
+            config-section: pluggable-config
+            typename: pluggable_modules.EventActionModule
+        -
+            typename: pluggable_modules.ARIHangupMonitor
+
+test-object-config:
+    subscribe-all: True
+
+pluggable-config:
+    -
+        ari-start:
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'Local/dial_alice@default'
+                    extension: 'echo'
+                expect: 200
+    -
+        # Matching of endpoint and device state subscriptions
+        ari-events:
+            -
+                match:
+                    type: 'DeviceStateChanged'
+                    device_state:
+                        name: 'Local/dial_alice@default'
+                        state: 'INUSE'
+                count: 2
+            -
+                match:
+                    type: 'DeviceStateChanged'
+                    device_state:
+                        name: 'Local/dial_alice@default'
+                        state: 'NOT_INUSE'
+                count: '>1'
+    -
+        # Matching of channel subscription
+        ari-events:
+            -
+                match:
+                    type: 'ChannelCreated'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;1'
+                count: 1
+            -
+                match:
+                    type: 'ChannelCreated'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;2'
+                count: 1
+            -
+                match:
+                    type: 'ChannelCreated'
+                    channel:
+                        name: 'Local/alice@default-00000001;1'
+                count: 1
+            -
+                match:
+                    type: 'ChannelCreated'
+                    channel:
+                        name: 'Local/alice@default-00000001;2'
+                count: 1
+            -
+                match:
+                    type: 'ChannelStateChange'
+                    channel:
+                        name: 'Local/alice@default-00000001;2'
+                        state: 'Up'
+                count: 1
+            -
+                match:
+                    type: 'ChannelStateChange'
+                    channel:
+                        name: 'Local/alice@default-00000001;1'
+                        state: 'Up'
+                count: 1
+            -
+                match:
+                    type: 'ChannelStateChange'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;2'
+                        state: 'Up'
+                count: 1
+            -
+                match:
+                    type: 'ChannelStateChange'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;1'
+                        state: 'Up'
+                count: 1
+            -
+                match:
+                    type: 'ChannelHangupRequest'
+                    channel:
+                        name: 'Local/alice@default-00000001;1'
+                count: 1
+            -
+                match:
+                    type: 'ChannelDestroyed'
+                    channel:
+                        name: 'Local/alice@default-00000001;2'
+                count: 1
+            -
+                match:
+                    type: 'ChannelHangupRequest'
+                    channel:
+                        name: 'Local/alice@default-00000001;1'
+                count: 1
+            -
+                match:
+                    type: 'ChannelDestroyed'
+                    channel:
+                        name: 'Local/alice@default-00000001;2'
+                count: 1
+            -
+                match:
+                    type: 'ChannelDestroyed'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;1'
+                count: 1
+            -
+                match:
+                    type: 'ChannelDestroyed'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;2'
+                count: 1
+    -
+        # Matching of bridge subscription
+        ari-events:
+            -
+                match:
+                    type: 'BridgeCreated'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'basic'
+                count: 1
+            -
+                match:
+                    type: 'ChannelEnteredBridge'
+                    channel:
+                        name: 'Local/alice@default-00000001;1'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'basic'
+                count: 1
+            -
+                match:
+                    type: 'ChannelEnteredBridge'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;2'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'basic'
+                count: 1
+            -
+                match:
+                    type: 'ChannelLeftBridge'
+                    channel:
+                        name: 'Local/alice@default-00000001;1'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'basic'
+                count: 1
+            -
+                match:
+                    type: 'ChannelLeftBridge'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;2'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'basic'
+                count: 1
+            -
+                match:
+                    type: 'BridgeDestroyed'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'basic'
+                count: 1
+
+
+properties:
+    minversion: '13.7.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+        - asterisk : app_dial
+    tags:
+        - ARI
+
+

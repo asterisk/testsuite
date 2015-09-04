@@ -64,11 +64,13 @@ class AriBaseTestObject(TestCase):
         port = test_config.get('port', DEFAULT_PORT)
         userpass = (test_config.get('username', 'testsuite'),
                     test_config.get('password', 'testsuite'))
+        subscribe_all = test_config.get('subscribe-all')
 
         # Create the REST interface and the WebSocket Factory
         self.ari = ARI(host, port=port, userpass=userpass)
         self.ari_factory = AriClientFactory(receiver=self, host=host, port=port,
-                                            apps=self.apps, userpass=userpass)
+                                            apps=self.apps, userpass=userpass,
+                                            subscribe_all=subscribe_all)
 
         self._ws_connection = None
         self._ws_event_handlers = []
@@ -312,7 +314,7 @@ class AriClientFactory(WebSocketClientFactory):
     """Twisted protocol factory for building ARI WebSocket clients."""
 
     def __init__(self, receiver, host, apps, userpass, port=DEFAULT_PORT,
-                 timeout_secs=60):
+                 timeout_secs=60, subscribe_all=False):
         """Constructor
 
         :param receiver The object that will receive events from the protocol
@@ -320,10 +322,13 @@ class AriClientFactory(WebSocketClientFactory):
         :param apps: App names to subscribe to.
         :param port: Port of Asterisk web server.
         :param timeout_secs: Maximum time to try to connect to Asterisk.
+        :param subscribe_all: If true, subscribe to all events.
         """
         url = "ws://%s:%d/ari/events?%s" % \
               (host, port,
                urllib.urlencode({'app': apps, 'api_key': '%s:%s' % userpass}))
+        if subscribe_all:
+            url += '&subscribeAll=true'
         LOGGER.info("WebSocketClientFactory(url=%s)", url)
         WebSocketClientFactory.__init__(self, url, debug=True,
                                         protocols=['ari'], debugCodePaths=True)
