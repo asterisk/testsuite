@@ -238,6 +238,45 @@ class AMIChannelHangupAll(AMIEventInstance):
             self.channels.remove(obj)
 
 
+class ARIHangupMonitor(object):
+    """A class that monitors for new channels and hungup channels in ARI.
+
+    This is the same as HangupMonitor, except that it listens over ARI
+    to avoid any issue with race conditions. Note that it will implicitly
+    create a global subscription to channels, which may conflict with
+    tests that don't expect to get all those events.
+    """
+
+    def __init__(self, instance_config, test_object):
+        """Constructor"""
+        super(ARIHangupMonitor, self).__init__()
+        self.test_object = test_object
+        self.test_object.register_ari_observer(self._handle_ws_open)
+        self.test_object.register_ws_event_handler(self._handle_ws_event)
+        self.channels = 0
+
+    def _handle_ws_open(self, ari_receiver):
+        """Handle WS connection"""
+
+        LOGGER.info(ari_receiver.apps)
+        for app in ari_receiver.apps.split(','):
+            self.test_object.ari.post('applications/{0}/subscription?eventSource=channel:'.format(app))
+
+    def _handle_ws_event(self, message):
+        """Handle a message received over the WS"""
+
+        message_type = message.get('type')
+        if (message_type == 'ChannelCreated'):
+            LOGGER.info('Tracking channel %s', message.get('channel'))
+            self.channels += 1
+        elif (message_type == 'ChannelDestroyed'):
+            LOGGER.info('Destroyed channel %s', message.get('channel'))
+            self.channels -= 1
+            if (self.channels == 0):
+                LOGGER.info("All channels have hungup; stopping test")
+                self.test_object.stop_reactor()
+
+
 class HangupMonitor(object):
     """A class that monitors for new channels and hungup channels. When all
     channels it has monitored for have hung up, it ends the test.
