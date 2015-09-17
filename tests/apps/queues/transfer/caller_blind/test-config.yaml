@@ -1,0 +1,144 @@
+testinfo:
+    summary: "Caller initiated blind queue transfer"
+    description: |
+        "This verifies a caller initiated blind transfer using queues works
+         as expected and that the app_queue's blind transfer stasis callback
+         handler is executed appropriately.
+
+         Alice dials into a queue and connects with member bob. Once alice and
+         bob are bridged, alice puts bob on hold, and then dials charlie. After
+         alice and charlie are bridged alice transfers bob to charlie using an
+         attended transfer."
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: pjsua-config
+            typename: 'phones.PjsuaPhoneController'
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    connect-ami: True
+
+pjsua-config:
+    transports:
+        -
+            name: 'local-ipv4-1'
+            bind: '127.0.0.1'
+            bindport: '5061'
+        -
+            name: 'local-ipv4-2'
+            bind: '127.0.0.1'
+            bindport: '5062'
+        -
+            name: 'local-ipv4-3'
+            bind: '127.0.0.1'
+            bindport: '5063'
+    accounts:
+        -
+            name: 'alice'
+            username: 'alice'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-1'
+        -
+            name: 'bob'
+            username: 'bob'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-2'
+        -
+            name: 'charlie'
+            username: 'charlie'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-3'
+
+pluggable-config:
+    # Ensure our pjsua phones are ready. Then alice calls the queue.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'PJsuaPhonesReady'
+            count: 1
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'alice'
+            call_uri: 'sip:101@127.0.0.1'
+    # Ensure alice and bob are connected. Then alice places bob on hold.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'AgentConnect'
+                    Channel: 'PJSIP/alice-.*'
+                    MemberName: 'PJSIP/bob'
+            count: '1'
+        pjsua_phone:
+            action: 'hold'
+            pjsua_account: 'alice'
+    # Once bob has been put on hold, blind transfer to charlie.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'MusicOnHoldStart'
+                    Channel: 'PJSIP/bob-.*'
+            count: 1
+        pjsua_phone:
+            action: 'transfer'
+            pjsua_account: 'alice'
+            transfer_type: 'blind'
+            transfer_uri: 'sip:102@127.0.0.1'
+    # Ensure the transfer is successful.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'BlindTransfer'
+                    TransfererChannel: 'PJSIP/alice-.*'
+                    TransfereeChannel: 'PJSIP/bob-.*'
+                    Extension: '102'
+                    Result: 'Success'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'AgentComplete'
+                    Channel: 'PJSIP/alice-.*'
+                    MemberName: 'PJSIP/bob'
+                    Reason: 'transfer'
+            count: 1
+    # Ensure alice channel leaves the bridge it was in.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'BridgeLeave'
+                    Channel: 'PJSIP/alice-.*'
+            count: 1
+    # Ensure alice hangs up with bob, then stop
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'PJSIP/alice-.*'
+            count: 1
+        stop_test:
+
+properties:
+    minversion: '13.6.0'
+    dependencies:
+        - python : twisted
+        - python : starpy
+        - python : pjsua
+        - asterisk : res_pjsip
+    tags:
+        - pjsip
+
