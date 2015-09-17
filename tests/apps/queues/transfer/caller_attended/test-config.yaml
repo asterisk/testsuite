@@ -1,0 +1,165 @@
+testinfo:
+    summary: "Caller initiated attended queue transfer"
+    description: |
+        "This verifies a caller initiated attended transfer using queues works
+         as expected and that the app_queue's attended transfer stasis callback
+         handler is executed appropriately.
+
+         Alice dials into a queue and connects with member bob. Once alice and
+         bob are bridged, alice puts bob on hold, and then dials charlie. After
+         alice and charlie are bridged alice transfers bob to charlie using an
+         attended transfer."
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: pjsua-config
+            typename: 'phones.PjsuaPhoneController'
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    connect-ami: True
+
+pjsua-config:
+    transports:
+        -
+            name: 'local-ipv4-1'
+            bind: '127.0.0.1'
+            bindport: '5061'
+        -
+            name: 'local-ipv4-2'
+            bind: '127.0.0.1'
+            bindport: '5062'
+        -
+            name: 'local-ipv4-3'
+            bind: '127.0.0.1'
+            bindport: '5063'
+    accounts:
+        -
+            name: 'alice'
+            username: 'alice'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-1'
+        -
+            name: 'bob'
+            username: 'bob'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-2'
+        -
+            name: 'charlie'
+            username: 'charlie'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-3'
+
+pluggable-config:
+    # Ensure our pjsua phones are ready. Then alice calls the queue.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'PJsuaPhonesReady'
+            count: 1
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'alice'
+            call_uri: 'sip:101@127.0.0.1'
+    # Ensure alice and bob are connected. Then alice places bob on hold.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'AgentConnect'
+                    Channel: 'PJSIP/alice-.*'
+                    MemberName: 'PJSIP/bob'
+            count: '1'
+        pjsua_phone:
+            action: 'hold'
+            pjsua_account: 'alice'
+    # Once bob has been put on hold, call charlie.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'MusicOnHoldStart'
+                    Channel: 'PJSIP/bob-.*'
+            count: 1
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'alice'
+            call_uri: 'sip:102@127.0.0.1'
+    # Ensure alice and charlie are bridged. Then alice transfers bob
+    # to charlie via an attended transfer.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Variable: BRIDGEPEER
+                    Channel: 'PJSIP/alice-.*'
+                    Value: 'PJSIP/charlie-.*'
+            count: '3'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Variable: BRIDGEPEER
+                    Channel: 'PJSIP/charlie-.*'
+                    Value: 'PJSIP/alice-.*'
+            count: '3'
+            trigger-on-count: True
+        pjsua_phone:
+            action: 'transfer'
+            pjsua_account: 'alice'
+            transfer_type: 'attended'
+    # Ensure the transfer is successful.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'AttendedTransfer'
+                    OrigTransfererChannel: 'PJSIP/alice-.*'
+                    SecondTransfererChannel: 'PJSIP/alice-.*'
+                    TransfereeChannel: 'PJSIP/bob-.*'
+                    TransferTargetChannel: 'PJSIP/charlie-.*'
+                    Result: 'Success'
+            count: 1
+            conditions:
+                match:
+                    Event: 'AgentComplete'
+                    Channel: 'PJSIP/alice-.*'
+                    MemberName: 'PJSIP/bob'
+                    Reason: 'transfer'
+            count: 1
+    # Ensure each alice channel leaves the bridge it was in.
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'BridgeLeave'
+                    Channel: 'PJSIP/alice-.*'
+            count: 2
+    # Ensure alice hangs up with bob and charlie, then stop
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'PJSIP/alice-.*'
+            count: 2
+        stop_test:
+
+properties:
+    minversion: '13.6.0'
+    dependencies:
+        - python : twisted
+        - python : starpy
+        - python : pjsua
+        - asterisk : res_pjsip
+    tags:
+        - pjsip
+
