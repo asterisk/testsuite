@@ -24,29 +24,32 @@ bridge-config:
 
 ami-uut:
     -
-        type: 'orderedheadermatch'
+        type: 'headermatch'
         id: '0'
         conditions:
             match:
                 Event: 'UserEvent'
                 UserEvent: 'CLInfo'
-        requirements:
-            -
-                match:
-                    CLInfo: 'Bob <4321>'
-            -
-                match:
-                    CLInfo: 'Bob <4321>'
-            -
-                match:
-                    CLInfo: 'Bob <4321>'
-            -
-                match:
-                    CLInfo: 'newbob <2345>'
-            -
-                match:
-                    CLInfo: 'newalice <5432>'
-        count: '5'
+                CLInfo: 'Bob <4321>'
+        count: '>1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'CLInfo'
+                CLInfo: 'newbob <2345>'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'CLInfo'
+                CLInfo: 'newalice <5432>'
+        count: '1'
     -
         type: 'headermatch'
         id: '1'
@@ -65,6 +68,15 @@ ami-uut:
                 CallerIDName: 'newbob'
                 CallerIDNum: '2345'
         count: '1'
+    -
+        type: 'headermatch'
+        id: '2'
+        conditions:
+            match:
+                Event: 'NewCallerid'
+                CallerIDName: 'Bob'
+                CallerIDNum: '4321'
+        count: '0'
 
 
 properties:
