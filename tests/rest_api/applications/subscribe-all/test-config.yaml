@@ -1,0 +1,273 @@
+testinfo:
+    summary: Test subscribing to all resources
+    description: |
+        This test verifies that we can subscribe to
+        all channels, bridges, endpoints, and device
+        states using the applications resource.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriBaseTestObject
+    modules:
+        -
+            config-section: pluggable-config
+            typename: pluggable_modules.EventActionModule
+        -
+            typename: pluggable_modules.ARIHangupMonitor
+
+pluggable-config:
+    -
+        ari-start:
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'applications/testsuite/subscription?eventSource=bridge:'
+                expect: 200
+            -
+                method: 'post'
+                uri: 'applications/testsuite/subscription?eventSource=channel:'
+                expect: 200
+            -
+                method: 'post'
+                uri: 'applications/testsuite/subscription?eventSource=endpoint:'
+                expect: 200
+            -
+                method: 'post'
+                uri: 'applications/testsuite/subscription?eventSource=deviceState:'
+                expect: 200
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/alice'
+                body: { 'fields': [ { 'attribute': 'allow', 'value': '!all,ulaw,alaw' },
+                                    { 'attribute': 'context', 'value': 'default' },
+                                    { 'attribute': 'aors', 'value': 'alice' } ] }
+                expect: 200
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/aor/alice'
+                body: { 'fields': [ { 'attribute': 'contact', 'value': 'sip:alice@127.0.0.1:5060;transport=udp' } ] }
+                expect: 200
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/identify/alice'
+                body: { 'fields': [ { 'attribute': 'match', 'value': '127.0.0.1' },
+                                    { 'attribute': 'endpoint', 'value': 'alice' } ] }
+                expect: 200
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'Local/dial_alice@default'
+                    extension: 'echo'
+                expect: 200
+    -
+        # Matching of endpoint and device state subscriptions
+        ari-events:
+            -
+                match:
+                    type: 'PeerStatusChange'
+                    endpoint:
+                        technology: 'PJSIP'
+                        resource: 'alice'
+                        state: 'offline'
+                    application: 'testsuite'
+                    peer:
+                        peer_status: 'Unreachable'
+                count: 2
+            -
+                match:
+                    type: 'DeviceStateChanged'
+                    device_state:
+                        name: 'PJSIP/alice'
+                        state: 'INUSE'
+                count: 1
+            -
+                match:
+                    type: 'DeviceStateChanged'
+                    device_state:
+                        name: 'Local/dial_alice@default'
+                        state: 'INUSE'
+                count: 2
+            -
+                match:
+                    type: 'DeviceStateChanged'
+                    device_state:
+                        name: 'Local/dial_alice@default'
+                        state: 'NOT_INUSE'
+                count: '>1'
+    -
+        # Matching of channel subscription
+        ari-events:
+            -
+                match:
+                    type: 'ChannelCreated'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;1'
+                count: 1
+            -
+                match:
+                    type: 'ChannelCreated'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;2'
+                count: 1
+            -
+                match:
+                    type: 'ChannelCreated'
+                    channel:
+                        name: 'PJSIP/alice-00000000'
+                count: 1
+            -
+                match:
+                    type: 'ChannelCreated'
+                    channel:
+                        name: 'PJSIP/alice-00000001'
+                count: 1
+            -
+                match:
+                    type: 'ChannelStateChange'
+                    channel:
+                        name: 'PJSIP/alice-00000001'
+                        state: 'Up'
+                count: 1
+            -
+                match:
+                    type: 'ChannelStateChange'
+                    channel:
+                        name: 'PJSIP/alice-00000000'
+                        state: 'Up'
+                count: 1
+            -
+                match:
+                    type: 'ChannelStateChange'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;2'
+                        state: 'Up'
+                count: 1
+            -
+                match:
+                    type: 'ChannelStateChange'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;1'
+                        state: 'Up'
+                count: 1
+            -
+                match:
+                    type: 'ChannelHangupRequest'
+                    channel:
+                        name: 'PJSIP/alice-00000001'
+                count: 1
+            -
+                match:
+                    type: 'ChannelDestroyed'
+                    channel:
+                        name: 'PJSIP/alice-00000001'
+                count: 1
+            -
+                match:
+                    type: 'ChannelHangupRequest'
+                    channel:
+                        name: 'PJSIP/alice-00000000'
+                count: 1
+            -
+                match:
+                    type: 'ChannelDestroyed'
+                    channel:
+                        name: 'PJSIP/alice-00000000'
+                count: 1
+            -
+                match:
+                    type: 'ChannelDestroyed'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;1'
+                count: 1
+            -
+                match:
+                    type: 'ChannelDestroyed'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;2'
+                count: 1
+    -
+        # Matching of bridge subscription
+        ari-events:
+            -
+                match:
+                    type: 'BridgeCreated'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'basic'
+                count: 1
+            -
+                match:
+                    type: 'ChannelEnteredBridge'
+                    channel:
+                        name: 'PJSIP/alice-00000000'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'basic'
+                count: 1
+            -
+                match:
+                    type: 'ChannelEnteredBridge'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;2'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'basic'
+                count: 1
+            -
+                match:
+                    type: 'ChannelLeftBridge'
+                    channel:
+                        name: 'PJSIP/alice-00000000'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'basic'
+                count: 1
+            -
+                match:
+                    type: 'ChannelLeftBridge'
+                    channel:
+                        name: 'Local/dial_alice@default-00000000;2'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'basic'
+                count: 1
+            -
+                match:
+                    type: 'BridgeDestroyed'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'basic'
+                count: 1
+
+
+properties:
+    minversion: '13.7.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+        - asterisk : res_ari_endpoints
+        - asterisk : res_ari_applications
+        - asterisk : res_ari_asterisk
+        - asterisk : res_ari_device_states
+        - asterisk : app_echo
+        - asterisk : app_dial
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip_endpoint_identifier_ip
+        - asterisk : res_pjsip
+    tags:
+        - ARI
+
+
