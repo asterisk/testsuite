@@ -24,3 +24,4 @@ tests:
     - test: 'atxfer_threeway_nominal'
     - test: 'atxfer_retries'
     - test: 'feature_timeout_hangup'
+    - test: 'hold_redirect'
