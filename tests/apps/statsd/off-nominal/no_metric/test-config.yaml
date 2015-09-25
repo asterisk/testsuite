@@ -1,15 +1,14 @@
 testinfo:
     summary:  |
-        Test sending statistics to a StatsD server for the StatsD Dialplan
-        Application
+        Test sending an empty metric type to the StatsD Dialplan Application
     description: |
-        This test verifies that a user will be able to send statistics properly
-        to StatsD through the StatsD Dialplan Application.
+        This test verifies that the StatsD Dialplan Application will fail
+        appropriately when a metric type is not given.
     skip: 'Skip while Asterisk StatsD Dialplan Application is being built.'
 
 test-modules:
     add-test-to-search-path: 'True'
-    add-relative-to-search-path: ['..']
+    add-relative-to-search-path: ['../..']
     test-object:
         config-section: 'test-object-config'
         typename: 'test_case.TestCaseModule'
@@ -28,13 +27,7 @@ test-object-config:
 
 statsd-config:
     -
-        StatsDCommand: 'foo:1|g'
-    -
-        StatsDCommand: 'bar:2|s'
-    -
-        StatsDCommand: 'baz:3|ms'
-    -
-        StatsDCommand: 'last:4|c'
+        UserEvent: 'InvalidParams'
 
 originator-config:
     channel: 'Local/start@default'

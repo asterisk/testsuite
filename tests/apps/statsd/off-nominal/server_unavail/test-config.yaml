@@ -1,15 +1,15 @@
 testinfo:
     summary:  |
-        Test sending statistics to a StatsD server for the StatsD Dialplan
-        Application
+        Test sending statistics to the StatsD Dialplan Application when the
+        server is unavailable
     description: |
-        This test verifies that a user will be able to send statistics properly
-        to StatsD through the StatsD Dialplan Application.
+        This test verifies that the StatsD Dialplan Application will have the
+        correct response when the StatsD server is unavailable.
     skip: 'Skip while Asterisk StatsD Dialplan Application is being built.'
 
 test-modules:
     add-test-to-search-path: 'True'
-    add-relative-to-search-path: ['..']
+    add-relative-to-search-path: ['../..']
     test-object:
         config-section: 'test-object-config'
         typename: 'test_case.TestCaseModule'
@@ -28,13 +28,7 @@ test-object-config:
 
 statsd-config:
     -
-        StatsDCommand: 'foo:1|g'
-    -
-        StatsDCommand: 'bar:2|s'
-    -
-        StatsDCommand: 'baz:3|ms'
-    -
-        StatsDCommand: 'last:4|c'
+        UserEvent: 'ServerUnavailable'
 
 originator-config:
     channel: 'Local/start@default'
