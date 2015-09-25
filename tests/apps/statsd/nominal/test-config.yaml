@@ -1,0 +1,41 @@
+testinfo:
+    summary:  |
+        Test sending statistics to a StatsD server for the StatsD Dialplan
+        Application
+    description: |
+        This test verifies that a user will be able to send statistics properly
+        to StatsD through the StatsD Dialplan Application.
+
+test-modules:
+    add-test-to-search-path: 'True'
+    add-relative-to-search-path: ['..']
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            typename: 'mockd.MockDServer'
+            config-section: 'statsd-config'
+
+test-object-config:
+    asterisk-instances: 1
+    connect-ami: True
+    reactor-timeout: 15
+
+statsd-config:
+    -
+        'foo|val:2'
+    -
+        'bar|val:1'
+    -
+        'last|val:3'
+
+properties:
+    minversion: '13.5.0'
+    dependencies:
+        - python: 'autobahn.websocket'
+        - python: 'starpy'
+        - python: 'twisted'
+    tags:
+        - statsd
+        - apps
