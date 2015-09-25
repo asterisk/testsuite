@@ -11,7 +11,7 @@
       To: sut <sip:[service]@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: 1 SUBSCRIBE
-      Contact: sip:sipp@[local_ip]:[local_port]
+      Contact: <sip:sipp@[local_ip]:[local_port];transport=tcp>
       Max-Forwards: 70
       Subject: Performance Test
       Event: presence

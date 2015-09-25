@@ -22,9 +22,28 @@ test-modules:
     test-object:
         config-section: 'sipp-config'
         typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
 
 sipp-config:
     test-iterations:
         -
             scenarios:
                 - { 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list', '-t': 't1'} }
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '1'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                Type: 'StateChange'
+                State: 'SUBSCRIPTION_STATE_SET'
+                Endpoint: 'sipp'
+        requirements:
+            match:
+                StateText: 'ACTIVE'
+        count: '>0'
