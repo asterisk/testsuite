@@ -95,17 +95,15 @@ class TcpClient(LineReceiver):
         msg = '{0} Initial connection to {1} established.'
         LOGGER.debug(msg.format(self, self.host))
 
-        connection_state = self.__sync_socket()
-        if connection_state != ConnectionState.CONNECTED:
-            msg = '{0} Connection state to {1} : {2}'
-            state = ConnectionState.get_state_name(connection_state)
-            LOGGER.debug(msg.format(self, self.host, state))
-            self.disconnect()
-        else:
-            msg = '{0} Connection to {1} successful.'
-            LOGGER.debug(msg.format(self, self.host))
+        self.__connection_state = self.__sync_socket()
 
-        self.__connection_state = connection_state
+        msg = '{0} Connection state to {1} : {2}'
+        state = ConnectionState.get_state_name(self.__connection_state)
+        LOGGER.debug(msg.format(self, self.host, state))
+
+        if self.__connection_state != ConnectionState.CONNECTED:
+            self.disconnect()
+
         self.__on_connection_change()
 
     def disconnect(self):
@@ -116,7 +114,7 @@ class TcpClient(LineReceiver):
 
         msg = '{0} Disconnecting the transport...'.format(self)
         LOGGER.debug(msg)
-        self.transport.loseConnection()
+        self.transport.abortConnection()
 
     def fail_connection(self):
         """Fails the connection.
