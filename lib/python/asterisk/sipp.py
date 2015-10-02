@@ -703,7 +703,6 @@ class CoordinatedScenario(object):
 
         self.exited = False
         self.passed = False
-        self.results = []
         self.name = "Coordinated Scenario %d" % self.coordination_port
 
     def kill(self):
@@ -730,7 +729,6 @@ class CoordinatedScenario(object):
 
         def __scenario_callback(result, exit_deferred):
             """Callback called when a scenario completes"""
-            self.results.append(result)
             if self.sender.exited and self.receiver.exited:
                 self.exited = True
                 if self.sender.passed and self.receiver.passed:
@@ -748,7 +746,7 @@ class CoordinatedScenario(object):
         def __receiver_start_callback(result):
             """Callback for receiver start"""
             sender_deferred = self.sender.run(test_case)
-            sender_deferred.addCallback(__scenario_callback)
+            sender_deferred.addCallback(__scenario_callback, exit_deferred)
             return result
 
         LOGGER.info("Executing coordinated SIPp scenario %d" %
