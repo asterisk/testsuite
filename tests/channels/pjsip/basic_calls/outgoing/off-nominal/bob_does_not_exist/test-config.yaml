@@ -25,10 +25,10 @@ test-modules:
             typename: 'pluggable_modules.Originator'
         -
             config-section: 'ami-config'
-            typename: 'ami.AMIEventModule'
+            typename: 'pluggable_modules.EventActionModule'
 
 test-object-config:
-   reactor-timeout: 60
+   reactor-timeout: 70
    fail-on-any: False
    test-iterations:
        -
@@ -85,60 +85,56 @@ originator-config-ipv6-tcp:
 ami-config:
     # UUT events
     -
-        type: 'headermatch'
-        id: '0'
-        conditions:
-            match:
-                Event: 'UserEvent'
-                UserEvent: 'DIALSTATUS'
-        requirements:
-            match:
-                Result: 'CANCEL'
-        count: '4'
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'DIALSTATUS'
+            requirements:
+                match:
+                    Result: 'CANCEL'
+            count: '4'
     -
-        type: 'headermatch'
-        id: '0'
-        conditions:
-            match:
-                Event: 'SoftHangupRequest'
-                Channel: 'Local/bob-*'
-        requirements:
-            match:
-                Cause: '16'
-        count: '4'
+        ami-events:
+            conditions:
+                match:
+                    Event: 'SoftHangupRequest'
+                    Channel: 'Local/bob-*'
+            requirements:
+                match:
+                    Cause: '16'
+            count: '4'
     -
-        type: 'headermatch'
-        id: '0'
-        conditions:
-            match:
-                Event: 'HangupRequest'
-                Channel: 'Local/bob-*'
-        requirements:
-            match:
-                Cause: '0'
-        count: '4'
+        ami-events:
+            conditions:
+                match:
+                    Event: 'HangupRequest'
+                    Channel: 'Local/bob-*'
+            requirements:
+                match:
+                    Cause: '0'
+            count: '4'
     -
-        type: 'headermatch'
-        id: '0'
-        conditions:
-            match:
-                Event: 'Hangup'
-                Channel: 'PJSIP/bob-*'
-        requirements:
-            match:
-                Cause: '0'
-        count: '4'
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'PJSIP/bob-*'
+            requirements:
+                match:
+                    Cause: '0'
+            count: '4'
     -
-        type: 'headermatch'
-        id: '0'
-        conditions:
-            match:
-                Event: 'Hangup'
-                Channel: 'Local/bob-*'
-        requirements:
-            match:
-                Cause: '0'
-        count: '8'
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'Local/bob-*'
+            requirements:
+                match:
+                    Cause: '0'
+            count: '8'
+        stop_test:
 
 properties:
     minversion: '12.0.0'
