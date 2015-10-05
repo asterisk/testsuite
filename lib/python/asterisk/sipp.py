@@ -100,6 +100,10 @@ class SIPpTestCase(TestCase):
         self.register_intermediate_obverver(self._handle_scenario_finished)
         self.create_asterisk()
 
+    def on_reactor_timeout(self):
+        """Create a failure token when the test times out"""
+        self.create_fail_token("Reactor timed out. Test Failed.")
+
     def register_scenario_generator(self, generator):
         """Register a scenario generator object instead of using
         ConfigScenarioGenerator
