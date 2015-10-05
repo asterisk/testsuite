@@ -157,6 +157,8 @@
   </send>
   <recv response="202" rtd="true" crlf="true" />
 
+  <!-- In a nominal attended transfer Asterisk should always
+       be sending two notifies (SIP frags of 100 and 200) -->
   <recv request="NOTIFY" />
   <send>
     <![CDATA[
@@ -173,12 +175,8 @@
     ]]>
   </send>
 
-  <recv request="NOTIFY" optional="true" next="do_notify"/>
-
-  <label id="after_notify" />
-
-  <recv request="BYE" />
-  <send next="after_notify_response">
+  <recv request="NOTIFY" />
+  <send>
     <![CDATA[
 
       SIP/2.0 200 OK
@@ -193,22 +191,24 @@
     ]]>
   </send>
 
-  <label id="do_notify" />
-  <send next="after_notify">
+  <send retrans="500">
     <![CDATA[
 
-      SIP/2.0 200 OK
-      [last_Via:]
-      [last_From:]
-      [last_To]
-      [last_Call-ID:]
-      [last_CSeq:]
-      Contact: <sip:bob@[local_ip]:[local_port]>
-      Content-Length:0
+      BYE sip:call_c@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:bob@[local_ip]:[local_port]>;tag=[call_number]
+      To: <sip:transfer@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: [cseq] BYE
+      Contact: sip:bob@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Performance Test
+      Content-Length: 0
 
     ]]>
   </send>
-  <label id="after_notify_response"/>
+
+  <recv response="200"/>
 
   <!-- definition of the response time repartition table (unit is ms)   -->
   <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
