@@ -173,7 +173,9 @@ class TestRun:
             dest_dir = "./logs/%s" % self.test_relpath
             if not os.path.exists(dest_dir):
                 os.makedirs(dest_dir)
-            dest_file = open(dest_dir + "/backtrace_%s.txt" % str(random_num), "w")
+            dest_file_name = os.path.join(dest_dir,
+                                          "backtrace_{0}.txt".format(random_num))
+            dest_file = open(dest_file_name, "w")
             gdb_cmd = ["gdb",
                        "-se", "asterisk",
                        "-ex", "bt full",
@@ -186,15 +188,21 @@ class TestRun:
                 if res != 0:
                     print "error analyzing core dump; gdb exited with %d" % res
                 # Copy the backtrace over to the logs
+                print "Archived backtrace: {0}".format(dest_file_name)
             except OSError, ose:
                 print "OSError ([%d]: %s) occurred while executing %r" % \
                     (ose.errno, ose.strerror, gdb_cmd)
-                return
             except:
                 print "Unknown exception occurred while executing %r" % (gdb_cmd,)
-                return
             finally:
                 dest_file.close()
+                if self.options.keep_core:
+                    try:
+                        dst_core = os.path.join(dest_dir, "core_{0}".format(random_num))
+                        shutil.copy(core, dst_core)
+                        print "Archived core file: {0}".format(dst_core)
+                    except Exception as e:
+                        print "Error occurred while copying core: {0}".format(e)
                 try:
                     os.unlink(core)
                 except OSError, e:
@@ -607,6 +615,9 @@ def main(argv=None):
     parser.add_option("-v", "--version",
                       dest="version", default=None,
                       help="Specify the version of Asterisk rather then detecting it.")
+    parser.add_option("-k", "--keep-core", action="store_true",
+                      dest="keep_core", default=False,
+                      help="Archive the 'core' file if Asterisk crashes.")
     parser.add_option("-L", "--list-tags", action="store_true",
                       dest="list_tags", default=False,
                       help="List available tags")
