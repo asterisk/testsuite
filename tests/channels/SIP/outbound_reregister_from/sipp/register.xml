@@ -6,6 +6,7 @@
 	<!-- Store the tag of the first register -->
 	<recv request="REGISTER">
 		<action>
+                        <assign assign_to="count" value="0" />
 			<ereg regexp="tag=.*" search_in="hdr" header="From:" assign_to="firsttag" />
 			<log message="Received First REGISTER [$firsttag]" />
 		</action>
@@ -74,8 +75,19 @@
  
 	]]>
 	</send>
-	<nop hide="true" next="badauth" />
 
+        <nop hide="true">
+		<action>
+			<add assign_to="count" value="1" />
+			<test assign_to="done" compare="equal" variable="count" value="4" />
+		</action>
+	</nop>
+
+	<!-- Stop test after a few registers have been received -->
+	<nop next="end" test="done" hide="true" />
+
+	<nop hide="true" next="badauth" />
+        <label id="end" />
 
 	<!-- definition of the response time repartition table (unit is ms)   -->
 	<ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>

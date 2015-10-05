@@ -6,6 +6,7 @@
 	<!-- Store the tag of the first register -->
 	<recv request="REGISTER">
 		<action>
+                        <assign assign_to="count" value="0" />
 			<ereg regexp="tag=.*" search_in="hdr" header="From:" assign_to="firsttag" />
 			<log message="Received First REGISTER [$firsttag]" />
 		</action>
@@ -23,6 +24,8 @@
 	<!-- Did tag match first one? -->
 	<nop hide="true">
 		<action>
+			<add assign_to="count" value="1" />
+			<test assign_to="done" compare="equal" variable="count" value="2" />
 			<strcmp assign_to="match" variable="fromtag" variable2="firsttag" />
 			<test assign_to="wrongtag" compare="not_equal" variable="match" value="0" />
 		</action>
@@ -36,10 +39,12 @@
 		</action>
 	</nop>
 
+	<!-- Stop test after a few registers have been received -->
+	<nop next="end" test="done" hide="true"/>
 
 	<!-- And just keep doing that until core breach -->
 	<nop hide="true" next="loop" />
-
+        <label id="end" />
 
 	<!-- definition of the response time repartition table (unit is ms)   -->
 	<ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
