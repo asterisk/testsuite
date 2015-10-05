@@ -376,7 +376,13 @@ class AriClientProtocol(WebSocketClientProtocol):
 
         :param receiver The event receiver
         """
-        WebSocketClientProtocol.__init__(self)
+        try:
+            super(AriClientProtocol, self).__init__()
+        except TypeError as te:
+            # Older versions of Autobahn use old style classes with no initializer.
+            # Newer versions must have their initializer called by derived
+            # implementations.
+            LOGGER.debug("AriClientProtocol: TypeError thrown in init: {0}".format(te))
         LOGGER.debug("Made me a client protocol!")
         self.receiver = receiver
         self.factory = factory
