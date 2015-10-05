@@ -803,7 +803,7 @@ class Asterisk(object):
                         continue
 
                     key, val = line.split('=')
-                    if next((dep for dep in deps if key == dep.name), None):
+                    if next((dep for dep in deps if dep.name in key), None):
                         for value in val.split(','):
                             conflicts.append(value.strip())
         except:
