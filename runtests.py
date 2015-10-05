@@ -196,7 +196,8 @@ class TestRun:
             finally:
                 dest_file.close()
                 try:
-                    os.unlink(core)
+                    if not self.options.keep_core:
+                        os.unlink(core)
                 except OSError, e:
                     print "Error removing core file: %s: " \
                           "Beware of the stale core file in CWD!" % (e,)
@@ -607,6 +608,9 @@ def main(argv=None):
     parser.add_option("-v", "--version",
                       dest="version", default=None,
                       help="Specify the version of Asterisk rather then detecting it.")
+    parser.add_option("-k", "--keep-core", action="store_true",
+                      dest="keep_core", default=False,
+                      help="Keep the 'core' file if Asterisk crashes.")
     parser.add_option("-L", "--list-tags", action="store_true",
                       dest="list_tags", default=False,
                       help="List available tags")
