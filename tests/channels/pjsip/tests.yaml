@@ -37,6 +37,7 @@ tests:
     - test: 'info_dtmf'
     - test: 'keep_alive'
     - test: 'refer_send_to_vm'
+    - test: 'reinvite_pending'
     - test: 'rpid_immediate'
     - test: 'set_var'
     - test: 'srtp_negotiation'
