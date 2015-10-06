@@ -52,8 +52,6 @@ test-object-config:
                   expected-result: 'Channel entered extension successfully!'
                 -
                   action-type: 'hangup'
-                -
-                  action-type: 'end-scenario'
             -
               type: 'headermatch'
               conditions:

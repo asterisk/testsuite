@@ -100,8 +100,6 @@ test-object-config:
                 -
                   action-type: 'hangup'
                   channel-id: 'Login-1000'
-                -
-                  action-type: 'end-scenario'
             -
               type: 'headermatch'
               conditions:
@@ -112,8 +110,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Agent 1000 logged off automatically.'
-                -
-                  action-type: 'end-scenario'
         -
           channel-id: 'Request-1000'
           channel-name: 'Local/request1000@default'
@@ -220,8 +216,6 @@ test-object-config:
                 -
                   action-type: 'hangup'
                   channel-id: 'Login-2000'
-                -
-                  action-type: 'end-scenario'
             -
               type: 'headermatch'
               conditions:
@@ -232,8 +226,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Agent 2000 logged off automatically.'
-                -
-                  action-type: 'end-scenario'
         -
           channel-id: 'Request-2000'
           channel-name: 'Local/request2000@default'

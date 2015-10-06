@@ -58,9 +58,6 @@ test-object-config:
                   State: 'PLAYBACK'
                   Channel: 'Local/start@default-.*'
                   Message: 'vm-goodbye'
-              actions:
-                -
-                  action-type: 'end-scenario'
 
 properties:
     minversion: '1.8.29.0'

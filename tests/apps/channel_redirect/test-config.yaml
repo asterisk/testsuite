@@ -95,8 +95,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Initiating channel hung up'
-                -
-                  action-type: 'end-scenario'
     -
       # Scenario 2
       # A local channel attempts to redirect a non-existent channel. CHANNELREDIRECT_STATUS
@@ -143,8 +141,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Null-initiate channel hung up'
-                -
-                  action-type: 'end-scenario'
 
 properties:
     minversion: '1.8.0.0'

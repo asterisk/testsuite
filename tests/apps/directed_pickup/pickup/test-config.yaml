@@ -88,8 +88,6 @@ test-object-config:
                 -
                   action-type: 'hangup'
                   delay: 1
-                -
-                  action-type: 'end-scenario'
     -
       # Scenario 2
       # A channel is set to a namedpickupgroup and dials an extension that rings constantly.
@@ -159,8 +157,6 @@ test-object-config:
                 -
                   action-type: 'hangup'
                   delay: 1
-                -
-                  action-type: 'end-scenario'
     -
       # Scenario 3
       # An outgoing channel sets the channel variable PICKUPMARK to a certain value before the
@@ -230,8 +226,6 @@ test-object-config:
                 -
                   action-type: 'hangup'
                   delay: 1
-                -
-                  action-type: 'end-scenario'
 
 properties:
     minversion: '12.0.0'

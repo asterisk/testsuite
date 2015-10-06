@@ -42,8 +42,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Phase 0 - All channels entered bridge. Hang up on bridge'
-                -
-                  action-type: 'end-scenario'
 
     #Phase 1: Predial Caller
     -
@@ -79,8 +77,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Phase 1 - All channels entered bridge. Hang up on bridge'
-                -
-                  action-type: 'end-scenario'
 
     #Phase 2: Predial Callee (single channel)
     -
@@ -118,8 +114,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Phase 2 - All channels entered bridge. Hang up on bridge'
-                -
-                  action-type: 'end-scenario'
 
     #Phase 3: Predial Callee (multiple channels)
     -
@@ -168,8 +162,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Phase 3 - All channels entered bridge. Hang up on bridge'
-                -
-                  action-type: 'end-scenario'
 
 properties:
     minversion: '13.0.0'

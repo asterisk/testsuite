@@ -152,8 +152,6 @@ test-object-config:
                 -
                   action-type: 'hangup'
                   channel-id: 'Login-1000'
-                -
-                  action-type: 'end-scenario'
     -
       # Scenario 2
       # Exactly the same as scenario 1, but the accepted DTMF value should be '*'.
@@ -285,8 +283,6 @@ test-object-config:
                 -
                   action-type: 'hangup'
                   channel-id: 'Login-2000'
-                -
-                  action-type: 'end-scenario'
     -
       # Scenario 3
       # Exactly the same as scenario 1, but a custom sound file will be played
@@ -363,8 +359,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'All channels hung up'
-                -
-                  action-type: 'end-scenario'
         -
           channel-id: 'Request-3000'
           channel-name: 'Local/request3000@default'
