@@ -102,8 +102,6 @@ test-object-config:
             -
               action-type: 'set-expected-result'
               expected-result: 'Channels exited conference'
-            -
-              action-type: 'end-scenario'
       channels:
         -
           channel-id: 'Marked'

@@ -185,7 +185,11 @@ class AppTest(TestCase):
         expected_result The name of the result that occurred
         """
         self._expected_results[expected_result] = True
-        self.reset_timeout()
+        # End a scenario once all events have been met it
+        if all(self._expected_results.itervalues()):
+            self.end_scenario()
+        else:
+            self.reset_timeout()
 
 
 class ChannelObject(object):
