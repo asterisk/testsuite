@@ -1,0 +1,59 @@
+testinfo:
+    summary: 'Ensure graceful operation when receiving an unexpected early reINVITE.'
+    description: |
+        'A SIPp scenario places a call into Asterisk.  Once the call has
+        been answered, the caller sends a reINVITE before sending the
+        ACK to the initial INVITE.  Asterisk should respond to the reINVITE
+        with a 491 because it has not seen the ACK completing the initial
+        INVITE transaction.  Once the reINVITE is completed the SIPp scenario
+        completes the original INVITE and hangs up the call.
+
+        The reason this test exists is because Asterisk would crash on the
+        early reINVITE because the reINVITE was not identified and was treated
+        as an initial INVITE.  The call wound up with two PBX threads running
+        on the same channel.  This test ensures that the code changes have
+        fixed the issue as expected.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+sipp-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-reinvite-early.xml'}}
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'PLAYBACK'
+                Channel: 'PJSIP/sipp-*'
+        requirements:
+            match:
+                Message: 'tt-monkeys'
+        count: '1'
+
+properties:
+    minversion: '13.7.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - app: 'sipp'
+        - asterisk: 'app_echo'
+        - asterisk: 'app_playback'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_caller_id'
+        - asterisk: 'res_pjsip_session'
+    tags:
+        - pjsip
