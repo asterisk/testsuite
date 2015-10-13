@@ -34,9 +34,9 @@ test-object-config:
        -
            scenarios:
                - { 'key-args': {'scenario': 'receive.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'bob-ipv4-udp'} }
-               - { 'key-args': {'scenario': 'receive.xml', '-i': '127.0.0.1', '-p': '5062', '-t': 't1', '-s': 'bob-ipv4-tcp'} }
-               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5062', '-s': 'bob-ipv6-udp'} }
-               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5062', '-t': 't1', '-s': 'bob-ipv6-tcp'} }
+               - { 'key-args': {'scenario': 'receive.xml', '-i': '127.0.0.1', '-p': '5063', '-t': 't1', '-s': 'bob-ipv4-tcp'} }
+               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5064', '-s': 'bob-ipv6-udp'} }
+               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5065', '-t': 't1', '-s': 'bob-ipv6-tcp'} }
 
 originator-config-ipv4-udp:
     trigger: 'scenario_start'
@@ -141,6 +141,9 @@ properties:
     dependencies:
         - sipp :
             version : 'v3.3'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_playback'
+        - asterisk : 'app_userevent'
         - asterisk : 'res_pjsip'
     tags:
         - pjsip
