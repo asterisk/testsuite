@@ -32,6 +32,8 @@ test-modules:
     add-to-search-path:
         -
             'tests/channels/pjsip/subscriptions/rls'
+    reactor-timeout: 25
+    fail-on-any: 'True'
     test-object:
         config-section: 'test-case-config'
         typename: 'sipp.SIPpTestCase'
@@ -49,6 +51,7 @@ test-case-config:
                 - { 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list'} }
 
 test-config:
+    stop_test_notifys: False
     list_name: 'pres_list'
     resources:
         -
