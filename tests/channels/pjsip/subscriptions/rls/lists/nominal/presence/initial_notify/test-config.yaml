@@ -45,7 +45,7 @@ test-modules:
     modules:
         -
             config-section: 'test-config'
-            typename: 'rls_test.IntegrityCheck'
+            typename: 'rls_test.RLSTest'
 
 test-case-config:
     test-iterations:
@@ -54,11 +54,8 @@ test-case-config:
                 - { 'key-args': {'scenario': 'list_subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list'} }
 
 test-config:
-    list_name: 'pres_list'
-    resources:
+    list-name: 'pres_list'
+    packets:
         -
-            { 'alice': {'type': 'PIDF', 'state': 'active'},
-              'bob': {'type': 'PIDF', 'state': 'active'} }
-    full_state:
-        -
-            True
+            full-state: True
+            resources: { 'alice': {'type': 'PIDF', 'state': 'active'}, 'bob': {'type': 'PIDF', 'state': 'active'} }
