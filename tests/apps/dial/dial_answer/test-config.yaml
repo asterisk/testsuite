@@ -199,10 +199,12 @@ ami-config-13-5:
         count: '1'
 
 originator-config:
+    trigger: 'scenario_start'
+    scenario-trigger-after: '1'
+    ignore-originate-failure: 'yes'
+    id: '0'
     channel: 'Local/s@default'
     application: 'Echo'
-    ignore-originate-failure: 'yes'
-    trigger: 'ami_connect'
     async: True
 
 sipp-config:
