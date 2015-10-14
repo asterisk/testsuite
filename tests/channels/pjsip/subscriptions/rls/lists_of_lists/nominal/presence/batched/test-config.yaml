@@ -34,7 +34,7 @@ test-modules:
     modules:
         -
             config-section: 'test-config'
-            typename: 'rls_test.IntegrityCheck'
+            typename: 'rls_test.RLSTest'
         -
             typename: 'driver.TestDriver'
 
@@ -45,10 +45,11 @@ test-case-config:
                 - { 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list_a'} }
 
 test-config:
-    list_name: 'pres_list_a'
-    resources:
+    list-name: 'pres_list_a'
+    packets:
         -
-            {
+            full-state: True
+            resources: {
                 'pres_list_b': {
                     'type': 'Multipart', 'state': 'active', 'sublist': {
                         'alice': {'type': 'PIDF', 'state': 'active'},
@@ -57,7 +58,8 @@ test-config:
                 }
             }
         -
-            {
+            full-state: False
+            resources: {
                 'pres_list_b': {
                     'type': 'Multipart', 'state': 'active', 'sublist': {
                         'alice': {'type': 'PIDF', 'state': 'active'},
@@ -65,17 +67,11 @@ test-config:
                 }
             }
         -
-            {
+            full-state: False
+            resources: {
                 'pres_list_b': {
                     'type': 'Multipart', 'state': 'active', 'sublist': {
                         'bob': {'type': 'PIDF', 'state': 'active'}
                     }
                 }
             }
-    full_state:
-        -
-            True
-        -
-            False
-        -
-            False
