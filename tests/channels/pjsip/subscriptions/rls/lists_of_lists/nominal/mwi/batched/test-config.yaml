@@ -37,7 +37,7 @@ test-modules:
     modules:
         -
             config-section: 'test-config'
-            typename: 'rls_test.IntegrityCheck'
+            typename: 'rls_test.RLSTest'
         -
             typename: 'driver.TestDriver'
 
@@ -48,19 +48,21 @@ test-case-config:
                 - { 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'mail_list_a'} }
 
 test-config:
-    list_name: 'mail_list_a'
-    resources:
+    list-name: 'mail_list_a'
+    packets:
         -
-            {
+            full-state: True
+            resources: {
                 'mail_list_b': {
                     'type': 'Multipart', 'state': 'active', 'sublist': {
                         'alice': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'},
-                        'bob': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'} 
+                        'bob': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'}
                     }
                 }
             }
         -
-            {
+            full-state: False
+            resources: {
                 'mail_list_b': {
                     'type': 'Multipart', 'state': 'active', 'sublist': {
                         'alice': {'type': 'MWI', 'state': 'active', 'voice_message': '1/0 (0/0)', 'messages_waiting': 'yes'},
@@ -68,17 +70,11 @@ test-config:
                 }
             }
         -
-            {
+            full-state: False
+            resources: {
                 'mail_list_b': {
                     'type': 'Multipart', 'state': 'active', 'sublist': {
-                        'bob': {'type': 'MWI', 'state': 'active', 'voice_message': '1/0 (0/0)', 'messages_waiting': 'yes'} 
+                        'bob': {'type': 'MWI', 'state': 'active', 'voice_message': '1/0 (0/0)', 'messages_waiting': 'yes'}
                     }
                 }
             }
-    full_state:
-        -
-            True
-        -
-            False
-        -
-            False
