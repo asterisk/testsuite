@@ -32,13 +32,15 @@ test-modules:
     add-to-search-path:
         -
             'tests/channels/pjsip/subscriptions/rls'
+    reactor-timeout: 25
+    fail-on-any: 'True'
     test-object:
         config-section: 'test-case-config'
         typename: 'sipp.SIPpTestCase'
     modules:
         -
             config-section: 'test-config'
-            typename: 'rls_test.IntegrityCheck'
+            typename: 'rls_test.RLSTest'
         -
             typename: 'driver.TestDriver'
 
@@ -49,29 +51,24 @@ test-case-config:
                 - { 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list'} }
 
 test-config:
-    list_name: 'pres_list'
-    resources:
+    stop-test-after-notifys: False
+    list-name: 'pres_list'
+    packets:
         -
-            { 'alice': {'type': 'PIDF', 'state': 'active'},
+            full-state: True
+            resources: { 'alice': {'type': 'PIDF', 'state': 'active'},
               'bob': {'type': 'PIDF', 'state': 'active'}}
         -
-            { 'alice': {'type': 'PIDF', 'state': 'active'}}
+            full-state: False
+            resources: { 'alice': {'type': 'PIDF', 'state': 'active'}}
         -
-            { 'alice': {'type': 'PIDF', 'state': 'active'},
+            full-state: True
+            resources: { 'alice': {'type': 'PIDF', 'state': 'active'},
               'bob': {'type': 'PIDF', 'state': 'active'}}
         -
-            { 'bob': {'type': 'PIDF', 'state': 'active'}}
+            full-state: False
+            resources: { 'bob': {'type': 'PIDF', 'state': 'active'}}
         -
-            { 'alice': {'type': 'PIDF', 'state': 'terminated'},
+            full-state: True
+            resources: { 'alice': {'type': 'PIDF', 'state': 'terminated'},
               'bob': {'type': 'PIDF', 'state': 'terminated'}}
-    full_state:
-        -
-            True
-        -
-            False
-        -
-            True
-        -
-            False
-        -
-            True
