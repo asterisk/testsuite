@@ -4,7 +4,7 @@ testinfo:
         'Run one instance of Asterisk ("UUT") and originate an outgoing call to
          SIPp ("Bob"). Bob does not respond to the INVITE. This ensures that
          Asterisk tears down the calls after the default value of timer B
-         expires. This is performed using ipv4/ipv6 & udp/tcp.'
+         (32 seconds) expires. This is performed using ipv4/ipv6 & udp/tcp.'
 
 test-modules:
     test-object:
@@ -45,8 +45,9 @@ originator-config-ipv4-udp:
     id: '0'
     channel: 'local/bob-ipv4-udp@default'
     context: 'default'
-    exten: 'playback'
+    exten: 'answered'
     priority: '1'
+    timeout: 40
     async: 'True'
 
 originator-config-ipv4-tcp:
@@ -56,8 +57,9 @@ originator-config-ipv4-tcp:
     id: '0'
     channel: 'local/bob-ipv4-tcp@default'
     context: 'default'
-    exten: 'playback'
+    exten: 'answered'
     priority: '1'
+    timeout: 40
     async: 'True'
 
 originator-config-ipv6-udp:
@@ -67,8 +69,9 @@ originator-config-ipv6-udp:
     id: '0'
     channel: 'local/bob-ipv6-udp@default'
     context: 'default'
-    exten: 'playback'
+    exten: 'answered'
     priority: '1'
+    timeout: 40
     async: 'True'
 
 originator-config-ipv6-tcp:
@@ -78,8 +81,9 @@ originator-config-ipv6-tcp:
     id: '0'
     channel: 'local/bob-ipv6-tcp@default'
     context: 'default'
-    exten: 'playback'
+    exten: 'answered'
     priority: '1'
+    timeout: 40
     async: 'True'
 
 ami-config:
@@ -89,17 +93,31 @@ ami-config:
             conditions:
                 match:
                     Event: 'UserEvent'
+                    UserEvent: 'AfterDial'
+            count: '4'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'Answered'
+            count: '0'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
                     UserEvent: 'DIALSTATUS'
             requirements:
                 match:
-                    Result: 'CANCEL'
+                    Result: 'CHANUNAVAIL'
             count: '4'
     -
         ami-events:
             conditions:
                 match:
                     Event: 'SoftHangupRequest'
-                    Channel: 'Local/bob-*'
+                    Channel: 'Local/bob-.*'
             requirements:
                 match:
                     Cause: '16'
@@ -109,31 +127,41 @@ ami-config:
             conditions:
                 match:
                     Event: 'HangupRequest'
-                    Channel: 'Local/bob-*'
+                    Channel: 'Local/bob-.*'
             requirements:
                 match:
-                    Cause: '0'
+                    Cause: '18'
             count: '4'
     -
         ami-events:
             conditions:
                 match:
                     Event: 'Hangup'
-                    Channel: 'PJSIP/bob-*'
+                    Channel: 'PJSIP/bob-.*'
             requirements:
                 match:
-                    Cause: '0'
+                    Cause: '18'
             count: '4'
     -
         ami-events:
             conditions:
                 match:
                     Event: 'Hangup'
-                    Channel: 'Local/bob-*'
+                    Channel: 'Local/bob-.*;2'
             requirements:
                 match:
-                    Cause: '0'
-            count: '8'
+                    Cause: '18'
+            count: '4'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'Local/bob-.*;1'
+            requirements:
+                match:
+                    Cause: '18'
+            count: '4'
         stop_test:
 
 properties:
