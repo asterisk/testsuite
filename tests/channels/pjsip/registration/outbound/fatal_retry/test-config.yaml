@@ -1,0 +1,28 @@
+testinfo:
+    summary:     'Test outbound registration with auth and fatal response retry'
+    description: |
+        "This tests whether Asterisk will treat a fatal response as a non-fatal
+         response when the fatal_retry_interval is set and continue retrying."
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    reactor-timeout: 50
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'register-retry.xml', '-p': '5065' } }
+                - { 'key-args': { 'scenario': 'register-no-retry.xml', '-p': '5066' } }
+
+properties:
+    minversion: '13.7.0'
+    dependencies:
+        - python: 'starpy'
+        - sipp :
+            version : 'v3.1'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
