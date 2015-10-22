@@ -318,7 +318,8 @@ class SIPpScenarioSequence(object):
     def __init__(self, test_case, sipp_scenarios=None,
                  fail_on_any=False,
                  intermediate_cb_fn=None,
-                 final_deferred=None):
+                 final_deferred=None,
+                 stop_on_done=True):
         """Create a new sequence of scenarios
 
         Keyword Arguments:
@@ -339,6 +340,8 @@ class SIPpScenarioSequence(object):
                             have executed, but before the reactor is stopped.
                             The parameter passed to the deferred callback
                             function will be this object.
+        stop_on_done        Stop the test_case object when all scenarios have
+                            executed. Defaults to True.
         """
         self._sipp_scenarios = sipp_scenarios or []
         self._test_case = test_case
@@ -348,6 +351,7 @@ class SIPpScenarioSequence(object):
         self._final_deferred = final_deferred
         self._scenario_start_fn = None
         self._scenario_stop_fn = None
+        self._stop_on_done = stop_on_done
 
     def register_scenario_start_callback(self, callback_fn):
         """Register a callback function that will be called on the start of
@@ -397,7 +401,8 @@ class SIPpScenarioSequence(object):
             else:
                 if self._final_deferred:
                     self._final_deferred.callback(self)
-                self._test_case.stop_reactor()
+                if self._stop_on_done:
+                    self._test_case.stop_reactor()
             return result
 
         scenarios = self._sipp_scenarios[self._test_counter]
