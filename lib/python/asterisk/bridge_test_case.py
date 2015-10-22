@@ -92,7 +92,14 @@ class BridgeTestCase(TestCase):
 
         if 'asterisk-instances' in test_config:
             self.instances = test_config['asterisk-instances']
-        self.create_asterisk(self.instances, "%s/configs/bridge" % os.getcwd())
+
+        if test_config.get('use_pjsip') is True:
+            self.create_asterisk(self.instances,
+                                 "%s/configs/bridge_pjsip" % os.getcwd())
+        else:
+            self.create_asterisk(self.instances,
+                                 "%s/configs/bridge" % os.getcwd())
+
         LOGGER.info("Bridge test initialized")
 
     def run(self):

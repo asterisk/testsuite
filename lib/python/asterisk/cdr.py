@@ -32,8 +32,11 @@ class CDRModule(object):
 
         # Build our expected CDR records
         self.cdr_records = {}
+        self.file_locations = {}
         for record in module_config:
             file_name = record['file']
+            cdr_dir = record.get('cdr-dir', 'cdr-csv')
+            self.file_locations[file_name] = cdr_dir
             ast_id = record.get('id') or 0
             if ast_id not in self.cdr_records:
                 self.cdr_records[ast_id] = {}
@@ -79,7 +82,8 @@ class CDRModule(object):
                 records = self.cdr_records[ast_id][file_name]
                 cdr_expect = AsteriskCSVCDR(records=records)
                 cdr_file = AsteriskCSVCDR(filename=ast_instance.get_path(
-                    "astlogdir", "cdr-csv", "%s.csv" % file_name))
+                    "astlogdir", self.file_locations[file_name],
+                    "%s.csv" % file_name))
                 if cdr_expect.match(cdr_file):
                     LOGGER.debug("%s.csv: CDR results met expectations" %
                                  file_name)
