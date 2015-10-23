@@ -259,11 +259,19 @@ class TestCase(object):
         port     The port to connect over
         """
 
+        def on_reconnect(login_deferred):
+            """Called if the connection is lost and re-made"""
+            login_deferred.addCallbacks(self._ami_connect, self.ami_login_error)
+
         for i in range(count):
             host = "127.0.0.%d" % (i + 1)
             self.ami.append(None)
             LOGGER.info("Creating AMIFactory %d" % (i + 1))
-            ami_factory = manager.AMIFactory(username, secret, i)
+            try:
+                ami_factory = manager.AMIFactory(username, secret, i,
+                                                 on_reconnect=on_reconnect)
+            except:
+                ami_factory = manager.AMIFactory(username, secret, i)
             deferred = ami_factory.login(ip=host, port=port)
             deferred.addCallbacks(self._ami_connect, self.ami_login_error)
 
