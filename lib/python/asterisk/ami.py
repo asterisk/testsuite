@@ -614,7 +614,12 @@ class AMI(object):
         self._attempts = 0
         self._start = None
         self.ami = None
-        self.ami_factory = manager.AMIFactory(user, secret)
+        try:
+            self.ami_factory = manager.AMIFactory(user, secret,
+                                                  on_reconnect=self.on_reconnect)
+        except:
+            # Try without reconnects
+            self.ami_factory = manager.AMIFactory(user, secret)
 
     def login(self):
         """Start the login process"""
@@ -625,6 +630,11 @@ class AMI(object):
             self._start = datetime.datetime.now()
         deferred = self.ami_factory.login(self.host, self.port)
         deferred.addCallbacks(self.on_login_success, self.on_login_error)
+
+    def on_reconnect(self, login_deferred):
+        """Called when an AMI instance reconnects"""
+        LOGGER.debug('AMI client reconnecting...')
+        login_deferred.addCallbacks(self.on_login_success, self.on_login_error)
 
     def on_login_success(self, ami):
         """Deferred callback when login succeeds
