@@ -1,0 +1,69 @@
+testinfo:
+    summary:     'A remote test demo'
+    description: |
+        This test is simply a demonstration of a remote Asterisk test. Rather
+        than spawn a local instance of Asterisk, it will attempt to connect
+        back to some Asterisk instance running on a remote system.
+
+        You will need to configure the global test-config.yaml file for this
+        test to function properly. In addition to providing credentials for the
+        SSH connection, an AMI connection should be configured for the remote
+        Asterisk instance.
+
+        The test spawns a Local channel at s@default. So long as the channel
+        is created and answered, the test will pass.
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: test_case.TestCaseModule
+    modules:
+        -
+            config-section: originator-config
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: hangup-monitor
+            typename: 'pluggable_modules.HangupMonitor'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-config:
+    connect-ami: True
+
+# This section defines the expected dialplan on the remote system.
+# At this time, nothing reads this configuration; however, it can
+# be used as the basis for what should exist.
+dialplan:
+    default:
+        s:
+            - Answer()
+            - Hangup()
+
+
+originator-config:
+    trigger: 'ami_connect'
+    id: '0'
+    channel: 'Local/s@default'
+    application: 'Echo'
+    async: True
+
+hangup-monitor:
+    ids: ['0']
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Hangup'
+        requirements:
+            match:
+                Channel: 'Local/s@default-.*'
+        count: '>1'
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - custom : 'remote'
