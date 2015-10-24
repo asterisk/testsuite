@@ -61,6 +61,7 @@ class TestRun:
         self.stdout = ""
         self.timeout = timeout
         self.cleanup = options.cleanup
+        self.skipped_reason = ""
 
         assert self.test_name.startswith('tests/')
         self.test_relpath = self.test_name[6:]
@@ -356,6 +357,7 @@ class TestSuite:
         self.options = options
 
         self.tests = []
+        self.start_time = None
         self.global_config = self._parse_global_config()
         self.tests = self._parse_test_yaml("tests", ast_version)
         if self.options.randomorder:
@@ -365,6 +367,7 @@ class TestSuite:
         self.total_time = 0.0
         self.total_count = 0
         self.total_failures = 0
+        self.total_skipped = 0
 
     def _parse_global_config(self):
         return TestConfig(os.getcwd())
@@ -454,6 +457,7 @@ class TestSuite:
             i += 1
 
     def run(self):
+        self.start_time = time.strftime("%Y-%m-%dT%H:%M:%S %Z", time.localtime())
         test_suite_dir = os.getcwd()
         i = 0
         for t in self.tests:
@@ -471,6 +475,8 @@ class TestSuite:
             if t.can_run is False:
                 if t.test_config.skip is not None:
                     print "--> %s ... skipped '%s'" % (t.test_name, t.test_config.skip)
+                    t.skipped_reason = t.test_config.skip
+                    self.total_skipped += 1
                     continue
                 print "--> Cannot run test '%s'" % t.test_name
                 if t.test_config.forced_version is not None:
@@ -490,6 +496,8 @@ class TestSuite:
                 for d in t.test_config.deps:
                     print "--- --> Dependency: %s - %s" % (d.name, str(d.met))
                 print
+                self.total_skipped += 1
+                t.skipped_reason = "Failed dependency"
                 continue
             if self.global_config is not None:
                 exclude = False
@@ -498,6 +506,7 @@ class TestSuite:
                         print "--- ---> Excluded test: %s" % excluded
                         exclude = True
                 if exclude:
+                    self.total_skipped += 1
                     continue
 
             print "--> Running test '%s' ..." % t.test_name
@@ -568,17 +577,23 @@ class TestSuite:
         ts.setAttribute("time", "%.2f" % self.total_time)
         ts.setAttribute("failures", str(self.total_failures))
         ts.setAttribute("name", "AsteriskTestSuite")
+        ts.setAttribute("timestamp", self.start_time)
         if self.options.dry_run:
-            ts.setAttribute("dry-run", str(self.total_count))
+            ts.setAttribute("skipped", str(self.total_count))
+        elif self.total_skipped > 0:
+            ts.setAttribute("skipped", str(self.total_skipped))
 
         for t in self.tests:
-            if t.did_run is False:
-                continue
-
             tc = doc.createElement("testcase")
             ts.appendChild(tc)
             tc.setAttribute("time", "%.2f" % t.time)
             tc.setAttribute("name", t.test_name)
+
+            if t.did_run is False:
+                tskip = doc.createElement("skipped")
+                tskip.appendChild(doc.createTextNode(str(t.skipped_reason)))
+                tc.appendChild(tskip)
+                continue
 
             if t.passed:
                 continue
