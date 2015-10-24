@@ -23,8 +23,124 @@ from config import ConfigFile
 from version import AsteriskVersion
 
 from twisted.internet import reactor, protocol, defer, utils, error
+from twisted.python.failure import Failure
+
+REMOTE_ERROR = None
+try:
+    from twisted.python.filepath import FilePath
+    from twisted.internet.endpoints import UNIXClientEndpoint
+    from twisted.conch.ssh.keys import Key
+    from twisted.conch.client.knownhosts import KnownHostsFile
+    from twisted.conch.endpoints import SSHCommandClientEndpoint
+    from twisted.internet.error import ConnectionDone, ProcessTerminated
+except ImportError as ie:
+    # We cache any import errors here, as there's no point in bothering
+    # things if we don't need the SSH connection to a remote Asterisk instance
+    REMOTE_ERROR = ie
+
 
 LOGGER = logging.getLogger(__name__)
+
+
+class AsteriskRemoteProtocol(protocol.Protocol):
+    """Class that acts as a remote protocol to Asterisk"""
+
+    def connectionMade(self):
+        """Called on connect"""
+        LOGGER.debug('Connection made to remote Asterisk instance')
+        self.output = ''
+        self.finished = defer.Deferred()
+
+    def dataReceived(self, data):
+        """Called when we receive data back"""
+        LOGGER.debug(data)
+        self.output += data
+
+    def connectionLost(self, reason):
+        """Called when the connect is lost"""
+        if reason.type == ProcessTerminated:
+            self.output += reason.getErrorMessage()
+            self.finished.errback(self)
+        else:
+            self.finished.callback(self)
+
+
+class AsteriskRemoteCliCommand(object):
+    """Class that attempts to manipulate a remote Asterisk CLI"""
+
+    def __init__(self, remote_config, cmd):
+        """Create a new remote Astrisk CLI Protocol instance
+
+        Keyword Arguments:
+        remote_config The parameters configuring this remote CLI command
+        cmd           The CLI command to run
+        """
+        if REMOTE_ERROR:
+            raise REMOTE_ERROR
+
+        self.exitcode = -1
+        self.output = ""
+        self.err = ""
+
+        self.config = remote_config
+        self.cmd = cmd
+        self.keys = []
+
+        identity = self.config.get('identity')
+        if identity:
+            key_path = os.path.expanduser(identity)
+            if os.path.exists(key_path):
+                passphrase = self.config.get('passphrase')
+                self.keys.append(Key.fromFile(key_path, passphrase=passphrase))
+
+        known_hosts_file = self.config.get('known_hosts', '~/.ssh/known_hosts')
+        known_hosts_path = FilePath(os.path.expanduser(known_hosts_file))
+        if known_hosts_path.exists():
+            self.known_hosts = KnownHostsFile.fromPath(known_hosts_path)
+        else:
+            self.known_hosts = None
+
+        no_agent = self.config.get('no-agent')
+        if no_agent or 'SSH_AUTH_SOCK' not in os.environ:
+            self.agent_endpoint = None
+        else:
+            self.agent_endpoint = UNIXClientEndpoint(reactor,
+                                                     os.environ['SSH_AUTH_SOCK'])
+
+    def execute(self):
+        """Execute the CLI command"""
+
+        cmd = " ".join(self.cmd)
+        LOGGER.debug('Executing {0}'.format(cmd))
+        endpoint = SSHCommandClientEndpoint.newConnection(reactor,
+            b"{0}".format(cmd), self.config.get('username'),
+            self.config.get('host'),
+            port=self.config.get('port', 22),
+            password=self.config.get('passsword'),
+            agentEndpoint=self.agent_endpoint,
+            keys=self.keys,
+            knownHosts=self.known_hosts)
+        factory = protocol.Factory()
+        factory.protocol = AsteriskRemoteProtocol
+
+        def _nominal(param):
+            self.exitcode = 0
+            self.output = param.output
+            self.err = self.output
+            LOGGER.debug('Remote Asterisk process completed successfully')
+            return self
+
+        def _error(param):
+            self.exitcode = -1
+            self.output = param.value.output
+            self.err = self.output
+            LOGGER.warning('Remote Asterisk process failed: {0}'.format(self.err))
+            return Failure(self)
+
+        deferred = endpoint.connect(factory)
+        deferred.addCallback(lambda proto: proto.finished)
+        deferred.addCallbacks(_nominal, _error)
+        return deferred
 
 
 class AsteriskCliCommand(object):
@@ -151,9 +267,10 @@ class AsteriskProtocol(protocol.ProcessProtocol):
 class Asterisk(object):
     """An instance of Asterisk.
 
-    This class assumes that Asterisk has been installed on the system.  The
-    installed version of Asterisk will be mirrored for this dynamically created
-    instance.
+    This class has two modes of operation, depending on how it is instantiated.
+    In the first, the class assumes that Asterisk has been installed on the system.
+    The installed version of Asterisk will be mirrored for this dynamically created
+    instance. The following applies to instances of Asterisk controlled locally.
 
     Instantiate an Asterisk object to create an instance of Asterisk from
     within python code.  Multiple instances of Asterisk are allowed.  However,
@@ -166,6 +283,15 @@ class Asterisk(object):
     dictionary to the ast_conf_options parameter.  The key should be the option
     name and the value is the option's value to be written out into
     asterisk.conf.
+
+    In the second mode of operation, this class provides a facade over some
+    remote running instance of Asterisk. In this case, the configuration of
+    that instance of Asterisk is assumed to be set, and any properties passed
+    to this class that may attempt to configure the remote instance of Asterisk
+    are ignored. Instead, a block of configuration is provided to this class
+    that defines how it should connect (over SSH) to the remote instance.
+    Users of this class can manipulate the remote instance using CLI commands
+    in the same fashion as if the instance were local.
 
     If AST_TEST_ROOT is unset (the default):
 
@@ -211,13 +337,22 @@ class Asterisk(object):
         # The default etc directory for Asterisk
         default_etc_directory = "/etc/asterisk"
 
-    def __init__(self, base=None, ast_conf_options=None, host="127.0.0.1"):
+    def __init__(self, base=None, ast_conf_options=None, host="127.0.0.1",
+                 remote_config=None):
         """Construct an Asterisk instance.
 
         Keyword Arguments:
         base -- This is the root of the files associated with this instance of
-        Asterisk.  By default, the base is "/tmp/asterisk-testsuite" directory.
-        Given a base, it will be appended to the default base directory.
+                Asterisk. By default, the base is "/tmp/asterisk-testsuite"
+                directory. Given a base, it will be appended to the default base
+                directory.
+        ast_conf_options -- Configuration overrides for asterisk.conf.
+        host -- The IP address the Asterisk instance runs on
+        remote_config -- Configuration section that defines this as a remote
+                         Asterisk instance. If provided, base and
+                         ast_conf_options are generally ignored, and the
+                         Asterisk instance's configuration is treated as
+                         immutable on some remote machine defined by 'host'
 
         Example Usage:
         self.asterisk = Asterisk(base="manager/login")
@@ -226,11 +361,16 @@ class Asterisk(object):
         self._stop_deferred = None
         self._stop_cancel_tokens = []
         self.directories = {}
-        self.ast_version = AsteriskVersion()
-        self.process_protocol = None
+        self.protocol = None
         self.process = None
         self.astetcdir = ""
         self.original_astmoddir = ""
+        self.ast_version = None
+        self.remote_config = remote_config
+
+        # If the process is remote, don't bother
+        if not self.remote_config:
+            self.ast_version = AsteriskVersion()
 
         valgrind_env = os.getenv("VALGRIND_ENABLE") or ""
         self.valgrind_enabled = True if "true" in valgrind_env else False
@@ -247,46 +387,56 @@ class Asterisk(object):
         self.host = host
 
         self._ast_conf_options = ast_conf_options
-        self._directory_structure_made = False
-        self._configs_installed = False
-        self._configs_set_up = False
 
-        # Find the system installed asterisk.conf
-        ast_confs = [
-            os.path.join(self.default_etc_directory, "asterisk.conf"),
-            "/usr/local/etc/asterisk/asterisk.conf",
-        ]
-        self._ast_conf = None
-        for config in ast_confs:
-            if os.path.exists(config):
-                self._ast_conf = ConfigFile(config)
-                break
-        if self._ast_conf is None:
-            msg = "Unable to locate asterisk.conf in any known location"
-            LOGGER.error(msg)
-            raise Exception(msg)
+        if remote_config:
+            # Pretend as if we made the structure
+            self._directory_structure_made = True
+            self._configs_installed = True
+            self._configs_set_up = True
 
-        # Set which astxxx this instance will be
-        i = 1
-        while True:
-            if not os.path.isdir("%s/ast%d" % (self.base, i)):
-                self.base = "%s/ast%d" % (self.base, i)
-                break
-            i += 1
+            # And assume we've got /etc/asterisk/ where we expect it to be
+            self.astetcdir = "/etc/asterisk"
+        else:
+            self._directory_structure_made = False
+            self._configs_installed = False
+            self._configs_set_up = False
 
-        # Get the Asterisk directories from the Asterisk config file
-        for cat in self._ast_conf.categories:
-            if cat.name == "directories":
-                for (var, val) in cat.options:
-                    self.directories[var] = val
+            # Find the system installed asterisk.conf
+            ast_confs = [
+                os.path.join(self.default_etc_directory, "asterisk.conf"),
+                "/usr/local/etc/asterisk/asterisk.conf",
+            ]
+            self._ast_conf = None
+            for config in ast_confs:
+                if os.path.exists(config):
+                    self._ast_conf = ConfigFile(config)
+                    break
+            if self._ast_conf is None:
+                msg = "Unable to locate asterisk.conf in any known location"
+                LOGGER.error(msg)
+                raise Exception(msg)
 
-        # self.original_astmoddir is for dependency checking only
-        if "astmoddir" in self.directories:
-            if self.localtest_root:
-                self.original_astmoddir = "%s%s" % (
-                    self.localtest_root, self.directories["astmoddir"])
-            else:
-                self.original_astmoddir = self.directories["astmoddir"]
+            # Set which astxxx this instance will be
+            i = 1
+            while True:
+                if not os.path.isdir("%s/ast%d" % (self.base, i)):
+                    self.base = "%s/ast%d" % (self.base, i)
+                    break
+                i += 1
+
+            # Get the Asterisk directories from the Asterisk config file
+            for cat in self._ast_conf.categories:
+                if cat.name == "directories":
+                    for (var, val) in cat.options:
+                        self.directories[var] = val
+
+            # self.original_astmoddir is for dependency checking only
+            if "astmoddir" in self.directories:
+                if self.localtest_root:
+                    self.original_astmoddir = "%s%s" % (
+                        self.localtest_root, self.directories["astmoddir"])
+                else:
+                    self.original_astmoddir = self.directories["astmoddir"]
 
     def start(self, deps=None):
         """Start this instance of Asterisk.
@@ -304,13 +454,17 @@ class Asterisk(object):
         def __start_asterisk_callback(cmd):
             """Begin the Asterisk startup cycle"""
 
-            self.process_protocol = AsteriskProtocol(self.host,
-                                                     self._stop_deferred)
-            self.process = reactor.spawnProcess(self.process_protocol,
+            self.__start_asterisk_time = time.time()
+
+            if self.remote_config:
+                reactor.callLater(1, __execute_wait_fully_booted)
+                return
+
+            self.protocol = AsteriskProtocol(self.host, self._stop_deferred)
+            self.process = reactor.spawnProcess(self.protocol,
                                                 cmd[0],
                                                 cmd, env=os.environ)
             # Begin the wait fully booted cycle
-            self.__start_asterisk_time = time.time()
             reactor.callLater(1, __execute_wait_fully_booted)
 
         def __execute_wait_fully_booted():
@@ -416,7 +570,7 @@ class Asterisk(object):
         def __send_stop_gracefully():
             """Send a core stop gracefully CLI command"""
             LOGGER.debug('sending stop gracefully')
-            if self.ast_version < AsteriskVersion("1.6.0"):
+            if self.ast_version and self.ast_version < AsteriskVersion("1.6.0"):
                 cli_deferred = self.cli_exec("stop gracefully")
             else:
                 cli_deferred = self.cli_exec("core stop gracefully")
@@ -436,7 +590,7 @@ class Asterisk(object):
         def __send_kill():
             """Check to see if the process is running and kill it with fire"""
             try:
-                if not self.process_protocol.exited:
+                if self.process and not self.protocol.exited:
                     LOGGER.warning("Sending KILL to Asterisk %s" % self.host)
                     self.process.signalProcess("KILL")
             except error.ProcessExitedAlready:
@@ -463,7 +617,11 @@ class Asterisk(object):
             self._stop_deferred.callback(reason)
             return reason
 
-        if self.process_protocol.exited:
+        if not self.process:
+            reactor.callLater(0, __process_stopped, None)
+            return self._stop_deferred
+
+        if self.protocol.exited:
             try:
                 if not self._stop_deferred.called:
                     self._stop_deferred.callback(
@@ -588,7 +746,7 @@ class Asterisk(object):
             return
 
         tmp = "%s/%s/%s" % (os.path.dirname(cfg_path),
-                            self.ast_version.branch,
+                            self.ast_version.branch if self.ast_version else '',
                             os.path.basename(cfg_path))
         if os.path.exists(tmp):
             cfg_path = tmp
@@ -675,7 +833,7 @@ class Asterisk(object):
                 "<tech/data> application <appname> appdata\n"
                 "<tech/data> extension <exten>@<context>")
 
-        if self.ast_version < AsteriskVersion("1.6.2"):
+        if self.ast_version and self.ast_version < AsteriskVersion("1.6.2"):
             return self.cli_exec("originate %s" % argstr)
         else:
             return self.cli_exec("channel originate %s" % argstr)
@@ -692,14 +850,21 @@ class Asterisk(object):
         Example Usage:
         asterisk.cli_exec("core set verbose 10")
         """
+        # If this is going to a remote system, make sure we enclose
+        # the command in quotes
+        if self.remote_config:
+            cli_cmd = '"{0}"'.format(cli_cmd)
+
         cmd = [
             self.ast_binary,
             "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
             "-rx", "%s" % cli_cmd
         ]
         LOGGER.debug("Executing %s ..." % cmd)
-
-        cli_protocol = AsteriskCliCommand(self.host, cmd)
+        if not self.remote_config:
+            cli_protocol = AsteriskCliCommand(self.host, cmd)
+        else:
+            cli_protocol = AsteriskRemoteCliCommand(self.remote_config, cmd)
         return cli_protocol.execute()
 
     def _make_directory_structure(self):

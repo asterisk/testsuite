@@ -215,36 +215,66 @@ class TestCase(object):
         self.condition_controller.register_observer(
             self.handle_condition_failure, 'Failed')
 
+    def get_asterisk_hosts(self, count):
+        """Return a list of host dictionaries for Asterisk instances
+
+        Keyword Arguments:
+        count  The number of Asterisk instances to create, if no remote
+               Asterisk instances have been specified
+        """
+        if self.global_config.config:
+            asterisks = self.global_config.config.get('asterisk-instances')
+        else:
+            asterisks = [{'num': i + 1, 'host': '127.0.0.%d' % (i + 1)}
+                         for i in range(count)]
+        return asterisks
+
     def create_asterisk(self, count=1, base_configs_path=None):
         """Create n instances of Asterisk
+
+        Note: if the instances of Asterisk being created are remote, the
+        keyword arguments to this function are ignored.
 
         Keyword arguments:
         count             The number of Asterisk instances to create.  Each
                           Asterisk instance will be hosted on 127.0.0.x, where x
-                          is the 1-based index of the instance created
+                          is the 1-based index of the instance created.
         base_configs_path Provides common configuration for Asterisk instances
                           to use. This is useful for certain test types that use
                           the same configuration all the time. This
                           configuration can be overwritten by individual tests,
                           however.
         """
-        for i in range(count):
-            num = i + 1
-            LOGGER.info("Creating Asterisk instance %d" % num)
-            host = "127.0.0.%d" % num
-            self.ast.append(Asterisk(base=self.testlogdir, host=host,
-                                     ast_conf_options=self.ast_conf_options))
+        for i, ast_config in enumerate(self.get_asterisk_hosts(count)):
+            local_num = ast_config.get('num')
+            host = ast_config.get('host')
+
+            if not host:
+                msg = "Cannot manage Asterisk instance without 'host'"
+                raise Exception(msg)
+
+            if local_num:
+                LOGGER.info("Creating Asterisk instance %d" % local_num)
+                ast_instance = Asterisk(base=self.testlogdir, host=host,
+                                        ast_conf_options=self.ast_conf_options)
+            else:
+                LOGGER.info("Managing Asterisk instance at %s" % host)
+                ast_instance = Asterisk(base=self.testlogdir, host=host,
+                                        remote_config=ast_config)
+            self.ast.append(ast_instance)
             self.condition_controller.register_asterisk_instance(self.ast[i])
-            # If a base configuration for this Asterisk instance has been
-            # provided, install it first
-            if base_configs_path:
-                ast_dir = "%s/ast%d" % (base_configs_path, num)
-                self.ast[i].install_configs(ast_dir,
+
+            if local_num:
+                # If a base configuration for this Asterisk instance has been
+                # provided, install it first
+                if base_configs_path:
+                    ast_dir = "%s/ast%d" % (base_configs_path, local_num)
+                    self.ast[i].install_configs(ast_dir,
+                                                self.test_config.get_deps())
+                # Copy test specific config files
+                self.ast[i].install_configs("%s/configs/ast%d" %
+                                            (self.test_name, local_num),
                                             self.test_config.get_deps())
-            # Copy test specific config files
-            self.ast[i].install_configs("%s/configs/ast%d" %
-                                        (self.test_name, num),
-                                        self.test_config.get_deps())
 
     def create_ami_factory(self, count=1, username="user", secret="mysecret",
                            port=5038):
@@ -263,16 +293,18 @@ class TestCase(object):
             """Called if the connection is lost and re-made"""
             login_deferred.addCallbacks(self._ami_connect, self.ami_login_error)
 
-        for i in range(count):
-            host = "127.0.0.%d" % (i + 1)
+        for i, ast_config in enumerate(self.get_asterisk_hosts(count)):
+            host = ast_config.get('host')
+            ami_config = ast_config.get('ami', {})
+            actual_user = ami_config.get('username', username)
+            actual_secret = ami_config.get('secret', secret)
+            actual_port = ami_config.get('port', port)
+
             self.ami.append(None)
-            LOGGER.info("Creating AMIFactory %d" % (i + 1))
-            try:
-                ami_factory = manager.AMIFactory(username, secret, i,
-                                                 on_reconnect=on_reconnect)
-            except:
-                ami_factory = manager.AMIFactory(username, secret, i)
-            deferred = ami_factory.login(ip=host, port=port)
+            LOGGER.info("Creating AMIFactory %d to %s" % ((i + 1), host))
+            ami_factory = manager.AMIFactory(actual_user, actual_secret, i,
+                                             on_reconnect=on_reconnect)
+            deferred = ami_factory.login(ip=host, port=actual_port)
             deferred.addCallbacks(self._ami_connect, self.ami_login_error)
 
     def create_fastagi_factory(self, count=1):
@@ -284,8 +316,9 @@ class TestCase(object):
         count The number of instances of AGI to create
         """
 
-        for i in range(count):
-            host = "127.0.0.%d" % (i + 1)
+        for i, ast_config in enumerate(self.get_asterisk_hosts(count)):
+            host = ast_config.get('host')
+
             self.fastagi.append(None)
             LOGGER.info("Creating FastAGI Factory %d" % (i + 1))
             fastagi_factory = fastagi.FastAGIFactory(self.fastagi_connect)
@@ -904,6 +937,12 @@ class TestCaseModule(TestCase):
         super(TestCaseModule, self).run()
 
         if self.connect_ami:
-            self.create_ami_factory(count=self.asterisk_instances)
+            if not isinstance(self.connect_ami, dict):
+                self.create_ami_factory(count=self.asterisk_instances)
+            else:
+                self.create_ami_factory(**self.connect_ami)
         if self.connect_agi:
-            self.create_fastagi_factory(count=self.asterisk_instances)
+            if not isinstance(self.connect_agi, dict):
+                self.create_fastagi_factory(count=self.asterisk_instances)
+            else:
+                self.create_fastagi_factory(**self.connect_agi)

@@ -91,6 +91,37 @@ config-fast:
 # It is included merely for completeness.
 config-standard:
 
+# This section defines how the Test Suite will behave if running against
+# a remote instance of Asterisk. In this particular case, the Test Suite
+# will not spawn or control any local instances of Asterisk; instead, it
+# will use an SSH connection to run CLI commands against remote Asterisk
+# instances and point its AMI/AGI/ARI interfaces at the configured instance(s).
+#
+# Note that the remote system should be in your known_hosts file before
+# running a test.
+#
+# This is useful when you want to use the Test Suite to test Asterisk, but
+# where Asterisk has a particular complex configuration and is part of a
+# larger integrated system.
+config-remote:
+    asterisk-instances:
+        -
+            # The host to connect to. This will be used for the SSH
+            # connection, as well as for the various API connections
+            host: '192.168.0.102'
+            # Path to the SSH private key
+            identity: '~/.ssh/id_psa'
+            # Passphrase used for encrypted private keys
+            passphrase: 'imalittleteapot'
+            # SSH username
+            username: 'user'
+            # SSH password
+            passsword: 'supersecret'
+            # AMI credentials.
+            ami:
+                username: 'asterisk'
+                secret: 'asterisk'
+
 # This test enables the pre- and post-test condition checking on all tests
 # that support it.  Individual tests can override the behavior of a pre-
 # and post-test in their test-config.yaml files.
