@@ -265,7 +265,7 @@ class TestConfig(object):
         self.excluded_tests = []
         self.features = set()
         self.feature_check = {}
-        self.test_configuration = "(none)"
+        self.test_configuration = None
         self.condition_definitions = []
         self.global_test_config = global_test_config
 
@@ -291,18 +291,17 @@ class TestConfig(object):
 
         if "global-settings" in self.config:
             settings = self.config['global-settings']
-            if "condition-definitions" in settings:
-                self.condition_definitions = settings['condition-definitions']
-            if "test-configuration" in settings:
-                self.test_configuration = settings['test-configuration']
-                if self.test_configuration in self.config:
-                    self.config = self.config[self.test_configuration]
+            self.condition_definitions = settings.get('condition-definitions', [])
+            self.test_configuration = settings.get('test-configuration')
 
-                    if self.config is not None and 'exclude-tests' in self.config:
-                        self.excluded_tests = self.config['exclude-tests']
-                else:
-                    print ("WARNING - test configuration [%s] not found in "
-                           "config file" % self.test_configuration)
+            if self.test_configuration and self.test_configuration in self.config:
+                self.config = self.config[self.test_configuration]
+
+                if self.config is not None and 'exclude-tests' in self.config:
+                    self.excluded_tests = self.config['exclude-tests']
+            else:
+                print ("WARNING - test configuration [%s] not found in "
+                       "config file" % self.test_configuration)
 
     def _process_testinfo(self):
         """Process the test information block"""
