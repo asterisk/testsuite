@@ -8,12 +8,15 @@
 testinfo:
     # If true, skip execution of this test
     skip : 'Brief reason for skipping test' # OPTIONAL
+
     # A summary of what the test does
     summary: 'Put a short one liner summary of the test here'
+
     # A detailed description of what functionality is covered by the test
     description: |
         'Put a more verbose description of the test here.  This may span
         multiple lines.'
+
     # A sequence of key/value pairs specifying issues in an issue tracker related to this test
     issues: # OPTIONAL
         # List of issue numbers associated with this test
@@ -23,16 +26,20 @@ testinfo:
 # The properties section contains information about requirements and
 # dependencies for this test.
 properties:
+
     # The minimum version of Asterisk necessary to run the test
     minversion: '1.8.0.0'
+
     # The maximum version of Asterisk that this test can exeucte under
     maxversion: '10.5.1' # OPTIONAL
+
     # A sequence of feature specifies that the version of Asterisk under test must support.
     features: # OPTIONAL
         # List features the Asterisk version under test must support for this test
         # to execute.  All features must be satisfied for the test to run.
         - 'digiumphones'
         - 'cert'
+
     # The Asterisk modules and third party applications/libraries necessary to run the test
     dependencies: # OPTIONAL
         # List dependencies that must be met for this test to run. Any of the
@@ -77,52 +84,60 @@ properties:
         #
         - core # This test is part of the core support level.
         - voicemail # This test involves voicemail functionality.
-    # The expected result of the test. Setting this to False will cause the test to pass if the test returns failure
+
+    # The expected result of the test. Setting this to False will cause the test
+    # to pass if the test returns failure
     expectedResult: True # OPTIONAL
-    # Settings that override the runtests script's test-config.yaml pre/post condition test settings
+
+    # Settings that override the runtests script's test-config.yaml pre/post
+    # condition test settings
     testconditions: # OPTIONAL
-        #
+
         # List of overrides for pre-test and post-test conditions.  If a condition is
         # defined for a test, the configuration of that condition in the test overrides
         # the setting defined in the global test configuration file.
-        #
-        -   # Check for thread usage in Asterisk.  Any threads present in Asterisk after test
+
+        -
+            # Check for thread usage in Asterisk.  Any threads present in Asterisk after test
             # execution - and any threads that were detected prior to test execution
             # that are no longer present - will be flagged as a test error.
             name: 'threads'
-            #
+
             # Disable execution of this condition.  This setting applies to any defined condition.
             # Any other value but 'False' will result in the condition being executed.
             enabled: 'False'
-            #
+
             # Execute the condition, but expect the condition to fail
             expectedResult: 'Fail'
-            #
+
             # The thread test condition allows for certain detected threads to be
             # ignored.  This is a list of the thread names, as reported by the CLI
             # command 'core show threads'
             ignoredThreads:
                 - 'netconsole'
                 - 'pbx_thread'
-        #
-        -   # Check for SIP dialog usage.  This looks for any SIP dialogs present
+
+        -
+            # Check for SIP dialog usage.  This looks for any SIP dialogs present
             # in the system before and after a run; if any are present and are not
             # scheduled for destruction, an error is raised.
             name: 'sip-dialogs'
-            #
+
             # In addition to checking for scheduled destruction, a test can request that
             # certain entries should appear in the SIP history.  If the entries do not
             # appear, an error is raised.
             sipHistoryRequirements:
                 - 'NewChan'
                 - 'Hangup'
-        #
-        -   # Check for held locks in Asterisk after test execution.  A lock is determined to
+
+        -
+            # Check for held locks in Asterisk after test execution.  A lock is determined to
             # be in potential error if threads are detected holding mutexes and waiting on
             # other threads that are also holding mutexes.
             name: 'locks'
-        #
-        -   # Check for active channels in Asterisk.  If active channels are detected, flag
+
+        -
+            # Check for active channels in Asterisk.  If active channels are detected, flag
             # an error
             name: 'channels'
             #
@@ -130,8 +145,9 @@ properties:
             # If the number of channels detected is greater than this value, an error is raised.
             # By default, this value is 0.
             allowedchannels: 1
-        #
-        -   # Check for active file descriptors in Asterisk.  File descriptors detected before
+
+        -
+            # Check for active file descriptors in Asterisk.  File descriptors detected before
             # test execution are tracked throughout the test; if any additional file descriptors
             # after test execution are detected, the test condition fails.
             name: 'file-descriptors'
@@ -139,26 +155,42 @@ properties:
 # Modules to load for tests that use the Test Suite's pluggable framework. If
 # using the Test Suite's pluggable framework, this block is required.
 test-modules:
-    #add-test-to-search-path: 'True'
+
+    # If defined and set to True, the test directory will be added to the
+    # Python module loader path.
+    add-test-to-search-path: True
+
+    # Add an explicit path to the Python module loader path.
+    add-to-search-path: '/usr/foo'
+
+    # Add a path relative to the test directory to the Python module loader path.
+    add-relative-to-search-path: '../../foo'
+
     # Defines the primary object that orchestrates test execution
     test-object:
+
         # The keyword in the test-config.yaml file that provides the configuration for the test object
         config-section: test-object-config
+
         # The fully qualified package.module.class to instantiate as the test object
         # A few that are available:
         # SimpleTestCase.SimpleTestCase, BridgeTestCase.BridgeTestCase, sipp.SIPpTestCase
         typename: 'SimpleTestCase.SimpleTestCase'
+
     # A sequence that defines optional pluggable modules to inject into the test object
     modules: # OPTIONAL
         -
             # The keyword in the test-config.yaml file that provides the configuration for the module
             config-section: 'ami-config-1.3'
+
             # The fully qualified package.module.class to instantiate as the module.
             # A few that are available:
             # ami.AMIEventModule, cdr.CDRModule
             typename: 'ami.AMIEventModule'
+
             # The minimum version of Asterisk necessary to load this module
             minversion: '1.8.0.0' # OPTIONAL
+
             # The maximum version of Asterisk that this module can load under
             maxversion: '11.0.0' # OPTIONAL
         -
@@ -167,7 +199,8 @@ test-modules:
             typename: 'ami.AMIEventModule'
             minversion: '12.0.0'
 
-# The configuration for the test object. The configuration will differ depending on the test object used
+# The configuration for the test object. The configuration will differ depending
+# on the test object used
 test-object-config:
     reactor-timeout: 30
     spawn-after-hangup: True
@@ -176,7 +209,8 @@ test-object-config:
             channel: 'Local/play@default'
             application: 'Echo'
 
-# The configuration for a pluggable module. See other *-config.yaml.sample files for more details.
+# The configuration for a pluggable module. See other *-config.yaml.sample files
+# for more details.
 ami-config-1.3:
     -
         type: 'headermatch'
@@ -191,7 +225,8 @@ ami-config-1.3:
                 AppData: 'AMI 1.3'
         count: '1'
 
-# The configuration for a pluggable module. See other *-config.yaml.sample files for more details.
+# The configuration for a pluggable module. See other *-config.yaml.sample files
+# for more details.
 ami-config-1.4:
     -
         type: 'headermatch'
