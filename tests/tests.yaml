@@ -34,4 +34,4 @@ tests:
     - dir: 'realtime'
     - dir: 'http_server'
     - dir: 'sorcery'
-
+    - test: 'remote-test'
