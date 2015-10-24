@@ -77,6 +77,15 @@ properties:
         # depend_ipv6() method is called to determine if the dependency is met.
         - custom: 'ipv6'
         - custom: 'fax'
+
+        # A 'remote' custom dependency specifies that this test does not run against
+        # a local instance of Asterisk, but against some remote instance. This will
+        # cause the Test Suite to not create new instances of Asterisk, modify the
+        # Asterisk configuration, etc. Instead, it will look to its global configuration
+        # settings for an 'asterisk-instances' section. This section defines the
+        # remote Asterisk instances that this test will run against.
+        - custom: 'remote'
+
     # A sequence of tags that categorize the test into groups of similar functionality
     tags: # OPTIONAL
         #

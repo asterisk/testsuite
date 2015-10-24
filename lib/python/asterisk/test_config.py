@@ -84,9 +84,15 @@ class TestConditionConfig(object):
 class Dependency(object):
     """Class that checks and stores the dependencies for a particular Test."""
 
-    asterisk_build_options = AsteriskBuildOptions()
+    try:
+        asterisk_build_options = AsteriskBuildOptions()
+    except:
+        asterisk_build_options = None
 
-    ast = Asterisk()
+    try:
+        ast = Asterisk()
+    except:
+        ast = None
 
     def __init__(self, dep):
         """Construct a new dependency
@@ -148,6 +154,15 @@ class Dependency(object):
             print "Unknown dependency type specified:"
             for key in dep.keys():
                 print key
+
+    def depend_remote(self):
+        """Check to see if we run against a remote instance of Asterisk"""
+        test_config = TestConfig(os.getcwd())
+        if not test_config.config:
+            return False
+        if test_config.config.get('asterisk-instances'):
+            return True
+        return False
 
     def depend_soundcard(self):
         """Check the soundcard custom dependency"""
@@ -222,10 +237,18 @@ class Dependency(object):
 
     def _find_build_flag(self, name):
         """Determine if the specified build option exists"""
-        return (self.asterisk_build_options.check_option(name))
+        if self.asterisk_build_options:
+            return (self.asterisk_build_options.check_option(name))
+        else:
+            print "Unable to evaluate build options: no build options found"
+            return False
 
     def _find_asterisk_module(self, name):
         """Determine if an Asterisk module exists"""
+        if not Dependency.ast:
+            print "Unable to evaluate Asterisk modules: Asterisk not found"
+            return False
+
         if Dependency.ast.original_astmoddir == "":
             return False
 
