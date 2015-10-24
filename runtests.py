@@ -602,40 +602,41 @@ def main(argv=None):
     usage = "Usage: ./runtests.py [options]"
 
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-l", "--list-tests", action="store_true",
-                      dest="list_tests", default=False,
-                      help="List tests instead of running them.")
-    parser.add_option("-t", "--test", action="append", default=[],
-                      dest="tests",
-                      help=("Run a single specified test (directory) instead "
-                            "of all tests.  May be specified more than once."))
+    parser.add_option("-c", "--cleanup", action="store_true",
+                      dest="cleanup", default=False,
+                      help="Cleanup tmp directory after each successful test")
     parser.add_option("-g", "--tag", action="append",
                       dest="tags",
                       help="Specify one or more tags to select a subset of tests.")
-    parser.add_option("-v", "--version",
-                      dest="version", default=None,
-                      help="Specify the version of Asterisk rather then detecting it.")
     parser.add_option("-k", "--keep-core", action="store_true",
                       dest="keep_core", default=False,
                       help="Archive the 'core' file if Asterisk crashes.")
+    parser.add_option("-l", "--list-tests", action="store_true",
+                      dest="list_tests", default=False,
+                      help="List tests instead of running them.")
     parser.add_option("-L", "--list-tags", action="store_true",
                       dest="list_tags", default=False,
                       help="List available tags")
     parser.add_option("-n", "--dry-run", action="store_true",
                       dest="dry_run", default=False,
                       help="Only show which tests would be run.")
-    parser.add_option("--timeout", metavar='int', type=int,
-                      dest="timeout", default=-1,
-                      help="Abort test after n seconds of no output.")
+    parser.add_option("-t", "--test", action="append", default=[],
+                      dest="tests",
+                      help=("Run a single specified test (directory) instead "
+                            "of all tests.  May be specified more than once."))
+    parser.add_option("-v", "--version",
+                      dest="version", default=None,
+                      help="Specify the version of Asterisk rather then detecting it.")
     parser.add_option("-V", "--valgrind", action="store_true",
                       dest="valgrind", default=False,
                       help="Run Asterisk under Valgrind")
-    parser.add_option("-c", "--cleanup", action="store_true",
-                      dest="cleanup", default=False,
-                      help="Cleanup tmp directory after each successful test")
     parser.add_option("--random-order", action="store_true",
                       dest="randomorder", default=False,
                       help="Shuffle the tests so they are run in random order")
+    parser.add_option("--timeout", metavar='int', type=int,
+                      dest="timeout", default=-1,
+                      help="Abort test after n seconds of no output.")
+
     (options, args) = parser.parse_args(argv)
 
     ast_version = AsteriskVersion(options.version)
