@@ -3,7 +3,7 @@
 ===                           Asterisk Test Suite                            ===
 ===                                                                          ===
 ===                         http://www.asterisk.org/                         ===
-===                  Copyright (C) 2010 - 2012, Digium, Inc.                 ===
+===                  Copyright (C) 2010 - 2015, Digium, Inc.                 ===
 ===                                                                          ===
 ================================================================================
 
@@ -15,13 +15,14 @@
         1) Introduction
         2) Test Suite System Requirements
         3) Running the Test Suite
+        4) External control of the Test Suite
 
     Writing Tests:
-        4) Test Anatomy
-        5) Test Configuration
-        6) Tests in Python
-        7) Tests in Lua
-        8) Custom Tests
+        5) Test Anatomy
+        6) Test Configuration
+        7) Tests in Python
+        8) Tests in Lua
+        9) Custom Tests
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -198,7 +199,13 @@ List the tests:
        ******************************************
 
 Run the tests:
-    # ./runtests.py
+    $ ./runtests.py
+
+Run multiple iterations:
+    $ ./runtests.py -n 5
+
+Run a specific test:
+    $ ./runtests.py -t tests/pbx/dialplan
 
 For more syntax information:
     $ ./runtests.py --help
@@ -226,7 +233,23 @@ Run tests:
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
---- 4) Test Anatomy
+--- 4) External control of the Test Suite
+--------------------------------------------------------------------------------
+
+The Test Suite can be controlled externally using the SIGUSR1 and SIGTERM
+signals.
+    - SIGUSR1 will instruct the Test Suite to stop running any further tests
+      after the current running test completes. Any tests not executed will be
+      marked as skipped.
+    - SIGTERM will attempt to immediately stop execution of the current test,
+      marking it as failed. The Test Suite will stop running any further tests,
+      marking any test not executed as skipped.
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+--- 5) Test Anatomy
 --------------------------------------------------------------------------------
 
 a) File layout
@@ -319,7 +342,7 @@ return code.  A return code of zero is considered a success.
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
---- 5) Test Configuration
+--- 6) Test Configuration
 --------------------------------------------------------------------------------
 
         Test configuration lives in a file called "test-config.yaml".  The
@@ -522,7 +545,7 @@ properties:
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
---- 6) Tests in Python
+--- 7) Tests in Python
 --------------------------------------------------------------------------------
 
         There are some python modules included in lib/python/ which are intended
@@ -533,7 +556,7 @@ formatted according to PEP8: http://www.python.org/dev/peps/pep-0008/.
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
---- 7) Tests in Lua
+--- 8) Tests in Lua
 --------------------------------------------------------------------------------
 
         The asttest framework included in the asttest directory provides a lot
@@ -545,7 +568,7 @@ information.
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
---- 8) Custom Tests
+--- 9) Custom Tests
 --------------------------------------------------------------------------------
 
         The testsuite supports automatic use of custom tests.  This feature is
