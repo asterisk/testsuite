@@ -107,8 +107,6 @@ test-object-config:
             -
               action-type: 'set-expected-result'
               expected-result: 'Conference Ended'
-            -
-              action-type: 'end-scenario'
       channels:
         -
           channel-id: 'Marked-user'
@@ -300,8 +298,6 @@ test-object-config:
             -
               action-type: 'set-expected-result'
               expected-result: 'Conference Ended'
-            -
-              action-type: 'end-scenario'
       channels:
         -
           channel-id: 'Marked-user'
@@ -489,8 +485,6 @@ test-object-config:
             -
               action-type: 'set-expected-result'
               expected-result: 'Conference Ended'
-            -
-              action-type: 'end-scenario'
       channels:
         -
           channel-id: 'Marked-user'

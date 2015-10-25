@@ -38,8 +38,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Channel Hung Up'
-                -
-                  action-type: 'end-scenario'
             -
               type: 'headermatch'
               conditions:
@@ -74,8 +72,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Channel Hung Up'
-                -
-                  action-type: 'end-scenario'
             -
               type: 'headermatch'
               conditions:
@@ -143,8 +139,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Channel Hung Up'
-                -
-                  action-type: 'end-scenario'
     -
       # Scenario 4: The e(s) test is identical to the e(n) test, yet it plays back
       # silent audio instead of dead air. It also checks that no Hold or MoH Events
@@ -200,8 +194,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Channel Hung Up'
-                -
-                  action-type: 'end-scenario'
     -
       # Scenario 5: The e(r) test verifies that the state of the channel changes
       # to ringing by checking a Newstate event.
@@ -237,8 +229,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Channel Hung Up'
-                -
-                  action-type: 'end-scenario'
     -
       # Scenario 6: The e(h) test checks to make sure that the channel is on
       # hold through MoH events.
@@ -283,8 +273,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Channel Hung Up'
-                -
-                  action-type: 'end-scenario'
 
 properties:
     minversion: '12.0.0'

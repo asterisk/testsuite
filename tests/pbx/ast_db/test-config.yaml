@@ -152,8 +152,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'S3 is hanging up'
-                -
-                  action-type: 'end-scenario'
 
 properties:
     minversion: '11.0.0'

@@ -80,9 +80,6 @@ test-object-config:
                 match:
                   Event: 'Hangup'
                   Channel: 'Local/test_user@default-00000000;2'
-              actions:
-                -
-                  action-type: 'end-scenario'
     -
       # Scenario 3: Verify an AMI connection can control a playback
       channels:
@@ -146,10 +143,6 @@ test-object-config:
                 match:
                   Event: 'Hangup'
                   Channel: 'Local/test_remote@default-00000001;2'
-              actions:
-                -
-                  action-type: 'end-scenario'
-
 
 properties:
     minversion: '12.0.0'

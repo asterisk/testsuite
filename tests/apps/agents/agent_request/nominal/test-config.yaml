@@ -180,8 +180,6 @@ test-object-config:
                 -
                   action-type: 'hangup'
                   channel-id: 'Agent-login'
-                -
-                  action-type: 'end-scenario'
 
 properties:
     minversion: '12.0.0'

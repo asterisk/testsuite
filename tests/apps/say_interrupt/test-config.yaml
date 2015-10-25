@@ -46,8 +46,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Phase 0 - Test Reached Completion Event'
-                -
-                  action-type: 'end-scenario'
             -
               type: 'headermatch'
               conditions:
@@ -178,8 +176,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Phase 1 - Test Reached Completion Event'
-                -
-                  action-type: 'end-scenario'
             -
               type: 'headermatch'
               conditions:

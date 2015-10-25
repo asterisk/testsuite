@@ -113,8 +113,6 @@ app-config:
                                 -
                                     action-type: 'send-ami-message'
                                     fields: {'Channel': '/.*/'}
-                                -
-                                    action-type: 'end-scenario'
         -
             # Call 2. See testinfo description for details.
             channels:
@@ -184,8 +182,6 @@ app-config:
                                     fields:
                                         Action: 'Hangup'
                                         Channel: '/^Local/.*$/'
-                                -
-                                    action-type: 'end-scenario'
 
 
 properties:

@@ -125,8 +125,6 @@ test-object-config:
               action-type: 'set-expected-result'
               delay: 2
               expected-result: 'Conference Ended'
-            -
-              action-type: 'end-scenario'
       channels:
         -
           channel-id: 'Waitmarked-user'
@@ -384,8 +382,6 @@ test-object-config:
               action-type: 'set-expected-result'
               delay: 2
               expected-result: 'Conference Ended'
-            -
-              action-type: 'end-scenario'
       channels:
         -
           channel-id: 'Waitmarked-user'
@@ -622,8 +618,6 @@ test-object-config:
               action-type: 'set-expected-result'
               delay: 2
               expected-result: 'Conference ended'
-            -
-              action-type: 'end-scenario'
         -
           type: 'headermatch'
           conditions:
@@ -870,8 +864,6 @@ test-object-config:
               action-type: 'set-expected-result'
               delay: 2
               expected-result: 'Conference ended'
-            -
-              action-type: 'end-scenario'
         -
           type: 'headermatch'
           conditions:

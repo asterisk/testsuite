@@ -54,6 +54,3 @@ test-object-config:
                 match:
                   Event: 'Hangup'
                   Channel: 'Local/begin@default-.*'
-              actions:
-                -
-                  action-type: 'end-scenario'

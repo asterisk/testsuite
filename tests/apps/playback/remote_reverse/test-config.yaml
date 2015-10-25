@@ -63,10 +63,6 @@ test-object-config:
                 match:
                   Event: 'Hangup'
                   Channel: 'Local/test_remote@default-00000000;2'
-              actions:
-                -
-                  action-type: 'end-scenario'
-
 
 properties:
     minversion: '12.0.0'

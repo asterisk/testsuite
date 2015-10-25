@@ -43,8 +43,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Phase 0: Success'
-                -
-                  action-type: 'end-scenario'
     # Phase 1: Operator
     -
       channels:
@@ -83,8 +81,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Phase 1: Success'
-                -
-                  action-type: 'end-scenario'
     # Phase 2: Assistant
     -
       channels:
@@ -123,8 +119,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Phase 2: Success'
-                -
-                  action-type: 'end-scenario'
     # Phase 3: Select
     -
       channels:
@@ -168,8 +162,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Phase 3: Success'
-                -
-                  action-type: 'end-scenario'
     # Phase 4: Exit
     -
       channels:
@@ -213,8 +205,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Phase 4: Success'
-                -
-                  action-type: 'end-scenario'
     # Phase 5: Hangup
     -
       channels:
@@ -252,8 +242,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Phase 5: Success'
-                -
-                  action-type: 'end-scenario'
     # Phase 6: Fail due to extension not existing at the selected directory context
     -
       channels:
@@ -297,8 +285,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Phase 6: Success'
-                -
-                  action-type: 'end-scenario'
 
 properties:
     minversion: '13.0.0'

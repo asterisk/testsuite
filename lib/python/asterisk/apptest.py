@@ -158,6 +158,16 @@ class AppTest(TestCase):
             self._run_scenario(self._scenarios.pop(0))
         return result
 
+    def _is_scenario_done(self):
+        """Checks to see if a scenario has completed
+
+        A Scenario is considered done if all results have been met and
+        all expected actions have been executed.
+        """
+        return (all(self._expected_results.itervalues()) and
+                all(i.ran_actions or i.unexpected
+                    for i in self._event_instances))
+
     def get_channel_object(self, channel_id):
         """Get the ChannelObject associated with a channel name
 
@@ -185,7 +195,15 @@ class AppTest(TestCase):
         expected_result The name of the result that occurred
         """
         self._expected_results[expected_result] = True
-        self.reset_timeout()
+        if self._is_scenario_done():
+            self.end_scenario()
+        else:
+            self.reset_timeout()
+
+    def event_instance_ran_actions(self):
+        """Raised when an event instance completes its actions"""
+        if self._is_scenario_done():
+            self.end_scenario()
 
 
 class ChannelObject(object):
@@ -574,12 +592,19 @@ class ApplicationEventInstance(AMIEventInstance):
         self.channel_id = channel_id
         self.actions = []
 
+        self.ran_actions = False
+        self.unexpected = False
         # create actions from the definitions
-        for action_def in instance_config['actions']:
-            action = ActionFactory.create_action(action_def)
-            LOGGER.debug('Adding action %s, matching on %s' % (
-                action, self.match_conditions))
-            self.actions.append(action)
+        if 'actions' in instance_config:
+            for action_def in instance_config['actions']:
+                action = ActionFactory.create_action(action_def)
+                LOGGER.debug('Adding action %s, matching on %s' % (
+                    action, self.match_conditions))
+                self.actions.append(action)
+                # if any associated action is a fail test action it's assumed
+                # that this event is an unexpected event (meaning the test
+                # scenario should never raise or see this event).
+                self.unexpected |= isinstance(action, ActionFailTest)
 
         self.__current_action = 0
         self.channel_obj = None
@@ -591,6 +616,9 @@ class ApplicationEventInstance(AMIEventInstance):
 
     def event_callback(self, ami, event):
         """Override of AMIEventInstance event_callback."""
+        # if more than one matching event comes in don't re-run the actions
+        if self.ran_actions:
+            return
 
         # If we aren't matching on a channel, then just execute the actions
         if 'channel' not in event or len(self.channel_id) == 0:
@@ -609,9 +637,14 @@ class ApplicationEventInstance(AMIEventInstance):
 
     def execute_next_action(self, result=None, actions=None):
         """Execute the next action in the sequence"""
-
         if (not actions or len(actions) == 0):
             self.__current_action = 0
+
+            self.ran_actions = True
+            # If an unexpected event was received end the scenario, otherwise
+            # notify the test object all event actions have been run
+            (self.test_object.end_scenario() if self.unexpected else
+             self.test_object.event_instance_ran_actions())
             return
 
         LOGGER.debug("Executing action %d on %s" %
@@ -784,20 +817,6 @@ class ActionFailTest(object):
         return None
 
 
-class ActionEndScenario(object):
-    """Functor that signals to the AppTest object that the scenario has ended"""
-
-    def __init__(self, action_config):
-        self.message = "Ending scenario..." if 'message' not in action_config \
-            else action_config['message']
-
-    def __call__(self, channel_object):
-        test_object = AppTest.get_instance()
-        LOGGER.info(self.message)
-        test_object.end_scenario()
-        return None
-
-
 class ActionSendMessage(object):
     """Functor that sends some AMI message"""
 
@@ -836,7 +855,6 @@ class ActionFactory(object):
                             'set-expected-result': ActionSetExpectedResult,
                             'hangup': ActionHangup,
                             'fail-test': ActionFailTest,
-                            'end-scenario': ActionEndScenario,
                             'send-ami-message': ActionSendMessage, }
 
     @staticmethod

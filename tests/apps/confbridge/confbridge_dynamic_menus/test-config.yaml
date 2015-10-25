@@ -43,8 +43,6 @@ test-object-config:
             -
               action-type: 'set-expected-result'
               expected-result: 'Phase 0: Conference Ended'
-            -
-              action-type: 'end-scenario'
       channels:
         -
           channel-id: 'SingleOption'
@@ -113,8 +111,6 @@ test-object-config:
             -
               action-type: 'set-expected-result'
               expected-result: 'Phase 1: Conference Ended'
-            -
-              action-type: 'end-scenario'
       channels:
         -
           channel-id: 'MultipleOptions'
@@ -199,8 +195,6 @@ test-object-config:
             -
               action-type: 'set-expected-result'
               expected-result: 'Phase 2: Conference Ended'
-            -
-              action-type: 'end-scenario'
         -
           type: 'headermatch'
           conditions:
@@ -312,8 +306,6 @@ test-object-config:
             -
               action-type: 'set-expected-result'
               expected-result: 'Phase 3: Conference Ended'
-            -
-              action-type: 'end-scenario'
       channels:
         -
           channel-id: 'MultipleOptions'
