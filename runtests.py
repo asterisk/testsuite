@@ -605,6 +605,9 @@ def main(argv=None):
     parser.add_option("-c", "--cleanup", action="store_true",
                       dest="cleanup", default=False,
                       help="Cleanup tmp directory after each successful test")
+    parser.add_option("-d", "--dry-run", action="store_true",
+                      dest="dry_run", default=False,
+                      help="Only show which tests would be run.")
     parser.add_option("-g", "--tag", action="append",
                       dest="tags",
                       help="Specify one or more tags to select a subset of tests.")
@@ -617,9 +620,6 @@ def main(argv=None):
     parser.add_option("-L", "--list-tags", action="store_true",
                       dest="list_tags", default=False,
                       help="List available tags")
-    parser.add_option("-n", "--dry-run", action="store_true",
-                      dest="dry_run", default=False,
-                      help="Only show which tests would be run.")
     parser.add_option("-t", "--test", action="append", default=[],
                       dest="tests",
                       help=("Run a single specified test (directory) instead "
