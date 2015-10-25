@@ -19,6 +19,7 @@ import shutil
 import xml.dom
 import random
 import select
+import signal
 
 try:
     import lxml.etree as ET
@@ -45,6 +46,12 @@ from asterisk.test_config import TestConfig
 
 TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
+
+# If True, abandon the current running TestRun. Used by SIGUSR2.
+abandon_test = False
+
+# If True, abandon the current running TestSuite. Used by SIGUSR1/SIGUSR2.
+abandon_test_suite = False
 
 
 class TestRun:
@@ -94,10 +101,14 @@ class TestRun:
 
             timedout = False
             try:
-                while(True):
-                    if not poll.poll(self.timeout):
-                        timedout = True
-                        p.terminate()
+                while (not abandon_test):
+                    try:
+                        if not poll.poll(self.timeout):
+                            timedout = True
+                            p.terminate()
+                    except select.error as v:
+                        if v[0] != errno.EINTR:
+                            raise
                     l = p.stdout.readline()
                     if not l:
                         break
@@ -107,13 +118,15 @@ class TestRun:
             p.wait()
 
             # Sanitize p.returncode so it's always a boolean.
-            did_pass = (p.returncode == 0)
+            did_pass = (p.returncode == 0 and not abandon_test)
             if did_pass and not self.test_config.expect_pass:
                 self.stdout_print("Test passed but was expected to fail.")
             if not did_pass and not self.test_config.expect_pass:
                 print "Test failed as expected."
 
             self.passed = (did_pass == self.test_config.expect_pass)
+            if abandon_test:
+                self.passed = False
 
             core_dumps = self._check_for_core()
             if (len(core_dumps)):
@@ -142,9 +155,15 @@ class TestRun:
                           "test %s (non-fatal)" % self.test_name
 
             self.__parse_run_output(self.stdout)
-            print 'Test %s %s\n' % (
-                cmd,
-                'timedout' if timedout else 'passed' if self.passed else 'failed')
+            if timedout:
+                status = 'timed out'
+            elif abandon_test:
+                status = 'was abandoned'
+            elif self.passed:
+                status = 'passed'
+            else:
+                status = 'failed'
+            print 'Test %s %s\n' % (cmd, status)
 
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
@@ -472,6 +491,9 @@ class TestSuite:
             (i, (self.options.timeout / 1000))
 
         for t in self.tests:
+            if abandon_test_suite:
+                break
+
             if t.can_run is False:
                 if t.test_config.skip is not None:
                     print "--> %s ... skipped '%s'" % (t.test_name, t.test_config.skip)
@@ -558,20 +580,10 @@ class TestSuite:
                 char_list.append(chr(i))
         return data.translate(None, ''.join(char_list))
 
-    def write_results_xml(self, fn, stdout=False):
-        try:
-            f = open(TEST_RESULTS, "w")
-        except IOError:
-            print "Failed to open test results output file: %s" % TEST_RESULTS
-            return
-        except:
-            print "Unexpected error: %s" % sys.exc_info()[0]
-            return
+    def write_results_xml(self, doc, root):
 
-        dom = xml.dom.getDOMImplementation()
-        doc = dom.createDocument(None, "testsuite", None)
-
-        ts = doc.documentElement
+        ts = doc.createElement("testsuite")
+        root.appendChild(ts)
         ts.setAttribute("errors", "0")
         ts.setAttribute("tests", str(self.total_count))
         ts.setAttribute("time", "%.2f" % self.total_time)
@@ -603,11 +615,30 @@ class TestSuite:
                 self.__strip_illegal_xml_chars(t.failure_message)))
             tc.appendChild(failure)
 
-        doc.writexml(f, addindent="  ", newl="\n", encoding="utf-8")
-        f.close()
 
-        if stdout:
-            print doc.toprettyxml("  ", encoding="utf-8")
+def handle_usr1(sig, stack):
+    """Handle the SIGUSR1 signal
+
+    This should instruct the running test suite to exit as soon as possible
+    """
+    global abandon_test_suite
+
+    print "SIGUSR1 received; stopping test suite after current test..."
+    abandon_test_suite = True
+
+
+def handle_usr2(sig, stack):
+    """Handle the SIGUSR2 signal
+
+    This should abandon the current running test, marking it as failed, and
+    gracefully exit the current running test suite as soon as possible
+    """
+    global abandon_test
+    global abandon_test_suite
+
+    print "SIGUSR2 received; abandoning current test and stopping..."
+    abandon_test = True
+    abandon_test_suite = True
 
 
 def main(argv=None):
@@ -635,6 +666,9 @@ def main(argv=None):
     parser.add_option("-L", "--list-tags", action="store_true",
                       dest="list_tags", default=False,
                       help="List available tags")
+    parser.add_option("-n", "--number", metavar="int", type=int,
+                      dest="number", default=1,
+                      help="Number of times to run the test suite. -1 loops forever.")
     parser.add_option("-t", "--test", action="append", default=[],
                       dest="tests",
                       help=("Run a single specified test (directory) instead "
@@ -654,7 +688,25 @@ def main(argv=None):
 
     (options, args) = parser.parse_args(argv)
 
+    # Install a signal handler for USR1/USR2, and use it to bail out of running
+    # any remaining tests
+    signal.signal(signal.SIGUSR1, handle_usr1)
+    signal.signal(signal.SIGUSR2, handle_usr2)
+
     ast_version = AsteriskVersion(options.version)
+
+    if options.list_tests or options.list_tags:
+        test_suite = TestSuite(ast_version, options)
+
+        print "Asterisk Version: %s\n" % str(ast_version)
+
+        if options.list_tests:
+            test_suite.list_tests()
+
+        if options.list_tags:
+            test_suite.list_tags()
+
+        return 0
 
     if options.timeout > 0:
         options.timeout *= 1000
@@ -664,49 +716,57 @@ def main(argv=None):
         if not test.endswith('/'):
             options.tests[i] = test + '/'
 
-    test_suite = TestSuite(ast_version, options)
-
-    if options.list_tests:
-        print "Asterisk Version: %s\n" % str(ast_version)
-        test_suite.list_tests()
-        return 0
-
-    if options.list_tags:
-        test_suite.list_tags()
-        return 0
-
     if options.valgrind:
         if not ET:
             print "python lxml module not loaded, text summaries " \
                   "from valgrind will not be produced.\n"
         os.environ["VALGRIND_ENABLE"] = "true"
 
-    print "Running tests for Asterisk %s ...\n" % str(ast_version)
+    dom = xml.dom.getDOMImplementation()
+    doc = dom.createDocument(None, "testsuites", None)
 
-    test_suite.run()
+    continue_forever = True if options.number < 0 else False
+    iteration = 0
+    while ((iteration < options.number or continue_forever) and not abandon_test_suite):
 
-    test_suite.write_results_xml(TEST_RESULTS, stdout=True)
+        test_suite = TestSuite(ast_version, options)
 
-    # If exactly one test was requested, then skip the summary.
-    if len(test_suite.tests) != 1:
-        print "\n=== TEST RESULTS ===\n"
-        print "PATH: %s\n" % os.getenv("PATH")
-        for t in test_suite.tests:
-            sys.stdout.write("--> %s --- " % t.test_name)
-            if t.did_run is False:
-                print "SKIPPED"
-                for d in t.test_config.deps:
-                    print "      --> Dependency: %s -- Met: %s" % (d.name, str(d.met))
-                if options.tags:
-                    for t in t.test_config.tags:
-                        print "      --> Tag: %s -- Met: %s" % (t, str(t in options.tags))
-                continue
-            if t.passed is True:
-                print "PASSED"
-            else:
-                print "FAILED"
+        print "Running tests for Asterisk {0} (run {1})...\n".format(
+            str(ast_version).strip('\n'), iteration + 1)
+        test_suite.run()
+        test_suite.write_results_xml(doc, doc.documentElement)
 
+        # If exactly one test was requested, then skip the summary.
+        if len(test_suite.tests) != 1:
+            print "\n=== TEST RESULTS ===\n"
+            print "PATH: %s\n" % os.getenv("PATH")
+            for t in test_suite.tests:
+                sys.stdout.write("--> %s --- " % t.test_name)
+                if t.did_run is False:
+                    print "SKIPPED"
+                    for d in t.test_config.deps:
+                        print "      --> Dependency: %s -- Met: %s" % (d.name, str(d.met))
+                    if options.tags:
+                        for t in t.test_config.tags:
+                            print "      --> Tag: %s -- Met: %s" % (t, str(t in options.tags))
+                    continue
+                if t.passed is True:
+                    print "PASSED"
+                else:
+                    print "FAILED"
+
+        iteration += 1
+
+    try:
+        with open(TEST_RESULTS, "w") as f:
+            doc.writexml(f, addindent="  ", newl="\n", encoding="utf-8")
+    except IOError:
+        print "Failed to open test results output file: %s" % TEST_RESULTS
+    except:
+        print "Unexpected error: %s" % sys.exc_info()[0]
     print "\n"
+    print doc.toprettyxml("  ", encoding="utf-8")
+
     return test_suite.total_failures
 
 
