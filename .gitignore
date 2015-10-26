@@ -1,5 +1,6 @@
 *.pyc
 asterisk-test-suite-report.xml
+crash-mail-config.yaml
 /astroot
 /contrib/valgrind/suppressions.txt
 /logs
