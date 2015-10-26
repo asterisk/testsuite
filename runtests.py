@@ -184,6 +184,41 @@ class TestRun:
 
         return core_files
 
+    def _email_backtrace(self, dest_file_name):
+        try:
+            import smtplib
+
+            max_bt_len = self.options.email_bt_len
+            email_server = self.options.email_server
+            sender = self.options.email_sender
+            recipients = self.options.email_recipients
+
+            if not sender or len(recipients) == 0:
+                return
+
+            subject = 'Testsuite crash detected'
+
+            dest_file = open(dest_file_name, 'r')
+            email_contents = "{0}\n\n{1}".format(dest_file_name,
+                                                 dest_file.read())
+            dest_file.close()
+
+            if max_bt_len > 0 and len(email_contents) > 8000:
+                email_contents = "{0}\n{1}".format(
+                    email_contents[0:max_bt_len],
+                    "-- Truncated to {0} characters --".format(max_bt_len))
+
+            email_message = "{0}\n\n{1}".format(
+                "Subject: {0}".format(subject),
+                email_contents)
+
+            smtpObj = smtplib.SMTP(email_server)
+
+            smtpObj.sendmail(sender, recipients, email_message)
+
+        except:
+            print "Failed to send email of backtrace"
+
     def _archive_core_dumps(self, core_dumps):
         for core in core_dumps:
             if not os.path.exists(core):
@@ -209,6 +244,7 @@ class TestRun:
                     print "error analyzing core dump; gdb exited with %d" % res
                 # Copy the backtrace over to the logs
                 print "Archived backtrace: {0}".format(dest_file_name)
+                self._email_backtrace(dest_file_name)
             except OSError, ose:
                 print "OSError ([%d]: %s) occurred while executing %r" % \
                     (ose.errno, ose.strerror, gdb_cmd)
@@ -686,7 +722,33 @@ def main(argv=None):
     parser.add_option("--timeout", metavar='int', type=int,
                       dest="timeout", default=-1,
                       help="Abort test after n seconds of no output.")
-
+    parser.add_option("--email-server",
+                      dest="email_server",
+                      default=None,
+                      action="store",
+                      help=("Specify an email server to use for sending crash"
+                            "reports"))
+    parser.add_option("--email-sender",
+                      dest="email_sender",
+                      default=None,
+                      action="store",
+                      help=("Specify email address to act as the sender for "
+                            "crash reports."))
+    parser.add_option("--email-recipient",
+                      dest="email_recipients",
+                      default=[],
+                      action="append",
+                      help=("Add email address to the list of recipents for "
+                            "crash reports."))
+    parser.add_option("--email-bt-len",
+                      dest="email_bt_len",
+                      default=8000,
+                      type="int",
+                      action="store",
+                      help=("Specify a maximum length for the backtrace "
+                            "included with crash report emails. Results will "
+                            "be truncated beyond the limit. 0 for no limit, "
+                            "defaults to 8000."))
     (options, args) = parser.parse_args(argv)
 
     # Install a signal handler for USR1/TERM, and use it to bail out of running
