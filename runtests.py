@@ -184,6 +184,62 @@ class TestRun:
 
         return core_files
 
+    def _email_backtrace(self, dest_file_name):
+        try:
+            f = open("crash-mail-config.yaml", "r")
+        except IOError:
+            print "Failed to open crash-mail-config.yaml"
+            return -1
+        except:
+            print "Unexpected error: %s" % sys.exc_info()[0]
+            return -1
+
+        email_config = yaml.load(f)
+        f.close()
+
+        email_server = email_config.get('smtp-server')
+        sender = email_config.get('sender')
+        recipients = email_config.get('recipients')
+        subject = email_config.get('subject', "")
+        max_bt_len = email_config.get('truncate-backtrace', 0)
+        email_debug = email_config.get('debug', 0)
+
+        if not sender or len(recipients) == 0:
+            print "--email-on-crash requires sender and 1+ recipients"
+            return -1
+
+        with open(dest_file_name, 'r') as bt_file:
+            backtrace_text = bt_file.read()
+
+        if max_bt_len > 0 and backtrace_text > max_bt_len:
+            truncated_text = "\n--truncated to {0} chars--".format(max_bt_len)
+            backtrace_text = backtrace_text[0:max_bt_len] + truncated_text
+
+        if len(subject):
+            subject = "Subject: {0}\n\n".format(subject)
+
+        email_text = "{0}{1}\n\n{2}".format(subject, dest_file_name,
+                                            backtrace_text)
+
+        try:
+            import smtplib
+        except ImportError:
+            print "Failed to import smtplib"
+            return -1
+
+        try:
+            smtpObj = smtplib.SMTP(email_server)
+            smtpObj.set_debuglevel(email_debug)
+            smtpObj.sendmail(sender, recipients, email_text)
+        except smtplib.SMTPServerDisconnected:
+            print "Failed to connect to SMTP Server"
+            return -1
+        except smtplib.SMTPException as smtp_exception:
+            print "Failed to send crash report due to unhandled SMTPException"
+            raise(smtp_exception)
+
+        return 0
+
     def _archive_core_dumps(self, core_dumps):
         for core in core_dumps:
             if not os.path.exists(core):
@@ -209,6 +265,10 @@ class TestRun:
                     print "error analyzing core dump; gdb exited with %d" % res
                 # Copy the backtrace over to the logs
                 print "Archived backtrace: {0}".format(dest_file_name)
+
+                if (self.options.email_on_crash and
+                        self._email_backtrace(dest_file_name)):
+                    print "Error: Failed to send backtrace email"
             except OSError, ose:
                 print "OSError ([%d]: %s) occurred while executing %r" % \
                     (ose.errno, ose.strerror, gdb_cmd)
@@ -668,8 +728,8 @@ def main(argv=None):
                       help="List available tags")
     parser.add_option("-t", "--test", action="append", default=[],
                       dest="tests",
-                      help=("Run a single specified test (directory) instead "
-                            "of all tests.  May be specified more than once."))
+                      help="Run a single specified test (directory) instead "
+                           "of all tests.  May be specified more than once.")
     parser.add_option("-v", "--version",
                       dest="version", default=None,
                       help="Specify the version of Asterisk rather then detecting it.")
@@ -686,7 +746,10 @@ def main(argv=None):
     parser.add_option("--timeout", metavar='int', type=int,
                       dest="timeout", default=-1,
                       help="Abort test after n seconds of no output.")
-
+    parser.add_option("--email-on-crash", action="store_true",
+                      dest="email_on_crash", default=False,
+                      help="Send email on crash with a backtrace. See "
+                           "crash-mail-config.yaml.sample for details.")
     (options, args) = parser.parse_args(argv)
 
     # Install a signal handler for USR1/TERM, and use it to bail out of running
