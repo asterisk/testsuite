@@ -44,10 +44,11 @@ test-case-config:
                 - { 'key-args': {'scenario': 'list_subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'mail_list'} }
 
 test-config:
-    list_name: 'mail_list'
-    resources:
+    list-name: 'mail_list'
+    packets:
         -
-            {
+            full-state: True
+            resources: {
                 'mail_sublist': {
                     'type': 'Multipart',
                     'state': 'active',
@@ -74,7 +75,8 @@ test-config:
                 }
             }
         -
-            {
+            full-state: False
+            resources: {
                 'carol': {
                     'type': 'MWI',
                     'state': 'active',
@@ -83,12 +85,6 @@ test-config:
                 }
             }
 
-    full_state:
-        -
-            True
-        -
-            False
-
-    ami_action:
+    ami-action:
         -
             { 'action': 'MWIUpdate', 'Mailbox': 'carol@default', 'NewMessages': '1', 'OldMessages': '2' }

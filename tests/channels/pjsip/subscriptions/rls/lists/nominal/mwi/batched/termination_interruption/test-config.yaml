@@ -49,17 +49,12 @@ test-case-config:
                 - { 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'mail_list', '-d': '3000'} }
 
 test-config:
-    stop_after_notifys: False
-    list_name: 'mail_list'
-    resources:
+    stop-test-after-notifys: False
+    list-name 'mail_list'
+    packets:
         -
-            { 'alice': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'},
-              'bob': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'} }
+            full-state: True
+            resources: { 'alice': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'}, 'bob': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'} }
         -
-            { 'alice': {'type': 'MWI', 'state': 'terminated', 'voice_message': '1/0 (0/0)', 'messages_waiting': 'yes'},
-              'bob': {'type': 'MWI', 'state': 'terminated', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'} }
-    full_state:
-        -
-            True
-        -
-            True
+            full-state: True
+            resources: { 'alice': {'type': 'MWI', 'state': 'terminated', 'voice_message': '1/0 (0/0)', 'messages_waiting': 'yes'}, 'bob': {'type': 'MWI', 'state': 'terminated', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'} }
