@@ -61,10 +61,11 @@ test-case-config:
                 - { 'key-args': {'scenario': 'list_subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'mail_list'} }
 
 test-config:
-    list_name: 'mail_list'
-    resources:
+    list-name: 'mail_list'
+    packets:
         -
-            {
+            full-state: True
+            resources: {
                 # Primary list carol wins because it was listed before mail_sublist
                 'carol': {
                     'type': 'MWI',
@@ -91,6 +92,3 @@ test-config:
                     }
                 }
             }
-    full_state:
-        -
-            True
