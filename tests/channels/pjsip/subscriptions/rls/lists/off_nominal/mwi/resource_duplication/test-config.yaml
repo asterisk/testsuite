@@ -30,7 +30,7 @@ test-modules:
     modules:
         -
             config-section: 'test-config'
-            typename: 'rls_test.IntegrityCheck'
+            typename: 'rls_test.RLSTest'
 
 test-case-config:
     test-iterations:
@@ -46,4 +46,3 @@ test-config:
     full_state:
         -
             True
-

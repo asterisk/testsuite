@@ -37,7 +37,7 @@ test-modules:
     modules:
         -
             config-section: 'test-config'
-            typename: 'rls_test.IntegrityCheck'
+            typename: 'rls_test.RLSTest'
         -
             typename: 'driver.TestDriver'
 
@@ -55,7 +55,7 @@ test-config:
                 'mail_list_b': {
                     'type': 'Multipart', 'state': 'active', 'sublist': {
                         'alice': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'},
-                        'bob': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'} 
+                        'bob': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'}
                     }
                 }
             }
@@ -71,7 +71,7 @@ test-config:
             {
                 'mail_list_b': {
                     'type': 'Multipart', 'state': 'active', 'sublist': {
-                        'bob': {'type': 'MWI', 'state': 'active', 'voice_message': '1/0 (0/0)', 'messages_waiting': 'yes'} 
+                        'bob': {'type': 'MWI', 'state': 'active', 'voice_message': '1/0 (0/0)', 'messages_waiting': 'yes'}
                     }
                 }
             }
