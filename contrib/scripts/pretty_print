@@ -13,15 +13,6 @@ if [ -t 0 ] ; then
 	exit 1
 fi
 
-declare -ix runnable=0
-declare -ix total=0
-declare -ix passed=0
-declare -ix failed=0
-declare -ix timedout=0
-declare -ix tests=0
-declare -ix maxelapsed=0
-declare -a failures
-declare -a timeouts
 declare -ix test_timeout=0
 YELLOW='\033[01;33m'
 GREEN='\033[01;32m'
@@ -50,6 +41,16 @@ echo -e -n "Calculating...\r"
 trap 'kill $countpid &>/dev/null' INT ERR
 while read line ; do
 	if [[ $line =~ ^Running.tests.for.(Asterisk.*) ]] ; then
+		declare -ix runnable=0
+		declare -ix total=0
+		declare -ix passed=0
+		declare -ix failed=0
+		declare -ix timedout=0
+		declare -ix tests=0
+		declare -ix maxelapsed=0
+		declare -a failures
+		declare -a timeouts
+
 		version=${BASH_REMATCH[1]}
 		starttime=$SECONDS
 	fi
@@ -57,6 +58,7 @@ while read line ; do
 	if [[ $line =~ ^Tests.to.run:.([0-9]+),[\ ]+Maximum.test.inactivity.time:.([0-9-]+) ]] ; then
 		runnable=${BASH_REMATCH[1]}
 		export test_timeout=${BASH_REMATCH[2]}
+		echo =============================================================
 		echo ${line/-1/unlimited}
 		printf "[%-*.*s ][%-11s][%s][${GREEN}%4s${NORM}][${RED}%4s${NORM}]\n" $col $col "Test" "   Test" "Status" "Pass" "Fail"
 	fi
@@ -99,22 +101,25 @@ while read line ; do
 		kill $countpid
 		printf "[${COLOR}%s${NORM}][${GREEN}%4d${NORM}][${RED}%4d${NORM}]\n" $label $passed $failed
 	fi
+
+	if [[ $line =~ TEST\ RESULTS ]] ; then
+		for fail in "${failures[@]}" ; do
+			echo -e "${RED}$fail${NORM}"
+		done
+		for to in "${timeouts[@]}" ; do
+			echo -e "${YELLOW}$to${NORM}"
+		done
+
+		elapsed=$(( $SECONDS - $starttime ))
+		time="$(( $elapsed / 60 ))m $(( $elapsed % 60 ))s"
+		echo -e "Tests: $runnable   ${GREEN}Passed: $passed   ${RED}Failed: $failed   TimedOut: $timedout${NORM}   Time: $time\tLongest test: ${maxelapsed}s"
+	fi
 done
 
 trap - INT ERR
 
 kill $countpid &>/dev/null
 
-for fail in "${failures[@]}" ; do
-	echo -e "${RED}$fail${NORM}"
-done
-for to in "${timeouts[@]}" ; do
-	echo -e "${YELLOW}$to${NORM}"
-done
-
-elapsed=$(( $SECONDS - $starttime ))
-time="$(( $elapsed / 60 ))m $(( $elapsed % 60 ))s"
-echo -e "Tests: $runnable   ${GREEN}Passed: $passed   ${RED}Failed: $failed   TimedOut: $timedout${NORM}   Time: $time\tLongest test: ${maxelapsed}s"
 
 
 
