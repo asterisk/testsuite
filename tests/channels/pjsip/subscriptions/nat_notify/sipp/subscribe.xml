@@ -86,10 +86,10 @@
     ]]>
   </send>
 
+  <recv response="200" crlf="true" />
+
   <!-- NOTIFY upon resubscription -->
   <recv request="NOTIFY" crlf="true" />
-
-  <recv response="200" crlf="true" />
 
   <send>
     <![CDATA[
