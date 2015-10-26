@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''Asterisk external test suite driver.
 
-Copyright (C) 2010, Digium, Inc.
+Copyright (C) 2015, Digium, Inc.
 Russell Bryant <russell@digium.com>
 
 This program is free software, distributed under the terms of
@@ -43,6 +43,7 @@ sys.path.append("lib/python")
 from asterisk.version import AsteriskVersion
 from asterisk.asterisk import Asterisk
 from asterisk.test_config import TestConfig
+from mailer import send_email
 
 TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
@@ -184,6 +185,37 @@ class TestRun:
 
         return core_files
 
+    def _email_crash_report(self, dest_file_name):
+        email_config = load_yaml_config("crash-mail-config.yaml")
+
+        smtp_server = email_config.get('smtp-server')
+        sender = email_config.get('sender')
+        recipients = email_config.get('recipients')
+        subject = email_config.get('subject', "Testsuite crash detected")
+        max_bt_len = email_config.get('truncate-backtrace', 0)
+        debug_level = email_config.get('debug', 0)
+
+        if not sender or len(recipients) == 0:
+            print "--email-on-crash requires sender and 1+ recipients"
+            return
+
+        with open(dest_file_name, 'r') as bt_file:
+            backtrace_text = bt_file.read()
+
+        if max_bt_len > 0 and backtrace_text > max_bt_len:
+            truncated_text = "\n--truncated to {0} chars--".format(max_bt_len)
+            backtrace_text = backtrace_text[0:max_bt_len] + truncated_text
+
+        email_text = "{0}\n\n{1}".format(dest_file_name, backtrace_text)
+
+        message = {'body': email_text, 'subject': subject}
+
+        try:
+            send_email(smtp_server, sender, recipients, message,
+                       debug=debug_level)
+        except Exception as exception:
+            print "Failed to send email\nError: {0}".format(exception)
+
     def _archive_core_dumps(self, core_dumps):
         for core in core_dumps:
             if not os.path.exists(core):
@@ -209,6 +241,10 @@ class TestRun:
                     print "error analyzing core dump; gdb exited with %d" % res
                 # Copy the backtrace over to the logs
                 print "Archived backtrace: {0}".format(dest_file_name)
+
+                if self.options.email_on_crash:
+                    self._email_crash_report(dest_file_name)
+
             except OSError, ose:
                 print "OSError ([%d]: %s) occurred while executing %r" % \
                     (ose.errno, ose.strerror, gdb_cmd)
@@ -393,18 +429,10 @@ class TestSuite:
 
     def _parse_test_yaml(self, test_dir, ast_version):
         tests = []
-        try:
-            f = open("%s/%s" % (test_dir, TESTS_CONFIG), "r")
-        except IOError:
-            if test_dir != "tests/custom":
-                print "Failed to open %s/%s" % (test_dir, TESTS_CONFIG)
-            return tests
-        except:
-            print "Unexpected error: %s" % sys.exc_info()[0]
-            return tests
 
-        config = yaml.load(f)
-        f.close()
+        config = load_yaml_config("%s/%s" % (test_dir, TESTS_CONFIG))
+        if not config:
+            return tests
 
         for t in config["tests"]:
             for val in t:
@@ -616,6 +644,23 @@ class TestSuite:
             tc.appendChild(failure)
 
 
+def load_yaml_config(path):
+    """Load contents of a YAML config file to a dictionary"""
+    try:
+        f = open(path, "r")
+    except IOError:
+        print "Failed to open %s" % path
+        return None
+    except:
+        print "Unexpected error: %s" % sys.exc_info()[0]
+        return None
+
+    config = yaml.load(f)
+    f.close()
+
+    return config
+
+
 def handle_usr1(sig, stack):
     """Handle the SIGUSR1 signal
 
@@ -668,14 +713,18 @@ def main(argv=None):
                       help="List available tags")
     parser.add_option("-t", "--test", action="append", default=[],
                       dest="tests",
-                      help=("Run a single specified test (directory) instead "
-                            "of all tests.  May be specified more than once."))
+                      help="Run a single specified test (directory) instead "
+                           "of all tests.  May be specified more than once.")
     parser.add_option("-v", "--version",
                       dest="version", default=None,
                       help="Specify the version of Asterisk rather then detecting it.")
     parser.add_option("-V", "--valgrind", action="store_true",
                       dest="valgrind", default=False,
                       help="Run Asterisk under Valgrind")
+    parser.add_option("--email-on-crash", action="store_true",
+                      dest="email_on_crash", default=False,
+                      help="Send email on crash with a backtrace. See "
+                           "crash-mail-config.yaml.sample for details.")
     parser.add_option("--number", metavar="int", type=int,
                       dest="number", default=1,
                       help="Number of times to run the test suite. If a value of "
@@ -686,7 +735,6 @@ def main(argv=None):
     parser.add_option("--timeout", metavar='int', type=int,
                       dest="timeout", default=-1,
                       help="Abort test after n seconds of no output.")
-
     (options, args) = parser.parse_args(argv)
 
     # Install a signal handler for USR1/TERM, and use it to bail out of running

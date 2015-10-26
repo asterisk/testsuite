@@ -1,0 +1,21 @@
+# Configuration sample for mail on crash functionality. Place this in the
+# testsuite base directory as crash-mail-config.yaml and use the
+# --email-on-crash option for runtests.py to send reports to the recipients
+# using the configured parameters here.
+
+# The smtp server to send the message
+smtp-server: 'example-domain.com'
+# The email address that should act as the sender
+sender: 'bigboss@example-domain.com'
+# Recipients for the email
+recipients:
+    -
+        'sigint@example-domain.com'
+    -
+        'paramedic@example-domain.com'
+# (optional) If set, backtrace will be truncated to the first N characters
+truncate-backtrace: 10000
+# (options) Subject line for the email (default: 'Testsuite crash detected')
+subject: 'Testsuite crash detected'
+# (optional) Sets debug level for SMTP interactions (default: 0)
+debug: 0
