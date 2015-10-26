@@ -55,10 +55,11 @@ test-case-config:
                 - { 'key-args': {'scenario': 'list_subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list'} }
 
 test-config:
-    list_name: 'pres_list'
-    resources:
+    list-name: 'pres_list'
+    packets:
         -
-            {
+            full-state: True
+            resources: {
                 'pres_sublist': {
                     'type': 'Multipart', 'state': 'active', 'sublist': {
                         'alice': {'type': 'PIDF', 'state': 'active'},
@@ -67,6 +68,3 @@ test-config:
                 },
                 'carol': {'type': 'PIDF', 'state': 'active'}
             }
-    full_state:
-        -
-            True

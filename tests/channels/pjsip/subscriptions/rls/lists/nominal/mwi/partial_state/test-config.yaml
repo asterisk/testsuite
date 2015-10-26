@@ -44,18 +44,34 @@ test-case-config:
                 - { 'key-args': {'scenario': 'list_subscribe.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'mail_list'} }
 
 test-config:
-    list_name: 'mail_list'
-    resources:
+    list-name: 'mail_list'
+    packets:
         -
-            { 'alice': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'},
-              'bob': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'} }
+            full-state: True
+            resources: {
+                'alice': {
+                    'type': 'MWI',
+                    'state': 'active',
+                    'voice_message': '0/0 (0/0)',
+                    'messages_waiting': 'no'
+                    },
+                'bob': {
+                    'type': 'MWI',
+                    'state': 'active',
+                    'voice_message': '0/0 (0/0)',
+                    'messages_waiting': 'no'
+                }
+            }
         -
-            { 'alice': {'type': 'MWI', 'state': 'active', 'voice_message': '1/2 (0/0)', 'messages_waiting': 'yes'} }
-    full_state:
-        -
-            True
-        -
-            False
-    ami_action:
+            full-state: False
+            resources: {
+                'alice': {
+                    'type': 'MWI',
+                    'state': 'active',
+                    'voice_message': '1/2 (0/0)',
+                    'messages_waiting': 'yes'
+                }
+            }
+    ami-action:
         -
             { 'action': 'MWIUpdate', 'Mailbox': 'alice@default', 'NewMessages': '1', 'OldMessages': '2' }

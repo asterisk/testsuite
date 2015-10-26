@@ -43,16 +43,11 @@ test-case-config:
                 - { 'key-args': {'scenario': 'termination.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'pres_list'} }
 
 test-config:
-    list_name: 'pres_list'
-    resources:
+    list-name: 'pres_list'
+    packets:
         -
-            { 'alice': {'type': 'PIDF', 'state': 'active'},
-              'bob': {'type': 'PIDF', 'state': 'active'} }
+            full-state: True
+            resources: { 'alice': {'type': 'PIDF', 'state': 'active'}, 'bob': {'type': 'PIDF', 'state': 'active'} }
         -
-            { 'alice': {'type': 'PIDF', 'state': 'terminated'},
-              'bob': {'type': 'PIDF', 'state': 'terminated'} }
-    full_state:
-        -
-            True
-        -
-            True
+            full-state: True
+            resources: { 'alice': {'type': 'PIDF', 'state': 'terminated'}, 'bob': {'type': 'PIDF', 'state': 'terminated'} }
