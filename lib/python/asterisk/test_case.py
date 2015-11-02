@@ -302,8 +302,12 @@ class TestCase(object):
 
             self.ami.append(None)
             LOGGER.info("Creating AMIFactory %d to %s" % ((i + 1), host))
-            ami_factory = manager.AMIFactory(actual_user, actual_secret, i,
-                                             on_reconnect=on_reconnect)
+            try:
+                ami_factory = manager.AMIFactory(actual_user, actual_secret, i,
+                                                 on_reconnect=on_reconnect)
+            except:
+                # Try without reconnects
+                ami_factory = manager.AMIFactory(actual_user, actual_secret, i)
             deferred = ami_factory.login(ip=host, port=actual_port)
             deferred.addCallbacks(self._ami_connect, self.ami_login_error)
 
