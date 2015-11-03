@@ -20,6 +20,7 @@ import xml.dom
 import random
 import select
 import signal
+import syslog
 
 try:
     import lxml.etree as ET
@@ -164,7 +165,10 @@ class TestRun:
                 status = 'passed'
             else:
                 status = 'failed'
-            print 'Test %s %s\n' % (cmd, status)
+            pass_str = 'Test %s %s\n' % (cmd, status)
+            print pass_str
+            if self.options.syslog:
+                syslog.syslog(pass_str)
 
         else:
             print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
@@ -559,7 +563,10 @@ class TestSuite:
                     self.total_skipped += 1
                     continue
 
-            print "--> Running test '%s' ..." % t.test_name
+            running_str = "--> Running test '%s' ..." % t.test_name
+            print running_str
+            if self.options.syslog:
+                syslog.syslog(running_str)
 
             if self.options.dry_run:
                 t.passed = True
@@ -711,6 +718,9 @@ def main(argv=None):
     parser.add_option("-L", "--list-tags", action="store_true",
                       dest="list_tags", default=False,
                       help="List available tags")
+    parser.add_option("-s", "--syslog", action="store_true",
+                      dest="syslog", default=False,
+                      help="Log test start/stop to syslog")
     parser.add_option("-t", "--test", action="append", default=[],
                       dest="tests",
                       help="Run a single specified test (directory) instead "
@@ -776,12 +786,18 @@ def main(argv=None):
 
     continue_forever = True if options.number < 0 else False
     iteration = 0
+    if options.syslog:
+        syslog.openlog('AsteriskTestsuite', syslog.LOG_PID)
     while ((iteration < options.number or continue_forever) and not abandon_test_suite):
 
         test_suite = TestSuite(ast_version, options)
 
-        print "Running tests for Asterisk {0} (run {1})...\n".format(
+        running_str = "Running tests for Asterisk {0} (run {1})...\n".format(
             str(ast_version).strip('\n'), iteration + 1)
+        print running_str
+        if options.syslog:
+            syslog.syslog(running_str)
+
         test_suite.run()
         test_suite.write_results_xml(doc, doc.documentElement)
 
@@ -815,6 +831,10 @@ def main(argv=None):
         print "Unexpected error: %s" % sys.exc_info()[0]
     print "\n"
     print doc.toprettyxml("  ", encoding="utf-8")
+
+    if options.syslog:
+        syslog.syslog("All tests concluded")
+        syslog.closelog()
 
     return test_suite.total_failures
 
