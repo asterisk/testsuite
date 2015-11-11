@@ -38,7 +38,7 @@ test-modules:
     modules:
         -
             config-section: 'test-config'
-            typename: 'rls_test.IntegrityCheck'
+            typename: 'rls_test.RLSTest'
         -
             typename: 'driver.TestDriver'
 

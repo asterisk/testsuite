@@ -20,20 +20,22 @@ from twisted.internet import reactor
 LOGGER = logging.getLogger(__name__)
 
 
-class IntegrityCheck(VOIPListener):
-    """Verifies that SIP notifies contain expected updates
+class RLSTest(VOIPListener):
+    """Verifies that SIP notifies contain expected updates.
 
        A test module that observes incoming SIP notifies and compares them
        to a set of expected results. Tests may optionally specify for an
        arbitrary number of AMI actions to be executed in order at 2 second
        intervals from the start of the test.
     """
-    def __init__(self, module_config, test_object):
-        """Constructor
 
-        Arguments:
-        module_config Dictionary containing test configuration
-        test_object used to manipulate reactor and set/remove failure tokens
+    def __init__(self, module_config, test_object):
+        """Constructor.
+
+        Keyword Arguments:
+        module_config          -- Dictionary containing test configuration.
+        test_object            -- Used to manipulate reactor and set/remove
+                                  failure tokens.
         """
         self.set_pcap_defaults(module_config)
         VOIPListener.__init__(self, module_config, test_object)
@@ -76,8 +78,8 @@ class IntegrityCheck(VOIPListener):
         the packet that will verify that the contents of the NOTIFY match the
         expectations set for NOTIFY in the test configuration.
 
-        Arguments:
-        packet Incoming SIP Packet
+        Keyword Arguments:
+        packet                 -- Incoming SIP Packet
         """
 
         LOGGER.debug('Received SIP packet')
@@ -134,10 +136,14 @@ class IntegrityCheck(VOIPListener):
 
         Note: Overrides scenario_started from VOIPListener
 
-        Arguments:
-        scenario Not actually used, just part of the signature.
+        Keyword Arguments:
+        scenario               -- The event payload. (Not actually used, just
+                                  part of the signature.)
         """
+
         def _perform_ami_action():
+            """Helper function to loop executing an ami action."""
+
             action = self.ami_action.pop(0)
             debug_msg = "Sending AMI action: {0}"
             LOGGER.debug(debug_msg.format(action))
