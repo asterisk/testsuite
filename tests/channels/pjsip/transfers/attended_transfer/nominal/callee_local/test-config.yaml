@@ -12,14 +12,13 @@ testinfo:
         SIPp #1 and SIPp #4 are hung up."
 
 test-modules:
-    add-test-to-search-path: True
     test-object:
         config-section: test-object-config
         typename: sipp.SIPpTestCase
     modules:
         -
             config-section: ami-config
-            typename: 'ami.AMIEventModule'
+            typename: 'pluggable_modules.EventActionModule'
 
 test-object-config:
     fail-on-any: True
@@ -33,19 +32,29 @@ test-object-config:
 
 ami-config:
     -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'AttendedTransfer'
-                Result: 'Success'
-        count: 1
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'AttendedTransfer'
+                    Result: 'Success'
+            count: 1
+    # Ensure COLP updates occur for alice and charlie before hanging up.
     -
-        type: 'callback'
-        conditions:
-            match:
-                Event: 'Hangup'
-        callbackModule: 'attended_transfer'
-        callbackMethod: 'transfer_complete'
+        ami-events:
+            conditions:
+                match:
+                    Event: 'NewConnectedLine'
+                    Channel: 'PJSIP/charlie-.*|PJSIP/alice-.*'
+                    ChannelStateDesc: 'Up'
+                    ConnectedLineNum: 'alice|charlie'
+                    ConnectedLineName: 'Alice|Charlie'
+            count: '>2'
+            trigger-on-count: True
+        ami-actions:
+            action:
+                action: 'Hangup'
+                channel: '/^PJSIP/charlie-.*$/'
 
 properties:
     minversion: '12.0.0'
