@@ -44,14 +44,17 @@ class RLSTest(VOIPListener):
         self.token = test_object.create_fail_token("Haven't handled all "
                                                    "expected NOTIFY packets.")
 
-        self.resources = module_config['resources']
-        self.list_name = module_config['list_name']
-        self.full_state = module_config['full_state']
-        self.ami_action = module_config.get('ami_action')
-        self.stop_after_notifys = module_config.get('stop_after_notifys', True)
 
-        self.version = 0
+        self.list_name = module_config['list-name']
+        self.log_packets = module_config.get("log-packets", False)
+        self.packets = module_config['packets']
+        self.ami_action = module_config.get('ami-action')
+        self.stop_test_after_notifys = \
+            module_config.get("stop-test-after-notifys", True)
+
+
         self.ami = None
+        self.packets_idx = 0
         self.test_object.register_ami_observer(self.ami_connect)
         if hasattr(self.test_object, 'register_scenario_started_observer'):
             self.test_object.register_scenario_started_observer(
@@ -93,34 +96,38 @@ class RLSTest(VOIPListener):
                          'multipart body')
             return
 
-        if self.version >= len(self.resources):
+        if self.packets_idx >= len(self.packets):
             LOGGER.debug('Ignoring packet, version is higher than count of ' +
                          'test expectations')
             return
 
+        resources = self.packets[self.packets_idx]["resources"]
+        full_state = self.packets[self.packets_idx]["full-state"]
+
         validator = RLSValidator(test_object=self.test_object,
                                  packet=packet,
-                                 version=self.version,
-                                 full_state=self.full_state[self.version],
+                                 version=self.packets_idx,
+                                 full_state=full_state,
                                  list_name=self.list_name,
-                                 resources=self.resources[self.version])
+                                 resources=resources)
 
         debug_msg = "validating packet -- expecting {0}"
-        LOGGER.debug(debug_msg.format(self.resources[self.version]))
+        LOGGER.debug(debug_msg.format(self.packets[self.packets_idx]))
         if not validator.check_integrity():
             LOGGER.error('Integrity Check Failed.')
             return
 
         info_msg = "Packet validated successfully. Test Phase {0} Completed."
-        LOGGER.info(info_msg.format(self.version))
-        self.version += 1
+        LOGGER.info(info_msg.format(self.packets_idx))
+        self.packets_idx += 1
 
-        if self.version == len(self.resources):
+        if self.packets_idx == len(self.packets):
             info_msg = "All test phases completed. RLS verification complete."
             LOGGER.info(info_msg)
             self.test_object.remove_fail_token(self.token)
             if self.stop_after_notifys:
-                # We only deal with as many NOTIFIES as we have resources
+                # We only deal with as many NOTIFIES as we have defined in our
+                # test-config.yaml
                 self.test_object.set_passed(True)
                 self.test_object.stop_reactor()
 
