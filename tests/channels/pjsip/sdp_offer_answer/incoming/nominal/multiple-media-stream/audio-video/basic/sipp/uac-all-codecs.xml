@@ -42,7 +42,7 @@
       a=rtpmap:102 G7221/16000
       a=rtpmap:115 G7221/32000
       a=rtpmap:116 G719/48000
-      a=rtpmap:107 opus/48000
+      a=rtpmap:107 opus/48000/2
       a=rtpmap:101 telephone-event/8000
       a=fmtp:101 0-16
       a=ptime:20
