@@ -45,7 +45,7 @@ class BridgeTestCase(TestCase):
         1 : the unit from which calls originate, also known as "Alice"
         2 : the unit where calls terminate, also known as "Bob"
         """
-        TestCase.__init__(self, test_path)
+        TestCase.__init__(self, test_path, test_config)
         self.test_runs = []
         self.current_run = 0
         self.ami_uut = None
