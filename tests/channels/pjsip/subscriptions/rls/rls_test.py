@@ -2,6 +2,7 @@
 """
 Copyright (C) 2015, Digium, Inc.
 Jonathan Rose <jrose@digium.com>
+Ashley Sanders <asanders@digium.com>
 
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
@@ -39,7 +40,7 @@ def filter_multipart_packet(packet):
     # If the packet body is not a multipart packet body, this is not a
     # packet we care about.
     if packet.body.packet_type != "Multipart":
-        LOGGER.debug("Ignoring packet, NOTIFY does not contain " \
+        LOGGER.debug("Ignoring packet, NOTIFY does not contain "
                      "multipart body")
         return False
 
@@ -108,9 +109,10 @@ class RLSTest(VOIPListener):
         self.test_object = test_object
         self.ami_action = module_config.get("ami-action")
 
-        if self.check_prerequisites():
-            self.test_object.register_scenario_started_observer(
-                self.on_scenario_started)
+        token_msg = (
+            "Test execution was interrupted before all NOTIFY "
+            "packets were accounted for.")
+        self.token = self.test_object.create_fail_token(token_msg)
 
         self.ami = None
         self.packets_idx = 0
@@ -121,12 +123,12 @@ class RLSTest(VOIPListener):
         self.stop_test_after_notifys = \
             module_config.get("stop-test-after-notifys", True)
 
-        token_msg = "Test execution was interrupted before all NOTIFY " \
-                    "packets were accounted for."
-        self.token = self.test_object.create_fail_token(token_msg)
-
         self.test_object.register_ami_observer(self.on_ami_connect)
         self.add_callback("SIP", self.multipart_handler)
+
+        if self.check_prerequisites():
+            self.test_object.register_scenario_started_observer(
+                self.on_scenario_started)
 
     def check_prerequisites(self):
         """Checks the test_object can support an ami_action, if configured.
@@ -142,16 +144,18 @@ class RLSTest(VOIPListener):
 
         is_start_observer = hasattr(self.test_object,
                                     "register_scenario_started_observer")
-        if self.ami_action is not None:
-            message = "This test is configured with an ami_action " \
-                      "attribute. However, it is also configured to " \
-                      "use a test-object that does not contain support " \
-                      "for 'register_scenario_started_observer'. As a " \
-                      "result, the ami_action will never be executed. " \
-                      "Either reconfigure the test to run without a " \
-                      "dependency for an ami_action or change the " \
-                      "test-object type to a type that supports " \
-                      "'register_scenario_started_observer'."
+
+        if not is_start_observer and self.ami_action is not None:
+            message = (
+                "This test is configured with an ami_action "
+                "attribute. However, it is also configured to "
+                "use a test-object that does not contain support "
+                "for 'register_scenario_started_observer'. As a "
+                "result, the ami_action will never be executed. "
+                "Either reconfigure the test to run without a "
+                "dependency for an ami_action or change the "
+                "test-object type to a type that supports "
+                "'register_scenario_started_observer'.")
             self.fail_test(message)
 
         return is_start_observer
@@ -186,9 +190,10 @@ class RLSTest(VOIPListener):
             return
 
         if self.packets_idx >= len(self.packets):
-            message = "Received more packets ({0}) than expected ({1}). " \
-                      "Failing test.".format(self.packets_idx,
-                                             len(self.packets))
+            message = (
+                "Received more packets ({0}) than expected ({1}). "
+                "Failing test.").format(self.packets_idx,
+                                        len(self.packets))
             self.fail_test(message)
 
         rls_packet = RLSPacket(packet)
@@ -225,6 +230,7 @@ class RLSTest(VOIPListener):
 
     def on_ami_connect(self, ami):
         """Callback when AMI connects. Sets test AMI instance."""
+
         self.ami = ami
 
     def on_scenario_started(self, scenario):
