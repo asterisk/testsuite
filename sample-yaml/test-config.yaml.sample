@@ -213,6 +213,10 @@ test-modules:
 test-object-config:
     reactor-timeout: 30
     spawn-after-hangup: True
+    # Whether a full log file containg DEBUG level should be created, defaults to True
+    log-full: True
+    # Whether a messages log file containing INFO level should be created, defaults to True
+    log-messages: True
     test-iterations:
         -
             channel: 'Local/play@default'

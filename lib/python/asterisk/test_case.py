@@ -34,7 +34,7 @@ except:
 LOGGER = None
 
 
-def setup_logging(log_dir):
+def setup_logging(log_dir, log_full, log_messages):
     """Initialize the logger"""
 
     global LOGGER
@@ -64,15 +64,17 @@ def setup_logging(log_dir):
     datefmt = '%b %d %H:%M:%S'
     form = logging.Formatter(fmt=fmt, datefmt=datefmt)
 
-    full_handler = logging.FileHandler(os.path.join(log_dir, 'full.txt'))
-    full_handler.setLevel(logging.DEBUG)
-    full_handler.setFormatter(form)
-    root_logger.addHandler(full_handler)
+    if log_full:
+        full_handler = logging.FileHandler(os.path.join(log_dir, 'full.txt'))
+        full_handler.setLevel(logging.DEBUG)
+        full_handler.setFormatter(form)
+        root_logger.addHandler(full_handler)
 
-    messages_handler = logging.FileHandler(os.path.join(log_dir, 'messages.txt'))
-    messages_handler.setLevel(logging.INFO)
-    messages_handler.setFormatter(form)
-    root_logger.addHandler(messages_handler)
+    if log_messages:
+        messages_handler = logging.FileHandler(os.path.join(log_dir, 'messages.txt'))
+        messages_handler.setLevel(logging.INFO)
+        messages_handler.setFormatter(form)
+        root_logger.addHandler(messages_handler)
 
 
 class TestCase(object):
@@ -138,6 +140,8 @@ class TestCase(object):
         self._ami_callbacks = []
         self._pcap_callbacks = []
         self._stop_deferred = None
+        log_full = True
+        log_messages = True
 
         if os.getenv("VALGRIND_ENABLE") == "true":
             self.reactor_timeout *= 20
@@ -147,13 +151,15 @@ class TestCase(object):
             if 'reactor-timeout' in test_config:
                 self.reactor_timeout = test_config['reactor-timeout']
             self.ast_conf_options = test_config.get('ast-config-options')
+            log_full = test_config.get('log-full', True)
+            log_messages = test_config.get('log-messages', True)
         else:
             self.ast_conf_options = None
 
         os.makedirs(self.testlogdir)
 
         # Set up logging
-        setup_logging(self.testlogdir)
+        setup_logging(self.testlogdir, log_full, log_messages)
 
         LOGGER.info("Executing " + self.test_name)
 
