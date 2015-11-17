@@ -1,0 +1,65 @@
+testinfo:
+    summary: 'Check handling of 423 response'
+    description: |
+        'Asterisk attempts to register with a short expiration time that the
+        registration server rejects with a 423 Interval Too Brief response.
+        Asterisk should then attempt to register with the requested expiration
+        time.
+
+        There are two scenarios:
+        1) The 423 response is sent before authentication.
+        2) The 423 response is sent after authentication.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'ami.AMIEventModule'
+            config-section: ami-config
+
+sipp-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'uas-reg-423-scenario1.xml', '-p': '5061'} }
+                - { 'key-args': { 'scenario': 'uas-reg-423-scenario2.xml', '-p': '5062'} }
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Registry'
+                ChannelType: 'PJSIP'
+                Username: 'sip:us@127.0.0.1'
+                Domain: 'sip:them@127.0.0.1:5061'
+        requirements:
+            match:
+                Status: 'Registered'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Registry'
+                ChannelType: 'PJSIP'
+                Username: 'sip:us@127.0.0.1'
+                Domain: 'sip:them@127.0.0.1:5062'
+        requirements:
+            match:
+                Status: 'Registered'
+        count: '1'
+
+properties:
+    minversion: '13.7.0'
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_outbound_authenticator_digest'
+        - asterisk: 'res_pjsip_outbound_registration'
+    tags:
+        - pjsip
