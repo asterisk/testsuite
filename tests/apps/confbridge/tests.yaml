@@ -13,4 +13,4 @@ tests:
     - test: 'confbridge_result'
     - test: 'confbridge_triple_lindy'
     - test: 'confbridge_end_marked'
-
+    - test: 'confbridge_timeout'

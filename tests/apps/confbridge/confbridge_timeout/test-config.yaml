@@ -1,0 +1,68 @@
+testinfo:
+    summary: 'Ensure that Confbridge user timeouts work as expected'
+    description: |
+        'This test configures a ConfBridge user profile that has a timeout of 10 seconds.
+        Alice calls into the ConfBridge. We expect that she will be removed from the
+        ConfBridge after 10 seconds.
+        Bob first calls into the CONFBRIDGE dialplan function to set his timeout to 5 seconds.
+        We expect that he will be removed from the ConfBridge after 5 seconds.
+        We ensure that both Bob and Alice have their CONFBRIDGE_RESULT channel variable set
+        to "TIMEOUT" when they are removed from the ConfBridge.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: alice-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: bob-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: hangup-monitor
+            typename: 'pluggable_modules.HangupMonitor'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    connect-ami: True
+
+alice-originator:
+    channel: 'Local/alice@default'
+    application: 'Echo'
+    trigger: 'ami_connect'
+
+bob-originator:
+    channel: 'Local/bob@default'
+    application: 'Echo'
+    trigger: 'ami_connect'
+
+hangup-monitor:
+    ids: '0'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'ConfBridgeTimeout'
+        requirements:
+            match:
+                Result: 'Pass'
+        count: 2
+
+
+properties:
+    minversion: '13.7.0'
+    tags:
+        - confbridge
+        - apps
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_confbridge'
+        - asterisk: 'app_userevent'
