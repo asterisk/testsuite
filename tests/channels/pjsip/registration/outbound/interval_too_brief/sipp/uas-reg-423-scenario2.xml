@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Register interval too brief scenario 2: 423 response after authentication">
+    <recv request="REGISTER" crlf="true">
+    </recv>
+
+    <send>
+        <![CDATA[
+            SIP/2.0 401 Unauthorized
+            [last_Via:]
+            [last_From:]
+            [last_To:];tag=[pid]SIPpTag01[call_number]
+            [last_Call-ID:]
+            [last_CSeq:]
+            Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+            WWW-Authenticate: Digest realm="asterisk", nonce="47ebe028cda119c35d4877b383027d28da013815"
+            Content-Length: 0
+        ]]>
+    </send>
+
+    <recv request="REGISTER" crlf="true">
+    </recv>
+
+    <send>
+        <![CDATA[
+            SIP/2.0 423 Interval Too Brief
+            [last_Via:]
+            [last_From:]
+            [last_To:];tag=[pid]SIPpTag01[call_number]
+            [last_Call-ID:]
+            [last_CSeq:]
+            Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+            Min-Expires: 20
+            Content-Length: 0
+        ]]>
+    </send>
+
+    <recv request="REGISTER" crlf="true">
+    </recv>
+
+    <send>
+        <![CDATA[
+            SIP/2.0 401 Unauthorized
+            [last_Via:]
+            [last_From:]
+            [last_To:];tag=[pid]SIPpTag01[call_number]
+            [last_Call-ID:]
+            [last_CSeq:]
+            Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+            WWW-Authenticate: Digest realm="asterisk", nonce="47ebe028cda119c35d4877b383027d28da014233"
+            Content-Length: 0
+        ]]>
+    </send>
+
+    <recv request="REGISTER" crlf="true">
+    </recv>
+
+    <send>
+        <![CDATA[
+            SIP/2.0 200 OK
+            [last_Via:]
+            [last_From:]
+            [last_To:];tag=[pid]SIPpTag01[call_number]
+            [last_Call-ID:]
+            [last_CSeq:]
+            Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+            Expires: 20
+            Content-Length: 0
+        ]]>
+    </send>
+
+    <!-- Keep the scenario going for a while to ensure that no further messages are sent -->
+    <timewait milliseconds="5000" />
+</scenario>
