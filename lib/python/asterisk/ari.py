@@ -28,6 +28,7 @@ except:
 
 LOGGER = logging.getLogger(__name__)
 
+DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 8088
 
 #: Default matcher to ensure we don't have any validation failures on the
@@ -60,7 +61,12 @@ class AriBaseTestObject(TestCase):
         self.apps = test_config.get('apps', 'testsuite')
         if isinstance(self.apps, list):
             self.apps = ','.join(self.apps)
-        host = test_config.get('host', '127.0.0.1')
+        default_host = DEFAULT_HOST
+        if self.global_config.config:
+            asterisks = self.global_config.config.get('asterisk-instances')
+            if asterisks:
+                default_host = asterisks[0]['host']
+        host = test_config.get('host', default_host)
         port = test_config.get('port', DEFAULT_PORT)
         userpass = (test_config.get('username', 'testsuite'),
                     test_config.get('password', 'testsuite'))
