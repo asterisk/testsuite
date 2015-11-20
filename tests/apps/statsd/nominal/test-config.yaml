@@ -7,8 +7,6 @@ testinfo:
         to StatsD through the StatsD Dialplan Application.
 
 test-modules:
-    add-test-to-search-path: 'True'
-    add-relative-to-search-path: ['..']
     test-object:
         config-section: 'test-object-config'
         typename: 'test_case.TestCaseModule'
