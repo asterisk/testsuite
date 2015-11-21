@@ -4,7 +4,7 @@ testinfo:
         entries are defined in pjsip.conf.
     description: |
         This test ensures Asterisk gracefully handles the situation where
-        duplicate sections are defined in pjsip.conf. Seven (7) test
+        duplicate sections are defined in pjsip.conf. Six (6) test
         scenarios are utilized to confirm configuring pjsip.conf with sections
         containing an identical id/type combination as another section in the
         file, results in Asterisk rejecting the configuration. Each test
@@ -12,11 +12,10 @@ testinfo:
         combination. The test scenarios:
         Scenario [1] -> ast1: Tests duplicate [id=siptrunk, type=aor] sections
         Scenario [2] -> ast2: Tests duplicate [id=siptrunk, type=auth] sections
-        Scenario [3] -> ast3: Tests duplicate [id=siptrunk, type=contact] sections
-        Scenario [4] -> ast4: Tests duplicate [id=siptrunk, type=endpoint] sections
-        Scenario [5] -> ast5: Tests duplicate [id=siptrunk, type=identify] sections
-        Scenario [6] -> ast6: Tests duplicate [id=siptrunk, type=registration] sections
-        Scenario [7] -> ast7: Tests duplicate [id=siptrunk, type=transport] sections
+        Scenario [3] -> ast3: Tests duplicate [id=siptrunk, type=endpoint] sections
+        Scenario [4] -> ast4: Tests duplicate [id=siptrunk, type=identify] sections
+        Scenario [5] -> ast5: Tests duplicate [id=siptrunk, type=registration] sections
+        Scenario [6] -> ast6: Tests duplicate [id=siptrunk, type=transport] sections
 
 properties:
     minversion: '13.4.0'
@@ -44,7 +43,7 @@ test-modules:
             typename: 'test_harness.TestHarness'
 
 test-object-config:
-    asterisk-instances: 7
+    asterisk-instances: 6
     connect-ami: 'True'
 
 duplicate-sections:
@@ -54,9 +53,6 @@ duplicate-sections:
             output_query: 'No\sobjects\sfound\.'
         -
             cli_command: 'pjsip show auths'
-            output_query: 'No\sobjects\sfound\.'
-        -
-            cli_command: 'pjsip show contacts'
             output_query: 'No\sobjects\sfound\.'
         -
             cli_command: 'pjsip show endpoints'
