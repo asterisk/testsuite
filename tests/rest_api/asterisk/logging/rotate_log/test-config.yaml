@@ -14,6 +14,9 @@ test-modules:
             config-section: ari-config
             typename: pluggable_modules.EventActionModule
 
+test-object-config:
+    stop-on-end: False
+
 ari-config:
     -
         ari-events:
