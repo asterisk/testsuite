@@ -52,7 +52,7 @@
 			SIP/2.0 200 OK
 			[last_Via:]
 			[last_From:]
-			[last_To:];tag=[call_number]
+			[last_To:]
 			[last_Call-ID:]
 			[last_CSeq:]
 			Contact: <sip:[field1]@[local_ip]:[local_port];transport=[transport]>
@@ -100,7 +100,7 @@
 			SIP/2.0 200 OK
 			[last_Via:]
 			[last_From:]
-			[last_To:];tag=[call_number]
+			[last_To:]
 			[last_Call-ID:]
 			[last_CSeq:]
 			Contact: <sip:[field1]@[local_ip]:[local_port];transport=[transport]>
@@ -133,10 +133,10 @@
 	<!-- Reinvite to set up T38 Fax session -->
 	<send retrans="500">
 		<![CDATA[
-			INVITE sip:[field0]@[remote_ip]:[remote_port] SIP/2.0
+			INVITE sip:endpoint_B@[remote_ip]:[remote_port] SIP/2.0
 			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-			From: [field1] <sip:[field1]@[local_ip]:[local_port]>;tag=[call_number]
-			To: [field0] <sip:[field1]@[remote_ip]>
+			From: <sip:127.0.0.3>
+			To: [$remote_tag]
 			CSeq: [cseq] INVITE
 			[last_Call-ID:]
 			Contact: <sip:[field1]@[local_ip]:[local_port]>
@@ -167,28 +167,14 @@
 
 	<recv response="100" optional="true" />
 
-	<recv response="200">
-		<action>
-			<ereg regexp="c=IN IP4 127.0.0.1" search_in="body" check_it="true" assign_to="1" />
-			<log message="Side B - Contact SDP for T38 reinvite 200 OK matches expectations: [$1]." />
-			<strcmp assign_to="result" variable="1" value="c=IN IP4 127.0.0.1" />
-			<test assign_to="empty200" variable="result" compare="not_equal" value="" />
-		</action>
-	</recv>
-
-	<nop condexec="empty200">
-		<action>
-			<error message="Side B - Contact SDP for T38 reinvite 200 OK did not match - expected 'c=IN IP4 127.0.0.1' but got [$1]" />
-		</action>
-	</nop>
-
+	<recv response="200" />
 
 	<send>
 		<![CDATA[
 			ACK sip:[field1]@[remote_ip]:[remote_port] SIP/2.0
 			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-			From: [field1] <sip:[field1]@[local_ip]>;tag=[call_number]
-			To: <sip:[field0]@[remote_ip];user=[field0]>[peer_tag_param]
+			From: <sip:127.0.0.3>
+			To: [$remote_tag]
 			CSeq: [cseq] ACK
 			[last_Call-ID:]
 			Contact: <sip:[field1]@[local_ip]:[local_port]>
@@ -207,8 +193,8 @@
 		<![CDATA[
 			BYE sip:[field1]@1[remote_ip]:[remote_port] SIP/2.0
 			Via: SIP/2.0/UDP [local_ip]:[local_port];branch=[branch]
-			From: [field1] <sip:[field1]@[local_ip]:[local_port]>;tag=[call_number]
-			To: [field0] <sip:[field1]@[remote_ip]>[$remote_tag]
+			From: <sip:127.0.0.3>
+			To: [$remote_tag]
 			CSeq: [cseq] BYE
 			[last_Call-ID:]
 			Contact: <sip:[field1]@[local_ip]:[local_port]>
@@ -219,6 +205,7 @@
 		]]>
 	</send>
 
+	<recv response="200" />
 
 </scenario>
 
