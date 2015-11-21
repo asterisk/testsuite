@@ -46,7 +46,7 @@ test-case-config:
 
 test-config:
     stop-test-after-notifys: False
-    list-name 'pres_list'
+    list-name: 'pres_list'
     packets:
         -
             full-state: True

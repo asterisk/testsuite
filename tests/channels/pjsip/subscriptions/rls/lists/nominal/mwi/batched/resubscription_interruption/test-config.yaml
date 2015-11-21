@@ -50,7 +50,7 @@ test-case-config:
 
 test-config:
     stop-test-after-notifys: False
-    list-name 'mail_list'
+    list-name: 'mail_list'
     packets:
         -
             full-state: True
