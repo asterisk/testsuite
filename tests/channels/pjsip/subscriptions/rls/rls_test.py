@@ -195,6 +195,7 @@ class RLSTest(VOIPListener):
                 "Failing test.").format(self.packets_idx,
                                         len(self.packets))
             self.fail_test(message)
+            return
 
         rls_packet = RLSPacket(packet)
         resources = self.packets[self.packets_idx]["resources"]
