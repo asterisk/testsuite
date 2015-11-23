@@ -14,7 +14,7 @@ import logging
 sys.path.append("lib/python")
 sys.path.append("tests/channels/pjsip/subscriptions/rls")
 
-from pcap import VOIPListener
+from pcap import VOIPProxy
 from rls_element import RLSPacket
 from rls_validation import ValidationInfo
 from twisted.internet import reactor
@@ -25,7 +25,7 @@ def filter_multipart_packet(packet):
     """Determines if a packet is an RLS multipart packet.
 
     Keyword Arguments:
-    packet                  -- A yappcap.PcapPacket
+    packet                  -- A SIPPacket
 
     Returns:
     True if this is a multipart NOTIFY packet. Otherwise, returns False.
@@ -54,38 +54,13 @@ def log_packet(packet, write_packet_contents):
     write_packet_contents   -- Whether or not to dump the contents of the
                                packet to the log.
     """
-
-    message = "Received SIP packet:\n"
-
     if not write_packet_contents:
         return
-
-    for attr in dir(packet):
-        message += "%s = %s\n" % (attr, getattr(packet, attr))
-        if attr == "body":
-            message += "body:\n"
-            body = getattr(packet, attr)
-            for body_attr in dir(body):
-                value = getattr(body, body_attr)
-                message += "\t%s = %s\n" % (body_attr, value)
-                message += "%s = %s\n" % (attr, getattr(packet, attr))
-
+    message = "Processing SIP packet:\n{0}".format(packet)
     LOGGER.debug(message)
 
-def set_pcap_defaults(module_config):
-    """Sets default values for the PcapListener."""
 
-    if not module_config.get("bpf-filter"):
-        module_config["bpf-filter"] = "udp port 5061"
-    if not module_config.get("register-observer"):
-        module_config["register-observer"] = True
-    if not module_config.get("debug-packets"):
-        module_config["debug-packets"] = True
-    if not module_config.get("device"):
-        module_config["device"] = "lo"
-
-
-class RLSTest(VOIPListener):
+class RLSTest(VOIPProxy):
     """Verifies that SIP notifies contain expected updates.
 
        A test module that observes incoming SIP notifies and compares them
@@ -102,8 +77,6 @@ class RLSTest(VOIPListener):
         test_object            -- Used to manipulate reactor and set/remove
                                   failure tokens.
         """
-
-        set_pcap_defaults(module_config)
         super(RLSTest, self).__init__(module_config, test_object)
 
         self.test_object = test_object
@@ -116,6 +89,7 @@ class RLSTest(VOIPListener):
 
         self.ami = None
         self.packets_idx = 0
+        self.cseq = None
         self.list_name = module_config["list-name"]
         self.log_packets = module_config.get("log-packets", False)
         self.packets = module_config["packets"]
@@ -184,10 +158,29 @@ class RLSTest(VOIPListener):
         packet                 -- Incoming SIP Packet
         """
 
+        # We are accessing a pseudo-private member here publicly, which
+        # shouldn't really be done. (Granted, read-only, hence why we can
+        # do this and not break the world.)
+        # We can't register a stop observer, as Asterisk will already be
+        # stopping before our observer is fired, and we need to ignore
+        # any packets that are received once the shutdown sequence starts.
+        # Asterisk will send new NOTIFY requests during shutdown for
+        # Presence types, which will muck up our "too-many packet" checks.
+        if self.test_object._stopping:
+            LOGGER.debug('Test is stopping; ignoring packet')
+            return
+
         log_packet(packet, self.log_packets)
 
         if not filter_multipart_packet(packet):
             return
+
+        cseq = int(packet.headers['CSeq'].strip().split()[0])
+        if self.cseq:
+            if cseq <= self.cseq:
+                LOGGER.debug('Out of order or retransmission; dropping')
+                return
+        self.cseq = cseq
 
         if self.packets_idx >= len(self.packets):
             message = (
