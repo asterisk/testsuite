@@ -13,7 +13,6 @@ properties:
     dependencies:
         - python: 'twisted'
         - python: 'starpy'
-        - python: 'yappcap'
         - python: 'lxml'
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_pubsub'
