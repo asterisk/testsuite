@@ -24,14 +24,15 @@ test-object-config:
     reactor-timeout: 15
 
 statsd-config:
-    -
-        'foo:1|g'
-    -
-        'bar:2|s'
-    -
-        'baz:3|ms'
-    -
-        'last:4|c'
+    packets:
+        -
+            'foo:1|g'
+        -
+            'bar:2|s'
+        -
+            'baz:3|ms'
+        -
+            'last:4|c'
 
 originator-config:
     channel: 'Local/start@default'

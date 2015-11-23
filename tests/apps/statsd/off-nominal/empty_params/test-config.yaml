@@ -23,8 +23,9 @@ test-object-config:
     reactor-timeout: 15
 
 statsd-config:
-    -
-        'ReceiveNothing'
+    packets:
+        -
+            'ReceiveNothing'
 
 originator-config:
     channel: 'Local/start@default'
