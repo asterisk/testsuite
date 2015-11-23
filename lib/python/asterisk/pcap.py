@@ -17,6 +17,8 @@ import binascii
 
 sys.path.append('lib/python')
 
+from twisted.internet.protocol import DatagramProtocol
+from twisted.internet import reactor
 from construct import *
 from construct.protocols.ipstack import ip_stack
 try:
@@ -105,9 +107,14 @@ class Packet():
 
         self.packet_type = packet_type
         self.raw_packet = raw_packet
-        self.eth_layer = ip_stack.parse(raw_packet.data)
-        self.ip_layer = self.eth_layer.next
-        self.transport_layer = self.ip_layer.next
+        if isinstance(self.raw_packet, str):
+            self.eth_layer = None
+            self.ip_layer = None
+            self.transport_layer = None
+        else:
+            self.eth_layer = ip_stack.parse(raw_packet.data)
+            self.ip_layer = self.eth_layer.next
+            self.transport_layer = self.ip_layer.next
 
 
 class RTCPPacket(Packet):
@@ -429,7 +436,7 @@ class BodyFactory(object):
 
         body_type, _, _ = content_type.partition(';')
         if (body_type == 'application/sdp'):
-            return SDPPacket(ascii_pack bet, raw_packet)
+            return SDPPacket(ascii_pack, raw_packet)
         elif (body_type == 'multipart/related'):
             return MultipartPacket(content_type, ascii_packet, raw_packet)
         elif (body_type == 'application/rlmi+xml'):
@@ -492,6 +499,9 @@ class SIPPacket(Packet):
                                                 ascii_packet=remainder_packet,
                                                 raw_packet=raw_packet)
 
+    def __str__(self):
+        return self.ascii_packet
+
 
 class SIPPacketFactory():
     """A packet factory for producing SIP (and SDP) packets
@@ -516,14 +526,15 @@ class SIPPacketFactory():
         A SIPPacket if we could
         """
         ret_packet = None
-        hex_string = binascii.b2a_hex(packet.data[42:])
-
-        try:
+        if not isinstance(packet, str):
+            hex_string = binascii.b2a_hex(packet.data[42:])
             ascii_string = hex_string.decode('hex')
-            if ('SIP/2.0' in ascii_string):
-                ret_packet = SIPPacket(ascii_string, packet)
-        except:
-            pass
+        else:
+            ascii_string = packet
+
+        if ('SIP/2.0' in ascii_string):
+            ret_packet = SIPPacket(ascii_string, packet)
+
         # If we got a SIP packet, it has an SDP, and that SDP specified an
         # RTP port and RTCP port; then set that information for this particular
         # stream in the factory manager so that the factories for RTP can
@@ -660,14 +671,151 @@ class PacketFactoryManager():
         for factory in self._packet_factories:
             try:
                 interpreted_packet = factory.interpret_packet(packet)
-            except:
-                pass
+            except Exception as e:
+                LOGGER.debug('{0} threw Exception {1}'.format(factory, e))
             if interpreted_packet is not None:
                 break
         return interpreted_packet
 
 
-class VOIPListener(PcapListener):
+class VOIPSniffer(object):
+    """Base class for a pluggable module that wants to inspect packets
+
+    Attributes:
+    callbacks      Registered callbacks by packet type
+    packet_factory The one and only PacketFactoryManager
+    traces         Dictionary of sniffed message traffic, organized by
+                   source address
+    """
+
+    def __init__(self, module_config, test_object):
+        """Constructor
+
+        Keyword Arguments:
+        module_config The module configuration for this pluggable module
+        test_object   The object we will attach to
+        """
+        self.packet_factory = PacketFactoryManager()
+        self.packet_factory.create_factory(SIPPacketFactory)
+        self.packet_factory.create_factory(RTPPacketFactory)
+        self.packet_factory.create_factory(RTCPPacketFactory)
+        self.callbacks = {}
+        self.traces = {}
+
+    def process_packet(self, packet, (host, port)):
+        """Store a known packet in our traces and call our callbacks
+
+        Keyword Arguments:
+        packet       A raw packet received from ... something.
+        (host, port) Tuple of received host and port
+        """
+        packet = self.packet_factory.interpret_packet(packet)
+        if packet is None:
+            return
+
+        if packet.ip_layer:
+            host = packet.ip_layer.header.source
+        if packet.transport_layer:
+            port = packet.transport_layer.header.source
+
+        LOGGER.debug('Processing packet from {0}:{1}'.format(host, port))
+        if host not in self.traces:
+            self.traces[host] = []
+        self.traces[host].append(packet)
+        if packet.packet_type not in self.callbacks:
+            return
+        for callback in self.callbacks[packet.packet_type]:
+            callback(packet)
+
+    def add_callback(self, packet_type, callback):
+        """Add a callback function for received packets of a particular type
+
+        Note that a particular packet type can only have a single callback
+
+        Keyword Arguments:
+        packet_type The string name of the packet type to receive
+        callback    A function that takes as an argument a Packet object
+        """
+        if packet_type not in self.callbacks:
+            self.callbacks[packet_type] = []
+        self.callbacks[packet_type].append(callback)
+
+    def remove_callbacks(self, packet_type):
+        """Remove the callbacks for a particular packet type
+
+        Keyword Arguments:
+        packet_type The string name of the packet type to remove callbacks for
+        """
+        del self.callbacks[packet_type]
+
+
+class VOIPProxy(VOIPSniffer):
+    """Pluggable module that acts as a packet level proxy for VoIP packets
+
+    This module will listen on a UDP port and forward received packets to some
+    destination based on provided rules. Received packets are interpreted as
+    SIP, RTP, and RTCP packets, and passed off to any registered observers.
+
+    Attributes:
+    port  The port this proxy listens on
+    rules A dictionary that maps source ports to their destination host/port
+    """
+
+    class ProxyProtocol(DatagramProtocol):
+        """The twisted DatagramProtocol that swaps packets
+        """
+
+        def __init__(self, rules, cb):
+            """Constructor
+
+            Keyword Arguments:
+            rules A Dictionary that maps inbound to outbound ports
+            cb    Callback function to called on received packets
+            """
+            self.rules = rules
+            self.cb = cb
+
+        def datagramReceived(self, data, (host, port)):
+            """Callback for when a datagram is received
+
+            Keyword Arguments:
+            data         The actual packet
+            (host, port) Tuple of source host and port
+            """
+            LOGGER.debug('Proxy received from {0}:{1}\n{2}'.format(
+                host, port, data))
+
+            if port not in self.rules:
+                LOGGER.debug('Dropping packet from {0}:{1}'.format(
+                    host, port))
+                return
+            dest_host = self.rules[port].get('host', host)
+            dest_port = self.rules[port]['port']
+            self.cb(data, (host, port))
+            LOGGER.debug('Forwarding packet to {0}:{1}'.format(
+                dest_host, dest_port))
+            self.transport.write(data, (dest_host, dest_port))
+
+    DEFAULT_RULES = {5060: {'host': '127.0.0.1', 'port': 5062},
+                     5062: {'host': '127.0.0.1', 'port': 5060}}
+
+    def __init__(self, module_config, test_object):
+        """Constructor
+
+        Keyword Arguments:
+        module_config The module configuration
+        test_object   Our one and only test object
+        """
+        super(VOIPProxy, self).__init__(module_config, test_object)
+
+        self.port = module_config.get('port', 5061)
+        self.rules = module_config.get('rules', VOIPProxy.DEFAULT_RULES)
+
+        protocol = VOIPProxy.ProxyProtocol(self.rules, self.process_packet)
+        reactor.listenUDP(self.port, protocol)
+
+
+class VOIPListener(VOIPSniffer, PcapListener):
     """Pluggable module class that sniffs for SIP, RTP, and RTCP packets
 
     Received packets are stored according to the source.
@@ -685,17 +833,10 @@ class VOIPListener(PcapListener):
         module_config The module configuration for this pluggable module
         test_object   The object we will attach to
         """
-        PcapListener.__init__(self, module_config, test_object)
-
         if not 'register-observer' in module_config:
             raise Exception('VOIPListener needs register-observer to be set')
 
-        self.packet_factory = PacketFactoryManager()
-        self.packet_factory.create_factory(SIPPacketFactory)
-        self.packet_factory.create_factory(RTPPacketFactory)
-        self.packet_factory.create_factory(RTCPPacketFactory)
-        self._callbacks = {}
-        self.traces = {}
+        super(VOIPListener, self).__init__(module_config, test_object)
 
     def pcap_callback(self, packet):
         """Packet capture callback function
@@ -707,40 +848,5 @@ class VOIPListener(PcapListener):
         Keyword Arguments:
         packet A received packet from the pcap listener
         """
+        self.process_packet(packet, (None, None))
 
-        try:
-            packet = self.packet_factory.interpret_packet(packet)
-        except:
-            pass
-        if packet is None:
-            return
-        LOGGER.debug('Got packet %s from %s' % (
-            str(packet), packet.ip_layer.header.source))
-        if packet.ip_layer.header.source not in self.traces:
-            self.traces[packet.ip_layer.header.source] = []
-        self.traces[packet.ip_layer.header.source].append(packet)
-        if packet.packet_type not in self._callbacks:
-            return
-        for callback in self._callbacks[packet.packet_type]:
-            callback(packet)
-
-    def add_callback(self, packet_type, callback):
-        """Add a callback function for received packets of a particular type
-
-        Note that a particular packet type can only have a single callback
-
-        Keyword Arguments:
-        packet_type The string name of the packet type to receive
-        callback    A function that takes as an argument a Packet object
-        """
-        if packet_type not in self._callbacks:
-            self._callbacks[packet_type] = []
-        self._callbacks[packet_type].append(callback)
-
-    def remove_callbacks(self, packet_type):
-        """Remove the callbacks for a particular packet type
-
-        Keyword Arguments:
-        packet_type The string name of the packet type to remove callbacks for
-        """
-        del self._callbacks[packet_type]
