@@ -835,8 +835,9 @@ class VOIPListener(VOIPSniffer, PcapListener):
         """
         if not 'register-observer' in module_config:
             raise Exception('VOIPListener needs register-observer to be set')
+        VOIPSniffer.__init__(self, module_config, test_object)
+        PcapListener.__init__(self, module_config, test_object)
 
-        super(VOIPListener, self).__init__(module_config, test_object)
 
     def pcap_callback(self, packet):
         """Packet capture callback function
