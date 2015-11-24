@@ -1,0 +1,57 @@
+testinfo:
+    summary: 'Check DNS negative cache entries'
+    description: |
+        "Checks to make sure that items are added, expired, and updated in
+        the DNS cache.
+
+        This test starts by sending an invite to Asterisk, which then attempts
+        to resolve an invalid host name on an endpoint IP identifier. When
+        resolution fails the attempted domain name is added to the cache.
+        Another invite is then sent to Asterisk, which again tries to resolve
+        the invalid host, but this time the dns cache immediately rejects the
+        host since it exists in the cache and has not expired.
+
+        The test then waits for the current entry to expire in the cache. It
+        once again sends an invite. The expected cache "miss" is processed, the
+        host name tries to resolve, fails, and then the host name (since it
+        still resides in the cache, but just expired) is updated for the entry
+        with an extended expiration. The test then verifies again that the host
+        exists in the cache in an unexpired state.
+
+        Finally the test completes after running a cli command to show the dns
+        cache entries and verifying that the invalid host is present."
+
+properties:
+    minversion: '13.7.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_config_curl'
+        - asterisk: 'res_sorcery_realtime'
+    tags:
+        - pjsip
+        - realtime
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'dns_test.DNSCacheTestModule'
+    modules:
+        -
+            config-section: 'realtime-config'
+            typename: 'realtime_test_module.RealtimeTestModule'
+
+test-object-config:
+    reactor-timeout: 120
+
+realtime-config:
+    data:
+        identify:
+            -
+                id: 'alice'
+                endpoint: 'alice'
+                match: 'invalid.dns'
