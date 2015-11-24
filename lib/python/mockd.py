@@ -56,7 +56,10 @@ class MockDServer(object):
         self.config = config
         self.test_object = test_object
         self.packets = []
+        self.prefix = self.config.get('prefix')
+
         self.test_object.register_stop_observer(self._stop_handler)
+
         reactor.listenUDP(8125, MockDProtocol(self))
 
     def message_handler(self, message):
@@ -67,6 +70,8 @@ class MockDServer(object):
 
         Check the message against the config and pass the test if they match
         '''
+        if self.prefix and not message.startswith(self.prefix):
+            return
         self.packets.append(message)
 
     def _stop_handler(self, result):
