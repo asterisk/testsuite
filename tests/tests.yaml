@@ -6,6 +6,7 @@ tests:
     - dir: 'manager'
     - dir: 'cdr'
     - dir: 'channels'
+    - dir: 'endpoints'
     - test: 'udptl'
     - test: 'udptl_v6'
     - test: 'feature_call_pickup'

@@ -1,0 +1,83 @@
+testinfo:
+    summary:  Test sending statistics to a StatsD server for Asterisk endpoints
+    description: |
+        This test verifies that endpoint statistics are sent to a StatsD server
+        when operations related to that endpoint occur. The test originates
+        a PJSIP channel, and verifies that the appropriate StatsD messages
+        are received.
+
+test-modules:
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            typename: 'mockd.MockDServer'
+            config-section: 'statsd-config'
+        -
+            typename: 'pluggable_modules.Originator'
+            config-section: 'originator-config'
+        -
+            typename: 'pluggable_modules.HangupMonitor'
+            config-section: 'hangup-monitor'
+
+test-object-config:
+    asterisk-instances: 1
+    connect-ami: True
+    reactor-timeout: 15
+
+hangup-monitor:
+    ids: '0'
+
+# Note: due to a bug in getting duplicate endpoint events over
+# Stasis, we'll see two statsd messages for the channel counts
+# for an Endpoint. When that is fixed, the duplicate messages
+# below should be removed.
+statsd-config:
+    prefix: 'endpoints'
+    regex: True
+    packets:
+        -
+            'endpoints\.count:\+1\|g'
+        -
+            'endpoints\.state\.online:\+1\|g'
+        -
+            'endpoints\.PJSIP\.test\.channels:1\|g'
+        -
+            'endpoints\.PJSIP\.test\.channels:1\|g'
+        -
+            'endpoints\.PJSIP\.test\.channels:2\|g'
+        -
+            'endpoints\.PJSIP\.test\.channels:2\|g'
+        -
+            'endpoints\.PJSIP\.test\.channels:1\|g'
+        -
+            'endpoints\.PJSIP\.test\.channels:1\|g'
+        -
+            'endpoints\.PJSIP\.test\.channels:0\|g'
+        -
+            'endpoints\.PJSIP\.test\.channels:0\|g'
+        -
+            'endpoints\.count:\-1\|g'
+        -
+            'endpoints\.state\.online:\-1\|g'
+
+
+originator-config:
+    channel: 'PJSIP/test'
+    application: 'Echo'
+    trigger: 'ami_connect'
+    async: True
+
+properties:
+    minversion: '13.7.0'
+    dependencies:
+        - asterisk: 'app_echo'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_endpoint_stats'
+        - python: 'autobahn.websocket'
+        - python: 'starpy'
+        - python: 'twisted'
+    tags:
+        - statsd
+        - apps
