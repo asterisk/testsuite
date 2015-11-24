@@ -42,6 +42,10 @@ statsd-config:
         -
             'endpoints\.state\.online:\+1\|g'
         -
+            'endpoints\.count:\+1\|g'
+        -
+            'endpoints\.state\.unknown:\+1\|g'
+        -
             'endpoints\.PJSIP\.test\.channels:1\|g'
         -
             'endpoints\.PJSIP\.test\.channels:1\|g'
@@ -61,7 +65,10 @@ statsd-config:
             'endpoints\.count:\-1\|g'
         -
             'endpoints\.state\.online:\-1\|g'
-
+        -
+            'endpoints\.count:\-1\|g'
+        -
+            'endpoints\.state\.unknown:\-1\|g'
 
 originator-config:
     channel: 'PJSIP/test'
