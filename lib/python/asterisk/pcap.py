@@ -31,23 +31,22 @@ LOGGER = logging.getLogger(__name__)
 
 
 class PcapListener(object):
-    '''
-    A class that creates a pcap file from a test and optionally provides
-    runttime inspection of the received packets
-    '''
+    """Class that creates a pcap file for a test
+
+    Optionally, this will also provide run-time inspection of the
+    received packets
+    """
 
     def __init__(self, module_config, test_object):
-        ''' Constructor
+        """Constructor
 
         Keyword arguments:
         module_config The YAML config object for this module
-        test_object The test object this module will attach to
-        '''
+        test_object   The test object this module will attach to
+        """
 
         if not PCAP_AVAILABLE:
             raise Exception('yappcap not installed')
-
-        self.debug_packets = False
 
         device = module_config.get('device')
         bpf_filter = module_config.get('bpf-filter')
@@ -56,8 +55,7 @@ class PcapListener(object):
         buffer_size = module_config.get('buffer-size')
         if (module_config.get('register-observer')):
             test_object.register_pcap_observer(self.__pcap_callback)
-        if (module_config.get('debug-packets')):
-            self.debug_packets = True
+        self.debug_packets = module_config.get('debug-packets', False)
 
         # Let exceptions propagate - if we can't create the pcap, this should
         # throw the exception to the pluggable module creation routines
@@ -69,28 +67,41 @@ class PcapListener(object):
             buffer_size=buffer_size)
 
     def __pcap_callback(self, packet):
-        ''' Private callback. Will log packets out as DEBUG messages if
-        configured to do so. '''
+        """Private callback that logs packets if the configuration supports it
+        """
         if (self.debug_packets):
             LOGGER.debug(str(packet))
         self.pcap_callback(packet)
 
     def pcap_callback(self, packet):
-        ''' Function that can be overridden by derived classes to inspect
-        packets as they arrive from the listener '''
+        """Virtual function for inspecting received packets
+
+        Derived classes should override this to inspect packets as they arrive
+        from the listener
+        """
         pass
 
 
 class Packet():
-    ''' Some IP packet. Base class for everything else '''
+    """Some IP packet.
+
+    This class acts as a base class for everything else.
+
+    Attributes:
+    packet_type     String name for the type of packet
+    raw_packet      The raw bytes read off the socket
+    eth_layer       The layer 2 ethernet frame
+    ip_layer        The layer 3 IPv4 or IPv6 frame
+    transport_layer The layer 4 TCP or UDP information
+    """
 
     def __init__(self, packet_type, raw_packet):
-        ''' Constructor
+        """Constructor
 
         Keyword Arguments:
         packet_type A text string describing what type of packet this is
-        raw_packet The bytes comprising the packet
-        '''
+        raw_packet  The bytes comprising the packet
+        """
 
         self.packet_type = packet_type
         self.raw_packet = raw_packet
@@ -100,15 +111,21 @@ class Packet():
 
 
 class RTCPPacket(Packet):
-    ''' An RTCP Packet '''
+    """An RTCP Packet
+
+    Attributes:
+    rtcp_header     The RTCP header information
+    sender_report   The SR report, if available
+    receiver_report The RR report, if available
+    """
 
     def __init__(self, raw_packet, factory_manager):
-        ''' Constructor
+        """Constructor
 
         Keyword Arguments:
-        raw_packet The bytes comprising this RTCP packet
+        raw_packet      The bytes comprising this RTCP packet
         factory_manager The packet manager that created this packet
-        '''
+        """
         Packet.__init__(self, packet_type='RTCP', raw_packet=raw_packet)
         self.rtcp_header = None
         self.sender_report = None
@@ -169,15 +186,16 @@ class RTCPPacket(Packet):
 
 
 class RTPPacket(Packet):
-    ''' An RTP Packet '''
+    """An RTP Packet
+    """
 
     def __init__(self, raw_packet, factory_manager):
-        ''' Constructor
+        """Constructor
 
         Keyword Arguments:
-        raw_packet The bytes comprising this RTP packet
+        raw_packet      The bytes comprising this RTP packet
         factory_manager The packet manager that created this packet
-        '''
+        """
         Packet.__init__(self, packet_type='RTP', raw_packet=raw_packet)
         ports = factory_manager.get_global_data(self.ip_layer.header.source)
         if ports is None:
@@ -187,15 +205,29 @@ class RTPPacket(Packet):
 
 
 class SDPPacket(Packet):
-    ''' An SDP packet. Should be owned by a SIPPacket '''
+    """An SDP packet.
+
+    An SDP packet should always be owned by a SIPPacket.
+
+    Note that this is *not* a good parser for an SDP. Rather than
+    write a full SDP parser - which the tests generally don't care
+    about - this class instead exposes some minimal details for
+    the Test Suite tests.
+
+    Attributes:
+    ascii_packet An ASCII string representation of the SDP
+    raw_packet   The raw bytes making up the SDP packet
+    rtp_port     The 'audio' media RTP port
+    rtcp_port    The 'audio' media RTCP port
+    """
 
     def __init__(self, ascii_packet, raw_packet):
-        ''' Constructor
+        """Constructor
 
         Keyword Arguments:
         ascii_packet The text of the SDP packet
-        raw_packet The bytes comprising this SDP packet
-        '''
+        raw_packet   The bytes comprising this SDP packet
+        """
         Packet.__init__(self, packet_type='SDP', raw_packet=raw_packet)
         self.ascii_packet = ascii_packet
         self.sdp_lines = ascii_packet.strip('\r\n').split('\r\n')
@@ -217,7 +249,14 @@ class SDPPacket(Packet):
 
 
 class PIDFPacket(Packet):
-    '''A PIDF presence body. Owned by SIPPacket or a MultipartPacket.'''
+    """A PIDF presence body.
+
+    Owned by SIPPacket or a MultipartPacket.
+
+    Attributes:
+    xml         The XML representation of this PIDF packet
+    content_id  Unique ID of the content this packet represents
+    """
 
     def __init__(self, ascii_packet, raw_packet, content_id):
         Packet.__init__(self, packet_type="PIDF", raw_packet=raw_packet)
@@ -226,18 +265,48 @@ class PIDFPacket(Packet):
 
 
 class XPIDFPacket(Packet):
-    '''A XPIDF presence body. Owned by SIPPacket or a MultipartPacket.'''
+    """A XPIDF presence body.
+
+    Owned by SIPPacket or a MultipartPacket.
+
+    Attributes:
+    xml         The XML representation of this XPIDF packet
+    content_id  Unique ID of the content this packet represents
+    """
 
     def __init__(self, ascii_packet, raw_packet, content_id):
+        """Constructor
+
+        Keyword Arguments:
+        ascii_packet ASCII string representation of the packet
+        raw_packet   Raw bytes read from the socket
+        content_id   Unique ID of the content this packet represents
+        """
+
         Packet.__init__(self, packet_type="XPIDF", raw_packet=raw_packet)
         self.xml = ascii_packet.strip()
         self.content_id = content_id
 
 
 class MWIPacket(Packet):
-    '''An MWI body. Owned by SIPPacket or a MultipartPacket.'''
+    """An MWI body.
+
+    Owned by SIPPacket or a MultipartPacket.
+
+    Attributes:
+    content_id       Unique ID of the content this packet represents
+    voice_message    Value of the 'Voice-Message' header in the packet
+    messages_waiting Value of the 'Messages-Waiting' header in the packet
+    """
 
     def __init__(self, ascii_packet, raw_packet, content_id):
+        """Constructor
+
+        Keyword Arguments:
+        ascii_packet ASCII string representation of the packet
+        raw_packet   Raw bytes read from the socket
+        content_id   Unique ID of the content this packet represents
+        """
         headers = {}
 
         Packet.__init__(self, packet_type="MWI", raw_packet=raw_packet)
@@ -252,15 +321,42 @@ class MWIPacket(Packet):
 
 
 class RLMIPacket(Packet):
-    '''An RLMI body. Owned either by a SIPPacket or a MultipartPacket.'''
+    """An RLMI body.
+
+    Owned either by a SIPPacket or a MultirpartPacket.
+
+    Attributes:
+    list_elem The resource list element
+    """
 
     def __init__(self, ascii_packet, raw_packet):
+        """Constructor
+
+        Keyword Arguments:
+        ascii_packet ASCII string representation of the packet
+        raw_packet   Raw bytes read from the socket
+        """
         Packet.__init__(self, packet_type="RLMI", raw_packet=raw_packet)
         self.list_elem = rlmi.parseString(ascii_packet.strip(), silence=True)
 
 
-class MultipartPart:
+class MultipartPart(object):
+    """A part in a MultipartPacket's body
+
+    Attributes:
+    headers    A list of headers that determine the content type and ID of the
+               content packet inside the multipart part
+    content_id The ID of the content packet
+    body       The packet making up the content
+    """
+
     def __init__(self, part, raw_packet):
+        """Constructor
+
+        Keyword Arguments:
+        part       The raw part of this MultipartPart
+        raw_packet The raw packet making up the entire MultipartPacket
+        """
         self.headers = {}
 
         last_pos = part.find('\r\n\r\n')
@@ -279,7 +375,14 @@ class MultipartPart:
 
 
 class MultipartPacket(Packet):
-    '''A multipart body. Owned either by a SIPPacket or a Multipartpacket.'''
+    """A multipart body.
+
+    Owned by a SIPPacket.
+
+    Attributes:
+    boundary The keyword that denotes the boundary in the multi-part body
+    parts    A list of MultipartPart parts making up the body
+    """
 
     def __init__(self, content_type, ascii_packet, raw_packet):
         Packet.__init__(self, packet_type="Multipart", raw_packet=raw_packet)
@@ -307,11 +410,26 @@ class MultipartPacket(Packet):
 
 
 class BodyFactory(object):
+    """Factory that creates a Packet based on some content type specification
+    """
+
     @staticmethod
     def create_body(content_type, ascii_packet, raw_packet, content_id=None):
+        """Create a Packet based on content type
+
+        Keyword Arguments:
+        content_type  The content type of the raw packet being parsed
+        ascii_packet  ASCII string representation of the raw packet
+        raw_packet    Raw bytes making up the packet
+        content_id    Optionally, an ID that separates content within the body
+
+        Returns:
+        A Packet of the type specified by content_type
+        """
+
         body_type, _, _ = content_type.partition(';')
         if (body_type == 'application/sdp'):
-            return SDPPacket(ascii_packet, raw_packet)
+            return SDPPacket(ascii_pack bet, raw_packet)
         elif (body_type == 'multipart/related'):
             return MultipartPacket(content_type, ascii_packet, raw_packet)
         elif (body_type == 'application/rlmi+xml'):
@@ -328,15 +446,25 @@ class BodyFactory(object):
 
 
 class SIPPacket(Packet):
-    ''' A SIP packet '''
+    """A SIP Packet
+
+    This is not a good SIP parser. It suffices for the Test Suite's
+    purposes.
+
+    Attributes:
+    body         The body conveyed in the SIP packet
+    headers      A dictionary of SIP header names and their values
+    request_line The full text of the request line in the SIP packet
+    ascii_packet ASCII string representation of the packet
+    """
 
     def __init__(self, ascii_packet, raw_packet):
-        ''' Constructor
+        """Constructor
 
         Keyword Arguments:
         ascii_packet The text of the SIP packet
-        raw_packet The bytes comprising this SIP packet
-        '''
+        raw_packet   The bytes comprising this SIP packet
+        """
         Packet.__init__(self, packet_type='SIP', raw_packet=raw_packet)
 
         self.body = None
@@ -366,18 +494,19 @@ class SIPPacket(Packet):
 
 
 class SIPPacketFactory():
-    ''' A packet factory for producing SIP (and SDP) packets '''
+    """A packet factory for producing SIP (and SDP) packets
+    """
 
     def __init__(self, factory_manager):
-        ''' Constructor
+        """Constructor
 
         Keyword Arguments:
         factory_manager The factory manager this class factory registers to
-        '''
+        """
         self._factory_manager = factory_manager
 
     def interpret_packet(self, packet):
-        ''' Interpret a packet
+        """Interpret a packet
 
         Keyword Arguments:
         packet The packet to interpret
@@ -385,7 +514,7 @@ class SIPPacketFactory():
         Returns:
         None if we couldn't interpret this packet
         A SIPPacket if we could
-        '''
+        """
         ret_packet = None
         hex_string = binascii.b2a_hex(packet.data[42:])
 
@@ -411,18 +540,19 @@ class SIPPacketFactory():
 
 
 class RTPPacketFactory():
-    ''' A packet factory for producing RTP packets '''
+    """A packet factory for producing RTP packets
+    """
 
     def __init__(self, factory_manager):
-        ''' Constructor
+        """Constructor
 
         Keyword Arguments:
         factory_manager The factory manager this class factory registers to
-        '''
+        """
         self._factory_manager = factory_manager
 
     def interpret_packet(self, packet):
-        ''' Interpret a packet
+        """Interpret a packet
 
         Keyword Arguments:
         packet The packet to interpret
@@ -430,7 +560,7 @@ class RTPPacketFactory():
         Returns:
         None if we couldn't interpret this packet
         A RTPPacket if we could
-        '''
+        """
         ret_packet = None
         try:
             ret_packet = RTPPacket(packet, self._factory_manager)
@@ -440,18 +570,19 @@ class RTPPacketFactory():
 
 
 class RTCPPacketFactory():
-    ''' A packet factory for producing RTCP packets '''
+    """A packet factory for producing RTCP packets
+    """
 
     def __init__(self, factory_manager):
-        ''' Constructor
+        """Constructor
 
         Keyword Arguments:
         factory_manager The factory manager this class factory registers to
-        '''
+        """
         self._factory_manager = factory_manager
 
     def interpret_packet(self, packet):
-        ''' Interpret a packet
+        """Interpret a packet
 
         Keyword Arguments:
         packet The packet to interpret
@@ -459,7 +590,7 @@ class RTCPPacketFactory():
         Returns:
         None if we couldn't interpret this packet
         A RTCPPacket if we could
-        '''
+        """
         ret_packet = None
         try:
             ret_packet = RTCPPacket(packet, self._factory_manager)
@@ -469,25 +600,28 @@ class RTCPPacketFactory():
 
 
 class PacketFactoryManager():
-    ''' Manager for packet factories. Also exposes shared data between
-    factories. '''
+    """A manager for packet factories.
+
+    This exists primarily to expose shared data between factories.
+    """
 
     def __init__(self):
-        ''' Constructor '''
+        """Constructor
+        """
         self._packet_factories = []
         self._global_data = {}
 
     def create_factory(self, factory_type):
-        ''' Make me a factory!
+        """Make me a factory!
 
         Keyword Arguments:
         factory_type The typename of the factory to create
-        '''
+        """
         factory = factory_type(self)
         self._packet_factories.append(factory)
 
     def add_global_data(self, key, value):
-        ''' Add a global data value to track
+        """Add a global data value to track
 
         A global data value is a piece of data that a factory has discovered
         that may be of use to other factories that construct packets. This is
@@ -497,11 +631,11 @@ class PacketFactoryManager():
         Keyword Arguments:
         key The key of the global data
         value The key's value (oooo)
-        '''
+        """
         self._global_data[key] = value
 
     def get_global_data(self, key):
-        ''' Get the global data associated with some key
+        """Get the global data associated with some key
 
         Keyword Arguments:
         key The key of the global data to obtain
@@ -509,11 +643,11 @@ class PacketFactoryManager():
         Returns:
         None if we don't have it
         Something if we do
-        '''
+        """
         return self._global_data.get(key)
 
     def interpret_packet(self, packet):
-        ''' Interpret a packet
+        """Interpret a packet
 
         Iterate over all of the factories and ask them to interpret a packet.
         Keep going until one of them says they got it.
@@ -521,7 +655,7 @@ class PacketFactoryManager():
         Returns:
         An interpreted packet if some packet factory handled it
         None otherwise
-        '''
+        """
         interpreted_packet = None
         for factory in self._packet_factories:
             try:
@@ -534,16 +668,23 @@ class PacketFactoryManager():
 
 
 class VOIPListener(PcapListener):
-    ''' Pluggable module class that sniffs for SIP, RTP, and RTCP packets and
-    stores them according to the source '''
+    """Pluggable module class that sniffs for SIP, RTP, and RTCP packets
+
+    Received packets are stored according to the source.
+
+    Attributes:
+    packet_factory The one and only PacketFactoryManager
+    traces         Dictionary of sniffed message traffic, organized by
+                   source address
+    """
 
     def __init__(self, module_config, test_object):
-        ''' Constructor
+        """Constructor
 
         Keyword Arguments:
         module_config The module configuration for this pluggable module
-        test_object The object we will attach to
-        '''
+        test_object   The object we will attach to
+        """
         PcapListener.__init__(self, module_config, test_object)
 
         if not 'register-observer' in module_config:
@@ -557,8 +698,15 @@ class VOIPListener(PcapListener):
         self.traces = {}
 
     def pcap_callback(self, packet):
-        ''' Packet capture callback function - overrides PcapListener's virtual
-        function '''
+        """Packet capture callback function
+
+        Overrides PcapListener's virtual function. This will interpret the
+        packet using the PacketFactoryManager, and pass the parsed packet
+        off to registered callbacks.
+
+        Keyword Arguments:
+        packet A received packet from the pcap listener
+        """
 
         try:
             packet = self.packet_factory.interpret_packet(packet)
@@ -577,11 +725,22 @@ class VOIPListener(PcapListener):
             callback(packet)
 
     def add_callback(self, packet_type, callback):
-        ''' Add a callback function for when a packet of a particular type
-        is received '''
+        """Add a callback function for received packets of a particular type
+
+        Note that a particular packet type can only have a single callback
+
+        Keyword Arguments:
+        packet_type The string name of the packet type to receive
+        callback    A function that takes as an argument a Packet object
+        """
         if packet_type not in self._callbacks:
             self._callbacks[packet_type] = []
         self._callbacks[packet_type].append(callback)
 
     def remove_callbacks(self, packet_type):
+        """Remove the callbacks for a particular packet type
+
+        Keyword Arguments:
+        packet_type The string name of the packet type to remove callbacks for
+        """
         del self._callbacks[packet_type]
