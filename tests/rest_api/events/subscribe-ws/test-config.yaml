@@ -15,22 +15,12 @@ test-modules:
             config-section: pluggable-config
             typename: pluggable_modules.EventActionModule
         -
-            typename: pluggable_modules.ARIHangupMonitor
+            typename: subscribe-ws.SubscribeTest
 
 test-object-config:
     subscribe-all: True
 
 pluggable-config:
-    -
-        ari-start:
-        ari-requests:
-            -
-                method: 'post'
-                uri: 'channels'
-                params:
-                    endpoint: 'Local/dial_alice@default'
-                    extension: 'echo'
-                expect: 200
     -
         # Matching of endpoint and device state subscriptions
         ari-events:
@@ -48,9 +38,7 @@ pluggable-config:
                         name: 'Local/dial_alice@default'
                         state: 'NOT_INUSE'
                 count: '>1'
-    -
-        # Matching of channel subscription
-        ari-events:
+            # Matching of channel subscription
             -
                 match:
                     type: 'ChannelCreated'
@@ -139,9 +127,7 @@ pluggable-config:
                     channel:
                         name: 'Local/dial_alice@default-00000000;2'
                 count: 1
-    -
-        # Matching of bridge subscription
-        ari-events:
+            # Matching of bridge subscription
             -
                 match:
                     type: 'BridgeCreated'
