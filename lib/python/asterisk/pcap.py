@@ -436,7 +436,7 @@ class BodyFactory(object):
 
         body_type, _, _ = content_type.partition(';')
         if (body_type == 'application/sdp'):
-            return SDPPacket(ascii_pack, raw_packet)
+            return SDPPacket(ascii_packet, raw_packet)
         elif (body_type == 'multipart/related'):
             return MultipartPacket(content_type, ascii_packet, raw_packet)
         elif (body_type == 'application/rlmi+xml'):
