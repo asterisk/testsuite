@@ -24,15 +24,16 @@ test-object-config:
     reactor-timeout: 15
 
 statsd-config:
+    prefix: nominal
     packets:
         -
-            'foo:1|g'
+            'nominal.foo:1|g'
         -
-            'bar:2|s'
+            'nominal.bar:2|s'
         -
-            'baz:3|ms'
+            'nominal.baz:3|ms'
         -
-            'last:4|c'
+            'nominal.last:4|c'
 
 originator-config:
     channel: 'Local/start@default'
