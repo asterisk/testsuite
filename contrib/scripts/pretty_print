@@ -22,16 +22,19 @@ NORM='\033[m'
 col=$(( $(tput cols) - 36 ))
 
 counter() {
-	s=1
 	status=Running
+	startsec=$SECONDS
 	while(true) ; do
-		sleep 1
-		if [ $test_timeout -gt 0 -a $s -gt $(( ($test_timeout / 4) * 3 )) ] ; then
-			printf "${YELLOW}[%12s %3ss ]${NORM}" "Hung in" $(( $test_timeout - s ))
+		sleep 0.25
+		et=$(( $SECONDS - $startsec))
+		time_left=$(( $test_timeout - et ))
+		if [ $test_timeout -gt 0 -a $et -gt $(( ($test_timeout / 4) * 3 )) ] ; then
+			if [ $time_left -ge 0 ] ; then
+				printf "${YELLOW}[%12s %3ss ]${NORM}" "Hung in" $time_left
+			fi
 		else
-			printf "[%12s %3ss ]" "Running for" $s
+			printf "[%12s %3ss ]" "Running for" $et
 		fi
-		(( s++ ))
 		tput cub 20
 	done
 }
@@ -72,11 +75,12 @@ while read line ; do
 		countpid=$!
 	fi
 
-	if [[ $line =~ ^Test.*tests/([^\']+)\',.*(passed|failed|timedout)$ ]] ; then
+	if [[ $line =~ ^Test.*tests/([^\']+)\',.*(passed|failed|timed\ out)$ ]] ; then
 		test=${BASH_REMATCH[1]}
 		status=${BASH_REMATCH[2]}
 		col=$(( $(tput cols) - 36 ))
 		et=$(( $SECONDS - $st ))
+		kill $countpid
 
 		if [[ $status = passed ]] ; then
 			(( passed++ ))
@@ -91,18 +95,17 @@ while read line ; do
 			failures+=("FAILED: $test")
 			[[ $et -gt $maxelapsed ]] && maxelapsed=$et
 		fi
-		if [[ $status = timedout ]] ; then
+		if [[ $status = "timed out" ]] ; then
 			(( failed++ ))
 			(( timedout++ ))
 			COLOR=${RED}
 			label=Hung!!
 			timeouts+=("TIMEDOUT: $test")
 		fi
-		kill $countpid
 		printf "[${COLOR}%s${NORM}][${GREEN}%4d${NORM}][${RED}%4d${NORM}]\n" $label $passed $failed
 	fi
 
-	if [[ $line =~ TEST\ RESULTS ]] ; then
+	if [[ $line =~ (TEST\ RESULTS) ]] ; then
 		for fail in "${failures[@]}" ; do
 			echo -e "${RED}$fail${NORM}"
 		done
@@ -119,7 +122,3 @@ done
 trap - INT ERR
 
 kill $countpid &>/dev/null
-
-
-
-
