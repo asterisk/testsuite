@@ -143,7 +143,7 @@ ami-config:
                     DefaultExpiration: '3600'
                     MaximumExpiration: '7200'
                     MinimumExpiration: '60'
-                    Contacts: 'trunk1/sip:127.0.0.5:41060,trunk1/sip:127.0.0.6:41070'
+                    Contacts: 'trunk1/sip:127.0.0.[56]:410[67]0,trunk1/sip:127.0.0.[56]:410[67]0'
                     TotalContacts: '2'
                     ContactsRegistered: '0'
                     EndpointName: 'trunk1'
