@@ -42,7 +42,7 @@ statsd-config:
         -
             'PJSIP\.contacts\.states\.Reachable:\+1\|g'
         -
-            'PJSIP\.contacts\.sipp@@sip:127\.0\.0\.1:5061\.rtt:.*\|ms'
+            'PJSIP\.contacts\.sipp@@d0c8ec670653c9643ca96622ef658bbb\.rtt:.*\|ms'
 
 properties:
     minversion: '13.7.0'
