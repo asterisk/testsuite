@@ -36,9 +36,9 @@ statsd-config:
         -
             'PJSIP\.contacts\.states\.Created:0\|g'
         -
-            'PJSIP\.contacts\.states\.Unknown:\+1\|g'
+            'PJSIP\.contacts\.states\.Created:\+1\|g'
         -
-            'PJSIP\.contacts\.states\.Unknown:\-1\|g'
+            'PJSIP\.contacts\.states\.Created:\-1\|g'
         -
             'PJSIP\.contacts\.states\.Reachable:\+1\|g'
         -
