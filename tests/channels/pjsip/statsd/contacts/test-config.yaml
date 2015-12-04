@@ -36,6 +36,8 @@ statsd-config:
         -
             'PJSIP\.contacts\.states\.Created:0\|g'
         -
+            'PJSIP\.contacts\.states\.Removed:0\|g'
+        -
             'PJSIP\.contacts\.states\.Created:\+1\|g'
         -
             'PJSIP\.contacts\.states\.Created:\-1\|g'
