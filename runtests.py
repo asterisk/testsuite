@@ -55,6 +55,8 @@ abandon_test = False
 # If True, abandon the current running TestSuite. Used by SIGUSR1/SIGTERM.
 abandon_test_suite = False
 
+# Set to True if any refs logs are processed
+ref_debug_is_enabled = False
 
 class TestRun:
     def __init__(self, test_name, ast_version, options, global_config=None, timeout=-1):
@@ -335,6 +337,9 @@ class TestRun:
             ast_dir = "%s/ast%d/var/log/asterisk" % (run_dir, i)
             refs_in = os.path.join(ast_dir, "refs")
             if os.path.exists(refs_in):
+                global ref_debug_is_enabled
+                ref_debug_is_enabled = True
+
                 refs_txt = os.path.join(ast_dir, "refs.txt")
                 dest_file = open(refs_txt, "w")
                 refcounter = [
@@ -650,6 +655,16 @@ class TestSuite:
                 self.__strip_illegal_xml_chars(t.failure_message)))
             tc.appendChild(failure)
 
+    def generate_refleaks_summary(self):
+        dest_file = open("./logs/refleaks-summary.txt", "w")
+        try:
+            subprocess.call("./contrib/scripts/refleaks-summary",
+                                  stdout=dest_file,
+                                  stderr=subprocess.STDOUT)
+        finally:
+            dest_file.close()
+
+
 
 def load_yaml_config(path):
     """Load contents of a YAML config file to a dictionary"""
@@ -823,6 +838,9 @@ def main(argv=None):
                     print "FAILED"
 
         iteration += 1
+
+    if ref_debug_is_enabled:
+        test_suite.generate_refleaks_summary()
 
     try:
         with open(TEST_RESULTS, "w") as f:
