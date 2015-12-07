@@ -656,7 +656,9 @@ def load_yaml_config(path):
     try:
         f = open(path, "r")
     except IOError:
-        print "Failed to open %s" % path
+        # Ignore errors for the optional tests/custom folder.
+        if path != "tests/custom/tests.yaml":
+            print "Failed to open %s" % path
         return None
     except:
         print "Unexpected error: %s" % sys.exc_info()[0]
