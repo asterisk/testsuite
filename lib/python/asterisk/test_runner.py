@@ -179,7 +179,11 @@ def load_and_parse_module(type_name):
         LOGGER.error("No module specified: %s" % module_name)
         return None
 
-    module = __import__(module_name)
+    try:
+        module = __import__(module_name)
+    except ImportError as e:
+        LOGGER.error("ImportError: %s" % e)
+        raise
     for comp in parts[1:]:
         module = getattr(module, comp)
     return module
@@ -315,6 +319,16 @@ def main(argv=None):
     test_object = create_test_object(test_directory, test_config)
     if test_object is None:
         return 1
+
+    from test_case import TestCase
+
+    if type(test_object) == TestCase:
+        LOGGER.debug(
+            "**Possible Test Misconfiguration: The test has been configured "
+            "to instantiate a type of 'test_case.TestCase' as its "
+            "test-object; however, this type is the base type for the Python "
+            "tests and not a pluggable module. Did you mean to use "
+            "'test_case.TestCaseModule?'")
 
     # Load other modules that may be specified
     load_test_modules(test_config, test_object, ast_version)
