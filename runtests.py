@@ -93,9 +93,11 @@ class TestRun:
         if not os.path.exists(cmd[0]):
             cmd = ["./lib/python/asterisk/test_runner.py",
                    "%s" % self.test_name]
+            cmd.append(str(self.ast_version).rstrip())
+            if self.options.realtime:
+                cmd.append('realtime')
         if os.path.exists(cmd[0]) and os.access(cmd[0], os.X_OK):
             self.stdout_print("Running %s ..." % cmd)
-            cmd.append(str(self.ast_version).rstrip())
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
             self.pid = p.pid
@@ -408,8 +410,12 @@ class TestRun:
 
     def __check_can_run(self, ast_version):
         """Check tags and dependencies in the test config."""
+        forbidden_tags = []
+        if self.options.realtime:
+            forbidden_tags.append('no-realtime')
+
         if self.test_config.check_deps(ast_version) and \
-                self.test_config.check_tags(self.options.tags):
+                self.test_config.check_tags(self.options.tags, forbidden_tags):
             self.can_run = True
 
     def __parse_run_output(self, output):
@@ -735,6 +741,9 @@ def main(argv=None):
     parser.add_option("-L", "--list-tags", action="store_true",
                       dest="list_tags", default=False,
                       help="List available tags")
+    parser.add_option("-r", "--realtime", action="store_true",
+                      dest="realtime", default=False,
+                      help="Run tests in realtime mode")
     parser.add_option("-s", "--syslog", action="store_true",
                       dest="syslog", default=False,
                       help="Log test start/stop to syslog")

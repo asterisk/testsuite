@@ -291,6 +291,7 @@ class TestConfig(object):
         self.test_configuration = None
         self.condition_definitions = []
         self.global_test_config = global_test_config
+        self.realtime_config = {}
 
         try:
             self._parse_config()
@@ -379,6 +380,14 @@ class TestConfig(object):
         for feature in self.features:
             self.feature_check[feature] = False
 
+    def _process_realtime(self):
+        """Process realtime configuration block"""
+
+        if not self.config:
+            return
+
+        self.realtime_config = self.config.get('realtime-config', {})
+
     def _parse_config(self):
         """Parse the test-config YAML file."""
 
@@ -394,6 +403,7 @@ class TestConfig(object):
         self._process_global_settings()
         self._process_testinfo()
         self._process_properties()
+        self._process_realtime()
 
     def get_conditions(self):
         """
@@ -495,18 +505,29 @@ class TestConfig(object):
                 self.can_run = False
         return self.can_run
 
-    def check_tags(self, requested_tags):
+    def check_tags(self, requested_tags, forbidden_tags):
         """Check whether or not a test should execute based on its tags
 
         Keyword arguments:
         requested_tags The list of tags used for selecting a subset of
                        tests.  The test must have all tags to run.
+        forbidden_tags The list of tags that must not be present in the test in
+                       order to run it. If the test has any of the forbidden
+                       tags present, then the test cannot be run.
         Returns:
         can_run True if the test can execute, False otherwise
         """
 
         if not self.config:
             return False
+
+        if forbidden_tags:
+            intersection = set(forbidden_tags).intersection(set(self.tags))
+            if len(intersection) > 0:
+                print "Forbidden tags {0} found in {1}".format(intersection,
+                                                               self.tags)
+                self.can_run = False
+                return False
 
         # If no tags are requested, this test's tags don't matter
         if not requested_tags:
