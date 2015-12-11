@@ -93,13 +93,14 @@ class TestModuleLoader(object):
 sys.path_hooks.append(TestModuleFinder)
 
 
-def load_test_modules(test_config, test_object, ast_version):
+def load_test_modules(test_config, test_object, ast_version, realtime):
     """Load the pluggable modules for a test
 
     Keyword Arguments:
     test_config The test configuration object
     test_object The test object that the modules will attach to
     ast_version A string containing the Asterisk version
+    realtime Boolean that indicates if test is to be run in realtime mode
     """
 
     if not test_object:
@@ -129,6 +130,15 @@ def load_test_modules(test_config, test_object, ast_version):
             LOGGER.debug("Skipping the loading of test module %s due to it's "
                          "minversion and/or maxversion not being met." %
                          module_spec['typename'])
+
+    if realtime:
+        # Realtime conversion pluggable module needs to be loaded. Its
+        # configuration is found in the global test-config.yaml file, in the
+        # "realtime-config" section.
+        realtime_config = test_object.global_config.realtime_config
+        realtime_class = 'realtime_converter.RealtimeConverter'
+        module_type = load_and_parse_module(realtime_class)
+        module_type(realtime_config, test_object)
 
 
 def check_module_version(module_spec, ast_version):
@@ -305,6 +315,11 @@ def main(argv=None):
         return 1
     ast_version = args[2]
 
+    if (len(args) >= 4):
+        realtime = True
+    else:
+        realtime = False
+
     LOGGER.info("Starting test run for %s" % test_directory)
     test_config = load_test_config(test_directory)
     if test_config is None:
@@ -317,7 +332,7 @@ def main(argv=None):
         return 1
 
     # Load other modules that may be specified
-    load_test_modules(test_config, test_object, ast_version)
+    load_test_modules(test_config, test_object, ast_version, realtime)
 
     # Kick off the twisted reactor
     reactor.run()

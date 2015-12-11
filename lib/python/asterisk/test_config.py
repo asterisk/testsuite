@@ -291,6 +291,7 @@ class TestConfig(object):
         self.test_configuration = None
         self.condition_definitions = []
         self.global_test_config = global_test_config
+        self.realtime_config = {}
 
         try:
             self._parse_config()
@@ -379,6 +380,14 @@ class TestConfig(object):
         for feature in self.features:
             self.feature_check[feature] = False
 
+    def _process_realtime(self):
+        """Process realtime configuration block"""
+
+        if not self.config:
+            return
+
+        self.realtime_config = self.config.get('realtime-config', {})
+
     def _parse_config(self):
         """Parse the test-config YAML file."""
 
@@ -394,6 +403,7 @@ class TestConfig(object):
         self._process_global_settings()
         self._process_testinfo()
         self._process_properties()
+        self._process_realtime()
 
     def get_conditions(self):
         """
