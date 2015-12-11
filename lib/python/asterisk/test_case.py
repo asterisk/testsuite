@@ -228,7 +228,8 @@ class TestCase(object):
         count  The number of Asterisk instances to create, if no remote
                Asterisk instances have been specified
         """
-        if self.global_config.config:
+        if (self.global_config.config and
+            self.global_config.config.get('asterisk-instances')):
             asterisks = self.global_config.config.get('asterisk-instances')
         else:
             asterisks = [{'num': i + 1, 'host': '127.0.0.%d' % (i + 1)}
