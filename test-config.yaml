@@ -143,3 +143,56 @@ config-specific-version:
         # branch not based on Asterisk trunk.
         forced-version: 1.8.0.0
 
+# This section demonstrates how to integrate automatic realtime testing into
+# the testsuite. If realtime-config is specified, then Asterisk will replace known
+# configuration file data with realtime equivalents when running tests.
+#
+# The tests assume that the realtime engine being used by Asterisk is ODBC since that
+# is the only realtime backend that has core support.
+config-realtime:
+    test-modules:
+        modules:
+            -
+                typename: realtime_converter.RealtimeConverter
+                config-section: realtime-config
+
+    realtime-config:
+        # The DBMS being used for the test. This is passed as a URL type to
+        # sqlalchemy. For information on what types of technology can be specified
+        # here, see http://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls
+        #
+        # Default: postgresql
+        engine: 'postgresql'
+        # User that should access the database. This is used both by sqlalchemy when
+        # populating the database and by Asterisk when reading configuration from the
+        # database
+        #
+        # Default: asterisk
+        username: 'asterisk'
+        # Password that corresponds to the user accessing the database. This is used
+        # both by sqlalchemy when populating the database and by Asterisk when reading
+        # configuration from the database
+        #
+        # Default: asterisk
+        password: 'asterisk'
+        # Hostname or IP address where the database can be reached. This is used by
+        # sqlalchemy when populating the database.
+        #
+        # Default: localhost
+        host: 'localhost'
+        # Port where the database can be reached. This is used by sqlalchemy when
+        # populating the database.
+        #
+        # Default: 5432
+        port: '5432'
+        # The name of the database where the configuration tables can be found. This is
+        # used by sqlalchemy when populating the database.
+        #
+        # Default: asterisk
+        db: 'asterisk'
+        # The name of the ODBC DSN for Asterisk to use when connecting to the database. This
+        # DSN references an odbc.ini file that tells the database, host, and port for Asterisk
+        # to use when connecting to the database.
+        #
+        # Default: asterisk
+        dsn: 'asterisk'

@@ -102,6 +102,8 @@ def load_test_modules(test_config, test_object, ast_version):
     ast_version A string containing the Asterisk version
     """
 
+    LOGGER.info(test_config)
+
     if not test_object:
         return
     if not 'test-modules' in test_config:
@@ -318,6 +320,8 @@ def main(argv=None):
 
     # Load other modules that may be specified
     load_test_modules(test_config, test_object, ast_version)
+    # Load global modules as well
+    load_test_modules(test_object.global_config.config, test_object, ast_version)
 
     # Kick off the twisted reactor
     reactor.run()
