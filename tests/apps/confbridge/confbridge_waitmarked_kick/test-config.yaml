@@ -16,6 +16,7 @@ test-modules:
         typename: 'apptest.AppTest'
 
 test-object-config:
+  reactor-timeout: '50'
   app: 'ConfBridge'
   scenarios:
     -
