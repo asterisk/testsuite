@@ -1,5 +1,6 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
+    - test: 'ast-2015-006'
     - test: 't38'
     - test: 't38_with_auth'
     - test: 'directmedia_reinvite_t38'
