@@ -1,0 +1,38 @@
+testinfo:
+    summary: 'Test for AST-2015-006 T.38 FAX UDPTL vulnerability'
+    description: |
+        'Two devices are in a normal Audio call when one does a reinvite
+        to start a T.38 Fax session to send a malicious UDPTL stream.
+        A calls B
+        B initiates T.38 reINVITE
+        B sends malicious UDPTL stream.'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'endpoint_A.xml', '-i': '127.0.0.2', '-p': '5060', '-inf': 'inject_bridge.csv'} }
+                - { 'key-args': {'scenario': 'endpoint_B.xml', '-i': '127.0.0.3', '-p': '5060', '-inf': 'inject_bridge.csv'} }
+
+properties:
+    minversion: '13.8.0'
+    dependencies:
+        # The test requires the use of the SIPp feature play_pcap_image.
+        # However the feature is not in a released SIPp version yet.
+        # The feature might be present in the specified version below.
+        - sipp :
+            version : 'v3.5'
+            feature : 'PCAP'
+        - asterisk : 'app_dial'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip_t38'
+    tags:
+        - pjsip
+        - fax
