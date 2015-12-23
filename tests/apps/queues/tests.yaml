@@ -13,3 +13,4 @@ tests:
     - test: 'macro_gosub_test'
     - test: 'ringinuse_and_pause'
     - test: 'wrapup_time'
+    - test: 'reason_pause_ami'
