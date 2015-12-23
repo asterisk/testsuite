@@ -1,0 +1,14 @@
+testinfo:
+    summary: 'Test field PausedReason  AMI event QueueMember'
+    description: |
+        Tests the AMI event QueueMember for check the field PausedReason when a
+        member on queue is paused and the reason was set.
+
+properties:
+    minversion: '13.6.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_queue'
+    tags:
+        - queues
