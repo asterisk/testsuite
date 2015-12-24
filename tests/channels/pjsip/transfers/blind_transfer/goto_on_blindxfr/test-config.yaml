@@ -1,0 +1,101 @@
+testinfo:
+    summary:     'Tests GOTO_ON_BLINDXFR on caller and callee sides of a blind transfer'
+    description: |
+        'The test performs two blind transfer scenarios to test that
+        GOTO_ON_BLINDXFR works when either the caller or callee is the
+        transferrer.
+
+        1) Make alice call bob which bob then blind transfers alice.  Bob is sent
+        to wherever GOTO_ON_BLINDXFR specifies.
+
+        2) Make charlie call david which charlie then blind transfers david.
+        Charlie is sent to wherever GOTO_ON_BLINDXFR specifies.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: originator-config-alice
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: originator-config-charlie
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    asterisk-instances: 1
+    connect-ami: True
+
+originator-config-alice:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/alice'
+    context: 'testsuite'
+    exten: 'xfer_bob'
+    priority: '1'
+    async: 'True'
+
+originator-config-charlie:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/charlie'
+    context: 'testsuite'
+    exten: 'xfer_david'
+    priority: '1'
+    async: 'True'
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'target_caller'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'callee_goto'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'target_callee'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'caller_goto'
+        count: '1'
+
+properties:
+    minversion: '13.8.0'
+    dependencies:
+        - python : twisted
+        - python : starpy
+        - asterisk : app_dial
+        - asterisk : app_echo
+        - asterisk : app_senddtmf
+        - asterisk : app_stack
+        - asterisk : app_userevent
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip
+    tags:
+        - pjsip
+

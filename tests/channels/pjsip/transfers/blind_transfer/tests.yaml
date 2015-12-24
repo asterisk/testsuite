@@ -1,10 +1,11 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
+    - dir: 'off_nominal'
+    - test: 'callee_direct_media'
     - test: 'callee_refer_only'
     - test: 'callee_with_hold'
-    - test: 'callee_direct_media'
+    - test: 'caller_direct_media'
     - test: 'caller_refer_only'
     - test: 'caller_with_hold'
-    - test: 'caller_direct_media'
-
+    - test: 'goto_on_blindxfr'
 
