@@ -75,7 +75,7 @@ pluggable-config:
                     application: 'testsuite'
                     peer:
                         peer_status: 'Unreachable'
-                count: 2
+                count: 1
             -
                 match:
                     type: 'DeviceStateChanged'
