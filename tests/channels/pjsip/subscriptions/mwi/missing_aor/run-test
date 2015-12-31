@@ -10,11 +10,11 @@ the GNU General Public License Version 2.
 import sys
 import logging
 
-sys.path.append("lib/python/asterisk")
+sys.path.append("lib/python")
 
 from twisted.internet import reactor
-from sipp import SIPpScenario
-from test_case import TestCase
+from asterisk.sipp import SIPpScenario
+from asterisk.test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
 
