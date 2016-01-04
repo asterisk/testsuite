@@ -1,0 +1,41 @@
+testinfo:
+    summary: 'Test the CDR dialplan function'
+    description: |
+        'This test generates a CDR, and then uses the CDR
+        dialplan function to verify attributes on the CDR.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    config-path: 'tests/cdr/configs/basic'
+    spawn-after-hangup: True
+    expected_events: 0
+    test-iterations:
+        -
+            channel: 'Local/s@default'
+            application: 'Echo'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+        count: '0'
+
+properties:
+    minversion: '13.8.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_echo'
+        - asterisk: 'func_cdr'
+    tags:
+        - CDR

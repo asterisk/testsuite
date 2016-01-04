@@ -5,4 +5,4 @@ tests:
     - test: 'cdr_fork_end_time'
     - test: 'nocdr'
     - test: 'cdr_prop_disable'
-
+    - test: 'func_cdr'
