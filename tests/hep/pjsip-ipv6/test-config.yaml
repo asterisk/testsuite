@@ -10,9 +10,6 @@ testinfo:
         validated, and the SIP payload verified.
 
 test-modules:
-    add-to-search-path:
-        -
-            'tests/hep'
     test-object:
         config-section: test-object-config
         typename: 'sipp.SIPpTestCase'

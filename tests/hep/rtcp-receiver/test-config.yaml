@@ -13,9 +13,6 @@ testinfo:
         what they sent and what they received).
 
 test-modules:
-    add-to-search-path:
-        -
-            'tests/hep'
     test-object:
         config-section: test-object-config
         typename: 'test_case.TestCaseModule'
