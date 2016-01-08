@@ -1,0 +1,42 @@
+testinfo:
+    summary:     'Tests bind_rtp_to_media_address'
+    description: |
+        'Asterisk calls bob with media_address set to 127.0.0.3 and
+         bind_rtp_to_media_address=yes.  PacketSourceCheck verifies that
+         the packets are coming from 127.0.0.3.'
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator-config-ipv4-udp
+            typename: 'pluggable_modules.Originator'
+        -
+            typename: 'rtp.PacketSourceCheck'
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'bob.xml', '-i': '127.0.0.1', '-p': '5062'}}
+
+originator-config-ipv4-udp:
+    trigger: 'scenario_start'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/bob-ipv4-udp'
+    context: 'default'
+    exten: 'playtone'
+    priority: '1'
+    async: 'True'
+
+properties:
+    minversion: '13.8.0'
+    dependencies:
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
