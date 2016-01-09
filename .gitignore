@@ -6,3 +6,4 @@ crash-mail-config.yaml
 /logs
 /tests/custom
 /fastagi
+/run-local.conf

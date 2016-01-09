@@ -1,0 +1,14 @@
+# This file shows the default settings.  If local.conf exists it is sourced
+# by run-local.  Currently these settings only apply to ./run-local setup,
+# though the file is sourced for all runs of run-local.
+
+# Specify additional options to use on ./configure for Asterisk.
+# Do not set --prefix or other installation directories, the testsuite expects
+# things to be installed a certain way.
+CONFIGURE_OPTIONS=""
+
+# Specify additional --enable/--disable options.
+MENUSELECT_OPTIONS=""
+
+# By default the parent directory is used to find the Asterisk source to build.
+ASTSRCDIR=".."

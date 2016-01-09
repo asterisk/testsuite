@@ -1,10 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
 # run_local: run the test suite without changing the system
 
 set -e
 HERE="`(cd "\`dirname "$0"\`" >/dev/null; pwd; cd - >/dev/null)`"
 cd "$HERE"
+
+if [ -r run-local.conf ]; then
+  # Read environment from run-local.conf
+  source run-local.conf
+fi
 
 usage() {
 	echo >&2 "$0: Run the test suite locally:"
@@ -26,7 +31,7 @@ setup() {
 		cd $ASTSRCDIR
 		# The user may have already run ./configure and make
 		if [ ! -f config.status ]; then
-			./configure --enable-dev-mode
+			./configure --enable-dev-mode $CONFIGURE_OPTIONS
 			make menuselect.makeopts
 			menuselect/menuselect --enable DONT_OPTIMIZE --enable TEST_FRAMEWORK $MENUSELECT_OPTIONS
 		fi
