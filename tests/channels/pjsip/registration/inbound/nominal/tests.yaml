@@ -6,6 +6,7 @@ tests:
     - dir: 'single_contact'
     - dir: 'unregister'
     - dir: 'contact_acl'
+    - test: 'regcontext'
     - test: 'path'
     - test: 'user_agent'
 
