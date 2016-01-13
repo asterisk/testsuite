@@ -1,0 +1,95 @@
+testinfo:
+    summary:     'Check regcontext causes Asterisk to create and destroy an extension
+                  when an endpoint registers and unregisters.'
+    description: |
+       'Set regcontext=sipregs and check that, when an endpoint registers, an extension
+        is created in the sipregs context with the name of the endpoint. Then check that the
+        extension is removed when the endpoint unregisters.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    connect-ami: True
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # IPv4 & UDP
+                - { 'key-args': {'scenario': 'register-noauth.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+ami-config:
+    -
+        ami-start:
+    -
+        ami-events:
+            conditions:
+                match:
+                     Event: 'TestEvent'
+                     State: 'AOR_CONTACT_ADDED'
+                     AOR: 'alice'
+            requirements:
+                match:
+                     Contact: 'sip:alice@127.0.0.1:5061'
+                     Expiration: '60'
+            count: '1'
+        ami-actions:
+            action:
+                Action: 'ShowDialPlan'
+                ActionID: '12345'
+                Context: 'sipregs'
+    -
+        ami-events:
+            conditions:
+                match:
+                     Event: 'ListDialplan'
+                     ActionID: '12345'
+            requirements:
+                match:
+                     Extension: 'alice'
+            count: '1'
+    -
+        ami-events:
+            conditions:
+                match:
+                     Event: 'TestEvent'
+                     State: 'AOR_CONTACT_REMOVED'
+                     AOR: 'alice'
+            requirements:
+                match:
+                     Contact: 'sip:alice@127.0.0.1:5061'
+            count: '1'
+        ami-actions:
+            action:
+                Action: 'ShowDialPlan'
+                ActionID: '12346'
+                Context: 'sipregs'
+    -
+        ami-events:
+            conditions:
+                match:
+                     Event: 'ListDialplan'
+                     ActionID: '12346'
+            requirements:
+                match:
+                     Extension: 'alice'
+            count: '0'
+        stop_test:
+
+properties:
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python: 'twisted'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.3'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+
