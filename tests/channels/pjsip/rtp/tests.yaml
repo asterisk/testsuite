@@ -3,3 +3,4 @@ tests:
     - dir: 'rtp_keepalive'
     - test: 'timeout'
     - test: 'timeout_hold'
+    - test: 'bind_rtp_to_media_address'
