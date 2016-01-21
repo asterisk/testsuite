@@ -211,6 +211,12 @@ test-modules:
 # The configuration for the test object. The configuration will differ depending
 # on the test object used
 test-object-config:
+    # A path to a configuration directory other than this test's configuration
+    # directory. The configuration files from this common directory will be
+    # installed prior to this test's configuration files. This is useful for
+    # large sets of tests that cover the same functionality, and allows them
+    # to share config files.
+    config-path: 'tests/foo'
     reactor-timeout: 30
     spawn-after-hangup: True
     # Whether a full log file containg DEBUG level should be created, defaults to True

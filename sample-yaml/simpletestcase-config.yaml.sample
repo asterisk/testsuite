@@ -23,13 +23,6 @@ test-object-config:
 	# the previous iteration's channel has hung up.
 	spawn-after-hangup: True
 
-	# A path to a configuration directory other than this test's configuration
-	# directory. The configuration files from this common directory will be
-	# installed prior to this test's configuration files. This is useful for
-	# large sets of tests that cover the same functionality, and allows them
-	# to share config files.
-	config-path: 'tests/foo'
-
 	# The test iterations block define a sequence of sets of scenarios to run
 	# sequentially
 	test-iterations:

@@ -122,6 +122,7 @@ class TestCase(object):
         self.ast = []
         self.ami = []
         self.fastagi = []
+        self.base_config_path = None
         self.reactor_timeout = 30
         self.passed = None
         self.fail_tokens = []
@@ -148,6 +149,8 @@ class TestCase(object):
 
         # Pull additional configuration from YAML config if possible
         if test_config:
+            if 'config-path' in test_config:
+                self.base_config_path = test_config['config-path']
             if 'reactor-timeout' in test_config:
                 self.reactor_timeout = test_config['reactor-timeout']
             self.ast_conf_options = test_config.get('ast-config-options')
@@ -273,6 +276,8 @@ class TestCase(object):
             if local_num:
                 # If a base configuration for this Asterisk instance has been
                 # provided, install it first
+                if base_configs_path is None:
+                    base_configs_path = self.base_config_path
                 if base_configs_path:
                     ast_dir = "%s/ast%d" % (base_configs_path, local_num)
                     self.ast[i].install_configs(ast_dir,
@@ -730,7 +735,6 @@ class SimpleTestCase(TestCase):
         self._tracking_channels = []
         self._ignore_originate_failures = False
         self._spawn_after_hangup = False
-        self._config_path = None
         self._end_test_delay = 0
 
         if test_config is None or 'test-iterations' not in test_config:
@@ -753,11 +757,9 @@ class SimpleTestCase(TestCase):
                     test_config['ignore-originate-failures']
             if 'spawn-after-hangup' in test_config:
                 self._spawn_after_hangup = test_config['spawn-after-hangup']
-            if 'config-path' in test_config:
-                self._config_path = test_config['config-path']
             self._end_test_delay = test_config.get('end-test-delay') or 0
 
-        self.create_asterisk(count=1, base_configs_path=self._config_path)
+        self.create_asterisk(count=1)
 
     def ami_connect(self, ami):
         """AMI connect handler"""
