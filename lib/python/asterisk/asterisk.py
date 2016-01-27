@@ -187,7 +187,7 @@ class AsteriskCliCommand(object):
 
         def __cli_error_callback(result):
             """Errback from getProcessOutputAndValue"""
-            self._set_properties(result)
+            self._set_properties(result.value)
             LOGGER.warning("Asterisk CLI %s exited %d with error: %s" %
                            (self.host, self.exitcode, self.err))
             if self.err:
