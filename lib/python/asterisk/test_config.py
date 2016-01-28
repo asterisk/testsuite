@@ -141,11 +141,19 @@ class Dependency(object):
             if not found:
                 print "Unknown custom dependency - '%s'" % self.name
         elif "asterisk" in dep:
-            self.name = dep["asterisk"]
-            self.met = self._find_asterisk_module(self.name)
+            if self.ast:
+                self.name = dep["asterisk"]
+                self.met = self._find_asterisk_module(self.name)
+            else:
+                # Remote Asterisk instance. Assume dependency is met
+                self.met = True
         elif "buildoption" in dep:
-            self.name = dep["buildoption"]
-            self.met = self._find_build_flag(self.name)
+            if self.ast:
+                self.name = dep["buildoption"]
+                self.met = self._find_build_flag(self.name)
+            else:
+                # Remote Asterisk instance. Assume dependency is met
+                self.met = True
         elif "pcap" in dep:
             self.name = "pcap"
             from test_case import PCAP_AVAILABLE

@@ -305,6 +305,13 @@ def main(argv=None):
         return 1
     ast_version = args[2]
 
+    try:
+        AsteriskVersion()
+    except OSError:
+        # If there is no Asterisk version on the local system, then we need to
+        # set the version to the one that was passed into the application.
+        AsteriskVersion(default=ast_version)
+
     LOGGER.info("Starting test run for %s" % test_directory)
     test_config = load_test_config(test_directory)
     if test_config is None:
