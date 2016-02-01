@@ -320,7 +320,8 @@ def main(argv=None):
     load_test_modules(test_config, test_object, ast_version)
 
     # Load global modules as well
-    load_test_modules(test_object.global_config.config, test_object, ast_version)
+    if test_object.global_config.config:
+        load_test_modules(test_object.global_config.config, test_object, ast_version)
 
     # Kick off the twisted reactor
     reactor.run()
