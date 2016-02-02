@@ -324,12 +324,8 @@ REALTIME_FILE_REGISTRY.append(SorceryRealtimeFile('pjsip.conf',
     # We don't include the following object types in this dictionary:
     # * system
     # * transport
-    # * contact
-    # * subscription_persistence
     # The first two don't work especially well for dynamic realtime since they
-    # are not reloadable. contact and subscription_persistence are left out
-    # because they are write-only and so there should be no configuration
-    # items for those.
+    # are not reloadable.
     #
     # The table names here are the ones that the alembic scripts use.
     {
@@ -339,12 +335,16 @@ REALTIME_FILE_REGISTRY.append(SorceryRealtimeFile('pjsip.conf',
             'auth': 'ps_auths',
             'global': 'ps_globals',
             'domain_alias': 'ps_domain_aliases',
+            'contact': 'ps_contacts',
         },
         'res_pjsip_endpoint_identifier_ip': {
             'identify': 'ps_endpoint_id_ips',
         },
         'res_pjsip_outbound_registration': {
             'registration': 'ps_registrations',
-        }
+        },
+        'res_pjsip_pubsub': {
+            'subscription_persistence': 'ps_subscription_persistence'
+        },
     }
 ))
