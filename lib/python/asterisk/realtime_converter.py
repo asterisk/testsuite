@@ -88,7 +88,7 @@ class SorceryRealtimeFile(object):
         self.sorcery = None
         self.extconfig = None
 
-    def write_configs(self, config_dir):
+    def write_configs(self, config_dir, asterisk):
         """Write configuration for sorcery.
 
         This writes the sorcery.conf file and adds to the extconfig.conf file in
@@ -101,6 +101,8 @@ class SorceryRealtimeFile(object):
         self.extconfig = ConfigFile(config_dir, 'extconfig.conf')
         self.write_sorcery_conf()
         self.write_extconfig_conf()
+        asterisk.install_config(os.path.join(config_dir, 'sorcery.conf'))
+        asterisk.install_config(os.path.join(config_dir, 'extconfig.conf'))
 
     def write_sorcery_conf(self):
         """Write sorcery.conf file.
@@ -246,8 +248,14 @@ class RealtimeConverter(object):
         self.write_extconfig_conf()
         self.write_res_odbc_conf(dsn, username, password)
         self.write_modules_conf()
+        test_object.ast[0].install_config(os.path.join(self.config_dir,
+                                                       'extconfig.conf'))
+        test_object.ast[0].install_config(os.path.join(self.config_dir,
+                                                       'res_odbc.conf'))
+        test_object.ast[0].install_config(os.path.join(self.config_dir,
+                                                       'modules.conf.inc'))
         for realtime_file in REALTIME_FILE_REGISTRY:
-            realtime_file.write_configs(self.config_dir)
+            realtime_file.write_configs(self.config_dir, test_object.ast[0])
 
         self.write_db()
 
