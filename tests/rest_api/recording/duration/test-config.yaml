@@ -102,9 +102,9 @@ ari-config:
                     type: RecordingFinished
                     application: testsuite
                     recording:
-                        duration: 6
+                        duration: 7
                         talking_duration: 4
-                        silence_duration: 2
+                        silence_duration: 3
             count: 1
             requests:
                 -
