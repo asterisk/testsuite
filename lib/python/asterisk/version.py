@@ -97,6 +97,7 @@ def parse_parent_branch(parent_branch):
     # This should be the last thing called.
     return (parent_branch, True)
 
+DEFAULT_VERSION = None
 
 class AsteriskVersion(object):
     """An Asterisk Version.
@@ -127,15 +128,26 @@ class AsteriskVersion(object):
 
     supported_modifiers = ['rc', 'beta']
 
-    def __init__(self, version=None):
+    def __init__(self, version=None, default=None):
         """Construct an Asterisk Version parser.
 
         Keyword Arguments:
         version -- The Asterisk version string to parse.
+        default -- Set a default version value. Whenever the initializer is
+                   called without the version keyword argument, then this
+                   default version will get returned instead. This setting
+                   persists beyond the lifetime of this object.
         """
+        global DEFAULT_VERSION
+
+        if default:
+            DEFAULT_VERSION = default
 
         if not version:
-            version = AsteriskVersion.get_version_from_binary()
+            if DEFAULT_VERSION:
+                version = DEFAULT_VERSION
+            else:
+                version = AsteriskVersion.get_version_from_binary()
 
         self.raw_version = version
         self.branch = False

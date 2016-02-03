@@ -103,6 +103,10 @@ config-standard:
 # This is useful when you want to use the Test Suite to test Asterisk, but
 # where Asterisk has a particular complex configuration and is part of a
 # larger integrated system.
+#
+# Because of checks for the running Asterisk version, when running against
+# a remote instance of Asterisk, you must specify the version with the -v
+# option to runtests.py
 config-remote:
     asterisk-instances:
         -

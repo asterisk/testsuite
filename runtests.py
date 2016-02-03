@@ -769,12 +769,10 @@ def main(argv=None):
     signal.signal(signal.SIGUSR1, handle_usr1)
     signal.signal(signal.SIGTERM, handle_term)
 
-    ast_version = AsteriskVersion(options.version)
+    ast_version = AsteriskVersion(default=options.version)
 
     if options.list_tests or options.list_tags:
         test_suite = TestSuite(ast_version, options)
-
-        print "Asterisk Version: %s\n" % str(ast_version)
 
         if options.list_tests:
             test_suite.list_tests()

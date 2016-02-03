@@ -246,7 +246,12 @@ class TestCondition(object):
     condition check
     """
 
-    build_options = AsteriskBuildOptions()
+    try:
+        build_options = AsteriskBuildOptions()
+    except:
+        # If no build options were found, we're running against a remote
+        # Asterisk.
+        build_options = None
 
     def __init__(self, test_config):
         """Initialize a new test condition
@@ -278,6 +283,11 @@ class TestCondition(object):
         True if all conditions are met
         False if a condition was not met.
         """
+        if not TestCondition.build_options:
+            # We assume that remote Asterisks have been set up with proper build
+            # options.
+            return True
+
         ret_val = True
         for option in self.my_build_options:
             build_option, expected_value = option
