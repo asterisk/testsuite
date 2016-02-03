@@ -1,5 +1,5 @@
 testinfo:
-    summary: 'Test for AST-2015-006 T.38 FAX UDPTL vulnerability'
+    summary: 'Test for AST-2016-003 T.38 FAX UDPTL vulnerability'
     description: |
         'Two devices are in a normal Audio call when one does a reinvite
         to start a T.38 Fax session to send a malicious UDPTL stream.

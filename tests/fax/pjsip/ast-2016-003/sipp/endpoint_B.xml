@@ -142,7 +142,7 @@
 	<!-- Send malicious T.38 pcap file. -->
 	<nop>
 		<action>
-			<exec play_pcap_image="tests/fax/pjsip/ast-2015-006/sipp/crash.pcap" />
+			<exec play_pcap_image="tests/fax/pjsip/ast-2016-003/sipp/crash.pcap" />
 		</action>
 	</nop>
 
