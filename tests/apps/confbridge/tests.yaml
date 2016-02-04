@@ -14,3 +14,4 @@ tests:
     - test: 'confbridge_waitmarked_normal'
     - test: 'confbridge_waitmarked_only'
     - test: 'confbridge_waitmarked_single'
+    - test: 'muted_conference_start_muted'

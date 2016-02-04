@@ -1,0 +1,232 @@
+testinfo:
+    summary: 'Test app_confbridge user mute status starting in a muted conference.'
+    description: |
+        Test the mute status of a user entering an app_confbridge conference
+        when the conference is not muted and when it is muted.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+    app: 'ConfBridge'
+    scenarios:
+        -
+            events:
+                -
+                    type: 'headermatch'
+                    conditions:
+                        match:
+                            Event: 'ConfbridgeStart'
+                            Conference: '1'
+                    actions:
+                        -
+                            action-type: 'set-expected-result'
+                            expected-result: 'Conference Started'
+                -
+                    type: 'headermatch'
+                    conditions:
+                        match:
+                            Event: 'ConfbridgeEnd'
+                            Conference: '1'
+                    actions:
+                        -
+                            action-type: 'set-expected-result'
+                            expected-result: 'Conference Ended'
+            channels:
+                -
+                    # Alice is the conference admin user that mutes the conference
+                    # after Bob joins.
+                    channel-id: 'Alice'
+                    channel-name: 'Local/alice@default'
+                    start-on-create: True
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/alice@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Alice Joined'
+                                -
+                                    action-type: 'start-call'
+                                    channel-id: 'Bob'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    Type: 'StateChange'
+                                    State: 'CONF_MUTE_UPDATE'
+                                    Mode: 'unmuted'
+                                    Channel: 'Local/alice@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Alice is unmuted'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    Type: 'StateChange'
+                                    State: 'CONF_MUTE_UPDATE'
+                                    Mode: 'muted'
+                                    Channel: 'Local/alice@default-.*'
+                            actions:
+                                -
+                                    action-type: 'fail-test'
+                                    message: 'Alice became muted'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/alice@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Alice Left'
+                -
+                    # Bob is a normal user that joins when the conference is unmuted
+                    channel-id: 'Bob'
+                    channel-name: 'Local/bob@default'
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/bob@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Bob Joined'
+                                -
+                                    # Bob just joined so have Alice mute the conference.
+                                    action-type: 'send-dtmf'
+                                    dtmf: '5'
+                                    channel-id: 'Alice'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    Type: 'StateChange'
+                                    State: 'CONF_MUTE_UPDATE'
+                                    Mode: 'unmuted'
+                                    Channel: 'Local/bob@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Bob is unmuted'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    Type: 'StateChange'
+                                    State: 'CONF_MUTE_UPDATE'
+                                    Mode: 'muted'
+                                    Channel: 'Local/bob@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Bob is muted'
+                                -
+                                    action-type: 'start-call'
+                                    channel-id: 'Carol'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/bob@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Bob Left'
+                -
+                    # Carol is a normal user that joins when the conference is muted
+                    channel-id: 'Carol'
+                    channel-name: 'Local/carol@default'
+                    events:
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeJoin'
+                                    Conference: '1'
+                                    Channel: 'Local/carol@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Carol Joined'
+                                -
+                                    action-type: 'hangup'
+                                    channel-id: 'Alice'
+                                -
+                                    action-type: 'hangup'
+                                    channel-id: 'Bob'
+                                -
+                                    action-type: 'hangup'
+                                    channel-id: 'Carol'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    Type: 'StateChange'
+                                    State: 'CONF_MUTE_UPDATE'
+                                    Mode: 'unmuted'
+                                    Channel: 'Local/carol@default-.*'
+                            actions:
+                                -
+                                    action-type: 'fail-test'
+                                    message: 'Carol started unmuted'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'TestEvent'
+                                    Type: 'StateChange'
+                                    State: 'CONF_MUTE_UPDATE'
+                                    Mode: 'muted'
+                                    Channel: 'Local/carol@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Carol is muted'
+                        -
+                            type: 'headermatch'
+                            conditions:
+                                match:
+                                    Event: 'ConfbridgeLeave'
+                                    Conference: '1'
+                                    Channel: 'Local/carol@default-.*'
+                            actions:
+                                -
+                                    action-type: 'set-expected-result'
+                                    expected-result: 'Carol Left'
+
+
+properties:
+    minversion: ['11.22.0', '13.8.0']
+    tags:
+        - confbridge
+        - apps
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_confbridge'
+        - asterisk: 'app_senddtmf'
+        - asterisk: 'app_playback'
