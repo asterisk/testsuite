@@ -1,5 +1,1 @@
-[modules]
-
-autoload=yes
-
 noload => app_playback.so
