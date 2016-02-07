@@ -658,7 +658,7 @@ class TestSuite:
     def generate_refleaks_summary(self):
         dest_file = open("./logs/refleaks-summary.txt", "w")
         try:
-            subprocess.call("./contrib/scripts/refleaks-summary",
+            subprocess.call(["./contrib/scripts/refleaks-summary", "-p", "logs/"],
                                   stdout=dest_file,
                                   stderr=subprocess.STDOUT)
         finally:

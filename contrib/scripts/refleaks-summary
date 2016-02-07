@@ -2,11 +2,12 @@
 
 print_usage() {
 	echo "Usage:"
-	echo "$0 [-s] [-n] [-b logs/]"
-	echo "\t-s            Strip /var/log/asterisk/refs.txt from output"
-	echo "\t-n            Sort output by number of objects leaked"
-	echo "\t-r            Reverse sort output"
-	echo "\t-b BASEDIR    Search for logs from BASEDIR instead of logs/"
+	echo "$0 [-s] [-n] [-b logs/] [-p logs/] > logs/refleaks.txt"
+	echo -e "\t-s            Strip /var/log/asterisk/refs.txt from output"
+	echo -e "\t-p PREFIX     Strip PREFIX from output"
+	echo -e "\t-n            Sort output by number of objects leaked"
+	echo -e "\t-r            Reverse sort output"
+	echo -e "\t-b BASEDIR    Search for logs from BASEDIR instead of logs/"
 	exit $1
 }
 
@@ -14,7 +15,7 @@ SORTPARAMS="-k2"
 REVERSEPARAMS=""
 STRIPFILE=
 BASEPATH=logs/
-while getopts ":snrhb:" opt; do
+while getopts ":snrhp:b:" opt; do
 	case $opt in
 		s)
 			STRIPFILE=/var/log/asterisk/refs.txt
@@ -24,6 +25,9 @@ while getopts ":snrhb:" opt; do
 			;;
 		n)
 			SORTPARAMS="-n"
+			;;
+		p)
+			STRIPPREFIX="$OPTARG"
 			;;
 		b)
 			BASEPATH="$OPTARG"
@@ -47,9 +51,9 @@ fi
 
 REFS_FILES=$(find "${BASEPATH}" -name refs.txt 2>/dev/null)
 if test -z "$REFS_FILES"; then
-	echo "No refs.txt logs found in ${BASEPATH}"
+	echo "No refs.txt logs found."
 	exit
 fi
 
 echo "Leaked objects per instance of Asterisk:"
-grep -H $REFS_FILES -e '==== Leaked Object '|sed -e "s,$STRIPFILE:.*,,"|uniq -c|sort $SORTPARAMS $REVERSEPARAMS
+grep -H $REFS_FILES -e '==== Leaked Object '|sed -e "s,$STRIPFILE:.*,," -e "s,^$STRIPPREFIX,,"|uniq -c|sort $SORTPARAMS $REVERSEPARAMS
