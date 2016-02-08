@@ -125,7 +125,7 @@ sound-file-analyzer:
                     actions:
                         -
                             type: 'size_check'
-                            size: 96000
+                            size: 114604
                             tolerance: 2000
                         -
                             type: 'energy_check'
