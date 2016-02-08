@@ -132,13 +132,6 @@ pluggable-config:
                 nomatch:
                     Bridgecreator: 'Stasis'
             count: 1
-        ari-requests:
-            -
-                method: 'delete'
-                uri: 'channels/bob;2'
-            -
-                method: 'delete'
-                uri: 'channels/dummy;2'
     # Ensure alice leaves the non-stasis bridge
     -
         ami-events:
