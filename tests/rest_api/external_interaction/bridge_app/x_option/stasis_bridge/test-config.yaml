@@ -51,6 +51,13 @@ test-object-config:
             context: 'default'
             extension: 'echo'
             priority: '1'
+        -
+            # This channel explicitly waits to give time for all events to be received
+            channelId: 'wait'
+            endpoint: 'Local/wait@default'
+            context: 'default'
+            extension: 'echo'
+            priority: '1'
 
 pluggable-config:
     -
