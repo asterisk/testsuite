@@ -51,6 +51,12 @@ test-object-config:
             context: 'default'
             extension: 'echo'
             priority: '1'
+        -
+            channelId: 'wait'
+            endpoint: 'Local/wait@default'
+            context: 'default'
+            extension: 'echo'
+            priority: '1'
 
 pluggable-config:
     -
