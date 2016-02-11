@@ -30,7 +30,7 @@ test-object-config:
         -
             scenarios:
                 - { 'key-args': {'scenario':'uas.xml', '-p':'5067', '-m':'2'} }
-                - { 'coordinated-sender': {'key-args': {'scenario':'referer.xml', '-p':'5066'} },
+                - { 'coordinated-sender': {'key-args': {'delay': 2, 'scenario':'referer.xml', '-p':'5066'} },
                     'coordinated-receiver': {'key-args': {'scenario':'referee.xml', '-p':'5065'} } }
 
 ami-config:

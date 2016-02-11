@@ -560,6 +560,7 @@ class SIPpScenario(object):
         self.target = target
         self._our_exit_deferred = None
         self._test_case = None
+        self.delay = scenario.get('delay', 0)
         if not self.sipp:
             raise ValueError("SIPpTestObject requires that sipp is installed")
 
@@ -609,6 +610,16 @@ class SIPpScenario(object):
                 self._test_case.stop_reactor()
             return result
 
+        def __spawn_process():
+            LOGGER.info("Executing SIPp scenario: %s" % self.name)
+            LOGGER.debug(sipp_args)
+            reactor.spawnProcess(self._process,
+                                 sipp_args[0],
+                                 sipp_args,
+                                 {"TERM": "vt100", },
+                                 None,
+                                 None)
+
         self.result = None
         sipp_args = [
             self.sipp, self.target,
@@ -628,6 +639,8 @@ class SIPpScenario(object):
         # Override and extend defaults
         default_args.update(self.scenario)
         del default_args['scenario']
+        if self.delay:
+            del default_args['delay']
 
         # correct the path specified by -slave_cfg
         if '-slave_cfg' in default_args:
@@ -642,9 +655,6 @@ class SIPpScenario(object):
             sipp_args.extend([key, val])
         sipp_args.extend(self.positional_args)
 
-        LOGGER.info("Executing SIPp scenario: %s" % self.scenario['scenario'])
-        LOGGER.debug(sipp_args)
-
         self._our_exit_deferred = defer.Deferred()
 
         exit_deferred = defer.Deferred()
@@ -655,12 +665,14 @@ class SIPpScenario(object):
 
         self._process = SIPpProtocol(self.scenario['scenario'], exit_deferred,
                                      start_deferred)
-        reactor.spawnProcess(self._process,
-                             sipp_args[0],
-                             sipp_args,
-                             {"TERM": "vt100", },
-                             None,
-                             None)
+        if self.delay:
+            LOGGER.info("Delaying execution of {0} by {1} "
+                        "seconds".format(self.name, self.delay))
+            reactor.callLater(self.delay, __spawn_process)
+        else:
+            LOGGER.info("No delay necessary for {0}".format(self.name))
+            __spawn_process()
+
         return self._our_exit_deferred
 
 
