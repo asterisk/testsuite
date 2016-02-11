@@ -31,10 +31,10 @@ test-object-config:
     test-iterations:
         -
             scenarios:
-                - { 'coordinated-sender': {'key-args': {'scenario':'referer_uas.xml', '-p':'5066'} },
+                - { 'coordinated-sender': {'key-args': {'delay': 2, 'scenario':'referer_uas.xml', '-p':'5066'} },
                     'coordinated-receiver': { 'key-args': {'scenario':'referee.xml', '-p':'5065'} } }
-                - { 'key-args': {'scenario':'uas.xml', '-p':'5067'} }
-                - { 'key-args': {'scenario':'uac-no-hangup.xml', '-p':'5068', '-s':'alice'} }
+                - { 'key-args': {'delay': 2, 'scenario':'uas.xml', '-p':'5067'} }
+                - { 'key-args': {'delay': 2, 'scenario':'uac-no-hangup.xml', '-p':'5068', '-s':'alice'} }
 
 ami-config:
     -
