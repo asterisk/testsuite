@@ -12,7 +12,6 @@ import logging
 
 sys.path.append("lib/python/asterisk")
 
-from tcp_scenario import TcpClientScenario
 from sipp_scenario import SIPpScenarioWrapper
 from twisted.internet import defer
 
@@ -28,9 +27,6 @@ def get_friendly_scenario_type(scenario_type):
 
     if scenario_type == 'SIPpScenarioWrapper':
         return 'SIPp scenario'
-
-    if scenario_type == 'TcpClientScenario':
-        return 'TCP client scenario'
 
     return 'Unknown type scenario'
 
@@ -82,12 +78,7 @@ class TcpAuthLimitTestModule(object):
             scenario_type = config_scenario['type']
             scenario_id = config_scenario.get('scenario-id') or None
 
-            if scenario_type.lower() == 'tcp-client':
-                scenario = TcpClientScenario(scenario_id,
-                                             remote_address,
-                                             remote_port,
-                                             tcpauthlimit)
-            elif scenario_type.lower() == 'sipp-scenario':
+            if scenario_type.lower() == 'sipp-scenario':
                 key_args = config_scenario['key-args']
                 ordered_args = config_scenario.get('ordered-args') or []
                 target = config_scenario.get('target') or remote_address
@@ -118,10 +109,6 @@ class TcpAuthLimitTestModule(object):
         the tcpauthlimit (maximum number of connections permitted). Because
         more scenarios are executed than the number of connections permitted,
         some of these scenarios are expected to fail.
-
-        For TcpClientScenario scenario type evaluations, the scenarios are
-        polled for their default pass/fail status without any adjustments being
-        applied.
 
         Keyword Arguments:
         scenario_type          -- The type of scenario instances to analyze.
@@ -206,10 +193,7 @@ class TcpAuthLimitTestModule(object):
 
         LOGGER.debug('{0} Evaluating test results...'.format(self))
 
-        if not self.__evaluate_scenario_results('SIPpScenarioWrapper'):
-            return False
-
-        return self.__evaluate_scenario_results('TcpClientScenario')
+        return self.__evaluate_scenario_results('SIPpScenarioWrapper')
 
     def __format__(self, format_spec):
         """Overrides default format handling for 'self'."""
