@@ -16,14 +16,23 @@ test-modules:
     test-object:
         config-section: sipp-config
         typename: 'sipp.SIPpAMIActionTestCase'
+    modules:
+        -
+            config-section: hangup-config
+            typename: 'pluggable_modules.HangupMonitor'
+
+hangup-config:
+    ids: '0'
 
 sipp-config:
     fail-on-any: True
+    stop-after-scenarios: False
     test-iterations:
         -
             scenarios:
-                - { 'key-args': {'scenario': 'uac-bye-also.xml', '-p': '5061', '-m': '10', '-s': '200'} }
+                - { 'key-args': {'scenario': 'uac-bye-also.xml', '-p': '5061', '-m': '10', '-s': '200', '-d': '2000'} }
     ami-action:
+        run-after-scenarios: True
         delay: 1
         args:
             Action: 'Hangup'

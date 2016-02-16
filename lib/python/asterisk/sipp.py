@@ -97,6 +97,11 @@ class SIPpTestCase(TestCase):
         else:
             self._fail_on_any = True
 
+        if 'stop-after-scenarios' in self._test_config:
+            self._stop_after_scenarios = self._test_config['stop-after-scenarios']
+        else:
+            self._stop_after_scenarios = True
+
         self.register_intermediate_obverver(self._handle_scenario_finished)
         self.create_asterisk()
 
@@ -231,12 +236,14 @@ class SIPpTestCase(TestCase):
 
         final_deferred = defer.Deferred()
         final_deferred.addCallback(_final_deferred_callback)
-        final_deferred.addCallback(_finish_test)
+        if self._stop_after_scenarios:
+            final_deferred.addCallback(_finish_test)
         sipp_sequence = SIPpScenarioSequence(self,
                                              self.scenarios,
                                              self._fail_on_any,
                                              self._intermediate_callback_fn,
-                                             final_deferred)
+                                             final_deferred,
+                                             self._stop_after_scenarios)
         sipp_sequence.register_scenario_start_callback(self._scenario_start_callback_fn)
         sipp_sequence.register_scenario_stop_callback(self._scenario_stop_callback_fn)
         sipp_sequence.execute()
@@ -284,6 +291,11 @@ class SIPpAMIActionTestCase(SIPpTestCase):
 
         self.ami_args = test_config['ami-action']['args']
         self.ami_delay = test_config['ami-action'].get('delay', 0)
+        self.run_after_scenarios = test_config['ami-action'].get(
+            'run-after-scenarios', False
+        )
+        if self.run_after_scenarios:
+            self.register_final_observer(self.scenarios_complete)
 
     def on_reactor_timeout(self):
         """Create a failure token when the test times out"""
@@ -295,18 +307,27 @@ class SIPpAMIActionTestCase(SIPpTestCase):
             return
         self.remove_fail_token(self.ami_token)
 
-    def ami_connect(self, ami):
-        """Handle the AMI connect event"""
-        super(SIPpAMIActionTestCase, self).ami_connect(ami)
-
+    def run_ami_action(self):
         def _ami_action():
             """Send the AMI action"""
             LOGGER.info("Sending Action: %s" % self.ami_args)
-            ami_out = ami.sendDeferred(self.ami_args)
-            ami_out.addCallback(ami.errorUnlessResponse)
+            ami_out = self.ami.sendDeferred(self.ami_args)
+            ami_out.addCallback(self.ami.errorUnlessResponse)
             ami_out.addCallback(self.remove_token_on_success)
 
         reactor.callLater(self.ami_delay, _ami_action)
+
+    def ami_connect(self, ami):
+        """Handle the AMI connect event"""
+        super(SIPpAMIActionTestCase, self).ami_connect(ami)
+        self.ami = ami
+
+        if not self.run_after_scenarios:
+            self.run_ami_action()
+
+    def scenarios_complete(self, test, test_object):
+        LOGGER.info("Scenarios complete, running AMI action")
+        self.run_ami_action()
 
 
 class SIPpScenarioSequence(object):
