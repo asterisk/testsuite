@@ -25,7 +25,10 @@ properties:
     dependencies:
         - sipp :
             version : 'v3.0'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_userevent'
         - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip'
         - asterisk : 'res_pjsip_t38'
     tags:
         - pjsip
