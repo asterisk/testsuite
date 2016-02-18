@@ -299,6 +299,7 @@ class HangupMonitor(object):
         """AMI connect handler"""
         if str(ami.id) in self.config["ids"]:
             ami.registerEvent('Newchannel', self.__new_channel_handler)
+            ami.registerEvent('Rename', self.__rename_handler)
             ami.registerEvent('Hangup', self.__hangup_handler)
 
     def __new_channel_handler(self, ami, event):
@@ -319,6 +320,12 @@ class HangupMonitor(object):
             LOGGER.info("All channels have hungup; stopping test")
             self.stop_test()
         return (ami, event)
+
+    def __rename_handler(self, ami, event):
+        LOGGER.debug("Channel {0} renamed to {1}".format(event['channel'],
+                                                         event['newname']))
+        self.channels.append(event['newname'])
+        self.channels.remove(event['channel'])
 
     def stop_test(self):
         """Allow subclasses to take different actions to stop the test."""
