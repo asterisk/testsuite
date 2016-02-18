@@ -162,6 +162,7 @@ ami-config:
                 match:
                     Cause: '18'
             count: '4'
+            trigger-on-count: True
         stop_test:
 
 properties:
