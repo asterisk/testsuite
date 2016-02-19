@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <!DOCTYPE scenario SYSTEM "sipp.dtd">
 
-<scenario name="Phone B Hold with Media Restrictions">
+<scenario name="Phone B direct media sending T.38 fax">
 	<Global variables="remote_tag"/>
 
 	<recv request="INVITE" crlf="true">
@@ -19,12 +19,13 @@
 			SIP/2.0 100 Trying
 			[last_Via:]
 			[last_From:]
-			[last_To:];tag=[call_number]
+			[last_To:]
 			[last_Call-ID:]
 			[last_CSeq:]
 			Contact: <sip:[field1]@[local_ip]:[local_port];transport=[transport]>
 			User-Agent: PolycomSoundPointIP-SPIP_430-UA/3.2.3.1734
 			Accept-Language: en
+			X-Testsuite-Track-Phone-B: 1
 			Content-Length: 0
 		]]>
 	</send>
@@ -41,6 +42,7 @@
 			User-Agent: PolycomSoundPointIP-SPIP_430-UA/3.2.3.1734
 			Allow-Events: talk,hold,conference
 			Accept-Language: en
+			X-Testsuite-Track-Phone-B: 2
 			Content-Length: 0
 		]]>
 	</send>
@@ -52,7 +54,7 @@
 			SIP/2.0 200 OK
 			[last_Via:]
 			[last_From:]
-			[last_To:]
+			[last_To:];tag=[call_number]
 			[last_Call-ID:]
 			[last_CSeq:]
 			Contact: <sip:[field1]@[local_ip]:[local_port];transport=[transport]>
@@ -60,7 +62,7 @@
 			Supported: 100rel,replaces
 			User-Agent: PolycomSoundPointIP-SPIP_430-UA/3.2.3.1734
 			Accept-Language: en
-			Testsuite-Track-Phone-B-Media-Restrict: 1
+			X-Testsuite-Track-Phone-B: 3
 			Content-Type: application/sdp
 			Content-Length: [len]
 
@@ -100,7 +102,7 @@
 			SIP/2.0 200 OK
 			[last_Via:]
 			[last_From:]
-			[last_To:]
+			[last_To:];tag=[call_number]
 			[last_Call-ID:]
 			[last_CSeq:]
 			Contact: <sip:[field1]@[local_ip]:[local_port];transport=[transport]>
@@ -108,7 +110,7 @@
 			Supported: 100rel,replaces
 			User-Agent: PolycomSoundPointIP-SPIP_430-UA/3.2.3.1734
 			Accept-Language: en
-			Testsuite-Track-Phone-B-Media-Restrict: 2
+			X-Testsuite-Track-Phone-B: 4
 			Content-Type: application/sdp
 			Content-Length: [len]
 
@@ -135,14 +137,15 @@
 		<![CDATA[
 			INVITE sip:endpoint_B@[remote_ip]:[remote_port] SIP/2.0
 			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-			From: <sip:127.0.0.3>
+			From: <sip:127.0.0.3>;tag=[call_number]
 			To: [$remote_tag]
 			CSeq: [cseq] INVITE
 			[last_Call-ID:]
-			Contact: <sip:[field1]@[local_ip]:[local_port]>
+			Contact: <sip:[field1]@[local_ip]:[local_port];transport=[transport]>
 			Allow: INVITE, ACK, BYE, CANCEL, OPTIONS, INFO, MESSAGE, SUBSCRIBE, NOTIFY, PRACK, UPDATE, REFER
 			User-Agent: PolycomSoundPointIP-SPIP_430-UA/3.2.3.1734
 			Accept-Language: en
+			X-Testsuite-Track-Phone-B: 5
 			Supported: 100rel,replaces
 			Allow-Events: talk,hold,conference
 			Max-Forwards: 70
@@ -173,14 +176,15 @@
 		<![CDATA[
 			ACK sip:[field1]@[remote_ip]:[remote_port] SIP/2.0
 			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-			From: <sip:127.0.0.3>
+			From: <sip:127.0.0.3>;tag=[call_number]
 			To: [$remote_tag]
 			CSeq: [cseq] ACK
 			[last_Call-ID:]
-			Contact: <sip:[field1]@[local_ip]:[local_port]>
+			Contact: <sip:[field1]@[local_ip]:[local_port];transport=[transport]>
 			Allow: INVITE, ACK, BYE, CANCEL, OPTIONS, INFO, MESSAGE, SUBSCRIBE, NOTIFY, PRACK, UPDATE, REFER
 			User-Agent: PolycomSoundPointIP-SPIP_430-UA/3.2.3.1734
 			Accept-Language: en
+			X-Testsuite-Track-Phone-B: 6
 			Max-Forwards: 70
 			Content-Length: 0
 		]]>
@@ -193,13 +197,14 @@
 		<![CDATA[
 			BYE sip:[field1]@1[remote_ip]:[remote_port] SIP/2.0
 			Via: SIP/2.0/UDP [local_ip]:[local_port];branch=[branch]
-			From: <sip:127.0.0.3>
+			From: <sip:127.0.0.3>;tag=[call_number]
 			To: [$remote_tag]
 			CSeq: [cseq] BYE
 			[last_Call-ID:]
-			Contact: <sip:[field1]@[local_ip]:[local_port]>
+			Contact: <sip:[field1]@[local_ip]:[local_port];transport=[transport]>
 			User-Agent: PolycomSoundPointIP-SPIP_430-UA/3.2.3.1734
 			Accept-Language: en
+			X-Testsuite-Track-Phone-B: 7
 			Max-Forwards: 70
 			Content-Length: 0
 		]]>

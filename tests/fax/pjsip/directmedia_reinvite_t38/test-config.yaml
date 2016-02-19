@@ -23,10 +23,15 @@ test-object-config:
 properties:
     minversion: '12.0.0'
     dependencies:
-        - sipp :
-            version : 'v3.0'
-        - asterisk : 'chan_pjsip'
-        - asterisk : 'res_pjsip_t38'
+        - sipp:
+            version: 'v3.0'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_userevent'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_t38'
     tags:
         - pjsip
         - fax
