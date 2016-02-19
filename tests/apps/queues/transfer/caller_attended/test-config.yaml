@@ -146,6 +146,7 @@ pluggable-config:
                     Event: 'Hangup'
                     Channel: 'PJSIP/alice-.*'
             count: 2
+            trigger-on-count: True
         stop_test:
 
 properties:
