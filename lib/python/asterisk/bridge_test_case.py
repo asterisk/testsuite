@@ -309,13 +309,13 @@ class BridgeTestCase(TestCase):
         This event only applies to Asterisk 11 and earlier.
         """
 
-        if self.uut_alice_channel is None:
-            self.uut_alice_channel = event.get('channel1')
-            LOGGER.info('UUT Alice Channel: %s' % self.uut_alice_channel)
-        if self.uut_bob_channel is None:
-            self.uut_bob_channel = event.get('channel2')
-            LOGGER.info('UUT Bob Channel: %s' % self.uut_bob_channel)
         if event.get('bridgestate') == 'Link':
+            if self.uut_alice_channel is None:
+                self.uut_alice_channel = event.get('channel1')
+                LOGGER.info('UUT Alice Channel: %s' % self.uut_alice_channel)
+            if self.uut_bob_channel is None:
+                self.uut_bob_channel = event.get('channel2')
+                LOGGER.info('UUT Bob Channel: %s' % self.uut_bob_channel)
             LOGGER.debug("Bridge is up between %s and %s"
                          % (event.get('channel1'), event.get('channel2')))
             LOGGER.debug("Type of bridge is %s" % event.get('bridgetype'))
