@@ -6,3 +6,4 @@ tests:
     - test: 'control_restart'
     - test: 'control_reverse'
     - test: 'control_stop'
+    - test: 'remote_uri'
