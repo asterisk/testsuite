@@ -1,0 +1,12 @@
+# Configuration sample for the static contentHTTP server pluggable module.
+# This is useful for those tests that need to interact with content hosted
+# on a remote web server.
+
+http-server-config
+
+    # The port to listen on. Default is 80
+    port: 8088
+
+    # Relative (to the root of the Test Suite) path to the directory
+    # holding the static resources to host
+    root-directory: 'contrib/sounds'
