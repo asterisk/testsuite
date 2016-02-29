@@ -1,0 +1,72 @@
+testinfo:
+    summary: 'Test ControlPlayback of a remote media resource'
+    description: |
+      'This tests playing back a remote media resource using the
+       ControlPlayback application.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: http-server
+            typename: 'http_static_server.HTTPStaticServer'
+
+test-object-config:
+    spawn-after-hangup: True
+    expected_events: 0
+    test-iterations:
+        -
+            channel: 'Local/test@default'
+            application: 'Echo'
+
+http-server:
+    port: 8090
+    root-directory: 'contrib/sounds'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'Offset'
+        requirements:
+            match:
+                Result: 'offset_pass'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'Status'
+        requirements:
+            match:
+                Result: 'status_pass'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'PLAYBACK'
+                Message: 'http://localhost:8090/talking.wav'
+        count: '1'
+
+properties:
+    minversion: '14.0.0'
+    tags:
+      - playback
+      - apps
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - buildoption: 'TEST_FRAMEWORK'
+        - asterisk : 'app_userevent'
+        - asterisk : 'app_controlplayback'
+        - asterisk : 'res_http_media_cache'
