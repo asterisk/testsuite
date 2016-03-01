@@ -10,10 +10,16 @@ testinfo:
 properties:
     minversion: '12.2.0'
     dependencies:
-         - app : 'sipp'
-         - asterisk : 'res_pjsip'
-         - asterisk : 'res_pjsip_refer'
-         - asterisk : 'res_pjsip_send_to_voicemail'
+         - python: 'twisted'
+         - python: 'starpy'
+         - app: 'sipp'
+         - asterisk: 'app_dial'
+         - asterisk: 'app_userevent'
+         - asterisk: 'func_callerid'
+         - asterisk: 'res_pjsip'
+         - asterisk: 'res_pjsip_header_funcs'
+         - asterisk: 'res_pjsip_refer'
+         - asterisk: 'res_pjsip_send_to_voicemail'
     tags:
         - pjsip
 
