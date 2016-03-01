@@ -1,0 +1,4 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'v12.2.0'
+    - test: 'v13.8.0'
