@@ -54,9 +54,13 @@ ami-config:
 properties:
     minversion: '13.0.0'
     dependencies:
+        - python: 'twisted'
         - python: 'starpy'
         - sipp:
             version: 'v3.1'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_userevent'
         - asterisk: 'chan_sip'
+        - asterisk: 'func_callerid'
     tags:
         - SIP
