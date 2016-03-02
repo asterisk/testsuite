@@ -38,12 +38,16 @@ test-object-config:
              scenarios:
                 - { 'key-args': { 'scenario':'refer.xml', '-p':'5062' } }
                 - { 'key-args': { 'scenario':'invite.xml', '-p':'5061' } }
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'refer_unquoted_send_to_vm.xml', '-p':'5062' } }
+                - { 'key-args': { 'scenario':'invite.xml', '-p':'5061' } }
 
 ami-config:
     -
         id: '0'
         type: 'headermatch'
-        count: '1'
+        count: '2'
         conditions:
             match:
                 Event: 'UserEvent'
