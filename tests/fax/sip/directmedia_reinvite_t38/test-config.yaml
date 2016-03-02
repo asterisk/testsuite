@@ -23,10 +23,10 @@ test-object-config:
 properties:
     minversion: '1.8.0.0'
     dependencies:
-        - sipp :
-            version : 'v3.0'
-        - python : 'twisted'
-        - python : 'starpy'
+        - sipp:
+            version: 'v3.0'
+        - python: 'twisted'
+        - python: 'starpy'
         - asterisk: 'app_dial'
         - asterisk: 'app_userevent'
         - asterisk: 'chan_sip'
