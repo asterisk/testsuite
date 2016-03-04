@@ -123,25 +123,6 @@
   <recv response="202" rtd="true">
   </recv>
 
-  <!-- We should receive a NOTIFY from Asterisk with a 100 trying sipfrag -->
-  <recv request="NOTIFY" crlf="true">
-  </recv>
-
-  <send>
-    <![CDATA[
-
-      SIP/2.0 200 OK
-      [last_Via:]
-      [last_From:]
-      [last_To:]
-      [last_Call-ID:]
-      [last_CSeq:]
-      [last_Event:]
-      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
-      Content-Length: 0
-    ]]>
-  </send>
-
   <!--
        Wait for re-invite for tearing down direct media between alice and bob
        due to transfering bob to charlie.
@@ -176,6 +157,25 @@
     rtd="true"
     crlf="true">
   </recv>
+
+  <!-- We should receive a NOTIFY from Asterisk with a 100 trying sipfrag -->
+  <recv request="NOTIFY" crlf="true">
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      [last_Event:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+    ]]>
+  </send>
 
   <!-- We should receive a NOTIFY from Asterisk with a '200 OK' sipfrag -->
   <recv request="NOTIFY" crlf="true">
