@@ -33,7 +33,7 @@ ari-config:
                     type: StasisStart
                     application: testsuite
                     args: ['blast']
-            count: 25
+            count: 15
             callback:
                 module: channel_originate
                 method: on_blast_start
@@ -41,7 +41,7 @@ ari-config:
                 match:
                     type: ChannelDestroyed
                     application: testsuite
-            count: 50
+            count: 30
             callback:
                 module: channel_originate
                 method: on_channel_destroyed
