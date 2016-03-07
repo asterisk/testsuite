@@ -36,8 +36,8 @@ class Resubscribe(TestCase):
     def __init__(self):
         TestCase.__init__(self)
         self.create_asterisk()
-        self.sipTestInitial = SIPpScenario(TEST_DIR, SIPP_SCENARIO_INITIAL)
-        self.sipTestResubscribe = SIPpScenario(TEST_DIR, SIPP_SCENARIO_RESUBSCRIBE)
+        self.sipTestInitial = SIPpScenario(TEST_DIR, SIPP_SCENARIO_INITIAL, ['-nr'])
+        self.sipTestResubscribe = SIPpScenario(TEST_DIR, SIPP_SCENARIO_RESUBSCRIBE, ['-nr'])
         self.sippPassed = False
         self.notifyPassed = False
         self.num_notifies = 0
