@@ -21,6 +21,7 @@ import yaml
 from twisted.internet import reactor
 
 LOGGER = logging.getLogger('test_runner')
+logging.basicConfig()
 
 sys.path.append('lib/python')
 
@@ -185,7 +186,7 @@ def load_and_parse_module(type_name):
     return module
 
 
-def create_test_object(test_path, test_config):
+def create_test_object(test_path, test_config, ast_version):
     """Create the specified test object from the test configuration
 
     Parameters:
@@ -199,6 +200,13 @@ def create_test_object(test_path, test_config):
         - evaluate_results() - True if the test passed, False otherwise
     Or None if the object couldn't be created.
     """
+    def get_test_object():
+        objs = test_config['test-modules']['test-object']
+        if not isinstance(objs, list):
+            objs = [objs]
+        return next((obj for obj in objs if check_module_version(
+            obj, ast_version)), None)
+
     if not 'test-modules' in test_config:
         LOGGER.error("No test-modules block in configuration")
         return None
@@ -206,7 +214,10 @@ def create_test_object(test_path, test_config):
         LOGGER.error("No test-object specified for this test")
         return None
 
-    test_object_spec = test_config['test-modules']['test-object']
+    test_object_spec = get_test_object()
+    if not test_object_spec:
+        LOGGER.error("No test-object found for version range(s)")
+        return None
 
     module_obj = load_and_parse_module(test_object_spec['typename'])
     if module_obj is None:
@@ -319,7 +330,7 @@ def main(argv=None):
 
     read_module_paths(test_config, test_directory)
 
-    test_object = create_test_object(test_directory, test_config)
+    test_object = create_test_object(test_directory, test_config, ast_version)
     if test_object is None:
         return 1
 

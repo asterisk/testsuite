@@ -29,8 +29,15 @@ properties:
 test-modules:
     add-test-to-search-path: 'True'
     test-object:
-        config-section: test-case-config
-        typename: 'sipp.SIPpTestCase'
+        -
+            maxversion: '13.8.0'
+            config-section: test-case-config
+            typename: 'sipp.SIPpTestCase'
+        -
+            # The Notify with a SIP frag of 100 are now sent later
+            minversion: '13.8.0'
+            config-section: test-case-config-v13.8.0
+            typename: 'sipp.SIPpTestCase'
     modules:
         -
             config-section: 'ami-config'
@@ -64,6 +71,36 @@ test-case-config:
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
                 # Alice calls Bob and sends audio. Alice then attempts to blind transfer Bob to Charlie.
                 - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob_two', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.2'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
+
+test-case-config-v13.8.0:
+    reactor-timeout: 45
+    connect-ami: 'True'
+    fail-on-any: False
+    test-iterations:
+        # First iteration
+        -
+            scenarios:
+                # Charlie receives transfered call and sends audio to Bob.
+                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.4'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
+                # Bob receives call from Alice and sends audio.
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.3'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
+                # Alice calls Bob and sends audio. Alice then attempts to blind transfer Bob to Charlie.
+                - { 'key-args': {'scenario': 'alice_v13_8_0.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.2'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
+        # Second iteration
+        -
+            scenarios:
+                # Charlie receives transfered call and sends audio to Bob.
+                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.4'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
+                # Bob receives call from Alice and sends audio.
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.3'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
+                # Alice calls Bob and sends audio. Alice then attempts to blind transfer Bob to Charlie.
+                - { 'key-args': {'scenario': 'alice_v13_8_0.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob_two', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.2'},
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
 
 ami-config:
