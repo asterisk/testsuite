@@ -39,15 +39,42 @@ sys.stdout = os.fdopen(newfno, 'w', 1)
 if not os.path.isdir("logs"):
     os.mkdir("logs")
 
+# The current sys.path is only used by runtests.py
 sys.path.append("lib/python")
+# The tests themselves are run in a separate process
+# so we're going to accumulate additional paths in
+# new_PYTHONPATH to pass to the new process.
+# Since we're going to replace the current PYTHONPATH
+# environment variable, we need to save it to our
+# new_PYTHONPATH.
+new_PYTHONPATH=[]
+if os.getenv("PYTHONPATH"):
+    new_PYTHONPATH.append(os.getenv("PYTHONPATH"))
+new_PYTHONPATH.append("lib/python")
 
 from asterisk.version import AsteriskVersion
 from asterisk.asterisk import Asterisk
 from asterisk.test_config import TestConfig
 from mailer import send_email
+from asterisk import test_suite_utils
 
 TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
+
+# If using embedded pjproject, we need to add the
+# astdatadir/third-party/pjproject directory to sys.path
+# so pjsua can be found.
+ast_config = test_suite_utils.get_asterisk_conf()
+astdatadir = ast_config.directories["astdatadir"] or '/var/lib/asterisk'
+if astdatadir[0] == os.path.sep:
+     astdatadir = astdatadir[1:]
+
+pjproject_lib = os.path.join(os.getenv("AST_TEST_ROOT") or os.path.sep, astdatadir, "third-party/pjproject")
+if os.path.exists(pjproject_lib):
+    # runtests.py needs pjproject_lib for the dependency checks.
+    sys.path.append(pjproject_lib)
+    # And of course, the tests need it.
+    new_PYTHONPATH.append(pjproject_lib)
 
 # If True, abandon the current running TestRun. Used by SIGTERM.
 abandon_test = False
@@ -86,6 +113,7 @@ class TestRun:
         self.did_run = True
         start_time = time.time()
         os.environ['TESTSUITE_ACTIVE_TEST'] = self.test_name
+        os.environ['PYTHONPATH'] = os.pathsep.join(new_PYTHONPATH)
         cmd = [
             "%s/run-test" % self.test_name,
         ]

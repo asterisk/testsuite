@@ -19,6 +19,7 @@ from os import close
 from os import remove
 from shutil import move
 from tempfile import mkstemp
+from config import ConfigFile
 
 LOGGER = logging.getLogger(__name__)
 
@@ -170,3 +171,36 @@ def get_bindable_ipv6_addr():
             return addr
 
     return None
+
+def get_asterisk_conf():
+    localtest_root = os.getenv("AST_TEST_ROOT")
+    if localtest_root:
+        # The default etc directory for Asterisk
+        default_etc_directory = os.path.join(localtest_root, "etc/asterisk")
+    else:
+        # The default etc directory for Asterisk
+        default_etc_directory = "/etc/asterisk"
+
+    # Find the system installed asterisk.conf
+    ast_confs = [
+        os.path.join(default_etc_directory, "asterisk.conf"),
+        "/usr/local/etc/asterisk/asterisk.conf",
+    ]
+    _ast_conf = None
+    for config in ast_confs:
+        if os.path.exists(config):
+            _ast_conf = ConfigFile(config)
+            break
+    if _ast_conf is None:
+        msg = "Unable to locate asterisk.conf in any known location"
+        LOGGER.error(msg)
+        raise Exception(msg)
+
+    # Get the Asterisk directories from the Asterisk config file
+    _ast_conf.directories = {};
+    for cat in _ast_conf.categories:
+        if cat.name == "directories":
+            for (var, val) in cat.options:
+                _ast_conf.directories[var] = val
+
+    return _ast_conf
