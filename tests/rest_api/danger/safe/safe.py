@@ -11,8 +11,6 @@ import sys
 
 LOGGER = logging.getLogger(__name__)
 
-sys.path.append('lib/python/asterisk')
-
 from version import AsteriskVersion
 
 

@@ -10,8 +10,6 @@ the GNU General Public License Version 2.
 import sys
 import logging
 
-sys.path.append("lib/python/asterisk")
-
 from sipp_scenario import SIPpScenarioWrapper
 from twisted.internet import defer
 
