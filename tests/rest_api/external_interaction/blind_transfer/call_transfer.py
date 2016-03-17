@@ -16,7 +16,6 @@ import logging
 import pjsua as pj
 from twisted.internet import reactor
 
-sys.path.append("lib/python/asterisk")
 import pjsua_mod
 
 LOGGER = logging.getLogger(__name__)

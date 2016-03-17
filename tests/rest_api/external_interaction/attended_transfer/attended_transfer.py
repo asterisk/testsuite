@@ -9,7 +9,6 @@ the GNU General Public License Version 2.
 import logging
 from sys import path
 
-path.append("lib/python/asterisk")
 from sipp import SIPpScenario
 
 LOGGER = logging.getLogger(__name__)

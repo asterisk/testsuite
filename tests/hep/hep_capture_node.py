@@ -25,8 +25,6 @@ from construct import *
 
 LOGGER = logging.getLogger(__name__)
 
-sys.path.append('lib/python/asterisk')
-
 from test_suite_utils import all_match
 
 def enum(**enums):

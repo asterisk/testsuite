@@ -14,8 +14,6 @@ import requests
 
 from twisted.internet import defer
 
-sys.path.append('lib/python/asterisk')
-
 from sipp import SIPpScenario
 
 LOGGER = logging.getLogger(__name__)

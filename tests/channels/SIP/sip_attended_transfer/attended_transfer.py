@@ -10,8 +10,6 @@ import logging
 import pjsua as pj
 import sys
 
-sys.path.append('lib/python/asterisk')
-
 from version import AsteriskVersion
 from twisted.internet import reactor
 
