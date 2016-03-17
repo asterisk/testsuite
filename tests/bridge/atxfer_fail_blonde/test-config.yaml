@@ -8,8 +8,7 @@ testinfo:
         3) Charlie delays slightly...
         4) Alice hangs up, converting attended transfer to blonde mode
         5)                        ...and hangs up to fail transfer
-        6) When the transfer recall is answered by Alice, hang up
-        7) Check "core show channels" for leaked Local/123 channel
+        6) Check "core show channels" for leaked Local/123 channel
         '
 
 test-modules:
@@ -51,21 +50,6 @@ pluggable-config:
                     Channel: 'Local/123@default-00000000;1'
                     Cause: 17
 
-    -
-        # after transfer recall calls back Alice
-        ami-events:
-            conditions:
-                match:
-                    Event: CEL
-                    EventName: ANSWER
-                    Channel: 'SIP/alice-00000002'
-        # hang the call up, test is done
-        ami-actions:
-            -
-                action:
-                    Action: 'Hangup'
-                    Channel: 'SIP/alice-00000002'
-                    Cause: 16
 
 properties:
     minversion: '11.0.0'
