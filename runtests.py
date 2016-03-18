@@ -65,7 +65,7 @@ TEST_RESULTS = "asterisk-test-suite-report.xml"
 # astdatadir/third-party/pjproject directory to sys.path
 # so pjsua can be found.
 ast_config = test_suite_utils.get_asterisk_conf()
-astdatadir = ast_config.directories["astdatadir"] or '/var/lib/asterisk'
+astdatadir = ast_config.directories.get("astdatadir", '/var/lib/asterisk')
 if astdatadir[0] == os.path.sep:
      astdatadir = astdatadir[1:]
 
