@@ -224,6 +224,7 @@ class BridgeTestCase(TestCase):
                     alice_bridge_peer=self.uut_bob_channel)
             else:
                 LOGGER.warning("Audio issues on bridged call")
+                self.set_passed(False)
                 self.stop_reactor()
         return (ami, event)
 
