@@ -58,4 +58,23 @@
   </send>
 
   <recv response="200" rtd="true" />
+
+  <recv request="NOTIFY" crlf="true" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <pause milliseconds="4000" />
 </scenario>
