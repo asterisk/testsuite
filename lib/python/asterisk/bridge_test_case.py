@@ -222,6 +222,7 @@ class BridgeTestCase(TestCase):
                     bob_connected_line=BridgeTestCase.BOB_CONNECTED,
                     bob_bridge_peer=self.uut_alice_channel,
                     alice_bridge_peer=self.uut_bob_channel)
+                self.ami_bob.redirect(self.bob_channel, "holding", "s", 1)
             else:
                 LOGGER.warning("Audio issues on bridged call")
                 self.set_passed(False)
