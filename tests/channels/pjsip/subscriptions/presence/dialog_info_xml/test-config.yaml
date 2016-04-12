@@ -21,8 +21,14 @@ properties:
 test-modules:
     add-test-to-search-path: 'True'
     test-object:
-        config-section: sipp-config
-        typename: 'sipp.SIPpTestCase'
+        -
+            maxversion: '13.9.0'
+            config-section: sipp-config
+            typename: 'sipp.SIPpTestCase'
+        -
+            minversion: '13.9.0'
+            config-section: sipp-config-v13.9.0
+            typename: 'sipp.SIPpTestCase'
     modules:
         -
             typename: 'dialog_info_xml.DialogInfoXML'
@@ -34,3 +40,11 @@ sipp-config:
         -
             scenarios:
                 - { 'key-args': {'scenario': 'subscribe.xml', '-p': '5061'} }
+
+sipp-config-v13.9.0:
+    reactor-timeout: 30
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'subscribe-direction-recipient.xml', '-p': '5061'} }
