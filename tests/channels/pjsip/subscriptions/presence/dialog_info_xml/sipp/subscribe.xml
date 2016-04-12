@@ -52,7 +52,7 @@
   <recv request="NOTIFY" crlf="true">
     <action>
       <ereg regexp="<dialog-info xmlns=\"urn:ietf:params:xml:ns:dialog-info\" version=\"1\" state=\"full\" entity=\"sip:presence@127.0.0.1(:5060)?\">
- <dialog id=\"presence\">
+ <dialog id=\"presence\" direction=\"recipient\">
   <state>early</state>
  </dialog>
 </dialog-info>" check_it="true" search_in="body" assign_to="body2" />
