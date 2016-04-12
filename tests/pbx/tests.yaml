@@ -1,6 +1,7 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - dir: 'accountcode'
+    - test: 'autohints'
     - test: 'call_file_retries_archive'
     - test: 'call_file_retries_alwaysdelete'
     - test: 'call_file_retries_fail'
