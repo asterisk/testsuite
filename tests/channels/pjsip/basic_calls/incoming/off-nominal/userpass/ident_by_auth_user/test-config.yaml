@@ -1,0 +1,28 @@
+testinfo:
+    summary:     'Tests incoming calls with failed identification by auth username'
+    description: |
+        'Run a SIPp scenario where From isn't a valid endpoint and auth_username
+        is NOT configured'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    reactor-timeout: 10
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5062', '-d': '500',
+                '-s': '18005551212', '-au': 'alice', '-ap': 'swordfish'} }
+
+properties:
+    minversion: '13.9.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'app_echo'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
