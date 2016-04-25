@@ -27,7 +27,8 @@ class MixMonitorTest(TestCase):
     def __init__(self):
         super(MixMonitorTest, self).__init__()
 
-        self.passed = False
+        # How many MixMonitor instances have ended, all 3 must end before checking file sizes
+        self.mixmonitor_ended = 0
 
         # playback file is 2559 bytes of ulaw,
         # that will come out to be ~41118 of wav
@@ -65,7 +66,16 @@ class MixMonitorTest(TestCase):
             LOGGER.error(name + " size is not within the size tolerance.")
             self.passed = False
 
-    def read_result(self):
+    def state_mixmonitor_end(self, ami, event):
+        if event.get("state") != "MIXMONITOR_END":
+            return
+
+        self.mixmonitor_ended += 1
+
+        if self.mixmonitor_ended != 3:
+            LOGGER.info("All MixMonitor applications have not yet ended.")
+            return
+
         self.passed = True
         self.stop_reactor()
         LOGGER.info("Checking MixMonitor recorded files...")
@@ -120,11 +130,10 @@ class MixMonitorTest(TestCase):
             self.stop_reactor()
             return
 
-        self.read_result()
-
     def ami_connect(self, ami):
         self.ami = ami
         self.ami.registerEvent("UserEvent", self.check_test1)
+        self.ami.registerEvent("TestEvent", self.state_mixmonitor_end)
 
         self.ami.setVar(channel="", variable="TESTAUDIO1", value=self.audiofile1)
         self.ami.setVar(channel="", variable="TESTAUDIO2", value=self.audiofile2)
