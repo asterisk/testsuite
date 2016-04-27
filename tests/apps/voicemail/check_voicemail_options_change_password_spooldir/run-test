@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 # vim: sw=3 et:
 '''
-Copyright (C) 2011, Digium, Inc.
-Matt Jordan <mjordan@digium.com>
+Copyright (C) 2016, Motorola Solution Inc.
+Jonathan Rose <jonathan.rose@motorolasolutions.com>
 
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 '''
 
 import sys
-import os
-import shutil
 import logging
 
 from twisted.internet import reactor
@@ -22,21 +20,26 @@ from asterisk.test_case import TestCase
 from asterisk.test_state import TestStateController
 from asterisk.test_state import TestState
 from asterisk.test_state import FailureTestState
-from asterisk.voicemail import VoiceMailMailboxManagement
 from asterisk.voicemail import TestCondition
 from asterisk.voicemail import VoiceMailTest
 from asterisk.voicemail import VoiceMailState
+from asterisk.voicemail import VoiceMailMailboxManagement
+from asterisk.config import ConfigFile
+
 
 logger = logging.getLogger(__name__)
 
-"""
-TestState that is the entry point for the VoiceMailMain application
-"""
+MAILBOX = "1234"
+ORIGINAL_PASS = "1234"
+NEW_PASS = "555666"
+
+
 class StartVoiceMailState(VoiceMailState):
-
-    userMailbox = "1234#"
-
-    userPassword = "1234#"
+    """
+    TestState that is the entry point for the VoiceMailMain application
+    """
+    userMailbox = MAILBOX + "#"
+    userPassword = ORIGINAL_PASS + "#"
 
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
@@ -51,7 +54,8 @@ class StartVoiceMailState(VoiceMailState):
             elif message == 'vm-password':
                 self.voice_mail_test.send_dtmf(self.userPassword)
         elif state == 'AUTHENTICATED':
-            self.change_state(AuthenticatedTestState(self.controller, self.voice_mail_test))
+            self.change_state(AuthenticatedTestState(self.controller,
+                                                     self.voice_mail_test))
         else:
             self.handle_default_state(event)
 
@@ -59,11 +63,10 @@ class StartVoiceMailState(VoiceMailState):
         return "START"
 
 
-"""
-TestState that occurs after a user has been authenticated
-"""
 class AuthenticatedTestState(VoiceMailState):
-
+    """
+    TestState that occurs after a user has been authenticated
+    """
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
 
@@ -74,10 +77,12 @@ class AuthenticatedTestState(VoiceMailState):
             logger.error("Received two authenticated events?")
             self.change_state(FailureTestState(self.controller))
         elif state == 'NEWUSER':
-            logger.error("New user state received; user credentials must have failed")
+            logger.error("New user state received; user credentials must "
+                         "have failed")
             self.change_state(FailureTestState(self.controller))
         elif state == 'INTRO':
-            self.change_state(IntroTestState(self.controller, self.voice_mail_test))
+            self.change_state(IntroTestState(self.controller,
+                              self.voice_mail_test))
         else:
             self.handle_default_state(event)
 
@@ -85,12 +90,11 @@ class AuthenticatedTestState(VoiceMailState):
         return "AUTHENTICATED"
 
 
-"""
-TestState that occurs after when the user is being presented with the initial message counts and the main
-voicemail menu
-"""
 class IntroTestState(VoiceMailState):
-
+    """
+    TestState that occurs after when the user is being presented with the
+    initial message counts and the main voicemail menu
+    """
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
 
@@ -101,14 +105,16 @@ class IntroTestState(VoiceMailState):
             message = event.get('message')
 
             if message == 'instructions':
-                if (self.voice_mail_test.get_test_condition("passwordChanged")):
+                if (self.voice_mail_test.get_test_condition(
+                        "passwordChanged")):
                     """ Exit """
                     self.voice_mail_test.send_dtmf("#")
                 else:
                     """ Tell it to go to the voicemail options """
                     self.voice_mail_test.send_dtmf("0")
         elif state == 'VMOPTIONS':
-            self.change_state(VoicemailOptionsTestState(self.controller, self.voice_mail_test))
+            self.change_state(VoicemailOptionsTestState(self.controller,
+                              self.voice_mail_test))
         else:
             self.handle_default_state(event)
 
@@ -116,37 +122,40 @@ class IntroTestState(VoiceMailState):
         return "INTRO"
 
 
-"""
-TestState that occurs when the user can change their options
-"""
 class VoicemailOptionsTestState(VoiceMailState):
-
+    """
+    TestState that occurs when the user can change their options
+    """
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
-        self.passwords = {0: "5555#", 1: "555555#", 2: "555666#"}
-        self.passwordCounter = 0
+        self.password = NEW_PASS + "#"
 
     def handle_state_change(self, ami, event):
         state = event['state']
+
+        logger.info("handle_state_change: %s" % state)
 
         if state == 'AUTHENTICATED':
             logger.error("Received authentication event after NEWUSER?")
             self.change_state(FailureTestState(self.controller))
         elif state == 'INTRO':
-            self.change_state(IntroTestState(self.controller, self.voice_mail_test))
+            self.change_state(IntroTestState(self.controller,
+                              self.voice_mail_test))
         elif state == 'PASSWORDCHANGED':
             message = event.get('message')
-            if "voicemail.conf" in message:
-                self.voice_mail_test.set_test_condition("passwordChanged", True)
-            elif "external script" in message:
-                self.voice_mail_test.set_test_condition("externNotifyReceived", True)
+            if (message == "secret.conf updated with new password"):
+                self.voice_mail_test.set_test_condition("passwordChanged",
+                                                        True)
         elif state == 'PLAYBACK':
             message = event.get('message')
+            logger.info("playback: %s" % message)
 
             if message == 'vm-options':
-                if (self.voice_mail_test.get_test_condition("passwordChanged")):
+                if (self.voice_mail_test.get_test_condition(
+                        "passwordChanged")):
                     """ Exit the menu """
-                    self.change_state(IntroTestState(self.controller,self.voice_mail_test))
+                    self.change_state(IntroTestState(
+                        self.controller, self.voice_mail_test))
                     self.voice_mail_test.send_dtmf("*")
                 else:
                     """ Tell it we want to change our password (5) """
@@ -155,14 +164,9 @@ class VoicemailOptionsTestState(VoiceMailState):
                 """ Back at main menu; exit """
                 self.voice_mail_test.send_dtmf("#")
             elif message == 'vm-newpassword':
-                self.voice_mail_test.reset_timeout()
-                self.voice_mail_test.send_dtmf(self.passwords[self.passwordCounter])
-                self.voice_mail_test.set_test_condition("passwordAttempt",1)
+                self.voice_mail_test.send_dtmf(self.password)
             elif message == 'vm-reenterpassword':
-                self.voice_mail_test.send_dtmf(self.passwords[self.passwordCounter])
-            elif message == 'vm-invalid-password':
-                self.voice_mail_test.set_test_condition("invalidPasswords",1)
-                self.passwordCounter += 1
+                self.voice_mail_test.send_dtmf(self.password)
             else:
                 self.handle_default_state(event)
         else:
@@ -172,57 +176,73 @@ class VoicemailOptionsTestState(VoiceMailState):
         return "VMOPTIONS"
 
 
-"""
-The TestCase class that executes the test
-"""
 class CheckVoicemailChangePassword(VoiceMailTest):
+    """
+    The TestCase class that executes the test
+    """
 
-    """
-    The parent directory that this test resides in
-    """
-    testParentDir = "tests/apps/voicemail"
-
-    """
-    The channel to connect to that acts as the voicemail server
-    """
-    channel = "sip/ast1/8052"
-
-    """
-    The voicemail manager object
-    """
-    voicemailManager = None
+    testParentDir = "tests/apps/voicemail"  # parent directory the test is in
+    channel = "sip/ast1/8052"  # channel to connect to that acts as vm server
 
     def __init__(self):
         super(CheckVoicemailChangePassword, self).__init__()
 
-        """
-        This merely passes back the value to the test condition, for those conditions
-        that are merely true / false
-        """
         def checkTrueCondition(value, testCondition):
+            """
+            This merely passes back the value to the test condition, for
+            conditions that are merely true / false
+            """
             return value
-        self.add_test_condition("passwordChanged", TestCondition(checkTrueCondition, False))
-        self.add_test_condition("externNotifyReceived", TestCondition(checkTrueCondition, False))
 
-        """ Check that the number of password attempts we will see is 3 """
-        def checkPasswordAttempts(value, testCondition):
-            testCondition.test_condition_data += value
-            return (testCondition.test_condition_data == 3)
-        self.add_test_condition("passwordAttempt", TestCondition(checkPasswordAttempts, 0))
+        self.add_test_condition("passwordChanged",
+                                TestCondition(checkTrueCondition, False))
 
-        """ Check that the number of invalid passwords we supply is 2 """
-        def checkInvalidPasswords(value, testCondition):
-            testCondition.test_condition_data += value
-            return (testCondition.test_condition_data == 2)
-        self.add_test_condition("invalidPasswords", TestCondition(checkInvalidPasswords, 0))
+        self.register_stop_observer(self.__check_voicemail_pw_settings)
 
         self.reactor_timeout = 60
         self.create_asterisk(2)
 
+    def __check_voicemail_pw_settings(self, result):
+        """ Checks conditions and voicemail password settings file prior to
+        shutting donw the reactor.
+
+        Keyword Arguments:
+        result              -- A twistd deferred object
+
+        Returns:
+        A twisted deferred object.
+        """
+        if not self.check_test_conditions():
+            logger.error("Test failed condition checks")
+            self.set_passed(False)
+
+        """ Verify that the password was changed """
+        config_file = ConfigFile("{0}{1}{2}".format(
+                                 self.ast[0].base,
+                                 "/var/spool/asterisk/voicemail",
+                                 "/default/{0}/secret.conf".format(MAILBOX)))
+
+        for category in config_file.categories:
+            if category.name != "general":
+                continue
+
+            for option in category.options:
+                if option[0] == "password":
+                    if option[1] == NEW_PASS:
+                        password_set = True
+                    else:
+                        logger.error("Wrong password found: Expected {0} "
+                                     "and received {1}.".format(NEW_PASS,
+                                                                option[1]))
+
+        if not password_set:
+            self.set_passed(False)
+
     def ami_connect(self, ami):
         super(CheckVoicemailChangePassword, self).ami_connect(ami)
 
-        """ Record which AMI instance we've received and attempt to set up the test controller """
+        """Record which AMI instance we've received and attempt to set up the
+           test controller"""
         if (ami.id == 0):
             self.ami_receiver = ami
         elif (ami.id == 1):
@@ -230,12 +250,12 @@ class CheckVoicemailChangePassword(VoiceMailTest):
             self.ast_sender = self.ast[self.ami_sender.id]
 
         self.create_test_controller()
-        if (self.test_state_controller != None):
+        if (self.test_state_controller is not None):
             startObject = StartVoiceMailState(self.test_state_controller, self)
             self.test_state_controller.change_state(startObject)
             self.test_state_controller.add_assert_handler(self.handleAssert)
 
-        """ Now do specific processing on the AMI instances """
+        """Now do specific processing on the AMI instances"""
         if (ami.id == 0):
 
             ami.registerEvent('UserEvent', self.user_event)
@@ -246,6 +266,7 @@ class CheckVoicemailChangePassword(VoiceMailTest):
             df.addErrback(self.handle_originate_failure)
 
     def handleAssert(self, event):
+        """Error handler for assertions to the tests tate controller"""
         self.passed = False
         logger.error("Test Failed - Assert received")
         logger.error("\t\t AppFunction: " + event['appfunction'])
@@ -255,6 +276,7 @@ class CheckVoicemailChangePassword(VoiceMailTest):
         self.stop_reactor()
 
     def user_event(self, ami, event):
+        """Handle user event from dialplan"""
         if event['userevent'] == 'TestResult':
             if event['result'] == "pass":
                 self.passed = True
@@ -273,52 +295,10 @@ class CheckVoicemailChangePassword(VoiceMailTest):
 
 
 def main():
-
-    """ Attempt to copy the test scripts over """
-    scriptFileCheck = os.path.join(os.getcwd(), CheckVoicemailChangePassword.testParentDir + "/check_voicemail_options_change_password/voicemailpwcheck.py")
-    scriptFileNotify = scriptFile = os.path.join(os.getcwd(), CheckVoicemailChangePassword.testParentDir + "/check_voicemail_options_change_password/voicemailpwnotify.py")
-
-    if not os.path.exists('/tmp/asterisk-testsuite'):
-        os.makedirs('/tmp/asterisk-testsuite')
-
-    shutil.copy(scriptFileCheck, "/tmp/asterisk-testsuite/voicemailpwcheck.py")
-    shutil.copy(scriptFileNotify, "/tmp/asterisk-testsuite/voicemailpwnotify.py")
-
+    """Main entry point for test."""
     test = CheckVoicemailChangePassword()
-    voicemailManager = VoiceMailMailboxManagement(test.ast[0])
-
-    test.start_asterisk()
-
     reactor.run()
-
-    test.stop_asterisk()
-
-    """ Remove the test scripts """
-    if os.path.exists("/tmp/asterisk-testsuite/voicemailpwcheck.py"):
-        os.unlink("/tmp/asterisk-testsuite/voicemailpwcheck.py")
-    if os.path.exists("/tmp/asterisk-testsuite/voicemailpwnotify.py"):
-        os.unlink("/tmp/asterisk-testsuite/voicemailpwnotify.py")
-
-    """
-    Post-test processing - verify that we listened to all the messages we wanted to listen to, that
-    we saved the messages, and that the messages were moved successfully
-    """
-    if test.passed:
-
-        if not test.check_test_conditions():
-            logger.warn("Test failed condition checks")
-            test.passed = False
-
-        """ Verify that the password was changed """
-        userObject = voicemailManager.get_user_object("default","1234")
-        if not userObject.password == "555666":
-            logger.warn("User password was not changed from [" + userObject.password + "]; test failed")
-            test.passed = False
-
-    if not test.passed:
-        return 1
-
-    return 0
+    return not test.passed
 
 if __name__ == "__main__":
-   sys.exit(main() or 0)
+    sys.exit(main())
