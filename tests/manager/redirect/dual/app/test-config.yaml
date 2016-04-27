@@ -28,6 +28,7 @@ test-config:
     # expect three user events - the first will kick off the second originate
     # and the second/third one will be raised during redirect
     expected_events: 4
+    stop-on-end: False
     test-iterations:
         -
             channel: 'Local/real_one@default'

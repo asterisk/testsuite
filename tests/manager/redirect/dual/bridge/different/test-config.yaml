@@ -29,6 +29,7 @@ test-config:
     # expect four user events - the first initiates the second call, the second
     # and third events are raised during redirect, and the fourth ends the test
     expected_events: 4
+    stop-on-end: False
     test-iterations:
         -
             channel: 'Local/alice0@default'

@@ -737,6 +737,7 @@ class SimpleTestCase(TestCase):
         self._ignore_originate_failures = False
         self._spawn_after_hangup = False
         self._end_test_delay = 0
+        self._stop_on_end = True
 
         if test_config is None or 'test-iterations' not in test_config:
             # No special test configuration defined, use defaults
@@ -759,6 +760,7 @@ class SimpleTestCase(TestCase):
             if 'spawn-after-hangup' in test_config:
                 self._spawn_after_hangup = test_config['spawn-after-hangup']
             self._end_test_delay = test_config.get('end-test-delay') or 0
+            self._stop_on_end = test_config.get('stop-on-end', True)
 
         self.create_asterisk(count=1)
 
@@ -871,14 +873,16 @@ class SimpleTestCase(TestCase):
 
     def __start_new_call(self, ami):
         """Kick off the next new call, or, if we've run out of calls to make,
-        stop the test
+        stop the test if configured to do so
         """
 
         if self._current_run < len(self._test_runs):
             self.__originate_call(ami, self._test_runs[self._current_run])
         else:
-            LOGGER.info("All calls executed, stopping")
-            reactor.callLater(self._end_test_delay, self.stop_reactor)
+            LOGGER.info("All calls executed")
+            if self._stop_on_end:
+                LOGGER.info("Stopping")
+                reactor.callLater(self._end_test_delay, self.stop_reactor)
 
     def __event_cb(self, ami, event):
         """UserEvent callback handler.

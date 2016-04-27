@@ -23,6 +23,11 @@ test-object-config:
 	# the previous iteration's channel has hung up.
 	spawn-after-hangup: True
 
+        # Set this option to false if you don't want the test to be stopped when
+        # all iterations have completed. It will be up to alternative logic to
+        # stop the test.
+        stop-on-end: True
+
 	# The test iterations block define a sequence of sets of scenarios to run
 	# sequentially
 	test-iterations:
