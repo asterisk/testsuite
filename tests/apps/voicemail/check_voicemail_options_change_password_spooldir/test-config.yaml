@@ -1,0 +1,22 @@
+testinfo:
+        summary: 'Test changing a password w/ passwordlocation=spooldir'
+        description: |
+            A voicemail user logs into their mailbox using voicemailmain and
+            then changes their password via DTMF menu commands. This test
+            confirms that playback of menu dialog occurs as expected for this
+            operation and also that changes to the password are stored in the
+            appropriate location in the Asterisk voicemail spool directory.
+
+properties:
+    minversion: '11.23.0'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_voicemail'
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'app_playback'
+        - asterisk : 'chan_sip'
+    tags:
+        - voicemail
+        - apps
