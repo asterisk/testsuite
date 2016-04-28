@@ -1,3 +1,3 @@
 tests:
-    - test: 'userpass'
+    - dir: 'userpass'
     - test: 'md5'

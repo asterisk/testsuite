@@ -1,0 +1,3 @@
+tests:
+    - test: 'wrong_credentials'
+    - test: 'ident_by_auth_user'
