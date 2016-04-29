@@ -87,8 +87,13 @@
     ]]>
   </send>
 
+  <recv response="481" optional="true" next="19">
+  </recv>
+
   <recv response="200" crlf="true">
   </recv>
+
+  <label id="19"/>
 
 </scenario>
 
