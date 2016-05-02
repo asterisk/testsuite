@@ -1,0 +1,77 @@
+testinfo:
+    summary: 'Test app_confbridge to ensure that regcontext gets created.'
+    description: |
+        'Test that after creating a bridge with regcontext the extension gets created
+        in the specified context.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: caller-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: hangup-monitor
+            typename: 'pluggable_modules.HangupMonitor'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    connect-ami: True
+
+caller-originator:
+    channel: 'Local/enterbridge@default'
+    context: caller
+    exten: caller
+    priority: 1
+    trigger: 'ami_connect'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'BridgeStatus'
+                Status: 'FailedAdd'
+        count: 0
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'BridgeStatus'
+                Status: 'FailedRemove'
+        count: 0
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'BridgeStatus'
+                Status: 'SucceedAdd'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'BridgeStatus'
+                Status: 'SucceedRemove'
+        count: 1
+
+hangup-monitor:
+    ids: '0'
+
+properties:
+    minversion: ['11.21.0','13.9.0']
+    tags:
+        - confbridge
+        - apps
+    dependencies:
+        - python : 'twisted'
+        - asterisk: 'app_confbridge'
+        - asterisk: 'app_userevent'
