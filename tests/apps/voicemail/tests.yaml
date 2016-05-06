@@ -21,6 +21,7 @@ tests:
     - test: 'check_voicemail_options_record_name'
     - test: 'check_voicemail_options_record_temp'
     - test: 'check_voicemail_options_change_password'
+    - test: 'check_voicemail_options_change_password_spooldir'
     - test: 'check_voicemail_forward'
     - test: 'check_voicemail_forward_hangup'
     - test: 'check_voicemail_forward_with_prepend'
