@@ -7,11 +7,11 @@
 
       INVITE sip:dtmf@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: test2 <sip:test2@[local_ip]:[local_port]>;tag=[call_number]
+      From: test <sip:test@[local_ip]:[local_port]>;tag=[call_number]
       To: dtmf <sip:dtmf@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: 1 INVITE
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Subject: INFO Test
       Content-Length: [len]
@@ -38,11 +38,11 @@
 
       ACK sip:dtmf@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: test2 <sip:test2@[local_ip]:[local_port]>;tag=[call_number]
+      From: test <sip:test@[local_ip]:[local_port]>;tag=[call_number]
       To: dtmf <sip:dtmf@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 1 ACK
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Subject: INFO Test
       Content-Type: application/sdp
@@ -54,13 +54,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 2 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -77,13 +77,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 3 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -100,13 +100,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 4 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -123,13 +123,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 5 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -146,13 +146,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 6 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -169,13 +169,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 7 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -192,13 +192,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 8 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -215,13 +215,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 9 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -238,13 +238,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 10 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -261,13 +261,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 11 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -284,13 +284,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 12 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -307,13 +307,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 13 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -330,13 +330,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 14 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -353,13 +353,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 15 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -376,13 +376,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 16 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -399,13 +399,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: dtmf <sip:dtmf@[local_ip]:[local_port]>;tag=[call_number]
-      To: test2 <sip:test2@[remote_ip]:[remote_port]>[peer_tag_param]
+      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 17 INFO
-      Contact: sip:test2@[local_ip]:[local_port]
+      Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Content-Type: application/dtmf-relay
       Content-Length: [len]
@@ -424,13 +424,13 @@
   <send retrans="500">
     <![CDATA[
 
-      BYE sip:test2@[remote_ip]:[remote_port] SIP/2.0
+      BYE sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: test2 <sip:test2@[local_ip]:[local_port]>;tag=[call_number]
+      From: test <sip:test@[local_ip]:[local_port]>;tag=[call_number]
       To: dtmf <sip:dtmf@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 18 BYE
-      Contact: sip:test2@[local_ip][local_port]
+      Contact: sip:test@[local_ip][local_port]
       Max-Forwards: 70
       Subject: INFO Test
       Content-Length: 0
