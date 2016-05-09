@@ -1,0 +1,23 @@
+testinfo:
+    summary: 'Test that asterisk correctly handles EMTPY INFO in SIP packets when using PJSIP.'
+    description:
+            Tests INFO packets with no Content-Type are responded to.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'empty.xml', '-i': '127.0.0.1', '-p': '5061', '-d': '3000'} }
+
+properties:
+    minversion: '13.10.0'
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
