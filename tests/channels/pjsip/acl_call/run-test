@@ -1,0 +1,146 @@
+#!/usr/bin/env python
+
+import sys
+import logging
+import logging.config
+import os
+import shutil
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.sipp import SIPpTest
+
+SIPP_SCENARIOS = [
+    # test1 - No named ACL, calling available only to 127.0.0.1
+    {
+        'scenario' : 'testsip1-success.xml',
+        '-i' : '127.0.0.1',
+        '-p' : '5061'
+    },
+    {
+        'scenario' : 'testsip1-failure.xml',
+        '-i' : '127.0.0.2',
+        '-p' : '5062'
+    },
+    {
+        'scenario' : 'testsip1-failure.xml',
+        '-i' : '127.0.0.3',
+        '-p' : '5063'
+    },
+    {
+        'scenario' : 'testsip1-failure.xml',
+        '-i' : '127.0.0.4',
+        '-p' : '5064'
+    },
+
+    # test2 - Same permissible addresses as test1, but while using a named ACL from the local configuration
+    {
+        'scenario' : 'testsip2-success.xml',
+        '-i' : '127.0.0.1',
+        '-p' : '5065'
+    },
+    {
+        'scenario' : 'testsip2-failure.xml',
+        '-i' : '127.0.0.2',
+        '-p' : '5066'
+    },
+    {
+        'scenario' : 'testsip2-failure.xml',
+        '-i' : '127.0.0.3',
+        '-p' : '5067'
+    },
+    {
+        'scenario' : 'testsip2-failure.xml',
+        '-i' : '127.0.0.4',
+        '-p' : '5068'
+    },
+
+    # test3 - Multiple named ACL rules from local configuration. Only 127.0.0.2 should be allowed to call
+    {
+        'scenario' : 'testsip3-failure.xml',
+        '-i' : '127.0.0.1',
+        '-p' : '5069'
+    },
+    {
+        'scenario' : 'testsip3-success.xml',
+        '-i' : '127.0.0.2',
+        '-p' : '5070'
+    },
+    {
+        'scenario' : 'testsip3-failure.xml',
+        '-i' : '127.0.0.3',
+        '-p' : '5071'
+    },
+    {
+        'scenario' : 'testsip3-failure.xml',
+        '-i' : '127.0.0.4',
+        '-p' : '5072'
+    },
+
+    # test4 - An undefined rule is used. All addresses should be rejected from calling
+    {
+        'scenario' : 'testsip4-failure.xml',
+        '-i' : '127.0.0.1',
+        '-p' : '5073'
+    },
+    {
+        'scenario' : 'testsip4-failure.xml',
+        '-i' : '127.0.0.2',
+        '-p' : '5074'
+    },
+    {
+        'scenario' : 'testsip4-failure.xml',
+        '-i' : '127.0.0.3',
+        '-p' : '5075'
+    },
+    {
+        'scenario' : 'testsip4-failure.xml',
+        '-i' : '127.0.0.4',
+        '-p' : '5076'
+    },
+
+    # test5 - A set of 3 named ACLs stored in realtime is used. Collectively only 127.0.0.3 should be allowed to call
+    {
+        'scenario' : 'testsip5-failure.xml',
+        '-i' : '127.0.0.1',
+        '-p' : '5077'
+    },
+    {
+        'scenario' : 'testsip5-failure.xml',
+        '-i' : '127.0.0.2',
+        '-p' : '5078'
+    },
+    {
+        'scenario' : 'testsip5-success.xml',
+        '-i' : '127.0.0.3',
+        '-p' : '5079'
+    },
+    {
+        'scenario' : 'testsip5-failure.xml',
+        '-i' : '127.0.0.4',
+        '-p' : '5080'
+    },
+]
+
+def main():
+    WORKING_DIR = "channels/pjsip/acl_call"
+    TEST_DIR = os.path.dirname(os.path.realpath(__file__))
+    DB_PATH = TEST_DIR + "/realtime.sqlite3"
+    TMP_DB_PATH = "/tmp/realtime.sqlite3"
+    shutil.copyfile(DB_PATH, TMP_DB_PATH)
+    test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
+    reactor.run()
+    os.remove(TMP_DB_PATH)
+
+    if test.passed:
+        return 0
+
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
+
