@@ -336,8 +336,11 @@ class AriClientFactory(WebSocketClientFactory):
         if subscribe_all:
             url += '&subscribeAll=true'
         LOGGER.info("WebSocketClientFactory(url=%s)", url)
-        WebSocketClientFactory.__init__(self, url, debug=True,
-                                        protocols=['ari'], debugCodePaths=True)
+        try:
+            WebSocketClientFactory.__init__(self, url, debug=True,
+                                            protocols=['ari'], debugCodePaths=True)
+        except TypeError:
+            WebSocketClientFactory.__init__(self, url, protocols=['ari'])
         self.timeout_secs = timeout_secs
         self.attempts = 0
         self.start = None
