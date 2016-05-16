@@ -1,0 +1,17 @@
+# Configuration for the pluggable_modules.AsteriskConfigModule pluggable module.
+# This module installs a customer Asterisk config file, allowing config files
+# to be shared across tests.
+
+asterisk-config:
+    # The configuration should consist of a list of files to install into
+    # specific Asterisk instances
+    -
+        # The Asterisk instance to install the file into. If not provided,
+        # will install into Asterisk instance 0
+        id: 0
+
+        # The config file to install
+        src: 'tests/my-cool-test/extensions.conf'
+
+        # The config file it should replace
+        dst: 'extensions.conf'
