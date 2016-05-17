@@ -1,0 +1,79 @@
+testinfo:
+    summary: 'Test cleanup of registration on deletion of a dynamically created registration'
+    description: |
+        This test adds a new registration, waits for it to register successfully,
+        deletes it, then makes sure that an unregister event is received.
+
+properties:
+    minversion: '13.9.2'
+    dependencies:
+        - python: autobahn.websocket
+        - python: requests
+        - python: twisted
+        - python: starpy
+        - asterisk: res_ari_asterisk
+        - asterisk: res_pjsip
+        - asterisk: res_pjsip_outbound_registration
+        - asterisk: res_sorcery_memory
+        - sipp:
+            version: 'v3.0'
+    tags:
+        - ARI
+        - pjsip
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/message'
+    test-object:
+        config-section: test-config
+        typename: ari.AriBaseTestObject
+    modules:
+        -
+            config-section: registrar
+            typename: 'message_modules.SIPMessageRunner'
+        -
+            config-section: pluggable-config
+            typename: pluggable_modules.EventActionModule
+
+test-config:
+    apps: testsuite
+    
+registrar:
+    end-on-success: True
+    sipp:
+        - { 'scenario':'registrar.xml', '-p':'5061' }
+
+pluggable-config:
+    -
+        ari-start:
+        ari-requests:
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/registration/sipp'
+                body: { "fields": [ { 'attribute': 'server_uri', 'value': 'sip:localhost:5061' },
+                                    { 'attribute': 'client_uri', 'value': 'sip:sipp@localhost:5061'},
+                                    { 'attribute': 'max_retries', 'value': '0'},
+                                    { 'attribute': 'expiration', 'value': '10' } ] }            
+                expect: 200
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Registry'
+                    Username: 'sip:sipp@localhost:5061'
+                    Status: 'Registered'
+            count: '1'
+        ari-requests:
+            -            
+                method: 'delete'
+                uri: 'asterisk/config/dynamic/res_pjsip/registration/sipp'
+                expect: 204
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Registry'
+                    Username: 'sip:sipp@localhost:5061'
+                    Status: 'Unregistered'
+            count: '1'
+        stop_test:
