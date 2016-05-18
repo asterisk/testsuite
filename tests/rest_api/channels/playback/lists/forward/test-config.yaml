@@ -1,0 +1,145 @@
+testinfo:
+    summary: Tests that the forward ARI playback command works on channels as intended
+    description: |
+        This test puts a local channel half into Stasis, and the other into the Echo
+        application.  Starts an ARI playback of tt-monkeys on a channel, and as soon
+        as the playback starts, fastforwards the playback. Test passes if a playback
+        FastForward TestEvent gets received.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
+        -
+            config-section: asterisk-config
+            typename: pluggable_modules.AsteriskConfigModule
+        -
+            config-section: ami-config
+            typename: ami.AMIEventModule
+
+asterisk-config:
+    -
+        src: 'tests/rest_api/channels/playback/lists/configs/extensions.conf'
+        dst: 'extensions.conf'
+
+test-object-config:
+    stop-on-end: False
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: ChannelDestroyed
+                application: testsuite
+                channel:
+                    id: 'testsuite-default-id$'
+        stop_test:
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'channels/testsuite-default-id/play/list'
+                    params:
+                       media: 'sound:tt-monkeys,sound:tt-weasels'
+        -
+            conditions:
+                match:
+                    type: PlaybackStarted
+                    application: testsuite
+                    playback:
+                        id: 'list'
+                        target_uri: 'channel:testsuite-default-id$'
+                        media_uri: 'sound:tt-monkeys'
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'playbacks/list/control?operation=forward'
+                -
+                    delay: 1
+                    method: 'post'
+                    uri: 'playbacks/list/control?operation=forward'
+        -
+            conditions:
+                match:
+                    type: PlaybackContinuing
+                    application: testsuite
+                    playback:
+                        id: 'list'
+                        target_uri: 'channel:testsuite-default-id$'
+                        media_uri: 'sound:tt-monkeys'
+        -
+            conditions:
+                match:
+                    type: PlaybackStarted
+                    application: testsuite
+                    playback:
+                        id: 'list'
+                        target_uri: 'channel:testsuite-default-id$'
+                        media_uri: 'sound:tt-weasels'
+            count: 1
+            requests:
+                -
+                    method: 'post'
+                    uri: 'playbacks/list/control?operation=forward'
+                -
+                    delay: 2
+                    method: 'delete'
+                    uri: 'playbacks/list'
+        -
+            conditions:
+                match:
+                    type: PlaybackFinished
+                    application: testsuite
+                    playback:
+                        id: 'list'
+                        target_uri: 'channel:testsuite-default-id$'
+                        media_uri: 'sound:tt-weasels'
+            count: 1
+            requests:
+                -
+                    method: 'delete'
+                    uri: 'channels/testsuite-default-id'
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'PLAYBACK'
+                Control: 'FastForward'
+                SkipMs: '3000'
+        count: 3
+
+properties:
+    buildoption: 'TEST_FRAMEWORK'
+    minversion: '14.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_playbacks
+    tags:
+        - ARI
