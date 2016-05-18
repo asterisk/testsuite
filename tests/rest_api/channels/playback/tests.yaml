@@ -7,3 +7,4 @@ tests:
     - test: 'tones_w_tonezone'
     - test: 'forward'
     - test: 'reverse'
+    - dir: 'lists'
