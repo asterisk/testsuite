@@ -639,6 +639,26 @@ class SoundChecker(object):
         self.event_register(ami)
 
 
+class AsteriskConfigModule(object):
+    """A pluggable module that installs an Asterisk config file.
+
+    Configuration is as follows:
+    config-section:
+        -
+            id: 0
+            src: tests/my-test/my-super-awesome.conf
+            dst: extensions.conf
+    """
+
+    def __init__(self, instance_config, test_object):
+        """Constructor for pluggable modules"""
+        super(AsteriskConfigModule, self).__init__()
+
+        for info in instance_config:
+            asterisk_instance = test_object.ast[info.get('id', 0)]
+            asterisk_instance.install_config(info['src'], info['dst'])
+
+
 class FastAGIModule(object):
     """A class that makes a FastAGI server available to be called via the
     dialplan and allows simple commands to be executed.
