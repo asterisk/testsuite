@@ -37,7 +37,6 @@ tests:
     - test: 'incoming_call_on_second_transport'
     - test: 'incoming_calls_without_auth'
     - test: 'info_dtmf'
-    - test: 'info_empty'
     - test: 'keep_alive'
     - test: 'reinvite_early'
     - test: 'reinvite_pending'
