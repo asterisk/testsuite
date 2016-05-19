@@ -22,6 +22,7 @@ tests:
     - dir: 'transfers'
     - dir: 'video_calls'
     - test: 'accountcode'
+    - test: 'acl_call'
     - test: 'auth_security_events'
     - test: 'call_pickup'
     - test: 'dtmf_incompatible'
