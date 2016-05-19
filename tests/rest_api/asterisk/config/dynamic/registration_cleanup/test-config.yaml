@@ -50,8 +50,8 @@ pluggable-config:
             -
                 method: 'put'
                 uri: 'asterisk/config/dynamic/res_pjsip/registration/sipp'
-                body: { "fields": [ { 'attribute': 'server_uri', 'value': 'sip:localhost:5061' },
-                                    { 'attribute': 'client_uri', 'value': 'sip:sipp@localhost:5061'},
+                body: { "fields": [ { 'attribute': 'server_uri', 'value': 'sip:127.0.0.1:5061' },
+                                    { 'attribute': 'client_uri', 'value': 'sip:sipp@127.0.0.1:5061'},
                                     { 'attribute': 'max_retries', 'value': '0'},
                                     { 'attribute': 'expiration', 'value': '10' } ] }
                 expect: 200
@@ -60,7 +60,7 @@ pluggable-config:
             conditions:
                 match:
                     Event: 'Registry'
-                    Username: 'sip:sipp@localhost:5061'
+                    Username: 'sip:sipp@127.0.0.1:5061'
                     Status: 'Registered'
             count: '1'
         ari-requests:
@@ -73,7 +73,7 @@ pluggable-config:
             conditions:
                 match:
                     Event: 'Registry'
-                    Username: 'sip:sipp@localhost:5061'
+                    Username: 'sip:sipp@127.0.0.1:5061'
                     Status: 'Unregistered'
             count: '1'
         stop_test:
