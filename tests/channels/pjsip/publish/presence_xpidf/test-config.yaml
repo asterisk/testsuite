@@ -1,0 +1,45 @@
+testinfo:
+    summary: 'Ensure that outgoing application/xpidf+xml PUBLISH messages are sent.'
+    description: |
+        'A single Asterisk instance is started and is configured to PUBLISH messages to
+        a SIPp scenario using application/xpidf+xml. Device state changes are queued up.
+        If the PUBLISH messages are not received by the SIPp scenario then the test fails.'
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_outbound_publish'
+        - asterisk: 'res_pjsip_exten_state'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator
+            typename: 'pluggable_modules.Originator'
+
+sipp-config:
+    reactor-timeout: 30
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'publish.xml', '-p': '5061'} }
+
+originator:
+    trigger: 'ami_connect'
+    id: '0'
+    channel: 'Local/change_state@default'
+    context: 'default'
+    exten: 'dummy'
+    priority: '1'
+    async: 'True'

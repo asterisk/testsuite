@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="PUBLISH">
+  <recv request="PUBLISH" crlf="true">
+    <action>
+      <ereg regexp="<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>
+<presence entity=\"sip:presence@127.0.0.1:5061\" xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:pp=\"urn:ietf:params:xml:ns:pidf:person\" xmlns:es=\"urn:ietf:params:xml:ns:pidf:rpid:status:rpid-status\" xmlns:ep=\"urn:ietf:params:xml:ns:pidf:rpid:rpid-person\">
+ <note>Ready</note>
+ <tuple id=\"presence\">
+  <status>
+   <basic>open</basic>
+  </status>
+  <contact priority=\"1\">sip:presence@127.0.0.1:5061</contact>
+ </tuple>
+ <pp:person>
+  <status />
+ </pp:person>
+</presence>" check_it="true" search_in="body" assign_to="presence1" />
+    </action>
+  </recv>
+
+  <Reference variables="presence1" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv request="PUBLISH" crlf="true">
+    <action>
+      <ereg regexp="<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>
+<presence entity=\"sip:presence@127.0.0.1:5061\" xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:pp=\"urn:ietf:params:xml:ns:pidf:person\" xmlns:es=\"urn:ietf:params:xml:ns:pidf:rpid:status:rpid-status\" xmlns:ep=\"urn:ietf:params:xml:ns:pidf:rpid:rpid-person\">
+ <note>Ready</note>
+ <tuple id=\"presence\">
+  <status>
+   <basic>open</basic>
+  </status>
+  <contact priority=\"1\">sip:presence@127.0.0.1:5061</contact>
+ </tuple>
+ <pp:person>
+  <status />
+ </pp:person>
+</presence>" check_it="true" search_in="body" assign_to="presence2" />
+    </action>
+  </recv>
+
+  <Reference variables="presence2" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv request="PUBLISH" crlf="true">
+    <action>
+      <ereg regexp="<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>
+<presence entity=\"sip:presence@127.0.0.1:5061\" xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:pp=\"urn:ietf:params:xml:ns:pidf:person\" xmlns:es=\"urn:ietf:params:xml:ns:pidf:rpid:status:rpid-status\" xmlns:ep=\"urn:ietf:params:xml:ns:pidf:rpid:rpid-person\">
+ <note>Ringing</note>
+ <tuple id=\"presence\">
+  <status>
+   <basic>closed</basic>
+  </status>
+  <contact priority=\"1\">sip:presence@127.0.0.1:5061</contact>
+ </tuple>
+ <pp:person>
+  <status>
+   <ep:activities>ep:busy</ep:activities>
+  </status>
+ </pp:person>
+</presence>" check_it="true" search_in="body" assign_to="presence3" />
+    </action>
+  </recv>
+
+  <Reference variables="presence3" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv request="PUBLISH" crlf="true">
+    <action>
+      <ereg regexp="<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>
+<presence entity=\"sip:presence@127.0.0.1:5061\" xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:pp=\"urn:ietf:params:xml:ns:pidf:person\" xmlns:es=\"urn:ietf:params:xml:ns:pidf:rpid:status:rpid-status\" xmlns:ep=\"urn:ietf:params:xml:ns:pidf:rpid:rpid-person\">
+ <note>On the phone</note>
+ <tuple id=\"presence\">
+  <status>
+   <basic>closed</basic>
+  </status>
+  <contact priority=\"1\">sip:presence@127.0.0.1:5061</contact>
+ </tuple>
+ <pp:person>
+  <status>
+   <ep:activities>ep:busy</ep:activities>
+  </status>
+ </pp:person>
+</presence>" check_it="true" search_in="body" assign_to="presence4" />
+    </action>
+  </recv>
+
+  <Reference variables="presence4" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv request="PUBLISH" crlf="true">
+    <action>
+      <ereg regexp="<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>
+<presence entity=\"sip:presence@127.0.0.1:5061\" xmlns=\"urn:ietf:params:xml:ns:pidf\" xmlns:pp=\"urn:ietf:params:xml:ns:pidf:person\" xmlns:es=\"urn:ietf:params:xml:ns:pidf:rpid:status:rpid-status\" xmlns:ep=\"urn:ietf:params:xml:ns:pidf:rpid:rpid-person\">
+ <note>On hold</note>
+ <tuple id=\"presence\">
+  <status>
+   <basic>closed</basic>
+  </status>
+  <contact priority=\"1\">sip:presence@127.0.0.1:5061</contact>
+ </tuple>
+ <pp:person>
+  <status>
+   <ep:activities>ep:busy</ep:activities>
+  </status>
+ </pp:person>
+</presence>" check_it="true" search_in="body" assign_to="presence5" />
+    </action>
+  </recv>
+
+  <Reference variables="presence5" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+</scenario>
