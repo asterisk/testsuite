@@ -41,8 +41,8 @@
  <presentity uri=\"sip:presence@127.0.0.1:5061;method=SUBSCRIBE\" />
  <atom atomid=(.*?) id=\"presence\">
   <address uri=\"sip:presence@127.0.0.1:5061;user=ip\" priority=\"0.80000\">
-   <status status=\"open\" />
-   <msnsubstatus substatus=\"online\" />
+   <status status=\"inuse\" />
+   <msnsubstatus substatus=\"onthephone\" />
   </address>
  </atom>
 </presence>" check_it="true" search_in="body" assign_to="presence2" />
@@ -105,8 +105,8 @@
  <presentity uri=\"sip:presence@127.0.0.1:5061;method=SUBSCRIBE\" />
  <atom atomid=(.*?) id=\"presence\">
   <address uri=\"sip:presence@127.0.0.1:5061;user=ip\" priority=\"0.80000\">
-   <status status=\"inuse\" />
-   <msnsubstatus substatus=\"onthephone\" />
+   <status status=\"closed\" />
+   <msnsubstatus substatus=\"offline\" />
   </address>
  </atom>
 </presence>" check_it="true" search_in="body" assign_to="presence4" />
@@ -137,8 +137,8 @@
  <presentity uri=\"sip:presence@127.0.0.1:5061;method=SUBSCRIBE\" />
  <atom atomid=(.*?) id=\"presence\">
   <address uri=\"sip:presence@127.0.0.1:5061;user=ip\" priority=\"0.80000\">
-   <status status=\"closed\" />
-   <msnsubstatus substatus=\"offline\" />
+   <status status=\"open\" />
+   <msnsubstatus substatus=\"online\" />
   </address>
  </atom>
 </presence>" check_it="true" search_in="body" assign_to="presence5" />
@@ -146,20 +146,5 @@
   </recv>
 
   <Reference variables="presence5" />
-
-  <send>
-    <![CDATA[
-
-      SIP/2.0 200 OK
-      [last_Via:]
-      [last_From:]
-      [last_To:]
-      [last_Call-ID:]
-      [last_CSeq:]
-      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
-      Content-Length: 0
-
-    ]]>
-  </send>
 
 </scenario>
