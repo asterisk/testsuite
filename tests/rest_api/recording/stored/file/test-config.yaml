@@ -1,0 +1,101 @@
+testinfo:
+    summary: Test downloading a stored recording
+    description: |
+        This test does the following:
+        - Makes a recording
+        - Retrieves the recording
+        - Verifies that the recording was downloaded successfully
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: asterisk-config
+            typename: pluggable_modules.AsteriskConfigModule
+
+test-object-config:
+    stop-on-end: False
+    test-iterations:
+        -
+            endpoint: 'Local/s@default'
+            channelId: 'testsuite-default-id'
+            otherChannelId: 'testsuite-default-other-id'
+            extension: 's'
+            context: 'default'
+            priority: 1
+
+asterisk-config:
+    -
+        src: 'tests/rest_api/recording/stored/configs/extensions.conf'
+        dst: 'extensions.conf'
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'channels/testsuite-default-id/record'
+                params:
+                    name: 'superfly'
+                    format: 'wav'
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-other-id'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'channels/testsuite-default-other-id/play/MyPlaybackId'
+                params:
+                    media: 'sound:tt-monkeys'
+        -
+            conditions:
+                match:
+                    type: PlaybackFinished
+                    application: testsuite
+                    playback:
+                        id: MyPlaybackId
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'recordings/live/superfly/stop'
+        -
+            conditions:
+                match:
+                    type: RecordingFinished
+                    recording:
+                        name: superfly
+            count: 1
+            callback:
+                module: recording
+                method: on_recording_finished
+
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_recordings
+        - asterisk : app_echo
+    tags:
+        - ARI
