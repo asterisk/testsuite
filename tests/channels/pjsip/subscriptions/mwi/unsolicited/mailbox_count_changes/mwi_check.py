@@ -71,6 +71,8 @@ class AliceCallback(pj.AccountCallback):
 
     def on_mwi_info(self, body):
         self.check_mwi(body)
+        if self.result_pos == 0:
+            return
         self.pos += 1
         if (self.pos < len(self.mwis)):
             self.send_mwi()

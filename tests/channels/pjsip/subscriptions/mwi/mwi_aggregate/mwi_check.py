@@ -76,7 +76,8 @@ class PJMWICallback(pj.AccountCallback):
 
     def on_mwi_info(self, body):
         self.check_mwi(body)
-        self.controller.next_mwi(self)
+        if self.result_pos != 0:
+            self.controller.next_mwi(self)
 
 
 class MWICallback(object):
