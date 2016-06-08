@@ -32,23 +32,26 @@ class Originator(object):
     def ami_connect(self, ami):
         LOGGER.info("AMI connected")
         self.ami = ami
+        self.ami.registerEvent('DeviceStateChange', self.device_state_change)
         return
 
-    def success(self, result):
-        LOGGER.info("Originate Successful")
+    def device_state_change(self, ami, event):
+        if event['device'] != 'Custom:Eggs':
+            return
+
+        LOGGER.info("Device state changed to {0}".format(event['state']))
         self.current_destination += 1
         if self.current_destination < len(DESTINATIONS):
             self.originate_call()
-        return result
 
     def originate_call(self):
 
         LOGGER.info("Originating call to %s" %
                 DESTINATIONS[self.current_destination])
 
-        self.ami.originate(channel = 'Local/%s@default' %
+        self.ami.originate(channel='Local/%s@default' %
                 DESTINATIONS[self.current_destination],
-                application = 'Echo').addCallback(self.success)
+                application='Echo')
 
     def scenario_started(self, result):
         def failure(result):
