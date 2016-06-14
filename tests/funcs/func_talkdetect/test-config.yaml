@@ -47,7 +47,7 @@ test-object-config:
             channel: 'Local/stasis_app@default'
             context: 'default'
             exten: 'stasis_app'
-            priority: '1'
+            priority: 'start'
             async: True
 
 ari-config:
@@ -112,12 +112,13 @@ properties:
     dependencies:
         - python : autobahn.websocket
         - python : requests
-        - python : twisted
         - python : starpy
+        - python : twisted
+        - asterisk : app_stack
+        - asterisk : app_stasis
+        - asterisk : func_talkdetect
         - asterisk : res_ari_channels
         - asterisk : res_ari_playbacks
-        - asterisk : func_talkdetect
-        - asterisk : app_stasis
         - asterisk : res_stasis
     tags:
         - ARI
