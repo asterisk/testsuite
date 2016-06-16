@@ -32,14 +32,14 @@ class Originator(object):
     def ami_connect(self, ami):
         LOGGER.info("AMI connected")
         self.ami = ami
-        self.ami.registerEvent('DeviceStateChange', self.device_state_change)
+        self.ami.registerEvent('ExtensionStatus', self.extension_status)
         return
 
-    def device_state_change(self, ami, event):
-        if event['device'] != 'Custom:Eggs':
+    def extension_status(self, ami, event):
+        if event['hint'] != 'Custom:Eggs':
             return
 
-        LOGGER.info("Device state changed to {0}".format(event['state']))
+        LOGGER.info("Extension state changed to {0}".format(event['status']))
         self.current_destination += 1
         if self.current_destination < len(DESTINATIONS):
             self.originate_call()
