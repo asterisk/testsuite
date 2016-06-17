@@ -103,6 +103,9 @@ Required:
         - python-yaml
         - git-core
 
+You can execute the contrib/scripts/install_prereq script to install
+the needed libraries and python modules for the testsuite.
+
 Note: Many commands below will install files into system directories;
 if you are executing these commands as an unprivileged user, you might
 need to use 'sudo' or similar.

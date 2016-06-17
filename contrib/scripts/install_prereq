@@ -1,0 +1,275 @@
+#! /bin/sh
+#
+
+usage() {
+	echo "$0: A script to install external testsuite dependencies."
+	echo ""
+	echo "It is assumed that you have already built and installed Asterisk."
+	echo "Run the script from the testsuite root directory."
+	echo ""
+	echo "Usage: $0                     Shows this message."
+	echo "Usage: $0 test                Prints commands it is about to run."
+	echo "Usage: $0 install             Really install."
+}
+
+# Basic build system:
+PACKAGES_DEBIAN="subversion git build-essential automake"
+# Python tools
+PACKAGES_DEBIAN="$PACKAGES_DEBIAN python python-pip python-setuptools python-dev cython"
+# Testsuite: basic requirements:
+PACKAGES_DEBIAN="$PACKAGES_DEBIAN python-yaml python-twisted-core python-lxml liblua5.1-0-dev lua5.1 gdb"
+# Sipp requirements
+PACKAGES_DEBIAN="$PACKAGES_DEBIAN libpcap-dev libssl-dev libsctp-dev"
+# pjsua requirements
+#PACKAGES_DEBIAN="$PACKAGES_DEBIAN python-dev"
+
+# Basic build system:
+PACKAGES_RH="subversion git gcc gcc-c++ patch"
+# Python tools
+PACKAGES_RH="$PACKAGES_RH python python-pip python-setuptools python-devel cython"
+# Testsuite: basic requirements:
+PACKAGES_RH="$PACKAGES_RH PyYAML python-twisted-core python-lxml lua-devel gdb"
+# Sipp requirements
+PACKAGES_RH="$PACKAGES_RH pcap-devel openssl-devel libsctp-devel"
+# pjsua requirements
+#PACKAGES_RH="$PACKAGES_RH python-devel"
+
+LIBDIR=/usr/lib$(getconf LONG_BIT | fgrep 64)
+[ ! -d $LIBDIR ] && LIBDIR=/usr/lib
+
+LIBLOCALDIR=/usr/local/lib$(getconf LONG_BIT | fgrep 64)
+[ ! -d $LIBLOCALDIR ] && LIBLOCALDIR=/usr/local/lib
+
+MY_BIN=/usr/local/bin
+
+set -e
+
+case "$1" in
+test)
+	testcmd=echo
+	;;
+install)
+	testcmd=''
+	;;
+'')
+	usage
+	exit 0
+	;;
+*)
+	usage
+	exit 1
+	;;
+esac
+
+in_test_mode() {
+	test "$testcmd" != ''
+}
+
+check_installed_debs() {
+	for pack in "$@" ; do
+		tocheck="${tocheck} ^${pack}$ ~P^${pack}$"
+	done
+	pkgs=$(aptitude -F '%c %p' search ${tocheck} 2>/dev/null | awk '/^p/{print $2}')
+	if [ ${#pkgs} -ne 0 ]; then
+		echo $pkgs | sed -r -e "s/ ?[^ :]+:i386//g"
+	fi
+}
+
+# parsing the output of yum is close to impossible.
+# We'll use rpm and hope for the best:
+check_installed_rpms() {
+	for pack in "$@"
+	do
+		if ! rpm -q $pack >/dev/null 2>/dev/null
+		then echo $pack
+		fi
+	done
+}
+
+install_debian() {
+	if ! [ -x "$(command -v aptitude)" ]; then
+		if in_test_mode; then
+			echo sudo apt-get install aptitude
+			echo "$0: Please install aptitude and try again. Aborting."
+			exit 1
+		fi
+		sudo apt-get install aptitude
+	fi
+	$testcmd sudo aptitude update
+	extra_packs=`check_installed_debs $PACKAGES_DEBIAN`
+	if [ x"$extra_packs" != "x" ] ; then
+		$testcmd sudo aptitude install -y $extra_packs
+	fi
+}
+
+install_rh() {
+	extra_packs=`check_installed_rpms $PACKAGES_RH`
+	if [ x"$extra_packs" != "x" ] ; then
+		$testcmd sudo yum install -y $extra_packs
+	fi
+}
+
+OS=`uname -s`
+
+# A number of distributions we don't (yet?) support.
+if [ "$OS" != 'Linux' ]; then
+	echo >&2 "$0: Your OS ($OS) is currently not supported. Aborting."
+	exit 1
+fi
+
+unsupported_distro=''
+if [ -f /etc/gentoo-release ]; then
+	unsupported_distro='Gentoo'
+fi
+if [ -f /etc/mandrake-release ]; then
+	unsupported_distro='Mandriva'
+fi
+if [ -f /etc/SuSE-release ]; then
+	unsupported_distro='SUSE'
+fi
+if [ -f /etc/slackware-version ]; then
+	unsupported_distro='Slackware'
+fi
+if [ "$unsupported_distro" != '' ]; then
+	echo >&2 "$0: Your distribution ($unsupported_distro) is currently not supported. Aborting."
+	exit 1
+fi
+
+# The distributions we do support:
+if [ -r /etc/debian_version ]; then
+	install_packages=install_debian
+elif [ -r /etc/redhat-release ]; then
+	install_packages=install_rh
+else
+	echo >&2 "$0: Your distribution is currently not supported. Aborting."
+	exit 1
+fi
+
+install_starpy() {
+	$testcmd cd addons
+	$testcmd make update
+	$testcmd cd starpy
+	$testcmd sudo python setup.py install
+	$testcmd cd ../..
+}
+
+install_asttest() {
+	$testcmd cd asttest
+	$testcmd make
+	$testcmd sudo make install
+	$testcmd cd ..
+}
+
+# Build and install yappcap
+install_yappcap() {
+	SAVE_DIR=`pwd`
+	$testcmd cd /tmp
+
+	PROJECT_DIR=yappcap
+
+	$testcmd sudo rm -rf $PROJECT_DIR
+	$testcmd git clone https://github.com/otherwiseguy/yappcap $PROJECT_DIR
+	$testcmd cd $PROJECT_DIR
+
+	$testcmd make
+	$testcmd sudo make install
+
+	$testcmd cd $SAVE_DIR
+}
+
+# Build and install sipp
+install_sipp() {
+	SAVE_DIR=`pwd`
+	$testcmd cd /tmp
+
+	PROJECT_DIR=sipp
+
+	$testcmd sudo rm -rf $PROJECT_DIR
+	$testcmd git clone https://github.com/SIPp/sipp $PROJECT_DIR
+	$testcmd cd $PROJECT_DIR
+
+	# Checkout and build the current latest released version.
+	$testcmd git checkout v3.5.1
+
+	$testcmd ./build.sh --with-openssl --with-pcap --with-rtpstream --with-sctp
+	$testcmd sudo make install
+
+	$testcmd cd $SAVE_DIR
+}
+
+# Build and then install ONLY pjsua from pjproject
+install_pjsua() {
+	SAVE_DIR=`pwd`
+	$testcmd cd /tmp
+
+	PROJECT_DIR=pjsua
+
+	$testcmd sudo rm -rf pjsua
+	$testcmd git clone https://github.com/asterisk/pjproject $PROJECT_DIR
+	$testcmd cd $PROJECT_DIR
+
+	$testcmd ./configure CFLAGS="-fPIC -O2 -DNDEBUG"
+	#$testcmd ./configure --prefix=/usr --libdir=$LIBDIR --enable-shared --with-external-speex --with-external-srtp --with-external-gsm --disable-sound --disable-resample --disable-video --disable-opencore-amr CFLAGS='-O2 -DNDEBUG'
+
+	$testcmd cp pjlib/include/pj/config_site_sample.h pjlib/include/pj/config_site.h
+	if in_test_mode; then
+		$testcmd 'echo "#define PJ_HAS_IPV6 1" >> pjlib/include/pj/config_site.h'
+	else
+		echo "#define PJ_HAS_IPV6 1" >> pjlib/include/pj/config_site.h
+	fi
+
+	$testcmd make dep
+	$testcmd make
+
+	# The testsuite only cares about pjsua from what we have built.
+	$testcmd sudo cp -v pjsip-apps/bin/pjsua-`uname -m`-*-linux-gnu $MY_BIN/pjsua
+	$testcmd sudo make -C pjsip-apps/src/python install
+
+	$testcmd cd $SAVE_DIR
+}
+
+install_testsuite_dependencies()
+{
+	$install_packages
+
+	if [ "x`find $LIBDIR/python* $LIBLOCALDIR/python* -name starpy`" = "x" ] ; then
+		install_starpy
+	fi
+
+	if [ "x`find $LIBDIR/python* $LIBLOCALDIR/python* -name yappcap.so`" = "x" ] ; then
+		install_yappcap
+	fi
+
+	which asttest > /dev/null || install_asttest
+	which sipp > /dev/null || install_sipp
+	which pjsua > /dev/null || install_pjsua
+
+	$testcmd sudo pip install construct
+	$testcmd sudo pip install requests
+
+	# The following is needed for ARI tests and may not install
+	# on older distributions.
+	$testcmd sudo pip install autobahn
+}
+
+if in_test_mode; then
+	echo "#############################################"
+	echo "## test mode."
+	echo "## Use the commands here to install your system."
+	echo "#############################################"
+fi
+
+install_testsuite_dependencies
+
+if ! in_test_mode; then
+	echo "#############################################"
+	echo "## $1 completed successfully"
+	echo "#############################################"
+	echo ""
+	echo "Testsuite requires 2.6.5 <= python version < 3"
+	echo "Your installed python is"
+	python --version
+fi
+
+exit 0
+
