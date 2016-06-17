@@ -41,8 +41,6 @@ ami-config:
                     Event: 'TestEvent'
                     State: 'SUBSCRIPTION_STATE_SET'
                     Endpoint: 'user1'
-            requirements:
-                match:
                     StateText: 'ACTIVE'
             count: 1
     -
@@ -52,8 +50,6 @@ ami-config:
                     Event: 'TestEvent'
                     State: 'SUBSCRIPTION_STATE_SET'
                     Endpoint: 'user2'
-            requirements:
-                match:
                     StateText: 'ACTIVE'
             count: 1
         ami-actions:
