@@ -71,10 +71,10 @@ pluggable-config:
                     endpoint:
                         technology: 'PJSIP'
                         resource: 'alice'
-                        state: 'offline'
+                        state: 'online'
                     application: 'testsuite'
                     peer:
-                        peer_status: 'Unreachable'
+                        peer_status: 'Reachable'
                 count: 1
             -
                 match:

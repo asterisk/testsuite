@@ -120,7 +120,7 @@ ami-config:
                     RtpIpv6: 'false'
                     DtmfMode: 'rfc4733'
                     Context: 'default'
-                    DeviceState: 'Invalid|Not in use|Unavailable'
+                    DeviceState: 'Unknown|Invalid|Not in use|Unavailable'
                     ActiveChannels: ''
             count: 1
     -
