@@ -1,0 +1,208 @@
+testinfo:
+    summary: 'Test outgoing calls that are canceled'
+    description: |
+        'There are five scenarios being tested.
+        1) Call Buba and cancel the call before Buba answers.  Buba "answers"
+           right as we cancel the call with a valid SDP response.  This is the
+           CANCEL race condition described in RFC5407 section 3.1.2.  In this
+           case PJPROJECT does not send the BYE for us so Asterisk must detect
+           this case and send the needed BYE.
+        2) Call Carl and cancel the call before Carl answers.  Carl "answers"
+           right as we cancel the call with an invalid SDP response.  This is
+           the CANCEL race condition described in RFC5407 section 3.1.2.  In
+           this case PJPROJECT does send the BYE for us because of the invalid
+           SDP response so Asterisk must detect this case and not send a BYE.
+        3) Call Dave and cancel the call before Dave answers.  Dave "answers"
+           right as we cancel the call with a missing SDP response.  This is
+           the CANCEL race condition described in RFC5407 section 3.1.2.  In
+           this case PJPROJECT does send the BYE for us because of the missing
+           SDP response so Asterisk must detect this case and not send a BYE.
+        4) Call Evan and wait for Evan to answer.  When Evan answers he sends
+           an invalid SDP response.  In this case PJPROJECT cancels the call
+           because of the invalid SDP response and sends the BYE.  Asterisk
+           must detect this case and not send a BYE.'
+        5) Call Fred and wait for Fred to answer.  When Fred answers he sends
+           a missing SDP response.  In this case PJPROJECT cancels the call
+           because of the missing SDP response and sends the BYE.  Asterisk
+           must detect this case and not send a BYE.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        - config-section: ami-config
+          typename: 'ami.AMIEventModule'
+        - config-section: start-call
+          typename: 'pluggable_modules.Originator'
+
+test-object-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'-i': '127.0.0.1', '-p': '5071', '-s': 'buba', '-d': '500', 'scenario': 'call_cancel_valid_sdp.xml'} }
+                - { 'key-args': {'-i': '127.0.0.1', '-p': '5072', '-s': 'carl', '-d': '500', 'scenario': 'call_cancel_invalid_sdp.xml'} }
+                - { 'key-args': {'-i': '127.0.0.1', '-p': '5073', '-s': 'dave', '-d': '500', 'scenario': 'call_cancel_missing_sdp.xml'} }
+                - { 'key-args': {'-i': '127.0.0.1', '-p': '5074', '-s': 'evan', '-d': '500', 'scenario': 'call_invalid_sdp.xml'} }
+                - { 'key-args': {'-i': '127.0.0.1', '-p': '5075', '-s': 'fred', '-d': '500', 'scenario': 'call_missing_sdp.xml'} }
+
+start-call:
+    trigger: 'scenario_start'
+    scenario-trigger-after: '3'
+    channel: 'Local/start@default'
+    context: 'default'
+    exten: 'target'
+    priority: 1
+    async: True
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'DialResult'
+        count: '5'
+    # Buba events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'DialResult'
+                status: 'buba-.*'
+        requirements:
+            match:
+                status: 'buba-NOANSWER'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'PJSIP_SESSION_CANCELED'
+                Endpoint: 'buba'
+        requirements:
+            match:
+                SDP: 'complete'
+        count: '1'
+    # Carl events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'DialResult'
+                status: 'carl-.*'
+        requirements:
+            match:
+                status: 'carl-NOANSWER'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'PJSIP_SESSION_CANCELED'
+                Endpoint: 'carl'
+        requirements:
+            match:
+                SDP: 'incomplete'
+        count: '1'
+    # Dave events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'DialResult'
+                status: 'dave-.*'
+        requirements:
+            match:
+                status: 'dave-NOANSWER'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'PJSIP_SESSION_CANCELED'
+                Endpoint: 'dave'
+        requirements:
+            match:
+                SDP: 'incomplete'
+        count: '1'
+    # Evan events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'DialResult'
+                status: 'evan-.*'
+        requirements:
+            match:
+                status: 'evan-ANSWER'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'PJSIP_SESSION_CANCELED'
+                Endpoint: 'evan'
+        requirements:
+            match:
+                SDP: 'incomplete'
+        count: '1'
+    # Fred events
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'DialResult'
+                status: 'fred-.*'
+        requirements:
+            match:
+                status: 'fred-ANSWER'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'PJSIP_SESSION_CANCELED'
+                Endpoint: 'fred'
+        requirements:
+            match:
+                SDP: 'incomplete'
+        count: '1'
+
+properties:
+    minversion: '13.11.0'
+    dependencies:
+        - sipp:
+            version: 'v3.0'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_echo'
+        - asterisk: 'app_userevent'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+

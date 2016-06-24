@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="UAS with missing SDP answer test">
+	<Global variables="remote_tag" />
+	<recv request="INVITE" crlf="true">
+		<action>
+			<!-- Save the from tag. We'll need it when we send our BYE -->
+			<ereg regexp=".*(;tag=.*)"
+				header="From:"
+				search_in="hdr"
+				check_it="true"
+				assign_to="remote_tag"/>
+		</action>
+	</recv>
+
+	<send>
+		<![CDATA[
+			SIP/2.0 100 Trying
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Content-Length: 0
+		]]>
+	</send>
+
+	<pause/>
+
+	<send retrans="500">
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:];tag=[pid]SIPpTag01[call_number]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Contact: <sip:[service]@[local_ip]:[local_port];transport=[transport]>
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv request="ACK" rtd="true" crlf="true">
+	</recv>
+
+	<recv request="BYE" rtd="true" crlf="true">
+	</recv>
+
+	<send>
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Content-Length: 0
+		]]>
+	</send>
+
+	<!-- Linger awhile in case we get some unexpected message. -->
+	<pause/>
+	<pause/>
+
+	<ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
+
+	<CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+
+</scenario>
+

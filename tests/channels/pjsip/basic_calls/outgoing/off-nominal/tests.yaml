@@ -3,3 +3,4 @@ tests:
     - test: 'bob_does_not_answer'
     - test: 'bob_is_busy'
     - test: 'bob_incompatible_codecs'
+    - test: 'call_canceled'

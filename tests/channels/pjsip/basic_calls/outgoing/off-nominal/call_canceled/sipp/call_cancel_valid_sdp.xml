@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="UAS for canceled call with valid SDP answer test">
+	<Global variables="invite_from" />
+	<Global variables="invite_to" />
+	<Global variables="invite_callid" />
+	<Global variables="invite_cseq" />
+	<recv request="INVITE" crlf="true">
+		<action>
+			<!-- Save the from value. -->
+			<ereg regexp=".*(;tag=.*)"
+				header="From:"
+				search_in="hdr"
+				check_it="true"
+				assign_to="invite_from"/>
+			<!-- Save the to value. -->
+			<ereg regexp=".*"
+				header="To:"
+				search_in="hdr"
+				check_it="true"
+				assign_to="invite_to"/>
+			<!-- Save the callid value. -->
+			<ereg regexp=".*"
+				header="Call-ID:"
+				search_in="hdr"
+				check_it="true"
+				assign_to="invite_callid"/>
+			<!-- Save the cseq value. -->
+			<ereg regexp=".*"
+				header="CSeq:"
+				search_in="hdr"
+				check_it="true"
+				assign_to="invite_cseq"/>
+		</action>
+	</recv>
+
+	<send>
+		<![CDATA[
+			SIP/2.0 100 Trying
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv request="CANCEL" rtd="true" crlf="true">
+	</recv>
+
+	<send>
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Content-Length: 0
+		]]>
+	</send>
+
+	<send retrans="500">
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			From:[$invite_from]
+			To:[$invite_to];tag=[pid]SIPpTag01[call_number]
+			Call-ID:[$invite_callid]
+			CSeq:[$invite_cseq]
+			Contact: <sip:[service]@[local_ip]:[local_port];transport=[transport]>
+			Content-Type: application/sdp
+			Content-Length: [len]
+
+			v=0
+			o=CGPLeg607266 362679584 181339793 IN IP[local_ip_type] [local_ip]
+			s=[sipp_version]
+			c=IN IP[media_ip_type] [media_ip]
+			t=0 0
+			m=audio [media_port] RTP/AVP 8 101
+			a=rtpmap:8 PCMA/8000
+			a=rtpmap:101 telephone-event/8000
+			a=fmtp:101 0-16
+			a=ptime:20
+			a=rtcpping:F:1253985:125398578
+			m=video 0 RTP/AVP 100
+		]]>
+	</send>
+
+	<recv request="ACK" rtd="true" crlf="true">
+	</recv>
+
+	<recv request="BYE" rtd="true" crlf="true">
+	</recv>
+
+	<send>
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Content-Length: 0
+		]]>
+	</send>
+
+	<!-- Linger awhile in case we get some unexpected message. -->
+	<pause/>
+	<pause/>
+
+	<ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
+
+	<CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
+
+</scenario>
+
