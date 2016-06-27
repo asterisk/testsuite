@@ -25,6 +25,7 @@ properties:
     dependencies:
         - sipp:
             version: 'v3.0'
+        - asterisk: 'app_echo'
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_session'
         - asterisk: 'res_pjsip_sdp_rtp'
