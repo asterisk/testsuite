@@ -1,4 +1,5 @@
 tests:
     - dir: 'userpass'
     - test: 'incompatible_codecs'
+    - test: 'invalid_sdp'
     - test: 'md5'

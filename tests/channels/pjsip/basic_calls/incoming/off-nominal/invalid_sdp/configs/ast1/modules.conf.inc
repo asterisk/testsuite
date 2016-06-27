@@ -1,0 +1,13 @@
+; Minimize open fds in this test by not loading other VoIP channel drivers
+noload => chan_iax2.so
+noload => chan_mgcp.so
+noload => chan_unistim.so
+noload => chan_motif.so
+noload => chan_skinny.so
+noload => chan_ooh323.so
+
+; res_hep.so opens an fd on the first SIP call received, and doesn't close it after
+; the call has completed. I could either noload res_hep or set the fd test condition
+; to ignore it. It's easier to just noload.
+
+noload => res_hep.so

@@ -1,0 +1,48 @@
+testinfo:
+    summary: 'Test incoming calls that have invalid SDP from the caller'
+    description: |
+        'There are four scenarios being tested.
+        1) Incoming call with invalid SDP offer.  Expecting a 400 Bad Request.
+        2) Incoming call with invalid deferred SDP answer.  Call should get
+           disconnected immediately.
+        3) Incoming call with missing deferred SDP answer.  Call should get
+           disconnected immediately.
+
+        And finally to make sure the nominal case works:
+
+        4) Incoming call with valid deferred SDP answer.  Call should stay
+           connected.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'-i': '127.0.0.1', '-p': '5061', '-s': 'echo', '-d': '500', 'scenario': 'uac_invalid_offer.xml'}}
+        -
+            scenarios:
+                - { 'key-args': {'-i': '127.0.0.1', '-p': '5061', '-s': 'echo', '-d': '500', 'scenario': 'uac_invalid_deferred_answer.xml'}}
+        -
+            scenarios:
+                - { 'key-args': {'-i': '127.0.0.1', '-p': '5061', '-s': 'echo', '-d': '500', 'scenario': 'uac_missing_deferred_answer.xml'}}
+        -
+            scenarios:
+                - { 'key-args': {'-i': '127.0.0.1', '-p': '5061', '-s': 'echo', '-d': '500', 'scenario': 'uac_valid_deferred_answer.xml'}}
+
+
+properties:
+    minversion: '13.11.0'
+    dependencies:
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'app_echo'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+        - asterisk: 'res_pjsip_sdp_rtp'
+    tags:
+        - pjsip
