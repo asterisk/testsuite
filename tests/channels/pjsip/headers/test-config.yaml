@@ -1,8 +1,8 @@
 testinfo:
     summary: 'Tests the different capabilities of PJSIP_HEADER.'
     description:
-        Checks to see if PJSIP_HEADER can add, remove, get, and update different SIP headers
-        in a PJSIP session.
+        'Checks to see if PJSIP_HEADER can add, remove, get, and update
+        different SIP headers in a PJSIP session.'
 
 test-modules:
     test-object:
@@ -50,6 +50,13 @@ properties:
     minversion: '12.0.0'
     dependencies:
         - app : 'sipp'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_stack'
+        - asterisk : 'app_userevent'
+        - asterisk : 'func_logic'
+        - asterisk : 'func_uri'
         - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_header_funcs'
     tags:
         - pjsip
