@@ -1,9 +1,9 @@
 testinfo:
-    summary: 'Test that asterisk correctly handles EMTPY INFO in SIP packets when using PJSIP.'
+    summary: 'Test that asterisk correctly handles empty INFO requests when using PJSIP.'
     description:
-            This test checks that after establishing a call via an INVITE, when
-            an INFO packet is recieved with no 'Content-Type' header, the
-            emtpy INFO module should respond with a 200 - OK packet.
+            'This test checks that after establishing a call via an INVITE, when
+            an INFO request is recieved with no "Content-Type" header, the
+            emtpy INFO request gets a 200 OK response.'
 
 test-modules:
     test-object:
@@ -20,6 +20,7 @@ properties:
     minversion: '13.10.0'
     dependencies:
         - app : 'sipp'
+        - asterisk : 'app_echo'
         - asterisk : 'res_pjsip'
     tags:
         - pjsip

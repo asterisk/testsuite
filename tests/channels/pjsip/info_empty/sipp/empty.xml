@@ -4,7 +4,6 @@
 <scenario name="INFO Test">
   <send retrans="500">
     <![CDATA[
-
       INVITE sip:empty@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: test <sip:test@[local_ip]:[local_port]>;tag=[call_number]
@@ -14,6 +13,7 @@
       Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Subject: INFO Test
+      Content-Type: application/sdp
       Content-Length: [len]
 
       v=0
@@ -21,9 +21,8 @@
       s=-
       c=IN IP[media_ip_type] [media_ip]
       t=0 0
-      m=audio 6000 RTP/AVP 0
+      m=audio [media_port] RTP/AVP 0
       a=rtpmap:0 PCMU/8000
-
     ]]>
   </send>
 
@@ -35,7 +34,6 @@
 
   <send>
     <![CDATA[
-
       ACK sip:empty@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: test <sip:test@[local_ip]:[local_port]>;tag=[call_number]
@@ -45,15 +43,12 @@
       Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Subject: INFO Test
-      Content-Type: application/sdp
       Content-Length: 0
-
     ]]>
   </send>
 
   <send retrans="500">
     <![CDATA[
-
       INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: empty <sip:empty@[local_ip]:[local_port]>;tag=[call_number]
@@ -62,8 +57,7 @@
       CSeq: 2 INFO
       Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
-      Content-Length: [len]
-
+      Content-Length: 0
     ]]>
   </send>
 
@@ -72,7 +66,6 @@
 
   <send retrans="500">
     <![CDATA[
-
       INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: empty <sip:empty@[local_ip]:[local_port]>;tag=[call_number]
@@ -81,8 +74,7 @@
       CSeq: 3 INFO
       Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
-      Content-Length: [len]
-
+      Content-Length: 0
     ]]>
   </send>
 
@@ -91,7 +83,6 @@
 
   <send retrans="500">
     <![CDATA[
-
       INFO sip:test@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: empty <sip:empty@[local_ip]:[local_port]>;tag=[call_number]
@@ -100,8 +91,7 @@
       CSeq: 17 INFO
       Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
-      Content-Length: [len]
-
+      Content-Length: 0
     ]]>
   </send>
 
@@ -112,7 +102,6 @@
 
   <send retrans="500">
     <![CDATA[
-
       BYE sip:empty@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: test <sip:test@[local_ip]:[local_port]>;tag=[call_number]
@@ -123,7 +112,6 @@
       Max-Forwards: 70
       Subject: INFO Test
       Content-Length: 0
-
     ]]>
   </send>
 
