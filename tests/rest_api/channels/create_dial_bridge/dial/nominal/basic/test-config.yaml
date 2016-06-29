@@ -1,0 +1,102 @@
+testinfo:
+    summary: 'Test channels/create then dial.'
+    description: |
+        * Create channel 1 using channels/create with endpoint = Local/s@default
+        * Do a get to make sure it's actually there
+        * Dial the channel
+        * Wait for answer and dialplan Channel HangupRequest
+        * Delete the channel
+        * Wait for our ChannelHangupRequest
+        * Stop.
+
+test-modules:
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'ari.AriBaseTestObject'
+    modules:
+    -   config-section: 'pluggable-config'
+        typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    apps: 'testsuite'
+    reactor-timeout: 30
+    stop-on-end: False
+
+pluggable-config:
+    -   ari-start:
+        ari-requests:
+            -   method: 'post'
+                uri: 'channels/create'
+                params:
+                    endpoint: 'Local/s@default'
+                    app: 'testsuite'
+                    channelId: 'channel1'
+                expect: 200
+
+    -   ari-events:
+            match:
+                type: 'StasisStart'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+            count: 1
+        ari-requests:
+            -   method: 'get'
+                uri: 'channels/channel1'
+                expect: 200
+
+            -   method: 'post'
+                uri: 'channels/channel1/dial'
+                expect: 204
+
+    -   ari-events:
+            match:
+                type: 'Dial'
+                dialstatus: 'ANSWER'
+                application: 'testsuite'
+                peer:
+                    id: 'channel1'
+                    state: 'Up'
+            count: 1
+
+    -   ari-events:
+            match:
+                type: 'ChannelHangupRequest'
+                cause: 16
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+            count: 1
+        ari-requests:
+            -   method: 'delete'
+                uri: 'channels/channel1'
+                expect: 204
+
+    -   ari-events:
+            match:
+                type: 'ChannelHangupRequest'
+                cause: 32
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+            count: 1
+
+    -   ari-events:
+            match:
+                type: 'StasisEnd'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+            count: 1
+        stop_test:
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+    -   python: 'autobahn.websocket'
+    -   python: 'requests'
+    -   python: 'twisted'
+    -   python: 'starpy'
+    -   asterisk: 'res_ari_channels'
+    tags:
+    - ARI

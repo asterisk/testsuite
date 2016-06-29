@@ -1,0 +1,2 @@
+tests:
+    - test: 'bridge_then_dial'

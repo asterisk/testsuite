@@ -1,0 +1,4 @@
+tests:
+    - dir: 'bridge'
+    - dir: 'create'
+    - dir: 'dial'
