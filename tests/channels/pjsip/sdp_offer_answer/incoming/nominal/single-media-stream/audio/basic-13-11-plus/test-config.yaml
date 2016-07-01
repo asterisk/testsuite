@@ -48,8 +48,7 @@ test-object-config:
                 - { 'key-args': {'scenario': 'uac-basic-codecs-delayed.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-codec-match', } }
 
 properties:
-    minversion: '13.0.0'
-    maxversion: '13.11.0'
+    minversion: '13.11.0'
     dependencies:
         - sipp :
             version : 'v3.0'

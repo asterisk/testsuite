@@ -3,3 +3,4 @@ tests:
     - test: 'avpf'
     - test: 'basic'
     - test: 'packetization'
+    - test: 'basic-13-11-plus'
