@@ -25,7 +25,12 @@ testinfo:
 
 test-modules:
     test-object:
+        maxversion: '13.11.0'
         config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    test-object:
+        minversion: '13.11.0'
+        config-section: test-object-config-13-11
         typename: 'sipp.SIPpTestCase'
 
 test-object-config:
@@ -46,6 +51,26 @@ test-object-config:
         -
             scenarios:
                 - { 'key-args': {'scenario': 'uac-basic-codecs-delayed.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-codec-match', } }
+
+test-object-config-13-11:
+    reactor-timeout: 80
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-all-codecs-13-11.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice-codec-all', } }
+                - { 'key-args': {'scenario': 'uac-basic-codecs.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-codec-match', } }
+                - { 'key-args': {'scenario': 'uac-basic-codecs.xml', '-i': '127.0.0.1', '-p': '5063', '-s': 'alice-codec-extended', } }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-basic-codecs-no-rtpmap.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-codec-match', } }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-basic-codecs-odd-rtpmap.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-codec-match', } }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-basic-codecs-delayed.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-codec-match', } }
+
 
 properties:
     minversion: '13.0.0'
