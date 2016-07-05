@@ -1,0 +1,163 @@
+testinfo:
+    summary: 'Test channels create, dial and bridge while ringing'
+    description: |
+        * Create channel 1 using channels/create with endpoint = Local/s@default
+            which answers and plays tt-weasels (but not until dialed below).
+        * Create bridge1.
+        * Create channel 2 using channels/create with endpoint = Local/amd@default
+            which just runs the AMD() app (but not until dialed below).
+        * Dial channel 1.
+        * Wait for ringing
+        * Add to bridge.
+        * Dial channel 2.
+        * Wait for ringing
+        * Add to bridge.
+        * Make sure AMD detects HUMAN.
+        * Wait for channel 2 to hang itself up after AMD returns.
+        * Delete channel 1 and the bridge.
+        * Stop.
+
+test-modules:
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'ari.AriBaseTestObject'
+    modules:
+    -   config-section: ami-uut
+        typename: 'ami.AMIEventModule'
+    -   config-section: 'pluggable-config'
+        typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    apps: 'testsuite'
+    reactor-timeout: 60
+    stop-on-end: False
+
+ami-uut:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'VarSet'
+                Variable: 'AMDSTATUS'
+                Value: 'HUMAN'
+        count: '1'
+
+pluggable-config:
+    -
+        ari-start:
+        ari-requests:
+            -   method: 'post'
+                uri: 'channels/create'
+                params:
+                    endpoint: 'Local/s@default'
+                    app: 'testsuite'
+                    channelId: 'channel1'
+                expect: 200
+            -   method: 'post'
+                uri: 'channels/create'
+                params:
+                    'endpoint': 'Local/amd@default'
+                    'app': 'testsuite'
+                    'appArgs': 'amd'
+                    'channelId': 'channel2'
+                expect: 200
+            -   method: 'post'
+                uri: 'bridges/bridge1'
+                expect: 200
+
+    -   ari-events:
+            match:
+                type: 'StasisStart'
+                application: 'testsuite'
+                args: [
+                    ]
+                channel:
+                    id: 'channel1$'
+            count: 1
+        ari-requests:
+            -   method: 'post'
+                uri: 'channels/channel1/dial'
+
+    -   ari-events:
+            match:
+                type: 'StasisStart'
+                application: 'testsuite'
+                'args':
+                - 'amd'
+                channel:
+                    id: 'channel2$'
+            count: 1
+        ari-requests:
+            -   method: 'post'
+                uri: 'channels/channel2/dial'
+                params:
+                    caller: 'channel1'
+
+    -   ari-events:
+            match:
+                type: 'Dial'
+                dialstatus: 'RINGING'
+                application: 'testsuite'
+                peer:
+                    id: 'channel1'
+            count: 1
+        ari-requests:
+            -   method: 'post'
+                uri: 'bridges/bridge1/addChannel'
+                params:
+                    channel: 'channel1'
+                expect: 204
+
+    -   ari-events:
+            match:
+                type: 'Dial'
+                dialstatus: 'RINGING'
+                application: 'testsuite'
+                peer:
+                    id: 'channel2'
+            count: 1
+        ari-requests:
+            -   method: 'post'
+                uri: 'bridges/bridge1/addChannel'
+                params:
+                    channel: 'channel2'
+                expect: 204
+
+    -   ari-events:
+            match:
+                type: 'ChannelEnteredBridge'
+                application: 'testsuite'
+                channel:
+                    id: 'channel[12]$'
+            count: 2
+
+    -   ari-events:
+            match:
+                type: 'ChannelLeftBridge'
+                channel:
+                    id: 'channel2'
+            count: 1
+        ari-requests:
+            -   method: 'delete'
+                uri: 'channels/channel1'
+            -   method: 'delete'
+                uri: 'bridges/bridge1'
+
+    -   ari-events:
+            match:
+                type: 'BridgeDestroyed'
+            count: 1
+        stop_test:
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+    -   python: 'autobahn.websocket'
+    -   python: 'requests'
+    -   python: 'twisted'
+    -   python: 'starpy'
+    -   asterisk: 'res_ari_channels'
+    -   asterisk: 'app_amd'
+    tags:
+    - ARI
