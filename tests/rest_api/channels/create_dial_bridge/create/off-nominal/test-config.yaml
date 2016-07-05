@@ -1,0 +1,135 @@
+testinfo:
+    summary: 'Test channel operation failures on newly created channel'
+    description: |
+        * Create channel 1 using channels/create with endpoint = Local/s@default
+        * Do a get to make sure it's actually there
+        * Perform operations that should fail
+        * Delete the channel
+        * Wait for ChannelHangupRequest
+        * Do another get and test for 404
+        * Wait for StasisEnd
+        * Stop.
+
+test-modules:
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'ari.AriBaseTestObject'
+    modules:
+    -   config-section: 'pluggable-config'
+        typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    apps: 'testsuite'
+    reactor-timeout: 15
+    stop-on-end: False
+
+pluggable-config:
+    -   ari-start:
+        ari-requests:
+            -   method: 'post'
+                uri: 'channels/create'
+                params:
+                    endpoint: 'Local/s@default'
+                    app: 'testsuite'
+                    channelId: 'channel1'
+                expect: 200
+
+    -   ari-events:
+            match:
+                type: 'StasisStart'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+            count: 1
+        ari-requests:
+            -   method: 'get'
+                uri: 'channels/channel1'
+                expect: 200
+
+            -   method: 'post'
+                uri: 'channels/channel1/continue'
+                expect: 412
+            -   method: 'post'
+                uri: 'channels/channel1/redirect'
+                params:
+                    endpoint: 'doesnt_matter'
+                expect: 412
+            -   method: 'post'
+                uri: 'channels/channel1/answer'
+                expect: 412
+            -   method: 'post'
+                uri: 'channels/channel1/dtmf'
+                params:
+                    dtmf: '12345'
+                expect: 412
+            -   method: 'post'
+                uri: 'channels/channel1/ring'
+                expect: 412
+            -   method: 'delete'
+                uri: 'channels/channel1/ring'
+                expect: 412
+            -   method: 'post'
+                uri: 'channels/channel1/mute'
+                expect: 412
+            -   method: 'delete'
+                uri: 'channels/channel1/mute'
+                expect: 412
+            -   method: 'post'
+                uri: 'channels/channel1/hold'
+                expect: 412
+            -   method: 'delete'
+                uri: 'channels/channel1/hold'
+                expect: 412
+            -   method: 'post'
+                uri: 'channels/channel1/moh'
+                expect: 412
+            -   method: 'delete'
+                uri: 'channels/channel1/moh'
+                expect: 412
+            -   method: 'post'
+                uri: 'channels/channel1/silence'
+                expect: 412
+            -   method: 'delete'
+                uri: 'channels/channel1/silence'
+                expect: 412
+            -   method: 'post'
+                uri: 'channels/channel1/play'
+                params:
+                    media: 'sound:silence/5'
+                expect: 412
+
+            -   method: 'delete'
+                uri: 'channels/channel1'
+                expect: 204
+
+    -   ari-events:
+            match:
+                type: 'ChannelHangupRequest'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+            count: 1
+        ari-requests:
+            -   method: 'get'
+                uri: 'channels/channel1'
+                expect: 404
+
+    -   ari-events:
+            match:
+                type: 'StasisEnd'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+            count: 1
+        stop_test:
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+    -   python: 'autobahn.websocket'
+    -   python: 'requests'
+    -   python: 'twisted'
+    -   python: 'starpy'
+    -   asterisk: 'res_ari_channels'
+    tags:
+    - ARI
