@@ -9,3 +9,4 @@ tests:
     - dir: 'rls'
     - test: 'mismatch'
     - test: 'nat_notify'
+    - test: 'subscribe_context'

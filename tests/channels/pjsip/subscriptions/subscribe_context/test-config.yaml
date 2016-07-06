@@ -1,0 +1,40 @@
+testinfo:
+    summary: 'Test the option "subscribe_context" is used when it should be.'
+    description: |
+        '
+        * The "subscribe_context" is specified and there is extension in this context. Result: OK.
+
+        * The "subscribe_context" is specified and there isn't extension in this context. Result: Not Found.
+
+        * The "subscribe_context" isn't specified, the "context" setting is used
+          and there is extension in the "context". Result: OK.
+
+        * The "subscribe_context" isn't specified, the "context" setting is used
+          and there isn't extension in the "context". Result: Not Found.
+        '
+
+properties:
+    minversion: '13.11.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_exten_state'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    reactor-timeout: 30
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'subscribe_200.xml', '-p': '5061', '-s': 'alice_sc_good'} }
+                - { 'key-args': {'scenario': 'subscribe_404.xml', '-p': '5062', '-s': 'alice_sc_bad'} }
+                - { 'key-args': {'scenario': 'subscribe_200.xml', '-p': '5063', '-s': 'alice_non_sc_good'} }
+                - { 'key-args': {'scenario': 'subscribe_404.xml', '-p': '5064', '-s': 'alice_non_sc_bad'} }
