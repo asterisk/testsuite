@@ -84,21 +84,8 @@ pluggable-config:
 
     -   ari-events:
             match:
-                type: 'ChannelHangupRequest'
+                type: 'ChannelDestroyed'
                 cause: 99
-                application: 'testsuite'
-                channel:
-                    id: 'channel1'
-            count: 1
-        ari-requests:
-            -   method: 'delete'
-                uri: 'channels/channel1'
-                expect: 204
-
-    -   ari-events:
-            match:
-                type: 'ChannelHangupRequest'
-                cause: 32
                 application: 'testsuite'
                 channel:
                     id: 'channel1'
