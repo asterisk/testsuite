@@ -67,15 +67,10 @@ pluggable-config:
                 channel:
                     id: 'channel1'
             count: 1
-        ari-requests:
-            -   method: 'delete'
-                uri: 'channels/channel1'
-                expect: 204
 
     -   ari-events:
             match:
-                type: 'ChannelHangupRequest'
-                cause: 32
+                type: 'StasisEnd'
                 application: 'testsuite'
                 channel:
                     id: 'channel1'
@@ -83,7 +78,7 @@ pluggable-config:
 
     -   ari-events:
             match:
-                type: 'StasisEnd'
+                type: 'ChannelDestroyed'
                 application: 'testsuite'
                 channel:
                     id: 'channel1'
