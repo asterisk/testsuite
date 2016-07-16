@@ -503,7 +503,7 @@ class TestConfig(object):
                 self.can_run = False
         return self.can_run
 
-    def check_tags(self, requested_tags):
+    def check_tags(self, requested_tags, skip_tags):
         """Check whether or not a test should execute based on its tags
 
         Keyword arguments:
@@ -516,13 +516,15 @@ class TestConfig(object):
         if not self.config:
             return False
 
-        # If no tags are requested, this test's tags don't matter
-        if not requested_tags:
-            return self.can_run
+        if requested_tags:
+            intersection = set(requested_tags).intersection(set(self.tags))
+            if len(intersection) == 0:
+                self.can_run = False
 
-        intersection = set(requested_tags).intersection(set(self.tags))
-        if len(intersection) == 0:
-            self.can_run = False
+        if skip_tags:
+            intersection = set(skip_tags).intersection(set(self.tags))
+            if len(intersection) != 0:
+                self.can_run = False
 
         # all tags matched successfully
         return self.can_run

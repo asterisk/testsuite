@@ -28,6 +28,7 @@ properties:
             version: 'v3.0'
     tags:
         - pjsip
+        - realtime-incompatible
     issues:
         - jira: 'ASTERISK-24996'
 

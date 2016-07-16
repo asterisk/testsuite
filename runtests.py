@@ -437,7 +437,7 @@ class TestRun:
     def __check_can_run(self, ast_version):
         """Check tags and dependencies in the test config."""
         if self.test_config.check_deps(ast_version) and \
-                self.test_config.check_tags(self.options.tags):
+                self.test_config.check_tags(self.options.tags, self.options.skip_tags):
             self.can_run = True
 
     def __parse_run_output(self, output):
@@ -754,6 +754,9 @@ def main(argv=None):
     parser.add_option("-g", "--tag", action="append",
                       dest="tags",
                       help="Specify one or more tags to select a subset of tests.")
+    parser.add_option("-G", "--skip-tag", action="append",
+                      dest="skip_tags",
+                      help="Specify one or more tags to ignore a subset of tests.")
     parser.add_option("-k", "--keep-core", action="store_true",
                       dest="keep_core", default=False,
                       help="Archive the 'core' file if Asterisk crashes.")
