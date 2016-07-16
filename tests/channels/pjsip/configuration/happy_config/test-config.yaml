@@ -17,6 +17,7 @@ properties:
             version: 'v3.0'
     tags:
         - pjsip
+        - configuration
     issues:
         - jira: 'ASTERISK-24996'
 
