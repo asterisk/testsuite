@@ -155,7 +155,7 @@ class SorceryRealtimeFile(object):
                 vals = {'id': title}
                 for key in section.keys():
                     if key != 'type':
-                        vals[key] = section.get(key)[0].replace(";", "^3B")
+                        vals[key] = ";".join(value.replace(";", "^3B") for value in section.get(key))
 
                 conn.execute(table.insert().values(**vals))
 
