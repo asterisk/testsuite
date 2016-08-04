@@ -12,6 +12,7 @@ properties:
 
     tags:
         - pjsip
+        - realtime-incompatible
 
 test-modules:
     test-object:
