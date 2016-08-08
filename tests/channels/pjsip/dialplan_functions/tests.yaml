@@ -4,3 +4,4 @@ tests:
     - test: 'pjsip_endpoint'
     - test: 'pjsip_aor'
     - test: 'pjsip_contact'
+    - test: 'pjsip_session_refresh'
