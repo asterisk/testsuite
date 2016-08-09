@@ -19,6 +19,8 @@ properties:
     dependencies:
         - sipp :
             version : 'v3.0'
-        - asterisk : 'res_pjsip'
+        - asterisk: 'app_echo'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_srtp'
     tags:
         - pjsip

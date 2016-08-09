@@ -1,5 +1,5 @@
 testinfo:
-    summary:     'Tests SRTP offer with crypto.'
+    summary:     'Tests SRTP offer without crypto.'
     description: |
         'Run a SIPp scenario that sends an INVITE with no encryption.'
 
@@ -19,6 +19,8 @@ properties:
     dependencies:
         - sipp :
             version : 'v3.0'
-        - asterisk : 'res_pjsip'
+        - asterisk: 'app_echo'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_srtp'
     tags:
         - pjsip

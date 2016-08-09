@@ -8,7 +8,9 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-        - asterisk : 'res_srtp'
-        - asterisk : 'chan_sip'
+        - asterisk: 'chan_sip'
+        - asterisk: 'func_channel'
+        - asterisk: 'res_agi'
+        - asterisk: 'res_srtp'
     tags:
         - SIP
