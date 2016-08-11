@@ -1,0 +1,132 @@
+testinfo:
+    summary: 'Verify that call forwarding from a Queue member works.'
+    description: |
+        'This test verifies that call forwarding from a Queue member
+        is honored correctly by app_queue itself. This includes both
+        a valid forwarding destination, along with an invalid one.
+        The test verifies that all of the expected DialBegin/DialEnd
+        events are received.'
+
+
+test-modules:
+    test-object:
+        typename: sipp.SIPpTestCase
+        config-section: sipp-config
+    modules:
+        -
+            config-section: originator-config
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: hangup-config
+            typename: 'pluggable_modules.HangupMonitor'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialBegin'
+                DestChannel: 'Local/caller@default-00000000;1'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialBegin'
+                Channel: 'Local/caller@default-.*'
+                DestChannel: 'PJSIP/redirect-invalid-.*'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialBegin'
+                Channel: 'Local/caller@default-.*'
+                DestChannel: 'PJSIP/redirect-0.*'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialBegin'
+                Channel: 'Local/caller@default-.*'
+                DestChannel: 'Local/I_DONT_EXIST_OMG@default-.*'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialBegin'
+                Channel: 'Local/caller@default-.*'
+                DestChannel: 'Local/other_place@default-.*'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialEnd'
+                Channel: 'Local/caller@default-.*'
+                DestChannel: 'PJSIP/redirect-invalid-.*'
+                Forward: 'I_DONT_EXIST_OMG'
+                DialStatus: 'CANCEL'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialEnd'
+                Channel: 'Local/caller@default-.*'
+                DestChannel: 'PJSIP/redirect-0.*'
+                Forward: 'other_place'
+                DialStatus: 'CANCEL'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialEnd'
+                Channel: 'Local/caller@default-.*'
+                DestChannel: 'Local/other_place@default-.*'
+                DialStatus: 'ANSWER'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialEnd'
+                DestChannel: 'Local/caller@default-00000000;1'
+                DialStatus: 'ANSWER'
+        count: 1
+
+
+sipp-config:
+    stop-after-scenarios: false
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'redirect.xml' } }
+                - { 'key-args': {'scenario': 'redirect-invalid.xml', '-p': '5062'} }
+
+originator-config:
+    channel: 'Local/caller@default'
+    application: 'Echo'
+    ignore-originate-failure: 'yes'
+    trigger: 'ami_connect'
+
+hangup-config:
+    ids: ['0']
+
+properties:
+    minversion: '13.11.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_queue'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'app_echo'
+    tags:
+        - pjsip
+        - queues
