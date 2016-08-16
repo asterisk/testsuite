@@ -4,3 +4,4 @@ tests:
     - test: 'invalid_sdp'
     - test: 'md5'
     - test: 'unknown_user'
+    - test: 'bare_ack'
