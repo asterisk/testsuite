@@ -3,4 +3,4 @@ tests:
     - test: 'bridge_baseline'
     - test: 'bridge_transfer_callee'
     - dir: 'bridge_wait'
-
+    - test: 'bridge_add'
