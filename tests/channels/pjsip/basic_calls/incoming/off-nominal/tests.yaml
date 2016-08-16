@@ -3,3 +3,4 @@ tests:
     - test: 'incompatible_codecs'
     - test: 'invalid_sdp'
     - test: 'md5'
+    - test: 'unknown_user'
