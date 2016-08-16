@@ -1,0 +1,87 @@
+testinfo:
+    summary:     'Tests BridgeAdd application'
+    description: |
+        * We call alice
+        * alice calls bob
+        * bob answers and starts the AMD app
+        * When bob enters the bridge, we call charlie
+        * when charlie answers, bridgeadd is is called
+        * bridgeadd calls BridgeAdd to alice's channel
+        * charlie plays a human simulation
+        * bob's AMD detects HUMAN
+        * charlie's playback finishes and now he starts AMD
+        * bob's AMD finishes and now he plays a human simulation
+        * charlie's AMD detects HUMAN
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    reactor-timeout: 15
+    connect-ami: True
+    stop-on-end: True
+
+ami-config:
+    -
+        ami-start:
+        ami-actions:
+            action:
+                Action: 'Originate'
+                ActionID: '12345'
+                Channel: 'Local/alice@default'
+                Exten: 'bob'
+                Context: 'default'
+                Priority: '1'
+                Codecs: 'gsm,ulaw'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'BridgeEnter'
+                    BridgeTechnology: 'simple_bridge'
+                    Channel: 'Local/alice@default-00000000;2'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'Originate'
+                ActionID: '12345'
+                Channel: 'Local/charlie@default'
+                Exten: 'charlie_real'
+                Context: 'default'
+                Priority: '1'
+                Codecs: 'gsm,ulaw'
+    -
+        ami-events:
+        -
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Variable: 'AMDSTATUS'
+                    Value: 'HUMAN'
+                    Channel: 'Local/bob@default-00000001;2'
+            count: 1
+        -
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Variable: 'AMDSTATUS'
+                    Value: 'HUMAN'
+                    Channel: 'Local/charlie@default-00000002;1'
+            count: 1
+        stop_test:
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+        - asterisk : 'app_amd'
+        - asterisk : 'app_bridgeaddchan'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_playback'
+    tags:
+        - bridge
