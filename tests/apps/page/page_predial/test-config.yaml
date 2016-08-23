@@ -13,8 +13,18 @@ testinfo:
 
 test-modules:
     test-object:
-        config-section: test-object-config
-        typename: 'apptest.AppTest'
+        -
+            config-section: test-object-config
+            typename: 'apptest.AppTest'
+            maxversion: '13.12.0'
+        -
+            # Starting in 13.12.0, ConfBridges have announcer channels
+            # permanently in them. The result is that the number of channels
+            # the bridge reports is now one higher for these tests.
+            config-section: test-object-config-13-12
+            typename: 'apptest.AppTest'
+            minversion: '13.12.0'
+
 
 test-object-config:
   app: 'Page'
@@ -155,6 +165,154 @@ test-object-config:
                 match:
                   Event: 'BridgeEnter'
                   BridgeNumChannels: '3'
+                  ChannelStateDesc: 'Up'
+              actions:
+                -
+                  action-type: 'hangup'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 3 - All channels entered bridge. Hang up on bridge'
+
+
+test-object-config-13-12:
+  app: 'Page'
+  scenarios:
+    # Phase 0: Baseline
+    -
+      channels:
+        -
+          channel-id: 'baseline'
+          channel-name: 'Local/standard@page'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeNumChannels: '3'
+                  ChannelStateDesc: 'Up'
+              actions:
+                -
+                  action-type: 'hangup'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 0 - All channels entered bridge. Hang up on bridge'
+
+    #Phase 1: Predial Caller
+    -
+      channels:
+        -
+          channel-id: 'pd-caller'
+          channel-name: 'Local/predial_caller@page'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'UserPredial'
+                  Channel: 'Local/predial_caller@page-.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1 - Received Predial Event for Caller Channel.'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeNumChannels: '3'
+                  ChannelStateDesc: 'Up'
+              actions:
+                -
+                  action-type: 'hangup'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 1 - All channels entered bridge. Hang up on bridge'
+
+    #Phase 2: Predial Callee (single channel)
+    -
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'UserEvent'
+              UserEvent: 'UserPredial'
+              Channel: 'Local/test_pagee1@test-.*'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Phase 2 - Received Predial Event for Callee Channel.'
+
+      channels:
+        -
+          channel-id: 'pd-callee'
+          channel-name: 'Local/predial_callee@page'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeNumChannels: '3'
+                  ChannelStateDesc: 'Up'
+              actions:
+                -
+                  action-type: 'hangup'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Phase 2 - All channels entered bridge. Hang up on bridge'
+
+    #Phase 3: Predial Callee (multiple channels)
+    -
+      events:
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'UserEvent'
+              UserEvent: 'UserPredial'
+              Channel: 'Local/test_pagee1@test-.*'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Phase 3 - Received Predial Event for Callee Channel (1 of 2).'
+        -
+          type: 'headermatch'
+          conditions:
+            match:
+              Event: 'UserEvent'
+              UserEvent: 'UserPredial'
+              Channel: 'Local/test_pagee2@test-.*'
+          actions:
+            -
+              action-type: 'set-expected-result'
+              expected-result: 'Phase 3 - Received Predial Event for Callee Channel (2 of 2).'
+
+      channels:
+        -
+          channel-id: 'pd-callee-mult'
+          channel-name: 'Local/predial_callee_multiple@page'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  BridgeNumChannels: '4'
                   ChannelStateDesc: 'Up'
               actions:
                 -
