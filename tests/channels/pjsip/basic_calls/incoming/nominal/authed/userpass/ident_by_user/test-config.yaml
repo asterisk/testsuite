@@ -74,6 +74,7 @@ properties:
     dependencies:
         - sipp :
             version : 'v3.0'
+        - asterisk : 'app_dial'
         - asterisk : 'app_echo'
         - asterisk : 'app_playback'
         - asterisk : 'res_pjsip'

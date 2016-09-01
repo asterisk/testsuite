@@ -15,6 +15,7 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk : 'app_dial'
         - asterisk : 'res_pjsip'
         - sipp :
             version : 'v3.4.1'
