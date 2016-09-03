@@ -2,3 +2,4 @@
 tests:
     - test: 'connect-call'
     - test: 'forever-vm'
+    - test: 'go-away'
