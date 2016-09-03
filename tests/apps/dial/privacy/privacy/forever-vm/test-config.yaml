@@ -1,0 +1,207 @@
+testinfo:
+    summary: 'Test Privacy where the calling party is sent to VM forever'
+    description: |
+        'This test covers the privacy option (P) where the called
+        party chooses to send the calling party to voicemail,
+        forever. Ouch. The test verifies some basic properties of the
+        Privacy mode, including the recording of the name of the caller,
+        along with the resulting DIALSTATUS.
+
+        Once the Caller ID has been banned, a second attempt is made. The
+        test verifies that it immediately gets bounced out.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: apptest.AppTest
+    modules:
+        -
+            config-section: asterisk-config
+            typename: pluggable_modules.AsteriskConfigModule
+
+asterisk-config:
+    -
+        src: 'tests/apps/dial/privacy/configs/extensions.conf'
+        dst: 'extensions.conf'
+
+test-object-config:
+  app: 'Dial'
+  scenarios:
+    -
+      channels:
+        -
+          channel-id: 'Test-User'
+          channel-name: 'Local/test_privacy@default'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Newexten'
+                  Context: 'default'
+                  Extension: 'wait'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Message: 'beep'
+              actions:
+                -
+                  action-type: 'stream-audio-with-dtmf'
+                  sound-file: 'agent-loginok'
+                  dtmf: '#'
+                  dtmf-delay: 4
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Message: 'vm-dialout'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Dial out commencing and announced'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  Channel: 'Local/test_privacy@default-00000000;2'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'Bridge of test_privacy half occurred when they should have gone to VM'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'DialStatus'
+                  Result: 'NOANSWER'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'DIALSTATUS is NOANSWER'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel test_privacy hungup'
+                -
+                  action-type: 'start-call'
+                  channel-id: 'Test-User2'
+        -
+          # This channel is dialed; as a result, we don't control
+          # it when it goes into an application. Instead, channel
+          # variables set in the dialplan will inform apptest that
+          # it can be controlled
+          channel-id: 'Farend'
+          channel-name: 'Local/farend@default'
+          testuniqueid: 'farend'
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Message: 'priv-callerintros/5551234.*'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Calling party name played to called party'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Message: 'priv-callee-options'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Options played to far end'
+                -
+                  action-type: 'send-dtmf'
+                  delay: 1
+                  dtmf: '2'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'BridgeEnter'
+                  Channel: 'Local/farend@default-00000001;1'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  message: 'Bridge of farend half occurred when it should have hung up'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel farend hungup'
+        -
+          channel-id: 'Test-User2'
+          channel-name: 'Local/test_privacy@default'
+          context: 'default'
+          exten: 'wait'
+          ignore-until-started: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'TestEvent'
+                  State: 'PLAYBACK'
+                  Message: 'beep'
+              actions:
+                -
+                  action-type: 'fail-test'
+                  expected-result: 'Dial should have been blocked but we got asked to record our name'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'DialStatus'
+                  Result: 'NOANSWER'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'DIALSTATUS is NOANSWER'
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'Hangup'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Channel test_privacy hungup a second time'
+
+properties:
+    minversion: '13.12.0'
+    tags:
+      - apps
+      - dial
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_dial'
+
