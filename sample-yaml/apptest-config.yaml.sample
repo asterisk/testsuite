@@ -80,6 +80,27 @@ app-test-config:
             delay: 1                   # Optional. If start-on-create is set,
                                        # the amount of time to wait before
                                        # starting the call.
+            testuniqueid: 'foo'        # Optional. If specified, AppTest will
+                                       # not attempt to match a created Local
+                                       # channel pair itself, and will instead
+                                       # look for a SetVar event over AMI that
+                                       # matches this key (testuniqueid) / value
+                                       # (foo) pair. Upon seeing this event, it
+                                       # will associate the Local channel pair
+                                       # with this channel object definition.
+                                       # This allows the dialplan to control the
+                                       # channel matching, as opposed to
+                                       # matching based on the application under
+                                       # test.
+            ignore-until-started: True # Optional. If set to True, events
+                                       # received for Local channels that would
+                                       # normally match the 'channel-name' are
+                                       # instead ignored. This prevents this
+                                       # channel object from being considered
+                                       # as a 'candidate' for execution until
+                                       # explicitly started via an action, or
+                                       # if the 'start-on-create' is set to
+                                       # True.
             # In general, creating a channel doesn't do much other than just
             # drop a channel into an application and send the controlling
             # half into an indefinite wait.  Once the channel is in the
