@@ -7,9 +7,10 @@ testinfo:
 properties:
     minversion: '12'
     dependencies:
-         - app : 'sipp'
-         - asterisk : 'res_pjsip'
-         - asterisk : 'res_pjsip_diversion'
+        - app : 'sipp'
+        - asterisk : 'app_dial'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_diversion'
     tags:
         - pjsip
 
