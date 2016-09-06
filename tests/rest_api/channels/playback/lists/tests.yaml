@@ -2,3 +2,4 @@ tests:
     - test: 'basic'
     - test: 'forward'
     - test: 'reverse'
+    - test: 'stop'

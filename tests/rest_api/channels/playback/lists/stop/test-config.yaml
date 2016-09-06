@@ -1,0 +1,171 @@
+testinfo:
+    summary: 'Test playback stop of a playlist'
+    description: |
+        * Originate a channel
+        * Playback a list of audio files
+        * Before the list completes, stop the list
+        * Verify that we don't receive any further events
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_playbacks
+        - asterisk : app_echo
+    tags:
+        - ARI
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
+        -
+            config-section: asterisk-config
+            typename: pluggable_modules.AsteriskConfigModule
+
+asterisk-config:
+    -
+        src: 'tests/rest_api/channels/playback/lists/configs/extensions.conf'
+        dst: 'extensions.conf'
+
+test-object-config:
+    stop-on-end: False
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: ChannelDestroyed
+                application: testsuite
+                channel:
+                    id: 'testsuite-default-id$'
+        stop_test:
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: 'ChannelStateChange'
+            count: '>1'
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'channels/testsuite-default-id/play/MyPlaybackId'
+                params:
+                    media: 'sound:silence/1,sound:silence/2,sound:silence/3'
+        -
+            conditions:
+                match:
+                    type: PlaybackStarted
+                    application: testsuite
+                    playback:
+                        id: 'MyPlaybackId'
+                        media_uri: 'sound:silence/1'
+                        next_media_uri: 'sound:silence/2'
+                        target_uri: 'channel:testsuite-default-id$'
+                        state: 'playing'
+            count: 1
+        -
+            conditions:
+                match:
+                    type: PlaybackContinuing
+                    application: testsuite
+                    playback:
+                        id: 'MyPlaybackId'
+                        media_uri: 'sound:silence/1'
+                        next_media_uri: 'sound:silence/2'
+                        target_uri: 'channel:testsuite-default-id$'
+                        state: 'continuing'
+            count: 1
+        -
+            conditions:
+                match:
+                    type: PlaybackStarted
+                    application: testsuite
+                    playback:
+                        id: 'MyPlaybackId'
+                        media_uri: 'sound:silence/2'
+                        next_media_uri: 'sound:silence/3'
+                        target_uri: 'channel:testsuite-default-id$'
+                        state: 'playing'
+            count: 1
+            requests:
+                -
+                    instance: 1
+                    method: 'delete'
+                    uri: 'playbacks/MyPlaybackId'
+        -
+            conditions:
+                match:
+                    type: PlaybackContinuing
+                    application: testsuite
+                    playback:
+                        id: 'MyPlaybackId'
+                        media_uri: 'sound:silence/2'
+                        next_media_uri: 'sound:silence/3'
+                        target_uri: 'channel:testsuite-default-id$'
+                        state: 'continuing'
+            count: 0
+        -
+            conditions:
+                match:
+                    type: PlaybackStarted
+                    application: testsuite
+                    playback:
+                        id: 'MyPlaybackId'
+                        media_uri: 'sound:silence/3'
+                        target_uri: 'channel:testsuite-default-id$'
+                        state: 'playing'
+            count: 0
+        -
+            conditions:
+                match:
+                    type: PlaybackFinished
+                    application: testsuite
+                    playback:
+                        id: 'MyPlaybackId'
+                        media_uri: 'sound:silence/2'
+                        target_uri: 'channel:testsuite-default-id$'
+                        state: 'done'
+            count: 1
+            requests:
+                # playback is already deleted
+                method: 'delete'
+                uri: 'channels/testsuite-default-id'
+        -
+            conditions:
+                match:
+                    type: ChannelHangupRequest
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+
+        -
+            conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
