@@ -14,7 +14,7 @@
       [last_To:];tag=[pid]SIPpTag[call_number]
       [last_Call-ID:]
       [last_CSeq:]
-      Contact: <sip:bob@[local_ip]:[local_port];transport=[transport]>
+      Contact: <sip:bob;phone-context=national@[local_ip]:[local_port];transport=[transport]>
       Content-Length: 0
 
     ]]>
@@ -29,7 +29,7 @@
       [last_To:];tag=[pid]SIPpTag[call_number]
       [last_Call-ID:]
       [last_CSeq:]
-      Contact: <sip:bob@[local_ip]:[local_port];transport=[transport]>
+      Contact: <sip:bob;phone-context=national@[local_ip]:[local_port];transport=[transport]>
       Content-Type: application/sdp
       Content-Length: [len]
 

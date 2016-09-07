@@ -4,10 +4,10 @@
   <send retrans="500">
     <![CDATA[
 
-      MESSAGE sip:user1@[remote_ip]:[remote_port] SIP/2.0
+      MESSAGE sip:user1;phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: user <sip:user@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
-      To: <sip:user1@[remote_ip]:[remote_port]>
+      From: user <sip:user;phone-context=national@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:user1;phone-context=national@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: 1 MESSAGE
       Max-Forwards: 70

@@ -5,13 +5,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INVITE sip:playback@[remote_ip]:[remote_port] SIP/2.0
+      INVITE sip:playback;phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: test1 <sip:[service]@[local_ip]:[local_port]>;tag=[call_number]
-      To: test <sip:test@[remote_ip]:[remote_port]>
+      From: test1 <sip:[service];phone-context=national@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test;phone-context=national@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: 1 INVITE
-      Contact: <sip:test@[local_ip]:[local_port];transport=[transport]>
+      Contact: <sip:test;phone-context=national@[local_ip]:[local_port];transport=[transport]>
       Max-Forwards: 70
       Subject: Test
       User-Agent: Test
@@ -25,13 +25,13 @@
   <send>
     <![CDATA[
 
-      ACK sip:playback@[remote_ip]:[remote_port] SIP/2.0
+      ACK sip:playback;phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: sipp <sip:[service]@[local_ip]:[local_port]>;tag=[call_number]
-      To: sut <sip:[service]@[remote_ip]:[remote_port]>[peer_tag_param]
+      From: sipp <sip:[service];phone-context=national@[local_ip]:[local_port]>;tag=[call_number]
+      To: sut <sip:[service];phone-context=national@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 1 ACK
-      Contact: <sip:sipp@[local_ip]:[local_port];transport=[transport]>
+      Contact: <sip:sipp;phone-context=national@[local_ip]:[local_port];transport=[transport]>
       Max-Forwards: 70
       Subject: Performance Test
       Content-Length: 0
@@ -42,13 +42,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INVITE sip:playback@[remote_ip]:[remote_port] SIP/2.0
+      INVITE sip:playback;phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: test1 <sip:[service]@[local_ip]:[local_port]>;tag=[call_number]
-      To: test <sip:test@[remote_ip]:[remote_port]>
+      From: test1 <sip:[service];phone-context=national@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test;phone-context=national@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: 2 INVITE
-      Contact: <sip:test@[local_ip]:[local_port];transport=[transport]>
+      Contact: <sip:test;phone-context=national@[local_ip]:[local_port];transport=[transport]>
       Max-Forwards: 70
       [authentication username=alice password=swordfish]
       Subject: Test
@@ -67,13 +67,13 @@
   <send>
     <![CDATA[
 
-      ACK sip:playback@[remote_ip]:[remote_port] SIP/2.0
+      ACK sip:playback;phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: test1 <sip:[service]@[local_ip]:[local_port]>;tag=[call_number]
-      To: test <sip:test@[remote_ip]:[remote_port]>[peer_tag_param]
+      From: test1 <sip:[service];phone-context=national@[local_ip]:[local_port]>;tag=[call_number]
+      To: test <sip:test;phone-context=national@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 2 ACK
-      Contact: <sip:test@[local_ip]:[local_port];transport=[transport]>
+      Contact: <sip:test;phone-context=national@[local_ip]:[local_port];transport=[transport]>
       Max-Forwards: 70
       Subject: Test
       Content-Type: application/sdp

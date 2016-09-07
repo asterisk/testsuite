@@ -11,7 +11,7 @@
 			[last_To:];tag=[call_number]
 			[last_Call-ID:]
 			[last_CSeq:]
-			Contact: <sip:user3@[local_ip]>
+			Contact: <sip:user3;phone-context=national@[local_ip]>
 			Content-Length: 0
 		]]>
 	</send>

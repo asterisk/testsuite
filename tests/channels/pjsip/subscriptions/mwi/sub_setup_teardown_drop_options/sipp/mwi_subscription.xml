@@ -5,13 +5,13 @@
   <!-- Subscribe -->
   <send retrans="500">
     <![CDATA[
-      SUBSCRIBE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      SUBSCRIBE sip:[service];phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
-      To: "alice" <sip:[service]@[remote_ip]:[remote_port]>
+      From: "alice" <sip:alice;phone-context=national@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: "alice" <sip:[service];phone-context=national@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: 1 SUBSCRIBE
-      Contact: "alice" <sip:alice@[local_ip]:[local_port]>
+      Contact: "alice" <sip:alice;phone-context=national@[local_ip]:[local_port]>
       Max-Forwards: 70
       Event: message-summary
       Expires: 300
@@ -45,7 +45,7 @@
       [last_To:]
       [last_Call-ID:]
       [last_CSeq:]
-      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Contact: "alice" <sip:alice;phone-context=national@[local_ip]:[local_port]>
       Content-Length: 0
 
     ]]>
@@ -54,13 +54,13 @@
   <!-- Resubscribe -->
   <send retrans="500">
     <![CDATA[
-      SUBSCRIBE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      SUBSCRIBE sip:[service];phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
-      To: "alice" <sip:[service]@[remote_ip]:[remote_port]>[$to_tag]
+      From: "alice" <sip:alice;phone-context=national@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: "alice" <sip:[service];phone-context=national@[remote_ip]:[remote_port]>[$to_tag]
       Call-ID: [call_id]
       CSeq: 2 SUBSCRIBE
-      Contact: "alice" <sip:alice@[local_ip]:[local_port]>
+      Contact: "alice" <sip:alice;phone-context=national@[local_ip]:[local_port]>
       Max-Forwards: 70
       Event: message-summary
       Expires: 600
@@ -90,7 +90,7 @@
       [last_To:]
       [last_Call-ID:]
       [last_CSeq:]
-      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Contact: "alice" <sip:alice;phone-context=national@[local_ip]:[local_port]>
       Content-Length: 0
 
     ]]>
@@ -101,13 +101,13 @@
   <!-- Unsubscribe -->
   <send retrans="500">
     <![CDATA[
-      SUBSCRIBE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      SUBSCRIBE sip:[service];phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
-      To: "alice" <sip:[service]@[remote_ip]:[remote_port]>[$to_tag]
+      From: "alice" <sip:alice;phone-context=national@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: "alice" <sip:[service];phone-context=national@[remote_ip]:[remote_port]>[$to_tag]
       Call-ID: [call_id]
       CSeq: 3 SUBSCRIBE
-      Contact: "alice" <sip:alice@[local_ip]:[local_port]>
+      Contact: "alice" <sip:alice;phone-context=national@[local_ip]:[local_port]>
       Max-Forwards: 70
       Event: message-summary
       Expires: 0
@@ -137,7 +137,7 @@
       [last_To:]
       [last_Call-ID:]
       [last_CSeq:]
-      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Contact: "alice" <sip:alice;phone-context=national@[local_ip]:[local_port]>
       Content-Length: 0
 
     ]]>
