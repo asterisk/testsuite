@@ -1,10 +1,11 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 'message_basic'
+    - test: 'message_basic_drop_options'
     - test: 'message_context'
-    - test: 'message_to_uri'
-    - test: 'message_from'
     - test: 'message_cust_hdr'
+    - test: 'message_from'
     - test: 'message_in_dialog'
-    - test: 'message_send_ami'
     - test: 'message_retrans'
+    - test: 'message_send_ami'
+    - test: 'message_to_uri'

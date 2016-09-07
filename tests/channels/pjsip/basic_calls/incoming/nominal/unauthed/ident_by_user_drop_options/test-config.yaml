@@ -1,0 +1,50 @@
+testinfo:
+    summary:     'Tests incoming calls without authentication'
+    description: |
+        'Run a SIPp scenario that sends various calls to res_pjsip, which should not be authenticated'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # IPv4 & UDP
+                - { 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-ipv4-udp'} }
+                - { 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5062', '-d': '5000', '-s': 'alice-ipv4-udp'} }
+                - { 'key-args': {'scenario': 'playback_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5066', '-s': 'alice-ipv4-udp'} }
+                - { 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5067', '-d': '5000', '-s': 'alice-ipv4-udp'} }
+
+                # IPv4 & TCP
+                - { 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-t': 't1', '-s': 'alice-ipv4-tcp'} }
+                - { 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5062', '-t': 't1', '-d': '5000', '-s': 'alice-ipv4-tcp'} }
+                - { 'key-args': {'scenario': 'playback_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5066', '-t': 't1', '-s': 'alice-ipv4-tcp'} }
+                - { 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '127.0.0.1', '-p': '5067', '-t': 't1', '-d': '5000', '-s': 'alice-ipv4-tcp'} }
+
+               # IPv6 & UDP
+                - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '[::1]', '-p': '5061', '-s': 'alice-ipv6-udp'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '[::1]', '-p': '5062', '-d': '5000', '-s': 'alice-ipv6-udp'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5066', '-s': 'alice-ipv6-udp'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5067', '-d': '5000', '-s': 'alice-ipv6-udp'} }
+
+                # IPv6 & TCP
+                - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'alice-ipv6-tcp'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_initial_sdp.xml', '-i': '[::1]', '-p': '5062', '-t': 't1', '-d': '5000', '-s': 'alice-ipv6-tcp'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5066', '-t': 't1', '-s': 'alice-ipv6-tcp'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5067', '-t': 't1', '-d': '5000', '-s': 'alice-ipv6-tcp'} }
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_playback'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

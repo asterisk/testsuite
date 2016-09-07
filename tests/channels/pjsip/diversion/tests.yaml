@@ -1,6 +1,9 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 'diversion_basic'
+    - test: 'diversion_basic_drop_options'
     - test: 'diversion_caller_id'
     - test: 'diversion_request'
+    - test: 'diversion_request_drop_options'
     - test: 'diversion_response'
+    - test: 'diversion_response_drop_options'

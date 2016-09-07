@@ -29,6 +29,7 @@ tests:
     - test: 'endpoint_identify'
     - test: 'forward_loop'
     - test: 'handle_options_request'
+    - test: 'handle_options_request_drop_options'
     - test: 'headers'
     - test: 'hold'
     - test: 'hold_ice'

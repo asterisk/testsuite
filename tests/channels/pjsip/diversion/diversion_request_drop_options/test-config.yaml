@@ -1,0 +1,27 @@
+testinfo:
+    summary: 'Test to make sure the diversion header on an invite gets
+              propagated correctly.'
+    description: |
+        'user1 calls user2 with an invite containing a diversion header.'
+
+properties:
+    minversion: '12'
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'app_dial'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_diversion'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'user2.xml', '-p':'5062' } }
+                - { 'key-args': { 'scenario':'user1.xml', '-p':'5061' } }

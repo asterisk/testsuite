@@ -2,3 +2,4 @@
 tests:
     - test: 'authed'
     - test: 'unauthed'
+    - test: 'unauthed_drop_options'
