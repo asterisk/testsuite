@@ -241,19 +241,21 @@ class ChannelObject(object):
         self._channel_id = channel_def['channel-id']
         self._channel_name = channel_def['channel-name']
         self._applications = applications
-        self._controller_context = channel_def.get('context') \
-            or ChannelObject.default_context
-        self._controller_initial_exten = channel_def.get('exten') \
-            or ChannelObject.default_wait_exten
-        self._controller_hangup_exten = channel_def.get('hangup-exten') \
-            or ChannelObject.default_hangup_exten
-        self._controller_audio_exten = channel_def.get('audio-exten') \
-            or ChannelObject.default_audio_exten
-        self._controller_dtmf_exten = channel_def.get('dtmf-exten') \
-            or ChannelObject.default_dtmf_exten
-        self._controller_wait_exten = channel_def.get('wait-exten') \
-            or ChannelObject.default_wait_exten
-        delay = channel_def.get('delay') or 0
+        self._controller_context = channel_def.get('context',
+            ChannelObject.default_context)
+        self._controller_initial_exten = channel_def.get('exten',
+            ChannelObject.default_wait_exten)
+        self._controller_hangup_exten = channel_def.get('hangup-exten',
+            ChannelObject.default_hangup_exten)
+        self._controller_audio_exten = channel_def.get('audio-exten',
+            ChannelObject.default_audio_exten)
+        self._controller_dtmf_exten = channel_def.get('dtmf-exten',
+            ChannelObject.default_dtmf_exten)
+        self._controller_wait_exten = channel_def.get('wait-exten',
+            ChannelObject.default_wait_exten)
+        self._ignore_until_started = channel_def.get('ignore-until-started',
+            False)
+        delay = channel_def.get('delay', 0)
 
         self.ami = ami
         self.ami.registerEvent('Hangup', self._hangup_event_handler)
@@ -271,9 +273,21 @@ class ChannelObject(object):
         self._test_observers = []
         self._hangup_observers = []
         self._candidate_prefix = ''
-        self._unique_id = str(uuid.uuid1())
+        self._started = False
+        self._unique_id = channel_def.get('testuniqueid', str(uuid.uuid1()))
         if 'start-on-create' in channel_def and channel_def['start-on-create']:
             self.spawn_call(delay)
+
+    def is_active(self):
+        """Returns whether or not this channel object is active
+
+        Returns:
+        True if the channel object is a candidate for events (active)
+        False otherwise
+        """
+        if self._ignore_until_started:
+            return self._started
+        return True
 
     def spawn_call(self, delay=0):
         """Spawn the call!
@@ -286,13 +300,23 @@ class ChannelObject(object):
         The deferred will pass this object as the parameter.
         """
 
+        def __originate_failure(result):
+            """Handle originate failures.
+
+            Note that this may not be an error, so we just log it and absorb.
+            """
+            LOGGER.info('Originate {0} failed: {1}'.format(
+                self._unique_id, result))
+            return
+
         def __spawn_call_callback(spawn_call_deferred):
             """Actually perform the origination"""
             self.ami.originate(channel=self._channel_name,
                                context=self._controller_context,
                                exten=self._controller_initial_exten,
                                priority='1',
-                               variable={'testuniqueid': '%s' % self._unique_id})
+                               variable={'testuniqueid': '%s' % self._unique_id}).addErrback(__originate_failure)
+            self._started = True
             spawn_call_deferred.callback(self)
 
         spawn_call_deferred = defer.Deferred()
@@ -460,7 +484,7 @@ class ChannelObject(object):
         have been triggered
         """
 
-        def __start_dtmf(param):
+        def __start_dtmf(_, param):
             """Triggered when the audio has started"""
             dtmf, dtmf_delay, audio_dtmf_deferred = param
             start_deferred = self.send_dtmf(dtmf, dtmf_delay)
@@ -489,6 +513,10 @@ class ChannelObject(object):
 
     def _new_channel_handler(self, ami, event):
         """Handler for the Newchannel event"""
+
+        if not self._started and self._ignore_until_started:
+            return (ami, event)
+
         if event['channel'] not in self._all_channels:
             self._all_channels.append(event['channel'])
             self._evaluate_candidates()
@@ -496,11 +524,16 @@ class ChannelObject(object):
 
     def _hangup_event_handler(self, ami, event):
         """Handler for the Hangup event"""
+
+        if not self._started and self._ignore_until_started:
+            return (ami, event)
+
         if self._hungup:
             # Don't process multiple hangup events
-            return
+            return (ami, event)
         if 'channel' not in event:
-            return
+            return (ami, event)
+
         if self.controller_channel == event['channel']:
             LOGGER.debug("Controlling Channel %s hangup event detected" %
                          self.controller_channel)
@@ -509,56 +542,22 @@ class ChannelObject(object):
                          self.app_channel)
         else:
             # Not us!
-            return
+            return (ami, event)
 
         for observer in self._hangup_observers:
             observer(self, event)
         self._hungup = True
         return (ami, event)
 
-    def _varset_event_handler(self, ami, event):
-        """Handler for the VarSet event
-
-        Note that we only care about the testuniqueid channel variable, which
-        will tell us which channels we're responsible for
-        """
-        if (event['variable'] != 'testuniqueid'):
-            return
-        if (event['value'] != self._unique_id):
-            return
-        channel_name = event['channel'][:len(event['channel'])-2]
-        LOGGER.debug("Detected channel %s" % channel_name)
-        self._candidate_prefix = channel_name
-        self._evaluate_candidates()
-        return (ami, event)
-
-    def _test_event_handler(self, ami, event):
-        """Handler for test events"""
-        if 'channel' not in event:
-            return
-        if self.app_channel not in event['channel'] \
-                and self.controller_channel not in event['channel']:
-            return
-        for observer in self._test_observers:
-            observer(self, event)
-        return (ami, event)
-
-    def _new_exten_handler(self, ami, event):
-        """Handler for new extensions. This figures out which half of a
-        local channel dropped into the specified app"""
-
-        if 'channel' not in event or 'application' not in event:
-            return
-        if event['application'] not in self._applications:
-            return
-        if event['channel'] not in self._candidate_channels:
+    def _evaluate_channel_candidate(self, channel_name):
+        if channel_name not in self._candidate_channels:
             # Whatever channel just entered isn't one of our channels.  This
             # could occur if multiple channels are entering a Conference in a
             # test.
             return
 
-        self.app_channel = event['channel']
-        self._candidate_channels.remove(event['channel'])
+        self.app_channel = channel_name
+        self._candidate_channels.remove(channel_name)
         if (';2' in self.app_channel):
             controller_name = self.app_channel.replace(';2', '') + ';1'
         else:
@@ -567,6 +566,66 @@ class ChannelObject(object):
         self._candidate_channels.remove(controller_name)
         LOGGER.debug("Setting App Channel to %s; Controlling Channel to %s"
                      % (self.app_channel, self.controller_channel))
+        return
+
+    def _varset_event_handler(self, ami, event):
+        """Handler for the VarSet event
+
+        Note that we only care about the testuniqueid channel variable, which
+        will tell us which channels we're responsible for
+        """
+
+        if not self._started and self._ignore_until_started:
+            return (ami, event)
+
+        def _varset_uniqueid_handler(event):
+            if (event['value'] != self._unique_id):
+                return
+            channel_name = event['channel'][:len(event['channel'])-2]
+            LOGGER.debug("Detected channel %s" % channel_name)
+            self._candidate_prefix = channel_name
+            self._evaluate_candidates()
+
+        def _varset_appchannel_handler(event):
+            self._evaluate_channel_candidate(event['value'])
+            return
+
+        if (event['variable'] == 'testuniqueid'):
+            _varset_uniqueid_handler(event)
+        elif (event['variable'] == 'appchannel'):
+            _varset_appchannel_handler(event)
+
+        return (ami, event)
+
+    def _test_event_handler(self, ami, event):
+        """Handler for test events"""
+
+        if 'channel' not in event:
+            return
+
+        if not self._started and self._ignore_until_started:
+            return (ami, event)
+
+        if self.app_channel not in event['channel'] \
+                and self.controller_channel not in event['channel']:
+            return (ami, event)
+
+        for observer in self._test_observers:
+            observer(self, event)
+        return (ami, event)
+
+    def _new_exten_handler(self, ami, event):
+        """Handler for new extensions. This figures out which half of a
+        local channel dropped into the specified app"""
+
+        if not self._started and self._ignore_until_started:
+            return (ami, event)
+
+        if 'channel' not in event or 'application' not in event:
+            return
+        if event['application'] not in self._applications:
+            return
+        self._evaluate_channel_candidate(event['channel'])
         return (ami, event)
 
 
@@ -626,6 +685,8 @@ class ApplicationEventInstance(AMIEventInstance):
             return
 
         self.channel_obj = self.test_object.get_channel_object(self.channel_id)
+        if not self.channel_obj.is_active():
+            return
 
         # Its possible that the event matching could only be so accurate, as
         # there may be multiple Local channel in the same extension.  Make
