@@ -4,3 +4,4 @@ tests:
     - test: 'forever-vm'
     - test: 'go-away'
     - test: 'torture'
+    - test: 'single-vm'
