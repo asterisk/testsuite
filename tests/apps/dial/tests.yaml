@@ -12,3 +12,4 @@ tests:
     - dir: 'mid_call_events'
     - dir: 'action_post_answer'
     - test: 'peer_h_exten'
+    - dir: 'privacy'
