@@ -23,6 +23,7 @@ from asterisk.test_state import TestState
 from asterisk.test_state import FailureTestState
 from asterisk.confbridge import ConfbridgeTestState
 from asterisk.confbridge import ConfbridgeChannelObject
+from asterisk.version import AsteriskVersion
 
 logger = logging.getLogger(__name__)
 
@@ -90,19 +91,27 @@ class StartConfBridgeState(ConfbridgeTestState):
 
     def __handle_confbridge_join(self, channel):
         """ Handles when the ConfBridge notifies the users that someone has joined """
-
-        """ We'll hear this twice for each channel that joins """
         self.test_case.reset_timeout()
-        if channel == self.__bridge_channel:
-            self.__joined_bridges += 1
-            if (self.__joined_bridges == len(self.calls)):
-                self.test_case.expectedEvents['joinannouncetoall'] = True
+        if AsteriskVersion() < AsteriskVersion('13.12.0'):
+            # Prior to 13.12.0, the join sound was played once to the channel
+            # that joined and once to the entire bridge.
+            if channel == self.__bridge_channel:
+                self.__joined_bridges += 1
+            else:
+                self.__joined_channels += 1
         else:
+            # For 13.12.0 and up, the join sound is only played to the entire
+            # bridge. We just go ahead and bump both the joined_channels and
+            # joined_bridges counts together and "lie" about having the sound
+            # played to the individual channel
             self.__joined_channels += 1
-            if (self.__joined_channels == len(self.calls)):
-                self.test_case.expectedEvents['joinannouncetochannel'] = True
-        if (self.__joined_bridges == len(self.calls) and self.__joined_channels == len(self.calls)):
+            self.__joined_bridges += 1
+
+        if (self.__joined_bridges == len(self.calls)):
+            self.test_case.expectedEvents['joinannouncetoall'] = True
+        if (self.__joined_channels == len(self.calls)):
             """ Everyone has joined the conference! """
+            self.test_case.expectedEvents['joinannouncetochannel'] = True
             self.change_state(ActiveConfBridgeState(self.controller, self.test_case, self.calls))
 
     def get_state_name(self):

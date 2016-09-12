@@ -136,6 +136,7 @@ test-object-config:
                   expected-result: 'Marked-1 Leave Event received'
             -
               type: 'headermatch'
+              maxversion: '13.12.0'
               conditions:
                 match:
                   Event: 'TestEvent'
@@ -319,6 +320,7 @@ test-object-config:
                   expected-result: 'Marked-1 Leave Event received'
             -
               type: 'headermatch'
+              maxversion: '13.12.0'
               conditions:
                 match:
                   Event: 'TestEvent'

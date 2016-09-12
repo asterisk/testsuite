@@ -284,6 +284,7 @@ test-object-config:
                   expected-result: 'Marked user left Conference'
             -
               type: 'headermatch'
+              maxversion: '13.12.0'
               conditions:
                 match:
                   Event: 'TestEvent'
@@ -541,6 +542,7 @@ test-object-config:
                   expected-result: 'Marked user left Conference'
             -
               type: 'headermatch'
+              maxversion: '13.12.0'
               conditions:
                 match:
                   Event: 'TestEvent'
@@ -788,6 +790,7 @@ test-object-config:
                   expected-result: 'Marked user left Conference'
             -
               type: 'headermatch'
+              maxversion: '13.12.0'
               conditions:
                 match:
                   Event: 'TestEvent'
@@ -946,6 +949,10 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Marked user joined Conference'
+                -
+                  action-type: 'start-call'
+                  delay: 1
+                  channel-id: 'Waitmarked-user'
             -
               type: 'headermatch'
               conditions:
@@ -959,6 +966,7 @@ test-object-config:
                   expected-result: 'Marked user left Conference'
             -
               type: 'headermatch'
+              maxversion: '13.12.0'
               conditions:
                 match:
                   Event: 'TestEvent'
@@ -969,10 +977,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Marked user heard confbridge-join'
-                -
-                  action-type: 'start-call'
-                  delay: 1
-                  channel-id: 'Waitmarked-user'
         -
           channel-id: 'Waitmarked-user'
           channel-name: 'Local/waitmarked-user@confbridge'

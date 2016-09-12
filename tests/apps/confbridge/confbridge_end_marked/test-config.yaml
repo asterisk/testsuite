@@ -325,6 +325,7 @@ test-object-config:
                   expected-result: 'Marked user left Conference'
             -
               type: 'headermatch'
+              maxversion: '13.12.0'
               conditions:
                 match:
                   Event: 'TestEvent'

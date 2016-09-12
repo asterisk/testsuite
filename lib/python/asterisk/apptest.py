@@ -20,6 +20,7 @@ from twisted.internet import reactor, defer
 sys.path.append("lib/python")
 from test_case import TestCase
 from ami import AMIEventInstance
+from version import AsteriskVersion
 
 LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +85,18 @@ class AppTest(TestCase):
         super(AppTest, self).run()
         self.create_ami_factory()
 
+    def _create_application_event_instances(self, channel_id, events):
+        for event_config in events:
+            minversion = event_config.get('minversion', '0.0.0')
+            maxversion = event_config.get('maxversion', '999.999.999')
+            if (AsteriskVersion() < AsteriskVersion(minversion) or
+                AsteriskVersion() >= AsteriskVersion(maxversion)):
+                continue
+            ae_instance = ApplicationEventInstance(channel_id,
+                                                   event_config,
+                                                   self)
+            self._event_instances.append(ae_instance)
+
     def _run_scenario(self, scenario):
         """Run some scenario
 
@@ -94,20 +107,14 @@ class AppTest(TestCase):
 
         # Create event instances not associated with a channel
         if 'events' in scenario:
-            for event_config in scenario['events']:
-                ae_instance = ApplicationEventInstance('', event_config, self)
-                self._event_instances.append(ae_instance)
+            self._create_application_event_instances('', scenario['events'])
 
         # Create the event instances associated with a channel and the
         # corresponding channel object
         for channel_config in scenario['channels']:
             channel_id = channel_config['channel-id']
-            for event_config in channel_config['events']:
-                ae_instance = ApplicationEventInstance(channel_id,
-                                                       event_config,
-                                                       self)
-                self._event_instances.append(ae_instance)
-
+            self._create_application_event_instances(channel_id,
+                                                     channel_config['events'])
             obj = ChannelObject(ami=self.ami[0],
                                 applications=self._applications,
                                 channel_def=channel_config)
