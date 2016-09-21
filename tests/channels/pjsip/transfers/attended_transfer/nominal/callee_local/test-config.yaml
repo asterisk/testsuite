@@ -64,4 +64,4 @@ properties:
         - asterisk : app_dial
         - asterisk : chan_pjsip
     tags:
-        - PJSIP
+        - pjsip

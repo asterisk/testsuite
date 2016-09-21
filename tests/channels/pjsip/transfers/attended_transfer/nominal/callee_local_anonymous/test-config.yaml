@@ -66,4 +66,4 @@ properties:
         - asterisk : res_pjsip_caller_id
         - asterisk : res_pjsip_session
     tags:
-        - PJSIP
+        - pjsip
