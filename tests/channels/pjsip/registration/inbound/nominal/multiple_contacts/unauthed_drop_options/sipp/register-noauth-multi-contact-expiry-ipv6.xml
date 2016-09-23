@@ -8,13 +8,13 @@
 
         REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
         Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-        From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
-        To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+        From: "[service]" <sip:[service];phone-context=national@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+        To: "[service]" <sip:[service];phone-context=national@[remote_ip]:[remote_port]>
         Call-ID: [call_id]
         CSeq: 1 REGISTER
         Max-Forwards: 70
-	Contact: "[service]" <sip:[service]-office@[customip1]:5062>;transport=[transport]
-	Contact: "[service]" <sip:[service]-home@[customip2]:5063>;transport=[transport]
+	Contact: "[service]" <sip:[service]-office;phone-context=national@[customip1]:5062>;transport=[transport]
+	Contact: "[service]" <sip:[service]-home;phone-context=national@[customip2]:5063>;transport=[transport]
         Subject: Performance Test
 	Expires: 10
         Content-Length: 0
@@ -27,8 +27,8 @@
             <!--
 	     ensure the received expires parameters are what was sent in the expires header with a 5 second tolerance
             -->
-	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-office@.::2.:5062>;expires=(10|[5-9])" search_in="msg" check_it="true" assign_to="1"/>
-	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-home@.::3.:5063>;expires=(10|[5-9])" search_in="msg" check_it="true" assign_to="2" />
+	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-office;phone-context=national@.::2.:5062>;expires=(10|[5-9])" search_in="msg" check_it="true" assign_to="1"/>
+	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-home;phone-context=national@.::3.:5063>;expires=(10|[5-9])" search_in="msg" check_it="true" assign_to="2" />
         </action>
     </recv>
 
@@ -42,13 +42,13 @@
 
         REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
         Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-        From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
-        To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+        From: "[service]" <sip:[service];phone-context=national@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+        To: "[service]" <sip:[service];phone-context=national@[remote_ip]:[remote_port]>
         Call-ID: [call_id]
         CSeq: 1 REGISTER
         Max-Forwards: 70
-	Contact: "[service]" <sip:[service]-office@[customip1]:5062>;transport=[transport];expires=15
-	Contact: "[service]" <sip:[service]-home@[customip2]:5063>;transport=[transport];expires=20
+	Contact: "[service]" <sip:[service]-office;phone-context=national@[customip1]:5062>;transport=[transport];expires=15
+	Contact: "[service]" <sip:[service]-home;phone-context=national@[customip2]:5063>;transport=[transport];expires=20
         Subject: Performance Test
 	Expires: 10
         Content-Length: 0
@@ -61,8 +61,8 @@
             <!--
 	     Ensure the received expires parameters are what was sent in the expires parameters with a 5 second tolerance
             -->
-	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-office@.::2.:5062>;expires=1[0-5]" search_in="msg" check_it="true" assign_to="3"/>
-	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-home@.::3.:5063>;expires=(20|1[5-9])" search_in="msg" check_it="true" assign_to="4" />
+	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-office;phone-context=national@.::2.:5062>;expires=1[0-5]" search_in="msg" check_it="true" assign_to="3"/>
+	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-home;phone-context=national@.::3.:5063>;expires=(20|1[5-9])" search_in="msg" check_it="true" assign_to="4" />
         </action>
     </recv>
 

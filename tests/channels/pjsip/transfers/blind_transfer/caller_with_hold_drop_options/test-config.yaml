@@ -11,7 +11,7 @@ testinfo:
         along with Bob being placed on hold and taken off hold appropriately.'
 
 properties:
-    minversion: '12.0.0'
+    minversion: '13.12.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
@@ -110,7 +110,7 @@ ami-config:
                     Event: 'VarSet'
                     Channel: 'PJSIP/bob-.{8}'
                     Variable: '_{0,2}SIPREFERREDBYHDR'
-                    Value: 'sip:alice@127.0.0.2:5060'
+                    Value: 'sip:alice;phone-context=national@127.0.0.2:5060'
             count: 2
         -
             type: 'headermatch'
@@ -118,7 +118,7 @@ ami-config:
                 match:
                     Event: 'VarSet'
                     Variable: 'SIPREFERTOHDR'
-                    Value: 'sip:charlie@127.0.0.1'
+                    Value: 'sip:charlie;phone-context=national@127.0.0.1'
             count: 2
         -
             type: 'headermatch'

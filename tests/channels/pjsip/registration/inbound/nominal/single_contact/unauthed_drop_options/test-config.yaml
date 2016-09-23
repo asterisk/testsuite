@@ -42,7 +42,7 @@ ami-config:
                 AOR: 'alice'
         requirements:
             match:
-                Contact: 'sip:alice@127.0.0.1:5061'
+                Contact: 'sip:alice;phone-context=national@127.0.0.1:5061'
                 Expiration: '30'
         count: '1'
     -
@@ -55,7 +55,7 @@ ami-config:
                 AOR: 'bob'
         requirements:
             match:
-                Contact: 'sip:bob@127.0.0.1:5062'
+                Contact: 'sip:bob;phone-context=national@127.0.0.1:5062'
                 Expiration: '30'
         count: '1'
     -
@@ -68,7 +68,7 @@ ami-config:
                 AOR: 'charlie'
         requirements:
             match:
-                Contact: 'sip:charlie@\[::1\]:5063'
+                Contact: 'sip:charlie;phone-context=national@\[::1\]:5063'
                 Expiration: '30'
         count: '1'
     -
@@ -81,12 +81,12 @@ ami-config:
                 AOR: 'carol'
         requirements:
             match:
-                Contact: 'sip:carol@\[::1\]:5064'
+                Contact: 'sip:carol;phone-context=national@\[::1\]:5064'
                 Expiration: '30'
         count: '1'
 
 properties:
-    minversion: '12.0.0'
+    minversion: '13.12.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python: 'twisted'

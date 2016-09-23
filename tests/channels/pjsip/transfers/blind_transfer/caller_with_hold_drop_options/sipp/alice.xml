@@ -5,13 +5,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INVITE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      INVITE sip:[service];phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag[call_number]
-      To: <sip:[service]@[remote_ip]:[remote_port]>
+      From: <sip:alice;phone-context=national@[local_ip]:[local_port]>;tag=[pid]SIPpTag[call_number]
+      To: <sip:[service];phone-context=national@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: [cseq] INVITE
-      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Contact: <sip:alice;phone-context=national@[local_ip]:[local_port];transport=[transport]>
       Max-Forwards: 70
       Content-Type: application/sdp
       Content-Length: [len]
@@ -45,13 +45,13 @@
   <send>
     <![CDATA[
 
-      ACK sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      ACK sip:[service];phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       [last_Via:]
       [last_From:]
       [last_To:]
       Call-ID: [call_id]
       CSeq: [cseq] ACK
-      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Contact: <sip:alice;phone-context=national@[local_ip]:[local_port];transport=[transport]>
       Max-Forwards: 70
       Content-Length: 0
 
@@ -71,13 +71,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INVITE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      INVITE sip:[service];phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       [last_Via:]2
       [last_From:]
       [last_To:]
       [last_Call-ID:]
       CSeq: [cseq] INVITE
-      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Contact: <sip:alice;phone-context=national@[local_ip]:[local_port];transport=[transport]>
       Max-Forwards: 70
       Content-Type: application/sdp
       Content-Length: [len]
@@ -102,13 +102,13 @@
   <send>
     <![CDATA[
 
-      ACK sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      ACK sip:[service];phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       [last_Via:]2
       [last_From:]
       [last_To:]
       Call-ID: [call_id]
       CSeq: [cseq] ACK
-      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Contact: <sip:alice;phone-context=national@[local_ip]:[local_port];transport=[transport]>
       Max-Forwards: 70
       Content-Length: 0
 
@@ -121,17 +121,17 @@
   <send retrans="500">
     <![CDATA[
 
-      REFER sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      REFER sip:[service];phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       [last_Via:]3
-      From: <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag[call_number]
-      To: <sip:[service]@[remote_ip]:[remote_port]>[$remote_tag]
+      From: <sip:alice;phone-context=national@[local_ip]:[local_port]>;tag=[pid]SIPpTag[call_number]
+      To: <sip:[service];phone-context=national@[remote_ip]:[remote_port]>[$remote_tag]
       Call-ID: [call_id]
       CSeq: 3 REFER
-      Contact: sip:alice@[local_ip]:[local_port];transport=[transport]
+      Contact: sip:alice;phone-context=national@[local_ip]:[local_port];transport=[transport]
       Max-Forwards: 70
       Subject: Performance Test
-      Refer-To: sip:charlie@[remote_ip]:[remote_port];user=phone
-      Referred-By: sip:alice@[local_ip]:[local_port]
+      Refer-To: sip:charlie;phone-context=national@[remote_ip]:[remote_port];user=phone
+      Referred-By: sip:alice;phone-context=national@[local_ip]:[local_port]
       Content-Length: 0
 
     ]]>
@@ -190,13 +190,13 @@
   <send retrans="500">
     <![CDATA[
 
-      BYE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      BYE sip:[service];phone-context=national@[remote_ip]:[remote_port] SIP/2.0
       [last_Via:]4
-      From: <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag[call_number]
-      To: <sip:[service]@[remote_ip]:[remote_port]>[$remote_tag]
+      From: <sip:alice;phone-context=national@[local_ip]:[local_port]>;tag=[pid]SIPpTag[call_number]
+      To: <sip:[service];phone-context=national@[remote_ip]:[remote_port]>[$remote_tag]
       Call-ID: [call_id]
       CSeq: [cseq] BYE
-      Contact: sip:alice@[local_ip]:[local_port]
+      Contact: sip:alice;phone-context=national@[local_ip]:[local_port]
       Max-Forwards: 70
       Subject: Performance Test
       Content-Length: 0

@@ -49,7 +49,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:alice-office@127.0.0.2:5062'
+                Contact: 'sip:alice-office;phone-context=national@127.0.0.2:5062'
                 Expiration: '10'
         requirements:
             match:
@@ -62,7 +62,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:alice-home@127.0.0.3:5063'
+                Contact: 'sip:alice-home;phone-context=national@127.0.0.3:5063'
                 Expiration: '10'
         requirements:
             match:
@@ -75,7 +75,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:alice-office@127.0.0.2:5062'
+                Contact: 'sip:alice-office;phone-context=national@127.0.0.2:5062'
                 Expiration: '15'
         requirements:
             match:
@@ -88,7 +88,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:alice-home@127.0.0.3:5063'
+                Contact: 'sip:alice-home;phone-context=national@127.0.0.3:5063'
                 Expiration: '20'
         requirements:
             match:
@@ -104,7 +104,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:bob-office@127.0.0.2:5062'
+                Contact: 'sip:bob-office;phone-context=national@127.0.0.2:5062'
                 Expiration: '10'
         requirements:
             match:
@@ -117,7 +117,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:bob-home@127.0.0.3:5063'
+                Contact: 'sip:bob-home;phone-context=national@127.0.0.3:5063'
                 Expiration: '10'
         requirements:
             match:
@@ -130,7 +130,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:bob-office@127.0.0.2:5062'
+                Contact: 'sip:bob-office;phone-context=national@127.0.0.2:5062'
                 Expiration: '15'
         requirements:
             match:
@@ -143,7 +143,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:bob-home@127.0.0.3:5063'
+                Contact: 'sip:bob-home;phone-context=national@127.0.0.3:5063'
                 Expiration: '20'
         requirements:
             match:
@@ -159,7 +159,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:charlie-office@\[::2\]:5062'
+                Contact: 'sip:charlie-office;phone-context=national@\[::2\]:5062'
                 Expiration: '10'
         requirements:
             match:
@@ -172,7 +172,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:charlie-home@\[::3\]:5063'
+                Contact: 'sip:charlie-home;phone-context=national@\[::3\]:5063'
                 Expiration: '10'
         requirements:
             match:
@@ -185,7 +185,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:charlie-office@\[::2\]:5062'
+                Contact: 'sip:charlie-office;phone-context=national@\[::2\]:5062'
                 Expiration: '15'
         requirements:
             match:
@@ -198,7 +198,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:charlie-home@\[::3\]:5063'
+                Contact: 'sip:charlie-home;phone-context=national@\[::3\]:5063'
                 Expiration: '20'
         requirements:
             match:
@@ -214,7 +214,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:carol-office@\[::2\]:5062'
+                Contact: 'sip:carol-office;phone-context=national@\[::2\]:5062'
                 Expiration: '10'
         requirements:
             match:
@@ -227,7 +227,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:carol-home@\[::3\]:5063'
+                Contact: 'sip:carol-home;phone-context=national@\[::3\]:5063'
                 Expiration: '10'
         requirements:
             match:
@@ -240,7 +240,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:carol-office@\[::2\]:5062'
+                Contact: 'sip:carol-office;phone-context=national@\[::2\]:5062'
                 Expiration: '15'
         requirements:
             match:
@@ -253,7 +253,7 @@ ami-config:
             match:
                 Event: 'TestEvent'
                 State: 'AOR_CONTACT_ADDED'
-                Contact: 'sip:carol-home@\[::3\]:5063'
+                Contact: 'sip:carol-home;phone-context=national@\[::3\]:5063'
                 Expiration: '20'
         requirements:
             match:
@@ -261,7 +261,7 @@ ami-config:
         count: '1'
 
 properties:
-    minversion: '12.0.0'
+    minversion: '13.12.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python: 'twisted'
@@ -271,4 +271,3 @@ properties:
         - asterisk: 'res_pjsip'
     tags:
         - pjsip
-
