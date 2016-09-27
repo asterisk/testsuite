@@ -5,7 +5,7 @@ testinfo:
         'user1 calls user2 which is set to forward calls to user3.'
 
 properties:
-    minversion: '13.12.0'
+    minversion: ['13.12.0', '14.1.0']
     dependencies:
         - app : 'sipp'
         - asterisk : 'app_dial'
