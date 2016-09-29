@@ -68,7 +68,7 @@ run() {
 	# Prepend $PATH to include locations populated by ./run-local setup
 	#     astroot/usr/local/bin - asttest
 	#     astroot/usr/sbin      - asterisk
-	export PATH="$HERE/astroot/usr/local/bin:$HERE/astroot/usr/sbin:$PATH"
+	export PATH="$HERE/astroot/var/lib/asterisk/third-party/pjproject:$HERE/astroot/usr/local/bin:$HERE/astroot/usr/sbin:$PATH"
         # Preprend ':' if LD_LIBRARY_PATH is not empty:
 	LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 	# Libraries could be in lib or lib64 so search for libasteriskssl.so
