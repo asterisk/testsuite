@@ -75,6 +75,11 @@ if os.path.exists(pjproject_lib):
     sys.path.append(pjproject_lib)
     # And of course, the tests need it.
     new_PYTHONPATH.append(pjproject_lib)
+    new_SYSPATH = []
+    if os.getenv("PATH"):
+        new_SYSPATH.append(os.getenv("PATH"))
+    new_SYSPATH.append(pjproject_lib)
+    os.environ['PATH'] = os.pathsep.join(new_SYSPATH)
 
 # If True, abandon the current running TestRun. Used by SIGTERM.
 abandon_test = False
