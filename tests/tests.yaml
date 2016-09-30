@@ -36,3 +36,4 @@ tests:
     - dir: 'http_server'
     - dir: 'sorcery'
     - test: 'remote-test'
+    - dir: 'codecs'
