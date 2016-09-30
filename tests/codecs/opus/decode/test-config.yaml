@@ -1,0 +1,25 @@
+testinfo:
+    summary: 'Test opus decoding'
+    description: |
+        'Plays an opus file that gets decoded and written to a .wav file.
+         Once written, the file is analyzed to see if the data in the file
+         approximately matches the a specified tone.'
+
+test-modules:
+    add-to-search-path:
+        - 'tests/codecs'
+    test-object:
+        config-section: test-object-config
+        typename: 'audio_analyzer.Analyzer'
+
+test-object-config:
+    playback-file: '16_bit_48khz_2_4_2'
+
+properties:
+    minversion: ['13.12.0', '14.0.1']
+    dependencies:
+        - asterisk : 'res_pjsip'
+        - asterisk : 'codec_opus'
+    tags:
+        - pjsip
+        - codec
