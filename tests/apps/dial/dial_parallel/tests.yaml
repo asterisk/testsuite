@@ -1,5 +1,6 @@
 tests:
     - test: 'dial_parallel_answer_cancel'
+    - test: 'dial_parallel_answer_cancel_cause'
     - test: 'dial_parallel_all_cancel'
     - test: 'dial_parallel_all_busy'
     - test: 'dial_parallel_all_congestion'

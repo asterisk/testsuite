@@ -1,0 +1,138 @@
+testinfo:
+    summary:     'Dial Parallel with an Answer/Cancel and a specific hangup cause'
+    description: |
+        'Dial two endpoints. One happens to Answer before the other replies back.
+        Verify that Asterisk cancels the other Dial request with a specific reason
+        when Dial is called with the Q() argument.'
+
+properties:
+    minversion: '13.12.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - app : 'sipp'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_echo'
+        - asterisk : 'chan_pjsip'
+    tags:
+        - pjsip
+        - dial
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: originator-config
+            typename: 'pluggable_modules.Originator'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialBegin'
+                DestChannel: 'PJSIP/bob-.*'
+        requirements:
+            match:
+                Channel: 'Local/s@default-.*'
+                Uniqueid: '.*'
+                Linkedid: '.*'
+                DestUniqueid: '.*'
+                DestLinkedid: '.*'
+                CallerIDNum: '<unknown>'
+                CallerIDName: '<unknown>'
+                ConnectedLineNum: '<unknown>'
+                ConnectedLineName: '<unknown>'
+                Dialstring: 'bob'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialBegin'
+                DestChannel: 'PJSIP/charlie-.*'
+        requirements:
+            match:
+                Channel: 'Local/s@default-.*'
+                Uniqueid: '.*'
+                Linkedid: '.*'
+                DestUniqueid: '.*'
+                DestLinkedid: '.*'
+                CallerIDNum: '<unknown>'
+                CallerIDName: '<unknown>'
+                ConnectedLineNum: '<unknown>'
+                ConnectedLineName: '<unknown>'
+                Dialstring: 'charlie'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialEnd'
+                DestChannel: 'PJSIP/bob-.*'
+        requirements:
+            match:
+                Channel: 'Local/s@default-.*'
+                Uniqueid: '.*'
+                Linkedid: '.*'
+                DestUniqueid: '.*'
+                DestLinkedid: '.*'
+                CallerIDNum: '<unknown>'
+                CallerIDName: '<unknown>'
+                ConnectedLineNum: 's'
+                ConnectedLineName: '<unknown>'
+                DialStatus: 'CANCEL'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'DialEnd'
+                DestChannel: 'PJSIP/charlie-.*'
+        requirements:
+            match:
+                Channel: 'Local/s@default-.*'
+                Uniqueid: '.*'
+                Linkedid: '.*'
+                DestUniqueid: '.*'
+                DestLinkedid: '.*'
+                CallerIDNum: '<unknown>'
+                CallerIDName: '<unknown>'
+                ConnectedLineNum: 's'
+                ConnectedLineName: '<unknown>'
+                DialStatus: 'ANSWER'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Hangup'
+                Channel: 'PJSIP/bob-.*'
+        requirements:
+            match:
+                Cause: '29'
+        count: '1'
+
+originator-config:
+    trigger: 'scenario_start'
+    scenario-trigger-after: '2'
+    ignore-originate-failure: 'yes'
+    id: '0'
+    channel: 'Local/s@default'
+    context: 'default'
+    exten: 'echo'
+    priority: 1
+    async: True
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5066'} }
+                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5067'} }

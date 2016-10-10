@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic UAS responder">
+	<recv request="INVITE" crlf="true">
+		<!-- Save the from tag. We'll need it when we send our response -->
+		<action>
+			<ereg regexp=".*(;tag=.*)" header="From:" search_in="hdr"
+				check_it="true" assign_to="remote_tag" />
+		</action>
+	</recv>
+
+	<send>
+    <![CDATA[
+
+      SIP/2.0 180 Ringing
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+	</send>
+
+	<recv request="CANCEL" crlf="true">
+		<action>
+			<ereg regexp=".*;cause=29" header="Reason:" search_in="hdr"
+				check_it="true" assign_to="dummy" />
+		</action>
+	</recv>
+
+	<send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];[$remote_tag]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+	</send>
+
+
+	<send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 487 Request Terminated
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+	</send>
+
+	<Reference variables="dummy" />
+
+</scenario>
+
