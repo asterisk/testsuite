@@ -20,9 +20,9 @@ import logging
 import time
 import random
 
-from config import ConfigFile
-from test_case import TestCase
-from test_state import TestState, TestStateController, FailureTestState
+from .config import ConfigFile
+from .test_case import TestCase
+from .test_state import TestState, TestStateController, FailureTestState
 
 sys.path.append("lib/python")
 
@@ -232,7 +232,7 @@ class VoiceMailTest(TestCase):
         condition_name   The unique name of the condition
         value            The value to pass to the evaluation checker
         """
-        if condition_name in self._test_conditions.keys():
+        if condition_name in list(self._test_conditions.keys()):
             self._test_conditions[condition_name].evaluate(value)
 
     def get_test_condition(self, condition_name):
@@ -244,7 +244,7 @@ class VoiceMailTest(TestCase):
         Returns:
         True if the condition has passed; False otherwise
         """
-        if condition_name in self._test_conditions.keys():
+        if condition_name in list(self._test_conditions.keys()):
             return self._test_conditions[condition_name].current_state
         return False
 
@@ -463,7 +463,7 @@ class VoiceMailMailboxManagement(object):
                                         (self.test_parent_dir))
             shutil.copy(audio_file, msg_format_path)
 
-        if folder not in self.created_voicemails.keys():
+        if folder not in list(self.created_voicemails.keys()):
             self.created_voicemails[folder] = []
         self.created_voicemails[folder].append((msgnum, msg_id))
         return True

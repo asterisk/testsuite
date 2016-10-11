@@ -12,7 +12,7 @@ the GNU General Public License Version 2.
 
 import unittest
 import sys
-import astcsv
+from . import astcsv
 import logging
 
 LOGGER = logging.getLogger(__name__)

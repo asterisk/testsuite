@@ -8,6 +8,7 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 '''
 
+from __future__ import print_function
 import sys
 import os
 import errno
@@ -57,6 +58,7 @@ from asterisk.asterisk import Asterisk
 from asterisk.test_config import TestConfig
 from mailer import send_email
 from asterisk import test_suite_utils
+from asterisk.compat import xrange
 
 TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
@@ -105,8 +107,8 @@ class TestRun:
         self.test_relpath = self.test_name[6:]
 
     def stdout_print(self, msg):
-        self.stdout += msg + "\n"
-        print msg
+        self.stdout += str(msg) + "\n"
+        print(msg)
 
     def run(self):
         self.passed = False
@@ -119,7 +121,7 @@ class TestRun:
         ]
 
         if not os.path.exists(cmd[0]):
-            cmd = ["./lib/python/asterisk/test_runner.py",
+            cmd = ["./lib/python/test_runner.py",
                    "%s" % self.test_name]
         if os.path.exists(cmd[0]) and os.access(cmd[0], os.X_OK):
             self.stdout_print("Running %s ..." % cmd)
@@ -154,7 +156,7 @@ class TestRun:
             if did_pass and not self.test_config.expect_pass:
                 self.stdout_print("Test passed but was expected to fail.")
             if not did_pass and not self.test_config.expect_pass:
-                print "Test failed as expected."
+                print("Test failed as expected.")
 
             self.passed = (did_pass == self.test_config.expect_pass)
             if abandon_test:
@@ -183,8 +185,8 @@ class TestRun:
                     shutil.rmtree(absolute_dir)
                     os.remove(symlink_dir)
                 except:
-                    print "Unable to clean up directory for" \
-                          "test %s (non-fatal)" % self.test_name
+                    print(("Unable to clean up directory for"
+                          "test %s (non-fatal)" % self.test_name))
 
             self.__parse_run_output(self.stdout)
             if timedout:
@@ -196,12 +198,12 @@ class TestRun:
             else:
                 status = 'failed'
             pass_str = 'Test %s %s\n' % (cmd, status)
-            print pass_str
+            print(pass_str)
             if self.options.syslog:
                 syslog.syslog(pass_str)
 
         else:
-            print "FAILED TO EXECUTE %s, it must exist and be executable" % cmd
+            print(("FAILED TO EXECUTE %s, it must exist and be executable" % cmd))
         self.time = time.time() - start_time
 
     def _check_for_core(self):
@@ -230,7 +232,7 @@ class TestRun:
         debug_level = email_config.get('debug', 0)
 
         if not sender or len(recipients) == 0:
-            print "--email-on-crash requires sender and 1+ recipients"
+            print("--email-on-crash requires sender and 1+ recipients")
             return
 
         with open(dest_file_name, 'r') as bt_file:
@@ -248,12 +250,12 @@ class TestRun:
             send_email(smtp_server, sender, recipients, message,
                        debug=debug_level)
         except Exception as exception:
-            print "Failed to send email\nError: {0}".format(exception)
+            print(("Failed to send email\nError: {0}".format(exception)))
 
     def _archive_core_dumps(self, core_dumps):
         for core in core_dumps:
             if not os.path.exists(core):
-                print "Unable to find core dump file %s, skipping" % core
+                print(("Unable to find core dump file %s, skipping" % core))
                 continue
             random_num = random.randint(0, 16000)
             dest_dir = "./logs/%s" % self.test_relpath
@@ -268,36 +270,36 @@ class TestRun:
                        "-ex", "thread apply all bt",
                        "--batch",
                        "-c", core]
-            print "Running %s" % (" ".join(gdb_cmd),)
+            print(("Running %s" % (" ".join(gdb_cmd),)))
             try:
                 res = subprocess.call(gdb_cmd, stdout=dest_file, stderr=subprocess.STDOUT)
                 if res != 0:
-                    print "error analyzing core dump; gdb exited with %d" % res
+                    print(("error analyzing core dump; gdb exited with %d" % res))
                 # Copy the backtrace over to the logs
-                print "Archived backtrace: {0}".format(dest_file_name)
+                print(("Archived backtrace: {0}".format(dest_file_name)))
 
                 if self.options.email_on_crash:
                     self._email_crash_report(dest_file_name)
 
-            except OSError, ose:
-                print "OSError ([%d]: %s) occurred while executing %r" % \
-                    (ose.errno, ose.strerror, gdb_cmd)
+            except OSError(ose):
+                print(("OSError ([%d]: %s) occurred while executing %r" %
+                    (ose.errno, ose.strerror, gdb_cmd)))
             except:
-                print "Unknown exception occurred while executing %r" % (gdb_cmd,)
+                print(("Unknown exception occurred while executing %r" % (gdb_cmd,)))
             finally:
                 dest_file.close()
                 if self.options.keep_core:
                     try:
                         dst_core = os.path.join(dest_dir, "core_{0}".format(random_num))
                         shutil.copy(core, dst_core)
-                        print "Archived core file: {0}".format(dst_core)
+                        print(("Archived core file: {0}".format(dst_core)))
                     except Exception as e:
-                        print "Error occurred while copying core: {0}".format(e)
+                        print(("Error occurred while copying core: {0}".format(e)))
                 try:
                     os.unlink(core)
-                except OSError, e:
-                    print "Error removing core file: %s: " \
-                          "Beware of the stale core file in CWD!" % (e,)
+                except OSError(e):
+                    print(("Error removing core file: %s: "
+                          "Beware of the stale core file in CWD!" % (e,)))
 
     def _find_run_dirs(self):
         test_run_dir = os.path.join(Asterisk.test_suite_root,
@@ -380,7 +382,7 @@ class TestRun:
                     res = subprocess.call(refcounter,
                                           stdout=dest_file,
                                           stderr=subprocess.STDOUT)
-                except Exception, e:
+                except Exception(e):
                     self.stdout_print("Exception occurred while processing REF_DEBUG")
                 finally:
                     dest_file.close()
@@ -408,10 +410,10 @@ class TestRun:
                 srcfile = os.path.join(src_dir, filename)
                 if os.path.exists(srcfile):
                     hardlink_or_copy(srcfile, os.path.join(dest_dir, filename))
-            except Exception, e:
-                print "Exception occurred while archiving file '%s' to %s: %s" % (
+            except Exception(e):
+                print(("Exception occurred while archiving file '%s' to %s: %s" % (
                     srcfile, dest_dir, e
-                )
+                )))
 
     def _archive_logs(self):
         (run_num, run_dir, archive_dir) = self._find_run_dirs()
@@ -501,42 +503,42 @@ class TestSuite:
         tags.sort(key=str.lower)
         maxwidth = max(len(t) for t in tags)
 
-        print "Available test tags:"
+        print("Available test tags:")
         tags = chunks(tags, 3)
         for tag in tags:
-            print "\t%-*s     %-*s     %-*s" % (
+            print(("\t%-*s     %-*s     %-*s" % (
                 maxwidth, tag[0],
                 maxwidth, len(tag) > 1 and tag[1] or '',
-                maxwidth, len(tag) > 2 and tag[2] or '')
+                maxwidth, len(tag) > 2 and tag[2] or '')))
 
     def list_tests(self):
-        print "Configured tests:"
+        print("Configured tests:")
         i = 1
         for t in self.tests:
-            print "%.3d) %s" % (i, t.test_config.test_name)
-            print "      --> Summary: %s" % t.test_config.summary
+            print(("%.3d) %s" % (i, t.test_config.test_name)))
+            print(("      --> Summary: %s" % t.test_config.summary))
             if t.test_config.skip is not None:
-                print "      --> Skip: %s" % t.test_config.skip
-            print ("      --> Minimum Version: %s (%s)" %
+                print(("      --> Skip: %s" % t.test_config.skip))
+            print(("      --> Minimum Version: %s (%s)" %
                    (", ".join([str(v) for v in t.test_config.minversion]),
-                    t.test_config.minversion_check))
+                    t.test_config.minversion_check)))
             if t.test_config.maxversion is not None:
-                print ("      --> Maximum Version: %s (%s)" %
+                print(("      --> Maximum Version: %s (%s)" %
                        (", ".join([str(v) for v in t.test_config.maxversion]),
-                        t.test_config.maxversion_check))
+                        t.test_config.maxversion_check)))
             if t.test_config.features:
-                print "      --> Features:"
+                print("      --> Features:")
                 for feature_name in t.test_config.features:
-                    print "        --> %s: -- Met: %s" % \
-                        (feature_name, str(t.test_config.feature_check[feature_name]))
+                    print(("        --> %s: -- Met: %s" % \
+                        (feature_name, str(t.test_config.feature_check[feature_name]))))
             if t.test_config.tags:
-                print "      --> Tags: %s" % str(t.test_config.tags)
+                print(("      --> Tags: %s" % str(t.test_config.tags)))
             for d in t.test_config.deps:
                 if d.version:
-                    print "      --> Dependency: %s" % (d.name)
-                    print "        --> Version: %s -- Met: %s" % (d.version, str(d.met))
+                    print(("      --> Dependency: %s" % (d.name)))
+                    print(("        --> Version: %s -- Met: %s" % (d.version, str(d.met))))
                 else:
-                    print "      --> Dependency: %s -- Met: %s" % (d.name, str(d.met))
+                    print(("      --> Dependency: %s -- Met: %s" % (d.name, str(d.met))))
 
             i += 1
 
@@ -552,8 +554,8 @@ class TestSuite:
                     if excluded in t.test_name:
                         continue
             i += 1
-        print "Tests to run: %d,  Maximum test inactivity time: %d sec." % \
-            (i, (self.options.timeout / 1000))
+        print(("Tests to run: %d,  Maximum test inactivity time: %d sec." % \
+            (i, (self.options.timeout / 1000))))
 
         for t in self.tests:
             if abandon_test_suite:
@@ -561,28 +563,28 @@ class TestSuite:
 
             if t.can_run is False:
                 if t.test_config.skip is not None:
-                    print "--> %s ... skipped '%s'" % (t.test_name, t.test_config.skip)
+                    print(("--> %s ... skipped '%s'" % (t.test_name, t.test_config.skip)))
                     t.skipped_reason = t.test_config.skip
                     self.total_skipped += 1
                     continue
-                print "--> Cannot run test '%s'" % t.test_name
+                print(("--> Cannot run test '%s'" % t.test_name))
                 if t.test_config.forced_version is not None:
-                    print "--- --> Forced Asterisk Version: %s" % \
-                        (str(t.test_config.forced_version))
-                print ("--- --> Minimum Version: %s (%s)" %
+                    print(("--- --> Forced Asterisk Version: %s" %
+                        (str(t.test_config.forced_version))))
+                print(("--- --> Minimum Version: %s (%s)" %
                        (", ".join([str(v) for v in t.test_config.minversion]),
-                        t.test_config.minversion_check))
+                        t.test_config.minversion_check)))
                 if t.test_config.maxversion is not None:
-                    print ("--- --> Maximum Version: %s (%s)" %
+                    print(("--- --> Maximum Version: %s (%s)" %
                            (", ".join([str(v) for v in t.test_config.maxversion]),
-                            t.test_config.maxversion_check))
+                            t.test_config.maxversion_check)))
                 for f in t.test_config.features:
-                    print "--- --> Version Feature: %s - %s" % (
-                        f, str(t.test_config.feature_check[f]))
-                print "--- --> Tags: %s" % (t.test_config.tags)
+                    print(( "--- --> Version Feature: %s - %s" % (
+                        f, str(t.test_config.feature_check[f]))))
+                print(("--- --> Tags: %s" % (t.test_config.tags)))
                 for d in t.test_config.deps:
-                    print "--- --> Dependency: %s - %s" % (d.name, str(d.met))
-                print
+                    print(("--- --> Dependency: %s - %s" % (d.name, str(d.met))))
+                print()
                 self.total_skipped += 1
                 t.skipped_reason = "Failed dependency"
                 continue
@@ -590,14 +592,14 @@ class TestSuite:
                 exclude = False
                 for excluded in self.global_config.excluded_tests:
                     if excluded in t.test_name:
-                        print "--- ---> Excluded test: %s" % excluded
+                        print(("--- ---> Excluded test: %s" % excluded))
                         exclude = True
                 if exclude:
                     self.total_skipped += 1
                     continue
 
             running_str = "--> Running test '%s' ..." % t.test_name
-            print running_str
+            print(running_str)
             if self.options.syslog:
                 syslog.syslog(running_str)
 
@@ -605,16 +607,16 @@ class TestSuite:
                 t.passed = True
             else:
                 # Establish Preconditions
-                print "Making sure Asterisk isn't running ..."
+                print("Making sure Asterisk isn't running ...")
                 if os.system("if pidof asterisk >/dev/null; then "
                              "killall -9 asterisk >/dev/null 2>&1; "
                              "sleep 1; ! pidof asterisk >/dev/null; fi"):
-                    print "Could not kill asterisk."
-                print "Making sure SIPp isn't running..."
+                    print("Could not kill asterisk.")
+                print("Making sure SIPp isn't running...")
                 if os.system("if pidof sipp >/dev/null; then "
                              "killall -9 sipp >/dev/null 2>&1; "
                              "sleep 1; ! pidof sipp >/dev/null; fi"):
-                    print "Could not kill sipp."
+                    print("Could not kill sipp.")
                 # XXX TODO Hard coded path, gross.
                 os.system("rm -f /var/run/asterisk/asterisk.ctl")
                 os.system("rm -f /var/run/asterisk/asterisk.pid")
@@ -701,10 +703,10 @@ def load_yaml_config(path):
     except IOError:
         # Ignore errors for the optional tests/custom folder.
         if path != "tests/custom/tests.yaml":
-            print "Failed to open %s" % path
+            print(("Failed to open %s" % path))
         return None
     except:
-        print "Unexpected error: %s" % sys.exc_info()[0]
+        print(("Unexpected error: %s" % sys.exc_info()[0]))
         return None
 
     config = yaml.load(f)
@@ -720,7 +722,7 @@ def handle_usr1(sig, stack):
     """
     global abandon_test_suite
 
-    print "SIGUSR1 received; stopping test suite after current test..."
+    print("SIGUSR1 received; stopping test suite after current test...")
     abandon_test_suite = True
 
 
@@ -733,7 +735,7 @@ def handle_term(sig, stack):
     global abandon_test
     global abandon_test_suite
 
-    print "SIGTREM received; abandoning current test and stopping..."
+    print("SIGTREM received; abandoning current test and stopping...")
     abandon_test = True
     abandon_test_suite = True
 
@@ -801,7 +803,6 @@ def main(argv=None):
     signal.signal(signal.SIGTERM, handle_term)
 
     ast_version = AsteriskVersion(default=options.version)
-
     if options.list_tests or options.list_tags:
         test_suite = TestSuite(ast_version, options)
 
@@ -823,8 +824,8 @@ def main(argv=None):
 
     if options.valgrind:
         if not ET:
-            print "python lxml module not loaded, text summaries " \
-                  "from valgrind will not be produced.\n"
+            print("python lxml module not loaded, text summaries "
+                  "from valgrind will not be produced.\n")
         os.environ["VALGRIND_ENABLE"] = "true"
 
     dom = xml.dom.getDOMImplementation()
@@ -840,7 +841,7 @@ def main(argv=None):
 
         running_str = "Running tests for Asterisk {0} (run {1})...\n".format(
             str(ast_version).strip('\n'), iteration + 1)
-        print running_str
+        print(running_str)
         if options.syslog:
             syslog.syslog(running_str)
 
@@ -849,22 +850,22 @@ def main(argv=None):
 
         # If exactly one test was requested, then skip the summary.
         if len(test_suite.tests) != 1:
-            print "\n=== TEST RESULTS ===\n"
-            print "PATH: %s\n" % os.getenv("PATH")
+            print("\n=== TEST RESULTS ===\n")
+            print(("PATH: %s\n" % os.getenv("PATH")))
             for t in test_suite.tests:
                 sys.stdout.write("--> %s --- " % t.test_name)
                 if t.did_run is False:
-                    print "SKIPPED"
+                    print("SKIPPED")
                     for d in t.test_config.deps:
-                        print "      --> Dependency: %s -- Met: %s" % (d.name, str(d.met))
+                        print(("      --> Dependency: %s -- Met: %s" % (d.name, str(d.met))))
                     if options.tags:
                         for t in t.test_config.tags:
-                            print "      --> Tag: %s -- Met: %s" % (t, str(t in options.tags))
+                            print(("      --> Tag: %s -- Met: %s" % (t, str(t in options.tags))))
                     continue
                 if t.passed is True:
-                    print "PASSED"
+                    print("PASSED")
                 else:
-                    print "FAILED"
+                    print("FAILED")
 
         iteration += 1
 
@@ -875,11 +876,11 @@ def main(argv=None):
         with open(TEST_RESULTS, "w") as f:
             doc.writexml(f, addindent="  ", newl="\n", encoding="utf-8")
     except IOError:
-        print "Failed to open test results output file: %s" % TEST_RESULTS
+        print(("Failed to open test results output file: %s" % TEST_RESULTS))
     except:
-        print "Unexpected error: %s" % sys.exc_info()[0]
-    print "\n"
-    print doc.toprettyxml("  ", encoding="utf-8")
+        print(("Unexpected error: %s" % sys.exc_info()[0]))
+    print("\n")
+    print((doc.toprettyxml("  ", encoding="utf-8")))
 
     if options.syslog:
         syslog.syslog("All tests concluded")
@@ -900,7 +901,7 @@ def hardlink_or_copy(source, destination):
 
     try:
         os.link(source, destination)
-    except OSError, e:
+    except OSError(e):
         # Different partitions can cause hard links to fail (error 18),
         # if there's a different error, bail out immediately.
         if e.args[0] != errno.EXDEV:

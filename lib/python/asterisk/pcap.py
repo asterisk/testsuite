@@ -702,13 +702,14 @@ class VOIPSniffer(object):
         self.callbacks = {}
         self.traces = {}
 
-    def process_packet(self, packet, (host, port)):
+    def process_packet(self, packet, host_port):
         """Store a known packet in our traces and call our callbacks
 
         Keyword Arguments:
         packet       A raw packet received from ... something.
         (host, port) Tuple of received host and port
         """
+        (host, port) = host_port
         packet = self.packet_factory.interpret_packet(packet)
         if packet is None:
             return
@@ -775,13 +776,14 @@ class VOIPProxy(VOIPSniffer):
             self.rules = rules
             self.cb = cb
 
-        def datagramReceived(self, data, (host, port)):
+        def datagramReceived(self, data, host_port):
             """Callback for when a datagram is received
 
             Keyword Arguments:
             data         The actual packet
             (host, port) Tuple of source host and port
             """
+            (host, port) = host_port
             LOGGER.debug('Proxy received from {0}:{1}\n{2}'.format(
                 host, port, data))
 

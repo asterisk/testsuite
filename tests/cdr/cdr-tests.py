@@ -13,8 +13,8 @@ import logging
 import time
 
 sys.path.append("lib/python")
-from cdr import CDRModule
-from cdr import AsteriskCSVCDR
+from asterisk.cdr import CDRModule
+from asterisk.cdr import AsteriskCSVCDR
 
 LOGGER = logging.getLogger(__name__)
 
@@ -171,7 +171,7 @@ class ForkCdrModuleEndResetTime(ForkCdrModuleEndTime):
                  "cdrtest_local"))
 
         LOGGER.debug('Checking start/end times for forked entries')
-        for i in range(len(self.entries_to_check) - 1):
+        for i in list(range(len(self.entries_to_check) - 1)):
             end = time.strptime(cdr1[self.entries_to_check[i]].end,
                 "%Y-%m-%d %H:%M:%S")
             beg = time.strptime(cdr1[self.entries_to_check[i + 1]].start,

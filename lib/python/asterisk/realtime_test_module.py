@@ -15,6 +15,7 @@ from twisted.internet import reactor
 from twisted.internet import error
 from twisted.web.server import Site
 from twisted.web.resource import Resource, NoResource
+from . import compat
 
 LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +92,7 @@ class RealtimeData(object):
 
         return [row for row in table
                 if all(key in row and re.match(value, row[key])
-                       for key, value in where.iteritems())]
+                       for key, value in compat.iteritems(where.items))]
 
     def retrieve_rows(self, table_name, where):
         """Retrieve multiple rows from a table.
@@ -239,7 +240,7 @@ class LeafResource(Resource):
         since we could use a dict comprehension.
         """
         filtered_args = {}
-        for key, values in args.iteritems():
+        for key, values in compat.iteritems(args):
             if " LIKE" in key:
                 # Strip away " LIKE" and % from values
                 filtered_args[key[:-5]] = [val.replace('%', '.*')
@@ -250,7 +251,7 @@ class LeafResource(Resource):
         LOGGER.debug('filtered args is %s' % filtered_args)
 
         return dict((key, values[0] if values else '.*') for key, values in
-                    filtered_args.iteritems())
+                    compat.iteritems(filtered_args))
 
     def encode_row(self, row):
         """Encode a retrieved row for an HTTP response.
@@ -261,7 +262,7 @@ class LeafResource(Resource):
         Example output: 'foo=cat&bar=dog&baz=donkey'
         """
         string = '&'.join(['{0}={1}'.format(cgi.escape(key), cgi.escape(val))
-                           for key, val in row.iteritems()])
+                           for key, val in compat.iteritems(row)])
         LOGGER.debug("Returning response %s" % string)
         return string
 
@@ -481,7 +482,7 @@ class RealtimeTestModule(object):
         if not data:
             return
 
-        for table_name, rows in data.iteritems():
+        for table_name, rows in compat.iteritems(data):
             self.rt_data.add_rows(table_name, rows)
 
     def setup_http(self):

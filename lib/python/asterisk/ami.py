@@ -13,8 +13,9 @@ import datetime
 import logging
 import re
 import json
-from pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
+from .pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
     PLUGGABLE_ACTION_REGISTRY, var_replace
+from . import compat
 
 LOGGER = logging.getLogger(__name__)
 
@@ -346,7 +347,7 @@ class CelRequirement(object):
             lower_key = key.lower()
             if lower_key == 'extra':
                 value = dict((key.lower(), value)
-                             for key, value in value.iteritems())
+                             for key, value in compat.iteritems(value))
             self.requirements[lower_key] = value
         self.orderings = requirements.get('partialorder') or []
         self.named_id = requirements.get('id')
@@ -731,7 +732,7 @@ PLUGGABLE_EVENT_REGISTRY.register("ami-events", AMIPluggableEventModule)
 
 def replace_ami_vars(mydict, values):
     outdict = {}
-    for key, value in mydict.iteritems():
+    for key, value in compat.iteritems(mydict):
         outdict[key] = var_replace(value, values)
 
     return outdict

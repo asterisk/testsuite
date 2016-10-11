@@ -8,6 +8,7 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 '''
 
+from __future__ import print_function
 import sys
 import yaml
 
@@ -80,7 +81,7 @@ class TestSuite:
     def occurances(self, **kwargs):
         match = []
         for test in self.tests:
-            for key, value in kwargs.iteritems():
+            for key, value in kwargs.items():
                 if value in getattr(test, key):
                     match.append(test)
                     continue
@@ -88,14 +89,14 @@ class TestSuite:
         return len(match)
 
     def results_for(self, key):
-        print key.title() + ":"
+        print((key.title() + ":"))
         things = self.unique(key)
         width = max(len(t) for t in things)
         results = [(self.occurances(**{key: t}), t) for t in things]
         results.sort(key=lambda tup: tup[0], reverse=True)
         for (count, name) in results:
-            print "\t%-*s %5d" % (width, name, count)
-        print ""
+            print(("\t%-*s %5d" % (width, name, count)))
+        print("")
 
 
 def load_yaml_config(path):
@@ -105,10 +106,10 @@ def load_yaml_config(path):
     except IOError:
         # Ignore errors for the optional tests/custom folder.
         if path != "tests/custom/tests.yaml":
-            print "Failed to open %s" % path
+            print(("Failed to open %s" % path))
         return None
     except:
-        print "Unexpected error: %s" % sys.exc_info()[0]
+        print(("Unexpected error: %s" % sys.exc_info()[0]))
         return None
 
     config = yaml.load(f)
@@ -118,11 +119,11 @@ def load_yaml_config(path):
 
 
 def main(argv=None):
-    print "Testsuite Module Usage and Coverage Report"
-    print ""
+    print("Testsuite Module Usage and Coverage Report")
+    print("")
     test_suite = TestSuite()
-    print "Number of tests:", len(test_suite.tests)
-    print ""
+    print("Number of tests:", len(test_suite.tests))
+    print("")
     test_suite.results_for('tags')
     test_suite.results_for('test_objects')
     test_suite.results_for('test_modules')

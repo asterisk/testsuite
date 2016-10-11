@@ -14,11 +14,12 @@ import requests
 import traceback
 import urllib
 
-from test_case import TestCase
-from pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
+from .test_case import TestCase
+from .pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
     PLUGGABLE_ACTION_REGISTRY, var_replace
-from test_suite_utils import all_match
+from .test_suite_utils import all_match
 from twisted.internet import reactor
+from . import compat
 try:
     from autobahn.websocket import WebSocketClientFactory, \
         WebSocketClientProtocol, connectWS
@@ -560,7 +561,7 @@ class ARIRequest(object):
         url = self.ari.build_url(uri)
         requests_method = getattr(requests, self.method)
         params = dict((key, var_replace(val, values))
-                      for key, val in self.params.iteritems())
+                      for key, val in compat.iteritems(self.params))
 
         response = requests_method(
             url,

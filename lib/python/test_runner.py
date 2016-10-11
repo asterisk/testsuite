@@ -17,6 +17,7 @@ import logging
 import logging.config
 import os
 import yaml
+import importlib
 
 from twisted.internet import reactor
 
@@ -25,7 +26,7 @@ logging.basicConfig()
 
 sys.path.append('lib/python')
 
-from version import AsteriskVersion
+from asterisk.version import AsteriskVersion
 
 
 class TestModuleFinder(object):
@@ -179,8 +180,14 @@ def load_and_parse_module(type_name):
     if not len(module_name):
         LOGGER.error("No module specified: %s" % module_name)
         return None
+   
+    # Try load module from pkg asterisk
+    # If dont can load from test module
+    try:
+        module = importlib.import_module('asterisk.' + module_name)
+    except:
+        module = __import__(module_name)
 
-    module = __import__(module_name)
     for comp in parts[1:]:
         module = getattr(module, comp)
     return module

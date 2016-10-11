@@ -12,7 +12,7 @@ the GNU General Public License Version 2.
 
 import yaml
 import unittest
-import astcsv
+from . import astcsv
 import re
 import logging
 
@@ -50,7 +50,7 @@ class CELSniffer(object):
 
     def stop_handler(self, reason):
         """Write out the file. Currently hard codd to cel_events.yaml"""
-        stream = file('cel_events.yaml', 'w')
+        stream = open('cel_events.yaml', 'w')
         if len(self.display) == 0:
             yaml.dump(self.events, stream)
         else:

@@ -19,7 +19,8 @@ from os import close
 from os import remove
 from shutil import move
 from tempfile import mkstemp
-from config import ConfigFile
+from .config import ConfigFile
+from . import compat
 
 LOGGER = logging.getLogger(__name__)
 
@@ -100,12 +101,12 @@ def all_match(pattern, message):
     elif isinstance(pattern, dict):
         # Dict should match for every field in the pattern.
         # extra fields in the message are fine.
-        for key, value in pattern.iteritems():
+        for key, value in compat.iteritems(pattern):
             to_check = message.get(key)
             if to_check is None or not all_match(value, to_check):
                 return False
         return True
-    elif isinstance(pattern, str) or isinstance(pattern, unicode):
+    elif isinstance(pattern, str) or isinstance(pattern, compat.unicode):
         # Pattern strings are considered to be regexes
         return re.match(pattern, str(message)) is not None
     elif isinstance(pattern, int):

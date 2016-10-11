@@ -9,7 +9,7 @@ the GNU General Public License Version 2.
 """
 
 from twisted.internet import defer
-from test_conditions import TestCondition
+from .test_conditions import TestCondition
 import logging
 import unittest
 import re

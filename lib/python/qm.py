@@ -37,7 +37,8 @@ NOTE: The author stated that this code was in the Public Domain
 >>> qm.get_function(qm.solve([0,1,2],[])[1])
 '((NOT B) OR (NOT A))'
 """
-
+from __future__ import absolute_import
+from asterisk.compat import xrange
 
 class QM:
   def __init__(self, variables):

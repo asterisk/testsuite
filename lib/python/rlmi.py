@@ -17,13 +17,14 @@
 #   rlmi_schema_gen
 #
 
+from __future__ import absolute_import
 import sys
 import re as re_
 import base64
 import datetime as datetime_
 import warnings as warnings_
 from lxml import etree as etree_
-
+from asterisk.compat import iteritems
 
 Validate_simpletypes_ = True
 
@@ -343,7 +344,7 @@ except ImportError as exp:
             return None
         @classmethod
         def gds_reverse_node_mapping(cls, mapping):
-            return dict(((v, k) for k, v in mapping.iteritems()))
+            return dict(((v, k) for k, v in iteritems(mapping)))
 
 
 #
@@ -386,6 +387,8 @@ def quote_xml(inStr):
     "Escape markup chars, but do not modify CDATA sections."
     if not inStr:
         return ''
+    if sys.version_info >= (3, 0):
+        basestring = str
     s1 = (isinstance(inStr, basestring) and inStr or
           '%s' % inStr)
     s2 = ''
@@ -409,6 +412,8 @@ def quote_xml_aux(inStr):
 
 
 def quote_attrib(inStr):
+    if sys.version_info >= (3, 0):
+        basestring = str
     s1 = (isinstance(inStr, basestring) and inStr or
           '%s' % inStr)
     s1 = s1.replace('&', '&amp;')

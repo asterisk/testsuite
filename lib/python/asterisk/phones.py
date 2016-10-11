@@ -13,7 +13,8 @@ import logging
 from twisted.internet import reactor, task
 import pjsua as pj
 
-import pjsua_mod
+from . import pjsua_mod
+from . import compat
 
 LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +86,7 @@ class PjsuaPhoneController(pjsua_mod.PJsua):
 
     def __setup_pjsua_acc_cb(self):
         """Setup PJSUA account callbacks"""
-        for name, phone_obj in self.__pjsua_phones.iteritems():
+        for name, phone_obj in compat.iteritems(self.__pjsua_phones):
             acc_cb = AccCallback()
             phone_obj.account.set_callback(acc_cb)
             LOGGER.info("%s is ready to receive calls." % name)
@@ -106,7 +107,7 @@ class PjsuaPhoneController(pjsua_mod.PJsua):
         if name:
             return self.__pjsua_phones.get(name)
         if account:
-            for name, phone_obj in self.__pjsua_phones.iteritems():
+            for name, phone_obj in compat.iteritems(self.__pjsua_phones):
                 if account is phone_obj.account:
                     return phone_obj
 

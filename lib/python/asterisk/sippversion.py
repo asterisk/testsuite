@@ -13,7 +13,7 @@ import sys
 import unittest
 sys.path.append("lib/python")
 
-import test_suite_utils
+from . import test_suite_utils
 
 
 class SIPpVersion:
@@ -48,6 +48,7 @@ class SIPpVersion:
             except OSError:
                 return
             for line in sipp_process.stdout:
+                line = line.decode('utf-8') # py3 support
                 if line.strip().startswith('SIPp '):
                     sipp = line.strip()[5:]
                     sipp = sipp.split(',', 1)
@@ -56,7 +57,6 @@ class SIPpVersion:
                     if len(sipp) > 1:
                         feature = sipp[1]
             sipp_process.wait()
-
         if version is not None:
             self.__parse_version(version)
         if feature is not None:

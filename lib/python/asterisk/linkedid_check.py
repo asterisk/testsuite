@@ -163,7 +163,7 @@ class LinkedIdCheck(object):
         event   - The event key/value pairs in a dict
         """
         uniqueid = event['uniqueid']
-        if uniqueid not in self.channels.keys():
+        if uniqueid not in list(self.channels.keys()):
             new_chan = LinkedIdChannel(uniqueid,
                                        len(self.channels) + 1,
                                        self.test_object)
@@ -185,7 +185,7 @@ class LinkedIdCheck(object):
         # insure the channel object is created for a new uniqueid
         uniqueid = event['uniqueid']
         linkedid = event['linkedid']
-        if not uniqueid in self.channels.keys():
+        if not uniqueid in list(self.channels.keys()):
             new_chan = LinkedIdChannel(uniqueid,
                                        len(self.channels) + 1,
                                        self.test_object)
@@ -216,7 +216,7 @@ class LinkedIdCheck(object):
         bridgeid = event['bridgeuniqueid']
 
         # uniqueid bridges numerically in logs for better readability
-        if bridgeid not in self.bridges.keys():
+        if bridgeid not in list(self.bridges.keys()):
             self.bridges[bridgeid] = len(self.bridges) + 1
 
         # list of channels in this bridge

@@ -17,10 +17,12 @@ import time
 import shutil
 import logging
 
-import test_suite_utils
+from . import test_suite_utils
 
-from config import ConfigFile
-from version import AsteriskVersion
+from .config import ConfigFile
+from .version import AsteriskVersion
+
+from . import compat
 
 from twisted.internet import reactor, protocol, defer, utils, error
 from twisted.python.failure import Failure
@@ -232,7 +234,7 @@ class AsteriskProtocol(protocol.ProcessProtocol):
 
     def outReceived(self, data):
         """Override of ProcessProtocol.outReceived"""
-        self.output += data
+        self.output += str(data)
 
     def connectionMade(self):
         """Override of ProcessProtocol.connectionMade"""
@@ -331,7 +333,7 @@ class Asterisk(object):
         default_etc_directory = os.path.join(localtest_root, "etc/asterisk")
     else:
         # select tmp path with most available space
-        best_tmp = sorted(['/tmp', '/var/tmp'], cmp=compare_free_space)[0]
+        best_tmp = sorted(['/tmp', '/var/tmp'], key=compat.cmp_to_key(compare_free_space))[0]
         # Base location of the temporary files created by the testsuite
         test_suite_root = best_tmp + "/asterisk-testsuite"
         # The default etc directory for Asterisk
@@ -477,7 +479,7 @@ class Asterisk(object):
         def __wait_fully_booted_callback(cli_command):
             """Callback for CLI command waitfullybooted"""
 
-            if "Asterisk has fully booted" in cli_command.output:
+            if "Asterisk has fully booted" in cli_command.output.decode('utf-8'):
                 msg = "Successfully started Asterisk %s" % self.host
                 self._start_deferred.callback(msg)
             else:
@@ -941,7 +943,7 @@ class Asterisk(object):
                 ast_file.write("#include \"%s/asterisk.options.conf.inc\"\n" %
                                (self.astetcdir))
                 if ast_conf_options:
-                    for (var, val) in ast_conf_options.iteritems():
+                    for (var, val) in compat.iteritems(ast_conf_options):
                         ast_file.write("%s = %s\n" % (var, val))
                 for (var, val) in cat.options:
                     if not ast_conf_options or var not in ast_conf_options:

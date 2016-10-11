@@ -147,7 +147,7 @@ class PJsua(object):
             self.lib.set_null_snd_dev()
             self.__create_accounts()
             self.lib.start()
-        except pj.Error, exception:
+        except pj.Error as exception:
             LOGGER.error("Exception: " + str(exception))
             self.lib.destroy()
             self.lib = None

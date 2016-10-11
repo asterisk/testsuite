@@ -16,6 +16,7 @@ import sys
 import csv
 import re
 import logging
+from . import compat
 
 LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +73,7 @@ class AsteriskCSVLine(object):
 
     def iteritems(self):
         """Iterate over the values in the columns"""
-        return self.__columns.iteritems()
+        return compat.iteritems(self.__columns)
 
     def __str__(self):
         return ",".join(["\"%s\"" % (self.__dict__[x]) for x in self.__fields])
@@ -97,7 +98,8 @@ class AsteriskCSV(object):
 
         try:
             csvreader = csv.DictReader(open(self.filename, "r"), fields, ",")
-        except IOError as (errno, strerror):
+        except IOError as err:
+            (errno, strerror) = err.args
             LOGGER.error("IOError %d[%s] while opening file '%s'" %
                          (errno, strerror, self.filename))
         except:
@@ -147,7 +149,7 @@ class AsteriskCSV(object):
             size = len(list_a)
 
             # attempt two orderings: forward and reversed
-            guess_orders = (range(size), list(reversed(range(size))))
+            guess_orders = (list(range(size)), list(reversed(list(range(size)))))
             found_orders = []
 
             for guess_order in guess_orders:

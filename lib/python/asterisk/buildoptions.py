@@ -51,7 +51,7 @@ class AsteriskBuildOptions(object):
         except IOError:
             return ret_val
         except:
-            print "Unexpected error: %s" % sys.exc_info()[0]
+            print("Unexpected error: %s" % sys.exc_info()[0])
             return ret_val
         for line in file_lines:
             if "#define" in line:
@@ -59,7 +59,7 @@ class AsteriskBuildOptions(object):
                 if (define_tuple[0] == "" or define_tuple[2] == ""):
                     msg = ("Unable to parse build option line [%s] into "
                            "compiler flag token and value" % line)
-                    print msg
+                    print(msg)
                 else:
                     flag = define_tuple[0].strip()
                     allowed = define_tuple[2].strip()
@@ -84,7 +84,7 @@ class AsteriskBuildOptions(object):
         True if the build option exists and the expected value matches;
         false otherwise
         """
-        if build_option in self._flags.keys():
+        if build_option in list(self._flags.keys()):
             return expected_value == self._flags[build_option]
         elif expected_value == "0":
             return True

@@ -14,13 +14,14 @@ import shutil
 import re
 
 sys.path.append("lib/python")
-from ami import AMIEventInstance
+from .ami import AMIEventInstance
 from twisted.internet import reactor
 from starpy import fastagi
 from test_runner import load_and_parse_module
-from pluggable_registry import PLUGGABLE_ACTION_REGISTRY,\
+from .pluggable_registry import PLUGGABLE_ACTION_REGISTRY,\
     PLUGGABLE_EVENT_REGISTRY,\
     PluggableRegistry
+from . import compat
 
 LOGGER = logging.getLogger(__name__)
 
@@ -373,7 +374,7 @@ class CallFiles(object):
                         ["astspooldir"], call_file_num))
 
         with open(self.locale, 'w') as outfile:
-            for key, value in params.items():
+            for key, value in compat.iteritems(params):
                 outfile.write("%s: %s\n" % (key, value))
         LOGGER.debug("Wrote call file to %s", self.locale)
         self.move_file(call_file_num, call_file)
@@ -570,7 +571,7 @@ class SoundChecker(object):
             return
 
         current_trigger = config['trigger']['match']
-        for key, value in current_trigger.iteritems():
+        for key, value in compat.iteritems(current_trigger):
             if key.lower() not in event:
                 LOGGER.debug("Condition %s not in event, returning", key)
                 return
@@ -778,7 +779,7 @@ class EventActionModule(object):
 
         def register_modules(config, registry):
             """Register pluggable modules into the registry"""
-            for key, local_class_path in config.iteritems():
+            for key, local_class_path in compat.iteritems(config.items):
                 local_class = load_and_parse_module(local_class_path)
                 if not local_class:
                     raise Exception("Unable to load %s for module key %s"
@@ -798,7 +799,7 @@ class EventActionModule(object):
         for e_a_set in config["mapping"]:
             plug_set = {"events": [], "actions": []}
 
-            for plug_name, plug_config in e_a_set.iteritems():
+            for plug_name, plug_config in compat.iteritems(e_a_set.items):
                 self.parse_module_config(plug_set, plug_name, plug_config)
 
             if 0 == len(plug_set["events"]):

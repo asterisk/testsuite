@@ -12,7 +12,7 @@ import logging
 import logging.config
 import unittest
 
-from test_conditions import TestCondition
+from .test_conditions import TestCondition
 from twisted.internet import defer
 
 LOGGER = logging.getLogger(__name__)

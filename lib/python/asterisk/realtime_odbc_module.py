@@ -8,7 +8,7 @@ the GNU General Public License Version 2.
 """
 import os
 import logging
-
+from . import compat
 
 LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class RealtimeOdbcModule(object):
         self.res_odbc = {}
 
         # generate configuration for each dsn
-        for dsn, config in module_config.iteritems():
+        for dsn, config in compat.iteritems(module_config):
             self._configure(dsn, config)
 
         # set the odbc and conf files
@@ -109,7 +109,7 @@ class RealtimeOdbcModule(object):
         with open(filepath, 'w') as filehandle:
             for section in contents:
                 filehandle.write('[' + section + ']\n')
-                for name, value in contents[section].iteritems():
+                for name, value in compat.iteritems(contents[section]):
                     filehandle.write(name + '=' + value + '\n')
 
     def _read_ini_file(self, filepath):

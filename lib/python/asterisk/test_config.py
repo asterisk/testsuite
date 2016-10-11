@@ -9,6 +9,7 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
 
+from __future__ import print_function
 import sys
 import os
 import subprocess
@@ -18,12 +19,12 @@ import traceback
 
 sys.path.append("lib/python")
 
-import test_suite_utils
+from . import test_suite_utils
 
-from version import AsteriskVersion
-from asterisk import Asterisk
-from buildoptions import AsteriskBuildOptions
-from sippversion import SIPpVersion
+from .version import AsteriskVersion
+from .asterisk import Asterisk
+from .buildoptions import AsteriskBuildOptions
+from .sippversion import SIPpVersion
 
 
 class TestConditionConfig(object):
@@ -124,7 +125,7 @@ class Dependency(object):
                 feature = dep['sipp']['feature']
             self.sipp_version = SIPpVersion()
             self.version = SIPpVersion(version, feature)
-            if self.sipp_version >= self.version:
+            if str(self.sipp_version) >= str(self.version):
                 self.met = True
             if self.version.tls and not self.sipp_version.tls:
                 self.met = False
@@ -139,7 +140,7 @@ class Dependency(object):
                     self.met = getattr(self, dir_method)()
                     found = True
             if not found:
-                print "Unknown custom dependency - '%s'" % self.name
+                print(("Unknown custom dependency - '%s'" % self.name))
         elif "asterisk" in dep:
             if self.ast:
                 self.name = dep["asterisk"]
@@ -156,12 +157,12 @@ class Dependency(object):
                 self.met = True
         elif "pcap" in dep:
             self.name = "pcap"
-            from test_case import PCAP_AVAILABLE
+            from .test_case import PCAP_AVAILABLE
             self.met = PCAP_AVAILABLE
         else:
-            print "Unknown dependency type specified:"
+            print("Unknown dependency type specified:")
             for key in dep.keys():
-                print key
+                print(key)
 
     def depend_remote(self):
         """Check to see if we run against a remote instance of Asterisk"""
@@ -248,13 +249,13 @@ class Dependency(object):
         if self.asterisk_build_options:
             return (self.asterisk_build_options.check_option(name))
         else:
-            print "Unable to evaluate build options: no build options found"
+            print("Unable to evaluate build options: no build options found")
             return False
 
     def _find_asterisk_module(self, name):
         """Determine if an Asterisk module exists"""
         if not Dependency.ast:
-            print "Unable to evaluate Asterisk modules: Asterisk not found"
+            print("Unable to evaluate Asterisk modules: Asterisk not found")
             return False
 
         if Dependency.ast.original_astmoddir == "":
@@ -303,12 +304,12 @@ class TestConfig(object):
         try:
             self._parse_config()
         except yaml.YAMLError as e:
-            print("YAML Parse Error: %s" % e)
-            print(traceback.format_exc())
+            print(("YAML Parse Error: %s" % e))
+            print((traceback.format_exc()))
             self.can_run = False
         except:
-            print("Exception occurred while parsing config:", sys.exc_info()[0])
-            print(traceback.format_exc())
+            print(("Exception occurred while parsing config:", sys.exc_info()[0]))
+            print((traceback.format_exc()))
             self.can_run = False
 
     def _process_global_settings(self):
@@ -331,8 +332,8 @@ class TestConfig(object):
                 if self.config is not None and 'exclude-tests' in self.config:
                     self.excluded_tests = self.config['exclude-tests']
             else:
-                print ("WARNING - test configuration [%s] not found in "
-                       "config file" % self.test_configuration)
+                print(("WARNING - test configuration [%s] not found in "
+                       "config file" % self.test_configuration))
 
     def _process_testinfo(self):
         """Process the test information block"""
@@ -395,8 +396,8 @@ class TestConfig(object):
             self.config = yaml.load(config_file)
 
         if not self.config:
-            print "ERROR: Failed to load configuration for test '%s'" % \
-                self.test_name
+            print("ERROR: Failed to load configuration for test '%s'" % \
+                self.test_name)
             return
 
         self._process_global_settings()
@@ -422,8 +423,8 @@ class TestConfig(object):
             matches = [cond_def for cond_def in self.condition_definitions
                        if cond_def['name'] == conf['name']]
             if len(matches) != 1:
-                print ("Unknown or too many matches for condition: " +
-                       conf['name'])
+                print(("Unknown or too many matches for condition: " +
+                       conf['name']))
             else:
                 pre_cond = TestConditionConfig(conf, matches[0], "Pre")
                 post_cond = TestConditionConfig(conf, matches[0], "Post")

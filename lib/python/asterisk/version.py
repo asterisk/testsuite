@@ -18,7 +18,7 @@ import logging
 import sys
 import subprocess
 
-import test_suite_utils
+from . import test_suite_utils
 
 LOGGER = logging.getLogger(__name__)
 
@@ -238,7 +238,7 @@ class AsteriskVersion(object):
     def __int__(self):
         """Convert the Asterisk version to an integer for comparisons"""
         if self.name:
-            return sys.maxint
+            return sys.maxsize if sys.version_info > (3,) else sys.maxint
         elif (self.branch):
             # Branches are a little odd. The more you specify, the less your
             # calculated value is. This keeps the following relationships true:
@@ -363,6 +363,7 @@ class AsteriskVersion(object):
                                                    o_excep.strerror))
                 raise
             process.wait()
+            version  = version.decode('utf-8') # compat py3
             cls._asterisk_version_from_binary = version.replace(
                 "Asterisk ", "")
         return cls._asterisk_version_from_binary

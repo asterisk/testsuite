@@ -10,19 +10,19 @@ the GNU General Public License Version 2.
 """
 
 import logging
-import test_suite_utils
+from . import test_suite_utils
+from . import compat
 
 from abc import ABCMeta, abstractmethod
 from twisted.internet import reactor, defer, protocol, error
-from test_case import TestCase
+from .test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
 
 
-class ScenarioGenerator(object):
+class ScenarioGenerator(compat.with_metaclass(ABCMeta, object)):
     """Scenario Generators provide a generator function for creating scenario
     sets for use by SIPpTestCase"""
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def generator(self):
@@ -486,7 +486,7 @@ class SIPpProtocol(protocol.ProcessProtocol):
     def outReceived(self, data):
         """Override of ProcessProtocol.outReceived"""
         LOGGER.debug("Received from SIPp scenario %s: %s" % (self._name, data))
-        self.output += data
+        self.output += str(data)
 
     def connectionMade(self):
         """Override of ProcessProtocol.connectionMade"""
