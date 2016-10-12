@@ -1,0 +1,22 @@
+testinfo:
+    summary: 'Test opus encoding'
+    description: |
+        'Plays a tone that gets encoded into opus. This tone is then written
+         out/decoded into a .wav file. Once written, the file is analyzed to
+         see if the data in the file approximately matches the original tone.'
+
+test-modules:
+    add-to-search-path:
+        - 'tests/codecs'
+    test-object:
+        config-section: test-object-config
+        typename: 'audio_analyzer.Analyzer'
+
+properties:
+    minversion: ['13.12.0', '14.0.1']
+    dependencies:
+        - asterisk : 'res_pjsip'
+        - asterisk : 'codec_opus'
+    tags:
+        - pjsip
+        - codec
