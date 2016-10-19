@@ -1,0 +1,70 @@
+testinfo:
+    summary: 'Ensure that duplicate Channel IDs are not allowed'
+    description: |
+        'This test ensures that duplicate channel IDs are not allowed by ARI. When
+        a duplicate channel ID is used, ARI should return a 409 response. Here
+        is how this test works:
+            * A channel is originated with ID "eggs". This should succeed with a 200
+              response and we should get a StasisStart event.
+            * Once we get the StasisStart, we attempt in every way to originate a channel
+              with ID "eggs":
+                  * Originate, specifying channelID "eggs"
+                  * Originate, specifying otherChannelID "eggs"
+                  * OriginateWithId, specifying channelID "eggs"
+                  * OriginateWithId, specifying otherChannelID "eggs"
+              All of these should fail with a 409 response and no Stasis Start. The test
+              fails if:
+                  * An originate succeeds
+                  * An originate fails with a non-409 status
+                  * An originate fails with a non HTTP error
+                  * A StasisStart happens for any of the failed originates.
+            * Hang up the channel.'
+
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        typename: ari.AriOriginateTestObject
+        config-section: ari-config
+    modules:
+        -
+            config-section: event-config
+            typename: ari.WebSocketEventModule
+
+
+ari-config:
+    test-iterations:
+        -
+            endpoint: 'Local/echo@default'
+            channelId: 'eggs'
+            app: 'testsuite'
+
+
+event-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+            count: 1
+            callback:
+                module: duplicate_id
+                method: on_start
+
+
+properties:
+    minversion: ['13.13.0', '14.2.0']
+    dependencies:
+        - python: 'autobahn.websocket'
+        - python: 'requests'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_ari_channels'
+        - asterisk: 'res_stasis'
+    tags:
+        - ARI
+    issues:
+        - jira: 'ASTERISK-26241'

@@ -13,3 +13,4 @@ tests:
     - test: 'originate_to_dialplan'
     - dir: 'create_dial_bridge'
     - dir: 'hold'
+    - test: 'originate_duplicate_id'
