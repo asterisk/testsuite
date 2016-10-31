@@ -87,10 +87,13 @@ class AppTest(TestCase):
 
     def _create_application_event_instances(self, channel_id, events):
         for event_config in events:
-            minversion = event_config.get('minversion', '0.0.0')
-            maxversion = event_config.get('maxversion', '999.999.999')
-            if (AsteriskVersion() < AsteriskVersion(minversion) or
-                AsteriskVersion() >= AsteriskVersion(maxversion)):
+            minversion = event_config.get('minversion')
+            maxversion = event_config.get('maxversion')
+            if (minversion is not None and
+                    AsteriskVersion() < AsteriskVersion(minversion)):
+                continue
+            if (maxversion is not None and
+                    AsteriskVersion() >= AsteriskVersion(maxversion)):
                 continue
             ae_instance = ApplicationEventInstance(channel_id,
                                                    event_config,
