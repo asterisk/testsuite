@@ -259,6 +259,8 @@ test-object-config:
 properties:
     minversion: '12.0.0'
     dependencies:
+        # Needed for the PLAYBACK event
+        - buildoption: 'TEST_FRAMEWORK'
         - python : 'starpy'
         - python : 'twisted'
     tags:
