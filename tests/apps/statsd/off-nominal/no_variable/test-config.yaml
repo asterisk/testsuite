@@ -38,11 +38,12 @@ originator-config:
     async: True
 
 properties:
-    minversion: '13.7.0'
+    minversion: '14.0.0'
     dependencies:
         - python: 'autobahn.websocket'
         - python: 'starpy'
         - python: 'twisted'
+        - asterisk: 'app_statsd'
     tags:
         - statsd
         - apps
