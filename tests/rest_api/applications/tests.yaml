@@ -3,6 +3,7 @@ tests:
     - test: 'errors'
     - dir: 'subscribe-endpoint'
     - test: 'subscribe-all'
+    - test: 'subscribe-all-bridge'
     - test: 'subscribe-bridge'
     - test: 'subscribe-device-state'
     - test: 'double-subscribe-device-state'
