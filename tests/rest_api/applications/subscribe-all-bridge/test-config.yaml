@@ -1,0 +1,164 @@
+testinfo:
+    summary: 'Test subscription to all bridges.'
+    description: |
+        * Subscribe the application to all bridge events
+        * Create channel 1 using channels/originate with endpoint = Local/s@default
+        * Wait for channel to enter Stasis application
+        * Create bridge 1
+        * Place channel into bridge 1
+        * Remove channel from bridge 1
+        * Delete the bridge
+        * Create bridge 2
+        * Wait for BridgeCreated event
+        * Delete bridge 2
+        * Delete the channel
+        * Stop.
+
+test-modules:
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'ari.AriBaseTestObject'
+    modules:
+    -   config-section: 'pluggable-config'
+        typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    apps: 'testsuite'
+    reactor-timeout: 30
+    stop-on-end: False
+
+pluggable-config:
+    -
+        ari-start:
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'applications/testsuite/subscription?eventSource=bridge:'
+                expect: 200
+            -   method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'Local/s@default'
+                    app: 'testsuite'
+                    channelId: 'channel1'
+                expect: 200
+
+    -   ari-events:
+            match:
+                type: 'StasisStart'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+            count: 1
+        ari-requests:
+            -   method: 'post'
+                uri: 'bridges'
+                params:
+                    bridgeId: 'bridge1'
+                expect: 200
+    -   ari-events:
+            -
+                match:
+                    type: 'BridgeCreated'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'stasis'
+                        id: 'bridge1'
+                count: 1
+        ari-requests:
+            -   method: 'post'
+                uri: 'bridges/bridge1/addChannel'
+                params:
+                   channel: 'channel1'
+                expect: 204
+    -   ari-events:
+            -
+                match:
+                    type: 'ChannelEnteredBridge'
+                    channel:
+                        id: 'channel1'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'stasis'
+                        id: 'bridge1'
+                count: 1
+        ari-requests:
+            -   method: 'post'
+                uri: 'bridges/bridge1/removeChannel'
+                params:
+                   channel: 'channel1'
+                expect: 204
+    -   ari-events:
+            -
+                match:
+                    type: 'ChannelLeftBridge'
+                    channel:
+                        id: 'channel1'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'stasis'
+                        id: 'bridge1'
+                count: 1
+        ari-requests:
+            -   method: 'delete'
+                uri: 'bridges/bridge1'
+                expect: 204
+    -   ari-events:
+            -
+                match:
+                    type: 'BridgeDestroyed'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'stasis'
+                        id: 'bridge1'
+                count: 1
+        ari-requests:
+            -   method: 'post'
+                uri: 'bridges'
+                params:
+                    bridgeId: 'bridge2'
+                expect: 200
+    -   ari-events:
+            -
+                match:
+                    type: 'BridgeCreated'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'stasis'
+                        id: 'bridge2'
+                count: 1
+        ari-requests:
+            -   method: 'delete'
+                uri: 'bridges/bridge2'
+                expect: 204
+    -   ari-events:
+            -
+                match:
+                    type: 'BridgeDestroyed'
+                    bridge:
+                        technology: 'simple_bridge'
+                        bridge_type: 'mixing'
+                        bridge_class: 'stasis'
+                        id: 'bridge2'
+                count: 1
+        ari-requests:
+            -   method: 'delete'
+                uri: 'channels/channel1'
+                expect: 204
+        stop_test:
+
+properties:
+    minversion: '13.13.0'
+    dependencies:
+    -   python: 'autobahn.websocket'
+    -   python: 'requests'
+    -   python: 'twisted'
+    -   python: 'starpy'
+    -   asterisk: 'res_ari_channels'
+    tags:
+    - ARI
