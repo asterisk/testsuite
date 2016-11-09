@@ -1,0 +1,48 @@
+testinfo:
+    summary: 'Test SRV resolution when an explicit IPv6 transport is configured'
+    description: |
+        'This test verifies that when an endpoint is configured with an explicit
+        IPv6 transport that an SRV record lookup occurs and then an AAAA lookup
+        occurs.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator-ipv6
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: dns-server-config
+            typename: 'dns_server.DNSServer'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'target': '[::1]', 'key-args': {'scenario': 'uas-ipv6.xml',
+                                                    '-i': '[::1]', '-p': '5061'} }
+originator-ipv6:
+    trigger: 'scenario_start'
+    scenario-name: 'uas-ipv6.xml'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'Local/s-ipv6@default'
+    application: 'Echo'
+    async: 'True'
+
+dns-server-config:
+    port: 10053
+    python-zones:
+        -
+            example.com
+
+properties:
+    minversion: '14.0.0'
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_resolver_unbound'
+    tags:
+        - pjsip
