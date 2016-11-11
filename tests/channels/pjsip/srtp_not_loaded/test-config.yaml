@@ -1,0 +1,32 @@
+testinfo:
+    summary:     'Tests SDP negotiation when the res_srtp module is not loaded.'
+    description: |
+        'Run a SIPp scenario that tests SDP negotiation scenarios including:
+         * scenario with non-SRTP offer that is accepted
+         * scenario with SRTP offer that is rejected
+         * scenario with optimistic SRTP offer that is accepted
+        '
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'accept_without_srtp.xml', '-i': '127.0.0.1', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'decline_with_required.xml', '-i': '127.0.0.1', '-p': '5062'} }
+                - { 'key-args': {'scenario': 'accept_with_optimistic.xml', '-i': '127.0.0.1', '-p': '5063'} }
+
+properties:
+    minversion: '13.1.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk: 'app_echo'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_srtp'
+    tags:
+        - pjsip

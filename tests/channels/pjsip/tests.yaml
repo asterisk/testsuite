@@ -46,4 +46,5 @@ tests:
     - test: 'rpid_immediate'
     - test: 'set_var'
     - test: 'srtp_negotiation'
+    - test: 'srtp_not_loaded'
     - test: 'user_eq_phone'
