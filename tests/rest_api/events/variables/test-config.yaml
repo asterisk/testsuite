@@ -1,0 +1,104 @@
+testinfo:
+    summary: Test adding variables to ARI events
+    description: |
+        With some configuration in ari.conf, we:
+            1. create a channel
+            2. add it in a bridge
+            3. remove it from the bridge
+            4. hangup the channel
+        In each associated ARI event, check that the channel variables are still
+        present inside the event.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+test-object-config:
+    test-iterations:
+        -
+            endpoint: Local/s@default
+            channelId: testsuite-default-id
+            otherChannelId: testsuite-other-id
+            app: testsuite
+            json:
+                variables:
+                    CAN_YOU_SEE_ME: 'YES'
+                    CHANNEL(language): gobbledegook
+
+ari-config:
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+                        channelvars:
+                            CAN_YOU_SEE_ME: 'YES'
+                            CHANNEL(language): gobbledegook
+                    args: []
+            count: 1
+            requests:
+                -
+                    method: post
+                    uri: bridges
+                    params:
+                        bridgeId: testsuite-bridge-id
+                    expect: 200
+                -
+                    method: post
+                    uri: bridges/testsuite-bridge-id/addChannel
+                    params:
+                        channel: testsuite-default-id
+        -   conditions:
+                match:
+                    type: ChannelEnteredBridge
+                    channel:
+                        id: 'testsuite-default-id$'
+                        channelvars:
+                            CAN_YOU_SEE_ME: 'YES'
+                            CHANNEL(language): gobbledegook
+            requests:
+                method: post
+                uri: bridges/testsuite-bridge-id/removeChannel
+                params:
+                    channel: testsuite-default-id
+            count: 1
+        -   conditions:
+                match:
+                    type: ChannelLeftBridge
+                    channel:
+                        id: 'testsuite-default-id$'
+                        channelvars:
+                            CAN_YOU_SEE_ME: 'YES'
+                            CHANNEL(language): gobbledegook
+            requests:
+                method: delete
+                uri: channels/testsuite-default-id
+            count: 1
+        -   conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+                        channelvars:
+                            CAN_YOU_SEE_ME: 'YES'
+                            CHANNEL(language): gobbledegook
+            count: 1
+
+properties:
+    minversion: '14.2.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+    tags:
+        - ARI
