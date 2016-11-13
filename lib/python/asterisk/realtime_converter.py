@@ -236,7 +236,7 @@ class RealtimeConverter(object):
 
         self.meta = MetaData()
         self.engine = create_engine('{0}://{1}:{2}@{3}:{4}/{5}'.format(engine,
-            username, password, host, port, database), echo=True)
+            username, password, host, port, database), echo=False)
         self.conn = self.engine.connect()
 
         self.modules_conf_exists = False
