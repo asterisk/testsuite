@@ -196,7 +196,7 @@ class AsteriskCliCommand(object):
 
         self._deferred = defer.Deferred()
         deferred = utils.getProcessOutputAndValue(self._cmd[0],
-                                                  self._cmd,
+                                                  self._cmd[1:],
                                                   env=os.environ)
         deferred.addCallbacks(callback=__cli_output_callback,
                               errback=__cli_error_callback,)
