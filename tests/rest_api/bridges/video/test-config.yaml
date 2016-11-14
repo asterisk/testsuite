@@ -1,0 +1,223 @@
+
+testinfo:
+    summary: 'Test manipulation of video source in a multi-party bridge'
+    description: |
+        * Originate three channels and put them in a mixing bridge
+        * Set the video source to the third channel
+        * Once we know that the source of video is the third channel, switch
+          to the second channel
+        * Once we know that the source is the second channel, remove the video
+          source
+        * Validate all the events
+
+properties:
+    minversion: '13.13.0'
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -   config-section: pluggable-config
+            typename: pluggable_modules.EventActionModule
+
+test-object-config:
+    # using default origination:
+    #   endpoint: Local/s@default
+    #   channelId: testsuite-default-id
+    #   app: testsuite
+    stop-on-end: True
+
+pluggable-config:
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                channel:
+                    id: 'testsuite-default-id$'
+            count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'bridges'
+                params:
+                    bridgeId: 'VideoBridge'
+                # note: creating bridge does not result in another event
+            -
+                # note: an explicit subscription to the bridge is required to catch BridgeDestroyed later
+                method: 'post'
+                uri: 'applications/testsuite/subscription'
+                params:
+                    eventSource: 'bridge:VideoBridge'
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'Local/echo@default'
+                    channelId: 'MyFirstChannel'
+                    app: 'testsuite'
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'Local/echo@default'
+                    channelId: 'MySecondChannel'
+                    app: 'testsuite'
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    endpoint: 'Local/echo@default'
+                    channelId: 'MyThirdChannel'
+                    app: 'testsuite'
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                channel:
+                    id: 'MyFirstChannel$'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/VideoBridge/addChannel'
+            params:
+                channel: 'MyFirstChannel'
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                channel:
+                    id: 'MySecondChannel$'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/VideoBridge/addChannel'
+            params:
+                channel: 'MySecondChannel'
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                channel:
+                    id: 'MyThirdChannel$'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/VideoBridge/addChannel'
+            params:
+                channel: 'MyThirdChannel'
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                application: testsuite
+                channel:
+                    id: 'MyFirstChannel$'
+            count: 1
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                application: testsuite
+                channel:
+                    id: 'MySecondChannel$'
+            count: 1
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                application: testsuite
+                channel:
+                    id: 'MyThirdChannel$'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/VideoBridge/videoSource/MyThirdChannel'
+    -
+        ari-events:
+            match:
+                type: BridgeVideoSourceChanged
+                application: testsuite
+                bridge:
+                    id: 'VideoBridge$'
+                    video_mode: 'single'
+                    video_source_id: 'MyThirdChannel$'
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/VideoBridge/videoSource/MySecondChannel'
+    -
+        ari-events:
+            match:
+                type: BridgeVideoSourceChanged
+                application: testsuite
+                bridge:
+                    id: 'VideoBridge$'
+                    video_mode: 'single'
+                    video_source_id: 'MySecondChannel$'
+                old_video_source_id: 'MyThirdChannel$'
+            count: 1
+        ari-requests:
+            method: 'delete'
+            uri: 'bridges/VideoBridge/videoSource'
+        ari-requests:
+            method: 'delete'
+            uri: 'channels/MyThirdChannel'
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                application: testsuite
+                channel:
+                    id: 'MyThirdChannel$'
+            count: 1
+        ari-requests:
+            method: 'delete'
+            uri: 'channels/MySecondChannel'
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                application: testsuite
+                channel:
+                    id: 'MySecondChannel$'
+            count: 1
+        ari-requests:
+            method: 'delete'
+            uri: 'channels/MyFirstChannel'
+    -
+        ari-events:
+            match:
+                type: ChannelLeftBridge
+                application: testsuite
+                channel:
+                    id: 'MyFirstChannel$'
+            count: 1
+        ari-requests:
+            method: 'delete'
+            uri: 'bridges/VideoBridge'
+    -
+        ari-events:
+            match:
+                type: BridgeDestroyed
+                application: testsuite
+                bridge:
+                    id: 'VideoBridge$'
+            count: 1
+        ari-requests:
+            # delete the first stasis channel to end the test
+            method: 'delete'
+            uri: 'channels/testsuite-default-id'
