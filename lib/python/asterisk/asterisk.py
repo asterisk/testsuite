@@ -315,10 +315,10 @@ class Asterisk(object):
     def compare_free_space(x, y):
         # statvfs can return a long; comparison functions must return an
         # int. Hence the checks that occur here.
-        blocks_avail = os.statvfs(y).f_bavail - os.statvfs(x).f_bavail
-        if (blocks_avail > 0):
+        difference = os.statvfs(y).f_bavail - os.statvfs(x).f_bavail
+        if (difference > 1000):
             return 1
-        elif (blocks_avail < 0):
+        elif (difference < 1000):
             return -1
         else:
             return 0
