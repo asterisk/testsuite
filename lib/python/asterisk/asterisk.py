@@ -490,7 +490,7 @@ class Asterisk(object):
         def __wait_fully_booted_error(cli_command):
             """Errback for CLI command waitfullybooted"""
 
-            timeout = 90 if self.valgrind_enabled else 5
+            timeout = 90 if self.valgrind_enabled else 45
             if time.time() - self.__start_asterisk_time > timeout:
                 msg = "Asterisk core waitfullybooted for %s failed" % self.host
                 LOGGER.error(msg)

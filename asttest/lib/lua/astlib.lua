@@ -118,12 +118,12 @@ end
 function asterisk:_waitfullybooted()
 	-- wait for asterisk to be fully booted.  We do this by reading the
 	-- output of the 'core waitfullybooted' command and looking for the
-	-- string 'fully booted'.  We will try 10 times before completely
-	-- giving up with a 500 ms delay in between each try.  This is
+	-- string 'fully booted'.  We will try 45 times before completely
+	-- giving up with a 1000 ms delay in between each try.  This is
 	-- necessary to give asterisk time to start the CLI socket.
 	local booted
 	local output = ""
-	for _=1,10 do
+	for _=1,45 do
 		local err
 		booted, err = self:cli("core waitfullybooted")
 		
@@ -141,7 +141,7 @@ function asterisk:_waitfullybooted()
 			output = output .. err
 		end
 
-		posix.usleep(500000)
+		posix.usleep(1000000)
 	end
 	if booted and not booted:find("fully booted") then
 		print("error waiting for asterisk to fully boot: " .. booted)
