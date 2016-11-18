@@ -52,25 +52,25 @@ test-case-config:
         -
             scenarios:
                 # Charlie receives transfered call and sends audio to Alice.
-                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.4'},
+                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-mi': '127.0.0.4'},
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
                 # Bob receives call from Alice and sends audio. Bob then attemps to blind transfer Alice to Charlie.
-                - { 'key-args': {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.3'},
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-mi': '127.0.0.3'},
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
                 # Alice calls Bob and sends audio.
-                - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.2'},
+                - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob', '-timeout': '20s', '-mi': '127.0.0.2'},
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
         # Second iteration
         -
             scenarios:
                 # Charlie receives transfered call and sends audio to Alice.
-                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.4'},
+                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-mi': '127.0.0.4'},
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
                 # Bob receives call from Alice and sends audio. Bob then attempts to blind transfer Alice to Charlie.
-                - { 'key-args': {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.3'},
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-mi': '127.0.0.3'},
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
                 # Alice calls Bob and sends audio.
-                - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob_two', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.2'},
+                - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob_two', '-timeout': '20s', '-mi': '127.0.0.2'},
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
 
 test-case-config-v13.8.0:
@@ -82,25 +82,25 @@ test-case-config-v13.8.0:
         -
             scenarios:
                 # Charlie receives transfered call and sends audio to Alice.
-                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.4'},
+                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-mi': '127.0.0.4'},
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
                 # Bob receives call from Alice and sends audio. Bob then attemps to blind transfer Alice to Charlie.
-                - { 'key-args': {'scenario': 'bob_v13_8_0.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.3'},
+                - { 'key-args': {'scenario': 'bob_v13_8_0.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-mi': '127.0.0.3'},
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
                 # Alice calls Bob and sends audio.
-                - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.2'},
+                - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob', '-timeout': '20s', '-mi': '127.0.0.2'},
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
         # Second iteration
         -
             scenarios:
                 # Charlie receives transfered call and sends audio to Alice.
-                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.4'},
+                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-mi': '127.0.0.4'},
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
                 # Bob receives call from Alice and sends audio. Bob then attempts to blind transfer Alice to Charlie.
-                - { 'key-args': {'scenario': 'bob_v13_8_0.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.3'},
+                - { 'key-args': {'scenario': 'bob_v13_8_0.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-mi': '127.0.0.3'},
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
                 # Alice calls Bob and sends audio.
-                - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob_two', '-timeout': '20s', '-min_rtp_port': '6004', '-max_rtp_port': '6008', '-mi': '127.0.0.2'},
+                - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob_two', '-timeout': '20s', '-mi': '127.0.0.2'},
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
 
 ami-config:

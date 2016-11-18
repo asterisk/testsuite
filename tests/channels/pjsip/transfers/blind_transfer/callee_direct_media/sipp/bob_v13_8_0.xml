@@ -10,7 +10,7 @@
           header="From:"
           search_in="hdr"
           check_it="true"
-          assign_to="remote_tag"/>
+          assign_to="dummy,remote_tag"/>
     </action>
   </recv>
 
@@ -189,7 +189,7 @@
        <ereg regexp="(SIP/2.0 200 OK)"
           search_in="msg"
           check_it="true"
-          assign_to="sip_frag_ok"/>
+          assign_to="dummy,sip_frag_ok"/>
     </action>
   </recv>
 
@@ -232,5 +232,6 @@
   </recv>
 
   <Reference variables="sip_frag_ok" />
+  <Reference variables="dummy" />
 
 </scenario>

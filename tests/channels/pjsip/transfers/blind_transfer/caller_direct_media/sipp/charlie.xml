@@ -10,19 +10,19 @@
               header="From:"
               search_in="hdr"
               check_it="true"
-              assign_to="remote_tag"/>
+              assign_to="dummy,remote_tag"/>
           <!-- Save the From user portion of URI. We'll need it when we send our BYE -->
           <ereg regexp="(sip:bob|sip:bob_two)"
               header="From:"
               search_in="hdr"
               check_it="true"
-              assign_to="remote_user"/>
+              assign_to="dummy,remote_user"/>
           <!-- Check the Referred-By header. -->
           <ereg regexp="sip:alice@127.0.0.2:5060"
               header="Referred-By"
               search_in="hdr"
               check_it="true"
-              assign_to="referred_by"/>
+              assign_to="dummy,referred_by"/>
       </action>
   </recv>
 
@@ -123,6 +123,7 @@
   <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
 
   <Reference variables="referred_by" />
+  <Reference variables="dummy" />
 
 </scenario>
 
