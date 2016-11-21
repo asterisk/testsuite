@@ -505,9 +505,13 @@ class TestCase(object):
         """A wrapper function for stop_reactor(), so we know when a reactor
         timeout has occurred.
         """
-        LOGGER.warning("Reactor timeout: '%s' seconds" % self.reactor_timeout)
-        self.on_reactor_timeout()
-        self.stop_reactor()
+        if not self._stopping:
+            LOGGER.warning("Reactor timeout: '%s' seconds" % self.reactor_timeout)
+            self.on_reactor_timeout()
+            self.stop_reactor()
+        else:
+            LOGGER.info("Reactor timeout: '%s' seconds (ignored; already stopping)"
+                        % self.reactor_timeout)
 
     def on_reactor_timeout(self):
         """Virtual method called when reactor times out"""
