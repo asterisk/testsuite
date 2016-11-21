@@ -206,8 +206,8 @@ class TestCase(object):
         # Get those global conditions that are not in the self conditions
         for g_cond in global_conditions:
             disallowed = [i for i in conditions
-                          if i[0].get_name() == g_cond[0].get_name()
-                          and i[1] == g_cond[1]]
+                          if i[0].get_name() == g_cond[0].get_name() and
+                          i[1] == g_cond[1]]
             if len(disallowed) == 0:
                 conditions.append(g_cond)
 
@@ -232,7 +232,7 @@ class TestCase(object):
                Asterisk instances have been specified
         """
         if (self.global_config.config and
-            'asterisk-instances' in self.global_config.config):
+                'asterisk-instances' in self.global_config.config):
             asterisks = self.global_config.config.get('asterisk-instances')
         else:
             asterisks = [{'num': i + 1, 'host': '127.0.0.%d' % (i + 1)}
@@ -316,7 +316,7 @@ class TestCase(object):
             LOGGER.info("Creating AMIFactory %d to %s" % ((i + 1), host))
             try:
                 ami_factory = manager.AMIFactory(actual_user, actual_secret, i,
-                                             on_reconnect=on_reconnect)
+                                                 on_reconnect=on_reconnect)
             except:
                 ami_factory = manager.AMIFactory(actual_user, actual_secret, i)
             deferred = ami_factory.login(ip=host, port=actual_port)
@@ -690,7 +690,7 @@ class TestCase(object):
         Keyword Arguments:
         fail_token A previously created fail token to be removed from the test
         """
-        if not fail_token in self.fail_tokens:
+        if fail_token not in self.fail_tokens:
             LOGGER.warning('Attempted to remove an unknown fail token: %s',
                            fail_token['message'])
             self.passed = False
@@ -847,8 +847,8 @@ class SimpleTestCase(TestCase):
             # There should only ever be one match, since we're
             # selecting on a UUID
             originating_channel = [chan for chan in self._test_runs
-                                   if (chan['variable']['testuniqueid']
-                                       == event['value'])][0]
+                                   if (chan['variable']['testuniqueid'] ==
+                                       event['value'])][0]
             self._tracking_channels.append({
                 'channel': event['channel'],
                 'testuniqueid': event['value'],
