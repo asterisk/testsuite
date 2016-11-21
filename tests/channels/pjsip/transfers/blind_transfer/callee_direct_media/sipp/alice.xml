@@ -33,6 +33,13 @@
 
   <recv response="200" rtd="true" response_txn="initial_invite"/>
 
+  <!-- Send audio --  Sending before sending the ACK is a hack for a regression in sipp 3.5.1 -->
+  <nop>
+    <action>
+      <exec rtp_stream="lib/python/asterisk/audio.ulaw,3,0"/>
+    </action>
+  </nop>
+
   <send ack_txn="initial_invite">
     <![CDATA[
 
@@ -48,13 +55,6 @@
 
     ]]>
   </send>
-
-  <!-- Send audio -->
-  <nop>
-    <action>
-      <exec rtp_stream="lib/python/asterisk/audio.ulaw,3,0"/>
-    </action>
-  </nop>
 
   <!-- Wait for re-invite to setup RTP directly between alice and bob -->
   <recv request="INVITE" crlf="true"/>
