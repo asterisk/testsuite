@@ -35,8 +35,6 @@ ami-config:
                 ChannelType: 'PJSIP'
                 Username: 'sip:us@127.0.0.1'
                 Domain: 'sip:them@127.0.0.1:5061'
-        requirements:
-            match:
                 Status: 'Registered'
         count: '1'
     -
@@ -47,8 +45,6 @@ ami-config:
                 ChannelType: 'PJSIP'
                 Username: 'sip:us@127.0.0.1'
                 Domain: 'sip:them@127.0.0.1:5062'
-        requirements:
-            match:
                 Status: 'Registered'
         count: '1'
 
