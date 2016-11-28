@@ -17,8 +17,12 @@ test-modules:
         -
             config-section: ari-config
             typename: ari.WebSocketEventModule
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
 
 test-object-config:
+    stop-on-end: False
     test-iterations:
         -
             endpoint: Local/s@default
@@ -29,6 +33,14 @@ test-object-config:
                 variables:
                     CAN_YOU_SEE_ME: 'YES'
                     CHANNEL(language): gobbledegook
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: testsuite
+        stop_test:
 
 ari-config:
     events:
