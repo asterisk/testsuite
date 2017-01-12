@@ -1,0 +1,43 @@
+testinfo:
+    summary: 'Test opus FEC handling with an adaptive jitter buffer'
+    description: |
+        'Establishes a call between two endpoints alice and bob. Once the call
+         is up start RTP playback from a pcap file that has missing packets in
+         it. If codec_opus handles the FEC correctly alice should receive RTP
+         with no dropped packets, in the correct order and correct timestamps.'
+
+test-modules:
+    add-to-search-path:
+        - 'tests/codecs'
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -   config-section: rtp-analyzer-config
+            typename: 'rtp_analyzer.Analyzer'
+
+test-object-config:
+    reactor-timeout: 90
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario':'invite_recv.xml', '-p':'5062', '-mp':'16002' } }
+                  # Specify the RTP port so the rtp analyzer knows where to
+                  # listen for packets. The analyzer defaults to 6001.
+                - { 'key-args': { 'scenario':'invite.xml', '-p':'5061', '-mp':'16001' } }
+
+rtp-analyzer-config:
+    # Expected time difference for ulaw
+    time_diff: 160
+
+properties:
+    minversion: ['13.14.0', '14.3.0']
+    dependencies:
+        - python: 'twisted'
+        - python: 'yappcap'
+        - asterisk : 'app_dial'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'codec_opus'
+    tags:
+        - pjsip
+        - codec
