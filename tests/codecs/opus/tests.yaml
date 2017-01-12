@@ -3,3 +3,4 @@ tests:
     - test: 'encode'
     - test: 'decode'
     - test: 'fmtp_with_spaces'
+    - dir: 'fec'

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Invite receive">
+  <Global variables="remote_tag" />
+  <recv request="INVITE" crlf="true">
+      <!-- Save the from tag. We'll need it when we send our BYE -->
+      <action>
+          <ereg regexp="\"alice\"\\s+<sip:alice.*(;tag=.*)"
+              search_in="hdr"
+              header="From:"
+              check_it="true"
+              assign_to="1,remote_tag"/>
+      </action>
+  </recv>
+
+  <Reference variables="1" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 180 Ringing
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=- 1324901698 1324901698 IN IP[media_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0 107
+      a=sendrecv
+      a=rtpmap:107 opus/48000/2
+      a=fmtp:107 useinbandfec=1
+      a=rtpmap:101 telephone-event/8000
+    ]]>
+  </send>
+
+  <recv request="ACK" rtd="true" crlf="true" />
+
+  <nop>
+    <action>
+      <exec play_pcap_audio="tests/codecs/opus/fec/16_bit_48khz_60_fec_dropped.pcapng"/>
+    </action>
+  </nop>
+
+  <!-- Pause while the pcap file is played -->
+  <pause milliseconds="65000"/>
+
+  <send retrans="500">
+    <![CDATA[
+
+      BYE sip:alice@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:bob@[local_ip]:[local_port]>;tag=[pid]SIPpTag01[call_number]
+      To: <sip:alice@[remote_ip]:[remote_port]>[$remote_tag]
+      [last_Call-ID:]
+      CSeq: [cseq] BYE
+      Contact: sip:bob@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Test
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" />
+</scenario>
