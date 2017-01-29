@@ -116,6 +116,11 @@ class Packet():
             self.ip_layer = self.eth_layer.next
             self.transport_layer = self.ip_layer.next
 
+    @property
+    def dst_port(self):
+        """Retrieve the destination port"""
+        return self.transport_layer.header.destination
+
 
 class RTCPPacket(Packet):
     """An RTCP Packet
@@ -196,6 +201,22 @@ class RTPPacket(Packet):
     """An RTP Packet
     """
 
+    rtp_header = Struct(
+        "rtp_header",
+        EmbeddedBitStruct(
+            BitField("version", 2),
+            Bit("padding"),
+            Bit("extension"),
+            Nibble("csrc_count"),
+            Bit("marker"),
+            BitField("payload_type", 7),
+        ),
+        UBInt16("sequence_number"),
+        UBInt32("timestamp"),
+        UBInt32("ssrc"),
+        # 'csrc' can be added later when needed
+    )
+
     def __init__(self, raw_packet, factory_manager):
         """Constructor
 
@@ -204,11 +225,23 @@ class RTPPacket(Packet):
         factory_manager The packet manager that created this packet
         """
         Packet.__init__(self, packet_type='RTP', raw_packet=raw_packet)
+
+        self._rtp_header = self.rtp_header.parse(self.transport_layer.next)
+
         ports = factory_manager.get_global_data(self.ip_layer.header.source)
         if ports is None:
             raise Exception()
         if (ports['rtp'] != self.ip_layer.next.header.source):
             raise Exception()
+
+
+    @property
+    def seqno(self):
+        return self._rtp_header.sequence_number
+
+    @property
+    def timestamp(self):
+        return self._rtp_header.timestamp
 
 
 class SDPPacket(Packet):
