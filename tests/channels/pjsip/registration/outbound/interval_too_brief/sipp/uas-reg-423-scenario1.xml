@@ -19,7 +19,14 @@
         ]]>
     </send>
 
-    <recv request="REGISTER" crlf="true">
+    <recv request="REGISTER">
+        <action>
+            <ereg regexp="20"
+                search_in="hdr"
+                check_it="true"
+                header="Expires: "
+                assign_to="1" />
+        </action>
     </recv>
 
     <send>
@@ -36,7 +43,14 @@
         ]]>
     </send>
 
-    <recv request="REGISTER" crlf="true">
+    <recv request="REGISTER">
+        <action>
+            <ereg regexp="20"
+                search_in="hdr"
+                check_it="true"
+                header="Expires: "
+                assign_to="1" />
+        </action>
     </recv>
 
     <send>
@@ -53,6 +67,24 @@
         ]]>
     </send>
 
-    <!-- Keep the scenario going for a while to ensure that no further messages are sent -->
-    <timewait milliseconds="5000" />
+    <!--  This could be a re- or un- register -->
+    <recv request="REGISTER" crlf="true">
+    </recv>
+
+    <send>
+       <![CDATA[
+            SIP/2.0 200 OK
+            [last_Via:]
+            [last_From:]
+            [last_To:];tag=[pid]SIPpTag01[call_number]
+            [last_Call-ID:]
+            [last_CSeq:]
+            Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+            Expires: 0
+            Content-Length: 0
+        ]]>
+    </send>
+
+	<Reference variables="1"/>
+
 </scenario>
