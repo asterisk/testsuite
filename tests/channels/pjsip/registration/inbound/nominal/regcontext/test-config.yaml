@@ -31,13 +31,11 @@ ami-config:
         ami-events:
             conditions:
                 match:
-                     Event: 'TestEvent'
-                     State: 'AOR_CONTACT_ADDED'
-                     AOR: 'alice'
+                     Event: 'PeerStatus'
+                     PeerStatus: 'Reachable'
             requirements:
                 match:
-                     Contact: 'sip:alice@127.0.0.1:5061'
-                     Expiration: '60'
+                     Peer: 'PJSIP/alice'
             count: '1'
         ami-actions:
             action:
@@ -84,7 +82,6 @@ ami-config:
 properties:
     minversion: '13.8.0'
     dependencies:
-        - buildoption: 'TEST_FRAMEWORK'
         - python: 'twisted'
         - python: 'starpy'
         - sipp:
