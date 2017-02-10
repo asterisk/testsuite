@@ -158,6 +158,14 @@ class RLSTest(VOIPProxy):
         packet                 -- Incoming SIP Packet
         """
 
+        def __mark_completed():
+            self.ami.userEvent('RLSResult', result='pass')
+            if self.stop_test_after_notifys:
+                # We only deal with as many NOTIFIES as we have defined in our
+                # test-config.yaml
+                self.test_object.set_passed(True)
+                self.test_object.stop_reactor()
+
         # We are accessing a pseudo-private member here publicly, which
         # shouldn't really be done. (Granted, read-only, hence why we can
         # do this and not break the world.)
@@ -216,11 +224,10 @@ class RLSTest(VOIPProxy):
             info_msg = "All test phases completed. RLS verification complete."
             LOGGER.info(info_msg)
             self.test_object.remove_fail_token(self.token)
-            if self.stop_test_after_notifys:
-                # We only deal with as many NOTIFIES as we have defined in our
-                # test-config.yaml
-                self.test_object.set_passed(True)
-                self.test_object.stop_reactor()
+            # Notify that we are done - give a couple of seconds for the
+            # scenario to stop on its own. If it doesn't not a big deal
+            # sine it will just be killed instead.
+            reactor.callLater(2, __mark_completed)
 
     def on_ami_connect(self, ami):
         """Callback when AMI connects. Sets test AMI instance."""
