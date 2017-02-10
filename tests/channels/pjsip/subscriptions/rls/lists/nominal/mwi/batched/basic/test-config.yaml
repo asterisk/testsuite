@@ -46,12 +46,14 @@ test-modules:
             typename: 'driver.TestDriver'
 
 test-case-config:
+    stop-after-scenarios: False
     test-iterations:
         -
             scenarios:
                 - { 'target': '127.0.0.1:5061', 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'mail_list'} }
 
 test-config:
+    stop-test-after-notifys: False
     list-name: 'mail_list'
     packets:
         -

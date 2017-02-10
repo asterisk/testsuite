@@ -114,7 +114,4 @@
 
     ]]>
   </send>
-
-  <timewait milliseconds="8000" />
-
 </scenario>

@@ -39,15 +39,18 @@ test-modules:
             config-section: 'test-config'
             typename: 'rls_test.RLSTest'
         -
-            typename: 'driver.TestDriver'
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
 
 test-case-config:
+    stop-after-scenarios: False
     test-iterations:
         -
             scenarios:
                 - { 'target': '127.0.0.1:5061', 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'mail_list_a'} }
 
 test-config:
+    stop-test-after-notifys: False
     list-name: 'mail_list_a'
     packets:
         -
@@ -78,3 +81,59 @@ test-config:
                     }
                 }
             }
+
+ami-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_ESTABLISHED'
+            count: 1
+        ami-actions:
+          -
+            action:
+                Action: 'MWIUpdate'
+                Mailbox: 'alice'
+                NewMessages: '1'
+                OldMessages: '0'
+          -
+            action:
+                Action: 'MWIUpdate'
+                Mailbox: 'bob'
+                NewMessages: '1'
+                OldMessages: '0'
+    -
+        ami-events:
+          -
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_STATE_CHANGED'
+            count: 2 # one for alice, one for bob
+            trigger-on-count: True
+          -
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_REFRESHED'
+            count: 0 # shouldn't receive any of these
+        ami-actions:
+          -
+            action:
+                Action: 'UserEvent'
+                UserEvent: 'RLSResult'
+                Result: 'pass'
+    -
+        ami-events:
+          -
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'RLSResult'
+            requirements:
+                match:
+                    Result: 'pass'
+            count: 2 # one after expected test events have been received, one after validation
+            trigger-on-count: True
+        stop_test:
