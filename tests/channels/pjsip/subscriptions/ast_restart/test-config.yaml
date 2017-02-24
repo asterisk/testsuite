@@ -1,0 +1,149 @@
+testinfo:
+    summary: 'Test subscription persistence over Asterisk restarts'
+    description: |
+        Tests that subscriptions survive an Asterisk restart.
+        The test ping-pongs between the SIPp scenario and Asterisk
+        by waiting for the other to signal completion of key events.
+        1) A SIPp scenario requests a subscription.
+        2) Asterisk is restarted when the subscription gets established.
+        3) Asterisk changes the extension custom device state after the
+        restart recreates the subscription.
+        4) The SIPp scenario refreshes the subscription.
+        5) Asterisk changes the extension custom device state again after
+        the subscription is refreshed.
+        6) The SIPp scenario unsubscribes to complete the scenario.
+        7) The test completes successfully when Asterisk sees the
+        subscription get terminated.
+
+properties:
+    minversion: [ '13.14.0', '14.3.0' ]
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python : 'twisted'
+        - python : 'starpy'
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'func_devstate'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_pubsub'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    stop-after-scenarios: False
+    fail-on-any: True
+
+    # Indicate that the test is going to be restarting Asterisk so
+    # we will require the AMI connection to get reconnected after the
+    # restart.  Old versions of starpy did not support reconnecting
+    # the AMI session if the connection was broken.  This option
+    # basically ensures that the test will fail with a meaningful
+    # error message if that feature is not supported by starpy.
+    allow-ami-reconnects: True
+
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'subscribe.xml', '-p': '5061'} }
+
+ami-config:
+    -
+        # Event generated on initial subscription creation
+        # and on subscription recreation after a restart.
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_ESTABLISHED'
+            requirements:
+                match:
+                    Resource: 'alice'
+            # Trigger on the first event
+            count: '>1'
+            trigger-on-count: True
+        ami-actions:
+            action:
+                Action: 'Command'
+                ActionID: '12345'
+                Command: 'core restart gracefully'
+    -
+        # Wake up after Asterisk is fully booted again.
+        # This tends to be too early for the restart NOTIFY to have
+        # a chance to go out.  Recreating persistent subscriptions
+        # has to wait for Asterisk to be fully booted to ensure that
+        # all pjsip modules are loaded and ready.
+        # We'll just require that we get restarted once.
+        ami-restart:
+            count: '1'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_ESTABLISHED'
+            requirements:
+                match:
+                    Resource: 'alice'
+            # Trigger on the second event
+            count: '2'
+            trigger-on-count: True
+        ami-actions:
+            action:
+                Action: 'SetVar'
+                ActionID: '23456'
+                Variable: 'DEVICE_STATE(Custom:hitchcock)'
+                Value: 'BUSY'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_REFRESHED'
+            requirements:
+                match:
+                    Resource: 'alice'
+            count: '1'
+            trigger-on-count: True
+        ami-actions:
+            # Changing the custom device state again so we can re-run
+            # the test without a previous run possibly interfering.
+            # This is basically paranoia because I think the AstDB is
+            # deleted between tests.  However, refreshing the subscription
+            # further tests that the subscription dialog is fully
+            # recreated after the restart.
+            action:
+                Action: 'SetVar'
+                ActionID: '34567'
+                Variable: 'DEVICE_STATE(Custom:hitchcock)'
+                Value: 'NOT_INUSE'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_STATE_CHANGED'
+            requirements:
+                match:
+                    Resource: 'alice'
+            # Changed the custom device state twice.
+            count: '2'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_TERMINATED'
+            requirements:
+                match:
+                    Resource: 'alice'
+            count: '1'
+        stop_test:

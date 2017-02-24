@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Subscribe">
+	<send retrans="500">
+		<![CDATA[
+			SUBSCRIBE sip:alice@[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+			To: <sip:alice@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: 1 SUBSCRIBE
+			Contact: "alice" <sip:alice@[local_ip]:[local_port]>
+			Expires: 300
+			Max-Forwards: 70
+			Event: presence
+			Accept: application/pidf+xml
+			User-Agent: Digium D40
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" rtd="true">
+		<action>
+			<ereg regexp="(;tag=.*)" header="To:" search_in="hdr" check_it="true" assign_to="to_tag"/>
+		</action>
+	</rcv>
+
+	<!-- NOTIFY for the initial subscription -->
+	<recv request="NOTIFY" crlf="true">
+		<action>
+			<ereg regexp="active;expires=[2,3][0,9][0,5-9]" check_it="true" search_in="hdr" header="Subscription-State" assign_to="substate" />
+		</action>
+	</recv>
+
+	<send>
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+			Content-Length: 0
+		]]>
+	</send>
+
+	<!-- NOTIFY for Asterisk recreating the subscription -->
+	<recv request="NOTIFY" crlf="true">
+	</recv>
+
+	<send>
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+			Content-Length: 0
+		]]>
+	</send>
+
+	<!-- NOTIFY for AMI reconnecting and then changing the device state  -->
+	<recv request="NOTIFY" crlf="true">
+	</recv>
+
+	<send>
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+			Content-Length: 0
+		]]>
+	</send>
+
+	<!-- Refresh subscription  -->
+	<send retrans="500">
+		<![CDATA[
+			SUBSCRIBE sip:alice@[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+			To: <sip:alice@[remote_ip]:[remote_port]>[$to_tag]
+			Call-ID: [call_id]
+			CSeq: 2 SUBSCRIBE
+			Contact: "alice" <sip:alice@[local_ip]:[local_port]>
+			Expires: 600
+			Max-Forwards: 70
+			Event: presence
+			Accept: application/pidf+xml
+			User-Agent: Digium D40
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" rtd="true" />
+
+	<!-- NOTIFY for the subscription refresh -->
+	<recv request="NOTIFY" crlf="true">
+		<action>
+			<ereg regexp="active;expires=[5,6][0,9][0,5-9]" check_it="true" search_in="hdr" header="Subscription-State" assign_to="resubstate" />
+		</action>
+	</recv>
+
+	<send>
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+			Content-Length: 0
+		]]>
+	</send>
+
+	<!-- NOTIFY for AMI changing the device state again  -->
+	<recv request="NOTIFY" crlf="true">
+	</recv>
+
+	<send>
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+			Content-Length: 0
+		]]>
+	</send>
+
+	<!-- Unsubscribe  -->
+	<send retrans="500">
+		<![CDATA[
+			SUBSCRIBE sip:alice@[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+			To: <sip:alice@[remote_ip]:[remote_port]>[$to_tag]
+			Call-ID: [call_id]
+			CSeq: 3 SUBSCRIBE
+			Contact: "alice" <sip:alice@[local_ip]:[local_port]>
+			Expires: 0
+			Max-Forwards: 70
+			Event: presence
+			Accept: application/pidf+xml
+			User-Agent: Digium D40
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" rtd="true" />
+
+	<!-- NOTIFY for the subscription termination -->
+	<recv request="NOTIFY" crlf="true">
+		<action>
+			<ereg regexp="terminated" check_it="true" search_in="hdr" header="Subscription-State" assign_to="unsubstate" />
+		</action>
+	</recv>
+
+	<send>
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+			Content-Length: 0
+		]]>
+	</send>
+
+	<Reference variables="substate,resubstate,unsubstate" />
+
+</scenario>

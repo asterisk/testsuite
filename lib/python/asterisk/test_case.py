@@ -138,7 +138,8 @@ class TestCase(object):
         self.ast_version = AsteriskVersion()
         self._start_callbacks = []
         self._stop_callbacks = []
-        self._ami_callbacks = []
+        self._ami_connect_callbacks = []
+        self._ami_reconnect_callbacks = []
         self._pcap_callbacks = []
         self._stop_deferred = None
         log_full = True
@@ -156,8 +157,10 @@ class TestCase(object):
             self.ast_conf_options = test_config.get('ast-config-options')
             log_full = test_config.get('log-full', True)
             log_messages = test_config.get('log-messages', True)
+            self.allow_ami_reconnects = test_config.get('allow-ami-reconnects', False)
         else:
             self.ast_conf_options = None
+            self.allow_ami_reconnects = False
 
         os.makedirs(self.testlogdir)
 
@@ -303,7 +306,7 @@ class TestCase(object):
 
         def on_reconnect(login_deferred):
             """Called if the connection is lost and re-made"""
-            login_deferred.addCallbacks(self._ami_connect, self.ami_login_error)
+            login_deferred.addCallbacks(self._ami_reconnect, self.ami_login_error)
 
         for i, ast_config in enumerate(self.get_asterisk_hosts(count)):
             host = ast_config.get('host')
@@ -314,10 +317,17 @@ class TestCase(object):
 
             self.ami.append(None)
             LOGGER.info("Creating AMIFactory %d to %s" % ((i + 1), host))
-            try:
-                ami_factory = manager.AMIFactory(actual_user, actual_secret, i,
-                                                 on_reconnect=on_reconnect)
-            except:
+            if self.allow_ami_reconnects:
+                try:
+                    ami_factory = manager.AMIFactory(actual_user, actual_secret, i,
+                                                     on_reconnect=on_reconnect)
+                except:
+                    LOGGER.error("starpy.manager.AMIFactory doesn't support reconnects")
+                    LOGGER.error("starpy needs to be updated to run this test")
+                    self.passed = False
+                    self.stop_reactor()
+                    return
+            else:
                 ami_factory = manager.AMIFactory(actual_user, actual_secret, i)
             deferred = ami_factory.login(ip=host, port=actual_port)
             deferred.addCallbacks(self._ami_connect, self.ami_login_error)
@@ -562,13 +572,40 @@ class TestCase(object):
         LOGGER.info("AMI Connect instance %s" % (ami.id + 1))
         self.ami[ami.id] = ami
         try:
-            for callback in self._ami_callbacks:
+            for callback in self._ami_connect_callbacks:
                 callback(ami)
             self.ami_connect(ami)
         except:
             LOGGER.error("Exception raised in ami_connect:")
             LOGGER.error(traceback.format_exc())
             self.stop_reactor()
+        return ami
+
+    def ami_reconnect(self, ami):
+        """Virtual method used after create_ami_factory() successfully re-logs into
+        the Asterisk AMI.
+        """
+        pass
+
+    def _ami_reconnect_fully_booted(self, ami, event):
+        """Callback when AMI reconnects and is fully booted"""
+        LOGGER.info("AMI Reconnect instance %s is fully booted" % (ami.id + 1))
+        ami.deregisterEvent('FullyBooted', self._ami_reconnect_fully_booted)
+        try:
+            for callback in self._ami_reconnect_callbacks:
+                callback(ami)
+            self.ami_reconnect(ami)
+        except:
+            LOGGER.error("Exception raised in ami_reconnect:")
+            LOGGER.error(traceback.format_exc())
+            self.stop_reactor()
+        return (ami, event)
+
+    def _ami_reconnect(self, ami):
+        """Callback when AMI initially reconnects"""
+        LOGGER.info("AMI Reconnect instance %s" % (ami.id + 1))
+        self.ami[ami.id] = ami
+        ami.registerEvent('FullyBooted', self._ami_reconnect_fully_booted)
         return ami
 
     def pcap_callback(self, packet):
@@ -671,7 +708,16 @@ class TestCase(object):
         Parameters:
         callback The deferred callback function to be called when AMI connects
         """
-        self._ami_callbacks.append(callback)
+        self._ami_connect_callbacks.append(callback)
+
+    def register_ami_reconnect_observer(self, callback):
+        """Register an observer that will be called when TestCase reconnects with
+        Asterisk over the Manager interface
+
+        Parameters:
+        callback The deferred callback function to be called when AMI reconnects
+        """
+        self._ami_reconnect_callbacks.append(callback)
 
     def create_fail_token(self, message):
         """Add a fail token to the test. If any fail tokens exist at the end of

@@ -219,6 +219,13 @@ test-object-config:
     config-path: 'tests/foo'
     reactor-timeout: 30
     spawn-after-hangup: True
+    # Indicate that the test is going to be restarting Asterisk so
+    # we will require the AMI connection to get reconnected after the
+    # restart.  Old versions of starpy did not support reconnecting
+    # the AMI session if the connection was broken.  This option
+    # basically ensures that the test will fail with a meaningful
+    # error message if that feature is not supported by starpy.
+    allow-ami-reconnects: True
     # Whether a full log file containg DEBUG level should be created, defaults to True
     log-full: True
     # Whether a messages log file containing INFO level should be created, defaults to True

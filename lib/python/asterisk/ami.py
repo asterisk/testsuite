@@ -94,10 +94,21 @@ class AMIEventInstance(object):
             raise Exception
 
         test_object.register_ami_observer(self.ami_connect)
+        # We have to reregister the AMI event handlers on reconnection
+        # because losing the connection clears all AMI event handlers.
+        test_object.register_ami_reconnect_observer(self._ami_reconnect)
         test_object.register_stop_observer(self.__check_result)
 
     def ami_connect(self, ami):
         """AMI connect handler"""
+        self.register_handler(ami)
+
+    def _ami_reconnect(self, ami):
+        self._registered = False
+        self.ami_reconnect(ami)
+
+    def ami_reconnect(self, ami):
+        """AMI reconnect handler"""
         self.register_handler(ami)
 
     def register_handler(self, ami):
@@ -106,7 +117,7 @@ class AMIEventInstance(object):
         Note:
         In general, most objects won't need this method.  You would only call
         this from a derived object when you create instances of the derived
-        object after AMI connect.
+        object after AMI connect/reconnect.
         """
         if str(ami.id) in self.ids and not self._registered:
             LOGGER.debug("Registering event %s",
@@ -673,19 +684,101 @@ class AMI(object):
 
 
 class AMIStartEventModule(object):
-    """An event module that triggers when the test starts."""
+    """An event module that triggers when AMI initially connects and
+    Asterisk is fully booted."""
 
     def __init__(self, test_object, triggered_callback, config):
-        """Setup the test start observer"""
+        """Setup the AMI connect observer"""
         self.test_object = test_object
         self.triggered_callback = triggered_callback
+        if config is None:
+            # Happens if ami-start has no parameters.
+            config = {}
         self.config = config
+        self.ids = config['id'].split(',') if 'id' in config else ['0']
         test_object.register_ami_observer(self.start_observer)
 
     def start_observer(self, ami):
         """Notify the event-action mapper that ami has started."""
-        self.triggered_callback(self, ami)
+        if str(ami.id) in self.ids:
+            self.triggered_callback(self, ami)
 PLUGGABLE_EVENT_REGISTRY.register("ami-start", AMIStartEventModule)
+
+
+class AMIRestartEventModule(object):
+    """An event module that triggers when AMI reconnects and
+    Asterisk is fully booted."""
+
+    def __init__(self, test_object, triggered_callback, config):
+        """Setup the AMI reconnect observer"""
+        LOGGER.debug("Initializing an AMIRestartEventModule")
+        self.test_object = test_object
+        self.triggered_callback = triggered_callback
+        if config is None:
+            # Happens if ami-restart has no parameters.
+            config = {}
+        self.config = config
+        self.ids = config['id'].split(',') if 'id' in config else ['0']
+        self.trigger_on_count = config.get('trigger-on-count', False)
+
+        # Keep track of how many restarts happened to check if we got the
+        # expected number of events.
+        self.count = {}
+        if 'count' in config:
+            count = config['count']
+            if isinstance(count, int):
+                # Need exactly this many events
+                self.count['min'] = count
+                self.count['max'] = count
+            elif count[0] == '<':
+                # Need at most this many events
+                self.count['min'] = 0
+                self.count['max'] = int(count[1:])
+            elif count[0] == '>':
+                # Need at least this many events
+                self.count['min'] = int(count[1:])
+                self.count['max'] = float("inf")
+            else:
+                # Need exactly this many events
+                self.count['min'] = int(count)
+                self.count['max'] = int(count)
+        else:
+            self.count['min'] = 0
+            self.count['max'] = float("inf")
+
+        self.count['event'] = 0
+
+        test_object.register_ami_reconnect_observer(self.restart_observer)
+        test_object.register_stop_observer(self.__check_result)
+
+    def restart_observer(self, ami):
+        """Notify the event-action mapper that ami has restarted
+        if it is time to trigger the action."""
+        if str(ami.id) in self.ids:
+            self.count['event'] += 1
+            if not self.trigger_on_count or self.count['event'] == self.count['min']:
+                LOGGER.debug("Restart event callback triggered")
+                self.triggered_callback(self, ami)
+
+    def check_result(self, callback_param):
+        """Method that can be overridden by subclasses"""
+        return callback_param
+
+    def __check_result(self, callback_param):
+        """Verify results
+
+        This will check against event counts and the like and then call into
+        overridden versions via check_result
+        """
+        if (self.count['event'] > self.count['max'] or
+                self.count['event'] < self.count['min']):
+            LOGGER.warning("Restart event occurred %d times, which is out"
+                           " of the allowable range", self.count['event'])
+            LOGGER.warning("Restart event description: %s", str(self.config))
+            self.test_object.set_passed(False)
+            return callback_param
+        return self.check_result(callback_param)
+PLUGGABLE_EVENT_REGISTRY.register("ami-restart", AMIRestartEventModule)
 
 
 class AMIPluggableEventInstance(AMIHeaderMatchInstance):

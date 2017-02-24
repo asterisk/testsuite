@@ -123,10 +123,11 @@ class SIPpTestCase(TestCase):
         Create an AMI factory in case anyone wants it
         """
         super(SIPpTestCase, self).run()
-        self.create_ami_factory()
 
         self.ast[0].cli_exec('sip set debug on')
         self.ast[0].cli_exec('pjsip set logger on')
+
+        self.create_ami_factory()
 
     def stop_asterisk(self):
         """Kill any remaining SIPp scenarios"""
@@ -141,6 +142,13 @@ class SIPpTestCase(TestCase):
         super(SIPpTestCase, self).ami_connect(ami)
 
         self._execute_test()
+
+    def ami_reconnect(self, ami):
+        """Handler for the AMI reconnect event"""
+        super(SIPpTestCase, self).ami_reconnect(ami)
+
+        self.ast[0].cli_exec('sip set debug on')
+        self.ast[0].cli_exec('pjsip set logger on')
 
     def register_scenario_started_observer(self, observer):
         """Register a function to be called when a SIPp scenario starts.
