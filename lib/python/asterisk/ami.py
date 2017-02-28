@@ -42,6 +42,10 @@ class AMIEventInstance(object):
         self.action = instance_config['action'] if 'action' in instance_config else 'none'
         self.config = instance_config
         self.passed = True
+        # Todo: _registered doesn't work if this object is to be used for
+        # multiple ami ids (Declaring "id: '0,1'") because the registerEvent
+        # needs to be done for each ami.  Admittedly it is kind of silly to
+        # use one object to deal with more than one ami instance.
         self._registered = False
         self._event_observers = []
         self.count = {}
@@ -186,8 +190,8 @@ class AMIEventInstance(object):
         This will check against event counts and the like and then call into
         overridden versions via check_result
         """
-        if (self.count['event'] > self.count['max']
-                or self.count['event'] < self.count['min']):
+        if (self.count['event'] > self.count['max'] or
+                self.count['event'] < self.count['min']):
             LOGGER.warning("Event occurred %d times, which is out of the"
                            " allowable range", self.count['event'])
             LOGGER.warning("Event description: %s", str(self.config))

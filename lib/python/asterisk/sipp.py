@@ -215,8 +215,8 @@ class SIPpTestCase(TestCase):
             # each set of scenarios in the YAML config
             sipp_scenarios = []
             for scenario in scenario_set:
-                if ("coordinated-sender" in scenario
-                        and "coordinated-receiver" in scenario):
+                if ("coordinated-sender" in scenario and
+                        "coordinated-receiver" in scenario):
                     sipp_scenarios.append(CoordinatedScenario(self.test_name,
                                                               scenario))
                 else:
@@ -875,7 +875,7 @@ class SIPpTest(TestCase):
         for scenario_def in self.scenarios:
             default_port = 5060 + i + 1
             i += 1
-            if not '-p' in scenario_def:
+            if '-p' not in scenario_def:
                 scenario_def['-p'] = str(default_port)
             scenario = SIPpScenario(self.test_dir, scenario_def)
             self._scenario_objects.append(scenario)
