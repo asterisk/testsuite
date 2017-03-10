@@ -1,0 +1,63 @@
+testinfo:
+    summary: "Ensure that when a REFER without a user is received we transfer to s extension"
+    description: |
+        'Asterisk originates a call to a Local channel that runs Echo. The other half of
+        the local channel is placed into the dialplan and calls a SIPp scenario. The SIPp
+        scenario answers the call and then performs a blind transfer without specifying
+        an extension in the REFER. The blind transfer should go to the s extension and be
+        considered successful. An event which is emitted by the dialplan is used to determine
+        if the s extension was executed and to end the test.
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: sipp.SIPpTestCase
+    modules:
+        -
+            config-section: originator-config
+            typename: pluggable_modules.Originator
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    stop-after-scenarios: false
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'transferer.xml', '-i': '127.0.0.1', '-p': '5061' }}
+
+originator-config:
+    channel: 'Local/echo@default'
+    context: 'default'
+    exten: 'call-sipp'
+    priority: '1'
+    trigger: 'scenario_start'
+    scenario-name: 'transferer.xml'
+
+pluggable-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'Transferred'
+            count: 1
+        stop_test:
+
+properties:
+    minversion: '13.15.0'
+    dependencies:
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+        - asterisk: 'res_pjsip_refer'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_echo'
+    tags:
+        - pjsip
+    testconditions:
+        -
+            name: 'channels'
