@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Out-of-Call NOTIFY after REGISTER">
+
+	<recv request="NOTIFY">
+		<action>
+			<ereg regexp="127.0.0.1:5066;rport" search_in="hdr" header="Via"
+				assign_to="1" />
+		</action>
+	</recv>
+
+	<!-- ereg 'check_it' doesn't work in an out-of-call scenario file because there's
+		no call to mark as failed so we have to explicitly kill sipp if the regex
+		didn't match. -->
+
+	<nop condexec="1" condexec_inverse="true">
+		<action>
+			<exec int_cmd="stop_now" />
+		</action>
+	</nop>
+
+	<send>
+		<![CDATA[
+
+		SIP/2.0 200 OK
+		[last_Via:]
+		[last_From:]
+		[last_To:]
+		[last_Call-ID:]
+		[last_CSeq:]
+		Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+		Content-Length: 0
+
+		]]>
+	</send>
+</scenario>
