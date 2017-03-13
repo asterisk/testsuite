@@ -1,0 +1,60 @@
+testinfo:
+    summary:     'Tests RTCP with mux disabled for both caller and callee'
+    description: |
+        This test places a call from one Asterisk instance to another with
+        RTCP-MUX disabled and confirms that RTCP traffic flows appropriately.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+        -
+            typename: 'pluggable_modules.Originator'
+            config-section: originator-config
+        -
+            config-section: 'hangup-monitor'
+            typename: 'pluggable_modules.HangupMonitor'
+
+test-object-config:
+    asterisk-instances: 2
+    connect-ami: True
+
+ami-config:
+    -
+        ami-events:
+            id: '0'
+            conditions:
+                match:
+                    Event: 'RTCPReceived'
+                    To: '^(.*)10001$'
+                    From: '^(.*)11001$'
+            count: '>0'
+    -
+        ami-events:
+            id: '1'
+            conditions:
+                match:
+                    Event: 'RTCPReceived'
+                    To: '^(.*)11001$'
+                    From: '^(.*)10001$'
+            count: '>0'
+
+hangup-monitor:
+    ids: '0'
+
+originator-config:
+    channel: 'Local/1000@default'
+    exten: 'playback'
+    context: 'default'
+    priority: 1
+    async: True
+    trigger: 'ami_connect'
+
+properties:
+    minversion: '13.15.0'
+    dependencies:
+        - asterisk : 'res_pjsip'

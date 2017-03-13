@@ -16,6 +16,7 @@ tests:
     - dir: 'registration'
     - dir: 'resolver'
     - dir: 'rtp'
+    - dir: 'rtcp'
     - dir: 'sdp_offer_answer'
     - dir: 'statsd'
     - dir: 'subscriptions'
