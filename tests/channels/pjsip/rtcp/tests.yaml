@@ -1,0 +1,6 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - dir: 'rtcp_mux_enabled'
+    - dir: 'rtcp_mux_disabled'
+    - dir: 'rtcp_mux_caller'
+    - dir: 'rtcp_mux_callee'
