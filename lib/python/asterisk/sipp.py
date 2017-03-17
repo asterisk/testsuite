@@ -667,6 +667,10 @@ class SIPpScenario(object):
             default_args['-inf'] = ('%s/sipp/%s' % (
                 self.test_dir, default_args['-inf']))
 
+        if '-oocsf' in default_args:
+            default_args['-oocsf'] = ('%s/sipp/%s' % (
+                self.test_dir, default_args['-oocsf']))
+
         for (key, val) in default_args.items():
             sipp_args.extend([key, val])
         sipp_args.extend(self.positional_args)

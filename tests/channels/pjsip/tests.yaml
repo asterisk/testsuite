@@ -22,6 +22,7 @@ tests:
     - dir: 'statsd'
     - dir: 'subscriptions'
     - dir: 'transfers'
+    - dir: 'transport'
     - dir: 'video_calls'
     - test: 'accountcode'
     - test: 'acl_call'

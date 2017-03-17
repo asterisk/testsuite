@@ -1,0 +1,47 @@
+testinfo:
+    summary:     'Tests symmetric transport on INVITE'
+    description: |
+        "Two transports are defined, the first on port 5066 and the last
+        (the default) on 5060.  Alice has a static contact with
+        x-ast-txp=local-transport-5066 appended to set the transport.
+        The Originator starts the call.
+
+        * Check the INVITE Via specifies 5066 as the port.
+        * Check the ACK Via specifies 5066 as the port.
+        * Check the BYE Via specifies 5066 as the port.
+        "
+
+properties:
+    minversion: '13.15.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip_session'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator-alice_invite_recv
+            typename: 'pluggable_modules.Originator'
+
+originator-alice_invite_recv:
+    trigger: 'ami_connect'
+
+sipp-config:
+    reactor-timeout: 15
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'invite.xml',
+                '-p': '5061', '-s': 'alice'}, 'target': '127.0.0.1:5066'}

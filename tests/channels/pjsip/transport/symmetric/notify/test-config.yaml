@@ -1,0 +1,48 @@
+testinfo:
+    summary:     'Tests symmetric transport'
+    description: |
+        "Two transports are defined, the first on port 5066 and the last
+        (the default) on 5060.  The endpoint/aor allows mwi subscription
+        and unsolicited mwi.
+
+        * Send REGISTER/auth
+        * In the out-of-call scenario file, check the unsolicited NOTIFY Via
+          specifies 5066 as the port.
+        * Send SUBSCRIBE/auth
+        * check the NOTIFY Via specifies 5066 as the port.
+        * Send unSUBSCRIBE/auth
+        * check the NOTIFY Via specifies 5066 as the port.
+        * Send unREGISTER/auth
+        "
+
+properties:
+    minversion: '13.15.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_mwi'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    reactor-timeout: 15
+    fail-on-any: True
+    test-iterations:
+        -
+#
+# The only way to test an unsolicited NOTIFY is in an out-of-call scenario file.
+#
+            scenarios:
+                - { 'key-args': {'scenario': 'reg_sub.xml',
+                '-oocsf': 'initial_notify.xml', '-p': '5061', '-s': 'alice',
+                '-au': 'alice', '-ap': 'password'},
+                'ordered-args': ['-key', 'mbx', '1000'], 'target': '127.0.0.1:5066'}
