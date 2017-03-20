@@ -11,7 +11,7 @@
 				search_in="hdr"
 				check_it="true"
 				assign_to="global_call_id"/>
-			<ereg regexp="m=video [0-9]{1,5} RTP/AVP( [0-9]{1,3})+..*a=rtpmap:99 H264/90000.*a=fmtp:99 profile-level-id=42801E;max-mbps=48600;packetization-mode=1"
+			<ereg regexp="m=video [0-9]{1,5} RTP/AVP( [0-9]{1,3})+..*a=rtpmap:9[6-9]|1{0,1}[0-9]|12[0-7] H264/90000.*a=fmtp:9[6-9]|1{0,1}[0-9]|12[0-7] profile-level-id=42801E;max-mbps=48600;packetization-mode=1"
 			      search_in="body" check_it="true" assign_to="1"/>
 			<strcmp assign_to="1" variable="1" value=""/>
 
