@@ -1,8 +1,9 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
-    - test: 'func_jitterbuffer'
-    - test: 'func_srv'
-    - test: 'func_presencestate'
+    - test: 'func_channel'
     - test: 'func_global'
-    - test: 'func_talkdetect'
+    - test: 'func_jitterbuffer'
+    - test: 'func_presencestate'
     - test: 'func_push'
+    - test: 'func_srv'
+    - test: 'func_talkdetect'
