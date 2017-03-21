@@ -55,4 +55,11 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_originate'
+        - asterisk : 'app_userevent'
+        # Not going to list local channel dependency because
+        # v12 pulled chan_local into Asterisk's core.
+        #- asterisk : 'chan_local'
         - asterisk : 'func_global'
+        - asterisk : 'func_math'
