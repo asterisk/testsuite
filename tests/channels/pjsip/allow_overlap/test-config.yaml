@@ -1,0 +1,48 @@
+testinfo:
+    summary:     'Tests incoming call behaviour with allow_overlap'
+    description: |
+        'Run SIPp scenarios that send various calls to res_pjsip. Each
+         scenario matches a PJSIP endpoint that has the allow_overlap
+         option set to yes or no. The SIP response from PJSIP is checked
+         to ensure that the expected behavior matches what the option
+         should produce.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        # overlap disabled
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'nooverlap_ech.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-ipv4-udp'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'nooverlap_echo.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-ipv4-udp'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'nooverlap_echox.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-ipv4-udp'} }
+        # overlap enabled
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'overlap_ech.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'bob-ipv4-udp'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'overlap_echo.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'bob-ipv4-udp'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'overlap_echox.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'bob-ipv4-udp'} }
+
+properties:
+    minversion: '13.15.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_playback'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip

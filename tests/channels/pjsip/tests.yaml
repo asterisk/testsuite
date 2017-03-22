@@ -26,6 +26,7 @@ tests:
     - dir: 'video_calls'
     - test: 'accountcode'
     - test: 'acl_call'
+    - test: 'allow_overlap'
     - test: 'auth_security_events'
     - test: 'call_pickup'
     - test: 'dtmf_incompatible'
