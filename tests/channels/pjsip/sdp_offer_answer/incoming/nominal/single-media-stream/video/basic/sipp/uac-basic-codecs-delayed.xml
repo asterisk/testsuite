@@ -34,7 +34,7 @@
 
   <recv response="200" rtd="true">
     <action>
-      <ereg regexp="m=video [0-9]{1,5} RTP/AVP 99 34+..*"
+      <ereg regexp="m=video [0-9]{1,5} RTP/AVP 9[6-9]|1{0,1}[0-9]|12[0-7] 34+..*"
             search_in="body" check_it="true" assign_to="1"/>
       <test assign_to="1" variable="1" compare="equal" value=""/>
     </action>
