@@ -15,7 +15,6 @@ testinfo:
          * off-nominal calls
            - verify declining an empty crypto attribute
            - verify declining only a tag
-           - verify declining an invalid tag (0)
            - verify declining an attribute with no tag
            - verify declining a non-integer tag (FOO)
            - verify declining an invalid tag (100000000000)
