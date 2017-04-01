@@ -200,25 +200,46 @@
     <recv request="ACK" rtd="true">
     </recv>
 
-    <send retrans="500">
+    <recv request="BYE">
+    </recv>
+
+    <send>
         <![CDATA[
 
-            BYE sip:in_dialog_auths@[remote_ip]:[remote_port];transport=[transport] SIP/2.0
+            SIP/2.0 401 Unauthorized
             [last_Via:]
-            From: <sip:test@[local_ip]>;tag=[call_number]
-            To:[$remote_from_data]
+            [last_From:]
+            [last_To:]
             [last_Call-ID:]
-            CSeq: 1 BYE
+            [last_CSeq:]
+            WWW-Authenticate: Digest  realm="asterisk",nonce="1431715752/35e47f0a610ed24b774610798d5a9c87",opaque="6a40d12245927b99",algorithm=md5,qop="auth"
             Contact: <sip:test@[local_ip]:[local_port];transport=[transport]>
-            Max-Forwards: 70
-            User-Agent: SIPp test
+            Server: SIPp test
             Content-Length: 0
 
             ]]>
     </send>
 
-    <recv response="200" crlf="true">
+    <recv request="BYE">
+        <action>
+            <!-- Need an Authorization header present to match. -->
+            <ereg regexp=".*" search_in="hdr" header="Authorization:" check_it="true" assign_to="dummy" />
+        </action>
     </recv>
+
+    <send retrans="500">
+        <![CDATA[
+
+            SIP/2.0 200 OK
+            [last_Via:]
+            [last_From:]
+            [last_To:]
+            [last_Call-ID:]
+            [last_CSeq:]
+            Contact: <sip:test@[local_ip]:[local_port];transport=[transport]>
+            Server: SIPp test
+            ]]>
+    </send>
 
     <Reference variables="dummy" />
 
