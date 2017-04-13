@@ -51,3 +51,4 @@ tests:
     - test: 'srtp_negotiation'
     - test: 'srtp_not_loaded'
     - test: 'user_eq_phone'
+    - test: 'cseq_method'
