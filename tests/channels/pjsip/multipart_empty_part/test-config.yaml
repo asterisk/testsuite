@@ -1,0 +1,26 @@
+testinfo:
+    summary: 'Ensures that AST-2017-003 has been addressed'
+    descriptions: |
+        'A SIPp scenario sends an INVITE with a multipart body. The only part of the multipart
+        body is an empty string. The test passes as long as Asterisk does not crash when
+        the request is received.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'multipart.xml'}}
+
+properties:
+    minversion: '13.15.1'
+    dependencies:
+        - sipp:
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
