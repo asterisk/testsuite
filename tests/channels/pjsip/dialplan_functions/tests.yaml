@@ -5,3 +5,4 @@ tests:
     - test: 'pjsip_aor'
     - test: 'pjsip_contact'
     - test: 'pjsip_session_refresh'
+    - test: 'chan_is_avail'

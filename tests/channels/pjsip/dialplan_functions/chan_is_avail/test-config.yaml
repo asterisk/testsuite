@@ -1,0 +1,83 @@
+testinfo:
+    summary: 'Test ChanIsAvail dialplan app'
+    description: |
+        Confirms that when ChanIsAvail creates a pjsip channel then
+        hangs it up without dialing that the session is properly cleaned up.
+
+properties:
+    minversion: '13.16.0'
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip_session'
+        - asterisk : 'app_chanisavail'
+
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    connect-ami: True
+    reactor-timeout: 15
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+            # we need to pass -aa to sipp so it will respond to the OPTIONS request
+            # asterisk sends after the register
+                - { 'key-args': {'scenario': 'register.xml', '-p': '5061' },
+                    'ordered-args': ['-aa'] }
+
+ami-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'ContactStatus'
+                    ContactStatus: 'Reachable'
+                    AOR: 'checked'
+            requirements:
+                match:
+                    EndpointName: 'checked'
+            count: '1'
+        ami-actions:
+            action:
+                Action: 'Originate'
+                ActionID: '12345'
+                Channel: 'Local/check@default'
+                Exten: 'checker'
+                Context: 'default'
+                Priority: '1'
+
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Exten: checker
+                    Variable: 'AVAILORIGCHAN'
+            requirements:
+                match:
+                    Value: 'PJSIP/checked'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SESSION_DESTROYING'
+            requirements:
+                match:
+                    Endpoint: 'checked'
+            count: 1
