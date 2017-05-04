@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Skip while failures are debugged'
     summary: Test the tcpauthlimit sip config option.
     description: |
        This test sets the tcpauthlimit in sip.conf to 1. It then attempts to

@@ -33,7 +33,7 @@
     <recv response="401" auth="true" rtd="true"/>
 
     <!-- Wait a couple of seconds before proceeding -->
-    <pause milliseconds="2000"/>
+    <pause milliseconds="200"/>
 
     <!-- Send a new INVITE with authentication this time -->
     <send retrans="500">
