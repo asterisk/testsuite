@@ -19,7 +19,7 @@ GREEN='\033[01;32m'
 RED='\033[01;31m'
 NORM='\033[m'
 
-col=$(( $(tput cols) - 36 ))
+status_string="[nnnn of nnnn][Status][Pass][Fail]"
 
 counter() {
 	status=Running
@@ -35,40 +35,50 @@ counter() {
 		else
 			printf "[%12s %3ss ]" "Running for" $et
 		fi
-		tput cub 20
+		tput cub 19
 	done
 }
 
 echo -e -n "Calculating...\r"
+declare -i run=0
+declare -i runs=0
+declare -ix runnable=0
+declare -ix total=0
+declare -ix passed=0
+declare -ix failed=0
+declare -ix timedout=0
+declare -ix tests=0
+declare -ix maxelapsed=0
+declare -a failures
+declare -a timeouts
+declare testname=""
+starttime=$SECONDS
 
 trap 'kill $countpid &>/dev/null' INT ERR
 while read line ; do
-	if [[ $line =~ ^Running.tests.for.(Asterisk.*) ]] ; then
-		declare -ix runnable=0
-		declare -ix total=0
-		declare -ix passed=0
-		declare -ix failed=0
-		declare -ix timedout=0
-		declare -ix tests=0
-		declare -ix maxelapsed=0
-		declare -a failures
-		declare -a timeouts
-
+	if [[ $line =~ ^Running.tests.for.(Asterisk[^\s]+)[\ ]+\(run[\ ]+([0-9]+)[\ ]+of[\ ]+([0-9]+)\)\.\.\. ]] ; then
+		run=${BASH_REMATCH[2]}
+		runs=${BASH_REMATCH[3]}
 		version=${BASH_REMATCH[1]}
-		starttime=$SECONDS
 	fi
 
-	if [[ $line =~ ^Tests.to.run:.([0-9]+),[\ ]+Maximum.test.inactivity.time:.([0-9-]+) ]] ; then
-		runnable=${BASH_REMATCH[1]}
-		export test_timeout=${BASH_REMATCH[2]}
-		echo =============================================================
-		echo ${line/-1/unlimited}
-		printf "[%-*.*s ][%-11s][%s][${GREEN}%4s${NORM}][${RED}%4s${NORM}]\n" $col $col "Test" "   Test" "Status" "Pass" "Fail"
+	if [[ $run -eq 1 && $line =~ ^Tests.to.run:[\ ]+([0-9]+)[\ ]+.[\ ]+([0-9]+)[\ ]+time\(s\)[\ ]+=[\ ]+([0-9]+)[\ ]+Maximum.test.inactivity.time:.([0-9-]+) ]] ; then
+		runnable=$(( ${BASH_REMATCH[1]} * $runs ))
+		export test_timeout=${BASH_REMATCH[4]}
+		echo ===========================================================================================
+		echo "${line/-1/unlimited}"
+		col=$(( $(tput cols) - ${#status_string} ))
+		printf "%-*.*s[%-12s][%s][${GREEN}%4s${NORM}][${RED}%4s${NORM}]\n" $col $col "Test" "  Test" "Status" "Pass" "Fail"
 	fi
 
 	if [[ $line =~ ^--\>.Running.test.\'(.+)\'.\.\.\. ]] ; then
 		(( tests++ ))
-		printf "[%-*.*s ][%4d of %3d]" $col $col ${BASH_REMATCH[1]#*/} $tests $runnable
+		col=$(( $(tput cols) - ${#status_string} -1 ))
+		testname=${BASH_REMATCH[1]#*/}
+		tnl=$(( ${#testname} - $col ))
+		[ $tnl -le 0 ] && tnl=0
+		testname=${testname:$tnl}
+		printf "%-*.*s [%4d of %4d]" $col $col ${testname} $tests $runnable
 		st=$SECONDS
 		counter &
 		disown $!
@@ -78,7 +88,7 @@ while read line ; do
 	if [[ $line =~ ^Test.*tests/([^\']+)\',.*(passed|failed|timed\ out)$ ]] ; then
 		test=${BASH_REMATCH[1]}
 		status=${BASH_REMATCH[2]}
-		col=$(( $(tput cols) - 36 ))
+		col=$(( $(tput cols) - ${#status_string} ))
 		et=$(( $SECONDS - $st ))
 		kill $countpid
 
@@ -105,19 +115,20 @@ while read line ; do
 		printf "[${COLOR}%s${NORM}][${GREEN}%4d${NORM}][${RED}%4d${NORM}]\n" $label $passed $failed
 	fi
 
-	if [[ $line =~ (TEST\ RESULTS) ]] ; then
-		for fail in "${failures[@]}" ; do
-			echo -e "${RED}$fail${NORM}"
-		done
-		for to in "${timeouts[@]}" ; do
-			echo -e "${YELLOW}$to${NORM}"
-		done
-
-		elapsed=$(( $SECONDS - $starttime ))
-		time="$(( $elapsed / 60 ))m $(( $elapsed % 60 ))s"
-		echo -e "Tests: $runnable   ${GREEN}Passed: $passed   ${RED}Failed: $failed   TimedOut: $timedout${NORM}   Time: $time\tLongest test: ${maxelapsed}s"
-	fi
 done
+
+for fail in "${failures[@]}" ; do
+	echo -e "${RED}$fail${NORM}"
+done
+for to in "${timeouts[@]}" ; do
+	echo -e "${YELLOW}$to${NORM}"
+done
+
+elapsed=$(( $SECONDS - $starttime ))
+time="$(( $elapsed / 60 ))m $(( $elapsed % 60 ))s"
+echo -------------------------------------------------------------------------------------------
+echo -e "Tests: $runnable   ${GREEN}Passed: $passed   ${RED}Failed: $failed   TimedOut: $timedout${NORM}   Time: $time\tLongest test: ${maxelapsed}s"
+echo ===========================================================================================
 
 trap - INT ERR
 

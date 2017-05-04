@@ -557,8 +557,8 @@ class TestSuite:
                     if excluded in t.test_name:
                         continue
             i += 1
-        print "Tests to run: %d,  Maximum test inactivity time: %d sec." % \
-            (i, (self.options.timeout / 1000))
+        print "Tests to run: %d * %d time(s) = %d  Maximum test inactivity time: %d sec." % \
+            (i, self.options.number, i * self.options.number, (self.options.timeout / 1000))
 
         for t in self.tests:
             if abandon_test_suite:
@@ -843,8 +843,8 @@ def main(argv=None):
 
         test_suite = TestSuite(ast_version, options)
 
-        running_str = "Running tests for Asterisk {0} (run {1})...\n".format(
-            str(ast_version).strip('\n'), iteration + 1)
+        running_str = "Running tests for Asterisk {0} (run {1} of {2})...\n".format(
+            str(ast_version).strip('\n'), iteration + 1, options.number)
         print running_str
         if options.syslog:
             syslog.syslog(running_str)
