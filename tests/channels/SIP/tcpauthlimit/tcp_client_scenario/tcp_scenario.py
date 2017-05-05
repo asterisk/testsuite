@@ -18,9 +18,9 @@ EXPECTED_CONNECTIONS_LOST = EXPECTED_CONNECTIONS_MADE - AUTH_LIMIT
 
 
 class TCPClient(Protocol):
-    def __init__(self, module, port):
+    def __init__(self, module):
         self.module = module
-        self.port = port
+        self.port = 0
 
     def connectionLost(self, reason):
         LOGGER.info("Lost connection for source port {0}".format(self.port))
@@ -28,18 +28,18 @@ class TCPClient(Protocol):
         self.module.connections_lost += 1
 
     def connectionMade(self):
+        self.port = self.transport.getHost().port
         LOGGER.info("Connection made for source port {0}".format(self.port))
         self.module.connections_made += 1
 
 
 class TCPClientFactory(ClientFactory):
-    def __init__(self, module, port):
+    def __init__(self, module):
         self.module = module
-        self.port = port
+        self.port = 0
 
     def buildProtocol(self, addr):
-        LOGGER.info("Building protocol for source port {0}".format(self.port))
-        return TCPClient(self.module, self.port)
+        return TCPClient(self.module)
 
 
 class TCPClientModule(object):
@@ -50,11 +50,11 @@ class TCPClientModule(object):
         test_object.register_ami_observer(self.ami_connect)
 
     def ami_connect(self, ami):
-        reactor.connectTCP("127.0.0.1", 5060, TCPClientFactory(self, 5062),
-                           bindAddress=("127.0.0.1", 5062))
-        reactor.connectTCP("127.0.0.1", 5060, TCPClientFactory(self, 5063),
-                           bindAddress=("127.0.0.1", 5063))
-        reactor.callLater(10, self.evaluate_connections)
+        reactor.connectTCP("127.0.0.1", 5060, TCPClientFactory(self),
+                           bindAddress=("127.0.0.1", 0))
+        reactor.connectTCP("127.0.0.1", 5060, TCPClientFactory(self),
+                           bindAddress=("127.0.0.1", 0))
+        reactor.callLater(5, self.evaluate_connections)
 
     def evaluate_connections(self):
         LOGGER.info("Made {0} connections".format(self.connections_made))
