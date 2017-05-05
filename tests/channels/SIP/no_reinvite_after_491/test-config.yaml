@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'Skip while failures are debugged'
     summary: 'Test that we get no reINVITE after 491 after BYE'
     description: |
         'This tests a scenario where asterisk initiates a reINVITE --
