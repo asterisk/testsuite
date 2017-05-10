@@ -6,6 +6,7 @@ tests:
     - dir: 'configuration'
     - dir: 'dialplan_functions'
     - dir: 'diversion'
+    - dir: 'headers'
     - dir: 'identify'
     - dir: 'message'
     - dir: 'nat'

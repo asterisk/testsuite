@@ -1,0 +1,30 @@
+testinfo:
+    summary: Test non-anonymized From headers.
+    description: |
+        Alice calls Bob without callerid_privacy=prohib
+        Bob verifies that the From header is NOT anonymized.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: sipp.SIPpTestCase
+
+test-object-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario':'alice.xml', '-p':'5062'} }
+                - { 'key-args': {'scenario':'bob.xml', '-p':'5063'} }
+
+properties:
+    minversion: '13.8.0'
+    dependencies:
+        - python : twisted
+        - python : starpy
+        - asterisk : app_dial
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip_caller_id
+        - asterisk : res_pjsip_session
+    tags:
+        - pjsip
