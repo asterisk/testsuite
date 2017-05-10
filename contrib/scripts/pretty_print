@@ -56,13 +56,14 @@ starttime=$SECONDS
 
 trap 'kill $countpid &>/dev/null' INT ERR
 while read line ; do
-	if [[ $line =~ ^Running.tests.for.(Asterisk[^\s]+)[\ ]+\(run[\ ]+([0-9]+)[\ ]+of[\ ]+([0-9]+)\)\.\.\. ]] ; then
+	### Running tests for Asterisk GIT-master-99dea9b (run 1 of 1)...
+	if [[ $line =~ ^Running\ tests\ for\ (Asterisk\ +[^\ ]+)\ +\(run\ +([0-9]+)\ +of\ +([0-9]+)\)\.\.\. ]] ; then
 		run=${BASH_REMATCH[2]}
 		runs=${BASH_REMATCH[3]}
 		version=${BASH_REMATCH[1]}
 	fi
-
-	if [[ $run -eq 1 && $line =~ ^Tests.to.run:[\ ]+([0-9]+)[\ ]+.[\ ]+([0-9]+)[\ ]+time\(s\)[\ ]+=[\ ]+([0-9]+)[\ ]+Maximum.test.inactivity.time:.([0-9-]+) ]] ; then
+	### Tests to run: 11 * 1 time(s) = 11  Maximum test inactivity time: 120 sec.
+	if [[ $run -eq 1 && $line =~ ^Tests\ to\ run:\ +([0-9]+)\ +\*\ +([0-9]+)\ +time\(s\)\ +=\ +([0-9]+)\ +Maximum.test.inactivity.time:.([-0-9-]+) ]] ; then
 		runnable=$(( ${BASH_REMATCH[1]} * $runs ))
 		export test_timeout=${BASH_REMATCH[4]}
 		echo ===========================================================================================
