@@ -14,7 +14,6 @@
       Contact: sip:test@[local_ip]:[local_port]
       Max-Forwards: 70
       Subject: Codec test
-      Content-Type: application/sdp
       Content-Length: 0
 
     ]]>
@@ -52,6 +51,7 @@
       Contact: sip:alice-codec-match@[local_ip]:[local_port]
       Max-Forwards: 70
       Subject: Performance Test
+      Content-Type: application/sdp
       Content-Length: [len]
 
       v=0

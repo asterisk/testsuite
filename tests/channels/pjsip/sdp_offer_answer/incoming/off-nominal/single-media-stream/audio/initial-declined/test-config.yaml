@@ -10,10 +10,6 @@ testinfo:
           audio stream in the ACK. This should cause the channel to
           be immediately hung up.
 
-# Note: The second scenario is currently disabled. This is due
-# to ASTERISK-24410. When that issue is resolved, this scenario
-# should be enabled.
-
 test-modules:
     test-object:
         config-section: test-object-config
@@ -26,7 +22,7 @@ test-object-config:
         -
             scenarios:
                 - { 'key-args': {'scenario': 'uac-declined.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice', } }
-#                - { 'key-args': {'scenario': 'uac-declined-delayed.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice', } }
+                - { 'key-args': {'scenario': 'uac-declined-delayed.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice', } }
 
 
 properties:
