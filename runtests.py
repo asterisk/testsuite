@@ -487,6 +487,11 @@ class TestSuite:
                                     for test in self.options.tests)):
                         continue
 
+                    if (self.options.skip_tests and
+                            any((path + '/').startswith(test)
+                                    for test in self.options.skip_tests)):
+                        continue
+
                     tests.append(TestRun(path, ast_version, self.options,
                                          self.global_config, self.options.timeout))
                 elif val == "dir":
@@ -543,6 +548,29 @@ class TestSuite:
                 else:
                     print "      --> Dependency: %s -- Met: %s" % (d.name, str(d.met))
 
+            i += 1
+
+    def list_terse(self):
+        i = 1
+        for t in self.tests:
+            flag = "E"
+            deps = ""
+            if t.test_config.skip:
+                flag = "S"
+            else:
+                for d in t.test_config.deps:
+                    if not d.met:
+                        if flag == "D":
+                            deps += ","
+                        else:
+                            deps += " "
+                            flag = "D"
+                        if d.version:
+                            deps += ("%s" % d.version)
+                        else:
+                            deps += ("%s" % d.name)
+
+            print "%04d %s %s%s" % (i, flag, t.test_config.test_name, deps)
             i += 1
 
     def run(self):
@@ -768,6 +796,12 @@ def main(argv=None):
     parser.add_option("-l", "--list-tests", action="store_true",
                       dest="list_tests", default=False,
                       help="List tests instead of running them.")
+    parser.add_option("--list-terse", action="store_true",
+                      dest="list_terse", default=False,
+                      help="List tests in 'nnnn A testname [ unmet_dependency[,unmet_dependency]...]' format "
+                      "where 'nnnn' = number, 'A' = 'S':Skipped, 'D':Dependency not met, 'E':Enabled, "
+                      "'unmet_dependency': A CSV list of unmet dependencies, if any"
+                      )
     parser.add_option("-L", "--list-tags", action="store_true",
                       dest="list_tags", default=False,
                       help="List available tags")
@@ -778,6 +812,10 @@ def main(argv=None):
                       dest="tests",
                       help="Run a single specified test (directory) instead "
                            "of all tests.  May be specified more than once.")
+    parser.add_option("-T", "--skip-test", action="append", default=[],
+                      dest="skip_tests",
+                      help="Exclude tests based on regex. "
+                           "May be specified more than once.")
     parser.add_option("-v", "--version",
                       dest="version", default=None,
                       help="Specify the version of Asterisk rather then detecting it.")
@@ -807,7 +845,7 @@ def main(argv=None):
 
     ast_version = AsteriskVersion(default=options.version)
 
-    if options.list_tests or options.list_tags:
+    if options.list_tests or options.list_tags or options.list_terse :
         test_suite = TestSuite(ast_version, options)
 
         if options.list_tests:
@@ -815,6 +853,9 @@ def main(argv=None):
 
         if options.list_tags:
             test_suite.list_tags()
+
+        if options.list_terse:
+            test_suite.list_terse()
 
         return 0
 
