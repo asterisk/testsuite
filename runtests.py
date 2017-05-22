@@ -21,6 +21,7 @@ import random
 import select
 import signal
 import syslog
+import re
 
 try:
     import lxml.etree as ET
@@ -487,9 +488,14 @@ class TestSuite:
                                     for test in self.options.tests)):
                         continue
 
-                    if (self.options.skip_tests and
-                            any((path + '/').startswith(test)
-                                    for test in self.options.skip_tests)):
+                    if (self.options.tests_regex and
+                            not any(re.search(test, path + '/')
+                                    for test in self.options.tests_regex)):
+                        continue
+
+                    if (self.options.skip_tests_regex and
+                            any(re.search(test, path + '/')
+                                    for test in self.options.skip_tests_regex)):
                         continue
 
                     tests.append(TestRun(path, ast_version, self.options,
@@ -812,8 +818,12 @@ def main(argv=None):
                       dest="tests",
                       help="Run a single specified test (directory) instead "
                            "of all tests.  May be specified more than once.")
-    parser.add_option("-T", "--skip-test", action="append", default=[],
-                      dest="skip_tests",
+    parser.add_option("--test-regex", action="append", default=[],
+                      dest="tests_regex",
+                      help="Run tests matching the supplied regex."
+                           "May be specified more than once.")
+    parser.add_option("-T", "--skip-test-regex", action="append", default=[],
+                      dest="skip_tests_regex",
                       help="Exclude tests based on regex. "
                            "May be specified more than once.")
     parser.add_option("-v", "--version",
