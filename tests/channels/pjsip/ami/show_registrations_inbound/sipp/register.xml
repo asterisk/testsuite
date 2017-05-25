@@ -20,6 +20,4 @@
     </send>
 
     <recv response="200" rtd="true" />
-
-    <pause milliseconds="3000"/>
 </scenario>
