@@ -34,7 +34,7 @@ sipp-config:
     connect-ami: True
     reactor-timeout: 15
     fail-on-any: True
-    stop-after-scenario: False
+    stop-after-scenarios: False
     test-iterations:
         -
             scenarios:
