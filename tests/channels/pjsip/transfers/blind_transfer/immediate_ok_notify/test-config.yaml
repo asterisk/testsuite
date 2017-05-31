@@ -1,0 +1,56 @@
+testinfo:
+    summary: "Ensure that when the refer_blind_progress option is set to no we get an immediate 200 OK NOTIFY"
+    description: |
+        'Asterisk originates a call to a Local channel that runs Echo. The other half of
+        the local channel is placed into the dialplan and calls a SIPp scenario. The SIPp
+        scenario answers the call and then performs a blind transfer. The target of the blind
+        transfer performs ringing for a period of time and then answers. The endpoint
+        that the SIPp scenario uses is configured with the refer_blind_progress option set to no.
+        The SIPp scenario tests that it receives only two NOTIF messages: a 100 Trying and a
+        200 OK.
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: sipp.SIPpTestCase
+    modules:
+        -
+            config-section: originator-config
+            typename: pluggable_modules.Originator
+        -
+            config-section: 'hangup-monitor'
+            typename: 'pluggable_modules.HangupMonitor'
+
+sipp-config:
+    stop-after-scenarios: false
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'transferer.xml', '-i': '127.0.0.1', '-p': '5061' }}
+
+originator-config:
+    channel: 'Local/echo@default'
+    context: 'default'
+    exten: 'call-sipp'
+    priority: '1'
+    trigger: 'scenario_start'
+    scenario-name: 'transferer.xml'
+
+hangup-monitor:
+    ids: '0'
+
+properties:
+    minversion: '13.17.0'
+    dependencies:
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+        - asterisk: 'res_pjsip_refer'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'app_dial'
+    tags:
+        - pjsip
+    testconditions:
+        -
+            name: 'channels'
