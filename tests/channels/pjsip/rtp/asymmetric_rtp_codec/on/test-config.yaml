@@ -1,0 +1,59 @@
+testinfo:
+    summary:     'Tests that when asymmetric_rtp_codec is set to no only one format is on the channel'
+    description: |
+        'Asterisk calls bob with the asymmetric_rtp_codec option set to
+         no. The test confirms that the format on the resulting channel
+         contains only one format and not multiple.'
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: sipp-config
+        typename: sipp.SIPpTestCase
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+        -
+            config-section: originator-config-ipv4-udp
+            typename: 'pluggable_modules.Originator'
+
+test-object-config:
+    connect-ami: True
+    asterisk-instances: 1
+
+sipp-config:
+    fail-on-any: True
+    stop-after-scenarios: false
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'bob.xml', '-i': '127.0.0.1', '-p': '5062'}}
+
+ami-config:
+    -
+        ami-events:
+            id: '0'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: '\(g722\)'
+            count: 1
+        stop_test:
+
+originator-config-ipv4-udp:
+    trigger: 'scenario_start'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/bob-ipv4-udp'
+    context: 'default'
+    exten: 'tacos'
+    priority: '1'
+    async: 'True'
+
+properties:
+    minversion: '13.17.0'
+    dependencies:
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
