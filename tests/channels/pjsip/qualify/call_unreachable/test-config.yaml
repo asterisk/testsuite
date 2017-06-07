@@ -1,0 +1,60 @@
+testinfo:
+    summary:     'Tests that calling an unreachable PJSIP endpoint does not result in a call'
+    description: |
+        This test sets up a PJSIP endpoint with an AOR that has qualify enabled to a contact
+        that is unreachable. A call is then placed from the Asterisk instance to the PJSIP
+        endpoint and it is confirmed that an outgoing channel is not created.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+        -
+            config-section: 'hangup-monitor'
+            typename: 'pluggable_modules.HangupMonitor'
+
+test-object-config:
+    asterisk-instances: 1
+    connect-ami: True
+
+ami-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'ContactStatus'
+                    ContactStatus: 'Unreachable'
+                    AOR: 'test'
+            requirements:
+                match:
+                    EndpointName: 'test'
+            count: '1'
+        ami-actions:
+            action:
+                Action: 'Originate'
+                ActionID: '12345'
+                Channel: 'Local/1000@default'
+                Exten: 'playback'
+                Context: 'default'
+                Priority: '1'
+    -
+        ami-events:
+            id: '0'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'success'
+            count: 1
+
+hangup-monitor:
+    ids: '0'
+
+properties:
+    minversion: '13.17.0'
+    dependencies:
+        - asterisk : 'res_pjsip'
+
