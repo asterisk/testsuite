@@ -2,7 +2,13 @@ testinfo:
     summary: |
         "Transfer (attended) Stasis bridge to Stasis bridge in same Stasis app"
     description: |
-        "Upon the kick off local channel entering into the Stasis(testsuite)
+        "NOTE - The only difference between this test and the same_stasis_app
+         test is that the transferer hangs up immediately after the REFER has
+         been accepted instead of waiting until receiving the NOTIFY with the
+         200 OK frag. This allows the test to make sure the transfer completes
+         even when Asterisk receives an early BYE.
+
+         Upon the kick off local channel entering into the Stasis(testsuite)
          app, a call is made from the 'alice' PJSUA account that is put into
          Stasis(testsuite). The Stasis bridge 'test_bridge_a' is created and
          alice is added to it. A channel is originated to the 'bob' PJSUA
@@ -73,6 +79,7 @@ pjsua-config:
             username: 'alice'
             domain: '127.0.0.1'
             transport: 'local-ipv4-1'
+            hangup-reason: 'accepted' # Hang up after REFER, but before NOTIFY
         -
             name: 'bob'
             username: 'bob'
@@ -489,7 +496,7 @@ pluggable-config:
             uri: 'bridges/test_bridge_b'
 
 properties:
-    minversion: ['13.17.0', '14.6.0']
+    minversion: '13.5.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests
