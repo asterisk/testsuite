@@ -1,0 +1,29 @@
+testinfo:
+    summary: 'This test case verifies the DTMF INFO FALLBACK i.e fallback tO INFO instead of INBAND'
+    description: |
+        'This test case verifies the DTMF INFO FALLBACK i.e fallback tO INFO instead of INBAND'
+
+properties:
+    minversion: [ '13.17.0', '14.6.0' ]
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        typename: sipp.SIPpTestCase
+        config-section: sipp-config
+
+sipp-config:
+    connect-ami: True
+    reactor-timeout: 15
+    fail-on-any: True
+    stop-after-scenarios: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5062', '-s': 'bob'} }
+                - { 'key-args': {'scenario': 'alice.xml', '-p': '5061', '-s': 'alice'} }
+
