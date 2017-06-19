@@ -56,6 +56,8 @@
 			s=-
 			c=IN IP[media_ip_type] [media_ip]
 			t=0 0
+			m=audio 6000 RTP/AVP 0
+			a=rtpmap:0 PCMU/8000
 			m=video 6002 RTP/AVP 34
 			a=rtpmap:34 H263/90000
 			a=fmtp:34 SQCIF=1;QCIF=1;CIF=1;CIF4=1;CIF16=1;F=1;I=1;J=1;T=1;K=1;N=1;PAR=255:255;BPP=65535;HRD=1

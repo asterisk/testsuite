@@ -56,6 +56,8 @@
 			s=-
 			c=IN IP[media_ip_type] [media_ip]
 			t=0 0
+			m=audio 6000 RTP/AVP 0
+			a=rtpmap:0 PCMU/8000
 			m=video 6002 RTP/AVP 99
 			a=rtpmap:99 H264/90000
 			a=fmtp:99 profile-level-id=42801e;packetization-mode=1;max-mbps=48600
