@@ -1,0 +1,13 @@
+testinfo:
+    summary: 'Test that asterisk does not drop the call after it rejects the T38 reinvite from the carrier side because customer does not suport it.  It also makes sure that the rejection happends quickly'
+    description: |
+        'Test that asterisk does not drop the call after it rejects the T38 reinvite from the carrier side because customer does not suport it.  I also measures the 488 response time and make sure it happends quckly'
+
+properties:
+    minversion: '13.16.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+
+    tags:
+        - PJSIP
