@@ -7,3 +7,4 @@ tests:
     - test: 'pjsip_session_refresh'
     - test: 'chan_is_avail'
     - test: 'pjsip_header'
+    - test: 'pjsip_dtmfmode'
