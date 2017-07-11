@@ -1,4 +1,5 @@
 tests:
     - test: 'same_stasis_app'
+    - test: 'same_stasis_app_accepted'
     - test: 'different_stasis_app'
 

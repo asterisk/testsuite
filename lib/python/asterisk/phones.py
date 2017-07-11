@@ -116,6 +116,7 @@ class PjsuaPhone(object):
 
     def __init__(self, controller, account_config):
         """Constructor"""
+        self.config = account_config
         self.name = account_config['name']
         self.account = controller.pj_accounts[self.name].account
         self.pj_lib = controller.pj_accounts[self.name].pj_lib
@@ -137,7 +138,7 @@ class PjsuaPhone(object):
         call = None
         try:
             LOGGER.info("'%s' is calling '%s'" % (self.name, uri))
-            call_cb = PhoneCallCallback()
+            call_cb = PhoneCallCallback(config=self.config)
             call = self.account.make_call(uri, cb=call_cb)
             self.calls.append(call)
         except pj.Error as err:
@@ -259,10 +260,21 @@ class AccCallback(pj.AccountCallback):
 
 
 class PhoneCallCallback(pj.CallCallback):
-    """Derived callback class for calls."""
+    """Derived callback class for calls.
 
-    def __init__(self, call=None):
+    configuration:
+        hangup-reason - Specifies when to hangup during a transfer. The
+            following values are allowed:
+                accepted - Sent right after the refer is accepted
+                trying - Sent right after receiving a sip frag 100 Trying
+                ok - Sent right after receiving a sip frag 200 OK
+                final - Sent upon receiving the final message
+    """
+
+    def __init__(self, call=None, config=None):
         pj.CallCallback.__init__(self, call)
+        self.hangup_reason = (config.get('hangup-reason', 'ok')
+                              if config else 'ok').lower()
         self.controller = PjsuaPhoneController.get_instance()
         self.phone = None
         if call is not None:
@@ -300,30 +312,30 @@ class PhoneCallCallback(pj.CallCallback):
 
     def on_transfer_status(self, code, reason, final, cont):
         """Callback for the status of a previous call transfer request."""
+
         LOGGER.debug(fmt_call_info(self.call.info()))
         status_format = "\n=== Transfer Status ==="
         status_format += "\nCode: '%s'"
         status_format += "\nReason: '%s'"
         status_format += "\nFinal Notification: '%s'\n"
         LOGGER.debug(status_format % (code, reason, final))
-        if final != 1:
-            return cont
 
-        LOGGER.debug("Call uri: '%s'; remote uri: '%s'" %
-                     (self.call.info().uri, self.call.info().remote_uri))
         if code == 200 and reason == "OK" and cont == 0:
             LOGGER.info("Transfer target answered the call.")
-        else:
-            LOGGER.warn("Transfer failed!")
 
-        self.phone.remove_call_op_tracking(self.call, operation='transfer')
+        if (reason.lower() == self.hangup_reason or
+                (final and self.hangup_reason == 'final')):
+            LOGGER.debug("Call uri: '%s'; remote uri: '%s'" %
+                         (self.call.info().uri, self.call.info().remote_uri))
 
-        try:
-            LOGGER.info("Hanging up '%s'" % self.call)
-            self.call.hangup(code=200, reason="Q.850;cause=16")
-        except pj.Error as err:
-            LOGGER.warn("Failed to hangup the call!")
-            LOGGER.warn("Exception: %s" % str(err))
+            self.phone.remove_call_op_tracking(self.call, operation='transfer')
+
+            try:
+                LOGGER.info("Hanging up '%s'" % self.call)
+                self.call.hangup(reason="Q.850;cause=16")
+            except pj.Error as err:
+                LOGGER.warn("Failed to hangup the call!")
+                LOGGER.warn("Exception: %s" % str(err))
 
         return cont
 
