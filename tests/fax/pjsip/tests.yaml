@@ -6,3 +6,4 @@ tests:
     - test: 'directmedia_reinvite_t38'
     - test: 'gateway_t38_g711'
     - test: 'gateway_native_t38'
+    - test: 't38_fast_reject'
