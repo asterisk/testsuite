@@ -1,0 +1,27 @@
+testinfo:
+    summary:     'Test offers with multiple video streams/one audio stream and bundled'
+    description: |
+        This tests inbound offers that contain multiple video
+        media streams and a single audio stream with bundle enabled.
+        Asterisk should accept all the streams in a single bundle group.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-multiple-video-with-audio.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+properties:
+    minversion: '15.0.0'
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
