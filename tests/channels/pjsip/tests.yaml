@@ -53,3 +53,4 @@ tests:
     - test: 'user_eq_phone'
     - test: 'cseq_method'
     - test: 'multipart_empty_part'
+    - test: 'dtmf_info_fallback'
