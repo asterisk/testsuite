@@ -21,10 +21,11 @@ from asterisk.voicemail import VoiceMailState, VoiceMailTest
 
 logger = logging.getLogger(__name__)
 
-"""
-TestState that attempts a login with a mailbox / incorrect password
-"""
+
 class LoginWithMailbox(VoiceMailState):
+    """
+    TestState that attempts a login with a mailbox / incorrect password
+    """
 
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
@@ -52,10 +53,11 @@ class LoginWithMailbox(VoiceMailState):
     def get_state_name(self):
         return "LOGIN WITH MAILBOX"
 
-"""
-TestState that attempts a login with an incorrect password only
-"""
+
 class LoginWithoutMailbox(VoiceMailState):
+    """
+    TestState that attempts a login with an incorrect password only
+    """
 
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
@@ -81,6 +83,7 @@ class LoginWithoutMailbox(VoiceMailState):
     def get_state_name(self):
         return "LOGIN WITHOUT MAILBOX"
 
+
 class AuthenticateInvalidPassword(VoiceMailTest):
 
     def __init__(self):
@@ -91,7 +94,10 @@ class AuthenticateInvalidPassword(VoiceMailTest):
     def ami_connect(self, ami):
         super(AuthenticateInvalidPassword, self).ami_connect(ami)
 
-        """ Record which AMI instance we've received and attempt to set up the test controller """
+        """
+        Record which AMI instance we've received and attempt to set up
+        the test controller
+        """
         if (ami.id == 0):
             self.ami_receiver = ami
             ami.registerEvent('UserEvent', self.user_event)
@@ -135,8 +141,8 @@ class AuthenticateInvalidPassword(VoiceMailTest):
             return
 
         """
-        Note that in this test, failure to see any UserEvents is a good thing - if we get to a
-        UserEvent its because we authenticated something invalid
+        Note that in this test, failure to see any UserEvents is a good thing.
+        If we get a UserEvent its because we authenticated something invalid.
         """
         self.passed = False
         if event['result'] == 'pass':
@@ -170,4 +176,4 @@ def main():
     return 0
 
 if __name__ == "__main__":
-   sys.exit(main() or 0)
+    sys.exit(main() or 0)

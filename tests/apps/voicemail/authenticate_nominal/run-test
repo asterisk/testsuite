@@ -21,10 +21,11 @@ from asterisk.voicemail import VoiceMailTest, VoiceMailState
 
 logger = logging.getLogger(__name__)
 
-"""
-TestState that attempts a login with a mailbox / incorrect password
-"""
+
 class LoginWithMailbox(VoiceMailState):
+    """
+    TestState that attempts a login with a mailbox / incorrect password
+    """
 
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
@@ -57,10 +58,11 @@ class LoginWithMailbox(VoiceMailState):
     def get_state_name(self):
         return "LOGIN WITH MAILBOX"
 
-"""
-TestState that attempts a login with an incorrect password only
-"""
+
 class LoginWithoutMailbox(VoiceMailState):
+    """
+    TestState that attempts a login with an incorrect password only
+    """
 
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
@@ -92,17 +94,17 @@ class LoginWithoutMailbox(VoiceMailState):
         return "LOGIN WITHOUT MAILBOX"
 
 
-
 class AuthenticateNominal(VoiceMailTest):
-
-
 
     """ Test results for each iterations """
     results = [False, False, False]
 
     def __init__(self):
         super(AuthenticateNominal, self).__init__()
-        """ Each tuple consists of the mailbox, password, expected channel and test controller object type """
+        """
+        Each tuple consists of the mailbox, password, expected channel
+        and test controller object type
+        """
         self.credentials = [
             ("9000", "1234", "SIP/ast1-00000000", LoginWithMailbox),
             ("9001", "0", "SIP/ast1-00000001", LoginWithoutMailbox),
@@ -113,14 +115,17 @@ class AuthenticateNominal(VoiceMailTest):
     def ami_connect(self, ami):
         super(AuthenticateNominal, self).ami_connect(ami)
 
-        """ Record which AMI instance we've received and attempt to set up the test controller """
+        """
+        Record which AMI instance we've received and attempt to set up
+        the test controller
+        """
         if (ami.id == 0):
             self.ami_receiver = ami
             ami.registerEvent('UserEvent', self.user_event)
         elif (ami.id == 1):
             self.ami_sender = ami
             self.ast_sender = self.ast[self.ami_sender.id]
-            #ami.registerEvent('Hangup', self.hangup_event_handler)
+            # ami.registerEvent('Hangup', self.hangup_event_handler)
         self.create_test_controller()
 
         if (self.ami_receiver != None and self.ami_sender != None):
@@ -190,4 +195,4 @@ def main():
     return 0
 
 if __name__ == "__main__":
-   sys.exit(main() or 0)
+    sys.exit(main() or 0)

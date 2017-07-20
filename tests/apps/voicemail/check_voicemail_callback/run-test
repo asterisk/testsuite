@@ -28,10 +28,11 @@ from asterisk.voicemail import VoiceMailState
 
 logger = logging.getLogger(__name__)
 
-"""
-TestState that is the entry point for the VoiceMailMain application
-"""
+
 class StartVoiceMailState(VoiceMailState):
+    """
+    TestState that is the entry point for the VoiceMailMain application
+    """
 
     userPassword = "1234#"
 
@@ -54,10 +55,10 @@ class StartVoiceMailState(VoiceMailState):
         return "START"
 
 
-"""
-TestState that occurs after a user has been authenticated
-"""
 class AuthenticatedTestState(VoiceMailState):
+    """
+    TestState that occurs after a user has been authenticated
+    """
 
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
@@ -84,11 +85,11 @@ class AuthenticatedTestState(VoiceMailState):
         return "AUTHENTICATED"
 
 
-"""
-TestState that occurs after when the user is being presented with the initial message counts and the main
-voicemail menu
-"""
 class IntroTestState(VoiceMailState):
+    """
+    TestState that occurs after when the user is being presented with the
+    initial message counts and the main voicemail menu
+    """
 
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
@@ -113,10 +114,10 @@ class IntroTestState(VoiceMailState):
         return "INTRO"
 
 
-"""
-TestState that occurs while the user is browsing through messages
-"""
 class BrowseMessageTestState(VoiceMailState):
+    """
+    TestState that occurs while the user is browsing through messages
+    """
 
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
@@ -134,10 +135,10 @@ class BrowseMessageTestState(VoiceMailState):
         return "BROWSE"
 
 
-"""
-TestState that occurs when a user chooses to play a message
-"""
 class AdvancedOptionsTestState(VoiceMailState):
+    """
+    TestState that occurs when a user chooses to play a message
+    """
 
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
@@ -164,10 +165,10 @@ class AdvancedOptionsTestState(VoiceMailState):
         return "ADVOPTIONS"
 
 
-"""
-TestState that occurs when the actual voicemail is being played back to the user
-"""
 class PlayVoiceMailTestState(VoiceMailState):
+    """
+    TestState that occurs when the actual voicemail is being played back to the user
+    """
 
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
@@ -194,10 +195,10 @@ class PlayVoiceMailTestState(VoiceMailState):
         return "PLAYVOICE"
 
 
-"""
-The TestCase class that executes the test
-"""
 class CheckVoicemailCallback(VoiceMailTest):
+    """
+    The TestCase class that executes the test
+    """
 
     """
     The channel to connect to that acts as the voicemail server
@@ -229,7 +230,10 @@ class CheckVoicemailCallback(VoiceMailTest):
     def ami_connect(self, ami):
         super(CheckVoicemailCallback, self).ami_connect(ami)
 
-        """ Record which AMI instance we've received and attempt to set up the test controller """
+        """
+        Record which AMI instance we've received and attempt to set up the
+        test controller
+        """
         if (ami.id == 0):
             self.ami_receiver = ami
         elif (ami.id == 1):
@@ -244,7 +248,6 @@ class CheckVoicemailCallback(VoiceMailTest):
 
         """ Now do specific processing on the AMI instances """
         if (ami.id == 0):
-
             ami.registerEvent('UserEvent', self.user_event)
 
             """ Create a dummy voicemail """
@@ -253,10 +256,9 @@ class CheckVoicemailCallback(VoiceMailTest):
 
             logger.debug("Creating dummy voicemail")
             for i in range(0, 1):
-                if not self.voicemailManager.create_dummy_voicemail("default","1234", VoiceMailMailboxManagement.inbox_folder_name, i, self.formats):
+                if not self.voicemailManager.create_dummy_voicemail("default", "1234", VoiceMailMailboxManagement.inbox_folder_name, i, self.formats):
                     logger.error("Failed to create voicemails in folder " + VoiceMailMailboxManagement.inbox_folder_name)
                     self.stop_reactor()
-
         else:
             logger.debug("Originating call to " + self.channel)
             df = ami.originate(self.channel, "voicemailCaller", "wait", 1)
@@ -307,17 +309,17 @@ def main():
     test.stop_asterisk()
 
     """
-    Post-test processing - verify that we listened to all the messages we wanted to listen to, that
-    we saved the messages, and that the messages were moved successfully
+    Post-test processing - verify that we listened to all the messages we wanted
+    to listen to, that we saved the messages, and that the messages were moved
+    successfully
     """
     if test.passed:
-
         if not test.check_test_conditions():
             logger.warn("Test failed condition checks")
             test.passed = False
 
-        formats = ["ulaw","wav","WAV"]
-        if voicemailManager.check_voicemail_exists("default","1234", 0, formats, "INBOX"):
+        formats = ["ulaw", "wav", "WAV"]
+        if voicemailManager.check_voicemail_exists("default", "1234", 0, formats, "INBOX"):
             logger.warn("Voicemail left in INBOX - should have been moved to old")
             test.passed = False
 
@@ -327,4 +329,4 @@ def main():
     return 0
 
 if __name__ == "__main__":
-   sys.exit(main() or 0)
+    sys.exit(main() or 0)

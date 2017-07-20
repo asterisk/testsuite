@@ -23,12 +23,13 @@ from twisted.internet import defer
 
 logger = logging.getLogger(__name__)
 
+
 class PlayMsg(TestCase):
 
     def __init__(self):
         super(PlayMsg, self).__init__()
         self._voicemailManager = None
-        self._formats = ["ulaw","wav","WAV"]
+        self._formats = ["ulaw", "wav", "WAV"]
         self._current_test = 0
         self._tests = []
         self._results = []
@@ -46,17 +47,38 @@ class PlayMsg(TestCase):
         self.voicemailManager.create_dummy_voicemail("notdefault", "5678", VoiceMailMailboxManagement.urgent_folder_name, 0, self._formats)
 
         # For each of the created voicemails, push a dictionary onto the list containing the information for that test
-        self._tests.append({"context": "default", "mailbox": "1234", "msg_id": self.voicemailManager.created_voicemails[VoiceMailMailboxManagement.inbox_folder_name][0][1], "expected_result": True})
-        self._tests.append({"context": "default", "mailbox": "1234", "msg_id": self.voicemailManager.created_voicemails[VoiceMailMailboxManagement.old_folder_name][0][1], "expected_result": True})
-        self._tests.append({"context": "notdefault", "mailbox": "5678", "msg_id": self.voicemailManager.created_voicemails[VoiceMailMailboxManagement.urgent_folder_name][0][1], "expected_result": True})
+        self._tests.append({"context": "default",
+                            "mailbox": "1234",
+                            "msg_id": self.voicemailManager.created_voicemails[VoiceMailMailboxManagement.inbox_folder_name][0][1],
+                            "expected_result": True})
+        self._tests.append({"context": "default",
+                            "mailbox": "1234",
+                            "msg_id": self.voicemailManager.created_voicemails[VoiceMailMailboxManagement.old_folder_name][0][1],
+                            "expected_result": True})
+        self._tests.append({"context": "notdefault",
+                            "mailbox": "5678",
+                            "msg_id": self.voicemailManager.created_voicemails[VoiceMailMailboxManagement.urgent_folder_name][0][1],
+                            "expected_result": True})
         # Bad message ID
-        self._tests.append({"context": "default", "mailbox": "1234", "msg_id": "12345678", "expected_result": False})
+        self._tests.append({"context": "default",
+                            "mailbox": "1234",
+                            "msg_id": "12345678",
+                            "expected_result": False})
         # Empty mailbox
-        self._tests.append({"context": "default", "mailbox": "", "msg_id": self.voicemailManager.created_voicemails[VoiceMailMailboxManagement.inbox_folder_name][0][1], "expected_result": False})
+        self._tests.append({"context": "default",
+                            "mailbox": "",
+                            "msg_id": self.voicemailManager.created_voicemails[VoiceMailMailboxManagement.inbox_folder_name][0][1],
+                            "expected_result": False})
         # Empty message ID
-        self._tests.append({"context":"default", "mailbox": "1234", "msg_id": "", "expected_result": False})
+        self._tests.append({"context": "default",
+                            "mailbox": "1234",
+                            "msg_id": "",
+                            "expected_result": False})
         # Default context
-        self._tests.append({"context": "", "mailbox": "1234", "msg_id": self.voicemailManager.created_voicemails[VoiceMailMailboxManagement.old_folder_name][0][1], "expected_result": True})
+        self._tests.append({"context": "",
+                            "mailbox": "1234",
+                            "msg_id": self.voicemailManager.created_voicemails[VoiceMailMailboxManagement.old_folder_name][0][1],
+                            "expected_result": True})
 
         ami.registerEvent('TestEvent', self.test_event_handler)
         ami.registerEvent('UserEvent', self.user_event_handler)
@@ -65,10 +87,14 @@ class PlayMsg(TestCase):
 
     def _start_test(self, ami):
         test = self._tests[self._current_test]
-        logger.debug("Setting context=%s; mailbox=%s; msgid=%s" % (test["context"], test["mailbox"], test["msg_id"]))
-        variable_value = '%s,MAILBOX=%s,MSGID=%s' % (test['context'], test['mailbox'], test['msg_id'])
-        ami.originate(channel = "Local/playmsg@voicemail", application = "Echo",
-            variable={"MAILCONTEXT": variable_value}).addErrback(self.handle_originate_failure)
+        logger.debug("Setting context=%s; mailbox=%s; msgid=%s" % (test["context"],
+                                                                   test["mailbox"],
+                                                                   test["msg_id"]))
+        variable_value = '%s,MAILBOX=%s,MSGID=%s' % (test['context'],
+                                                     test['mailbox'],
+                                                     test['msg_id'])
+        ami.originate(channel="Local/playmsg@voicemail", application="Echo",
+                      variable={"MAILCONTEXT": variable_value}).addErrback(self.handle_originate_failure)
 
     def test_event_handler(self, ami, event):
         if 'state' in event and 'message' in event:
@@ -105,6 +131,7 @@ class PlayMsg(TestCase):
         super(PlayMsg, self).run()
         self.create_ami_factory()
 
+
 def main():
 
     test = PlayMsg()
@@ -116,4 +143,4 @@ def main():
     return 0
 
 if __name__ == "__main__":
-   sys.exit(main() or 0)
+    sys.exit(main() or 0)

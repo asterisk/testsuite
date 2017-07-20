@@ -361,27 +361,32 @@ class VoiceMailMailboxManagement(object):
             if not create_all_folders:
                 return True
 
-            inbox_path = ("%(mp)s/%(f)s" % {'mp': mailbox_path,
+            inbox_path = ("%(mp)s/%(f)s" % {
+                'mp': mailbox_path,
                 'f': VoiceMailMailboxManagement.inbox_folder_name})
             if not os.path.isdir(inbox_path):
                 os.makedirs(inbox_path)
 
-            temp_path = ("%(mp)s/%(f)s" % {'mp': mailbox_path,
+            temp_path = ("%(mp)s/%(f)s" % {
+                'mp': mailbox_path,
                 'f': VoiceMailMailboxManagement.temp_folder_name})
             if not os.path.isdir(temp_path):
                 os.makedirs(temp_path)
 
-            old_path = ("%(mp)s/%(f)s" % {'mp': mailbox_path,
+            old_path = ("%(mp)s/%(f)s" % {
+                'mp': mailbox_path,
                 'f': VoiceMailMailboxManagement.old_folder_name})
             if not os.path.isdir(old_path):
                 os.makedirs(old_path)
 
-            urgent_path = ("%(mp)s/%(f)s" % {'mp': mailbox_path,
+            urgent_path = ("%(mp)s/%(f)s" % {
+                'mp': mailbox_path,
                 'f': VoiceMailMailboxManagement.urgent_folder_name})
             if not os.path.isdir(urgent_path):
                 os.makedirs(urgent_path)
 
-            greetings_path = ("%(mp)s/%(f)s" % {'mp': mailbox_path,
+            greetings_path = ("%(mp)s/%(f)s" % {
+                'mp': mailbox_path,
                 'f': VoiceMailMailboxManagement.greetings_folder_name})
             if not os.path.isdir(greetings_path):
                 os.makedirs(greetings_path)
@@ -419,8 +424,9 @@ class VoiceMailMailboxManagement(object):
         msg_name = 'msg%04d' % (msgnum)
         msg_env_name = msg_name + ".txt"
         msg_env_path = (self.__ast.base +
-            "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {'vd': self.voicemail_directory,
-            'c': context, 'm': mailbox, 'f': folder, 'n': msg_env_name})
+                        "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {
+                            'vd': self.voicemail_directory,
+                            'c': context, 'm': mailbox, 'f': folder, 'n': msg_env_name})
 
         random.seed()
         msg_id = (str(int(time.time())) + "-" +
@@ -452,15 +458,15 @@ class VoiceMailMailboxManagement(object):
         for snd_format in formats:
             msg_format_name = msg_name + '.' + snd_format
             msg_format_path = (self.__ast.base +
-                "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {
-                    'vd': self.voicemail_directory,
-                    'c': context,
-                    'm': mailbox,
-                    'f': folder,
-                    'n': msg_format_name})
+                               "%(vd)s/%(c)s/%(m)s/%(f)s/%(n)s" % {
+                                   'vd': self.voicemail_directory,
+                                   'c': context,
+                                   'm': mailbox,
+                                   'f': folder,
+                                   'n': msg_format_name})
             audio_file = os.path.join(os.getcwd(),
                                       "%s/sounds/talking.ulaw" %
-                                        (self.test_parent_dir))
+                                      (self.test_parent_dir))
             shutil.copy(audio_file, msg_format_path)
 
         if folder not in self.created_voicemails.keys():
@@ -552,8 +558,8 @@ class VoiceMailMailboxManagement(object):
         return ret_val
 
     def check_voicemail_property(self, context, mailbox, msgnum,
-                        property_name, property_value,
-                        folder=inbox_folder_name):
+                                 property_name, property_value,
+                                 folder=inbox_folder_name):
         """Check if a voicemail has the property specified
 
         Keyword Arguments:
@@ -707,15 +713,15 @@ class VoiceMailMailboxManagement(object):
             return False
 
         self._remove_items_from_folder(mailbox_path,
-                VoiceMailMailboxManagement.inbox_folder_name)
+                                       VoiceMailMailboxManagement.inbox_folder_name)
         self._remove_items_from_folder(mailbox_path,
-                VoiceMailMailboxManagement.temp_folder_name)
+                                       VoiceMailMailboxManagement.temp_folder_name)
         self._remove_items_from_folder(mailbox_path,
-                VoiceMailMailboxManagement.old_folder_name)
+                                       VoiceMailMailboxManagement.old_folder_name)
         self._remove_items_from_folder(mailbox_path,
-                VoiceMailMailboxManagement.urgent_folder_name)
+                                       VoiceMailMailboxManagement.urgent_folder_name)
         self._remove_items_from_folder(mailbox_path,
-                VoiceMailMailboxManagement.greetings_folder_name)
+                                       VoiceMailMailboxManagement.greetings_folder_name)
 
         if (remove_folders):
             os.rmdir(os.path.join(self.__ast.base, "%(mp)s/%(f)s" % {
