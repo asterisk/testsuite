@@ -133,8 +133,8 @@ class BrowseMessageTestState(VoiceMailState):
             elif message == 'vm-nomore':
                 """ Exit voicemail """
                 self.voice_mail_test.send_dtmf("#")
-            elif message == 'tt-monkeys':
-                self.voice_mail_test.set_test_condition("ttMonkeysHeard", True)
+            elif message == 'tt-weasels':
+                self.voice_mail_test.set_test_condition("ttWeaselsHeard", True)
             elif message == 'vm-from-phonenumber':
                 self.voice_mail_test.set_test_condition("callerIdHeard", True)
             elif message == 'vm-duration':
@@ -261,7 +261,7 @@ class CheckVoicemailEnvelope(VoiceMailTest):
 
         def returnValue(value, testCondition):
             return value
-        self.add_test_condition("ttMonkeysHeard", TestCondition(returnValue, False))
+        self.add_test_condition("ttWeaselsHeard", TestCondition(returnValue, False))
         self.add_test_condition("durationHeard", TestCondition(returnValue, False))
         self.add_test_condition("callerIdHeard", TestCondition(returnValue, False))
 

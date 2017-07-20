@@ -452,7 +452,7 @@ class VoiceMailMailboxManagement(object):
                 envelope_file.write('flag=Urgent\n')
             else:
                 envelope_file.write('flag=\n')
-            envelope_file.write('category=tt-monkeys\n')
+            envelope_file.write('category=tt-weasels\n')
             envelope_file.write('duration=6\n')
 
         for snd_format in formats:
