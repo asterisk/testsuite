@@ -35,14 +35,14 @@ class LoginWithMailbox(VoiceMailState):
         if state == 'PLAYBACK':
             message = event.get('message')
             if message == 'vm-login':
-                self.voice_mail_test.send_dtmf("1234")
+                self.voice_mail_test.send_dtmf("1234#")
+                self.voice_mail_test.reset_timeout()
             elif message == 'vm-password':
                 """
                 Instead of sending a password, ask to be transferred to the
                 attendant extension
                 """
-                self.voice_mail_test.send_dtmf("*")
-                self.voice_mail_test.reset_timeout()
+                self.voice_mail_test.send_dtmf("*#")
             elif message == 'vm-incorrect-mailbox':
                 logger.warn("We failed to pass a valid mailbox - failing the test")
                 self.voice_mail_test.passed = False
@@ -74,7 +74,7 @@ class LoginWithoutMailbox(VoiceMailState):
             message = event.get('message')
             if message == 'vm-login':
                 """ Don't login - just ask to be transferred """
-                self.voice_mail_test.send_dtmf("*")
+                self.voice_mail_test.send_dtmf("*#")
                 self.voice_mail_test.reset_timeout()
             elif message == 'vm-password':
                 logger.warn("We were asked a password instead of being transferred - failing the test")

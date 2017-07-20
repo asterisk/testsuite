@@ -29,22 +29,27 @@ class LoginWithMailbox(VoiceMailState):
 
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
+        self.login_attempts = 0
 
     def handle_state_change(self, ami, event):
         state = event['state']
         if state == 'PLAYBACK':
             message = event.get('message')
             if message == 'vm-login' or message == 'vm-incorrect-mailbox':
-                self.voice_mail_test.send_dtmf("1234")
-            elif message == 'vm-password':
-                self.voice_mail_test.send_dtmf("5555")
+                self.voice_mail_test.send_dtmf("1234#")
                 self.voice_mail_test.reset_timeout()
+                self.login_attempts += 1
+            elif message == 'vm-password':
+                self.voice_mail_test.send_dtmf("5555#")
+            elif message == 'vm-incorrect':
+                if (self.login_attempts == 3):
+                    logger.info("Good, mailbox and password didn't login after 3 tries")
             elif message == 'vm-goodbye':
                 self.voice_mail_test.hangup()
             else:
                 self.handle_default_state(event)
         elif state == 'AUTHENTICATED':
-            logger.warn("We authenticated with an invalid mailbox - failing the test")
+            logger.warn("We authenticated with an invalid password - failing the test")
             self.voice_mail_test.passed = False
             self.voice_mail_test.stop_reactor()
         else:
@@ -61,20 +66,25 @@ class LoginWithoutMailbox(VoiceMailState):
 
     def __init__(self, controller, voiceMailTest):
         VoiceMailState.__init__(self, controller, voiceMailTest)
+        self.login_attempts = 0
 
     def handle_state_change(self, ami, event):
         state = event['state']
         if state == 'PLAYBACK':
             message = event.get('message')
             if message == 'vm-password':
-                self.voice_mail_test.send_dtmf("5555")
+                self.voice_mail_test.send_dtmf("5555#")
                 self.voice_mail_test.reset_timeout()
+                self.login_attempts += 1
+            elif message == 'vm-incorrect':
+                if (self.login_attempts == 3):
+                    logger.info("Good, just password didn't login after 3 tries")
             elif message == 'vm-goodbye':
                 self.voice_mail_test.hangup()
             else:
                 self.handle_default_state(event)
         elif state == 'AUTHENTICATED':
-            logger.warn("We authenticated with an invalid mailbox - failing the test")
+            logger.warn("We authenticated with an invalid password - failing the test")
             self.voice_mail_test.passed = False
             self.voice_mail_test.stop_reactor()
         else:

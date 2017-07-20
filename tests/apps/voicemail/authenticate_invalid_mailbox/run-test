@@ -36,14 +36,15 @@ class StartVoiceMailState(VoiceMailState):
         if state == 'PLAYBACK':
             message = event.get('message')
             if message == 'vm-login' or message == 'vm-incorrect-mailbox':
-                self.voice_mail_test.send_dtmf("5555")
+                self.voice_mail_test.send_dtmf("5678#")
                 self.voice_mail_test.reset_timeout()
                 self.login_attempts += 1
-                if (self.login_attempts == 3):
-                    logger.info("Failed to login 3 times - setting test result to Pass")
-                    self.voice_mail_test.passed = True
             elif message == 'vm-password':
-                self.voice_mail_test.send_dtmf("1234")
+                self.voice_mail_test.send_dtmf("1234#")
+            elif message == 'vm-incorrect':
+                if (self.login_attempts == 3):
+                    logger.info("Good, mailbox and password didn't login after 3 tries")
+                    self.voice_mail_test.passed = True
             elif message == 'vm-goodbye':
                 self.voice_mail_test.hangup()
             else:
