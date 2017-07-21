@@ -100,6 +100,10 @@ class PlayMsg(TestCase):
         if 'state' in event and 'message' in event:
             if event['state'] == 'PLAYBACK':
                 logger.debug("Playing back %s" % event.get('message'))
+            elif event['state'] == 'PLAYVOICE':
+                # Playing a recorded voicemail message
+                # or at least trying to play it.
+                logger.debug("Recorded msg %s" % event.get('message'))
 
     def user_event_handler(self, ami, event):
         if 'userevent' not in event or 'result' not in event or 'status' not in event:
