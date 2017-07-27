@@ -62,12 +62,12 @@ test-config:
         # Expected namespaces for PIDF bodies.
         namespaces:
             default: 'urn:ietf:params:xml:ns:pidf'
-            pp: 'urn:ietf:params:xml:ns:pidf:person'
-            ep: 'urn:ietf:params:xml:ns:pidf:rpid:rpid-person'
+            pp: 'urn:ietf:params:xml:ns:pidf:data-model'
+            ep: 'urn:ietf:params:xml:ns:pidf:rpid'
         # All expected element tag names for PIDF bodies.
         tags:
             ['presence', 'note', 'tuple', 'status', 'basic', 'contact',
-             'pp:person', 'ep:activities']
+             'pp:person', 'ep:activities', 'ep:on-the-phone']
         # Regex patterns for element attributes for each body in order. Some
         # attribute values of elements differ for each body depending on the
         # body type and state changes. Therefore we list them in the order that
@@ -134,28 +134,23 @@ test-config:
                 contact: '^"alice" <sip:alice@127.0.0.1(:5060)?>$'
             -
                 note: 'Ringing'
-                basic: 'closed'
-                activities: 'ep:busy'
+                basic: 'open'
                 contact: '^"alice" <sip:alice@127.0.0.1(:5060)?>$'
             -
                 note: 'On the phone'
-                basic: 'closed'
-                activities: 'ep:busy'
+                basic: 'open'
                 contact: '^"alice" <sip:alice@127.0.0.1(:5060)?>$'
             -
                 note: 'On hold'
-                basic: 'closed'
-                activities: 'ep:busy'
+                basic: 'open'
                 contact: '^"alice" <sip:alice@127.0.0.1(:5060)?>$'
             -
                 note: 'On the phone'
-                basic: 'closed'
-                activities: 'ep:busy'
+                basic: 'open'
                 contact: '^"alice" <sip:alice@127.0.0.1(:5060)?>$'
             -
                 note: 'Unavailable'
                 basic: 'closed'
-                activities: 'ep:away'
                 contact: '^"alice" <sip:alice@127.0.0.1(:5060)?>$'
             -
                 note: 'Ready'

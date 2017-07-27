@@ -118,9 +118,9 @@ test-config:
                     uri: '^"alice" <sip:alice@127.0.0.1(:5060)?>;user=ip$'
                     priority: '^0\.80000$'
                 status:
-                    status: '^closed$'
+                    status: '^inuse$'
                 msnsubstatus:
-                    substatus: '^offline$'
+                    substatus: '^onthephone$'
             -
                 presentity:
                     uri: '^sip:bob@127.0.0.1(:5060)?;method=SUBSCRIBE$'
@@ -131,9 +131,9 @@ test-config:
                     uri: '^"alice" <sip:alice@127.0.0.1(:5060)?>;user=ip$'
                     priority: '^0\.80000$'
                 status:
-                    status: '^closed$'
+                    status: '^inuse$'
                 msnsubstatus:
-                    substatus: '^offline$'
+                    substatus: '^onthephone$'
             -
                 presentity:
                     uri: '^sip:bob@127.0.0.1(:5060)?;method=SUBSCRIBE$'

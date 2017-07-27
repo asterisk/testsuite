@@ -11,10 +11,10 @@ from twisted.internet import reactor
 LOGGER = logging.getLogger(__name__)
 
 states = [
-    ('INUSE', 2, "On the phone"),
-    ('ONHOLD', 2, "On hold"),
-    ('BUSY', 2, "On the phone"),
-    ('RINGING', 2, "Ringing"),
+    ('INUSE', 1, "On the phone"),
+    ('ONHOLD', 1, "On hold"),
+    ('BUSY', 1, "On the phone"),
+    ('RINGING', 1, "Ringing"),
     ('UNAVAILABLE', 2, "Unavailable"),
     ('NOT_INUSE', 1, "Ready"),
     ('', 1, "Ready")  # Final state upon subscription teardown
