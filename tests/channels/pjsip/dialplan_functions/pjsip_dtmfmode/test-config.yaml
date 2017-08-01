@@ -1,0 +1,29 @@
+testinfo:
+    summary:     'Receive a SIP call and confirm that changing the DTMF mode works'
+    description: |
+        'Using SIPp place a call into Asterisk that negotiates DTMF using RFC2833. In the dialplan change
+         the DTMF mode using the PJSIP_DTMF_MODE dialplan function. Once changed send a DTMF using SendDTMF
+         and confirm that INFO DTMF was sent instead of the negotiated RFC2833.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'A_PARTY.xml', '-i': '127.0.0.1', '-p': '5061', '-s': '1000'} }
+
+properties:
+    minversion: '13.18.0'
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.3'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+
