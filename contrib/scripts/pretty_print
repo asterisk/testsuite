@@ -7,19 +7,67 @@
 # the GNU General Public License Version 2.
 #
 
+print_help() {
+	echo "$1: Pretty print the output of runtests.py"
+	echo "runtests.py ... | $1 [ --show-errors ] [ --verbose ] [ --term_width=n ]"
+	echo "                     [ --no-color ] [ --no-timer ]"
+	echo "     --show-errors:  If a test fails, show the output."
+	echo "     --verbose:      Regardless of test status, show the output."
+	echo "     --term-width=n: Force output to span 'n' columns."
+	echo "     --no-color:     Don't use escape sequences to display color."
+	echo "     --no-timer:     Don't display the timer as tests run."
+	echo "                     Together, --no-color and --no-timer make the output"
+	echo "                     suitable for redirecting to a file."
+}
+
 if [ -t 0 ] ; then
-	echo "pretty_print is a filter and needs the output of runtests.py piped to it."
-	echo "Try ./runtests.py <options> | $0"
+	print_help $(basename $0)
 	exit 1
 fi
 
-declare -ix test_timeout=0
-YELLOW='\033[01;33m'
-GREEN='\033[01;32m'
-RED='\033[01;31m'
-NORM='\033[m'
+SHOW_ERRORS=0
+VERBOSE=0
+TERM_WIDTH=$(tput cols)
+NO_COLOR=0
+NO_TIMER=0
+for a in "$@" ; do
+	OPTION_COUNT+=1
+	case "$a" in
+		--*=*)
+			[[ $a =~ --([^=]+)=(.*) ]]
+			l=${BASH_REMATCH[1]//-/_}
+			r=${BASH_REMATCH[2]}
+			eval ${l^^}=$r
+			;;
+		--*)
+			[[ $a =~ --(.+) ]]
+			l=${BASH_REMATCH[1]//-/_}
+			eval ${l^^}=1
+			;;
+		*)
+			print_help $(basename $0)
+			exit 1
+			;;
+	esac
+done
 
-status_string="[nnnn of nnnn][Status][Pass][Fail]"
+declare -ix test_timeout=0
+
+if [ $NO_COLOR -gt 0 ] ; then
+	YELLOW=''
+	GREEN=''
+	RED=''
+	BOLD=''
+	NORM=''
+else
+	YELLOW='\033[01;33m'
+	GREEN='\033[01;32m'
+	RED='\033[01;31m'
+	BOLD='\033[1m'
+	NORM='\033[m'
+fi
+
+status_string="[nnnn of nnnn][Status][Pass][Fail] "
 
 counter() {
 	status=Running
@@ -35,7 +83,7 @@ counter() {
 		else
 			printf "[%12s %3ss ]" "Running for" $et
 		fi
-		tput cub 19
+		tput cub 20
 	done
 }
 
@@ -54,8 +102,14 @@ declare -a timeouts
 declare testname=""
 starttime=$SECONDS
 
+unset buffer
+declare -a buffer
+
 trap 'kill $countpid &>/dev/null' INT ERR
 while read line ; do
+	[ -z "$line" ] && continue
+	buffer+=("$line")
+
 	### Running tests for Asterisk GIT-master-99dea9b (run 1 of 1)...
 	if [[ $line =~ ^Running\ tests\ for\ (Asterisk\ +[^\ ]+)\ +\(run\ +([0-9]+)\ +of\ +([0-9]+)\)\.\.\. ]] ; then
 		run=${BASH_REMATCH[2]}
@@ -66,38 +120,45 @@ while read line ; do
 	if [[ $run -eq 1 && $line =~ ^Tests\ to\ run:\ +([0-9]+)\ +\*\ +([0-9]+)\ +time\(s\)\ +=\ +([0-9]+)\ +Maximum.test.inactivity.time:.([-0-9-]+) ]] ; then
 		runnable=$(( ${BASH_REMATCH[1]} * $runs ))
 		export test_timeout=${BASH_REMATCH[4]}
-		echo ===========================================================================================
+		printf "=%.0s" $(seq 1 ${TERM_WIDTH:-$(tput cols)}) ; echo
 		echo "${line/-1/unlimited}"
-		col=$(( $(tput cols) - ${#status_string} ))
+		col=$(( ${TERM_WIDTH:-$(tput cols)} - ${#status_string} ))
 		printf "%-*.*s[%-12s][%s][${GREEN}%4s${NORM}][${RED}%4s${NORM}]\n" $col $col "Test" "  Test" "Status" "Pass" "Fail"
 	fi
 
 	if [[ $line =~ ^--\>.Running.test.\'(.+)\'.\.\.\. ]] ; then
+		unset buffer
+		declare -a buffer
 		(( tests++ ))
-		col=$(( $(tput cols) - ${#status_string} -1 ))
+		col=$(( ${TERM_WIDTH:-$(tput cols)} - ${#status_string} -1 ))
 		testname=${BASH_REMATCH[1]#*/}
 		tnl=$(( ${#testname} - $col ))
 		[ $tnl -le 0 ] && tnl=0
 		testname=${testname:$tnl}
-		printf "%-*.*s [%4d of %4d]" $col $col ${testname} $tests $runnable
+		printf "${BOLD}%-*.*s${NORM} [%4d of %4d]" $col $col ${testname} $tests $runnable
 		st=$SECONDS
-		counter &
-		disown $!
-		countpid=$!
+		countpid=-1
+		if [ $NO_TIMER -eq 0 ] ; then
+			counter &
+			disown $!
+			countpid=$!
+		fi
 	fi
 
 	if [[ $line =~ ^Test.*tests/([^\']+)\',.*(passed|failed|timed\ out)$ ]] ; then
 		test=${BASH_REMATCH[1]}
 		status=${BASH_REMATCH[2]}
-		col=$(( $(tput cols) - ${#status_string} ))
+		col=$(( ${TERM_WIDTH:-$(tput cols)} - ${#status_string} ))
 		et=$(( $SECONDS - $st ))
-		kill $countpid
+		[ $countpid -gt 0 ] && kill $countpid
+		show=0
 
 		if [[ $status = passed ]] ; then
 			(( passed++ ))
 			COLOR=${GREEN}
 			label=Passed
 			[[ $et -gt $maxelapsed ]] && maxelapsed=$et
+			[ $VERBOSE -gt 0 ] && show=1
 		fi
 		if [[ $status = failed ]] ; then
 			(( failed++ ))
@@ -105,6 +166,7 @@ while read line ; do
 			label=Failed
 			failures+=("FAILED: $test")
 			[[ $et -gt $maxelapsed ]] && maxelapsed=$et
+			[ $SHOW_ERRORS -gt 0 -o $VERBOSE -gt 0 ] && show=1
 		fi
 		if [[ $status = "timed out" ]] ; then
 			(( failed++ ))
@@ -112,8 +174,16 @@ while read line ; do
 			COLOR=${RED}
 			label=Hung!!
 			timeouts+=("TIMEDOUT: $test")
+			[ $SHOW_ERRORS -gt 0 -o $VERBOSE -gt 0 ] && show=1
 		fi
 		printf "[${COLOR}%s${NORM}][${GREEN}%4d${NORM}][${RED}%4d${NORM}]\n" $label $passed $failed
+		if [ $show -gt 0 ] ; then
+			echo ---------------------------------------------------------------------
+			printf "%s\n" "${buffer[@]}"
+			echo ---------------------------------------------------------------------
+		fi
+		unset buffer
+		declare -a buffer
 	fi
 
 done
@@ -127,10 +197,10 @@ done
 
 elapsed=$(( $SECONDS - $starttime ))
 time="$(( $elapsed / 60 ))m $(( $elapsed % 60 ))s"
-echo -------------------------------------------------------------------------------------------
+printf "+%.0s" $(seq 1 ${TERM_WIDTH:-$(tput cols)}) ; echo
 echo -e "Tests: $runnable   ${GREEN}Passed: $passed   ${RED}Failed: $failed   TimedOut: $timedout${NORM}   Time: $time\tLongest test: ${maxelapsed}s"
-echo ===========================================================================================
+printf "=%.0s" $(seq 1 ${TERM_WIDTH:-$(tput cols)}) ; echo
 
 trap - INT ERR
 
-kill $countpid &>/dev/null
+[ $countpid -gt 0 ] && kill $countpid &>/dev/null
