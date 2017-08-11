@@ -583,6 +583,7 @@ class TestSuite:
         self.start_time = time.strftime("%Y-%m-%dT%H:%M:%S %Z", time.localtime())
         test_suite_dir = os.getcwd()
         i = 0
+        global abandon_test_suite
         for t in self.tests:
             if t.can_run is False:
                 continue
@@ -666,6 +667,8 @@ class TestSuite:
             self.total_time += t.time
             if t.passed is False:
                 self.total_failures += 1
+                if self.options.stop_on_error:
+                    abandon_test_suite = True
 
     def __strip_illegal_xml_chars(self, data):
         """
@@ -781,6 +784,8 @@ def main(argv=None):
     if argv is None:
         args = sys.argv
 
+    global abandon_test_suite
+
     usage = "Usage: ./runtests.py [options]"
 
     parser = optparse.OptionParser(usage=usage)
@@ -846,6 +851,9 @@ def main(argv=None):
     parser.add_option("--timeout", metavar='int', type=int,
                       dest="timeout", default=-1,
                       help="Abort test after n seconds of no output.")
+    parser.add_option("--stop-on-error", action="store_true",
+                      dest="stop_on_error", default=False,
+                      help="Stops the testsuite when a test fails.")
     (options, args) = parser.parse_args(argv)
 
     # Install a signal handler for USR1/TERM, and use it to bail out of running
