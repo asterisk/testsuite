@@ -128,6 +128,9 @@ class TestRun:
             cmd = ["./lib/python/asterisk/test_runner.py",
                    "%s" % self.test_name]
         if os.path.exists(cmd[0]) and os.access(cmd[0], os.X_OK):
+            if self.options.pcap:
+                os.environ['PCAP'] = "yes"
+
             self.stdout_print("Running %s ..." % cmd)
             cmd.append(str(self.ast_version).rstrip())
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
@@ -439,6 +442,7 @@ class TestRun:
 
     def _archive_pcap_dump(self, run_dir, archive_dir):
         self._archive_files(run_dir, archive_dir, 'dumpfile.pcap')
+        self._archive_files(run_dir, archive_dir, 'packet.pcap')
 
     def __check_can_run(self, ast_version):
         """Check tags and dependencies in the test config."""
@@ -854,6 +858,10 @@ def main(argv=None):
     parser.add_option("--stop-on-error", action="store_true",
                       dest="stop_on_error", default=False,
                       help="Stops the testsuite when a test fails.")
+    parser.add_option("--pcap", action="store_true",
+                      dest="pcap", default=False,
+                      help="Capture packets. Output will be in "
+                      " the test's log directory as packet.pcap.")
     (options, args) = parser.parse_args(argv)
 
     # Install a signal handler for USR1/TERM, and use it to bail out of running

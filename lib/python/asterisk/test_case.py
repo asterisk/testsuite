@@ -169,9 +169,13 @@ class TestCase(object):
 
         LOGGER.info("Executing " + self.test_name)
 
-        if PCAP_AVAILABLE and self.create_pcap:
-            self.pcapfilename = os.path.join(self.testlogdir, "dumpfile.pcap")
-            self.pcap = self.create_pcap_listener(dumpfile=self.pcapfilename)
+        if PCAP_AVAILABLE and os.getenv("PCAP", "no") == "yes":
+            # This PcapListener is from pcap_listener NOT from asterisk/pcap.
+            # The former is standalone, which we need here, while the latter
+            # is meant for use by tests.
+            # It's triggered by the --pcap command line.
+            dumpfile = os.path.join(self.testlogdir, "packet.pcap")
+            PcapListener("lo", dumpfile=dumpfile)
 
         self._setup_conditions()
 
