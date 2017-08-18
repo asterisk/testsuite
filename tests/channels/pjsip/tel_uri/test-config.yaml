@@ -1,0 +1,26 @@
+testinfo:
+    summary: 'TEL URI support in basic inbound calls'
+    description: |
+        This test verifies that TEL URIs are appropriately handled in a basic
+        incoming call situation.
+
+properties:
+    minversion: ['13.17.1', '14.6.1']
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'tel_uac.xml', '-p': '5061'} }
