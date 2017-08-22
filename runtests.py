@@ -105,6 +105,7 @@ class TestRun:
         self.stdout = ""
         self.timeout = timeout
         self.cleanup = options.cleanup
+        self.keep_full_logs = options.keep_full_logs
         self.skipped_reason = ""
 
         assert self.test_name.startswith('tests/')
@@ -181,7 +182,7 @@ class TestRun:
             self._process_valgrind()
             self._process_ref_debug()
 
-            if not self.passed:
+            if not self.passed or self.keep_full_logs:
                 self._archive_logs()
             elif self.cleanup:
                 try:
@@ -862,6 +863,9 @@ def main(argv=None):
                       dest="pcap", default=False,
                       help="Capture packets. Output will be in "
                       " the test's log directory as packet.pcap.")
+    parser.add_option("--keep-full-logs", action="store_true",
+                      dest="keep_full_logs", default=False,
+                      help="Keep full logs even if test passes.")
     (options, args) = parser.parse_args(argv)
 
     # Install a signal handler for USR1/TERM, and use it to bail out of running
