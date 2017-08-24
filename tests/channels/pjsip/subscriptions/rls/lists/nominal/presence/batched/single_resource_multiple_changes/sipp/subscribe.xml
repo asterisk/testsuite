@@ -35,10 +35,14 @@
       </action>
   </recv>
 
-  <!-- Initial NOTIFY upon subscribing -->
+  <!-- Initial NOTIFY upon subscribing.  Should have both alice and bob -->
   <recv request="NOTIFY" crlf="true">
       <action>
           <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
+
+          <ereg regexp="<name>pres_list</name>.+<resource uri=\"sip:alice@127.0.0.1:5060\">.+<resource uri=\"sip:bob@127.0.0.1:5060\">"
+              search_in="body" check_it="true" assign_to="1" />
+
       </action>
   </recv>
 
@@ -57,10 +61,14 @@
     ]]>
   </send>
 
-  <!-- NOTIFY upon changing Alice's state -->
+  <!-- NOTIFY upon changing Alice's state to inuse and back again.
+      With batching, should have only alice not inuse. -->
   <recv request="NOTIFY" crlf="true">
       <action>
           <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
+
+          <ereg regexp="<presence entity=\"sip:alice@127.0.0.1:5060\"[^>]+>[^<]*<note>Ready</note>[^<]*<tuple id=\"alice\">[^<]*<status>[^<]*<basic>open</basic>[^<]*</status>"
+            search_in="body" check_it="true" assign_to="1" />
       </action>
   </recv>
 
@@ -134,10 +142,14 @@
     ]]>
   </send>
 
-  <!--- NOTIFY upon changing Bob's state -->
+  <!-- NOTIFY upon changing Bob's state to inuse and back again.
+      With batching, should have only bob not inuse. -->
   <recv request="NOTIFY" crlf="true">
       <action>
           <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
+
+          <ereg regexp="<presence entity=\"sip:bob@127.0.0.1:5060\"[^>]+>[^<]*<note>Ready</note>[^<]*<tuple id=\"bob\">[^<]*<status>[^<]*<basic>open</basic>[^<]*</status>"
+            search_in="body" check_it="true" assign_to="1" />
       </action>
   </recv>
 

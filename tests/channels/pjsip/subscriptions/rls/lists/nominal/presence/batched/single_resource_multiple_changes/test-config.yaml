@@ -13,7 +13,6 @@ properties:
         - buildoption: 'TEST_FRAMEWORK'
         - python: 'twisted'
         - python: 'starpy'
-        - python: 'lxml'
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_pubsub'
     tags:
@@ -21,43 +20,90 @@ properties:
         - pjsip
 
 test-modules:
-    add-test-to-search-path: 'True'
-    add-to-search-path:
-        -
-            'tests/channels/pjsip/subscriptions/rls'
     test-object:
         config-section: 'test-case-config'
         typename: 'sipp.SIPpTestCase'
     modules:
         -
-            config-section: 'test-config'
-            typename: 'rls_test.RLSTest'
-        -
-            typename: 'driver.TestDriver'
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
 
 test-case-config:
-    stop-after-scenarios: False
+    reactor-timeout: 15
+    stop-after-scenarios: True
     test-iterations:
         -
             scenarios:
-                - { 'target': '127.0.0.1:5061', 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'pres_list'} }
+                - { 'target': '127.0.0.1:5060', 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'pres_list'} }
 
-test-config:
-    stop-test-after-notifys: False
-    list-name: 'pres_list'
-    packets:
-        -
-            full-state: True
-            resources: { 'alice': {'type': 'PIDF', 'state': 'active'}, 'bob': {'type': 'PIDF', 'state': 'active'}}
-        -
-            full-state: False
-            resources: { 'alice': {'type': 'PIDF', 'state': 'active' } }
-        -
-            full-state: True
-            resources: { 'alice': {'type': 'PIDF', 'state': 'active'}, 'bob': {'type': 'PIDF', 'state': 'active'}}
-        -
-            full-state: False
-            resources: { 'bob': {'type': 'PIDF', 'state': 'active' } }
-        -
-            full-state: True
-            resources: { 'alice': {'type': 'PIDF', 'state': 'terminated'}, 'bob': {'type': 'PIDF', 'state': 'terminated'}}
+ami-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_ESTABLISHED'
+                    Resource: 'pres_list'
+            count: '1'
+        ami-actions:
+            action:
+                Action: 'SetVar'
+                Variable: 'DEVICE_STATE(Custom:alice)'
+                Value: 'InUse'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'DeviceStateChange'
+                    Device: 'Custom:alice'
+                    State: 'INUSE'
+            count: '1'
+        ami-actions:
+            action:
+                Action: 'SetVar'
+                Variable: 'DEVICE_STATE(Custom:alice)'
+                Value: 'NOT_INUSE'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'DeviceStateChange'
+                    Device: 'Custom:alice'
+                    State: 'NOT_INUSE'
+            count: '1'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_REFRESHED'
+            requirements:
+                match:
+                    Resource: 'pres_list'
+            count: '1'
+        ami-actions:
+            action:
+                Action: 'SetVar'
+                Variable: 'DEVICE_STATE(Custom:bob)'
+                Value: 'InUse'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'DeviceStateChange'
+                    Device: 'Custom:bob'
+                    State: 'INUSE'
+            count: '1'
+        ami-actions:
+            action:
+                Action: 'SetVar'
+                Variable: 'DEVICE_STATE(Custom:bob)'
+                Value: 'NOT_INUSE'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'DeviceStateChange'
+                    Device: 'Custom:bob'
+                    State: 'NOT_INUSE'
+            count: '1'
