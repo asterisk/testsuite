@@ -58,6 +58,10 @@
   <!-- are saved and used for following messages sent. Useful to test   -->
   <!-- against stateful SIP proxies/B2BUAs.                             -->
   <recv response="200" rtd="true" crlf="true">
+	  <action>
+		  <ereg regexp="telephone-event" search_in="body" check_it_inverse="true" assign_to = "2" />
+		  <log message="telephony-event [$2]"/>
+	  </action>
   </recv>
 
 
