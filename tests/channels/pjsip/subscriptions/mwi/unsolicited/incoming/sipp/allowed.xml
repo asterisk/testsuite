@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic Sipstone UAC">
+
+    <send retrans="500">
+		<![CDATA[
+
+NOTIFY sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+From: "[service]" <sip:[service]@[local_ip]:[local_port]>
+To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+Contact: <sip:[service]@[local_ip]:[local_port]>
+Call-ID: [call_id]
+CSeq: 6 NOTIFY
+Subscription-State: terminated
+Event: message-summary
+Allow-Events: presence, dialog, message-summary, refer
+Max-Forwards: 70
+User-Agent: Asterisk PBX 13.1.0-6.5.2.rl.1500488122.d0054c3
+Content-Type: application/simple-message-summary
+Content-Length: [len]
+
+Messages-Waiting: no
+Message-Account: sip:[service]@default.com
+Voice-Message: 7/2 (3/6)
+
+]]>
+	</send>
+
+    <recv response="200" crlf="true"/>

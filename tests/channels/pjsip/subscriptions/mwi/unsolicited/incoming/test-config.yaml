@@ -1,0 +1,70 @@
+testinfo:
+    summary: 'Ensure that an incoming MWI NOTIFY triggers the proper stasis push'
+    description: |
+        'This test runs a SIPp scenario that sends an MWI NOTIFY to Asterisk and
+        ensures that the proper event is generated with the correct message
+        counts and message account when endpoint->incoming_mwi_mailbox is set
+        and that no event is generated when endpoint->incoming_mwi_mailbox is
+        NOT set.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-action-config
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    connect-ami: True
+    reactor-timeout: 15
+    fail-on-any: True
+    stop-after-scenarios: False
+    test-iterations:
+        -
+            scenarios:
+#   Kick both sipp scenarios off at the same time since they're hitting different endpoints
+                - {'key-args': { 'scenario': 'allowed.xml', '-s': 'allowed', '-p': '5061' }}
+                - {'key-args': { 'scenario': 'not_allowed.xml', '-s': 'not_allowed', '-p': '5062' }}
+
+ami-action-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'PUBSUB_INCOMING_MWI_PUBLISH'
+                    Endpoint: 'allowed'
+            requirements:
+                match:
+                    Mailbox: 'allowed@default'
+                    MessageAccount: 'sip:allowed@default.com'
+                    VoiceMessagesNew: '7'
+                    VoiceMessagesOld: '2'
+                    VoiceMessagesUrgentNew: '3'
+                    VoiceMessagesUrgentOld: '6'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'PUBSUB_NO_INCOMING_MWI_MAILBOX'
+                    Endpoint: 'not_allowed'
+            count: 1
+        stop_test:
+
+properties:
+    minversion: [ '13.18.0', '14.7.0', '15.1.0' ]
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_pubsub'
+        - asterisk: 'res_pjsip_mwi'
+        - asterisk: 'res_mwi_external'
+        - asterisk: 'res_mwi_external_ami'
+    tags:
+        - pjsip
+        - mwi_external
