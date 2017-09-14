@@ -1,11 +1,11 @@
 testinfo:
-    summary: 'TEL URI support in basic inbound calls'
+    summary: 'Verifies that non sip(s) uri requests are rejected'
     description: |
-        This test verifies that TEL URIs are appropriately handled in a basic
-        incoming call situation.
+        This test verifies that non sip(s) URIs are rejected when appearing in
+        the Request Line or in the From/To/Contact headers.
 
 properties:
-    minversion: ['13.17.1', '14.6.1']
+    minversion: ['13.18.0', '14.7.0']
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
@@ -23,4 +23,4 @@ sipp-config:
     test-iterations:
         -
             scenarios:
-                - { 'key-args': {'scenario': 'tel_uac.xml', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'invalid_uris.xml', '-p': '5061'} }
