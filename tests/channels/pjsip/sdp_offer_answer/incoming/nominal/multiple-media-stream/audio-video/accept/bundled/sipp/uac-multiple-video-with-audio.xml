@@ -4,7 +4,6 @@
 <scenario name="Basic Sipstone UAC">
   <send retrans="500">
     <![CDATA[
-
       INVITE sip:answer@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: alice <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
@@ -33,21 +32,28 @@
       a=maxptime:20
       a=sendrecv
       a=mid:audio
+      a=rtcp-mux
+      a=ssrc:1 cname:alice
       m=video 6001 RTP/AVP 99 34
       a=rtpmap:99 H264/90000
       a=rtpmap:34 H263/90000
       a=sendrecv
       a=mid:video
+      a=rtcp-mux
+      a=ssrc:2 cname:bob
       m=video 6002 RTP/AVP 99
       c=IN IP[media_ip_type] [media_ip]
       a=rtpmap:99 H264/90000
       a=sendrecv
       a=mid:video
+      a=rtcp-mux
+      a=ssrc:3 cname:charlie
       m=video 6003 RTP/AVP 34
       a=rtpmap:34 H263/90000
       a=sendrecv
       a=mid:video
-
+      a=rtcp-mux
+      a=ssrc:4 cname:david
     ]]>
   </send>
 
@@ -79,7 +85,6 @@
 
   <send>
     <![CDATA[
-
       ACK sip:answer@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: alice <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
@@ -90,7 +95,6 @@
       Max-Forwards: 70
       Subject: Codec Test
       Content-Length: 0
-
     ]]>
   </send>
 
@@ -99,7 +103,6 @@
 
   <send>
     <![CDATA[
-
       SIP/2.0 200 OK
       [last_Via:]
       [last_From:]
@@ -108,7 +111,6 @@
       [last_CSeq:]
       Contact: <sip:[local_ip]:[local_port];transport=[transport]>
       Content-Length: 0
-
     ]]>
   </send>
 
