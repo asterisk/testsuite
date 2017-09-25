@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic Sipstone UAC">
+	<send retrans="500">
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]-1
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: 1 REGISTER
+			Max-Forwards: 70
+			Contact: "[service]" <sip:[service]-1@127.0.0.2:5062>;transport=[transport]
+			Subject: Performance Test
+			Expires: 60
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" rtd="true">
+		<action>
+			<!-- Ensure the expected contacts are present and that the expires is correct with a 5 second tolerance -->
+			<ereg regexp="Contact: <sip:(alice|bob)-1@127.0.0.2:5062>;expires=(60|5[5-9])" search_in="msg" check_it="true" assign_to="1"/>
+		</action>
+	</recv>
+
+	<send retrans="500">
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]-2
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: 1 REGISTER
+			Max-Forwards: 70
+			Contact: "[service]" <sip:[service]-2@127.0.0.3:5063>;transport=[transport]
+			Subject: Performance Test
+			Expires: 70
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" rtd="true">
+		<action>
+			<!-- Ensure the expected contacts are present and that the expires is correct with a 5 second tolerance -->
+			<ereg regexp="Contact: <sip:(alice|bob)-1@127.0.0.2:5062>;expires=(60|5[5-9])" search_in="msg" check_it="true" assign_to="2"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-2@127.0.0.3:5063>;expires=(70|6[5-9])" search_in="msg" check_it="true" assign_to="3"/>
+		</action>
+	</recv>
+
+	<send retrans="500">
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]-3
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: 1 REGISTER
+			Max-Forwards: 70
+			Contact: "[service]" <sip:[service]-3@127.0.0.4:5064>;transport=[transport]
+			Subject: Performance Test
+			Expires: 80
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" rtd="true">
+		<action>
+			<!-- Ensure the expected contacts are present and that the expires is correct with a 5 second tolerance -->
+			<ereg regexp="Contact: <sip:(alice|bob)-1@127.0.0.2:5062>;expires=(60|5[5-9])" search_in="msg" check_it="true" assign_to="4"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-2@127.0.0.3:5063>;expires=(70|6[5-9])" search_in="msg" check_it="true" assign_to="5"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-3@127.0.0.4:5064>;expires=(80|7[5-9])" search_in="msg" check_it="true" assign_to="6"/>
+		</action>
+	</recv>
+
+	<send retrans="500">
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]-4
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: 1 REGISTER
+			Max-Forwards: 70
+			Contact: "[service]" <sip:[service]-4@127.0.0.5:5065>;transport=[transport]
+			Subject: Performance Test
+			Expires: 90
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" rtd="true">
+		<action>
+			<!-- Ensure the expected contacts are present and that the expires is correct with a 5 second tolerance -->
+			<ereg regexp="Contact: <sip:(alice|bob)-2@127.0.0.3:5063>;expires=(70|6[5-9])" search_in="msg" check_it="true" assign_to="7"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-3@127.0.0.4:5064>;expires=(80|7[5-9])" search_in="msg" check_it="true" assign_to="8"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-4@127.0.0.5:5065>;expires=(90|8[5-9])" search_in="msg" check_it="true" assign_to="9"/>
+			<!-- Ensure the expected old contacts are *not* present -->
+			<ereg regexp="Contact: <sip:(alice|bob)-1@127.0.0.2:5062>" search_in="msg" check_it_inverse="true" assign_to="10" />
+		</action>
+	</recv>
+
+	<send retrans="500">
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]-5
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: 1 REGISTER
+			Max-Forwards: 70
+			Contact: "[service]" <sip:[service]-4@127.0.0.5:5065>;transport=[transport];expires=0
+			Contact: "[service]" <sip:[service]-5@127.0.0.6:5066>;transport=[transport];expires=100
+			Contact: "[service]" <sip:[service]-6@127.0.0.7:5067>;transport=[transport];expires=110
+			Subject: Performance Test
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" rtd="true">
+		<action>
+			<!-- Ensure the expected contacts are present and that the expires is correct with a 5 second tolerance -->
+			<ereg regexp="Contact: <sip:(alice|bob)-3@127.0.0.4:5064>;expires=(80|7[5-9])" search_in="msg" check_it="true" assign_to="11"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-5@127.0.0.6:5066>;expires=(100|9[5-9])" search_in="msg" check_it="true" assign_to="12"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-6@127.0.0.7:5067>;expires=(110|10[5-9])" search_in="msg" check_it="true" assign_to="13"/>
+			<!-- Ensure the expected old contacts are *not* present -->
+			<ereg regexp="Contact: <sip:(alice|bob)-1@127.0.0.2:5062>" search_in="msg" check_it_inverse="true" assign_to="14" />
+			<ereg regexp="Contact: <sip:(alice|bob)-2@127.0.0.3:5063>" search_in="msg" check_it_inverse="true" assign_to="15"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-4@127.0.0.5:5065>" search_in="msg" check_it_inverse="true" assign_to="16"/>
+		</action>
+	</recv>
+
+	<send retrans="500">
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]-6
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: 1 REGISTER
+			Max-Forwards: 70
+			Contact: "[service]" <sip:[service]-7@127.0.0.8:5068>;transport=[transport]
+			Contact: "[service]" <sip:[service]-8@127.0.0.9:5069>;transport=[transport]
+			Subject: Performance Test
+			Expires: 110
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" rtd="true">
+		<action>
+			<!-- Ensure the expected contacts are present and that the expires is correct with a 5 second tolerance -->
+			<ereg regexp="Contact: <sip:(alice|bob)-6@127.0.0.7:5067>;expires=(110|10[5-9])" search_in="msg" check_it="true" assign_to="17"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-7@127.0.0.8:5068>;expires=(110|10[5-9])" search_in="msg" check_it="true" assign_to="18"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-8@127.0.0.9:5069>;expires=(110|10[5-9])" search_in="msg" check_it="true" assign_to="19"/>
+			<!-- Ensure the expected old contacts are *not* present -->
+			<ereg regexp="Contact: <sip:(alice|bob)-1@127.0.0.2:5062>" search_in="msg" check_it_inverse="true" assign_to="20" />
+			<ereg regexp="Contact: <sip:(alice|bob)-2@127.0.0.3:5063>" search_in="msg" check_it_inverse="true" assign_to="21"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-3@127.0.0.4:5064>" search_in="msg" check_it_inverse="true" assign_to="22"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-4@127.0.0.5:5065>" search_in="msg" check_it_inverse="true" assign_to="23"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-5@127.0.0.6:5066>" search_in="msg" check_it_inverse="true" assign_to="24"/>
+		</action>
+	</recv>
+
+	<send retrans="500">
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]-7
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: 1 REGISTER
+			Max-Forwards: 70
+			Contact: "[service]" <sip:[service]-9@127.0.0.10:5070>;transport=[transport]
+			Contact: "[service]" <sip:[service]-10@127.0.0.10:5071>;transport=[transport]
+			Contact: "[service]" <sip:[service]-11@127.0.0.10:5072>;transport=[transport]
+			Contact: "[service]" <sip:[service]-12@127.0.0.10:5073>;transport=[transport]
+			Subject: Performance Test
+			Expires: 110
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="403" rtd="true">
+	</recv>
+
+	<send retrans="500">
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]-8
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: 1 REGISTER
+			Max-Forwards: 70
+			Contact: *
+			Subject: Performance Test
+			Expires: 0
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" rtd="true">
+		<action>
+			<!-- Ensure the expected old contacts are *not* present -->
+			<ereg regexp="Contact: <sip:(alice|bob)-1@127.0.0.2:5062>" search_in="msg" check_it_inverse="true" assign_to="25" />
+			<ereg regexp="Contact: <sip:(alice|bob)-2@127.0.0.3:5063>" search_in="msg" check_it_inverse="true" assign_to="26"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-3@127.0.0.4:5064>" search_in="msg" check_it_inverse="true" assign_to="27"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-4@127.0.0.5:5065>" search_in="msg" check_it_inverse="true" assign_to="28"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-5@127.0.0.6:5066>" search_in="msg" check_it_inverse="true" assign_to="29"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-6@127.0.0.7:5067>" search_in="msg" check_it_inverse="true" assign_to="30"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-7@127.0.0.8:5068>" search_in="msg" check_it_inverse="true" assign_to="31"/>
+			<ereg regexp="Contact: <sip:(alice|bob)-8@127.0.0.9:5069>" search_in="msg" check_it_inverse="true" assign_to="32"/>
+		</action>
+	</recv>
+
+	<Reference variables="1" />
+	<Reference variables="2" />
+	<Reference variables="3" />
+	<Reference variables="4" />
+	<Reference variables="5" />
+	<Reference variables="6" />
+	<Reference variables="7" />
+	<Reference variables="8" />
+	<Reference variables="9" />
+	<Reference variables="10" />
+	<Reference variables="11" />
+	<Reference variables="12" />
+	<Reference variables="13" />
+	<Reference variables="14" />
+	<Reference variables="15" />
+	<Reference variables="16" />
+	<Reference variables="17" />
+	<Reference variables="18" />
+	<Reference variables="19" />
+	<Reference variables="20" />
+	<Reference variables="21" />
+	<Reference variables="22" />
+	<Reference variables="23" />
+	<Reference variables="24" />
+	<Reference variables="25" />
+	<Reference variables="26" />
+	<Reference variables="27" />
+	<Reference variables="28" />
+	<Reference variables="29" />
+	<Reference variables="30" />
+	<Reference variables="31" />
+	<Reference variables="32" />
+</scenario>
