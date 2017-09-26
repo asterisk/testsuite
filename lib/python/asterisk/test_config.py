@@ -484,11 +484,17 @@ class TestConfig(object):
             min_candidates = self.minversion
         self.minversion_check = all([ast_version >= ver
                                      for ver in min_candidates])
+
         # Max version is a bit different: generally, it is a hard cut-off
-        # (as what the test covers has been removed). We should always be less
-        # than any provided max version.
+        # (as what the test covers has been removed).  If we have a maximum
+        # version for our branch; use that.  Otherwise, compare against all
+        # listed maximum versions.
+        max_candidates = [ver for ver in self.maxversion
+                          if ver.major == ast_version.major]
+        if not len(max_candidates):
+            max_candidates = self.maxversion
         self.maxversion_check = all([ast_version < ver
-                                     for ver in self.maxversion])
+                                     for ver in max_candidates])
 
         if not self.minversion_check or not self.maxversion_check:
             self.can_run = False

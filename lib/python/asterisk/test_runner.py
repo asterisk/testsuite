@@ -145,13 +145,40 @@ def check_module_version(module_spec, ast_version):
     version, True otherwise
     """
 
-    modminversion = module_spec.get('minversion')
-    modmaxversion = module_spec.get('maxversion')
-    if (modminversion is not None and
-            AsteriskVersion(ast_version) < AsteriskVersion(modminversion)):
+    running_version = AsteriskVersion(ast_version)
+
+    minversion = module_spec.get("minversion", [])
+    if not isinstance(minversion, list):
+        minversion = [minversion]
+    min_versions = [AsteriskVersion(ver) for ver in minversion]
+
+    # If we have a minimum version for our branch; use that.  Otherwise,
+    # compare against all listed minimum versions.
+    min_candidates = [ver for ver in min_versions
+                      if ver.major == running_version.major]
+    if not len(min_candidates):
+        min_candidates = min_versions
+    min_version_check = all([running_version >= ver for ver in min_candidates])
+
+    if not min_version_check:
         return False
-    if (modmaxversion is not None and
-            AsteriskVersion(ast_version) >= AsteriskVersion(modmaxversion)):
+
+    maxversion = module_spec.get("maxversion", [])
+    if not isinstance(maxversion, list):
+        maxversion = [maxversion]
+    max_versions = [AsteriskVersion(ver) for ver in maxversion]
+
+    # Max version is a bit different: generally, it is a hard cut-off
+    # (as what the test covers has been removed).  If we have a maximum
+    # version for our branch; use that.  Otherwise, compare against all
+    # listed maximum versions.
+    max_candidates = [ver for ver in max_versions
+                      if ver.major == running_version.major]
+    if not len(max_candidates):
+        max_candidates = max_versions
+    max_version_check = all([running_version < ver for ver in max_candidates])
+
+    if not max_version_check:
         return False
 
     return True
