@@ -7,3 +7,4 @@ crash-mail-config.yaml
 /tests/custom
 /fastagi
 /run-local.conf
+/.valgrindrc
