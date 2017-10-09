@@ -512,6 +512,8 @@ class Asterisk(object):
         if os.getenv("VALGRIND_ENABLE") == "true":
             valgrind_path = test_suite_utils.which('valgrind')
             if valgrind_path:
+                # No need to modify this array to add options.  Instead create
+                # .valgrindrc in the testsuite root directory.
                 cmd_prefix = [
                     valgrind_path,
                     '--xml=yes',
