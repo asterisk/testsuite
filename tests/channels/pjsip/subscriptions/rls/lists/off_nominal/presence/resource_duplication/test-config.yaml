@@ -11,6 +11,7 @@ properties:
         - python: 'twisted'
         - python: 'starpy'
         - python: 'lxml'
+        - python: 'construct'
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_pubsub'
     tags:
