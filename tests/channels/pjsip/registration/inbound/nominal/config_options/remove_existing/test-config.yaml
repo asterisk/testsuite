@@ -1,22 +1,51 @@
 testinfo:
     summary:     'Register contacts to test the remove_existing option'
     description: |
-        'Using all combinations of IPv4/IPv6 and UDP/TCP, run SIPp scenarios
+        'Old remove_exising behaviour:
+         All existing AOR contacts are removed and replaced with the new
+         registration contacts when remove_existing is enabled.  The number
+         of contacts cannot go over the max_contacts setting.
+
+         Using all combinations of IPv4/IPv6 and UDP/TCP, run SIPp scenarios
          that register two contacts per AOR. Then register two different
          contacts for the same AORs. This ensures that with the remove_existing
          pjsip.conf configuration option enabled, the first two contacts are
-         removed and the new contacts are added.'
+         removed and the new contacts are added.
+
+         New remove_existing behavour:
+         Any existing AOR contacts not affected by the new registration and
+         expire the soonest are removed if they push the number of contacts
+         over the max_contacts setting.  A single registration still cannot
+         try to add more contacts than the max_contacts setting.  The number
+         of contacts cannot go over the max_contacts setting.
+
+         Using all combinations of IPv4/IPv6 and UDP/TCP, run SIPp scenarios
+         that register contacts in a series of registrations per transport.
+         This ensures that with the remove_existing pjsip.conf configuration
+         option enabled, the contacts are removed and the new contacts are
+         added as expected.'
 
 test-modules:
     test-object:
-        config-section: test-object-config
-        typename: 'sipp.SIPpTestCase'
+        -
+            maxversion: ['13.18.0', '14.7.0', '15.1.0']
+            config-section: test-object-config-v12
+            typename: 'sipp.SIPpTestCase'
+        -
+            minversion: ['13.18.0', '14.7.0', '15.1.0']
+            config-section: test-object-config-v13.18.0
+            typename: 'sipp.SIPpTestCase'
     modules:
         -
-            config-section: 'ami-config'
+            maxversion: ['13.18.0', '14.7.0', '15.1.0']
+            config-section: 'ami-config-v12'
+            typename: 'ami.AMIEventModule'
+        -
+            minversion: ['13.18.0', '14.7.0', '15.1.0']
+            config-section: 'ami-config-v13.18.0'
             typename: 'ami.AMIEventModule'
 
-test-object-config:
+test-object-config-v12:
     fail-on-any: False
     test-iterations:
         -
@@ -28,16 +57,16 @@ test-object-config:
                 - { 'key-args': {'scenario': 'register-noauth-ipv4.xml', '-i': '127.0.0.1', '-p': '5061', '-t': 't1', '-s': 'bob'} }
                 # IPv6 & UDP
                 - { 'key-args': {'scenario': 'register-noauth-ipv6.xml',
-                                    'target': '[::1]', '-i': '[::1]', '-p': '5061', '-s': 'charlie'},
+                                 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-s': 'charlie'},
                     'ordered-args': ['-key', 'customip1', '[::2]', '-key', 'customip2', '[::3]',
-                                        '-key', 'customip3', '[::4]', '-key', 'customip4', '[::5]'] }
+                                     '-key', 'customip3', '[::4]', '-key', 'customip4', '[::5]'] }
                 # IPv6 & TCP
                 - { 'key-args': {'scenario': 'register-noauth-ipv6.xml',
-                                    'target': '[::1]', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'carol'},
+                                 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'carol'},
                     'ordered-args': ['-key', 'customip1', '[::2]', '-key', 'customip2', '[::3]',
-                                        '-key', 'customip3', '[::4]', '-key', 'customip4', '[::5]'] }
+                                     '-key', 'customip3', '[::4]', '-key', 'customip4', '[::5]'] }
 
-ami-config:
+ami-config-v12:
     -
         type: 'headermatch'
         id: '0'
@@ -246,6 +275,107 @@ ami-config:
             match:
                 Expiration: '60'
         count: '1'
+
+test-object-config-v13.18.0:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # IPv4 & UDP
+                - { 'key-args': {'scenario': 'register-v13.18-ipv4.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+                # IPv4 & TCP
+                - { 'key-args': {'scenario': 'register-v13.18-ipv4.xml', '-i': '127.0.0.1', '-p': '5061', '-t': 't1', '-s': 'bob'} }
+                # IPv6 & UDP
+                - { 'key-args': {'scenario': 'register-v13.18-ipv6.xml',
+                                 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-s': 'charlie'},
+                    'ordered-args': ['-key', 'customip1', '[::2]', '-key', 'customip2', '[::3]',
+                                     '-key', 'customip3', '[::4]', '-key', 'customip4', '[::5]',
+                                     '-key', 'customip5', '[::6]', '-key', 'customip6', '[::7]',
+                                     '-key', 'customip7', '[::8]', '-key', 'customip8', '[::9]',
+                                     '-key', 'customip9', '[::10]'] }
+                # IPv6 & TCP
+                - { 'key-args': {'scenario': 'register-v13.18-ipv6.xml',
+                                 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'carol'},
+                    'ordered-args': ['-key', 'customip1', '[::2]', '-key', 'customip2', '[::3]',
+                                     '-key', 'customip3', '[::4]', '-key', 'customip4', '[::5]',
+                                     '-key', 'customip5', '[::6]', '-key', 'customip6', '[::7]',
+                                     '-key', 'customip7', '[::8]', '-key', 'customip8', '[::9]',
+                                     '-key', 'customip9', '[::10]'] }
+
+ami-config-v13.18.0:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'alice'
+        count: '8'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_REMOVED'
+                AOR: 'alice'
+        count: '8'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'bob'
+        count: '8'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_REMOVED'
+                AOR: 'bob'
+        count: '8'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'charlie'
+        count: '8'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_REMOVED'
+                AOR: 'charlie'
+        count: '8'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'carol'
+        count: '8'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_REMOVED'
+                AOR: 'carol'
+        count: '8'
 
 properties:
     minversion: '12.0.0'
