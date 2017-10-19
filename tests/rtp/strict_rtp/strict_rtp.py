@@ -75,8 +75,12 @@ class StrictRtpTester(object):
         ami   The AMI protocol instance
         event The Newchannel event
         """
-        if event['sentpackets'] != '250':
+        if int(event['sentpackets']) < 240 or 260 < int(event['sentpackets']):
             return
+        LOGGER.info("AMI " +
+                    str(ami.id) +
+                    ": Triggered on AMI RTCPReceived event with SentPackets: " +
+                    event['sentpackets'])
 
         self.test_object.set_passed(True)
         protocol = StrictRtpTester.NoAnswerProtocol(self.test_object)
