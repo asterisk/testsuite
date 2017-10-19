@@ -26,13 +26,17 @@ ami-config:
         ami-events:
             conditions:
                 match:
-                    Event: 'ContactStatus'
-                    ContactStatus: 'Unreachable'
-                    AOR: 'test'
+                    Event: 'TestEvent'
+                    Type: 'StateChange'
+                    State: 'AOR_CONTACT_QUALIFY_RESULT'
             requirements:
                 match:
-                    EndpointName: 'test'
-            count: '1'
+                    Status: 'Unreachable'
+            # We have to wait for the second event just in case
+            # the first event happens too early and the unreachable
+            # ContactStatus state has not been set yet.
+            count: '>2'
+            trigger-on-count: True
         ami-actions:
             action:
                 Action: 'Originate'
@@ -43,12 +47,21 @@ ami-config:
                 Priority: '1'
     -
         ami-events:
+          -
+            id: '0'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'failed'
+            count: '0' # shouldn't receive any of these
+          -
             id: '0'
             conditions:
                 match:
                     Event: 'UserEvent'
                     UserEvent: 'success'
-            count: 1
+            count: '1'
+        stop_test:
 
 hangup-monitor:
     ids: '0'
@@ -56,5 +69,11 @@ hangup-monitor:
 properties:
     minversion: '13.17.0'
     dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_playback'
+        - asterisk : 'app_userevent'
         - asterisk : 'res_pjsip'
 
