@@ -36,6 +36,7 @@ test-modules:
             typename: 'ami.AMIEventModule'
 
 test-case-config:
+    memcheck-delay-stop: 7
     connect-ami: 'True'
 
 pjsua-config:

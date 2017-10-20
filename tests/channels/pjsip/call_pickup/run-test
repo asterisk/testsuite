@@ -40,7 +40,7 @@ class CallPickupTest(TestCase):
 
         self.connectionsEstablished = 0
 
-        self.create_asterisk(count=2)
+        self.create_asterisk(count=2, test_config={'memcheck-delay-stop': 7})
 
     def hangup(self, ami):
         self.stop_reactor()

@@ -17,6 +17,7 @@ test-modules:
 
 
 test-object-config:
+    memcheck-delay-stop: 7
     test-iterations:
         -
             scenarios:
