@@ -103,7 +103,7 @@ class SIPpTestCase(TestCase):
             self._stop_after_scenarios = True
 
         self.register_intermediate_obverver(self._handle_scenario_finished)
-        self.create_asterisk()
+        self.create_asterisk(test_config=test_config)
 
     def on_reactor_timeout(self):
         """Create a failure token when the test times out"""
