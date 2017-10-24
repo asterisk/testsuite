@@ -24,6 +24,5 @@ properties:
         - asterisk : 'res_pjsip'
         - asterisk : 'chan_pjsip'
         - asterisk : 'res_pjsip_session'
-        - asterisk : 'res_pjsip_multihomed'
     tags:
         - pjsip
