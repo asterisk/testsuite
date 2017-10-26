@@ -1,0 +1,4 @@
+tests:
+    - test: 'invite'
+    - test: 'notify'
+    - test: 'options'

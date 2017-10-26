@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="UAS Test transport">
+	<send>
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:5062;rport;branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:5062>;tag=[pid]SIPpTag00[call_number]
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: [cseq] REGISTER
+			Max-Forwards: 70
+			Expires: 60
+			Contact: <sip:[service]@[local_ip]:5062>;transport=[transport]
+			Subject: Transport reuse Test
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" crlf="true" />
+
+	<pause milliseconds="4000"/>
+
+	<send>
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:5062;rport;branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:5062>;tag=[pid]SIPpTag00[call_number]
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: [cseq] REGISTER
+			Max-Forwards: 70
+			Expires: 0
+			Contact: <sip:[service]@[local_ip]:5062>;transport=[transport]
+			Subject: Transport reuse Test
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" crlf="true" />
+</scenario>
+
