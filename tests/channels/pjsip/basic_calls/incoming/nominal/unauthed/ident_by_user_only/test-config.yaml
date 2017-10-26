@@ -1,0 +1,33 @@
+testinfo:
+    summary:     'Tests incoming calls without authentication matching only based on user'
+    description: |
+        'Run a SIPp scenario that sends various calls to res_pjsip, which should be matched using username only'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+        # IPv4 & UDP
+                - { 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice-ipv4-udp'} }
+        # IPv6 & UDP
+        -
+            scenarios:
+                 - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '[::1]', '-p': '5061', '-s': 'alice-ipv6-udp'} }
+
+properties:
+    minversion: [ '13.19.0', '15.2.0' ]
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_playback'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
