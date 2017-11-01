@@ -154,6 +154,11 @@ class TestCase(object):
                 self.base_config_path = test_config['config-path']
             if 'reactor-timeout' in test_config:
                 self.reactor_timeout = test_config['reactor-timeout']
+            if 'memcheck-delay-stop' in test_config:
+                # minimum reactor timeout 3 seconds more than memcheck-delay-stop.
+                delay = test_config['memcheck-delay-stop'] + 3
+                if delay > self.reactor_timeout:
+                    self.reactor_timeout = delay
             self.ast_conf_options = test_config.get('ast-config-options')
             log_full = test_config.get('log-full', True)
             log_messages = test_config.get('log-messages', True)
@@ -246,7 +251,7 @@ class TestCase(object):
                          for i in range(count)]
         return asterisks
 
-    def create_asterisk(self, count=1, base_configs_path=None):
+    def create_asterisk(self, count=1, base_configs_path=None, test_config=None):
         """Create n instances of Asterisk
 
         Note: if the instances of Asterisk being created are remote, the
@@ -261,6 +266,7 @@ class TestCase(object):
                           the same configuration all the time. This
                           configuration can be overwritten by individual tests,
                           however.
+        test_config       Test Configuration
         """
         for i, ast_config in enumerate(self.get_asterisk_hosts(count)):
             local_num = ast_config.get('num')
@@ -273,11 +279,13 @@ class TestCase(object):
             if local_num:
                 LOGGER.info("Creating Asterisk instance %d" % local_num)
                 ast_instance = Asterisk(base=self.testlogdir, host=host,
-                                        ast_conf_options=self.ast_conf_options)
+                                        ast_conf_options=self.ast_conf_options,
+                                        test_config=test_config)
             else:
                 LOGGER.info("Managing Asterisk instance at %s" % host)
                 ast_instance = Asterisk(base=self.testlogdir, host=host,
-                                        remote_config=ast_config)
+                                        remote_config=ast_config,
+                                        test_config=test_config)
             self.ast.append(ast_instance)
             self.condition_controller.register_asterisk_instance(self.ast[i])
 
@@ -293,7 +301,7 @@ class TestCase(object):
                 # Copy test specific config files
                 self.ast[i].install_configs("%s/configs/ast%d" %
                                             (self.test_name, local_num),
-                                            self.test_config.get_deps())
+                                            self.test_config)
 
     def create_ami_factory(self, count=1, username="user", secret="mysecret",
                            port=5038):
@@ -816,7 +824,7 @@ class SimpleTestCase(TestCase):
             self._end_test_delay = test_config.get('end-test-delay') or 0
             self._stop_on_end = test_config.get('stop-on-end', True)
 
-        self.create_asterisk(count=1)
+        self.create_asterisk(count=1, test_config=test_config)
 
     def ami_connect(self, ami):
         """AMI connect handler"""
@@ -1000,7 +1008,7 @@ class TestCaseModule(TestCase):
         self.connect_ami = test_config.get('connect-ami') or False
         self.connect_agi = test_config.get('connect-agi') or False
 
-        self.create_asterisk(count=self.asterisk_instances)
+        self.create_asterisk(count=self.asterisk_instances, test_config=test_config)
 
     def run(self):
         """The reactor entry point"""

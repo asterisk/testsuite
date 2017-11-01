@@ -71,7 +71,7 @@ class AppTest(TestCase):
 
         self.register_ami_observer(self._ami_connect_handler)
         self.register_stop_observer(self.end_scenario)
-        self.create_asterisk()
+        self.create_asterisk(test_config=test_config)
 
         # Created successfully - set the singleton instance to this object
         # if we're the first instance created; otherwise, complain loudly

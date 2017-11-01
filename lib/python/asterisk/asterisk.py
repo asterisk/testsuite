@@ -341,7 +341,7 @@ class Asterisk(object):
         default_etc_directory = "/etc/asterisk"
 
     def __init__(self, base=None, ast_conf_options=None, host="127.0.0.1",
-                 remote_config=None):
+                 remote_config=None, test_config=None):
         """Construct an Asterisk instance.
 
         Keyword Arguments:
@@ -356,6 +356,7 @@ class Asterisk(object):
                          ast_conf_options are generally ignored, and the
                          Asterisk instance's configuration is treated as
                          immutable on some remote machine defined by 'host'
+        test_config -- yaml loaded object containing config information
 
         Example Usage:
         self.asterisk = Asterisk(base="manager/login")
@@ -370,6 +371,9 @@ class Asterisk(object):
         self.original_astmoddir = ""
         self.ast_version = None
         self.remote_config = remote_config
+        self.memcheck_delay_stop = 0
+        if test_config is not None and 'memcheck-delay-stop' in test_config:
+            self.memcheck_delay_stop = test_config['memcheck-delay-stop'] or 0
 
         # If the process is remote, don't bother
         if not self.remote_config:
@@ -622,11 +626,22 @@ class Asterisk(object):
             self._stop_deferred.callback(reason)
             return reason
 
+        def __actual_stop():
+            # Schedule a kill. If we don't gracefully shut down Asterisk, this
+            # will ensure that the test is stopped.
+            sched_time = 200 if self.valgrind_enabled else 45
+
+            self._stop_cancel_tokens.append(reactor.callLater(sched_time,
+                                            __send_kill))
+
+            # Start by asking to stop gracefully.
+            __send_stop_gracefully()
+
+            self._stop_deferred.addCallback(__cancel_stops)
+
         if not self.process:
             reactor.callLater(0, __process_stopped, None)
-            return self._stop_deferred
-
-        if self.protocol.exited:
+        elif self.protocol.exited:
             try:
                 if not self._stop_deferred.called:
                     self._stop_deferred.callback(
@@ -635,16 +650,13 @@ class Asterisk(object):
                 LOGGER.warning("Asterisk %s stop deferred already called" %
                                self.host)
         else:
-            # Schedule a kill. If we don't gracefully shut down Asterisk, this
-            # will ensure that the test is stopped.
-            sched_time = 200 if self.valgrind_enabled else 45
-            self._stop_cancel_tokens.append(reactor.callLater(sched_time,
-                                            __send_kill))
+            delay = 0
+            if self.valgrind_enabled or os.path.exists(self.get_path("astlogdir", 'refs')):
+                delay = self.memcheck_delay_stop
+                if delay != 0:
+                    LOGGER.debug("Delaying shutdown by %d seconds" % delay)
 
-            # Start by asking to stop gracefully.
-            __send_stop_gracefully()
-
-            self._stop_deferred.addCallback(__cancel_stops)
+            reactor.callLater(delay, __actual_stop)
 
         return self._stop_deferred
 

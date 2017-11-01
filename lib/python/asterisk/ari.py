@@ -84,7 +84,7 @@ class AriBaseTestObject(TestCase):
         self.timed_out = False
 
         self.asterisk_instances = test_config.get('asterisk-instances', 1)
-        self.create_asterisk(count=self.asterisk_instances)
+        self.create_asterisk(count=self.asterisk_instances, test_config=test_config)
 
     def run(self):
         """Override of TestCase run
