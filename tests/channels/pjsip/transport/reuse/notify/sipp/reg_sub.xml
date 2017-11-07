@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="REGISTER, SUBSCRIBE, unSUBSCRIBE, unREGISTER">
+	<send>
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:5062;rport;branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:5062>;tag=[pid]SIPpTag00[call_number]
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: 1 REGISTER
+			Max-Forwards: 70
+			Expires: 60
+			Contact: <sip:[service]@[local_ip]:5062>;transport=[transport]
+			Subject: Performance Test
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="401" auth="true" />
+
+	<send>
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:5062;rport;branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:5062>;tag=[pid]SIPpTag00[call_number]
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: [cseq] REGISTER
+			Max-Forwards: 70
+			Expires: 60
+			Contact: <sip:[service]@[local_ip]:5062>;transport=[transport]
+			Subject: Performance Test
+			[authentication]
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" crlf="true" />
+	<pause milliseconds="500" />
+
+	<send retrans="500">
+		<![CDATA[
+			SUBSCRIBE sip:[mbx]@[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:5062;rport;branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:5062>;tag=[pid]SIPpTag00[call_number]
+			To: <sip:[service]@[remote_ip]:[remote_port]>
+			Contact: <sip:[service]@[local_ip]:5062>
+			Call-ID: [call_id]
+			CSeq: [cseq] SUBSCRIBE
+			Max-Forwards: 70
+			Event: presence
+			Expires: 10
+			Supported: replaces, 100rel, timer, norefersub
+			Accept: application/pidf+xml, application/xpidf+xml, application/simple-message-summary
+			Allow-Events: presence, message-summary, refer
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="401" auth="true" />
+
+	<send retrans="500">
+		<![CDATA[
+			SUBSCRIBE sip:[mbx]@[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:5062;rport;branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:5062>;tag=[pid]SIPpTag00[call_number]
+			To: <sip:[service]@[remote_ip]:[remote_port]>
+			Contact: <sip:[service]@[local_ip]:5062>
+			Call-ID: [call_id]
+			CSeq: [cseq] SUBSCRIBE
+			Max-Forwards: 70
+			Event: presence
+			Expires: 10
+			Supported: replaces, 100rel, timer, norefersub
+			Accept: application/pidf+xml, application/xpidf+xml, application/simple-message-summary
+			Allow-Events: presence, message-summary, refer
+			[authentication]
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" crlf="true" />
+
+	<recv request="NOTIFY">
+		<action>
+			<ereg regexp="127.0.0.1:5066;rport" search_in="hdr" header="Via"
+				check_it="true" assign_to="1" />
+		</action>
+	</recv>
+	<Reference variables="1" />
+
+	<send crlf="true">
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Contact: <sip:[local_ip]:5062;transport=[transport]>
+			Content-Length: 0
+		]]>
+	</send>
+
+	<pause milliseconds="500" />
+
+	<send retrans="500">
+		<![CDATA[
+			SUBSCRIBE sip:[mbx]@[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:5062;rport;branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:5062>;tag=[pid]SIPpTag00[call_number]
+			To: <sip:[service]@[remote_ip]:[remote_port]>[peer_tag_param]
+			Contact: <sip:[service]@[local_ip]:5062>
+			Call-ID: [call_id]
+			CSeq: [cseq] SUBSCRIBE
+			Max-Forwards: 70
+			Event: presence
+			Expires: 0
+			Supported: replaces, 100rel, timer, norefersub
+			Accept: application/pidf+xml, application/xpidf+xml, application/simple-message-summary
+			Allow-Events: presence, message-summary, refer
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" />
+
+	<recv request="NOTIFY">
+		<action>
+			<ereg regexp="127.0.0.1:5066;rport" search_in="hdr" header="Via"
+				check_it="true" assign_to="2" />
+		</action>
+	</recv>
+	<Reference variables="2" />
+
+	<send crlf="true">
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Contact: <sip:[local_ip]:5062;transport=[transport]>
+			Content-Length: 0
+		]]>
+	</send>
+
+	<pause milliseconds="1000" />
+
+	<send retrans="500">
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:5062;rport;branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:5062>;tag=[pid]SIPpTag00[call_number]
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: [cseq] REGISTER
+			Max-Forwards: 70
+			Expires: 0
+			Contact: <sip:[service]@[local_ip]:5062>;transport=[transport]
+			Subject: Performance Test
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="401" auth="true" />
+
+	<send>
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:5062;rport;branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:5062>;tag=[pid]SIPpTag00[call_number]
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: [cseq] REGISTER
+			Max-Forwards: 70
+			Expires: 0
+			Contact: <sip:[service]@[local_ip]:5062>;transport=[transport]
+			Subject: Performance Test
+			[authentication]
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" />
+
+	<pause milliseconds="1000" />
+</scenario>
