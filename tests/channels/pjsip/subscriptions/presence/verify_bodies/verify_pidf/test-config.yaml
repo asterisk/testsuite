@@ -16,7 +16,7 @@ testinfo:
         fails.'
 
 properties:
-    minversion: '12.5.0'
+    minversion: ['13.19.0', '15.2.0']
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - sipp :
@@ -131,31 +131,31 @@ test-config:
             -
                 note: 'Ready'
                 basic: 'open'
-                contact: '^"alice" <sip:alice@127.0.0.1(:5060)?>$'
+                contact: '^sip:alice@127.0.0.1(:5060)?$'
             -
                 note: 'Ringing'
                 basic: 'open'
-                contact: '^"alice" <sip:alice@127.0.0.1(:5060)?>$'
+                contact: '^sip:alice@127.0.0.1(:5060)?$'
             -
                 note: 'On the phone'
                 basic: 'open'
-                contact: '^"alice" <sip:alice@127.0.0.1(:5060)?>$'
+                contact: '^sip:alice@127.0.0.1(:5060)?$'
             -
                 note: 'On hold'
                 basic: 'open'
-                contact: '^"alice" <sip:alice@127.0.0.1(:5060)?>$'
+                contact: '^sip:alice@127.0.0.1(:5060)?$'
             -
                 note: 'On the phone'
                 basic: 'open'
-                contact: '^"alice" <sip:alice@127.0.0.1(:5060)?>$'
+                contact: '^sip:alice@127.0.0.1(:5060)?$'
             -
                 note: 'Unavailable'
                 basic: 'closed'
-                contact: '^"alice" <sip:alice@127.0.0.1(:5060)?>$'
+                contact: '^sip:alice@127.0.0.1(:5060)?$'
             -
                 note: 'Ready'
                 basic: 'open'
-                contact: '^"alice" <sip:alice@127.0.0.1(:5060)?>$'
+                contact: '^sip:alice@127.0.0.1(:5060)?$'
 
 ami-config:
     -
