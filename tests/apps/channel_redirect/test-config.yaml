@@ -147,5 +147,13 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk : 'app_channelredirect'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_exec'
+        - asterisk : 'app_playback'
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'app_verbose'
+        - asterisk : 'func_global'
+        - asterisk : 'pbx_config'
     tags:
         - apps
