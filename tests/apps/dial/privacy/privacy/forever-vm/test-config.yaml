@@ -202,7 +202,10 @@ properties:
       - buildoption: 'TEST_FRAMEWORK'
       - python : 'twisted'
       - python : 'starpy'
-      - asterisk : 'app_senddtmf'
       - asterisk : 'app_dial'
       - asterisk : 'app_playback'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_verbose'
+      - asterisk : 'func_callerid'
+      - asterisk : 'pbx_config'
 
