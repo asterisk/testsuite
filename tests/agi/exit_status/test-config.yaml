@@ -9,5 +9,9 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'app_userevent'
+        - asterisk : 'func_cdr'
+        - asterisk : 'func_logic'
+        - asterisk : 'pbx_config'
+        - asterisk : 'res_agi'
     tags:
         - AGI
