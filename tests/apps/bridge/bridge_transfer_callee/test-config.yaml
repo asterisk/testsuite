@@ -9,5 +9,11 @@ testinfo:
 
 properties:
     minversion: '11.0.0'
+    dependencies:
+        - python : 'starpy'
+        - python : 'twisted'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_userevent'
+        - asterisk : 'pbx_config'
     tags:
         - bridge
