@@ -16,7 +16,7 @@ testinfo:
         fails.'
 
 properties:
-    minversion: '12.5.0'
+    minversion: ['13.19.0', '15.2.0']
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - sipp :
@@ -76,7 +76,7 @@ test-config:
                     atomid: '^[a-z0-9-]+$'
                     id: '^bob$'
                 address:
-                    uri: '^"alice" <sip:alice@127.0.0.1(:5060)?>;user=ip$'
+                    uri: '^sip:alice@127.0.0.1(:5060)?;user=ip$'
                     priority: '^0\.80000$'
                 status:
                     status: '^open$'
@@ -89,7 +89,7 @@ test-config:
                     atomid: '^[a-z0-9-]+$'
                     id: '^bob$'
                 address:
-                    uri: '^"alice" <sip:alice@127.0.0.1(:5060)?>;user=ip$'
+                    uri: '^sip:alice@127.0.0.1(:5060)?;user=ip$'
                     priority: '^0\.80000$'
                 status:
                     status: '^inuse$'
@@ -102,7 +102,7 @@ test-config:
                     atomid: '^[a-z0-9-]+$'
                     id: '^bob$'
                 address:
-                    uri: '^"alice" <sip:alice@127.0.0.1(:5060)?>;user=ip$'
+                    uri: '^sip:alice@127.0.0.1(:5060)?;user=ip$'
                     priority: '^0\.80000$'
                 status:
                     status: '^inuse$'
@@ -115,7 +115,7 @@ test-config:
                     atomid: '^[a-z0-9-]+$'
                     id: '^bob$'
                 address:
-                    uri: '^"alice" <sip:alice@127.0.0.1(:5060)?>;user=ip$'
+                    uri: '^sip:alice@127.0.0.1(:5060)?;user=ip$'
                     priority: '^0\.80000$'
                 status:
                     status: '^inuse$'
@@ -128,7 +128,7 @@ test-config:
                     atomid: '^[a-z0-9-]+$'
                     id: '^bob$'
                 address:
-                    uri: '^"alice" <sip:alice@127.0.0.1(:5060)?>;user=ip$'
+                    uri: '^sip:alice@127.0.0.1(:5060)?;user=ip$'
                     priority: '^0\.80000$'
                 status:
                     status: '^inuse$'
@@ -141,7 +141,7 @@ test-config:
                     atomid: '^[a-z0-9-]+$'
                     id: '^bob$'
                 address:
-                    uri: '^"alice" <sip:alice@127.0.0.1(:5060)?>;user=ip$'
+                    uri: '^sip:alice@127.0.0.1(:5060)?;user=ip$'
                     priority: '^0\.80000$'
                 status:
                     status: '^closed$'
@@ -154,7 +154,7 @@ test-config:
                     atomid: '^[a-z0-9-]+$'
                     id: '^bob$'
                 address:
-                    uri: '^"alice" <sip:alice@127.0.0.1(:5060)?>;user=ip$'
+                    uri: '^sip:alice@127.0.0.1(:5060)?;user=ip$'
                     priority: '^0\.80000$'
                 status:
                     status: '^open$'
