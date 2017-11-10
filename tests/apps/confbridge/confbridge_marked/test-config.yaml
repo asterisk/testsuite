@@ -399,6 +399,8 @@ properties:
       - python : 'twisted'
       - python : 'starpy'
       - asterisk : 'app_confbridge'
-      - asterisk : 'app_senddtmf'
       - asterisk : 'app_playback'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_verbose'
+      - asterisk : 'pbx_config'
 

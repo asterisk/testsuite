@@ -72,6 +72,9 @@ properties:
         - confbridge
         - apps
     dependencies:
+        - python : 'starpy'
         - python : 'twisted'
         - asterisk: 'app_confbridge'
         - asterisk: 'app_userevent'
+        - asterisk: 'func_dialplan'
+        - asterisk: 'pbx_config'
