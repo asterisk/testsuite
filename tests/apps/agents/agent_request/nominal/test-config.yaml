@@ -186,6 +186,13 @@ properties:
     dependencies:
         - python : 'starpy'
         - python : 'twisted'
+        - asterisk : 'app_agent_pool'
+        - asterisk : 'app_exec'
+        - asterisk : 'app_playback'
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'app_verbose'
+        - asterisk : 'func_devstate'
+        - asterisk : 'pbx_config'
     tags:
         - agents
         - apps
