@@ -9,7 +9,17 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - app : 'sipp'
+        - asterisk : 'app_cdr'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_stack'
+        - asterisk : 'app_userevent'
+        - asterisk : 'cdr_csv'
         - asterisk : 'chan_sip'
+        - asterisk : 'func_channel'
+        - asterisk : 'func_hangupcause'
+        - asterisk : 'func_strings'
+        - asterisk : 'pbx_config'
     tags:
         - SIP
         - dial
