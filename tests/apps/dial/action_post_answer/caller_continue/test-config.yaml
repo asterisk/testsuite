@@ -91,6 +91,14 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_stack'
+        - asterisk : 'app_userevent'
+        - asterisk : 'cdr_csv'
+        - asterisk : 'func_cdr'
+        - asterisk : 'func_timeout'
+        - asterisk : 'pbx_config'
     tags:
         - dial
         - CDR
