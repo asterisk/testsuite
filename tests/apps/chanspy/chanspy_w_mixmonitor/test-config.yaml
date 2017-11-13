@@ -15,12 +15,15 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - app : 'pjsua'
-        - asterisk : 'app_talkdetect'
-        - asterisk : 'res_musiconhold'
-        - asterisk : 'app_mixmonitor'
         - asterisk : 'app_chanspy'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_mixmonitor'
+        - asterisk : 'app_playback'
+        - asterisk : 'app_talkdetect'
         - asterisk : 'chan_sip'
-
+        - asterisk : 'pbx_config'
+        - asterisk : 'res_agi'
+        - asterisk : 'res_musiconhold'
     tags:
         - SIP
         - chanspy
