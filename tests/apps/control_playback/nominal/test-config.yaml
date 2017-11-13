@@ -50,5 +50,7 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-        - asterisk : 'app_userevent'
         - asterisk : 'app_controlplayback'
+        - asterisk : 'app_exec'
+        - asterisk : 'app_userevent'
+        - asterisk : 'pbx_config'
