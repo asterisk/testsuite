@@ -263,6 +263,11 @@ properties:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'starpy'
         - python : 'twisted'
+        - asterisk : 'app_agent_pool'
+        - asterisk : 'app_playback'
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'app_verbose'
+        - asterisk : 'pbx_config'
     tags:
         - agents
         - apps
