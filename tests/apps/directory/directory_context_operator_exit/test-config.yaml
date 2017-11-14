@@ -9,7 +9,11 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk : 'app_directory'
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'app_userevent'
         - asterisk : 'chan_sip'
+        - asterisk : 'pbx_config'
     tags:
         - directory
         - apps
