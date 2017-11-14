@@ -13,6 +13,7 @@ test-modules:
 
 test-object-config:
     fail-on-any: False
+    memcheck-delay-stop: 6
     test-iterations:
         -
             scenarios:
