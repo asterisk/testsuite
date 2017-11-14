@@ -10,8 +10,10 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-        - asterisk : 'app_userevent'
         - asterisk : 'app_disa'
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'app_verbose'
+        - asterisk : 'pbx_config'
     tags:
         - apps
         - disa
