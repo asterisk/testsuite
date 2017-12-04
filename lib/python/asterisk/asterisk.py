@@ -16,6 +16,7 @@ import os
 import time
 import shutil
 import logging
+import fileinput
 
 import test_suite_utils
 
@@ -262,7 +263,6 @@ class AsteriskProtocol(protocol.ProcessProtocol):
             LOGGER.warning("Asterisk %s stop deferred already called" %
                            self._host)
         self.exited = True
-
 
 class Asterisk(object):
     """An instance of Asterisk.
@@ -678,6 +678,15 @@ class Asterisk(object):
 
         return os.path.join(self.base + self.directories[astdirkey], *paths)
 
+# Quick little function for doing search and replace in a file used below.
+    def _file_replace_string(self, file):
+        for line in fileinput.input(file, inplace=1):
+            if "<<" in line:
+                for key in self.directories.keys():
+                    line = line.replace("<<%s>>" % key,
+                                    "%s%s" % (self.base, self.directories[key]))
+            sys.stdout.write(line)
+
     def install_configs(self, cfg_path, deps=None):
         """Installs all files located in the configuration directory for this
         instance of Asterisk.
@@ -778,6 +787,7 @@ class Asterisk(object):
             os.remove(target_path)
         try:
             shutil.copyfile(cfg_path, target_path)
+            self._file_replace_string(target_path);
         except shutil.Error:
             LOGGER.warn("'%s' and '%s' are the same file" %
                         (cfg_path, target_path))

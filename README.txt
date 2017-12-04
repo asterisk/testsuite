@@ -288,7 +288,15 @@ setting to logger.conf [logfiles], you could create a 'logger.logfiles.conf.inc'
 file for your test and the global Asterisk logger.conf will automatically
 include it. The filename convention is <asterisk module>.<category>.conf.inc.
 Again, settings in 'asterisk.options.conf.inc' would be included in
-asterisk.conf [options] category.
+asterisk.conf [options] category.  Config files may contain replaceable
+parameters that map to the entries in the [directories] section of the
+asterisk.conf file.  Use the "<<directory>>" syntax to have the token
+replaced with the actual value of that entry.  For instance:
+
+priv_key_file = <<astetcdir>>/privkey1.pem
+might become
+priv_key_file = /tmp/asterisk-testsuite/ad41368488ddbac785d54e5689db3b8e/run_5/ast1/etc/asterisk/privkey1.pem
+
 
 b) Preconditions
 
