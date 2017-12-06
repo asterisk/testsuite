@@ -1,0 +1,118 @@
+#!/bin/sh -e
+DEFAULT_CA_CN="Asterisk Private CA"
+DEFAULT_CLIENT_CN="127.0.0.1"
+DEFAULT_SERVER_CN="127.0.0.1"
+DEFAULT_CERT_MODE="server"
+
+# arguments
+# $1 "ca" if we are to generate a CA cert
+# $2 alternate config file name (for ca)
+# $3 alternate common name
+# $4 alternate org name
+
+create_config () {
+	if [ "$1" = "ca" ]
+	then
+castring="
+[ext]
+basicConstraints=CA:TRUE"
+	fi
+
+cat > ${2:-"${CONFIG_FILE}"} << EOF
+[req]
+distinguished_name = req_distinguished_name
+prompt = no
+
+[req_distinguished_name]
+CN=${3:-"${COMMON_NAME}"}
+O=${4:-"${ORG_NAME}"}
+${castring}
+EOF
+}
+
+create_ca () {
+	echo "Creating CA key ${CAKEY}"
+	openssl genrsa -out ${CAKEY} 4096 > /dev/null
+	if [ $? -ne 0 ];
+	then
+		echo "Failed"
+		exit 1
+	fi
+	echo "Creating CA certificate ${CACERT}"
+	openssl req -new -config ${CACFG} -x509 -days 3650 -key ${CAKEY} -out ${CACERT} > /dev/null
+	if [ $? -ne 0 ];
+	then
+		echo "Failed"
+		exit 1
+	fi
+}
+
+create_cert () {
+	local base=${OUTPUT_DIR}/${OUTPUT_BASE}
+	echo "Creating certificate ${base}.key"
+	openssl genrsa -out ${base}.key 1024 > /dev/null
+	if [ $? -ne 0 ];
+	then
+		echo "Failed"
+		exit 1
+	fi
+	echo "Creating signing request ${base}.csr"
+	openssl req -batch -new -config ${CONFIG_FILE} -key ${base}.key -out ${base}.csr > /dev/null
+	if [ $? -ne 0 ];
+	then
+		echo "Failed"
+		exit 1
+	fi
+	echo "Creating certificate ${base}.crt"
+	openssl x509 -req -days 365 -in ${base}.csr -CA ${CACERT} -CAkey ${CAKEY} -set_serial 01 -out ${base}.crt > /dev/null
+	if [ $? -ne 0 ];
+	then
+		echo "Failed"
+		exit 1
+	fi
+	echo "Combining key and crt into ${base}.pem"
+	cat ${base}.key > ${base}.pem
+	cat ${base}.crt >> ${base}.pem
+}
+
+if ! type openssl >/dev/null 2>&1
+then
+	echo "This script requires openssl to be in the path"
+	exit 1
+fi
+
+if ! type c_rehash >/dev/null 2>&1
+then
+	echo "This script requires c_rehash (from openssl-perl) to be in the path"
+	exit 1
+fi
+
+rm -rf ca1 ca2 ca1.crt ca2.crt || :
+mkdir -p ca1 ca2
+
+CERT_MODE=server
+ORG_NAME=Asterisk
+
+for ca in ca1 ca2 ; do
+	CAKEY=${ca}/${ca}.key
+	CACERT=${ca}/${ca}.crt
+	CACFG=${ca}/${ca}.cfg
+	create_config ca "${CACFG}" "${DEFAULT_CA_CN} ${ca}" "${DEFAULT_CA_ORG}"
+	create_ca
+
+	ln -s ${ca}/${ca}.crt
+
+	OUTPUT_DIR=${ca}
+	COMMON_NAME="127.0.0.1"
+	for ast in ast1 ast2 ast3 ast4 ; do
+		OUTPUT_BASE="${ca}-${ast}"
+		CONFIG_FILE="${OUTPUT_DIR}/${OUTPUT_BASE}.cfg"
+		create_config
+		create_cert
+	done
+done
+
+c_rehash .
+openssl  x509 -in ca1.crt -text > ca-bundle.crt
+openssl  x509 -in ca2.crt -text >> ca-bundle.crt
+sed -i -r -e "s/CERTIFICATE--/TRUSTED CERTIFICATE--/g" ca-bundle.crt

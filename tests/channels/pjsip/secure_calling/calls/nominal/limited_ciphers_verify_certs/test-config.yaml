@@ -1,0 +1,95 @@
+testinfo:
+    summary:     'Tests sips/tls and dtls/sdes'
+    description: |
+        'Run three instances of Asterisk, "alice", "pbx", and "bob" to test
+         two party calls. sips/tls is used for signalling between all parties.
+         alice<>pbx uses dtls for media.
+         pbx<>bob uses sdes for media.
+         alice has only the AES128-CCM cipher enabled.
+         pbx has all ciphers enabled.
+         bob has only the AES256-SHA256 cipher enabled.
+         All 3 instances verify certificates.
+
+         Both alice and bob send audio to each other while
+         both also listen for audio. Alice then initiates the hang. This
+         ensures that both alice and bob receive audio.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: originator-config-tls
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    asterisk-instances: 3
+    connect-ami: True
+
+# Alice calls bob via pbx1 then connects the call to the "start"
+# extension which does the audio detection.
+originator-config-tls:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/bob@pbx-ast2'
+    context: 'default'
+    exten: 'start'
+    priority: '1'
+    async: 'True'
+
+ami-config:
+    # Alice events
+    -
+        ami-events:
+            type: 'headermatch'
+            id: '0'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'TalkDetect'
+            requirements:
+                match:
+                    result: 'pass'
+            count: '1'
+    # Bob events
+    -
+        ami-events:
+            type: 'headermatch'
+            id: '2'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'TalkDetect'
+            requirements:
+                match:
+                    result: 'pass'
+            count: '1'
+    -
+        ami-events:
+            type: 'headermatch'
+            id: '2'
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'PJSIP/pbx-ast2*'
+            requirements:
+                match:
+                    Cause: '16'
+            count: '1'
+        stop_test:
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_session'
+        - asterisk : 'res_pjsip_sips_contact'
+        - asterisk : 'res_srtp'
+    tags:
+        - pjsip
