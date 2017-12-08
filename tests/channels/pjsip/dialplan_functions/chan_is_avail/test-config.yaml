@@ -9,7 +9,7 @@ properties:
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - sipp :
-            version : 'v3.0'
+            version : 'v3.5.0'
         - asterisk : 'res_pjsip'
         - asterisk : 'chan_pjsip'
         - asterisk : 'res_pjsip_session'
