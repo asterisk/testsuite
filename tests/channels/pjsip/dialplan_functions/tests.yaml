@@ -1,10 +1,11 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
-    - test: 'pjsip_channel'
-    - test: 'pjsip_endpoint'
-    - test: 'pjsip_aor'
-    - test: 'pjsip_contact'
-    - test: 'pjsip_session_refresh'
     - test: 'chan_is_avail'
-    - test: 'pjsip_header'
+    - test: 'pjsip_aor'
+    - test: 'pjsip_channel'
+    - test: 'pjsip_channel2'
+    - test: 'pjsip_contact'
     - test: 'pjsip_dtmfmode'
+    - test: 'pjsip_endpoint'
+    - test: 'pjsip_header'
+    - test: 'pjsip_session_refresh'
