@@ -1,0 +1,5 @@
+tests:
+    - test: 'no_dtls_ciphers_in_common'
+    - test: 'no_sips_ciphers_in_common'
+    - test: 'dtls_verify_failure'
+    - test: 'sips_verify_failure'

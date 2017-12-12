@@ -1,0 +1,77 @@
+testinfo:
+    summary:     'Tests sips/tls and dtls/sdes'
+    description: |
+        'Run two instances of Asterisk, "alice" and "pbx" to test
+         dtls verify failure.
+         alice has certs and keys from ca1.
+         pbx has them for both ca1 and ca2 and uses ca1 for sips
+         then uses ca2 for dtls.
+         Both have verify enabled.
+
+         pbx answers and sends audio back to alice.
+         alice should NOT detect any since the dtls negotiation should have
+         failed.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: originator-config-tls
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    asterisk-instances: 2
+    connect-ami: True
+
+# Alice calls bob via pbx1 then connects the call to the "start"
+# extension which does the audio detection.
+originator-config-tls:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/bob@pbx-ast2'
+    context: 'default'
+    exten: 'start'
+    priority: '1'
+    async: 'True'
+
+ami-config:
+    # Alice events
+    -
+        ami-events:
+            type: 'headermatch'
+            id: '0'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    Channel: 'PJSIP/pbx-ast2.*'
+                    UserEvent: 'TalkDetect'
+# We must NOT get a TalkDetect UserEvent
+            count: '0'
+    -
+        ami-events:
+            type: 'headermatch'
+            id: '1'
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SESSION_DESTROYED'
+                    Endpoint: 'alice'
+            count: '1'
+        stop_test:
+
+properties:
+    minversion: '12.0.0'
+    dependencies:
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_session'
+        - asterisk : 'res_pjsip_sips_contact'
+        - asterisk : 'res_srtp'
+    tags:
+        - pjsip
