@@ -41,7 +41,7 @@ ami-config:
             conditions:
                 match:
                     Event: 'ContactStatus'
-                    ContactStatus: 'Created'
+                    ContactStatus: 'Created|NonQualified'
             requirements:
                 match:
                     AOR: 'user1'

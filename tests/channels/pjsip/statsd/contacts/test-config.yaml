@@ -34,13 +34,13 @@ statsd-config:
         -
             'PJSIP\.contacts\.states\.Unknown:0\|g'
         -
-            'PJSIP\.contacts\.states\.Created:0\|g'
+            'PJSIP\.contacts\.states\.(Created|NonQualified):0\|g'
         -
             'PJSIP\.contacts\.states\.Removed:0\|g'
         -
-            'PJSIP\.contacts\.states\.Created:\+1\|g'
+            'PJSIP\.contacts\.states\.(Created|NonQualified):\+1\|g'
         -
-            'PJSIP\.contacts\.states\.Created:\-1\|g'
+            'PJSIP\.contacts\.states\.(Created|NonQualified):\-1\|g'
         -
             'PJSIP\.contacts\.states\.Reachable:\+1\|g'
         -
