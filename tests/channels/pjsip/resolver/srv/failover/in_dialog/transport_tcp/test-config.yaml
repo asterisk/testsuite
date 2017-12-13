@@ -5,7 +5,6 @@ testinfo:
         transport, this test verifies that an SRV record lookup resulting in
         multiple results will successfully fail over to other records if
         previous ones do not respond.
-    skip: 'See ASTERISK-27408'
 
 test-modules:
     test-object:
