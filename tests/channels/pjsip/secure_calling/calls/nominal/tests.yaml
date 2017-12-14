@@ -1,0 +1,5 @@
+tests:
+    - test: 'all_ciphers_verify_certs'
+    - test: 'limited_ciphers_verify_certs'
+    - test: 'two_CAs_verify_certs'
+    - test: 'two_CAs_no_verify_certs'
