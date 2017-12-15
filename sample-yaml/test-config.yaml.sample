@@ -63,6 +63,10 @@ properties:
         - sipp:
             version: 'v3.3'
 
+        # Specifies attributes of OpenSSL that must be present for this test to execute
+        - openssl:
+            version: '1.0.1'
+
         # If present, import the yappcap library as a dependency for test execution
         - 'pcap'
 
