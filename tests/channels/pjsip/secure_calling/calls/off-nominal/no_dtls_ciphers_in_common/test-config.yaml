@@ -74,5 +74,7 @@ properties:
         - asterisk : 'res_pjsip_session'
         - asterisk : 'res_pjsip_sips_contact'
         - asterisk : 'res_srtp'
+        - openssl  :
+            version: '1.0.1'
     tags:
         - pjsip
