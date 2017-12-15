@@ -10,7 +10,6 @@ testinfo:
         be selected first. Once this fails the only option left is UDP, so it
         should then switch transport types when attempting the secondary
         failover address.
-    skip: 'See ASTERISK-27408'
 
 test-modules:
     test-object:
