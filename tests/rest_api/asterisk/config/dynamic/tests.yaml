@@ -5,3 +5,4 @@ tests:
     - test: 'get'
     - test: 'update'
     - test: 'registration_cleanup'
+    - dir: 'pjsip'
