@@ -47,7 +47,8 @@ pluggable-config:
             -
                 method: 'put'
                 uri: 'asterisk/config/dynamic/res_pjsip/aor/alice'
-                body: { 'fields': [ { 'attribute': 'contact', 'value': 'sip:alice@127.0.0.1:5060;transport=udp' } ] }
+                body: { 'fields': [ { 'attribute': 'contact', 'value': 'sip:alice@127.0.0.1:5060;transport=udp' },
+                                    { 'attribute': 'qualify_frequency', value: '5' } ] }
                 expect: 200
             -
                 method: 'put'
