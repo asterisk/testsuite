@@ -24,6 +24,7 @@ from version import AsteriskVersion
 from asterisk import Asterisk
 from buildoptions import AsteriskBuildOptions
 from sippversion import SIPpVersion
+from opensslversion import OpenSSLVersion
 
 
 class TestConditionConfig(object):
@@ -114,6 +115,14 @@ class Dependency(object):
                 self.met = True
             except ImportError:
                 pass
+        elif "openssl" in dep:
+            self.name = "OpenSSL"
+            self.version = None
+            if 'version' in dep['openssl']:
+                self.version = dep['openssl']['version']
+            ossl_installed = OpenSSLVersion()
+            ossl_required = OpenSSLVersion(self.version)
+            self.met = ossl_installed >= ossl_required
         elif "sipp" in dep:
             self.name = "SIPp"
             version = None
