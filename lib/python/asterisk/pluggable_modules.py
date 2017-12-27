@@ -250,6 +250,9 @@ class ARIHangupMonitor(object):
     def __init__(self, instance_config, test_object):
         """Constructor"""
         super(ARIHangupMonitor, self).__init__()
+        self.delay = 0
+        if 'delay-stop' in instance_config:
+            self.delay = instance_config['delay-stop']
         self.test_object = test_object
         self.test_object.register_ari_observer(self._handle_ws_open)
         self.test_object.register_ws_event_handler(self._handle_ws_event)
@@ -273,8 +276,9 @@ class ARIHangupMonitor(object):
             LOGGER.info('Destroyed channel %s', message.get('channel'))
             self.channels -= 1
             if (self.channels == 0):
-                LOGGER.info("All channels have hungup; stopping test")
-                self.test_object.stop_reactor()
+                LOGGER.info("All channels have hungup; stopping test after %d seconds",
+                            self.delay)
+                reactor.callLater(self.delay, self.test_object.stop_reactor)
 
 
 class HangupMonitor(object):

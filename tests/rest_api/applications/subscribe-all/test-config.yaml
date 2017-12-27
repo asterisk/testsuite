@@ -16,6 +16,10 @@ test-modules:
             typename: pluggable_modules.EventActionModule
         -
             typename: pluggable_modules.ARIHangupMonitor
+            config-section: hangup-monitor
+
+hangup-monitor:
+    delay-stop: 3
 
 pluggable-config:
     -
