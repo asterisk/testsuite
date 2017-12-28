@@ -10,5 +10,8 @@ properties:
     dependencies:
         - asterisk: 'app_dial'
         - asterisk: 'app_followme'
+        - asterisk: 'app_senddtmf'
+        - asterisk: 'app_stack'
+        - asterisk: 'app_userevent'
     tags:
         - predial
