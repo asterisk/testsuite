@@ -10,6 +10,7 @@ test-modules:
         typename: 'sipp.SIPpTestCase'
 
 test-object-config:
+    memcheck-delay-stop: 7
     reactor-timeout: 10
     test-iterations:
         -
