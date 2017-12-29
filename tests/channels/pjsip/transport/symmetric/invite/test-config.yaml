@@ -38,6 +38,7 @@ originator-alice_invite_recv:
     trigger: 'ami_connect'
 
 sipp-config:
+    memcheck-delay-stop: 7
     reactor-timeout: 15
     fail-on-any: True
     test-iterations:
