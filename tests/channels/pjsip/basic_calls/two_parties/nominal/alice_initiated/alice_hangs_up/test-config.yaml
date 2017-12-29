@@ -144,6 +144,13 @@ ami-config:
 properties:
     minversion: '12.0.0'
     dependencies:
-        - asterisk : 'res_pjsip'
+        - python: 'starpy'
+        - python: 'twisted'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_playback'
+        - asterisk: 'app_talkdetect'
+        - asterisk: 'app_userevent'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
     tags:
         - pjsip

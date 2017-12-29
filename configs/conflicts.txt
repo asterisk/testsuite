@@ -15,3 +15,6 @@ chan_sip=chan_pjsip.so,res_pjsip.so,res_pjsip_pubsub.so,res_pjsip_session.so,res
 
 app_voicemail=res_ari_mailboxes.so,res_mwi_external.so,res_mwi_external_ami.so,res_stasis_mailbox.so
 res_ari_mailboxes,res_mwi_external,res_mwi_external_ami,res_stasis_mailbox=app_voicemail.so
+
+chan_rtp=chan_multicast_rtp.so
+chan_multicast_rtp=chan_rtp.so
