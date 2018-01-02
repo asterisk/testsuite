@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Missing Contact">
+	<send retrans="500">
+		<![CDATA[
+		INVITE sip:alice@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid].[call_number]
+		To: "bob" <sip:bob@[remote_ip]:[remote_port]>
+		Call-ID: [call_id]
+		CSeq: [cseq] INVITE
+		Allow: INVITE, ACK, BYE, CANCEL, OPTIONS, INFO, MESSAGE, SUBSCRIBE, NOTIFY, PRACK, UPDATE, REFER
+		Supported: replaces, 100rel, timer, norefersub
+		Session-Expires: 1800
+		Min-SE: 90
+		User-Agent: Test
+		Content-Type: application/sdp
+		Content-Length: [len]
+
+		]]>
+	</send>
+
+	<recv response="400" />
+
+	<send retrans="500">
+		<![CDATA[
+		UPDATE sip:alice@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid].[call_number]
+		To: "bob" <sip:bob@[remote_ip]:[remote_port]>
+		Call-ID: [call_id]
+		CSeq: [cseq] UPDATE
+		Allow: INVITE, ACK, BYE, CANCEL, OPTIONS, INFO, MESSAGE, SUBSCRIBE, NOTIFY, PRACK, UPDATE, REFER
+		Supported: replaces, 100rel, timer, norefersub
+		Session-Expires: 1800
+		Min-SE: 90
+		User-Agent: Test
+		Content-Type: application/sdp
+		Content-Length: [len]
+
+		]]>
+	</send>
+
+	<recv response="400" />
+
+	<send retrans="500">
+		<![CDATA[
+		SUBSCRIBE sip:alice@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid].[call_number]
+		To: "alice" <sip:alice@[remote_ip]:[remote_port]>
+		Call-ID: [call_id]
+		CSeq: [cseq] SUBSCRIBE
+		Event: presence
+		Expires: 3600
+		Supported: replaces, 100rel, timer, norefersub
+		Accept: application/pidf+xml
+		User-Agent: Test
+		Content-Length: [len]
+
+		]]>
+	</send>
+
+	<recv response="400" />
+
+	<send retrans="500">
+    <![CDATA[
+		REFER sip:alice@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid].[call_number]
+		To: "bob" <sip:bob@[remote_ip]:[remote_port]>
+		Call-ID: [call_id]
+		CSeq: [cseq] REFER
+		Event: refer
+		Expires: 600
+		Supported: replaces, 100rel, timer, norefersub
+		Accept: message/sipfag;version=2.0
+		Allow-Events: presence, message-summary, refer
+		Refer-To: sip:charlie@[remote_ip]:[remote_port];user=phone
+		Referred-By: sip:alice@[local_ip]:[local_port]
+		User-Agent: Test
+		Content-Length: [len]
+
+    ]]>
+	</send>
+
+	<recv response="400" />
+
+	<send retrans="500">
+		<![CDATA[
+		NOTIFY sip:bob@[remote_ip]:[remote_port] SIP/2.0
+		Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+		Max-Forwards: 70
+		From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid].[call_number]
+		To: "bob" <sip:bob@[remote_ip]:[remote_port]>
+		Call-ID: [call_id]
+		CSeq: [cseq] NOTIFY
+		Event: message-summary
+		Expires: 3600
+		Supported: replaces, 100rel, timer, norefersub
+		Accept: application/pidf+xml
+		User-Agent: Test
+		Content-Type: application/simple-message-summary
+		Content-Length: [len]
+
+		]]>
+	</send>
+
+	<recv response="400" />
+
+</scenario>

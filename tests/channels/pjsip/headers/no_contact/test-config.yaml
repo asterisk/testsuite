@@ -1,0 +1,28 @@
+testinfo:
+    summary: 'Test SIP messages that contain no contact header'
+    description: |
+        'SIP messages that create dialogs must contain a contact header.
+         This test makes sure that Asterisk responds with a 400 for those
+         SIP message types that require a contact header.'
+
+properties:
+    minversion: ['13.19.1', '14.7.5', '15.2.1']
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    reactor-timeout: 20
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'no_contact.xml', '-p': '5061',
+                    '-au': 'alice', '-ap': 'alice'} }
