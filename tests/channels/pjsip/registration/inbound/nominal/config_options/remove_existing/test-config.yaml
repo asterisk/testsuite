@@ -46,6 +46,7 @@ test-modules:
             typename: 'ami.AMIEventModule'
 
 test-object-config-v12:
+    memcheck-delay-stop: 7
     fail-on-any: False
     test-iterations:
         -
@@ -277,6 +278,7 @@ ami-config-v12:
         count: '1'
 
 test-object-config-v13.18.0:
+    memcheck-delay-stop: 7
     fail-on-any: False
     test-iterations:
         -
