@@ -23,6 +23,7 @@ test-modules:
             typename: 'pluggable_modules.HangupMonitor'
 
 test-object-config:
+    memcheck-delay-stop: 7
     asterisk-instances: 2
     connect-ami: True
 

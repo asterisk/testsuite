@@ -16,6 +16,7 @@ test-modules:
             typename: 'rtp.KeepaliveCheck'
 
 sipp-config:
+    memcheck-delay-stop: 7
     fail-on-any: True
     test-iterations:
         -
