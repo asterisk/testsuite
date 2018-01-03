@@ -15,6 +15,7 @@ test-modules:
 
 
 test-object-config:
+    memcheck-delay-stop: 7
     spawn-after-hangup: True
     test-iterations:
         -
