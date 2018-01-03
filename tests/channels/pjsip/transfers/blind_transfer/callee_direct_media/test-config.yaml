@@ -44,6 +44,7 @@ test-modules:
             typename: 'ami.AMIEventModule'
 
 test-case-config:
+    memcheck-delay-stop: 7
     reactor-timeout: 45
     connect-ami: 'True'
     fail-on-any: False
@@ -74,6 +75,7 @@ test-case-config:
                     'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
 
 test-case-config-v13.8.0:
+    memcheck-delay-stop: 7
     reactor-timeout: 45
     connect-ami: 'True'
     fail-on-any: False

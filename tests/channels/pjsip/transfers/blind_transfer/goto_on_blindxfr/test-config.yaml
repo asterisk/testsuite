@@ -27,6 +27,7 @@ test-modules:
             typename: 'ami.AMIEventModule'
 
 test-object-config:
+    memcheck-delay-stop: 7
     asterisk-instances: 1
     connect-ami: True
 
