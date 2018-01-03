@@ -15,7 +15,7 @@
       Contact: sip:user1@[local_ip]:[local_port]
       Event: message-summary
       Accept: application/simple-message-summary
-      Expires: 3600
+      Expires: 90
       Content-Length: 0
 
     ]]>
@@ -51,7 +51,7 @@
       Contact: sip:user2@[local_ip]:[local_port]
       Event: presence
       Accept: application/pidf+xml
-      Expires: 3600
+      Expires: 90
       Content-Length: 0
 
     ]]>

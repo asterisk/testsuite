@@ -25,6 +25,7 @@ test-modules:
             typename: 'pluggable_modules.EventActionModule'
 
 sipp-config:
+    memcheck-delay-stop: 90
     connect-ami: True
     reactor-timeout: 15
     fail-on-any: True
