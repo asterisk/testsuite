@@ -146,7 +146,6 @@ ari-config:
                                 {
                                   "name": "res_stasis.so",
                                   "description": "Stasis application support",
-                                  "use_count": 13,
                                   "status": "Running",
                                   "support_level": "core"
                                 }
