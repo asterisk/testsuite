@@ -59,6 +59,7 @@ ami-config:
 properties:
     minversion: '13.0.0'
     dependencies:
-        - asterisk : 'res_pjsip'
+        - asterisk: 'app_userevent'
+        - asterisk: 'res_pjsip'
     tags:
         - pjsip
