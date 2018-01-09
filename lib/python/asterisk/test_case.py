@@ -301,7 +301,7 @@ class TestCase(object):
                 # Copy test specific config files
                 self.ast[i].install_configs("%s/configs/ast%d" %
                                             (self.test_name, local_num),
-                                            self.test_config)
+                                            self.test_config.get_deps())
 
     def create_ami_factory(self, count=1, username="user", secret="mysecret",
                            port=5038):
