@@ -1,0 +1,56 @@
+testinfo:
+    summary:     'Tests incoming calls identified by header and source IP'
+    description: |
+        This test covers sending calls to an Asterisk instance
+        identifiable by a custom header and by a source IP address.
+        It is expected that the requests are accepted by the correct
+        endpoint determined by endpoint_identifier_order.
+        This test expects the call to be accepted by the ip identifier.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        # IPv4 & UDP
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'nominal.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 's'},
+                    'ordered-args': ['-key', 'ident_key', 'e7657250-07fa-11e7-92f8-1b946c0c7e84'] }
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'Header'
+        count: '0'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'Ip'
+        count: '1'
+
+properties:
+    minversion: ['13.20.0', '15.3.0']
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'app_userevent'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_endpoint_identifier_ip'
+    tags:
+        - pjsip
