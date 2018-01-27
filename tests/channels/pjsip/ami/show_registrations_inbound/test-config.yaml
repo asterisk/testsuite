@@ -5,7 +5,6 @@ testinfo:
         sure the events are appropriately raised.
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - sipp :
@@ -21,12 +20,6 @@ test-modules:
         typename: 'sipp.SIPpTestCase'
     modules:
         -
-            minversion: '12.0.0'
-            maxversion: '13.5.0'
-            config-section: 'ami-config'
-            typename: 'pluggable_modules.EventActionModule'
-        -
-            minversion: '13.5.0'
             config-section: 'ami-config-13.5'
             typename: 'pluggable_modules.EventActionModule'
 
@@ -39,73 +32,6 @@ sipp-config:
         -
             scenarios:
                 - { 'key-args': {'scenario': 'register.xml', '-p': '5061'} }
-
-ami-config:
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'TestEvent'
-                    State: 'AOR_CONTACT_ADDED'
-            requirements:
-                match:
-                    AOR: 'user1'
-        ami-actions:
-            action:
-                Action: 'PJSIPShowRegistrationsInbound'
-                ActionID: '12345'
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'InboundRegistrationDetail'
-                    Contacts: user1/sip:user1@127.0.0.1:5061
-            requirements:
-                match:
-                    ActionID: '12345'
-                    ObjectType: 'aor'
-                    ObjectName: 'user.*'
-                    Mailboxes: ''
-                    RemoveExisting: 'false'
-                    MaxContacts: '1'
-                    AuthenticateQualify: 'false'
-                    QualifyFrequency: '0'
-                    DefaultExpiration: '3600'
-                    MaximumExpiration: '7200'
-                    MinimumExpiration: '60'
-            count: 1
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'InboundRegistrationDetail'
-                    Contacts: user2/sip:user2@127.0.0.1:5062
-            requirements:
-                match:
-                    ActionID: '12345'
-                    ObjectType: 'aor'
-                    ObjectName: 'user.*'
-                    Mailboxes: ''
-                    RemoveExisting: 'false'
-                    MaxContacts: '1'
-                    AuthenticateQualify: 'false'
-                    QualifyFrequency: '0'
-                    DefaultExpiration: '3600'
-                    MaximumExpiration: '7200'
-                    MinimumExpiration: '60'
-            count: 1
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'InboundRegistrationDetailComplete'
-            requirements:
-                match:
-                    ActionID: '12345'
-                    EventList: 'Complete'
-                    ListItems: '2'
-            count: 1
-        stop_test:
 
 ami-config-13.5:
     -

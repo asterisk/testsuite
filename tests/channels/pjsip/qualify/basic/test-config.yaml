@@ -10,12 +10,6 @@ test-modules:
         typename: 'sipp.SIPpTestCase'
     modules:
         -
-            minversion: '13.4.0'
-            maxversion: '13.5.0'
-            config-section: 'ami-config'
-            typename: 'ami.AMIEventModule'
-        -
-            minversion: '13.5.0'
             config-section: 'ami-config-13.5'
             typename: 'ami.AMIEventModule'
 
@@ -26,32 +20,6 @@ test-object-config:
         -
             scenarios:
                 - { 'key-args': {'scenario': 'options.xml', '-i': '127.0.0.1', '-p': '5061'} }
-
-ami-config:
-    -
-        type: 'headermatch'
-        id: '0'
-        conditions:
-            match:
-                Event: 'TestEvent'
-                State: 'AOR_CONTACT_QUALIFY_RESULT'
-                Status: 'Reachable'
-        requirements:
-            match:
-                Contact: 'sipp@@sip:127.0.0.1:5061'
-        count: '1'
-    -
-        type: 'headermatch'
-        id: '0'
-        conditions:
-            match:
-                Event: 'TestEvent'
-                State: 'AOR_CONTACT_UPDATE'
-                Status: 'Reachable'
-        requirements:
-            match:
-                Contact: 'sipp@@sip:127.0.0.1:5061'
-        count: '1'
 
 ami-config-13.5:
     -
@@ -67,7 +35,6 @@ ami-config-13.5:
         count: '>1'
 
 properties:
-    minversion: '13.4.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python: 'twisted'

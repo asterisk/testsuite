@@ -11,12 +11,7 @@ test-modules:
         typename: 'test_case.SimpleTestCase'
     modules:
         -
-            minversion: '12.0.0'
             config-section: 'cdr-config-12'
-            typename: 'cdr.CDRModule'
-        -
-            maxversion: '12.0.0'
-            config-section: 'cdr-config-pre-12'
             typename: 'cdr.CDRModule'
 
 test-object-config:
@@ -61,30 +56,7 @@ cdr-config-12:
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
 
-cdr-config-pre-12:
-    -
-        file: 'cdrtest_local'
-        lines:
-            -
-                accountcode: 'cdrtest_local'
-                destination: '1'
-                dcontext: 'default'
-                channel: 'Local/1@default-.*'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-    -
-        file: 'cdrtest_local3'
-        lines:
-            -
-                accountcode: 'cdrtest_local3'
-                destination: '3'
-                dcontext: 'default'
-                channel: 'Local/3@default-.*'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

@@ -282,19 +282,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Marked user left Conference'
-            -
-              type: 'headermatch'
-              maxversion: '13.12.0'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  State: 'PLAYBACK'
-                  Channel: 'Local/marked-user@confbridge-.*'
-                  Message: 'confbridge-join'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked user heard confbridge-join'
     -
       # Scenario 2
       # This scenario starts off the same as scenario 1, but the normal user leaves
@@ -540,19 +527,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Marked user left Conference'
-            -
-              type: 'headermatch'
-              maxversion: '13.12.0'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  State: 'PLAYBACK'
-                  Channel: 'Local/marked-user@confbridge-.*'
-                  Message: 'confbridge-join'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked user heard confbridge-join'
     -
       # Scenario 3
       # In this scenario, the normal user is the first to join the Conference.
@@ -788,19 +762,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Marked user left Conference'
-            -
-              type: 'headermatch'
-              maxversion: '13.12.0'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  State: 'PLAYBACK'
-                  Channel: 'Local/marked-user@confbridge-.*'
-                  Message: 'confbridge-join'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked user heard confbridge-join'
     -
       # Scenario 4
       # In this scenario, the normal user enters the Conference first, followed by
@@ -964,19 +925,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Marked user left Conference'
-            -
-              type: 'headermatch'
-              maxversion: '13.12.0'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  State: 'PLAYBACK'
-                  Channel: 'Local/marked-user@confbridge-.*'
-                  Message: 'confbridge-join'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked user heard confbridge-join'
         -
           channel-id: 'Waitmarked-user'
           channel-name: 'Local/waitmarked-user@confbridge'
@@ -1040,7 +988,6 @@ test-object-config:
                   message: 'Waitmarked user should not hear conf-waitforleader.'
 
 properties:
-    minversion: '12.0.0'
     tags:
       - confbridge
       - apps
