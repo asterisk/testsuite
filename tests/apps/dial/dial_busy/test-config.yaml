@@ -4,7 +4,6 @@ testinfo:
         'Dial an endpoint and get a response code that maps to a Busy status'
 
 properties:
-    minversion: '11.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
@@ -30,41 +29,14 @@ test-modules:
         typename: 'sipp.SIPpTestCase'
     modules:
         -
-            minversion: '11.0.0'
-            maxversion: '12.0.0'
-            config-section: 'cdr-config-11'
-            typename: 'cdr.CDRModule'
-        -
-            minversion: '12.0.0'
             config-section: 'cdr-config-12'
             typename: 'cdr.CDRModule'
         -
-            minversion: '12.0.0'
-            maxversion: '13.5.0'
-            config-section: ami-config-12
-            typename: 'ami.AMIEventModule'
-        -
-            minversion: '13.5.0'
             config-section: ami-config-13-5
             typename: 'ami.AMIEventModule'
         -
             config-section: originator-config
             typename: 'pluggable_modules.Originator'
-
-cdr-config-11:
-    -
-        file: 'Master'
-        lines:
-            -
-                accountcode: ''
-                destination: 's'
-                dcontext: 'default'
-                callerid: ''
-                channel: 'Local/s@default-.{8};2'
-                dchannel: 'SIP/bob-.{8}'
-                lastapp: 'Hangup'
-                disposition: 'BUSY'
-                amaflags: 'DOCUMENTATION'
 
 cdr-config-12:
     -
@@ -80,54 +52,6 @@ cdr-config-12:
                 lastapp: 'Dial'
                 disposition: 'BUSY'
                 amaflags: 'DOCUMENTATION'
-
-ami-config-12:
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'UserEvent'
-                UserEvent: 'HangupCause'
-        requirements:
-            match:
-                HangupChannel: 'SIP/bob-.*'
-                TechCause: 'SIP 486 Busy Here'
-                AsteriskCause: 'User busy'
-        count: '1'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'DialBegin'
-                DestChannel: 'SIP/bob-.*'
-        requirements:
-            match:
-                Channel: 'Local/s@default-.*'
-                Uniqueid: '.*'
-                DestUniqueid: '.*'
-                CallerIDNum: '<unknown>'
-                CallerIDName: '<unknown>'
-                ConnectedLineNum: '<unknown>'
-                ConnectedLineName: '<unknown>'
-                Dialstring: 'bob'
-        count: '1'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'DialEnd'
-                DestChannel: 'SIP/bob-.*'
-        requirements:
-            match:
-                Channel: 'Local/s@default-.*'
-                Uniqueid: '.*'
-                DestUniqueid: '.*'
-                CallerIDNum: '<unknown>'
-                CallerIDName: '<unknown>'
-                ConnectedLineNum: '<unknown>'
-                ConnectedLineName: '<unknown>'
-                DialStatus: 'BUSY'
-        count: '1'
 
 # Add Linkedid/DestLinkedid header requirements
 # to the DialBegin/DialEnd events over the ami-config-12 version.

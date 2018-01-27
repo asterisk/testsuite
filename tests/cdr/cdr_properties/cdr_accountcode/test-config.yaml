@@ -10,11 +10,6 @@ test-modules:
         typename: 'test_case.SimpleTestCase'
     modules:
         -
-            maxversion: '12.0.0'
-            config-section: 'cdr-config-pre-12'
-            typename: 'cdr.CDRModule'
-        -
-            minversion: '12.0.0'
             config-section: 'cdr-config-12'
             typename: 'cdr.CDRModule'
 
@@ -28,59 +23,6 @@ test-object-config:
             channel: 'Local/1@default'
             application: 'Echo'
             async: True
-
-cdr-config-pre-12:
-    -
-        file: 'Master'
-        lines:
-            -
-            # 3@default -> (answer)
-                accountcode: 'third'
-                destination: '3'
-                dcontext: 'default'
-                callerid: ''
-                channel: 'Local/3@default-.*'
-                dchannel: ''
-                lastapp: 'Hangup'
-                lastarg: ''
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-            -
-            # 2@default -> 3@default
-                accountcode: 'initial'
-                destination: '2'
-                dcontext: 'default'
-                callerid: ''
-                channel: 'Local/2@default-.*'
-                dchannel: 'Local/3@default-.*'
-                lastapp: 'Dial'
-                lastarg: 'Local/3@default'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-            -
-            # 1@default -> 2@default
-                accountcode: 'initial'
-                destination: '1'
-                dcontext: 'default'
-                callerid: ''
-                channel: 'Local/1@default-.*'
-                dchannel: 'Local/2@default-.*'
-                lastapp: 'Dial'
-                lastarg: 'Local/2@default'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-            -
-            # caller with Echo app
-                accountcode: ''
-                destination: '1'
-                dcontext: 'default'
-                callerid: ''
-                channel: 'Local/1@default-.*'
-                dchannel: ''
-                lastapp: 'Echo'
-                lastarg: ''
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
 
 cdr-config-12:
     -
@@ -136,7 +78,6 @@ cdr-config-12:
                 amaflags: 'DOCUMENTATION'
 
 properties:
-    minversion: '1.8.12.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

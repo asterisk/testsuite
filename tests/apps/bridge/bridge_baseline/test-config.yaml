@@ -12,33 +12,12 @@ test-modules:
             config-section: originator-config
             typename: 'pluggable_modules.Originator'
         -
-            minversion: '1.8.0.0'
-            maxversion: '10.0.0'
-            config-section: ami-config-1.8
-            typename: 'ami.AMIEventModule'
-        -
-            minversion: '11.0.0'
-            maxversion: '12.0.0'
-            config-section: ami-config-11
-            typename: 'ami.AMIEventModule'
-        -
-            maxversion: '12.0.0'
-            config-section: hangup-config-pre-12
-            typename: 'pluggable_modules.AMIChannelHangupAll'
-        -
-            maxversion: '12.0.0'
-            config-section: cdr-config-pre-12
-            typename: 'cdr.CDRModule'
-        -
-            minversion: '12.0.0'
             config-section: ami-config-12
             typename: 'ami.AMIEventModule'
         -
-            minversion: '12.0.0'
             config-section: hangup-config-12
             typename: 'pluggable_modules.AMIChannelHangup'
         -
-            minversion: '12.0.0'
             config-section: cdr-config-12
             typename: 'cdr.CDRModule'
 
@@ -65,73 +44,6 @@ originator-config:
             match:
                 Event: UserEvent
                 UserEvent: StartBridge
-
-hangup-config-pre-12:
-    type: 'headermatch'
-    conditions:
-        match:
-            Event: 'Bridge'
-            Bridgestate: 'Link'
-            Bridgetype: 'core'
-
-ami-config-1.8:
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'Bridge'
-                Bridgestate: 'Link'
-                Bridgetype: 'core'
-        count: '1'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'Unlink'
-        count: '1'
-
-ami-config-11:
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'Bridge'
-                Bridgestate: 'Link'
-                Bridgetype: 'core'
-        count: '1'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'Bridge'
-                Bridgestate: 'Unlink'
-                Bridgetype: 'core'
-        count: '1'
-
-cdr-config-pre-12:
-    -
-        file: 'Master'
-        lines:
-            -
-                accountcode: ''
-                destination: 'local'
-                dcontext: 'call.{1}'
-                callerid: ''
-                channel: 'Local/local@call.{1}-.{8};2'
-                dchannel: ''
-                lastapp: 'Answer'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-            -
-                accountcode: ''
-                destination: 'local'
-                dcontext: 'call.{1}'
-                callerid: ''
-                channel: 'Local/local@call.{1}-.{8};2'
-                dchannel: ''
-                lastapp: 'Answer'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
 
 hangup-config-12:
     type: 'headermatch'
@@ -227,7 +139,6 @@ cdr-config-12:
 
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'starpy'
         - python : 'twisted'

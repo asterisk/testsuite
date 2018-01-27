@@ -17,19 +17,12 @@ test-modules:
       -
         config-section: 'dial-events-12'
         typename: 'ami.AMIEventModule'
-        minversion: '12.0.0'
       -
-        minversion: '12.0.0'
         config-section: cdr-config-12
         typename: 'cdr.CDRModule'
       -
-        config-section: 'hangup-bridged'
-        typename: 'pluggable_modules.AMIChannelHangup'
-        maxversion: '12.0.0'
-      -
         config-section: 'hangup-bridged-12'
         typename: 'pluggable_modules.AMIChannelHangup'
-        minversion: '12.0.0'
 
 
 test-config:
@@ -151,15 +144,6 @@ hangup-bridged-12:
         match:
             Event: 'BridgeEnter'
             Channel: 'Local/invalid@default-.{8};2'
-
-hangup-bridged:
-    type: 'headermatch'
-    delay: 2
-    conditions:
-        match:
-            Event: 'VarSet'
-            Variable: 'BRIDGEPEER'
-            Value: 'Local/invalid@default-.*'
 
 cdr-config-12:
     -
@@ -303,7 +287,6 @@ cdr-config-12:
                 lastapp: 'Echo'
 
 properties:
-    minversion: ['1.8.0.0', '11.0.0', '13.2.0']
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

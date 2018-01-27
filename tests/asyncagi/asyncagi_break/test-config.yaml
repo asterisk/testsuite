@@ -11,12 +11,7 @@ test-modules:
         typename: 'test_case.SimpleTestCase'
     modules:
         -
-            config-section: pluggable-config-11
-            maxversion: '12.0.0'
-            typename: 'pluggable_modules.EventActionModule'
-        -
             config-section: pluggable-config-12
-            minversion: '12.0.0'
             typename: 'pluggable_modules.EventActionModule'
 
 test-object-config:
@@ -25,67 +20,6 @@ test-object-config:
         -
             channel: 'Local/s@default'
             application: 'Echo'
-
-pluggable-config-11:
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'UserEvent'
-            requirements:
-                match:
-                    Result: 'pass'
-            count: '1'
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'AsyncAGI'
-                    Channel: 'Local/s@default-.*'
-                    SubEvent: 'Start'
-        ami-actions:
-            action:
-                action: 'AGI'
-                channel: '{channel}'
-                command: 'STREAM FILE tt-monkeys ""'
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'AGIExec'
-                    SubEvent: 'Start'
-                    Channel: 'Local/s@default-.*'
-                    Command: 'STREAM FILE tt-monkeys ""'
-        ami-actions:
-            action:
-                action: 'AGI'
-                channel: '{channel}'
-                command: 'ASYNCAGI BREAK'
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'AGIExec'
-                    SubEvent: 'End'
-                    Channel: 'Local/s@default-.*'
-                    Command: 'STREAM FILE tt-monkeys ""'
-            requirements:
-                match:
-                    ResultCode: '200'
-                    Result: 'Success'
-            count: '1'
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'AGIExec'
-                    SubEvent: 'End'
-                    Channel: 'Local/s@default-.*'
-                    Command: 'ASYNCAGI BREAK'
-            requirements:
-                match:
-                    ResultCode: '200'
-                    Result: 'Success'
 
 pluggable-config-12:
     -
@@ -145,7 +79,6 @@ pluggable-config-12:
                     Result: 'Success'
 
 properties:
-    minversion: '1.8.0.0'
     tags:
       - AGI
     dependencies:

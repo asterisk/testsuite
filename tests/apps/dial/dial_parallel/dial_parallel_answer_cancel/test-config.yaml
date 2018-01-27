@@ -5,7 +5,6 @@ testinfo:
         Verify that Asterisk cancels the other Dial request.'
 
 properties:
-    minversion: '11.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
@@ -32,46 +31,14 @@ test-modules:
         typename: 'sipp.SIPpTestCase'
     modules:
         -
-            minversion: '11.0.0'
-            maxversion: '12.0.0'
-            config-section: cdr-config-11
-            typename: 'cdr.CDRModule'
-        -
-            minversion: '12.0.0'
             config-section: cdr-config-12
             typename: 'cdr.CDRModule'
         -
-            minversion: '11.0.0'
-            maxversion: '12.0.0'
-            config-section: ami-config-11
-            typename: 'ami.AMIEventModule'
-        -
-            minversion: '12.0.0'
-            maxversion: '13.5.0'
-            config-section: ami-config-12
-            typename: 'ami.AMIEventModule'
-        -
-            minversion: '13.5.0'
             config-section: ami-config-13-5
             typename: 'ami.AMIEventModule'
         -
             config-section: originator-config
             typename: 'pluggable_modules.Originator'
-
-cdr-config-11:
-    -
-        file: 'Master'
-        lines:
-            -
-                accountcode: ''
-                destination: 's'
-                dcontext: 'default'
-                callerid: ''
-                channel: 'Local/s@default-.{8};2'
-                dchannel: 'SIP/charlie-.{8}'
-                lastapp: 'Dial'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
 
 cdr-config-12:
     -
@@ -97,126 +64,6 @@ cdr-config-12:
                 lastapp: 'Dial'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
-
-ami-config-11:
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'UserEvent'
-                UserEvent: 'HangupCause'
-                HangupChannel: 'SIP/bob-.*'
-        requirements:
-            match:
-                TechCause: 'SIP 180 Ringing'
-                AsteriskCause: 'Normal Clearing'
-        count: '1'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'UserEvent'
-                UserEvent: 'HangupCause'
-                HangupChannel: 'SIP/charlie-.*'
-        requirements:
-            match:
-                TechCause: 'SIP 200 OK'
-                AsteriskCause: 'Normal Clearing'
-        count: '1'
-
-ami-config-12:
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'UserEvent'
-                UserEvent: 'HangupCause'
-                HangupChannel: 'SIP/bob-.*'
-        requirements:
-            match:
-                TechCause: 'SIP 180 Ringing'
-                AsteriskCause: 'Normal Clearing'
-        count: '1'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'UserEvent'
-                UserEvent: 'HangupCause'
-                HangupChannel: 'SIP/charlie-.*'
-        requirements:
-            match:
-                TechCause: 'SIP 200 OK'
-                AsteriskCause: 'Normal Clearing'
-        count: '1'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'DialBegin'
-                DestChannel: 'SIP/bob-.*'
-        requirements:
-            match:
-                Channel: 'Local/s@default-.*'
-                Uniqueid: '.*'
-                DestUniqueid: '.*'
-                CallerIDNum: '<unknown>'
-                CallerIDName: '<unknown>'
-                ConnectedLineNum: '<unknown>'
-                ConnectedLineName: '<unknown>'
-                Dialstring: 'bob'
-        count: '1'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'DialBegin'
-                DestChannel: 'SIP/charlie-.*'
-        requirements:
-            match:
-                Channel: 'Local/s@default-.*'
-                Uniqueid: '.*'
-                DestUniqueid: '.*'
-                CallerIDNum: '<unknown>'
-                CallerIDName: '<unknown>'
-                ConnectedLineNum: '<unknown>'
-                ConnectedLineName: '<unknown>'
-                Dialstring: 'charlie'
-        count: '1'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'DialEnd'
-                DestChannel: 'SIP/bob-.*'
-        requirements:
-            match:
-                Channel: 'Local/s@default-.*'
-                Uniqueid: '.*'
-                DestUniqueid: '.*'
-                CallerIDNum: '<unknown>'
-                CallerIDName: '<unknown>'
-                ConnectedLineNum: '<unknown>'
-                ConnectedLineName: '<unknown>'
-                DialStatus: 'CANCEL'
-        count: '1'
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'DialEnd'
-                DestChannel: 'SIP/charlie-.*'
-        requirements:
-            match:
-                Channel: 'Local/s@default-.*'
-                Uniqueid: '.*'
-                DestUniqueid: '.*'
-                CallerIDNum: '<unknown>'
-                CallerIDName: '<unknown>'
-                ConnectedLineNum: '<unknown>'
-                ConnectedLineName: '<unknown>'
-                DialStatus: 'ANSWER'
-        count: '1'
 
 # Add Linkedid/DestLinkedid header requirements
 # to the DialBegin/DialEnd events over the ami-config-12 version.

@@ -13,13 +13,8 @@ test-modules:
             config-section: test-object-config
             typename: 'test_case.TestCaseModule'
         modules:
-          - config-section: ami-config-11
-            typename: 'ami.AMIEventModule'
-            minversion: '11.0.0'
-            maxversion: '12.0.0'
           - config-section: ami-config-12
             typename: 'ami.AMIEventModule'
-            minversion: '12.0.0'
           - config-section: start-call
             typename: 'pluggable_modules.Originator'
 
@@ -37,16 +32,6 @@ start-call:
     priority: 1
     trigger: 'ami_connect'
     async: True
-
-ami-config-11:
-    -
-        type: 'callback'
-        conditions:
-            match:
-                Event: 'Newchannel'
-                Channel: 'Local/s@default-00000000;1'
-        callbackModule: 'start_mix'
-        callbackMethod: 'record'
 
 ami-config-12:
     -
@@ -84,7 +69,6 @@ sound-file-analyzer:
                             priority: '1'
 
 properties:
-    minversion: ['11.16.0', '13.3.0']
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

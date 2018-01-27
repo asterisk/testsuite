@@ -136,19 +136,6 @@ test-object-config:
                   expected-result: 'Marked-1 Leave Event received'
             -
               type: 'headermatch'
-              maxversion: '13.12.0'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  Channel: 'Local/marked_one@confbridge-.*'
-                  State: 'PLAYBACK'
-                  Message: 'confbridge-join'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked-1 Heard Join Sound'
-            -
-              type: 'headermatch'
               conditions:
                 match:
                   Event: 'MusicOnHold'
@@ -318,19 +305,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Marked-1 Leave Event received'
-            -
-              type: 'headermatch'
-              maxversion: '13.12.0'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  Channel: 'Local/marked_one@confbridge-.*'
-                  State: 'PLAYBACK'
-                  Message: 'confbridge-join'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked-1 Heard Join Sound'
         -
           channel-id: 'Marked-2'
           channel-name: 'Local/marked_two@confbridge'
@@ -390,7 +364,6 @@ test-object-config:
 
 
 properties:
-    minversion: '10.10.0'
     tags:
       - confbridge
       - apps

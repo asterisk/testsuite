@@ -5,7 +5,6 @@ testinfo:
         body contents. If these aren't received the test fails.'
 
 properties:
-    minversion: '12.4.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - sipp :
@@ -22,24 +21,11 @@ test-modules:
     add-test-to-search-path: 'True'
     test-object:
         -
-            maxversion: '13.9.0'
-            config-section: sipp-config
-            typename: 'sipp.SIPpTestCase'
-        -
-            minversion: '13.9.0'
             config-section: sipp-config-v13.9.0
             typename: 'sipp.SIPpTestCase'
     modules:
         -
             typename: 'dialog_info_xml.DialogInfoXML'
-
-sipp-config:
-    reactor-timeout: 30
-    fail-on-any: True
-    test-iterations:
-        -
-            scenarios:
-                - { 'key-args': {'scenario': 'subscribe.xml', '-p': '5061'} }
 
 sipp-config-v13.9.0:
     reactor-timeout: 30
