@@ -1,4 +1,3 @@
-#/usr/bin/env python
 """
 Copyright (C) 2015, Digium, Inc.
 Jonathan Rose <jrose@digium.com>
