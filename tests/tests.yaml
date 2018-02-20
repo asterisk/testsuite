@@ -2,7 +2,6 @@
 tests:
     - test: 'example'
     - dir: 'custom'
-    - test: 'dynamic-modules'
     - dir: 'manager'
     - dir: 'cdr'
     - dir: 'channels'
