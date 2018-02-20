@@ -4,3 +4,4 @@ tests:
     - test: 'auth'
     - test: 'nat'
     - test: 'peer_in_dialog_auths'
+    - test: 'early_media'
