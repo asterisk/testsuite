@@ -11,3 +11,4 @@ tests:
     - test: 'subscribe_context'
     - test: 'unallowed'
     - test: 'unknown_event_package'
+    - test: 'large_number_of_accept_headers'
