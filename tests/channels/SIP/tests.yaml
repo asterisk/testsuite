@@ -1,7 +1,6 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - dir: 'ami'
-    - dir: 'redirecting_reason'
     - dir: 'register_forbidden_retry'
     - dir: 'sendrpid'
     - dir: 'session_timers'
@@ -44,6 +43,7 @@ tests:
     - test: 'pcap_demo'
     - test: 'realtime_nosipregs'
     - test: 'realtime_sipregs'
+    - test: 'redirecting_reason'
     - test: 'refer_replaces_to_self'
     - test: 'rfc2833_dtmf_detect'
     - test: 'route'
