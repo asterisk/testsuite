@@ -9,11 +9,6 @@ test-modules:
         typename: 'test_case.SimpleTestCase'
     modules:
         -
-            maxversion: '12.0.0'
-            config-section: 'cdr-config-pre-12'
-            typename: 'cdr.CDRModule'
-        -
-            minversion: '12.0.0'
             config-section: 'cdr-config-12'
             typename: 'cdr.CDRModule'
 
@@ -27,23 +22,6 @@ test-object-config:
             channel: 'Local/1@default'
             application: 'Echo'
             async: True
-
-cdr-config-pre-12:
-    -
-        file: 'cdrtest_local'
-        lines:
-            -
-                accountcode: 'cdrtest_local'
-                source: ''
-                destination: '1'
-                dcontext: 'default'
-                callerid: ''
-                channel: 'Local/1@default-.*'
-                dchannel: ''
-                lastapp: 'Hangup'
-                lastarg: ''
-                disposition: 'NO ANSWER'
-                amaflags: 'DOCUMENTATION'
 
 cdr-config-12:
     -
@@ -63,7 +41,6 @@ cdr-config-12:
                 amaflags: 'DOCUMENTATION'
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

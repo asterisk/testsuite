@@ -5,7 +5,6 @@ testinfo:
         sure the events are appropriately raised.
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'
@@ -20,7 +19,6 @@ test-modules:
         typename: 'test_case.TestCaseModule'
     modules:
         -
-            minversion: '12.0.0'
             config-section: 'ami-config'
             typename: 'pluggable_modules.EventActionModule'
 

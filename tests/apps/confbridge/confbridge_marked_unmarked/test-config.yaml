@@ -139,19 +139,6 @@ test-object-config:
                   expected-result: 'Marked-user Leave Event received'
             -
               type: 'headermatch'
-              maxversion: '13.12.0'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  Channel: 'Local/marked@confbridge-.*'
-                  State: 'PLAYBACK'
-                  Message: 'confbridge-join'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked-user Heard Join Sound'
-            -
-              type: 'headermatch'
               conditions:
                 match:
                   Event: 'MusicOnHoldStart'
@@ -189,19 +176,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Normal-user Leave Event received'
-            -
-              type: 'headermatch'
-              maxversion: '13.12.0'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  Channel: 'Local/normal@confbridge-.*'
-                  State: 'PLAYBACK'
-                  Message: 'confbridge-join'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Normal-user Heard Join Sound'
             -
               type: 'headermatch'
               conditions:
@@ -332,19 +306,6 @@ test-object-config:
                   expected-result: 'Marked-user Leave Event received'
             -
               type: 'headermatch'
-              maxversion: '13.12.0'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  Channel: 'Local/marked@confbridge-.*'
-                  State: 'PLAYBACK'
-                  Message: 'confbridge-join'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked-user Heard Join Sound'
-            -
-              type: 'headermatch'
               conditions:
                 match:
                   Event: 'MusicOnHoldStart'
@@ -382,19 +343,6 @@ test-object-config:
                 -
                   action-type: 'set-expected-result'
                   expected-result: 'Normal-user Leave Event received'
-            -
-              type: 'headermatch'
-              maxversion: '13.12.0'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  Channel: 'Local/normal@confbridge-.*'
-                  State: 'PLAYBACK'
-                  Message: 'confbridge-join'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Normal-user Heard Join Sound'
             -
               type: 'headermatch'
               conditions:
@@ -526,19 +474,6 @@ test-object-config:
                   expected-result: 'Marked-user Leave Event received'
             -
               type: 'headermatch'
-              maxversion: '13.12.0'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  Channel: 'Local/marked@confbridge-.*'
-                  State: 'PLAYBACK'
-                  Message: 'confbridge-join'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Marked-user Heard Join Sound'
-            -
-              type: 'headermatch'
               conditions:
                 match:
                   Event: 'MusicOnHoldStart'
@@ -578,19 +513,6 @@ test-object-config:
                   expected-result: 'Normal-user Leave Event received'
             -
               type: 'headermatch'
-              maxversion: '13.12.0'
-              conditions:
-                match:
-                  Event: 'TestEvent'
-                  Channel: 'Local/normal@confbridge-.*'
-                  State: 'PLAYBACK'
-                  Message: 'confbridge-join'
-              actions:
-                -
-                  action-type: 'set-expected-result'
-                  expected-result: 'Normal-user Heard Join Sound'
-            -
-              type: 'headermatch'
               conditions:
                 match:
                   Event: 'MusicOnHoldStart'
@@ -601,7 +523,6 @@ test-object-config:
                   expected-result: 'MusicOnHoldStart Event received'
 
 properties:
-    minversion: '12.0.0'
     tags:
       - confbridge
       - apps

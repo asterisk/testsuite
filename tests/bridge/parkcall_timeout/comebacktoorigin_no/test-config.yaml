@@ -14,11 +14,6 @@ test-modules:
         typename: 'bridge_test_case.BridgeTestCase'
     modules:
         -
-            maxversion: '12.0.0'
-            config-section: 'cdr-config'
-            typename: 'cdr.CDRModule'
-        -
-            minversion: '12.0.0'
             config-section: 'cdr-config-12'
             typename: 'cdr.CDRModule'
         -
@@ -47,41 +42,6 @@ bridge-config:
                 who: 'alice'
                 what: 'parkcall'
                 success: 'true'
-
-cdr-config:
-    -
-        file: 'Master'
-        lines:
-            -
-                source: '1234'
-                destination: 'test1'
-                dcontext: 'default'
-                callerid: '"Alice" <1234>'
-                channel: '.*/alice-.*'
-                dchannel: '.*/bob-.*'
-                lastapp: 'Dial'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-            -
-                source: '1234'
-                destination: 'test2'
-                dcontext: 'default'
-                callerid: '"Alice" <1234>'
-                channel: '.*/alice-.*'
-                dchannel: '.*/bob-.*'
-                lastapp: 'Dial'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-            -
-                source: '1234'
-                destination: 'test3'
-                dcontext: 'default'
-                callerid: '"Alice" <1234>'
-                channel: '.*/alice-.*'
-                dchannel: '.*/bob-.*'
-                lastapp: 'Dial'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
 
 cdr-config-12:
     -
@@ -179,7 +139,6 @@ cdr-config-12:
                 amaflags: 'DOCUMENTATION'
 
 properties:
-    minversion: '11.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'

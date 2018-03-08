@@ -18,11 +18,6 @@ test-modules:
         typename: 'test_case.SimpleTestCase'
     modules:
         -
-            maxversion: '12.0.0'
-            config-section: 'cdr-config-pre-12'
-            typename: 'cdr-tests.ForkCdrModuleEndResetTime'
-        -
-            minversion: '12.0.0'
             config-section: 'cdr-config-12'
             typename: 'cdr-tests.ForkCdrModuleEndTime'
 
@@ -37,30 +32,6 @@ test-object-config:
             channel: 'Local/1@default'
             application: 'Echo'
             async: True
-
-cdr-config-pre-12:
-    -
-        check-entries: [0, 1]
-        file: 'cdrtest_local'
-        lines:
-            -
-                accountcode: 'cdrtest_local'
-                destination: '1'
-                lastapp: 'ForkCDR'
-                dcontext: 'default'
-                channel: 'Local/1@default-.*'
-                dchannel: 'SIP/test-.*'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-            -
-                accountcode: 'cdrtest_local'
-                destination: '1'
-                lastapp: 'Hangup'
-                dcontext: 'default'
-                dchannel: 'SIP/test-.*'
-                channel: 'Local/1@default-.*'
-                disposition: 'NO ANSWER'
-                amaflags: 'DOCUMENTATION'
 
 cdr-config-12:
     -
@@ -93,7 +64,6 @@ cdr-config-12:
 
 
 properties:
-    minversion: '1.8.13.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
