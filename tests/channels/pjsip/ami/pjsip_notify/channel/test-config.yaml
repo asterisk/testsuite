@@ -1,0 +1,48 @@
+info:
+    summary: 'Test PJSIPNotify AMI Action for Channel'
+    description: |
+        This Tests the AMI Action PJSIPNotify with the
+        channel parameter given, generating an in-DIALOG
+        request.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: sipp.SIPpTestCase
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'callee.xml', '-i': '127.0.0.1', '-p': '5063', '-trace_msg': '-pause_msg_ign' } }
+                - { 'key-args': { 'scenario': 'caller.xml', '-i': '127.0.0.1', '-p': '5062', '-trace_msg': '-pause_msg_ign' } }
+
+ami-config:
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'Newstate'
+                    Channel: 'PJSIP/callee-.*'
+                    ChannelStateDesc: 'Ringing'
+        ami-actions:
+            action:
+                Action: 'PJSIPNotify'
+                Channel: '{channel}'
+                Variable: 'Event=talk'
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'app_dial'
+    tags:
+        - PJSIP
+

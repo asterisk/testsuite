@@ -4,3 +4,4 @@ tests:
     - test: 'reserved_headers'
     - test: 'content'
     - test: 'to_uri'
+    - test: 'channel'
