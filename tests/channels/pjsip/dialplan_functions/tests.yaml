@@ -3,7 +3,6 @@ tests:
     - test: 'chan_is_avail'
     - test: 'pjsip_aor'
     - test: 'pjsip_channel'
-    - test: 'pjsip_channel2'
     - test: 'pjsip_contact'
     - test: 'pjsip_dtmfmode'
     - test: 'pjsip_endpoint'

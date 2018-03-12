@@ -2,4 +2,3 @@
 tests:
     - test: 'custom_headers'
     - test: 'content'
-    - test: 'call_id'

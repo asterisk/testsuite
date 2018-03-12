@@ -23,4 +23,3 @@ tests:
     - dir: 'disa'
     - dir: 'authenticate'
     - dir: 'statsd'
-    - test: 'waitdigit'
