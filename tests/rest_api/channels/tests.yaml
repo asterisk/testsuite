@@ -11,7 +11,5 @@ tests:
     - dir: 'redirect'
     - test: 'connected_line_update'
     - test: 'originate_to_dialplan'
-    - dir: 'create_dial_bridge'
     - dir: 'hold'
     - test: 'originate_duplicate_id'
-    - test: 'create_duplicate_id'

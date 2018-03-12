@@ -1,5 +1,0 @@
-tests:
-    - test: 'bridge_then_dial'
-    - test: 'bridge_after_answer'
-    - test: 'bridge_while_ringing'
-    - test: 'bridge_early_media'

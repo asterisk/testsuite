@@ -1,3 +1,2 @@
 tests:
     - dir: 'copy'
-    - test: 'file'

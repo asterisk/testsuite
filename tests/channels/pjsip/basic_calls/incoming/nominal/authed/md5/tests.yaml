@@ -2,4 +2,3 @@ tests:
     - test: 'ident_by_host'
     - test: 'ident_by_user'
     - test: 'ident_by_user_drop_options'
-    - test: 'ident_by_header'

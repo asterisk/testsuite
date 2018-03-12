@@ -17,7 +17,6 @@ tests:
     - test: 'mixmonitor'
     - test: 'manager_vars'
     - test: 'status'
-    - test: 'status_all_vars'
     - test: 'userevent'
     - test: 'connected_line'
     - test: 'response-time'

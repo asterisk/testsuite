@@ -14,7 +14,6 @@ tests:
     - dir: 'publish'
     - dir: 'qualify'
     - dir: 'registration'
-    - dir: 'resolver'
     - dir: 'rtp'
     - dir: 'rtcp'
     - dir: 'sdp_offer_answer'

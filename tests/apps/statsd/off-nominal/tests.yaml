@@ -1,9 +1,0 @@
-tests:
-    - test: 'empty_params'
-    - test: 'invalid_metric'
-    - test: 'invalid_sample_rate'
-    - test: 'invalid_value'
-    - test: 'invalid_variable'
-    - test: 'no_metric'
-    - test: 'no_value'
-    - test: 'no_variable'

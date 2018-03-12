@@ -6,4 +6,3 @@ tests:
     - test: 'remote_restart'
     - test: 'remote_reverse'
     - test: 'remote_stop'
-    - test: 'remote_uri'
