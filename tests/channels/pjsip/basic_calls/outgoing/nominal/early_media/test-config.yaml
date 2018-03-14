@@ -1,0 +1,59 @@
+testinfo:
+    summary:     'Tests a call to a UA which forks the call in order to send early media'
+    description: |
+        'The UA in this test first replies to the INVITE with a SIP 183 and the IP
+        address 127.0.0.2 as RTP source. Then, in the SIP 200 the call is forked by
+        changing the to tag and the RTP source IP is changed to 127.0.0.3.
+        We check if Asterisk properly handles the changed SDP in the 200 OK by
+        updating the RTP IP to 127.0.0.3.
+        This scenario is supported by PJsip in https://trac.pjsip.org/repos/ticket/657'
+
+properties:
+    minversion: '15.4.0'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_softhangup'
+        - asterisk : 'app_stack'
+        - asterisk : 'app_userevent'
+        - asterisk : 'func_channel'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator-ua1_invite_recv
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+originator-ua1_invite_recv:
+    trigger: 'ami_connect'
+
+sipp-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'ua1_invite_recv.xml', '-p': '5062', '-send_timeout': '20000', '-recv_timeout': '20000', '-timeout': '25000'},}
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'rtpinfo'
+        requirements:
+            match:
+                dest: '127.0.0.3: *'
+        count: '1'
