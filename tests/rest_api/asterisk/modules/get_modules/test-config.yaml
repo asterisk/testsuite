@@ -32,6 +32,13 @@ ari-config:
                         match:
                             -
                                 {
+                                  "name": "acl",
+                                  "description": "Named ACL system",
+                                  "status": "Running",
+                                  "support_level": "core",
+                                }
+                            -
+                                {
                                   "name": "app_echo.so",
                                   "description": "Simple Echo Application",
                                   "status": "Running",
@@ -46,8 +53,99 @@ ari-config:
                                 }
                             -
                                 {
+                                  "name": "ccss",
+                                  "description": "Call Completion Supplementary Services",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "cdr",
+                                  "description": "CDR Engine",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "cel",
+                                  "description": "CEL Engine",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "dnsmgr",
+                                  "description": "DNS Manager",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "dsp",
+                                  "description": "DSP",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "enum",
+                                  "description": "ENUM Support",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "extconfig",
+                                  "description": "Configuration",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "features",
+                                  "description": "Call Features",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "http",
+                                  "description": "Built-in HTTP Server",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "indications",
+                                  "description": "Indication Tone Handling",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "logger",
+                                  "description": "Logger",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "manager",
+                                  "description": "Asterisk Manager Interface",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
                                   "name": "pbx_config.so",
                                   "description": "Text Extension Configuration",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "plc",
+                                  "description": "PLC",
                                   "status": "Running",
                                   "support_level": "core"
                                 }
@@ -181,6 +279,20 @@ ari-config:
                                 {
                                   "name": "res_stasis_snoop.so",
                                   "description": "Stasis application snoop support",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "sounds",
+                                  "description": "Sounds Index",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "udptl",
+                                  "description": "UDPTL",
                                   "status": "Running",
                                   "support_level": "core"
                                 }
