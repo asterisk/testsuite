@@ -1,0 +1,41 @@
+testinfo:
+    summary: 'Test SDP rtcp-fb attribute negotiation of goog-remb'
+    description: |
+        This tests that when webrtc support is enabled goog-remb is present in the SDP.
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: sipp.SIPpTestCase
+    modules:
+        -
+            config-section: originator-config
+            typename: pluggable_modules.Originator
+
+sipp-config:
+    memcheck-delay-stop: 7
+    stop-after-scenarios: true
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'reject.xml', '-i': '127.0.0.1', '-p': '5061' }}
+
+originator-config:
+    channel: 'Local/webrtc@default'
+    ignore-originate-failure: 'yes'
+    context: 'default'
+    exten: 'nowhere'
+    priority: '1'
+    trigger: 'scenario_start'
+    scenario-name: 'reject.xml'
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_session'
+        - asterisk : 'res_pjsip_sdp_rtp'
+        - asterisk : 'chan_pjsip'
+    tags:
+        - pjsip
