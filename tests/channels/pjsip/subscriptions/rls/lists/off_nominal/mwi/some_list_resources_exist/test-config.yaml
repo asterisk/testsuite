@@ -7,7 +7,6 @@ testinfo:
          omit the non-existent resources.'
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

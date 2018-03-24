@@ -21,7 +21,6 @@ test-object-config:
                 - { 'key-args': {'scenario': 'uac-hold.xml', '-i': '127.0.0.1', '-p': '5061', } }
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - sipp :
             version : 'v3.0'

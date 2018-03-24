@@ -22,7 +22,6 @@ test-object-config:
                 - { 'key-args': {'scenario': 'uac-avpf-fail.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice-avp'} }
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'

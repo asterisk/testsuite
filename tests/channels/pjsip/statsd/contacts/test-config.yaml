@@ -47,7 +47,6 @@ statsd-config:
             'PJSIP\.contacts\.sipp@@d0c8ec670653c9643ca96622ef658bbb\.rtt:.*\|ms'
 
 properties:
-    minversion: '13.7.0'
     dependencies:
         - python: 'autobahn.websocket'
         - python: 'starpy'

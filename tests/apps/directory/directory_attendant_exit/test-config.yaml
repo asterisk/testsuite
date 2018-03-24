@@ -5,7 +5,6 @@ testinfo:
         of app_directory.
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

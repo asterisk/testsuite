@@ -5,7 +5,6 @@ testinfo:
         objects created are the same as discretely defined objects.
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - asterisk : 'res_pjsip'
         - asterisk : 'res_pjsip_config_wizard'

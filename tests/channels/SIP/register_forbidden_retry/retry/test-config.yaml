@@ -18,7 +18,6 @@ test-object-config:
                 - { 'key-args': { 'scenario': 'register.xml', '-p': '5065' } }
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python: 'starpy'
         - sipp :

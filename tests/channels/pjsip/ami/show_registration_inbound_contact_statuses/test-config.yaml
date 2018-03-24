@@ -5,7 +5,6 @@ testinfo:
         sure the events are appropriately raised.
 
 properties:
-    minversion: ['13.14.0', '14.3.0']
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - sipp :

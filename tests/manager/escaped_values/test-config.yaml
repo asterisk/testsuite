@@ -6,7 +6,6 @@ testinfo:
          makes sure those sequences are properly escaped."
 
 properties:
-    minversion: '13.5.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

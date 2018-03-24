@@ -3,7 +3,6 @@ testinfo:
     description: |
         'Test Manager UpdateConfig NOT preserving effective context'
 properties:
-    minversion: '13.2.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

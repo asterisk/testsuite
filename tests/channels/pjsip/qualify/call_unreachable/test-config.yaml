@@ -67,7 +67,6 @@ hangup-monitor:
     ids: '0'
 
 properties:
-    minversion: '13.17.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'

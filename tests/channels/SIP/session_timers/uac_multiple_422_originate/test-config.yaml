@@ -4,7 +4,6 @@ testinfo:
         "This test verifies that Asterisk remembers the Min-SE values in 422 across transactions within a dialog when in 'originate' mode."
 
 properties:
-    minversion: '1.8.21'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

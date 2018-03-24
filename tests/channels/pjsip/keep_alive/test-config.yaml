@@ -28,7 +28,6 @@ test-object-config:
 dummy-config:
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - asterisk : 'res_pjsip'
     tags:

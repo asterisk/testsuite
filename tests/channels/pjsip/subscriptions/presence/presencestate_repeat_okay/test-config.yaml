@@ -5,7 +5,6 @@ testinfo:
         to presence subtype and message changes.'
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'

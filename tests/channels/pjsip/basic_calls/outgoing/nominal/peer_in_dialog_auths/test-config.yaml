@@ -46,7 +46,6 @@ test-object-config:
                 - { 'target': '[::1]', 'key-args': {'scenario': 'outgoing_in_dialog_auths.xml', '-i': '[::1]', '-p': '5071', '-s': 'alice-ipv6-udp'} }
 
 properties:
-    minversion: ['13.16.0', '14.5.0']
     dependencies:
         - sipp :
             version : 'v3.0'

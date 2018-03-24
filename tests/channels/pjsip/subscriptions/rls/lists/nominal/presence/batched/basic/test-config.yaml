@@ -14,7 +14,6 @@ testinfo:
          sends in response to state changes are delayed.'
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python: 'twisted'

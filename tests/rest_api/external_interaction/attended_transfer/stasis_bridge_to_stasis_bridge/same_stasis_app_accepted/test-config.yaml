@@ -496,7 +496,6 @@ pluggable-config:
             uri: 'bridges/test_bridge_b'
 
 properties:
-    minversion: '13.5.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

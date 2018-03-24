@@ -287,7 +287,6 @@ test-object-config:
                   expected-result: 'Phase 6: Success'
 
 properties:
-    minversion: '13.0.0'
     tags:
       - apps
       - directory

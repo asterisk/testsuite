@@ -71,7 +71,6 @@ test-object-config:
                 - { 'target': '[::1]', 'key-args': {'scenario': 'echo_with_deferred_sdp.xml', '-i': '[::1]', '-p': '5078', '-t': 't1', '-d': '5000', '-s': 'alice-ipv6-tcp'} }
 
 properties:
-    minversion: ['13.12.0', '14.1.0']
     dependencies:
         - sipp :
             version : 'v3.0'

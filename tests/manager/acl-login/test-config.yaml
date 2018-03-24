@@ -5,7 +5,6 @@ testinfo:
          Primary purpose is to verify proper behavior of ACL configuration and named ACLs.'
 
 properties:
-    minversion: '11.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

@@ -5,7 +5,6 @@ testinfo:
         the Request Line or in the From/To/Contact headers.
 
 properties:
-    minversion: ['13.18.0', '14.7.0']
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

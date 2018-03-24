@@ -9,7 +9,6 @@ testinfo:
 properties:
     # Unlike other realtime tests, this requires at least version 12.2.0 because
     # of a bug in res_sorcery_realtime when storing in realtime.
-    minversion: '12.2.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

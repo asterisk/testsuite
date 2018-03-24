@@ -194,7 +194,6 @@ test-object-config:
                   expected-result: 'Waitmarked2 heard conf-waitforleader.'
 
 properties:
-    minversion: '12.0.0'
     tags:
       - confbridge
       - apps

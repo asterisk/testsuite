@@ -7,7 +7,6 @@ testinfo:
        two connections and end up losing 1 since we exceed tcpauthlimit by 1.
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - asterisk: 'chan_sip'
         - python: 'starpy'

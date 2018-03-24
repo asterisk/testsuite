@@ -10,7 +10,6 @@ testinfo:
         - mantis : '16331'
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'

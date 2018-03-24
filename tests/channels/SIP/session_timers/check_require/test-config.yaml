@@ -27,7 +27,6 @@ test-object-config:
                 - { 'key-args': {'scenario': 'uac-no-timer-support.xml', '-s': 'test'}}
 
 properties:
-    minversion: '1.8.20.0'
     dependencies:
         - python: 'starpy'
         - sipp:

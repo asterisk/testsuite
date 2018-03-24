@@ -394,7 +394,6 @@ hep-node-config-ast2:
                     }
 
 properties:
-    minversion: '12.5.0'
     dependencies:
         - asterisk : 'res_pjsip'
         - asterisk: 'res_hep'

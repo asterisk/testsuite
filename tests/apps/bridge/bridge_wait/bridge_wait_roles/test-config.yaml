@@ -100,7 +100,6 @@ test-object-config:
                   expected-result: 'Announcer channel hung up'
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - python : 'starpy'
         - python : 'twisted'
