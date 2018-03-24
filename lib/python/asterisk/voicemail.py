@@ -20,9 +20,9 @@ import logging
 import time
 import random
 
-from config import ConfigFile
-from test_case import TestCase
-from test_state import TestState, TestStateController, FailureTestState
+from .config import ConfigFile
+from .test_case import TestCase
+from .test_state import TestState, TestStateController, FailureTestState
 
 sys.path.append("lib/python")
 

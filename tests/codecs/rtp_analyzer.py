@@ -13,7 +13,7 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 
-import pcap
+from asterisk import pcap
 
 LOGGER = logging.getLogger(__name__)
 

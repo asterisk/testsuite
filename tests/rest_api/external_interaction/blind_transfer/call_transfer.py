@@ -16,7 +16,7 @@ import logging
 import pjsua as pj
 from twisted.internet import reactor
 
-import pjsua_mod
+from asterisk import pjsua_mod
 
 LOGGER = logging.getLogger(__name__)
 THIS_FILE = os.path.basename(__file__)

@@ -9,7 +9,7 @@ the GNU General Public License Version 2.
 
 import logging
 
-from sipp import SIPpScenario
+from asterisk.sipp import SIPpScenario
 from twisted.internet import defer
 
 LOGGER = logging.getLogger(__name__)

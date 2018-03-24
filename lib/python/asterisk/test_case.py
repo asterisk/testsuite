@@ -19,9 +19,9 @@ from twisted.internet import reactor, defer, error as twisted_error
 from twisted.python import log
 from starpy import manager, fastagi
 
-from asterisk import Asterisk
-from test_config import TestConfig
-from test_conditions import TestConditionController
+from .asterisk import Asterisk
+from .test_config import TestConfig
+from .test_conditions import TestConditionController
 
 
 try:
@@ -45,12 +45,12 @@ def setup_logging(log_dir, log_full, log_messages):
         except:
             msg = ("WARNING: failed to preserve existing loggers - some "
                    "logging statements may be missing")
-            print msg
+            print(msg)
             logging.config.fileConfig(config_file)
     else:
         msg = ("WARNING: no logging.conf file found; using default "
                "configuration")
-        print msg
+        print(msg)
         logging.basicConfig(level=logging.DEBUG)
 
     root_logger = logging.getLogger()
@@ -102,7 +102,7 @@ class TestCase(object):
         # for the rasterisk CLI connection. As a quick fix, we hash the path
         # using md5, to make it unique enough.
         self.realbase = self.test_name.replace("tests/", "", 1)
-        self.base = md5(self.realbase).hexdigest()
+        self.base = md5(self.realbase.encode()).hexdigest()
         # We provide a symlink to it from a named path.
         named_dir = os.path.join(Asterisk.test_suite_root, self.realbase)
         try:

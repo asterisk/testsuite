@@ -13,7 +13,7 @@ import os
 from time import sleep
 
 sys.path.append("lib/python")
-from test_case import TestCase
+from .test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
 
