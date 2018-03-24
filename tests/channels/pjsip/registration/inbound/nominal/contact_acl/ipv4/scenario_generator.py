@@ -12,8 +12,8 @@ import logging
 
 sys.path.append("lib/python")
 
-import test_suite_utils
-from sipp import ScenarioGenerator
+from asterisk import test_suite_utils
+from asterisk.sipp import ScenarioGenerator
 
 LOGGER = logging.getLogger(__name__)
 

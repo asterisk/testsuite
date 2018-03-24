@@ -11,7 +11,7 @@ the GNU General Public License Version 2.
 import logging
 
 from twisted.internet import defer
-from test_conditions import TestCondition
+from .test_conditions import TestCondition
 
 LOGGER = logging.getLogger(__name__)
 

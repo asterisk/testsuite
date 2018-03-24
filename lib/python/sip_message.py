@@ -118,7 +118,7 @@ class SIPMessageTest(object):
 def main():
     msg = """INVITE sip:123@example.com SIP/2.0\r\nContact   : \tTerry Wilson\r\n   <terry@example.com>\r\nCall-ID:\r\n Whatever\r\nContact: New Contact\r\n\r\nData!!!!!"""
     sipmsg = SIPMessage(msg)
-    print sipmsg
+    print(sipmsg)
     if sipmsg.get_header('CoNtact') is None:
         return -1
     if len(sipmsg.get_header_all('contact')) != 2:

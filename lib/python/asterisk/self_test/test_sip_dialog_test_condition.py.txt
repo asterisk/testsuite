@@ -1,0 +1,426 @@
+#!/usr/bin/env python
+"""Test condition for verifying SIP dialogs unit tests
+
+Copyright (C) 2011-2012, Digium, Inc.
+Matt Jordan <mjordan@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+"""
+
+from harness_shared import AstMockOutput, main
+import unittest
+from asterisk.sip_dialog_test_condition import SipDialogPreTestCondition, \
+    SipDialogPostTestCondition
+
+
+class TestConfig(object):
+    """Mock TestConfig object"""
+
+    def __init__(self):
+        """Constructor
+
+        Values here don't matter much - we just need to have something"""
+        self.type_name = ("asterisk.sip_dialog_test_condition." +
+                          "SipDialogPostTestCondition")
+        self.pass_expected = True
+        self.type = "Post"
+        self.related_condition = ""
+        self.class_type_name = "sip_dialog_test_condition"
+        self.config = {}
+        self.enabled = True
+
+
+class TestConfigWithHistory(TestConfig):
+    """Mock TestConfig object with history requirements"""
+
+    def __init__(self):
+        """Constructor"""
+        super(TestConfigWithHistory, self).__init__()
+
+        self.config['history_requirements'] = []
+        self.config['history_requirements'].append('Hangup')
+        self.config['history_requirements'].append('NewChan')
+
+
+class AstMockObjectPostTestNoDestructionFail(AstMockOutput):
+    """Mock out CLI execution from Asterisk instance
+
+    This mock object makes it appear as if a dialog failed to be destroyed
+    """
+    def __init__(self):
+        """Constructor"""
+        self.host = "127.0.0.6"
+
+    def cli_exec(self, command):
+        """Mock CLI execution/response"""
+
+        output = ""
+        if command == "sip show objects":
+            output = "-= Peer objects: 4 static, 0 realtime, 0 autocreate =-\n\n"
+            output += "name: audio\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7002\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7001\ntype: peer\nobjflags: 0\nrefcount: 1\n\n"
+            output += "name: zoiper_01\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "-= Peer objects by IP =-\n\n"
+            output += "name: zoiper_01\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: audio\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7002\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "-= Registry objects: 0 =-\n\n"
+            output += "-= Dialog objects:\n\n"
+            output += "name: 2ec048aa4ed1239664f6408f0c5044c4@127.0.0.2:5060\n"
+            output += "type: dialog\n"
+            output += "objflags: 0\n"
+            output += "refcount: 2\n\n"
+            output += "name: 2ec048aa4ed1239664f6408f0c5044c5@127.0.0.2:5060\n"
+            output += "type: dialog\n"
+            output += "objflags: 0\n"
+            output += "refcount: 2\n\n"
+        elif command == "sip show history 2ec048aa4ed1239664f6408f0c5044c4@127.0.0.2:5060":
+            output = "* SIP Call\n"
+            output += "1. NewChan         Channel SIP/ast1-00000002 - from 2ec048aa4ed1239664f6408f0c5044\n"
+            output += "2. TxReqRel        INVITE / 102 INVITE - INVITE\n"
+            output += "3. Rx              SIP/2.0 / 102 INVITE / 100 Trying\n"
+            output += "4. Rx              SIP/2.0 / 102 INVITE / 200 OK\n"
+            output += "5. TxReq           ACK / 102 ACK - ACK\n"
+            output += "6. Rx              BYE / 102 BYE / sip:ast2@127.0.0.2:5060\n"
+            output += "7. RTCPaudio       Quality:ssrc=28249381;themssrc=485141946;lp=0;rxjitter=0.000029\n"
+            output += "8. RTCPaudioJitter Quality:minrxjitter=0.000000;maxrxjitter=0.000000;avgrxjitter=0\n"
+            output += "9. RTCPaudioLoss   Quality:minrxlost=0.000000;maxrxlost=0.000000;avgrxlost=0.00000\n"
+            output += "10. RTCPaudioRTT    Quality:minrtt=0.000000;maxrtt=0.000000;avgrtt=0.000000;stdevrt\n"
+            output += "11. SchedDestroy    32000 ms\n"
+            output += "12. TxResp          SIP/2.0 / 102 BYE - 200 OK\n"
+            output += "13. Hangup          Cause Normal Clearing\n"
+        elif command == "sip show history 2ec048aa4ed1239664f6408f0c5044c5@127.0.0.2:5060":
+            output = "* SIP Call\n"
+            output += "1. NewChan         Channel SIP/ast1-00000002 - from 2ec048aa4ed1239664f6408f0c5044\n"
+            output += "2. TxReqRel        INVITE / 102 INVITE - INVITE\n"
+            output += "3. Rx              SIP/2.0 / 102 INVITE / 100 Trying\n"
+            output += "4. Rx              SIP/2.0 / 102 INVITE / 200 OK\n"
+            output += "5. TxReq           ACK / 102 ACK - ACK\n"
+            output += "6. Rx              BYE / 102 BYE / sip:ast2@127.0.0.2:5060\n"
+            output += "7. RTCPaudio       Quality:ssrc=28249381;themssrc=485141946;lp=0;rxjitter=0.000029\n"
+            output += "8. RTCPaudioJitter Quality:minrxjitter=0.000000;maxrxjitter=0.000000;avgrxjitter=0\n"
+            output += "9. RTCPaudioLoss   Quality:minrxlost=0.000000;maxrxlost=0.000000;avgrxlost=0.00000\n"
+            output += "10. RTCPaudioRTT    Quality:minrtt=0.000000;maxrtt=0.000000;avgrtt=0.000000;stdevrt\n"
+            output += "11. TxResp          SIP/2.0 / 102 BYE - 200 OK\n"
+            output += "12. Hangup          Cause Normal Clearing\n"
+        return self.MockDefer(output)
+
+
+class AstMockObjectPostTestNoHangupFail(AstMockOutput):
+    """Mock out CLI execution from Asterisk instance
+
+    This mock object makes it appear as if a channel failed to hangup
+    """
+
+    def __init__(self):
+        """Constructor"""
+        self.host = "127.0.0.5"
+
+    def cli_exec(self, command):
+        """Mock CLI execution/response"""
+
+        output = ""
+        if command == "sip show objects":
+            output = "-= Peer objects: 4 static, 0 realtime, 0 autocreate =-\n\n"
+            output += "name: audio\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7002\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7001\ntype: peer\nobjflags: 0\nrefcount: 1\n\n"
+            output += "name: zoiper_01\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "-= Peer objects by IP =-\n\n"
+            output += "name: zoiper_01\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: audio\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7002\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "-= Registry objects: 0 =-\n\n"
+            output += "-= Dialog objects:\n\n"
+            output += "name: 2ec048aa4ed1239664f6408f0c5044c4@127.0.0.2:5060\n"
+            output += "type: dialog\n"
+            output += "objflags: 0\n"
+            output += "refcount: 2\n\n"
+            output += "name: 2ec048aa4ed1239664f6408f0c5044c5@127.0.0.2:5060\n"
+            output += "type: dialog\n"
+            output += "objflags: 0\n"
+            output += "refcount: 2\n\n"
+        elif command == "sip show history 2ec048aa4ed1239664f6408f0c5044c4@127.0.0.2:5060":
+            output = "* SIP Call\n"
+            output += "1. NewChan         Channel SIP/ast1-00000002 - from 2ec048aa4ed1239664f6408f0c5044\n"
+            output += "2. TxReqRel        INVITE / 102 INVITE - INVITE\n"
+            output += "3. Rx              SIP/2.0 / 102 INVITE / 100 Trying\n"
+            output += "4. Rx              SIP/2.0 / 102 INVITE / 200 OK\n"
+            output += "5. TxReq           ACK / 102 ACK - ACK\n"
+            output += "6. Rx              BYE / 102 BYE / sip:ast2@127.0.0.2:5060\n"
+            output += "7. RTCPaudio       Quality:ssrc=28249381;themssrc=485141946;lp=0;rxjitter=0.000029\n"
+            output += "8. RTCPaudioJitter Quality:minrxjitter=0.000000;maxrxjitter=0.000000;avgrxjitter=0\n"
+            output += "9. RTCPaudioLoss   Quality:minrxlost=0.000000;maxrxlost=0.000000;avgrxlost=0.00000\n"
+            output += "10. RTCPaudioRTT    Quality:minrtt=0.000000;maxrtt=0.000000;avgrtt=0.000000;stdevrt\n"
+            output += "11. SchedDestroy    32000 ms\n"
+            output += "12. TxResp          SIP/2.0 / 102 BYE - 200 OK\n"
+        elif command == "sip show history 2ec048aa4ed1239664f6408f0c5044c5@127.0.0.2:5060":
+            output = "* SIP Call\n"
+            output += "1. NewChan         Channel SIP/ast1-00000002 - from 2ec048aa4ed1239664f6408f0c5044\n"
+            output += "2. TxReqRel        INVITE / 102 INVITE - INVITE\n"
+            output += "3. Rx              SIP/2.0 / 102 INVITE / 100 Trying\n"
+            output += "4. Rx              SIP/2.0 / 102 INVITE / 200 OK\n"
+            output += "5. TxReq           ACK / 102 ACK - ACK\n"
+            output += "6. Rx              BYE / 102 BYE / sip:ast2@127.0.0.2:5060\n"
+            output += "7. RTCPaudio       Quality:ssrc=28249381;themssrc=485141946;lp=0;rxjitter=0.000029\n"
+            output += "8. RTCPaudioJitter Quality:minrxjitter=0.000000;maxrxjitter=0.000000;avgrxjitter=0\n"
+            output += "9. RTCPaudioLoss   Quality:minrxlost=0.000000;maxrxlost=0.000000;avgrxlost=0.00000\n"
+            output += "10. RTCPaudioRTT    Quality:minrtt=0.000000;maxrtt=0.000000;avgrtt=0.000000;stdevrt\n"
+            output += "11. SchedDestroy    32000 ms\n"
+            output += "12. TxResp          SIP/2.0 / 102 BYE - 200 OK\n"
+            output += "13. Hangup          Cause Normal Clearing\n"
+        return self.MockDefer(output)
+
+
+class AstMockObjectPostTestNoDialogsPass(AstMockOutput):
+    """Mock out CLI execution from Asterisk instance
+
+    This mock object makes it appear as if there were no dialogs, which is okay
+    """
+    def __init__(self):
+        """Constructor"""
+        self.host = "127.0.0.4"
+
+    def cli_exec(self, command):
+        """Mock CLI execution/response"""
+
+        output = ""
+        if command == "sip show objects":
+            output = "-= Peer objects: 4 static, 0 realtime, 0 autocreate =-\n\n"
+            output += "name: audio\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7002\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7001\ntype: peer\nobjflags: 0\nrefcount: 1\n\n"
+            output += "name: zoiper_01\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "-= Peer objects by IP =-\n\n"
+            output += "name: zoiper_01\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: audio\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7002\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "-= Registry objects: 0 =-\n\n"
+            output += "-= Dialog objects:\n\n"
+
+        return self.MockDefer(output)
+
+
+class AstMockObjectPostTestPass(AstMockOutput):
+    """Mock out CLI execution from Asterisk instance
+
+    This mock object provides two dialogs with acceptable history
+    """
+    def __init__(self):
+        """Constructor"""
+        self.host = "127.0.0.3"
+
+    def cli_exec(self, command):
+        """Mock CLI execution/response"""
+
+        output = ""
+        if command == "sip show objects":
+            output = "-= Peer objects: 4 static, 0 realtime, 0 autocreate =-\n\n"
+            output += "name: audio\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7002\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7001\ntype: peer\nobjflags: 0\nrefcount: 1\n\n"
+            output += "name: zoiper_01\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "-= Peer objects by IP =-\n\n"
+            output += "name: zoiper_01\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: audio\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7002\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "-= Registry objects: 0 =-\n\n"
+            output += "-= Dialog objects:\n\n"
+            output += "name: 2ec048aa4ed1239664f6408f0c5044c4@127.0.0.2:5060\n"
+            output += "type: dialog\n"
+            output += "objflags: 0\n"
+            output += "refcount: 2\n\n"
+            output += "name: 2ec048aa4ed1239664f6408f0c5044c5@127.0.0.2:5060\n"
+            output += "type: dialog\n"
+            output += "objflags: 0\n"
+            output += "refcount: 2\n\n"
+        elif command == "sip show history 2ec048aa4ed1239664f6408f0c5044c4@127.0.0.2:5060":
+            output = "* SIP Call\n"
+            output += "1. NewChan         Channel SIP/ast1-00000002 - from 2ec048aa4ed1239664f6408f0c5044\n"
+            output += "2. TxReqRel        INVITE / 102 INVITE - INVITE\n"
+            output += "3. Rx              SIP/2.0 / 102 INVITE / 100 Trying\n"
+            output += "4. Rx              SIP/2.0 / 102 INVITE / 200 OK\n"
+            output += "5. TxReq           ACK / 102 ACK - ACK\n"
+            output += "6. Rx              BYE / 102 BYE / sip:ast2@127.0.0.2:5060\n"
+            output += "7. RTCPaudio       Quality:ssrc=28249381;themssrc=485141946;lp=0;rxjitter=0.000029\n"
+            output += "8. RTCPaudioJitter Quality:minrxjitter=0.000000;maxrxjitter=0.000000;avgrxjitter=0\n"
+            output += "9. RTCPaudioLoss   Quality:minrxlost=0.000000;maxrxlost=0.000000;avgrxlost=0.00000\n"
+            output += "10. RTCPaudioRTT    Quality:minrtt=0.000000;maxrtt=0.000000;avgrtt=0.000000;stdevrt\n"
+            output += "11. SchedDestroy    32000 ms\n"
+            output += "12. TxResp          SIP/2.0 / 102 BYE - 200 OK\n"
+            output += "13. Hangup          Cause Normal Clearing\n"
+        elif command == "sip show history 2ec048aa4ed1239664f6408f0c5044c5@127.0.0.2:5060":
+            output = "* SIP Call\n"
+            output += "1. NewChan         Channel SIP/ast1-00000002 - from 2ec048aa4ed1239664f6408f0c5044\n"
+            output += "2. TxReqRel        INVITE / 102 INVITE - INVITE\n"
+            output += "3. Rx              SIP/2.0 / 102 INVITE / 100 Trying\n"
+            output += "4. Rx              SIP/2.0 / 102 INVITE / 200 OK\n"
+            output += "5. TxReq           ACK / 102 ACK - ACK\n"
+            output += "6. Rx              BYE / 102 BYE / sip:ast2@127.0.0.2:5060\n"
+            output += "7. RTCPaudio       Quality:ssrc=28249381;themssrc=485141946;lp=0;rxjitter=0.000029\n"
+            output += "8. RTCPaudioJitter Quality:minrxjitter=0.000000;maxrxjitter=0.000000;avgrxjitter=0\n"
+            output += "9. RTCPaudioLoss   Quality:minrxlost=0.000000;maxrxlost=0.000000;avgrxlost=0.00000\n"
+            output += "10. RTCPaudioRTT    Quality:minrtt=0.000000;maxrtt=0.000000;avgrtt=0.000000;stdevrt\n"
+            output += "11. SchedDestroy    32000 ms\n"
+            output += "12. TxResp          SIP/2.0 / 102 BYE - 200 OK\n"
+            output += "13. Hangup          Cause Normal Clearing\n"
+        return self.MockDefer(output)
+
+
+class AstMockObjectPreTestFail(AstMockOutput):
+    """Mock out CLI execution from Asterisk instance
+
+    This mock object provides history during a pre-test call, which is wrong
+    """
+    def __init__(self):
+        """Constructor"""
+        self.host = "127.0.0.2"
+
+    def cli_exec(self, command):
+        """Mock CLI execution/response"""
+
+        output = ""
+        if command == "sip show objects":
+            output = "-= Peer objects: 4 static, 0 realtime, 0 autocreate =-\n\n"
+            output += "name: audio\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7002\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7001\ntype: peer\nobjflags: 0\nrefcount: 1\n\n"
+            output += "name: zoiper_01\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "-= Peer objects by IP =-\n\n"
+            output += "name: zoiper_01\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: audio\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7002\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "-= Registry objects: 0 =-\n\n"
+            output += "-= Dialog objects:\n\n"
+            output += "name: 2ec048aa4ed1239664f6408f0c5044c4@127.0.0.2:5060\n"
+            output += "type: dialog\n"
+            output += "objflags: 0\n"
+            output += "refcount: 2\n\n"
+        elif command == "sip show history 2ec048aa4ed1239664f6408f0c5044c4@127.0.0.2:5060":
+            output = "* SIP Call\n"
+            output += "1. NewChan         Channel SIP/ast1-00000002 - from 2ec048aa4ed1239664f6408f0c5044\n"
+            output += "2. TxReqRel        INVITE / 102 INVITE - INVITE\n"
+            output += "3. Rx              SIP/2.0 / 102 INVITE / 100 Trying\n"
+            output += "4. Rx              SIP/2.0 / 102 INVITE / 200 OK\n"
+            output += "5. TxReq           ACK / 102 ACK - ACK\n"
+            output += "6. Rx              BYE / 102 BYE / sip:ast2@127.0.0.2:5060\n"
+            output += "7. RTCPaudio       Quality:ssrc=28249381;themssrc=485141946;lp=0;rxjitter=0.000029\n"
+            output += "8. RTCPaudioJitter Quality:minrxjitter=0.000000;maxrxjitter=0.000000;avgrxjitter=0\n"
+            output += "9. RTCPaudioLoss   Quality:minrxlost=0.000000;maxrxlost=0.000000;avgrxlost=0.00000\n"
+            output += "10. RTCPaudioRTT    Quality:minrtt=0.000000;maxrtt=0.000000;avgrtt=0.000000;stdevrt\n"
+            output += "11. SchedDestroy    32000 ms\n"
+            output += "12. TxResp          SIP/2.0 / 102 BYE - 200 OK\n"
+            output += "13. Hangup          Cause Normal Clearing\n"
+        return self.MockDefer(output)
+
+
+class AstMockObjectPreTestPass(AstMockOutput):
+    """Mock out CLI execution from Asterisk instance
+
+    This mock object provides no history during a pre-test call, which is the
+    expected state
+    """
+    def cli_exec(self, command):
+        """Mock CLI execution/response"""
+
+        output = ""
+        if command == "sip show objects":
+            output = "-= Peer objects: 4 static, 0 realtime, 0 autocreate =-\n\n"
+            output += "name: audio\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7002\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7001\ntype: peer\nobjflags: 0\nrefcount: 1\n\n"
+            output += "name: zoiper_01\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "-= Peer objects by IP =-\n\n"
+            output += "name: zoiper_01\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: audio\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "name: 7002\ntype: peer\nobjflags: 0\nrefcount: 3\n\n"
+            output += "-= Registry objects: 0 =-\n\n"
+            output += "-= Dialog objects:\n"
+        elif command == "sip show history":
+            output = "\n"
+        return self.MockDefer(output)
+
+
+@unittest.skip("sip_dialog_test_condition.py is broken")
+class SipDialogTestConditionUnitTest(unittest.TestCase):
+    """Unit tests for SipDialogTestCondition objects"""
+
+    def test_pre_test_pass(self):
+        """Verify that acceptable pre-test output passes"""
+        ast = AstMockObjectPreTestPass()
+        obj = SipDialogPreTestCondition(TestConfig())
+        obj.register_asterisk_instance(ast)
+        obj.evaluate()
+        self.assertEqual(obj.get_status(), 'Passed')
+
+    def test_pre_test_fail(self):
+        """Verify that unacceptable pre-test output fails"""
+        ast = AstMockObjectPreTestFail()
+        obj = SipDialogPreTestCondition(TestConfig())
+        obj.register_asterisk_instance(ast)
+        obj.evaluate()
+        self.assertEqual(obj.get_status(), 'Failed')
+
+    def test_pre_test_fail_multi_asterisk(self):
+        """Verify that pre-test output from multiple sources fails when one
+        of those sources is bad"""
+        ast1 = AstMockObjectPreTestFail()
+        ast2 = AstMockObjectPreTestPass()
+        obj = SipDialogPreTestCondition(TestConfig())
+        obj.register_asterisk_instance(ast1)
+        obj.register_asterisk_instance(ast2)
+        obj.evaluate()
+        self.assertEqual(obj.get_status(), 'Failed')
+
+    def test_post_test_pass(self):
+        """Verify nominal post-test output"""
+        ast = AstMockObjectPostTestPass()
+        obj = SipDialogPostTestCondition(TestConfigWithHistory())
+        obj.register_asterisk_instance(ast)
+        obj.evaluate()
+        self.assertEqual(obj.get_status(), 'Passed')
+
+    def test_post_test_no_dialog_pass(self):
+        """Verify nominal post-test output with no dialogs passes"""
+        ast = AstMockObjectPostTestNoDialogsPass()
+        obj = SipDialogPostTestCondition(TestConfig())
+        obj.register_asterisk_instance(ast)
+        obj.evaluate()
+        self.assertEqual(obj.get_status(), 'Passed')
+
+    def test_post_test_no_hangup_fail(self):
+        """Verify no hangup detection is caught and results in a failure"""
+        ast = AstMockObjectPostTestNoHangupFail()
+        obj = SipDialogPostTestCondition(TestConfigWithHistory())
+        obj.register_asterisk_instance(ast)
+        obj.evaluate()
+        self.assertEqual(obj.get_status(), 'Failed')
+
+    def test_post_test_no_destruction_fail(self):
+        """Verify no destruction is caught and results in a failure"""
+        ast = AstMockObjectPostTestNoDestructionFail()
+        obj = SipDialogPostTestCondition(TestConfigWithHistory())
+        obj.register_asterisk_instance(ast)
+        obj.evaluate()
+        self.assertEqual(obj.get_status(), 'Failed')
+
+    def test_post_test_multi_asterisk_fail(self):
+        """Test multiple instances of Asterisk where a single failure causes
+        a failure in the overall result"""
+        ast1 = AstMockObjectPostTestNoHangupFail()
+        ast2 = AstMockObjectPostTestNoDestructionFail()
+        ast3 = AstMockObjectPostTestNoDialogsPass()
+        ast4 = AstMockObjectPostTestPass()
+        obj = SipDialogPostTestCondition(TestConfigWithHistory())
+        obj.register_asterisk_instance(ast1)
+        obj.register_asterisk_instance(ast2)
+        obj.register_asterisk_instance(ast3)
+        obj.register_asterisk_instance(ast4)
+        obj.evaluate()
+        self.assertEqual(obj.get_status(), 'Failed')
+
+
+if __name__ == "__main__":
+    main()

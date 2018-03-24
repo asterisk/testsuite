@@ -9,7 +9,7 @@ the GNU General Public License Version 2.
 """
 
 import logging
-from test_case import TestCase
+from asterisk.test_case import TestCase
 from twisted.internet import defer
 
 LOGGER = logging.getLogger(__name__)

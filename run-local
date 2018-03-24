@@ -75,7 +75,12 @@ run() {
 	LIBDIR=`dirname $HERE/astroot/usr/lib*/libasteriskssl.so`
 	export LD_LIBRARY_PATH="${LIBDIR}${LD_LIBRARY_PATH}"
 	set +e
-	./runtests.py "$@"
+	if test -n "$PYTHON"; then
+		# Use specific interpreter
+		$PYTHON ./runtests.py "$@"
+	else
+		./runtests.py "$@"
+	fi
 	status=$?
 	rm "$AST_TEST_ROOT"
 	set -e

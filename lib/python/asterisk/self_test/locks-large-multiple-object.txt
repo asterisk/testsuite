@@ -1,0 +1,16 @@
+=== Thread ID: 0x449ec940 (netconsole           started at [ 1351] asterisk.c listener())
+=== ---> Waiting for Lock #0 (astobj2.c): MUTEX 842 internal_ao2_iterator_next a->c 0x2aaaac491f50 (1)
+/usr/local/asterisk-1.8.6.0/sbin/asterisk(ast_bt_get_addresses+0x1a) [0x4e9679]
+/usr/local/asterisk-1.8.6.0/sbin/asterisk(__ast_pthread_mutex_lock+0xf6) [0x4e22d9]
+/usr/local/asterisk-1.8.6.0/sbin/asterisk(__ao2_lock+0x53) [0x4456fc]
+/usr/local/asterisk-1.8.6.0/sbin/asterisk [0x446cec]
+/usr/local/asterisk-1.8.6.0/sbin/asterisk(__ao2_iterator_next+0x29) [0x447134]
+/usr/local/asterisk-1.8.6.0/sbin/asterisk(ast_channel_iterator_next+0x19) [0x46cf7d]
+/usr/local/asterisk-1.8.6.0/sbin/asterisk [0x489e43]
+/usr/local/asterisk-1.8.6.0/sbin/asterisk(ast_cli_command_full+0x222) [0x48eec4]
+/usr/local/asterisk-1.8.6.0/sbin/asterisk(ast_cli_command_multiple_full+0x92) [0x48f035]
+/usr/local/asterisk-1.8.6.0/sbin/asterisk [0x43d129]
+/usr/local/asterisk-1.8.6.0/sbin/asterisk [0x5661c6]
+/lib64/libpthread.so.0 [0x3d1d80673d]
+/lib64/libc.so.6(clone+0x6d) [0x3d1ccd44bd]
+=== --- ---> Locked Here: astobj2.c line 657 (internal_ao2_callback)

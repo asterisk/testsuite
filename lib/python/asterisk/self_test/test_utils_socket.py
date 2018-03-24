@@ -10,17 +10,10 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
 
-import logging
-import sys
+from harness_shared import main
 import unittest
-
 from socket import SOCK_STREAM, SOCK_DGRAM, AF_INET, AF_INET6
-
-sys.path.append('lib/python')  # noqa
 from asterisk.utils_socket import Ports, PortError, get_available_port, MIN_PORT
-
-
-LOGGER = logging.getLogger(__name__)
 
 
 class PortTests(unittest.TestCase):
@@ -169,7 +162,4 @@ class PortTests(unittest.TestCase):
 
 if __name__ == "__main__":
     """Run the unit tests"""
-
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG,
-                        format="%(module)s:%(lineno)d - %(message)s")
-    unittest.main()
+    main()

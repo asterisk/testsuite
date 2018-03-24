@@ -8,8 +8,7 @@ the GNU General Public License Version 2.
 import re
 import itertools
 
-from astdicts import OrderedDict
-from astdicts import MultiOrderedDict
+from .astdicts import OrderedDict, MultiOrderedDict
 
 
 def merge_values(left, right, key):
@@ -270,11 +269,11 @@ def find_dict(mdicts, key, val):
 
 def write_dicts(config_file, mdicts):
     """Write the contents of the mdicts to the specified config file"""
-    for section, sect_list in mdicts.iteritems():
+    for section, sect_list in mdicts.items():
         # every section contains a list of dictionaries
         for sect in sect_list:
             config_file.write("[%s]\n" % section)
-            for key, val_list in sect.iteritems():
+            for key, val_list in sect.items():
                 # every value is also a list
                 for v in val_list:
                     key_val = key
@@ -355,7 +354,7 @@ class MultiOrderedConfigParser:
         if self._includes:
             res.extend(list(itertools.chain(*[
                 incl.get_sections(key, attr, searched)
-                for incl in self._includes.itervalues()])))
+                for incl in self._includes.values()])))
         if self._parent:
             res += self._parent.get_sections(key, attr, searched)
         return res
@@ -445,7 +444,7 @@ class MultiOrderedConfigParser:
             with open(filename, 'rt') as config_file:
                 self._read(config_file, sect)
         except IOError:
-            print "Could not open file ", filename, " for reading"
+            print("Could not open file ", filename, " for reading")
 
     def _read(self, config_file, sect):
         """Parse configuration information from the config_file"""
@@ -478,7 +477,7 @@ class MultiOrderedConfigParser:
     def write(self, config_file):
         """Write configuration information out to a file"""
         try:
-            for key, val in self._includes.iteritems():
+            for key, val in self._includes.items():
                 val.write(key)
                 config_file.write('#include "%s"\n' % key)
 
@@ -490,4 +489,4 @@ class MultiOrderedConfigParser:
                 with open(config_file, 'wt') as fp:
                     self.write(fp)
             except IOError:
-                print "Could not open file ", config_file, " for writing"
+                print("Could not open file ", config_file, " for writing")

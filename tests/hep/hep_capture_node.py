@@ -28,7 +28,7 @@ except ImportError:
 
 LOGGER = logging.getLogger(__name__)
 
-from test_suite_utils import all_match
+from asterisk.test_suite_utils import all_match
 
 def enum(**enums):
     """Make an enumeration out of the passed in values"""

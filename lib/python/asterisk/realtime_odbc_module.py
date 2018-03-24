@@ -53,7 +53,7 @@ class RealtimeOdbcModule(object):
         self.res_odbc = {}
 
         # generate configuration for each dsn
-        for dsn, config in module_config.iteritems():
+        for dsn, config in module_config.items():
             self._configure(dsn, config)
 
         # set the odbc and conf files
@@ -109,7 +109,7 @@ class RealtimeOdbcModule(object):
         with open(filepath, 'w') as filehandle:
             for section in contents:
                 filehandle.write('[' + section + ']\n')
-                for name, value in contents[section].iteritems():
+                for name, value in contents[section].items():
                     filehandle.write(name + '=' + value + '\n')
 
     def _read_ini_file(self, filepath):

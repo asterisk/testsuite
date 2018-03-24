@@ -35,8 +35,8 @@ import pjsua as pj
 
 sys.path.append('lib/python')
 
-from phones import PjsuaPhoneController
-from pcap import VOIPListener
+from asterisk.phones import PjsuaPhoneController
+from asterisk.pcap import VOIPListener
 
 LOGGER = logging.getLogger(__name__)
 

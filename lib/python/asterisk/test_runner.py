@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Module that spawns and manages running a test
 
 This module provides an entry point, loading, and teardown of test
@@ -22,8 +21,6 @@ from twisted.internet import reactor
 
 LOGGER = logging.getLogger('test_runner')
 logging.basicConfig()
-
-sys.path.append('lib/python')
 
 
 class TestModuleFinder(object):
@@ -144,8 +141,17 @@ def load_and_parse_module(type_name):
     module_name = ".".join(parts[:-1])
 
     if not len(module_name):
-        LOGGER.error("No module specified: %s" % module_name)
+        LOGGER.error("No module specified: %s" % typename)
         return None
+
+    if os.path.exists('lib/python/asterisk/%s.py' % module_name):
+        # This is convoluted but required.  lib/python/asterisk packages
+        # must be loaded using absolute package names and 'asterisk' must
+        # be included in the list of parts.  We cannot simply prepend
+        # type_name from the start because this blocks load of modules
+        # that are local to the test (add-test-to-search-path: 'True').
+        module_name = 'asterisk.' + module_name
+        parts = ['asterisk'] + parts
 
     module = __import__(module_name)
     for comp in parts[1:]:
