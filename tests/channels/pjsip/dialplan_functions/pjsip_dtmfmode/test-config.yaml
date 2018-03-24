@@ -18,7 +18,6 @@ test-object-config:
                 - { 'key-args': {'scenario': 'A_PARTY.xml', '-i': '127.0.0.1', '-p': '5061', '-s': '1000'} }
 
 properties:
-    minversion: '13.18.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

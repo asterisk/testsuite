@@ -56,7 +56,6 @@ ami-action-config:
         stop_test:
 
 properties:
-    minversion: [ '13.18.0', '14.7.0', '15.1.0' ]
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

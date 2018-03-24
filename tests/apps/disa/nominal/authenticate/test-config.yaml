@@ -65,7 +65,6 @@ test-object-config:
                   message: 'Channel did not enter extension. Test failed'
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

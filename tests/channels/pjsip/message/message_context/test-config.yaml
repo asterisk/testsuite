@@ -6,7 +6,6 @@ testinfo:
         MESSAGEs from bob should go to his configured context.'
 
 properties:
-    minversion: '12.2.0'
     dependencies:
         - app: 'sipp'
         - asterisk: 'res_pjsip'

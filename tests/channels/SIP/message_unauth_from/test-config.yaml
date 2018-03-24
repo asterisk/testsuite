@@ -4,7 +4,6 @@ testinfo:
         'Send Asterisk a MESSAGE and wait for Asterisk to send it back from a requested user.'
 
 properties:
-    minversion: '10.0.0'
     dependencies:
         - app : 'sipp'
         - asterisk : 'chan_sip'

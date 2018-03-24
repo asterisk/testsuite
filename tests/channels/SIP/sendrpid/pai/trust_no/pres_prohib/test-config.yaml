@@ -9,7 +9,6 @@ testinfo:
          Presence are expected'
 
 properties:
-    minversion: '1.8.27'
     dependencies:
          - app : 'sipp'
          - asterisk : 'chan_sip'

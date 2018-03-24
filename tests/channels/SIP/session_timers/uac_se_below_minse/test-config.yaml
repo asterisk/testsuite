@@ -4,7 +4,6 @@ testinfo:
         "This test verifies that outbound calls with a Session-Expires value less than the local Min-SE is torn down immediately."
 
 properties:
-    minversion: '1.8.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

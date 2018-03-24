@@ -49,7 +49,6 @@ ami-config:
         count: 1
 
 properties:
-    minversion: '13.5.0'
     dependencies:
         - python : twisted
         - python : starpy

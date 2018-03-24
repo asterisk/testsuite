@@ -54,7 +54,6 @@ hangup-config:
     min_calls: 4
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

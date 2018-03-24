@@ -6,7 +6,6 @@ testinfo:
          direct URI.'
 
 properties:
-    minversion: '12'
     dependencies:
         - app : 'sipp'
         - asterisk : 'res_pjsip'

@@ -29,7 +29,6 @@ test-object-config:
                                      '-key', 'event', 'presence'] }
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python: 'starpy'
         - sipp:

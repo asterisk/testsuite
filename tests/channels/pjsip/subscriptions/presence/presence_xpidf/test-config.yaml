@@ -7,7 +7,6 @@ testinfo:
         given the state we expected for each state change.'
 
 properties:
-    minversion: '12.1.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

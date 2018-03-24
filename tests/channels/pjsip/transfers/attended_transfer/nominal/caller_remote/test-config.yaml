@@ -215,7 +215,6 @@ ami-config:
                 Channel: '/^PJSIP/asterisk2-.*/'
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

@@ -53,7 +53,6 @@ originator-config-ipv4-udp:
     async: 'True'
 
 properties:
-    minversion: '13.17.0'
     dependencies:
         - asterisk : 'res_pjsip'
     tags:

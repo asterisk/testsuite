@@ -36,7 +36,6 @@ ami-object-config:
 
 
 properties:
-    minversion: [ '13.15.0', '14.4.0' ]
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

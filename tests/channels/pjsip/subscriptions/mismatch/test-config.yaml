@@ -11,7 +11,6 @@ testinfo:
             * Event: dialog, Accept: application/simple-message-summary'
 
 properties:
-    minversion: '12.5.0'
     dependencies:
         - sipp:
             version: 'v3.0'

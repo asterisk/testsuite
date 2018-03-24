@@ -18,7 +18,6 @@ test-object-config:
                 - { 'key-args': {'scenario': 'default.xml', '-i': '127.0.0.1', '-p': '5061'} }
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'

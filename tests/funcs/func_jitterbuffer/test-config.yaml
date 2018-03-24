@@ -10,7 +10,6 @@ testinfo:
          handled appropriately using app_talkdetect'
 
 properties:
-    minversion: '10.7.0'
     buildoption: 'TEST_FRAMEWORK'
     dependencies:
         - python : 'twisted'

@@ -24,7 +24,6 @@ testinfo:
                 * The Content-ID header matches the corresponding cid attribute
                   from the instance element in the RLMI document.'
 properties:
-    minversion: '13.0.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

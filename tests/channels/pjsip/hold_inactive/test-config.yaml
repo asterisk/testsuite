@@ -8,7 +8,6 @@ testinfo:
 
 
 properties:
-    minversion: '12.9.0'
     dependencies:
         - sipp :
             version : 'v3.0'

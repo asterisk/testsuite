@@ -70,7 +70,6 @@ ami-config:
                 UserEvent: 'ExtensionExecuted'
 
 properties:
-    minversion: '12.6.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

@@ -7,7 +7,6 @@ testinfo:
         Tests run with endbeforehexten=no'
 
 properties:
-    minversion: '11.0.0'
     dependencies:
         - asterisk: 'app_dial'
     tags:

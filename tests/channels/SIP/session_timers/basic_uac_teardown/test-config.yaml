@@ -4,7 +4,6 @@ testinfo:
         "This test verifies that timers function properly by tearing down an outbound call that requests UAS refresh and fails to refresh."
 
 properties:
-    minversion: '1.8.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

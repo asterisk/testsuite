@@ -7,7 +7,6 @@ testinfo:
         Asterisk instance the test fails.'
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'

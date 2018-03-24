@@ -48,7 +48,6 @@ ami-config:
         count: 7
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - app : 'sipp'
         - asterisk : 'app_dial'

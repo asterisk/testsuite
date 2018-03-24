@@ -21,7 +21,6 @@ test-object-config:
                 - { 'key-args': { 'scenario': 'register-no-retry.xml', '-p': '5066' } }
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - python: 'starpy'
         - sipp :
