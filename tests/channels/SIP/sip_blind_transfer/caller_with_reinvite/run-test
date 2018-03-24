@@ -20,7 +20,6 @@ from starpy import manager
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.test_case import TestCase
-from asterisk.version import AsteriskVersion
 
 logger = logging.getLogger(__name__)
 
@@ -60,12 +59,8 @@ class BlindTransfer(TestCase):
     def ami_connect(self, ami):
         TestCase.ami_connect(self, ami)
 
-        if AsteriskVersion() >= AsteriskVersion("12"):
-            ami.registerEvent('BridgeEnter', self.bridge_enter_event_handler)
-            ami.registerEvent('BlindTransfer', self.blind_transfer_event_handler)
-        else:
-            ami.registerEvent('Bridge', self.bridge_event_handler)
-            ami.registerEvent('Transfer', self.transfer_event_handler)
+        ami.registerEvent('BridgeEnter', self.bridge_enter_event_handler)
+        ami.registerEvent('BlindTransfer', self.blind_transfer_event_handler)
         ami.registerEvent('Hangup', self.hangup_event_handler)
 
         self.a_call_b()
@@ -90,41 +85,11 @@ class BlindTransfer(TestCase):
         else:
             logger.warning("Unexpected bridge (%s and %s) received!" % (self.channel1, channel2))
 
-    def bridge_event_handler(self, ami, event):
-        bridgetype = event['bridgetype'].lower()
-        bridgestate = event['bridgestate'].lower()
-        channel1 = event['channel1']
-        channel2 = event['channel2']
-        logger.debug("Received bridge type %s (%s) for channel %s and %s" % (bridgetype, bridgestate, channel1, channel2))
-        if (bridgetype == 'core' and bridgestate == 'link'):
-            if (channel1 == BlindTransfer.phone_a_channel and channel2 == BlindTransfer.phone_b_channel):
-                logger.debug("Starting transfer of Phone B to Phone C")
-                self.a_transfer_b_to_c()
-            elif (channel1 == BlindTransfer.phone_b_channel and channel2 == BlindTransfer.phone_c_channel):
-                self.ami_check_bridge()
-            else:
-                logger.warning("Unexpected bridge (%s and %s) received!" % (channel1, channel2))
-        elif bridgetype != 'core' or bridgestate != 'unlink':
-            logger.warning("Unexpected bridgetype %s or bridgestate %s received!" % (bridgetype, bridgestate))
-
     def blind_transfer_event_handler(self, ami, event):
         if event['isexternal'].lower() != 'yes':
             logger.warn("Unexpected transfer type: Internal")
         else:
             logger.debug("Received blind external transfer initiated by %(transfererchannel)s to %(extension)s@%(context)s" % event)
-            self.transfer_event_received = True
-
-    def transfer_event_handler(self, ami, event):
-        transfertype = event['transfertype'].lower()
-        transfermethod = event['transfermethod'].lower()
-        channel = event['channel']
-        targetchannel = event['targetchannel']
-        logger.debug("Received %s %s transfer initiated by %s on %s" % (transfermethod, transfertype, channel, targetchannel))
-        if transfertype != 'blind':
-            logger.warn("Unexpected transfer type: %s" % transfertype)
-        elif transfermethod != 'sip':
-            logger.warn("Unexpected transfer method: %s" % transfermethod)
-        else:
             self.transfer_event_received = True
 
     def hangup_event_handler(self, ami, event):
@@ -140,32 +105,10 @@ class BlindTransfer(TestCase):
             self.read_result()
             return
 
-        if AsteriskVersion() >= AsteriskVersion('12'):
-            # the following has already been verified using bridgeenter messages so exit early
-            self.passed = True
-            self.hangup_channel_c()
-            return
-
-        logger.debug('Results %s' % str(results))
-        """
-        Multiple results may be returned.  For example, at times, you may get a message
-        back that states "channel state will follow".  Iterate through each and only fail
-        if we don't get a match
-        """
-        i = 0
-        for result in results:
-            if "bridgedchannel" not in result:
-                logger.debug("'bridgedchannel' not found in result %d" % i)
-            elif result['bridgedchannel'] == BlindTransfer.phone_c_channel:
-                self.passed = True
-            i += 1
-
-        if self.passed == True:
-            logger.debug("Found Bridge!!!")
-            self.hangup_channel_c()
-        else:
-            logger.warn("Detecting Bridge failed")
-            self.read_result()
+        # the following has already been verified using bridgeenter messages so exit early
+        self.passed = True
+        self.hangup_channel_c()
+        return
 
     def check_bridge_error(self, reason):
         logger.error(reason.getTraceback())

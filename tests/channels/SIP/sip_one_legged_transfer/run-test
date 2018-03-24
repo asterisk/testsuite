@@ -16,7 +16,6 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 from asterisk.test_case import TestCase
-from asterisk.version import AsteriskVersion
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,10 +44,9 @@ class OneLeggedTransfer(TestCase):
     def ami_connect(self, ami):
         TestCase.ami_connect(self, ami)
 
-        # register for BridgeEnter and BridgeLeave events for later versions
-        if AsteriskVersion() >= AsteriskVersion('12'):
-            ami.registerEvent('BridgeEnter', self.handle_bridge_enter)
-            ami.registerEvent('BridgeLeave', self.handle_bridge_leave)
+        # register for BridgeEnter and BridgeLeave events
+        ami.registerEvent('BridgeEnter', self.handle_bridge_enter)
+        ami.registerEvent('BridgeLeave', self.handle_bridge_leave)
 
         # start up the processes
         self.startProcesses()
@@ -76,43 +74,17 @@ class OneLeggedTransfer(TestCase):
         channel = event['channel']
         self.bridges[bridge].remove(channel)
 
-    def checkBridgeResult(self, results):
-        LOGGER.debug('Result %s' % str(results))
-        for result in results:
-            if "bridgedchannel" not in result:
-                LOGGER.debug("bridgedchannel was not a valid key; checking for link")
-                if "link" not in result:
-                    LOGGER.warn("'link' and 'bridgedchannel' not found")
-                elif result['link'] == OneLeggedTransfer.a_channel: # check link for older versions of asterisk
-                    self.passed = True
-            elif result['bridgedchannel'] == OneLeggedTransfer.a_channel:
+    def amiCheckBridge(self):
+        '''Check whether A and C are bridged.'''
+        LOGGER.debug("Get AMI results")
+        for channels in self.bridges.values():
+            if OneLeggedTransfer.a_channel in channels and OneLeggedTransfer.c_channel in channels:
                 self.passed = True
 
         if self.passed == True:
             LOGGER.debug("Found Bridge!!!")
         else:
             LOGGER.warn("Detecting Bridge failed")
-
-
-    def checkBridgeError(self, reason):
-        LOGGER.error(reason.getTraceback())
-        LOGGER.error("Checking Bridge failed.  Channel did not exist.")
-        reactor.callLater(1, self.readResult)
-
-    def amiCheckBridge(self):
-        '''Check whether A and C are bridged.'''
-        LOGGER.debug("Get AMI results")
-        if AsteriskVersion() >= AsteriskVersion('12'):
-            for channels in self.bridges.values():
-                if OneLeggedTransfer.a_channel in channels and OneLeggedTransfer.c_channel in channels:
-                    self.passed = True
-
-            if self.passed == True:
-                LOGGER.debug("Found Bridge!!!")
-            else:
-                LOGGER.warn("Detecting Bridge failed")
-        else:
-            self.ami[0].status(OneLeggedTransfer.c_channel).addCallbacks(self.checkBridgeResult, self.checkBridgeError)
         self.reset_timeout()
 
     def cCallB(self):

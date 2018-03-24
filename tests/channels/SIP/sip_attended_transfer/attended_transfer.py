@@ -10,7 +10,6 @@ import logging
 import pjsua as pj
 import sys
 
-from version import AsteriskVersion
 from twisted.internet import reactor
 
 LOGGER = logging.getLogger(__name__)
@@ -141,83 +140,6 @@ class BridgeStateTwelve(object):
         return self.bridge2.bridged
 
 
-class BridgeStateEleven(object):
-    '''Tracker of bridge state for Asterisk 11-
-
-    Since in Asterisk versions prior to 12, there are no bridge objects, the
-    only way we can track the state of bridges in Asterisk is via Bridge events
-    and our own channel count. We count unique bridges by using the "channel2"
-    header in Bridge events from Asterisk.
-    '''
-    def __init__(self, test_object, controller, ami):
-        self.test_object = test_object
-        self.controller = controller
-        self.ami = ami
-        self.bridge_channels = []
-        self.final_bridge_participants = 0
-
-        self.ami.registerEvent('Bridge', self.bridge)
-        self.ami.registerEvent('VarSet', self.bridge_peer)
-
-    def bridge(self, _, event):
-        '''AMI Bridge event callback.
-
-        The Bridge callback in Asterisk 11- can fire at seemingly random
-        times, but it always has two channels indicated in it. This function
-        will log each unique 'channel2' channel that it sees, and assume that
-        a newly-discovered 'channel2' indicates that a new bridge has been
-        formed.
-        '''
-
-        if event['channel2'] in self.bridge_channels:
-            LOGGER.debug('channel {0} already seen in previous Bridge event. '
-                         'Ignoring'.format(event['channel2']))
-            return
-
-        LOGGER.debug('New bridge between {0} and {1} detected'.format(
-            event['channel1'], event['channel2']))
-        self.bridge_channels.append(event['channel2'])
-        numchans = len(self.bridge_channels)
-        if numchans == 1:
-            LOGGER.debug('Bridge between Alice and Bob established')
-            self.controller.call_carol()
-        elif numchans == 2:
-            LOGGER.debug('Bridge between Alice and Carol established')
-            self.controller.transfer_call()
-
-    def bridge_peer(self, _, event):
-        '''AMI VarSet event callback.
-
-        We are interested in BRIDGEPEER settings. When we get a BRIDGEPEER
-        that indicates that Bob and Carol have been bridged, then we consider
-        the transfer to have succeeded
-        '''
-
-        if event['variable'] != "BRIDGEPEER" or len(self.bridge_channels) < 2:
-            return
-
-        LOGGER.debug("After transfer, {0} is bridged to {1}".format(
-            event['channel'], event['value']))
-
-        # We should get an event indicating that the Bob channel's
-        # BRIDGEPEER variable is set to Carol's channel, and vice versa
-        if self.bridge_channels[:2] == [event['channel'], event['value']] or\
-            self.bridge_channels[:2] == [event['value'], event['channel']]:
-            self.final_bridge_participants += 1
-            if self.final_bridge_participants == 2:
-                LOGGER.debug("Bob and Carol bridged. Scenario complete.")
-                # success!
-                self.controller.hangup_calls()
-
-    def bridge1_bridged(self):
-        '''Indicates that Alice and Bob have been bridged'''
-        return len(self.bridge_channels) == 1
-
-    def bridge2_bridged(self):
-        '''Indicates that Alice and Carol have been bridged'''
-        return len(self.bridge_channels) == 2
-
-
 class Transfer(object):
     '''Controller for attended transfer test
 
@@ -230,10 +152,7 @@ class Transfer(object):
         super(Transfer, self).__init__()
         self.ami = test_object.ami[0]
 
-        if AsteriskVersion() < AsteriskVersion('12'):
-            self.bridge_state = BridgeStateEleven(test_object, self, self.ami)
-        else:
-            self.bridge_state = BridgeStateTwelve(test_object, self, self.ami)
+        self.bridge_state = BridgeStateTwelve(test_object, self, self.ami)
 
         self.bob_call_answered = False
         self.carol_call_answered = False

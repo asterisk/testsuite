@@ -13,7 +13,6 @@ import logging
 import time
 
 sys.path.append("lib/python")
-from version import AsteriskVersion
 
 LOGGER = logging.getLogger(__name__)
 TOLERANCE = 1.0
@@ -52,15 +51,7 @@ class Tester(object):
         self.ami = ami
         self.ami.registerEvent('Hangup', self.log_hangup_time)
         self.ami.registerEvent('TestEvent', self.log_warnings)
-        if AsteriskVersion() >= AsteriskVersion('12'):
-            self.ami.registerEvent('BridgeEnter', self.log_bridge_enter_time)
-        else:
-            self.ami.registerEvent('Bridge', self.log_bridge_time)
-
-    def log_bridge_time(self, ami, event):
-        if not self.bridge_time:
-            self.bridge_time = time.time()
-            LOGGER.info("Bridge started at time %f" % self.bridge_time)
+        self.ami.registerEvent('BridgeEnter', self.log_bridge_enter_time)
 
     def log_bridge_enter_time(self, ami, event):
         self.bridge_enters_received += 1
@@ -100,8 +91,7 @@ class Tester(object):
             self.test_object.set_passed(False)
 
         max_triggers = 1
-        if self.current_call['hangup_style'] == 'BRIDGE_TIMELIMIT' \
-            and AsteriskVersion() >= AsteriskVersion('12'):
+        if self.current_call['hangup_style'] == 'BRIDGE_TIMELIMIT':
             max_triggers = 2
 
         if 1 != self.num_hangup_triggers and max_triggers != self.num_hangup_triggers:
