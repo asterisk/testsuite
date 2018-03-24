@@ -10,7 +10,6 @@ testinfo:
          * We ensure that both state changes result in individual NOTIFY requests from Asterisk.'
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python: 'twisted'

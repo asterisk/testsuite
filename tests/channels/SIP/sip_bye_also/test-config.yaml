@@ -39,7 +39,6 @@ sipp-config:
             Channel: '/Local.*;1/'
 
 properties:
-    minversion: '11.19.0'
     dependencies:
         - python: 'starpy'
         - sipp:

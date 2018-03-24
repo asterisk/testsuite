@@ -4,7 +4,6 @@ testinfo:
         'This test case verifies the DTMF INFO FALLBACK i.e fallback tO INFO instead of INBAND'
 
 properties:
-    minversion: [ '13.17.0', '14.6.0' ]
     dependencies:
         - app : 'sipp'
         - asterisk : 'res_pjsip'

@@ -9,7 +9,6 @@ testinfo:
         * failure to play a message with an invalid message ID specified
 
 properties:
-    minversion: '1.8.11-cert1'
     buildoption: 'TEST_FRAMEWORK'
     dependencies:
         - python : 'twisted'

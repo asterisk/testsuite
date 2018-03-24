@@ -12,7 +12,6 @@ testinfo:
         * Validate all the events
 
 properties:
-    minversion: '12.2.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

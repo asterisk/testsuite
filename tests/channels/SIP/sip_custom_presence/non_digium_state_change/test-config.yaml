@@ -6,7 +6,6 @@ testinfo:
         sent but that the device state updates are sent.'
 
 properties:
-    minversion: '11.0.0'
     dependencies:
         - app : 'sipp'
         - asterisk : 'chan_sip'

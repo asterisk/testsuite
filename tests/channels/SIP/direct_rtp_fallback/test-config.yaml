@@ -4,7 +4,6 @@ testinfo:
         "This test verifies that Asterisk will fall back to P2P bridging if a direct media reinvite fails and checks for conditions where such an event fails to clean up properly."
 
 properties:
-    minversion: '1.8.27.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

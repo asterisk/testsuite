@@ -111,7 +111,6 @@ ami-config:
         count: '4'
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - asterisk : 'res_pjsip'
     tags:

@@ -61,7 +61,6 @@ test-object-config:
                 - { 'key-args': {'scenario': 'srtp-invite-off-nominal-crypto.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 's', '-inf': 'inject_attrib_single_off_nominal.csv', '-m': '20'} }
 
 properties:
-    minversion: ['11.17.0','13.3.0']
     dependencies:
         - sipp :
             version : 'v3.0'

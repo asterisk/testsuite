@@ -41,7 +41,6 @@ hangup-monitor:
     ids: '0'
 
 properties:
-    minversion: '13.17.0'
     dependencies:
         - sipp:
             version: 'v3.0'

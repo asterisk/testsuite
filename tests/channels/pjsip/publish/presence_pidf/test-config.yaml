@@ -6,7 +6,6 @@ testinfo:
         If the PUBLISH messages are not received by the SIPp scenario then the test fails.'
 
 properties:
-    minversion: '14.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'

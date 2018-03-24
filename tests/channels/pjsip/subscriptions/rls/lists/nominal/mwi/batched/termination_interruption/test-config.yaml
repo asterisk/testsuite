@@ -8,7 +8,6 @@ testinfo:
          * The subscription termination causes an immediate NOTIFY to be sent.
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python: 'twisted'

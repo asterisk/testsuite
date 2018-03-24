@@ -4,7 +4,6 @@ testinfo:
         'This test verifies Call Parking by DTMF one-step, DTMF blind xfer, DTMF atxfer.  Also tests features findslot=next option.'
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

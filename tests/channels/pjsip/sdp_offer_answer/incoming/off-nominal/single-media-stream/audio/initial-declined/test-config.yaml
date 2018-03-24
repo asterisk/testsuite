@@ -27,7 +27,6 @@ test-object-config:
 
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'

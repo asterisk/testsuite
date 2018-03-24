@@ -78,7 +78,6 @@ ami-config:
                 Extension: 'external_replaces'
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

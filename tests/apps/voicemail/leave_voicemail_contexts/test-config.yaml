@@ -5,7 +5,6 @@ testinfo:
         other contexts when leaving a voicemail.
 
 properties:
-    minversion: '1.8.14.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

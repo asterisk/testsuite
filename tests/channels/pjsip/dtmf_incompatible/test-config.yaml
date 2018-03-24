@@ -5,7 +5,6 @@ testinfo:
          are connected the appropriate bridge type is chosen.'
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - app : 'sipp'
         - asterisk : 'res_pjsip'

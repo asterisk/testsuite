@@ -257,7 +257,6 @@ test-object-config:
                   expected-result: 'Requesting channel entered basic bridge.'
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         # Needed for the PLAYBACK event
         - buildoption: 'TEST_FRAMEWORK'

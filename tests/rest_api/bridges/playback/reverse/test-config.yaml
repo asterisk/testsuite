@@ -111,7 +111,6 @@ ami-config:
                 SkipMs: '3000'
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

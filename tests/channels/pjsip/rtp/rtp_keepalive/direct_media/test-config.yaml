@@ -25,7 +25,6 @@ sipp-config:
                 - { 'key-args': {'scenario': 'alice.xml', '-s': 'call_bob', '-d': '10000', '-p': '5061'} }
 
 properties:
-    minversion: '13.6.0'
     dependencies:
         - sipp:
             version: 'v3.0'

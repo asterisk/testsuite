@@ -38,7 +38,6 @@ originator-config:
     async: True
 
 properties:
-    minversion: '14.0.0'
     dependencies:
         - python: 'autobahn.websocket'
         - python: 'starpy'

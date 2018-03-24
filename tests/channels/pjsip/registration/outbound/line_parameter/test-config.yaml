@@ -8,7 +8,6 @@ testinfo:
          directs it to the expected position in the dialplan.'
 
 properties:
-    minversion: '13.4.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

@@ -5,7 +5,6 @@ testinfo:
         the expected StatsD statistics are generated as a result.'
 
 properties:
-    minversion: ['13.14.0', '14.3.0']
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

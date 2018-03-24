@@ -7,7 +7,6 @@ testinfo:
         * Verify that we don't receive any further events
 
 properties:
-    minversion: '14.0.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

@@ -59,7 +59,6 @@ ami-config:
         count: '1'
 
 properties:
-    minversion: '14.0.0'
     tags:
       - playback
       - apps

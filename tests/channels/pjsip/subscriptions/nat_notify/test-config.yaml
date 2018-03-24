@@ -40,7 +40,6 @@ ami-action-config:
                     NewMessages: '1'
 
 properties:
-    minversion: '13.4.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

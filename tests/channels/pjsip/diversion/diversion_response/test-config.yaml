@@ -7,7 +7,6 @@ testinfo:
          response coming from user2 contains a diversion header.'
 
 properties:
-    minversion: '12'
     dependencies:
         - app : 'sipp'
         - asterisk : 'app_dial'

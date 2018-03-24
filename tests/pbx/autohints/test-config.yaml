@@ -6,7 +6,6 @@ testinfo:
         then receive an event about it.
 
 properties:
-    minversion: '14.0.0'
 
 test-modules:
     test-object:

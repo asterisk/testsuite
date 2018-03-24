@@ -47,7 +47,6 @@ pluggable-config:
         stop_test:
 
 properties:
-    minversion: '13.15.0'
     dependencies:
         - sipp:
             version: 'v3.0'

@@ -47,7 +47,6 @@ pjsua-config:
             transport: 'local-ipv4'
 
 properties:
-    minversion: '1.8.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

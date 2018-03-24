@@ -369,7 +369,6 @@ test-object-config:
                   expected-result: 'Phase 3: Profile Specified Leave Event received'
 
 properties:
-    minversion: '13.0.0'
     tags:
       - confbridge
       - apps

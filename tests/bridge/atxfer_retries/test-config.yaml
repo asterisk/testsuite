@@ -185,7 +185,6 @@ app-config:
 
 
 properties:
-    minversion: '13.1.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'

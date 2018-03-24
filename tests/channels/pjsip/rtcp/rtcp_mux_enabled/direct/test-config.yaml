@@ -56,6 +56,5 @@ originator-config:
     trigger: 'ami_connect'
 
 properties:
-    minversion: '13.15.0'
     dependencies:
         - asterisk : 'res_pjsip'

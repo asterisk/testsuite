@@ -17,7 +17,6 @@ test-object-config:
                 - { 'key-args': {'scenario': 'uac-codec-mismatch.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'
