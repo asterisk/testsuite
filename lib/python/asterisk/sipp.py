@@ -10,12 +10,12 @@ the GNU General Public License Version 2.
 """
 
 import logging
-import test_suite_utils
+from . import test_suite_utils
 
 from abc import ABCMeta, abstractmethod
 from twisted.internet import reactor, defer, protocol, error
-from test_case import TestCase
-from utils_socket import get_available_port
+from .test_case import TestCase
+from .utils_socket import get_available_port
 
 LOGGER = logging.getLogger(__name__)
 
@@ -495,7 +495,7 @@ class SIPpProtocol(protocol.ProcessProtocol):
     def outReceived(self, data):
         """Override of ProcessProtocol.outReceived"""
         LOGGER.debug("Received from SIPp scenario %s: %s" % (self._name, data))
-        self.output += data
+        self.output += data.decode('utf-8', 'ignore')
 
     def connectionMade(self):
         """Override of ProcessProtocol.connectionMade"""

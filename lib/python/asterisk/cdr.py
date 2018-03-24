@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Asterisk call detail record testing
 
 This module implements an Asterisk CDR parser.
@@ -10,9 +9,8 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
 
-import unittest
 import sys
-import astcsv
+from . import astcsv
 import logging
 
 LOGGER = logging.getLogger(__name__)
@@ -137,33 +135,5 @@ class AsteriskCSVCDR(astcsv.AsteriskCSV):
             self, filename, records,
             AsteriskCSVCDRLine.fields, AsteriskCSVCDRLine)
 
-
-class AsteriskCSVCDRTests(unittest.TestCase):
-    """Unit tests for AsteriskCSVCDR"""
-
-    def test_cdr(self):
-        """Test the self_test/Master.csv record"""
-
-        cdr = AsteriskCSVCDR("self_test/Master.csv")
-        self.assertEqual(len(cdr), 2)
-        self.assertTrue(
-            AsteriskCSVCDRLine(duration=7, lastapp="hangup").match(
-                cdr[0],
-                exact=(True, True)))
-        self.assertTrue(cdr[0].match(
-            AsteriskCSVCDRLine(duration=7, lastapp="hangup"),
-            exact=(True, True)))
-
-        self.assertFalse(cdr[1].match(cdr[0]))
-        self.assertFalse(cdr[0].match(cdr[1]))
-        self.assertEqual(cdr[0].billsec, "7")
-
-        self.assertTrue(cdr.match(cdr))
-        cdr2 = AsteriskCSVCDR("self_test/Master2.csv")
-        self.assertFalse(cdr.match(cdr2))
-
-
-if __name__ == '__main__':
-    unittest.main()
 
 # vim:sw=4:ts=4:expandtab:textwidth=79

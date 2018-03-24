@@ -13,8 +13,8 @@ import logging
 
 sys.path.append("lib/python")
 
-from test_case import TestCase
-from syncami import SyncAMI
+from asterisk.test_case import TestCase
+from asterisk.syncami import SyncAMI
 
 LOGGER = logging.getLogger(__name__)
 

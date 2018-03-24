@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Asterisk CSV-based testing
 
 This module implements the basic CSV testing backend for things like
@@ -11,7 +10,6 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
 
-import unittest
 import sys
 import csv
 import re
@@ -57,10 +55,10 @@ class AsteriskCSVLine(object):
         else:
             cmp_fn = (lambda x, y: str(x).lower() == str(y).lower())
 
-        for key, value in self.iteritems():
+        for key, value in self.items():
             if None not in (value, other.get(key)) and not cmp_fn(value, other.get(key)):
                 if not silent:
-                    LOGGER.warn("CSV MATCH FAILED, Expected: %s: '%s' "
+                    LOGGER.warning("CSV MATCH FAILED, Expected: %s: '%s' "
                                 "Got: %s: '%s'" % (key, value, key,
                                                    other.get(key)))
                 return False
@@ -70,9 +68,9 @@ class AsteriskCSVLine(object):
         """Retrieve a value from the specified column key"""
         return self.__columns.get(key)
 
-    def iteritems(self):
+    def items(self):
         """Iterate over the values in the columns"""
-        return self.__columns.iteritems()
+        return self.__columns.items()
 
     def __str__(self):
         return ",".join(["\"%s\"" % (self.__dict__[x]) for x in self.__fields])
@@ -94,12 +92,14 @@ class AsteriskCSV(object):
         self.__records = []
 
         csvreader = None
+        csvfile = None
 
         try:
-            csvreader = csv.DictReader(open(self.filename, "r"), fields, ",")
-        except IOError as (errno, strerror):
+            csvfile = open(self.filename, "r")
+            csvreader = csv.DictReader(csvfile, fields, ",")
+        except IOError as e:
             LOGGER.error("IOError %d[%s] while opening file '%s'" %
-                         (errno, strerror, self.filename))
+                         (e.errno, e.strerror, self.filename))
         except:
             LOGGER.error("Unexpected error: %s" % (sys.exc_info()[0]))
 
@@ -110,6 +110,8 @@ class AsteriskCSV(object):
         for row in csvreader:
             record = self.row_factory(**row)
             self.__records.append(record)
+
+        csvfile.close()
 
     def __len__(self):
         return len(self.__records)
@@ -125,7 +127,7 @@ class AsteriskCSV(object):
         each record"""
 
         if not partial and (len(self) != len(other)):
-            LOGGER.warn("CSV MATCH FAILED, different number of records, "
+            LOGGER.warning("CSV MATCH FAILED, different number of records, "
                         "self=%d and other=%d" % (len(self), len(other)))
             return False
 
@@ -147,7 +149,7 @@ class AsteriskCSV(object):
             size = len(list_a)
 
             # attempt two orderings: forward and reversed
-            guess_orders = (range(size), list(reversed(range(size))))
+            guess_orders = (list(range(size)), list(reversed(range(size))))
             found_orders = []
 
             for guess_order in guess_orders:
@@ -185,7 +187,7 @@ class AsteriskCSV(object):
             # have it complain immediately.
             for i, item in enumerate(self):
                 if not item.match(other[i], exact=exactness):
-                    LOGGER.warn("Failed to match entry %d" % (i,))
+                    LOGGER.warning("Failed to match entry %d" % (i,))
                     return False
             assert False
 
@@ -193,7 +195,7 @@ class AsteriskCSV(object):
             pass  # joy!
 
         elif len(matches) > 1:
-            LOGGER.warn("More than one CSV permutation results in success")
+            LOGGER.warning("More than one CSV permutation results in success")
 
         return True
 
@@ -205,9 +207,6 @@ class AsteriskCSV(object):
         try:
             open(self.filename, "w").close()
         except:
-            LOGGER.warn("Unable to empty CSV file %s" % (self.filename))
-
-if __name__ == '__main__':
-    unittest.main()
+            LOGGER.warning("Unable to empty CSV file %s" % (self.filename))
 
 # vim:sw=4:ts=4:expandtab:textwidth=79

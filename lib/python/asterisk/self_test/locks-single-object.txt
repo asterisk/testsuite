@@ -1,0 +1,6 @@
+=== Thread ID: 0x402c6940 (do_monitor           started at [25114] chan_sip.c restart_monitor())
+=== ---> Lock #0 (chan_sip.c): MUTEX 24629 handle_request_do &netlock 0x2aaabe671a40 (1)
+/usr/local/asterisk-1.8.6.0/sbin/asterisk(ast_bt_get_addresses+0x1a) [0x4e9679]
+/usr/local/asterisk-1.8.6.0/sbin/asterisk(__ast_pthread_mutex_lock+0xf6) [0x4e22d9]
+/usr/local/asterisk-1.8.6.0/lib/asterisk/modules/chan_sip.so [0x2aaabe423ee8]
+=== --- ---> Locked Here: channel.c line 4304 (ast_indicate_data)

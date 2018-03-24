@@ -9,13 +9,17 @@ the GNU General Public License Version 2.
 """
 
 import logging
+import sys
 
-from test_suite_utils import all_match
-from pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
-    PLUGGABLE_ACTION_REGISTRY
+from .test_runner import load_and_parse_module
+from .test_suite_utils import all_match
+from .pluggable_registry import PLUGGABLE_EVENT_REGISTRY
 
 
 LOGGER = logging.getLogger(__name__)
+
+if sys.version_info[0] == 3:
+    unicode = str
 
 
 class ConditionError(Exception):
@@ -217,7 +221,6 @@ class Conditions(object):
 
             matched.append(c)
 
-
         if not matched:
             return False
 
@@ -315,13 +318,9 @@ class PluggableConditionsEventModule(object):
 
         self.triggered_callback = triggered_callback
 
-        module_name, _, obj_type = config['type'].partition('.')
-
-        module = __import__(module_name, fromlist=[obj_type])
-        if not module:
-            raise Exception("Unable to import module '{0}'.".format(module_name))
-
-        obj = getattr(module, obj_type)
+        obj = load_and_parse_module(config['type'])
+        if not obj:
+            raise Exception("Unable to import module '{0}'.".format(config['type']))
 
         self.conditions = obj(config, test_object, self.__handle_match)
 

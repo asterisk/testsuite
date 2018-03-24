@@ -8,7 +8,7 @@ the GNU General Public License Version 2.
 '''
 
 import logging
-from test_case import TestCase
+from asterisk.test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
 

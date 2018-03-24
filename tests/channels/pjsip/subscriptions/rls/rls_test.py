@@ -13,7 +13,7 @@ import logging
 sys.path.append("lib/python")
 sys.path.append("tests/channels/pjsip/subscriptions/rls")
 
-from pcap import VOIPProxy
+from asterisk.pcap import VOIPProxy
 from rls_element import RLSPacket
 from rls_validation import ValidationInfo
 from twisted.internet import reactor

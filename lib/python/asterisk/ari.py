@@ -12,12 +12,16 @@ import logging
 import re
 import requests
 import traceback
-import urllib
+try:
+    from urllib.parse import urlencode
+except:
+    from urllib import urlencode
 
-from test_case import TestCase
-from pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
+from .test_case import TestCase
+from .test_runner import load_and_parse_module
+from .pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
     PLUGGABLE_ACTION_REGISTRY, var_replace
-from test_suite_utils import all_match
+from .test_suite_utils import all_match
 from twisted.internet import reactor
 try:
     from autobahn.websocket import WebSocketClientFactory, \
@@ -332,7 +336,7 @@ class AriClientFactory(WebSocketClientFactory):
         """
         url = "ws://%s:%d/ari/events?%s" % \
               (host, port,
-               urllib.urlencode({'app': apps, 'api_key': '%s:%s' % userpass}))
+               urlencode({'app': apps, 'api_key': '%s:%s' % userpass}))
         if subscribe_all:
             url += '&subscribeAll=true'
         LOGGER.info("WebSocketClientFactory(url=%s)", url)
@@ -560,7 +564,7 @@ class ARIRequest(object):
         url = self.ari.build_url(uri)
         requests_method = getattr(requests, self.method)
         params = dict((key, var_replace(val, values))
-                      for key, val in self.params.iteritems())
+                      for key, val in self.params.items())
 
         response = requests_method(
             url,
@@ -580,7 +584,7 @@ class ARIRequest(object):
                              response.status_code, response.text)
                 return False
         else:
-            if response.status_code / 100 != 2:
+            if response.status_code // 100 != 2:
                 LOGGER.error('sent %s %s %s response %d %s',
                              self.method, self.uri, self.params,
                              response.status_code, response.text)
@@ -606,8 +610,7 @@ class EventMatcher(object):
 
         callback = self.instance_config.get('callback')
         if callback:
-            module = __import__(callback['module'])
-            self.callback = getattr(module, callback['method'])
+            self.callback = load_and_parse_module(callback['module'] + '.' + callback['method'])
         else:
             # No callback; just use a no-op
             self.callback = lambda *args, **kwargs: True

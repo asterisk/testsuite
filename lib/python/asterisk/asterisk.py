@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Asterisk Instances in Python.
 
 This module provides an interface for creating instances of Asterisk
@@ -18,9 +17,9 @@ import shutil
 import logging
 import fileinput
 
-import test_suite_utils
+from . import test_suite_utils
 
-from config import ConfigFile
+from .config import ConfigFile
 
 from twisted.internet import reactor, protocol, defer, utils, error
 from twisted.python.failure import Failure
@@ -54,7 +53,7 @@ class AsteriskRemoteProtocol(protocol.Protocol):
     def dataReceived(self, data):
         """Called when we receive data back"""
         LOGGER.debug(data)
-        self.output += data
+        self.output += data.decode('utf-8', 'ignore')
 
     def connectionLost(self, reason):
         """Called when the connect is lost"""
@@ -206,7 +205,8 @@ class AsteriskCliCommand(object):
     def _set_properties(self, result):
         """Set the properties based on the result of the
         getProcessOutputAndValue call"""
-        self.output, self.err, self.exitcode = result
+        bintxt, self.err, self.exitcode = result
+        self.output = bintxt.decode('utf-8', 'ignore')
 
 
 class AsteriskProtocol(protocol.ProcessProtocol):
@@ -232,7 +232,7 @@ class AsteriskProtocol(protocol.ProcessProtocol):
 
     def outReceived(self, data):
         """Override of ProcessProtocol.outReceived"""
-        self.output += data
+        self.output += data.decode('utf-8', 'ignore')
 
     def connectionMade(self):
         """Override of ProcessProtocol.connectionMade"""
@@ -311,20 +311,6 @@ class Asterisk(object):
     we're not running into the asterisk.ctl AF_UNIX limit.
     """
 
-    def compare_free_space(x, y):
-        if os.stat(y).st_dev == os.stat(x).st_dev:
-            return 0
-        # statvfs can return a long; comparison functions must return an
-        # int.  Where both are same filesystem, bavail might change from
-        # one call to the next, but hopefully it is not more than 1000.
-        difference = os.statvfs(y).f_bavail - os.statvfs(x).f_bavail
-        if (difference > 1000):
-            return 1
-        elif (difference < 1000):
-            return -1
-        else:
-            return 0
-
     localtest_root = os.getenv("AST_TEST_ROOT")
     if localtest_root:
         # Base location of the temporary files created by the testsuite
@@ -333,7 +319,7 @@ class Asterisk(object):
         default_etc_directory = os.path.join(localtest_root, "etc/asterisk")
     else:
         # select tmp path with most available space
-        best_tmp = sorted(['/tmp', '/var/tmp'], cmp=compare_free_space)[0]
+        best_tmp = sorted(['/tmp', '/var/tmp'], key=lambda path: os.statvfs(path).f_bavail)[0]
         # Base location of the temporary files created by the testsuite
         test_suite_root = best_tmp + "/asterisk-testsuite"
         # The default etc directory for Asterisk
@@ -955,7 +941,7 @@ class Asterisk(object):
                 ast_file.write("#include \"%s/asterisk.options.conf.inc\"\n" %
                                (self.astetcdir))
                 if ast_conf_options:
-                    for (var, val) in ast_conf_options.iteritems():
+                    for (var, val) in ast_conf_options.items():
                         ast_file.write("%s = %s\n" % (var, val))
                 for (var, val) in cat.options:
                     if not ast_conf_options or var not in ast_conf_options:

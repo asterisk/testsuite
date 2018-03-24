@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Pluggable module registries
 
 Copyright (C) 2014, Digium, Inc.

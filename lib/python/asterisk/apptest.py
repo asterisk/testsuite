@@ -18,8 +18,8 @@ import uuid
 from twisted.internet import reactor, defer
 
 sys.path.append("lib/python")
-from test_case import TestCase
-from ami import AMIEventInstance
+from .test_case import TestCase
+from .ami import AMIEventInstance
 
 LOGGER = logging.getLogger(__name__)
 
@@ -165,7 +165,7 @@ class AppTest(TestCase):
         A Scenario is considered done if all results have been met and
         all expected actions have been executed.
         """
-        return (all(self._expected_results.itervalues()) and
+        return (all(self._expected_results.values()) and
                 all(i.ran_actions or i.unexpected
                     for i in self._event_instances))
 

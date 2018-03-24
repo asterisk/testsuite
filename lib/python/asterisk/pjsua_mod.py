@@ -17,6 +17,7 @@ import pjsua as pj
 sys.path.append("lib/python")
 
 from twisted.internet import reactor
+from .test_runner import load_and_parse_module
 
 LOGGER = logging.getLogger(__name__)
 
@@ -147,7 +148,7 @@ class PJsua(object):
             self.lib.set_null_snd_dev()
             self.__create_accounts()
             self.lib.start()
-        except pj.Error, exception:
+        except pj.Error as exception:
             LOGGER.error("Exception: " + str(exception))
             self.lib.destroy()
             self.lib = None
@@ -306,6 +307,5 @@ class PJsua(object):
 
     def do_callback(self):
         """Call the configured callback module/method"""
-        callback_module = __import__(self.callback_module)
-        callback_method = getattr(callback_module, self.callback_method)
+        callback_method = load_and_parse_module(self.callback_module + '.' + self.callback_method)
         callback_method(self.test_object, self.pj_accounts)

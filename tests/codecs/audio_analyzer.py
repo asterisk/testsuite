@@ -13,8 +13,8 @@ import sys
 import logging
 from twisted.internet import reactor
 
-import ami
-import ari
+from asterisk import ami
+from asterisk import ari
 import tonetest
 
 sys.path.append("lib/python")

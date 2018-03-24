@@ -13,8 +13,8 @@ import logging
 import time
 
 sys.path.append("lib/python")
-from cdr import CDRModule
-from cdr import AsteriskCSVCDR
+from asterisk.cdr import CDRModule
+from asterisk.cdr import AsteriskCSVCDR
 
 LOGGER = logging.getLogger(__name__)
 
