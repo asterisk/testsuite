@@ -31,7 +31,6 @@ sipp-config:
                 - { 'key-args': {'scenario': 'bob.xml', '-p': '5062' } }
 
 properties:
-    minversion: '13.6.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

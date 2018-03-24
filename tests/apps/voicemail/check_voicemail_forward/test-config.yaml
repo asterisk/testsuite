@@ -5,7 +5,6 @@ testinfo:
         voicemail users from their voicemail mailbox.
 
 properties:
-    minversion: '1.8.0.0'
     buildoption: 'TEST_FRAMEWORK'
     dependencies:
         - python : 'twisted'

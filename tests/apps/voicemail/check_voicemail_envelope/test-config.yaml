@@ -7,7 +7,6 @@ testinfo:
         to the person listening to the voicemail.
 
 properties:
-    minversion: '1.8.0.0'
     buildoption: 'TEST_FRAMEWORK'
     dependencies:
         - python : 'twisted'

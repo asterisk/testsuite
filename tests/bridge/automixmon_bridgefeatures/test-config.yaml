@@ -230,7 +230,6 @@ cel-config:
                     EventName: 'LINKEDID_END'
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'

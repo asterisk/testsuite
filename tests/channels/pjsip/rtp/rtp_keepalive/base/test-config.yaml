@@ -26,7 +26,6 @@ sipp-config:
                 - { 'key-args': {'scenario': 'uac.xml', '-s': 'echo', '-d': '10000'} }
 
 properties:
-    minversion: '13.6.0'
     dependencies:
         - sipp:
             version: 'v3.0'

@@ -6,7 +6,6 @@ testinfo:
          with a 603 response'
 
 properties:
-    minversion: '12.1.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

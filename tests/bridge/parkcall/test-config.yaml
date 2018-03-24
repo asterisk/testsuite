@@ -17,7 +17,6 @@ test-modules:
     modules:
 
         -
-            minversion: '12.0.0'
             config-section: 'cdr-config-12plus'
             typename: 'cdr.CDRModule'
 

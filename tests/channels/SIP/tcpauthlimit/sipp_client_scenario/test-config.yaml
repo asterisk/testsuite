@@ -10,7 +10,6 @@ testinfo:
         only n of these scenarios will pass, while the remaining n will fail.
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - asterisk: 'chan_sip'
         - python: 'autobahn.websocket'

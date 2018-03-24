@@ -129,7 +129,6 @@ ari-test-stopper:
 
 
 properties:
-    minversion: '12.5.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

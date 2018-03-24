@@ -54,7 +54,6 @@ hangup-config:
     ids: ['0']
 
 properties:
-    minversion: '13.4.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

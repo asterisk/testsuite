@@ -172,7 +172,6 @@ test-object-config:
 
 
 properties:
-    minversion: '11.9.0'
     tags:
         - confbridge
         - apps

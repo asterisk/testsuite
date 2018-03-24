@@ -28,7 +28,6 @@ bridge-config:
         originate_channel: 'SIP/uut/no_warning_s'
 
 properties:
-    minversion: '11.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

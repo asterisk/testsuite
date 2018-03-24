@@ -7,7 +7,6 @@ testinfo:
         Asterisk does not misidentify and reject a correct configuration.
 
 properties:
-    minversion: '13.4.0'
     dependencies:
         - asterisk: 'res_pjsip'
         - python: 'autobahn.websocket'

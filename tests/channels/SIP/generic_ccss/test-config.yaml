@@ -3,7 +3,6 @@ testinfo:
     description: 'Test generic SIP CCSS and usage of macro and subroutine callbacks.'
 
 properties:
-    minversion: '11.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

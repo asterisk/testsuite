@@ -47,7 +47,6 @@ ari-config:
                 method: on_channel_destroyed
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

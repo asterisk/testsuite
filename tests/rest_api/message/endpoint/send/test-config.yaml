@@ -46,7 +46,6 @@ message-sender:
                 X-Awesome-Header: 'Everything is awesome'
 
 properties:
-    minversion: '12.5.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

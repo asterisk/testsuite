@@ -194,7 +194,6 @@ test-object-config:
                   expected-result: 'Channel test_privacy hungup a second time'
 
 properties:
-    minversion: '13.12.0'
     tags:
       - apps
       - dial

@@ -51,7 +51,6 @@ ami-object-config:
 
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

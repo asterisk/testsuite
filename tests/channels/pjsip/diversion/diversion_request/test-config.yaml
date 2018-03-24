@@ -5,7 +5,6 @@ testinfo:
         'user1 calls user2 with an invite containing a diversion header.'
 
 properties:
-    minversion: '12'
     dependencies:
         - app : 'sipp'
         - asterisk : 'app_dial'

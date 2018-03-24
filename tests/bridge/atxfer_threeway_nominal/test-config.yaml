@@ -106,7 +106,6 @@ hangup-config:
             Value: '(SIP/bob-.{8},SIP/alice-.{8}|SIP/alice-.{8},SIP/bob-.{8})'
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'

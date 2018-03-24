@@ -14,7 +14,6 @@ testinfo:
         '
 
 properties:
-    minversion: '13.11.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

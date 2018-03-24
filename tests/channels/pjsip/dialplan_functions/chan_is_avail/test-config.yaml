@@ -5,7 +5,6 @@ testinfo:
         hangs it up without dialing that the session is properly cleaned up.
 
 properties:
-    minversion: '13.16.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - sipp :

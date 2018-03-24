@@ -57,7 +57,6 @@ cdr-config:
                 amaflags: 'DOCUMENTATION'
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

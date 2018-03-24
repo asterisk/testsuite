@@ -117,7 +117,6 @@ hangup-config:
             Channel: 'Local/alice@default-.*|Local/bob@default-.*'
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - asterisk : 'app_dial'
         - asterisk : 'app_echo'

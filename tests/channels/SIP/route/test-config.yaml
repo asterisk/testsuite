@@ -5,7 +5,6 @@ testinfo:
         Test includes loose and strict routes.'
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

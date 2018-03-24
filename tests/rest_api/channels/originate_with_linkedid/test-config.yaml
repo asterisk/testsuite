@@ -9,7 +9,6 @@ testinfo:
         * Check that the CEL events for the second channel contain the unique id of the first channel as the linked id
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

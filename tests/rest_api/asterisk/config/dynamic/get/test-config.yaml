@@ -9,7 +9,6 @@ testinfo:
         - Nominal retrieval of an object statically created
 
 properties:
-    minversion: '13.5.0'
     dependencies:
         - python: autobahn.websocket
         - python: requests

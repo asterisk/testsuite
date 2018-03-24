@@ -5,7 +5,6 @@ testinfo:
         'This test verifies the Blind Transfer routine with parkingtimeout used in the feature code.'
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

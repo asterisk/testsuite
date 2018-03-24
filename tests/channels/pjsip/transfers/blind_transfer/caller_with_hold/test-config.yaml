@@ -11,7 +11,6 @@ testinfo:
         along with Bob being placed on hold and taken off hold appropriately.'
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

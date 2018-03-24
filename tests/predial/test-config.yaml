@@ -6,7 +6,6 @@ testinfo:
         predial routines are called.'
 
 properties:
-    minversion: '11.0.0'
     dependencies:
         - asterisk: 'app_dial'
         - asterisk: 'app_followme'

@@ -5,7 +5,6 @@ testinfo:
          then the request should be rejected with a 489 response'
 
 properties:
-    minversion: '12.1.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

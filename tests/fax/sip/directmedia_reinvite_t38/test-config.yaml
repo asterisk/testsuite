@@ -21,7 +21,6 @@ test-object-config:
                 - { 'key-args': {'scenario': 'endpoint_B.xml', '-i': '127.0.0.3', '-p': '5060', '-inf': 'inject_bridge.csv'} }
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - sipp:
             version: 'v3.0'

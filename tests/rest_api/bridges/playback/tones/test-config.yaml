@@ -13,7 +13,6 @@ testinfo:
         * Validate all the events
 
 properties:
-    minversion: '12.3.0'
     dependencies:
         - python: autobahn.websocket
         - python: requests
@@ -123,7 +122,6 @@ ari-config:
                 method: on_channel_left_bridge
 
 properties:
-    minversion: '12.3.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

@@ -154,7 +154,6 @@ test-object-config:
                   expected-result: 'S3 is hanging up'
 
 properties:
-    minversion: '11.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'

@@ -10,7 +10,6 @@ testinfo:
         the list should increment for each NOTIFY body.'
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

@@ -5,7 +5,6 @@ testinfo:
          from one client to another.'
 
 properties:
-    minversion: '12'
     dependencies:
         - app : 'sipp'
         - asterisk : 'res_pjsip'

@@ -67,7 +67,6 @@ hangup-monitor:
     ids: '0'
 
 properties:
-    minversion: 13.10.0
     tags:
         - confbridge
         - apps

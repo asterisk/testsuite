@@ -5,7 +5,6 @@ testinfo:
         that proper template substitution is done.
 
 properties:
-    minversion: '12.7.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

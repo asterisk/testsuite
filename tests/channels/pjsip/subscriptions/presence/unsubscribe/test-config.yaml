@@ -6,7 +6,6 @@ testinfo:
         ensures that alice successfully un-subscribed from bob.'
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

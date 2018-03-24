@@ -101,7 +101,6 @@ ari-config:
                 method: on_end
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

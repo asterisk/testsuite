@@ -26,7 +26,6 @@ test-object-config:
                 - { 'key-args': {'scenario': 'alice.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
 
 properties:
-    minversion: '13.3.0'
     dependencies:
         - sipp :
             version : 'v3.0'

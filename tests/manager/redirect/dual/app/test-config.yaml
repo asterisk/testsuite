@@ -6,7 +6,6 @@ testinfo:
         make sure no surrogate channels are hanging around.
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

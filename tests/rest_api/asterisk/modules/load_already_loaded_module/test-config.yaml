@@ -39,7 +39,6 @@ ari-config:
                     uri: 'channels/{channel.id}'
 
 properties:
-    minversion: '13.5.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

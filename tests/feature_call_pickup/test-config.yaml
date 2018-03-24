@@ -5,7 +5,6 @@ testinfo:
         Answer a call to a channel that is assigned to its pickupgroup.'
 
 properties:
-    minversion: '11.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

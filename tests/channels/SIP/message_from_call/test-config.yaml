@@ -5,7 +5,6 @@ testinfo:
          from the dialplan processing that call.'
 
 properties:
-    minversion: '10.0.0'
     dependencies:
         - app : 'sipp'
         - asterisk : 'chan_sip'
