@@ -458,9 +458,7 @@ testinfo:
 # The properties section contains information about requirements and
 # dependencies for this test.
 properties:
-    minversion : '1.8.0.0' # minimum Asterisk version compatible with this test
     buildoption : 'TEST_FRAMEWORK' # OPTIONAL - Asterisk compilation flag
-    maxversion : '10.5.1' # OPTIONAL
     features:
         # List features the Asterisk version under test must support for this test
         # to execute.  All features must be satisfied for the test to run.

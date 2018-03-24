@@ -17,7 +17,6 @@ from twisted.internet import reactor
 sys.path.append("lib/python")
 
 from asterisk.test_case import TestCase
-from asterisk.version import AsteriskVersion
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,10 +38,7 @@ class BridgeTransferTest(TestCase):
         """ Register for all events we care about """
 
         ami.registerEvent("UserEvent", self.user_event)
-        if AsteriskVersion() >= AsteriskVersion('12'):
-            ami.registerEvent("BridgeEnter", self.bridge_enter_event)
-        else:
-            ami.registerEvent("BridgeExec", self.bridge_event)
+        ami.registerEvent("BridgeEnter", self.bridge_enter_event)
         #originate the bridgee
         df = ami.originate(channel = "Local/local@call1", exten = "call", context = "test_context", priority = 1)
         df.addErrback(self.handle_originate_failure)
@@ -91,16 +87,6 @@ class BridgeTransferTest(TestCase):
             LOGGER.info("All Bridge Transfer tests complete. Test Successful.")
             self.passed = True
             self.stop_reactor()
-
-    def bridge_event(self, ami, event):
-        if (event.get('response') == 'Success'):
-            channel = event.get('channel1')
-            if channel is not None:
-                ami.hangup(channel)
-            else:
-                LOGGER.error("bridge event didn't include a channel1. That's not supposed to happen.")
-        else:
-            LOGGER.error("A bridge failed. That's rather abnormal.")
 
     def bridge_enter_event(self, ami, event):
         if self.hangup_channel is None:

@@ -15,7 +15,6 @@ sys.path.append("lib/python")
 from asterisk.test_case import TestCase
 from asterisk.sipp import SIPpScenario
 from twisted.internet import reactor
-from asterisk.version import AsteriskVersion
 
 LOGGER = logging.getLogger(__name__)
 INJECT_FILE_BRIDGE = "inject_bridge.csv"
@@ -28,14 +27,6 @@ class SIPHold(TestCase):
         """ Constructor """
         TestCase.__init__(self)
         self.create_asterisk()
-
-        running_version = AsteriskVersion()
-
-        if (running_version < AsteriskVersion("12.0.0")):
-            #Pre-12
-            self.asterisk12Events = False
-        else:
-            self.asterisk12Events = True
 
         self.sipp_phone_a_scenario = {'scenario': 'phone_A.xml',
                                       '-i': '127.0.0.2',
@@ -59,11 +50,8 @@ class SIPHold(TestCase):
 
         ami.registerEvent('TestEvent', self.test_event_handler)
 
-        if self.asterisk12Events:
-            ami.registerEvent('MusicOnHoldStart', self.moh_start_event_handler)
-            ami.registerEvent('MusicOnHoldStop', self.moh_stop_event_handler)
-        else:
-            ami.registerEvent('MusicOnHold', self.moh_event_handler)
+        ami.registerEvent('MusicOnHoldStart', self.moh_start_event_handler)
+        ami.registerEvent('MusicOnHoldStop', self.moh_stop_event_handler)
 
         LOGGER.info("Starting SIP scenario")
         self.execute_scenario()
@@ -125,22 +113,6 @@ class SIPHold(TestCase):
         if self.check_list_success_events == 2:
             self.evaluate_success()
             self.stop_reactor()
-
-    def moh_event_handler(self, ami, event):
-        """ Reacts to MusicOnHold events (legacy events from Asterisk <= 11)
-
-        :param ami: AMI connection the event was received from
-        :param event: Event that was received
-        """
-        if event.get('state') == "Start":
-            LOGGER.debug("Received MOH start event")
-            self.moh_start_event = True
-        elif event.get('state') == "Stop":
-            LOGGER.debug("Received MOH stop event")
-            self.moh_stop_event = True
-            if self.check_list_success_events == 2:
-                self.evaluate_success()
-                self.stop_reactor()
 
     def run(self):
         """ Run the test and create an AMI connection """
