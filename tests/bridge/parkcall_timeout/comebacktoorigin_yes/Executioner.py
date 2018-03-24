@@ -14,8 +14,6 @@ sys.path.append("lib/python")
 
 LOGGER = logging.getLogger(__name__)
 
-from version import AsteriskVersion
-
 
 class Executioner(object):
     def __init__(self, module_config, test_object):
@@ -24,12 +22,6 @@ class Executioner(object):
         self.parked_channel = None
         test_object.register_ami_observer(self.ami_connect)
         self.test_object = test_object
-
-        running_version = AsteriskVersion()
-        if (running_version < AsteriskVersion("12.0.0")):
-            self.asterisk12Events = False
-        else:
-            self.asterisk12Events = True
 
         self.calls = []
         self.calls.append({'parker': 'SIP/alice', 'lot': 'parkinglot_test1',
@@ -82,13 +74,10 @@ class Executioner(object):
         if (event.get('status') != self.current_call['status']):
             num_failures += 1
 
-        if self.asterisk12Events:
-            # These values aren't set in Asterisk 11 when
-            # comebacktoorigin = yes, but they are in 12.
-            if (event.get('slot') != self.current_call['slot']):
-                num_failures += 1
-            if (event.get('lot') != self.current_call['lot']):
-                num_failures += 1
+        if (event.get('slot') != self.current_call['slot']):
+            num_failures += 1
+        if (event.get('lot') != self.current_call['lot']):
+            num_failures += 1
 
         if (num_failures):
             LOGGER.info("Failing event: %s" % event)

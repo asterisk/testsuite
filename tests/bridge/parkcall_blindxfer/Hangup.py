@@ -12,18 +12,11 @@ import logging
 
 sys.path.append("lib/python")
 
-from version import AsteriskVersion
-
 LOGGER = logging.getLogger(__name__)
 
 
 def handle_parkedcall(ami, event):
-    running_version = AsteriskVersion()
-
-    if running_version >= AsteriskVersion("12.0.0"):
-        parkee = event.get('parkeechannel')
-    else:
-        parkee = event.get('channel')
+    parkee = event.get('parkeechannel')
 
     if parkee is None:
         LOGGER.error("Receved ParkedCall event without a Parkee.\n")

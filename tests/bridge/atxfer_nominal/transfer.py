@@ -11,7 +11,6 @@ import sys
 import logging
 
 sys.path.append("lib/python")
-from version import AsteriskVersion
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,10 +46,7 @@ class Transfer(object):
         self._current_feature = None
 
         self.test_object.register_feature_start_observer(self._handle_feature_start)
-        if AsteriskVersion() >= AsteriskVersion('12'):
-            self.test_object.register_ami_observer(self._handle_ami_connect)
-        else:
-            self.test_object.register_feature_end_observer(self._handle_feature_end)
+        self.test_object.register_ami_observer(self._handle_ami_connect)
 
         if (Transfer.__singleton_instance == None):
             Transfer.__singleton_instance = self
@@ -71,13 +67,8 @@ class Transfer(object):
         LOGGER.debug('Setting current feature to %s' % str(feature))
         self._current_feature = feature
 
-    def _handle_feature_end(self, test_object, feature):
-        ''' Callback for the BridgeTestCase feature detected event
-
-        Keyword Arguments:
-        test_object The BridgeTestCase object
-        feature The specific feature that was executed
-        '''
+    def _handle_feature_end(self):
+        ''' Callback for the BridgeTestCase feature detected event'''
         LOGGER.debug("current_feature: %s\n" % self._current_feature)
         if self._current_feature['who'] == 'alice':
             ami = self.test_object.ami_bob
@@ -96,7 +87,7 @@ class Transfer(object):
         ''' Handle the AttendedTransfer event. Once the event has
         triggered, the call can be torn down. '''
         LOGGER.debug('ami %d: received event %s' % (ami.id, event))
-        self._handle_feature_end(None, None)
+        self._handle_feature_end()
 
     def complete_attended_transfer(self):
         '''

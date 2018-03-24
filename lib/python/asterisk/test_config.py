@@ -20,7 +20,6 @@ sys.path.append("lib/python")
 
 import test_suite_utils
 
-from version import AsteriskVersion
 from asterisk import Asterisk
 from buildoptions import AsteriskBuildOptions
 from sippversion import SIPpVersion
@@ -294,11 +293,6 @@ class TestConfig(object):
         self.config = None
         self.summary = None
         self.description = None
-        self.maxversion = []
-        self.maxversion_check = False
-        self.minversion = []
-        self.minversion_check = False
-        self.forced_version = None
         self.deps = []
         self.tags = []
         self.expect_pass = True
@@ -326,7 +320,6 @@ class TestConfig(object):
         if self.global_test_config is not None:
             settings = self.global_test_config
             self.condition_definitions = settings.condition_definitions
-            self.forced_version = settings.forced_version
             return
 
         if "global-settings" in self.config:
@@ -369,16 +362,6 @@ class TestConfig(object):
         if "properties" not in self.config:
             return
         properties = self.config["properties"]
-        minversion = properties.get("minversion", ["1.4"])
-
-        if not isinstance(minversion, list):
-            minversion = [minversion]
-        self.minversion = [AsteriskVersion(ver) for ver in minversion]
-
-        maxversion = properties.get("maxversion", [])
-        if not isinstance(maxversion, list):
-            maxversion = [maxversion]
-        self.maxversion = [AsteriskVersion(ver) for ver in maxversion]
 
         self.expect_pass = (properties.get("expectedResult", self.expect_pass) and
                             properties.get("expected-result", self.expect_pass))
@@ -386,15 +369,9 @@ class TestConfig(object):
             self.tags = properties["tags"]
         if "features" in properties:
             self.features = set(properties["features"])
-        if "forced-version" in properties:
-            self.forced_version = AsteriskVersion(properties["forced-version"])
-
-        for ver in self.minversion:
-            if ver.feature:
-                self.features.add(ver.feature)
 
         for feature in self.features:
-            self.feature_check[feature] = False
+            self.feature_check[feature] = True
 
     def _parse_config(self):
         """Parse the test-config YAML file."""
@@ -469,49 +446,15 @@ class TestConfig(object):
             ]
         return self.deps
 
-    def check_deps(self, ast_version):
+    def check_deps(self):
         """Check whether or not a test should execute based on its dependencies
 
-        Keyword arguments:
-        ast_version The AsteriskVersion object containing the version of
-                    Asterisk that will be executed
         Returns:
         can_run True if the test can execute, False otherwise
         """
 
         if not self.config:
             return False
-
-        if self.forced_version is not None:
-            ast_version = self.forced_version
-
-        # If we have a minimum version for our branch; use that. Otherwise,
-        # compare against all listed minimum versions.
-        min_candidates = [ver for ver in self.minversion
-                          if ver.major == ast_version.major]
-        if not len(min_candidates):
-            min_candidates = self.minversion
-        self.minversion_check = all([ast_version >= ver
-                                     for ver in min_candidates])
-
-        # Max version is a bit different: generally, it is a hard cut-off
-        # (as what the test covers has been removed).  If we have a maximum
-        # version for our branch; use that.  Otherwise, compare against all
-        # listed maximum versions.
-        max_candidates = [ver for ver in self.maxversion
-                          if ver.major == ast_version.major]
-        if not len(max_candidates):
-            max_candidates = self.maxversion
-        self.maxversion_check = all([ast_version < ver
-                                     for ver in max_candidates])
-
-        if not self.minversion_check or not self.maxversion_check:
-            self.can_run = False
-
-        for feature in self.features:
-            self.feature_check[feature] = ast_version.has_feature(feature)
-            if not self.feature_check[feature]:
-                self.can_run = False
 
         for dep in self.get_deps():
             if dep.met is False:
