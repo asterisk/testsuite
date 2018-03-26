@@ -85,7 +85,6 @@ class SIPTLS_Register_Test(TestCase):
         scenario_def = {
             'scenario': 'register.xml',
             '-p': '5061',
-            '-recv_timeout': '1000',
             '-s': 'SIP/v4-in',
             '-t': 'ln',
             '-tls_cert': '%s/configs/keys/serverA.crt' % self.test_name,
