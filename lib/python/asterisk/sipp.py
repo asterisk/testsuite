@@ -15,6 +15,7 @@ import test_suite_utils
 from abc import ABCMeta, abstractmethod
 from twisted.internet import reactor, defer, protocol, error
 from test_case import TestCase
+from utils_socket import get_available_port
 
 LOGGER = logging.getLogger(__name__)
 
@@ -670,6 +671,19 @@ class SIPpScenario(object):
         if '-oocsf' in default_args:
             default_args['-oocsf'] = ('%s/sipp/%s' % (
                 self.test_dir, default_args['-oocsf']))
+
+        if '-mp' not in default_args:
+            # Current SIPp correctly chooses an available port for audio, but
+            # unfortunately it then attempts to bind to the audio port + n for
+            # things like rtcp and video without first checking if those other
+            # ports are unused (https://github.com/SIPp/sipp/issues/276).
+            #
+            # So as a work around, if not given, we'll specify the media port
+            # ourselves, and make sure all associated ports are available.
+            #
+            # num = 4 = ports for audio rtp/rtcp and video rtp/rtcp
+            default_args['-mp'] = str(get_available_port(
+                config=default_args, num=4))
 
         for (key, val) in default_args.items():
             sipp_args.extend([key, val])
