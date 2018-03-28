@@ -673,7 +673,17 @@ class SIPpScenario(object):
 
         for (key, val) in default_args.items():
             sipp_args.extend([key, val])
-        sipp_args.extend(self.positional_args)
+
+        # The majority of tests do no need re-transmissions enabled. As a
+        # matter of fact most tests will fail if sipp re-transmits a message.
+        # By default disable all re-transmissions in a scenario unless
+        # explicitly told to allow them.
+        if '-enable-retrans' in self.positional_args:
+            sipp_args.extend(
+                [i for i in self.positional_args if i != '-enable-retrans'])
+        else:
+            sipp_args.append('-nr')
+            sipp_args.extend(self.positional_args)
 
         LOGGER.info("Executing SIPp scenario: %s" % self.scenario['scenario'])
         LOGGER.debug(sipp_args)

@@ -19,7 +19,7 @@ test-object-config:
     test-iterations:
         -
             scenarios:
-                - { 'key-args': {'scenario': 'options.xml', '-i': '127.0.0.1', '-d': '10000', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'options.xml', '-i': '127.0.0.1', '-d': '10000', '-p': '5061'}, 'ordered-args': ['-enable-retrans'] }
 
 ami-config-13.5:
     -
