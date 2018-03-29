@@ -108,7 +108,6 @@ ami-config:
         count: '6'
 
 properties:
-    minversion: '12.4.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

@@ -49,7 +49,6 @@ ami-config:
         count: '1'
 
 properties:
-    minversion: ['13.19.0', '15.2.0']
     dependencies:
         - sipp :
             version : 'v3.0'

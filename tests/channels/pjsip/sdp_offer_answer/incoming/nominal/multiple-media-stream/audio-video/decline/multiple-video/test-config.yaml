@@ -21,7 +21,6 @@ test-object-config:
                 - { 'key-args': {'scenario': 'uac-multiple-video-initial-declined.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice'} }
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'

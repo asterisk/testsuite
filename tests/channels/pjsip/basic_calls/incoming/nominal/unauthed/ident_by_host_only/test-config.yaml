@@ -22,7 +22,6 @@ test-object-config:
                  - { 'target': '[::1]', 'key-args': {'scenario': 'playback_with_initial_sdp.xml', '-i': '[::1]', '-p': '5061'} }
 
 properties:
-    minversion: [ '13.19.0', '15.2.0' ]
     dependencies:
         - sipp :
             version : 'v3.0'

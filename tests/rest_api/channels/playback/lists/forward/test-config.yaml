@@ -133,7 +133,6 @@ ami-config:
 
 properties:
     buildoption: 'TEST_FRAMEWORK'
-    minversion: '14.0.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

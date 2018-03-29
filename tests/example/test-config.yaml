@@ -5,6 +5,5 @@ testinfo:
         that it is expected to be installed in to.'
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - app : 'bash'

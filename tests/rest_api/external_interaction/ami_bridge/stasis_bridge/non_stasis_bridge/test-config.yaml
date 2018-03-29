@@ -196,7 +196,6 @@ pluggable-config:
         stop_test:
 
 properties:
-    minversion: ['13.16.0', '14.5.0']
     dependencies:
         - python : autobahn.websocket
         - python : requests

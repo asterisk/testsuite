@@ -6,7 +6,6 @@ testinfo:
         that let us know that the call went through the queue as expected.'
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - asterisk: 'app_queue'
     tags:

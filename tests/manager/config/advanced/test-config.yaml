@@ -3,7 +3,6 @@ testinfo:
     description: |
         'Test Manager GetConfig and UpdateConfig'
 properties:
-    minversion: '12.7.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

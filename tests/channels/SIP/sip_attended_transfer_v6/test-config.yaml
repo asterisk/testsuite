@@ -5,7 +5,6 @@ testinfo:
         "This test verifies the SIP REFER with Replaces attended transfer routine over IPv6. Two calls are originated and terminated at pairs SIPp scenarios.  After the calls are brought up, the two originating SIPp instances communicate using SIPp's 3PCC Extended Mode to pass the Call-ID of the originating leg of the second call to the originating leg of the primary call. The originating leg of the primary call uses this Call-ID in a REFER to bridge the two terminating legs.  This bridged call is then hung up to terminate the test."
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

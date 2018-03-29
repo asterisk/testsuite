@@ -77,7 +77,6 @@ ami-config:
         stop_test:
 
 properties:
-    minversion: '14.0.0'
     dependencies:
         - asterisk : 'app_amd'
         - asterisk : 'app_bridgeaddchan'

@@ -5,7 +5,6 @@ testinfo:
 
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - app : 'python'
         - python : 'twisted'

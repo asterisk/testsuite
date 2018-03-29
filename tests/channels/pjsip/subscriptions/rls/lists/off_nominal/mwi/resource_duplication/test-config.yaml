@@ -6,7 +6,6 @@ testinfo:
          duplicated resources in outgoing notifies only once.'
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

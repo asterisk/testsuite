@@ -4,7 +4,6 @@ testinfo:
         "This test verifies that timers function properly by ensuring that Asterisk refreshes properly as a UAC when requested to on outbound calls."
 
 properties:
-    minversion: '1.8.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

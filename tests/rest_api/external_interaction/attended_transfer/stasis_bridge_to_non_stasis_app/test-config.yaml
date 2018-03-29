@@ -120,7 +120,6 @@ pluggable-config:
             uri: 'channels/{channel.id}'
 
 properties:
-    minversion: '12.8.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

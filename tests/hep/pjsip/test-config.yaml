@@ -194,7 +194,6 @@ hep-node-config:
 
 
 properties:
-    minversion: '12.2.0'
     dependencies:
         - sipp :
             version : 'v3.0'

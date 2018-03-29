@@ -3,7 +3,6 @@ testinfo:
     description: |
         'Make sure that realtime peers are matched properly'
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

@@ -34,7 +34,6 @@ ami-config:
         count: '2'
 
 properties:
-    minversion: '13.5.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

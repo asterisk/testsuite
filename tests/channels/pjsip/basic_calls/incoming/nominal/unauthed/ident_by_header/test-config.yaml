@@ -88,7 +88,6 @@ test-object-config:
                     'ordered-args': ['-key', 'ident_key', 'c2d29890-07fb-11e7-b3f4-3b8d2e8ef30d'] }
 
 properties:
-    minversion: '14.4.0'
     dependencies:
         - sipp :
             version : 'v3.0'

@@ -4,7 +4,6 @@ testinfo:
         'This test verifies functionality of the PickupChan app and its options'
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

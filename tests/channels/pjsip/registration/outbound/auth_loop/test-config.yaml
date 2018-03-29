@@ -41,7 +41,6 @@ ami-config:
         count: '1'
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - python: 'starpy'
         - sipp:

@@ -4,7 +4,6 @@ testinfo:
         "This test verifies that Asterisk will reject an incoming INVITE with a 422 if the Session-Expires value is below the local Min-SE value."
 
 properties:
-    minversion: '1.8.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

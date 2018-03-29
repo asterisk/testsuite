@@ -4,7 +4,6 @@ testinfo:
         'Create a long chain of local channels to be optimized out.'
 
 properties:
-    minversion: '1.8.14.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

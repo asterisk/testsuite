@@ -40,7 +40,6 @@ dns-server-config:
             example.com
 
 properties:
-    minversion: '14.0.0'
     dependencies:
         - app : 'sipp'
         - asterisk : 'res_pjsip'

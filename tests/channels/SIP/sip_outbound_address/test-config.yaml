@@ -45,7 +45,6 @@ test-object-config:
                 - { 'key-args': { 'scenario': 'uas.xml', '-p': '5061' } }
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python: 'starpy'
         - sipp :

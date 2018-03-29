@@ -5,7 +5,6 @@ testinfo:
         member on queue is paused and the reason was set.
 
 properties:
-    minversion: '13.8.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

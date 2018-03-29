@@ -5,7 +5,6 @@ testinfo:
         'This test verifies that calls queued via the spooler do not cause warning messages about a file not existing.'
 
 properties:
-    minversion: '1.8.0.0'
     tags:
         - dialplan
         - iax2

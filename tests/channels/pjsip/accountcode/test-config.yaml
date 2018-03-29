@@ -39,7 +39,6 @@ ami-config:
         count: '2'
 
 properties:
-    minversion: '12.5.0'
     dependencies:
         - asterisk : 'res_pjsip'
     tags:

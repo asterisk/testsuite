@@ -4,7 +4,6 @@ testinfo:
         'Ensure that custom SIP INFO messages are generated properly via AST_CONTROL_CUSTOM frames with AST_CUSTOM_SIP_INFO payload type.'
 
 properties:
-    minversion: '1.8.11.0'
     features:
       - 'digiumphones'
     dependencies:

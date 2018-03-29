@@ -7,7 +7,6 @@ testinfo:
         If the bug is not fixed, this will leak a sip dialog object.'
 
 properties:
-    minversion: ['1.8.32.0', '11.14.0', '12.7.0', '13.0.0-beta3']
     dependencies:
         - python: 'starpy'
         - sipp:

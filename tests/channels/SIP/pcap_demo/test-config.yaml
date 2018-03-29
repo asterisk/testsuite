@@ -14,7 +14,6 @@ testinfo:
     description: |
         'Make a simple call and verify via pcap that an INVITE and a 200 happen'
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'construct'

@@ -5,7 +5,6 @@ testinfo:
         'As with the initial_notify test, only this test uses a multiple levels of nesting'
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

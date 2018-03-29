@@ -6,7 +6,6 @@ testinfo:
         mailboxes
 
 properties:
-    minversion: '1.8.9'
     buildoption: 'TEST_FRAMEWORK'
     dependencies:
         - python : 'twisted'

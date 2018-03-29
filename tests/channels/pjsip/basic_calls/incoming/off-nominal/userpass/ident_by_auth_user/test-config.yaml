@@ -18,7 +18,6 @@ test-object-config:
                 '-s': '18005551212', '-au': 'alice', '-ap': 'swordfish'} }
 
 properties:
-    minversion: '13.9.0'
     dependencies:
         - sipp :
             version : 'v3.0'
