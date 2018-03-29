@@ -6,7 +6,6 @@ testinfo:
         transferee does not wait for the new channel to pickup before hanging up.'
 
 properties:
-    minversion: '1.6.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

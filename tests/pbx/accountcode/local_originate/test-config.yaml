@@ -51,7 +51,6 @@ ami-config:
         count: '1'
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - asterisk : 'app_echo'
     tags:

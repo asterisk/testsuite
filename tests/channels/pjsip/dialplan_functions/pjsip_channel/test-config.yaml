@@ -44,7 +44,6 @@ ami-config:
                 Status: 'failed'
 
 properties:
-    minversion: '13.6.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

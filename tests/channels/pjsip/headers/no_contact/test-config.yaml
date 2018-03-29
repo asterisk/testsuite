@@ -6,7 +6,6 @@ testinfo:
          SIP message types that require a contact header.'
 
 properties:
-    minversion: ['13.19.1', '14.7.5', '15.2.1']
     dependencies:
         - sipp :
             version : 'v3.0'

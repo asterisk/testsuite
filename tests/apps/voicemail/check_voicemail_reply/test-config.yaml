@@ -6,7 +6,6 @@ testinfo:
         to the voicemail can automatically reply to that voicemail user
 
 properties:
-    minversion: '1.8.0.0'
     buildoption: 'TEST_FRAMEWORK'
     dependencies:
         - python : 'twisted'

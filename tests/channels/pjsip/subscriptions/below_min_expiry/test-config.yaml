@@ -6,7 +6,6 @@ testinfo:
          set in the request, reject that request with a resposne of 423'
 
 properties:
-    minversion: '12.1.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

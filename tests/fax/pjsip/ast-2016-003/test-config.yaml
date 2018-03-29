@@ -22,7 +22,6 @@ test-object-config:
                 - { 'key-args': {'scenario': 'endpoint_B.xml', '-i': '127.0.0.3', '-p': '5060', '-inf': 'inject_bridge.csv'} }
 
 properties:
-    minversion: '13.8.0'
     dependencies:
         # The test requires the use of the SIPp feature play_pcap_image.
         # However the feature is not in a released SIPp version yet.

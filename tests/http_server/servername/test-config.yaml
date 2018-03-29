@@ -10,7 +10,6 @@ testinfo:
         and a configured value that is empty/null.
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - python : twisted
         - python : starpy

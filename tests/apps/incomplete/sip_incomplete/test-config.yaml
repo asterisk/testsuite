@@ -10,7 +10,6 @@ testinfo:
         extension is not dialed.
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'

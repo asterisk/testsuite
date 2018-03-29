@@ -6,7 +6,6 @@ testinfo:
          the appropriate information is received.'
 
 properties:
-    minversion: '12.1.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

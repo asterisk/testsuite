@@ -7,7 +7,6 @@ testinfo:
         successfully re-subscribes to bob with an expiration of 600.'
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

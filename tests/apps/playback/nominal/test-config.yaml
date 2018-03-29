@@ -34,7 +34,6 @@ ami-config:
         count: '2'
 
 properties:
-    minversion: '1.8.0.0'
     tags:
       - playback
     dependencies:

@@ -10,7 +10,6 @@ testinfo:
          privacy settings specified'
 
 properties:
-    minversion: '1.8.27'
     dependencies:
          - app : 'sipp'
          - asterisk : 'chan_sip'

@@ -6,7 +6,6 @@ testinfo:
         that it gets redirected to the expected dialplan location.
 
 properties:
-    minversion: ['11.16.0', '13.2.0']
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

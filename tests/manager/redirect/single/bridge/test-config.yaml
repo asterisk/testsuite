@@ -6,7 +6,6 @@ testinfo:
         location, and make sure the channel it was bridged with is hung up.
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

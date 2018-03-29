@@ -8,7 +8,6 @@ testinfo:
          a REFER.'
 
 properties:
-    minversion: '13.8.0'
     dependencies:
          - python: 'twisted'
          - python: 'starpy'

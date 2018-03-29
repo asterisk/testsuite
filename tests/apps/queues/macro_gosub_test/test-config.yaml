@@ -9,7 +9,6 @@ testinfo:
         ensure that those are run instead.'
 
 properties:
-    minversion: '1.6.0'
     dependencies:
         - app: 'asttest'
     tags:

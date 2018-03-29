@@ -5,7 +5,6 @@ testinfo:
          and StopMixMonitor applications for mixed/rx/tx file generation.'
 
 properties:
-    minversion: '13.6.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

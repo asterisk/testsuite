@@ -61,7 +61,6 @@ ari-config:
                 method: on_unhold
 
 properties:
-    minversion: '13.4.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

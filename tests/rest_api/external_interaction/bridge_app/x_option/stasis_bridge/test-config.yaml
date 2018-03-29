@@ -21,7 +21,6 @@ testinfo:
         occur the proper number of times."
 
 properties:
-    minversion: '12.8.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

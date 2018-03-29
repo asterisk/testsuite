@@ -6,7 +6,6 @@ testinfo:
         the test fails.'
 
 properties:
-    minversion: '13.4.0'
     dependencies:
         - app: 'sipp'
         - asterisk: 'res_pjsip'

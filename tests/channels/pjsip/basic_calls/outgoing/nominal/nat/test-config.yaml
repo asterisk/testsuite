@@ -3,7 +3,6 @@ testinfo:
     description: |
         'This test verifies contact rewriting for chan_pjsip on outbound calls.'
 properties:
-    minversion: '12.1.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

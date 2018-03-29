@@ -6,7 +6,6 @@ testinfo:
          header exists and it matches the one sent.'
 
 properties:
-    minversion: '12'
     dependencies:
         - app : 'sipp'
         - asterisk : 'res_pjsip'

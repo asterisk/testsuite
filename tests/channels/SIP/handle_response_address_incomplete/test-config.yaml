@@ -6,7 +6,6 @@ testinfo:
         automatically triggering the Incomplete application logic.
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'

@@ -26,7 +26,6 @@ ari-config:
                 method: on_start
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

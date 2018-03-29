@@ -9,7 +9,6 @@ testinfo:
         This scenario is supported by PJsip in https://trac.pjsip.org/repos/ticket/657'
 
 properties:
-    minversion: '15.4.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

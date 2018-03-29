@@ -10,7 +10,6 @@ testinfo:
         - Nominal creation of an object'
 
 properties:
-    minversion: '13.5.0'
     dependencies:
         - python: autobahn.websocket
         - python: requests

@@ -4,7 +4,6 @@ testinfo:
         This tests the AMI action MessageSend to see if it sends a SIP MESSAGE.
 
 properties:
-    minversion: '11.0.0'
     dependencies:
         - sipp :
             version : 'v3.0'

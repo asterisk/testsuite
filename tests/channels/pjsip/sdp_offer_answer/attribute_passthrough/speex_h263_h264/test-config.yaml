@@ -6,7 +6,6 @@ testinfo:
         party.
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - sipp :
             version : 'v3.0'

@@ -59,7 +59,6 @@ test-object-config:
                                         '-key', 'contact1', '"ipv6-auth2" <sip:ipv6-auth2@[::2]:5064>;transport=udp'] }
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'

@@ -149,7 +149,6 @@ ari-config:
                     uri: 'channels/dummy;2'
 
 properties:
-    minversion: '12.8.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

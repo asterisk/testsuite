@@ -105,7 +105,6 @@ ari-config:
             count: 1
 
 properties:
-    minversion: '14.2.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests
