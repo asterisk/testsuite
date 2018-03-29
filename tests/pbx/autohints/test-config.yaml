@@ -6,6 +6,9 @@ testinfo:
         then receive an event about it.
 
 properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
 
 test-modules:
     test-object:
