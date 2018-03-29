@@ -24,7 +24,6 @@ testinfo:
         ast3 and ast4.
 
 properties:
-    minversion: '13.3.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

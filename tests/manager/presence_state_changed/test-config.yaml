@@ -5,7 +5,6 @@ testinfo:
         manager events fire in proper order."
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

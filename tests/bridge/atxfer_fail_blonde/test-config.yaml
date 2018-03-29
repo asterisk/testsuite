@@ -52,7 +52,6 @@ pluggable-config:
 
 
 properties:
-    minversion: '11.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'

@@ -47,7 +47,6 @@ test-object-config:
                 - { 'key-args': {'scenario': 'playback_with_initial_sdp.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5072', '-au': 'alice', '-ap': 'swordfish', '-inf': 'credentials-wrong_realm.csv', '-t': 't1'} }
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - sipp :
             version : 'v3.3'

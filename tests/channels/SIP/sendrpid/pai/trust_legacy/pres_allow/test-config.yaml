@@ -10,7 +10,6 @@ testinfo:
 
 
 properties:
-    minversion: '1.8.0'
     dependencies:
          - app : 'sipp'
          - asterisk : 'chan_sip'

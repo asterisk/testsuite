@@ -10,7 +10,6 @@ test-modules:
         typename: 'test_case.SimpleTestCase'
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

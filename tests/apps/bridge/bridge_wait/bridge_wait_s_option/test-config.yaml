@@ -49,7 +49,6 @@ test-object-config:
                   delay: 1
 
 properties:
-    minversion: '12.0.0'
     tags:
       - bridge
     dependencies:

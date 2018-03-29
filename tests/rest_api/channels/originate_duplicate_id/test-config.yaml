@@ -56,7 +56,6 @@ event-config:
 
 
 properties:
-    minversion: ['13.13.0', '14.2.0']
     dependencies:
         - python: 'autobahn.websocket'
         - python: 'requests'

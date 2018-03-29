@@ -6,7 +6,6 @@ testinfo:
         in gets destroyed, and neither channel is hung up by the process.
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

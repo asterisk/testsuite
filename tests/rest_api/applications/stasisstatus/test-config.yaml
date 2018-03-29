@@ -18,7 +18,6 @@ testinfo:
         the test verifies that Stasis correctly assigns FAILED to STASISSTATUS.
 
 properties:
-    minversion: '13.4.0'
     dependencies:
         - python: 'autobahn.websocket'
         - python: 'requests'

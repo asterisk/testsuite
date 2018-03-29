@@ -156,7 +156,6 @@ test-object-config:
                   Channel: 'Local/test_remote@default-00000001;2'
 
 properties:
-    minversion: '12.0.0'
     tags:
       - playback
       - apps

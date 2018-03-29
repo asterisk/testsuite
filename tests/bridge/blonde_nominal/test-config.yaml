@@ -46,7 +46,6 @@ bridge-config:
                   exten: '123'
 
 properties:
-    minversion: '11.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python : 'twisted'

@@ -9,7 +9,6 @@ testinfo:
         bridge, and a non-bridged scenario.
 
 properties:
-    minversion: '12'
     dependencies:
         - python: 'starpy'
         - sipp:

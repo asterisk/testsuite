@@ -182,7 +182,6 @@ test-object-config:
                   channel-id: 'Agent-login'
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - python : 'starpy'
         - python : 'twisted'

@@ -18,7 +18,6 @@ testinfo:
         Scenario [6] -> ast6: Tests duplicate [id=siptrunk, type=transport] sections
 
 properties:
-    minversion: '13.4.0'
     dependencies:
         - asterisk: 'res_pjsip'
         - python: 'autobahn.websocket'

@@ -6,7 +6,6 @@ testinfo:
          to respond to the subscription with a 500 error.'
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - python: 'twisted'
         - python: 'starpy'

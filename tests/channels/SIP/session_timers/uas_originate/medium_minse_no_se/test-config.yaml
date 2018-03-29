@@ -4,7 +4,6 @@ testinfo:
         "UAS session timer testing, with session-timers=originate, and the offered Min-SE is between session-minse and session-expires, and no Session-Expires."
 
 properties:
-    minversion: '1.8.22.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

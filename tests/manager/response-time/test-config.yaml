@@ -8,7 +8,6 @@ testinfo:
         -jira: AST-359
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - app : 'bash'
         - app : 'asttest'

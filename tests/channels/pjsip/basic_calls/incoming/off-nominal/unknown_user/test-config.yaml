@@ -18,7 +18,6 @@ sipp-config:
                 - { 'key-args': {'scenario': 'uac-unknown-endpoint.xml', '-i': '127.0.0.1', '-p': '5061'}}
 
 properties:
-    minversion: '13.10.1'
     dependencies:
         - sipp:
             version: 'v3.0'

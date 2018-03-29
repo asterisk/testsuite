@@ -187,7 +187,6 @@ cel-config:
 
 
 properties:
-    minversion: '13.0.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

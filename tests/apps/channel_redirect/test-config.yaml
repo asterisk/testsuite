@@ -143,7 +143,6 @@ test-object-config:
                   expected-result: 'Null-initiate channel hung up'
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

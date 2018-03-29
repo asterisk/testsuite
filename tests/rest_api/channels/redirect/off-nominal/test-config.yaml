@@ -35,7 +35,6 @@ ari-config:
                 method: on_stasis_start
 
 properties:
-    minversion: '13.3.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

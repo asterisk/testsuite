@@ -6,7 +6,6 @@ testinfo:
          subscribe to all aors on the endpoint.  This tests that.'
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

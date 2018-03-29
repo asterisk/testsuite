@@ -28,7 +28,6 @@ sipp-config:
 
 
 properties:
-    minversion: '13.5.0'
     dependencies:
         - sipp:
             version: 'v3.0'

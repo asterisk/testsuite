@@ -12,7 +12,6 @@ testinfo:
         - jira : 'ASTERISK-20008'
 
 properties:
-    minversion: '1.8.14.0'
     dependencies:
         - sipp :
             version : 'v3.0'

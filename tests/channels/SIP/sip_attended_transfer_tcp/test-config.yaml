@@ -5,7 +5,6 @@ testinfo:
         'This test verifies the SIP_REFER with Replaces attended transfer routine using TCP endpoints'
 
 properties:
-    minversion: '1.8.0.0'
     dependencies:
         - python : 'twisted'
         - python : 'starpy'

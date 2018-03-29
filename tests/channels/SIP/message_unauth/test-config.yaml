@@ -4,7 +4,6 @@ testinfo:
         'Send Asterisk a MESSAGE and wait for Asterisk to send it back.'
 
 properties:
-    minversion: '1.8.0.0'
     features:
         - 'digiumphones'
     dependencies:

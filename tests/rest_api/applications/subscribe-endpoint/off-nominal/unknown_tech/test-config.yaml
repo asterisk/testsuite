@@ -26,7 +26,6 @@ subscriber:
         - { event-source: 'endpoint:BLAH/bob', app: 'testsuite', expected-response: 422 }
 
 properties:
-    minversion: '12.5.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

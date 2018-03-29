@@ -243,7 +243,6 @@ ami-config:
         count: '1'
 
 properties:
-    minversion: '12.0.0'
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - python: 'twisted'

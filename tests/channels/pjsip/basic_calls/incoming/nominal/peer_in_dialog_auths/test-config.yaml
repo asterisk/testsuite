@@ -34,7 +34,6 @@ test-object-config:
                 - { 'target': '[::1]', 'key-args': {'scenario': 'incoming_in_dialog_auths.xml', '-i': '[::1]', '-p': '5072', '-t': 't1', '-s': 'alice-ipv6-tcp'} }
 
 properties:
-    minversion: '13.5.0'
     dependencies:
         - sipp :
             version : 'v3.0'

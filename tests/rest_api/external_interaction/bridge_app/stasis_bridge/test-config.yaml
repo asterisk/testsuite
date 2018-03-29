@@ -22,7 +22,6 @@ testinfo:
         - jira: 'ASTERISK-24637'
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - python : autobahn.websocket
         - python : requests

@@ -12,7 +12,6 @@ testinfo:
         considered in this test.
 
 properties:
-    minversion: '11.8.0'
     dependencies:
         - sipp :
             version : 'v3.0'

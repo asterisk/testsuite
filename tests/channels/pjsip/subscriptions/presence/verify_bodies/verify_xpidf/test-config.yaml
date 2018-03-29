@@ -16,7 +16,6 @@ testinfo:
         fails.'
 
 properties:
-    minversion: ['13.19.0', '15.2.0']
     dependencies:
         - buildoption: 'TEST_FRAMEWORK'
         - sipp :

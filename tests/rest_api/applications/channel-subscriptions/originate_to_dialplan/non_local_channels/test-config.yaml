@@ -21,7 +21,6 @@ testinfo:
         are received.'
 
 properties:
-    minversion: '13.2.0'
     dependencies:
         - python: autobahn.websocket
         - python: requests
