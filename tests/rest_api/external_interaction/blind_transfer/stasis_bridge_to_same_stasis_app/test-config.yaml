@@ -47,6 +47,8 @@ pjsua-config:
             bind: '127.0.0.1'
             bindport: '5062'
     accounts:
+        # Use static contacts due to race condition between 'reg_success' and
+        # 'call_transfer' method calls.
         -
             name: 'alice'
             username: 'alice'
@@ -54,12 +56,14 @@ pjsua-config:
             transport: 'local-ipv4-1'
             call_uri: 'sip:stasis@127.0.0.1'
             transfer_uri: 'sip:1000@127.0.0.1'
+            register: False
         -
             name: 'bob'
             username: 'bob'
             domain: '127.0.0.1'
             transport: 'local-ipv4-2'
             call_uri: 'sip:stasis@127.0.0.1'
+            register: False
 
 pluggable-config:
     # Upon kickoff channel entering Stasis app: create a bridge, don't add
