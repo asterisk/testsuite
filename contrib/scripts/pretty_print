@@ -111,10 +111,10 @@ while read line ; do
 	buffer+=("$line")
 
 	### Running tests for Asterisk GIT-master-99dea9b (run 1 of 1)...
-	if [[ $line =~ ^Running\ tests\ for\ (Asterisk\ +[^\ ]+)\ +\(run\ +([0-9]+)\ +of\ +([0-9]+)\)\.\.\. ]] ; then
-		run=${BASH_REMATCH[2]}
-		runs=${BASH_REMATCH[3]}
-		version=${BASH_REMATCH[1]}
+	### The version may or may not not be present.
+	if [[ $line =~ ^Running\ tests\ for\ Asterisk[^\(]*\(run\ +([0-9]+)\ +of\ +([0-9]+)\)\.\.\. ]] ; then
+		run=${BASH_REMATCH[1]}
+		runs=${BASH_REMATCH[2]}
 	fi
 	### Tests to run: 11 * 1 time(s) = 11  Maximum test inactivity time: 120 sec.
 	if [[ $run -eq 1 && $line =~ ^Tests\ to\ run:\ +([0-9]+)\ +\*\ +([0-9]+)\ +time\(s\)\ +=\ +([0-9]+)\ +Maximum.test.inactivity.time:.([-0-9-]+) ]] ; then
@@ -145,9 +145,10 @@ while read line ; do
 		fi
 	fi
 
-	if [[ $line =~ ^Test.*tests/([^\']+)\',.*(passed|failed|timed\ out)$ ]] ; then
+	if [[ $line =~ ^Test\ *\[\'[^\']+\',\ *\'tests/([^\']+)\'(, \'[^\']+\')?\]\ *(passed|failed|timed\ out)$ ]] ; then
 		test=${BASH_REMATCH[1]}
-		status=${BASH_REMATCH[2]}
+		_unused_arg=${BASH_REMATCH[2]}
+		status=${BASH_REMATCH[3]}
 		col=$(( ${TERM_WIDTH:-$(tput cols)} - ${#status_string} ))
 		et=$(( $SECONDS - $st ))
 		[ $countpid -gt 0 ] && kill $countpid
