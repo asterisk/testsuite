@@ -24,3 +24,4 @@ tests:
     - dir: 'authenticate'
     - dir: 'statsd'
     - test: 'waitdigit'
+    - dir: 'sendtext'
