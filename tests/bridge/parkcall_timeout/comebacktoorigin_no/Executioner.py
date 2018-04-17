@@ -12,8 +12,6 @@ import logging
 
 sys.path.append("lib/python")
 
-from version import AsteriskVersion
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -23,12 +21,6 @@ class Executioner(object):
         self.parked_channel = None
         test_object.register_ami_observer(self.ami_connect)
         self.test_object = test_object
-
-        running_version = AsteriskVersion()
-        if (running_version < AsteriskVersion("12.0.0")):
-            self.asterisk12Events = False
-        else:
-            self.asterisk12Events = True
 
         self.calls = []
         self.calls.append({'test': '1', 'parker': 'SIP/alice',
@@ -64,19 +56,10 @@ class Executioner(object):
         appdata = event.get('appdata')
         registrar = event.get('registrar')
 
-        if self.asterisk12Events:
-            # Asterisk 12's parking uses a different registrar from previous
-            # versions and puts features on channels directly instead of in
-            # the dialplan
-            if appdata != 'SIP/alice,3':
-                not_right = True
-            if registrar != 'res_parking':
-                not_right = True
-        else:
-            if appdata != 'SIP/alice,3,Hk':
-                not_right = True
-            if registrar != 'features':
-                not_right = True
+        if appdata != 'SIP/alice,3':
+            not_right = True
+        if registrar != 'res_parking':
+            not_right = True
 
         if not_right:
             # We don't handle failure here since the last check_user_event

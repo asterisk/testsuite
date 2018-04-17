@@ -10,7 +10,6 @@ the GNU General Public License Version 2.
 
 import logging
 from test_conditions import TestCondition
-from version import AsteriskVersion
 from twisted.internet import defer
 
 LOGGER = logging.getLogger(__name__)
@@ -23,9 +22,6 @@ class ThreadTestCondition(TestCondition):
     check thread usage in Asterisk.  It provides common functionality for
     parsing out the results of the 'core show threads' Asterisk command
     """
-
-    _ast_version = AsteriskVersion()
-    _ast_version_10 = AsteriskVersion("10")
 
     def __init__(self, test_config):
         """Constructor
@@ -62,15 +58,9 @@ class ThreadTestCondition(TestCondition):
             if 'threads listed' in line or 'Asterisk ending' in line:
                 continue
 
-            # get the name and thread ID - strip off the cli_exec / pthread ID
-            initial_partition = line.partition(' ')
-
-            #In v10 and greater, the result of core show threads introduces the
-            # Asterisk thread ID immediately after the pthread ID.  Use that if
-            # it's available.
-
-            if (ThreadTestCondition._ast_version >= ThreadTestCondition._ast_version_10):
-                initial_partition = initial_partition[2].partition(' ')
+            # The result of core show threads includes the Asterisk thread ID
+            # immediately after the pthread ID.
+            initial_partition = initial_partition[2].partition(' ')
             thread_id = initial_partition[0]
             thread_name = initial_partition[2].partition(' ')[0]
             if (thread_id != "" and thread_name != ""

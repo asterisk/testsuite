@@ -13,7 +13,6 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 from asterisk.test_case import TestCase
-from asterisk.version import AsteriskVersion
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +22,7 @@ class CallParkingTest(TestCase):
         TestCase.__init__(self)
 
         self.ami_count = 0
-        self.parking_var = "exten"
-
-        if AsteriskVersion() >= AsteriskVersion('12'):
-            self.parking_var = "parkingspace"
+        self.parking_var = "parkingspace"
 
         # Initial parked call subtest.
         self.expected_space = 701
