@@ -25,8 +25,6 @@ logging.basicConfig()
 
 sys.path.append('lib/python')
 
-from version import AsteriskVersion
-
 
 class TestModuleFinder(object):
     """Determines if a module is a test module that can be loaded"""
@@ -94,13 +92,12 @@ class TestModuleLoader(object):
 sys.path_hooks.append(TestModuleFinder)
 
 
-def load_test_modules(test_config, test_object, ast_version):
+def load_test_modules(test_config, test_object):
     """Load the pluggable modules for a test
 
     Keyword Arguments:
     test_config The test configuration object
     test_object The test object that the modules will attach to
-    ast_version A string containing the Asterisk version
     """
 
     if not test_object:
@@ -113,75 +110,18 @@ def load_test_modules(test_config, test_object, ast_version):
         return
 
     for module_spec in test_config['test-modules']['modules']:
-        if check_module_version(module_spec, ast_version):
-            # If there's a specific portion of the config for this module,
-            # use it
-            if ('config-section' in module_spec
-                    and module_spec['config-section'] in test_config):
-                module_config = test_config[module_spec['config-section']]
-            else:
-                module_config = test_config
-
-            module_type = load_and_parse_module(module_spec['typename'])
-            # Modules take in two parameters: the module configuration object,
-            # and the test object that they attach to
-            module_type(module_config, test_object)
+        # If there's a specific portion of the config for this module,
+        # use it
+        if ('config-section' in module_spec
+                and module_spec['config-section'] in test_config):
+            module_config = test_config[module_spec['config-section']]
         else:
-            LOGGER.debug("Skipping the loading of test module %s due to it's "
-                         "minversion and/or maxversion not being met." %
-                         module_spec['typename'])
+            module_config = test_config
 
-
-def check_module_version(module_spec, ast_version):
-    """Check the module configuration for minversion and maxversion and check
-    if the Asterisk version meets the version(s) if found
-
-    Keyword Arguments:
-    module_spec A dictionary of a pluggable module configuration
-    ast_version A string containing the Asterisk version
-
-    Returns:
-    False if minversion or maxversion are found and do not meet the Asterisk
-    version, True otherwise
-    """
-
-    running_version = AsteriskVersion(ast_version)
-
-    minversion = module_spec.get("minversion", [])
-    if not isinstance(minversion, list):
-        minversion = [minversion]
-    min_versions = [AsteriskVersion(ver) for ver in minversion]
-
-    # If we have a minimum version for our branch; use that.  Otherwise,
-    # compare against all listed minimum versions.
-    min_candidates = [ver for ver in min_versions
-                      if ver.major == running_version.major]
-    if not len(min_candidates):
-        min_candidates = min_versions
-    min_version_check = all([running_version >= ver for ver in min_candidates])
-
-    if not min_version_check:
-        return False
-
-    maxversion = module_spec.get("maxversion", [])
-    if not isinstance(maxversion, list):
-        maxversion = [maxversion]
-    max_versions = [AsteriskVersion(ver) for ver in maxversion]
-
-    # Max version is a bit different: generally, it is a hard cut-off
-    # (as what the test covers has been removed).  If we have a maximum
-    # version for our branch; use that.  Otherwise, compare against all
-    # listed maximum versions.
-    max_candidates = [ver for ver in max_versions
-                      if ver.major == running_version.major]
-    if not len(max_candidates):
-        max_candidates = max_versions
-    max_version_check = all([running_version < ver for ver in max_candidates])
-
-    if not max_version_check:
-        return False
-
-    return True
+        module_type = load_and_parse_module(module_spec['typename'])
+        # Modules take in two parameters: the module configuration object,
+        # and the test object that they attach to
+        module_type(module_config, test_object)
 
 
 def load_and_parse_module(type_name):
@@ -213,7 +153,7 @@ def load_and_parse_module(type_name):
     return module
 
 
-def create_test_object(test_path, test_config, ast_version):
+def create_test_object(test_path, test_config):
     """Create the specified test object from the test configuration
 
     Parameters:
@@ -231,8 +171,7 @@ def create_test_object(test_path, test_config, ast_version):
         objs = test_config['test-modules']['test-object']
         if not isinstance(objs, list):
             objs = [objs]
-        return next((obj for obj in objs if check_module_version(
-            obj, ast_version)), None)
+        return next((obj for obj in objs), None)
 
     if not 'test-modules' in test_config:
         LOGGER.error("No test-modules block in configuration")
@@ -338,18 +277,6 @@ def main(argv=None):
         return 1
     test_directory = args[1]
 
-    if (len(args) < 3):
-        LOGGER.error("test_runner requires the Asterisk version to execute")
-        return 1
-    ast_version = args[2]
-
-    try:
-        AsteriskVersion()
-    except OSError:
-        # If there is no Asterisk version on the local system, then we need to
-        # set the version to the one that was passed into the application.
-        AsteriskVersion(default=ast_version)
-
     LOGGER.info("Starting test run for %s" % test_directory)
     test_config = load_test_config(test_directory)
     if test_config is None:
@@ -357,16 +284,16 @@ def main(argv=None):
 
     read_module_paths(test_config, test_directory)
 
-    test_object = create_test_object(test_directory, test_config, ast_version)
+    test_object = create_test_object(test_directory, test_config)
     if test_object is None:
         return 1
 
     # Load other modules that may be specified
-    load_test_modules(test_config, test_object, ast_version)
+    load_test_modules(test_config, test_object)
 
     # Load global modules as well
     if test_object.global_config.config:
-        load_test_modules(test_object.global_config.config, test_object, ast_version)
+        load_test_modules(test_object.global_config.config, test_object)
 
     # Kick off the twisted reactor
     reactor.run()

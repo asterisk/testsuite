@@ -22,7 +22,6 @@ from starpy import manager, fastagi
 from asterisk import Asterisk
 from test_config import TestConfig
 from test_conditions import TestConditionController
-from version import AsteriskVersion
 
 
 try:
@@ -135,7 +134,6 @@ class TestCase(object):
         self.create_pcap = False
         self._stopping = False
         self.testlogdir = self._set_test_log_directory()
-        self.ast_version = AsteriskVersion()
         self._start_callbacks = []
         self._stop_callbacks = []
         self._ami_connect_callbacks = []

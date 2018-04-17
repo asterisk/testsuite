@@ -27,12 +27,6 @@ testinfo:
 # dependencies for this test.
 properties:
 
-    # The minimum version of Asterisk necessary to run the test
-    minversion: '1.8.0.0'
-
-    # The maximum version of Asterisk that this test can exeucte under
-    maxversion: '10.5.1' # OPTIONAL
-
     # A sequence of feature specifies that the version of Asterisk under test must support.
     features: # OPTIONAL
         # List features the Asterisk version under test must support for this test
@@ -194,23 +188,12 @@ test-modules:
     modules: # OPTIONAL
         -
             # The keyword in the test-config.yaml file that provides the configuration for the module
-            config-section: 'ami-config-1.3'
+            config-section: 'ami-config'
 
             # The fully qualified package.module.class to instantiate as the module.
             # A few that are available:
             # ami.AMIEventModule, cdr.CDRModule
             typename: 'ami.AMIEventModule'
-
-            # The minimum version of Asterisk necessary to load this module
-            minversion: '1.8.0.0' # OPTIONAL
-
-            # The maximum version of Asterisk that this module can load under
-            maxversion: '11.0.0' # OPTIONAL
-        -
-            # Similar to above but with different Asterisk version requirements
-            config-section: 'ami-config-1.4'
-            typename: 'ami.AMIEventModule'
-            minversion: '12.0.0'
 
 # The configuration for the test object. The configuration will differ depending
 # on the test object used
@@ -241,23 +224,7 @@ test-object-config:
 
 # The configuration for a pluggable module. See other *-config.yaml.sample files
 # for more details.
-ami-config-1.3:
-    -
-        type: 'headermatch'
-        id: '0'
-        conditions:
-            match:
-                Event: 'Newexten'
-                Channel: 'Local/play@default-00000000;2'
-                Application: 'NoOp'
-        requirements:
-            match:
-                AppData: 'AMI 1.3'
-        count: '1'
-
-# The configuration for a pluggable module. See other *-config.yaml.sample files
-# for more details.
-ami-config-1.4:
+ami-config:
     -
         type: 'headermatch'
         id: '0'

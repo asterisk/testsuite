@@ -24,12 +24,6 @@ class Test:
 
         properties = self.test_config.get('properties', {})
         self.tags = properties.get('tags', ['none'])
-        self.minversion = properties.get('minversion', 'none')
-        if not isinstance(self.minversion, list):
-            self.minversion = [self.minversion]
-        self.maxversion = properties.get('maxversion', 'none')
-        if not isinstance(self.maxversion, list):
-            self.maxversion = [self.maxversion]
         self.dependencies = [repr(d)
                              for d in properties.get('dependencies', [])]
 
@@ -39,10 +33,6 @@ class Test:
             test_objects = [test_objects]
         self.test_objects = [obj.get('typename', 'test-run')
                              for obj in test_objects]
-        self.test_maxversion = [obj.get('maxversion', 'none')
-                                for obj in test_objects]
-        self.test_minversion = [obj.get('minversion', 'none')
-                                for obj in test_objects]
         modules = test_modules.get('modules', {})
         self.test_modules = [module.get('typename', '-error-')
                              for module in modules]
@@ -50,9 +40,9 @@ class Test:
 
 class TestSuite:
     def __init__(self):
-        self.tests = self._parse_test_yaml("tests", '')
+        self.tests = self._parse_test_yaml("tests")
 
-    def _parse_test_yaml(self, test_dir, ast_version):
+    def _parse_test_yaml(self, test_dir):
         tests = []
 
         config = load_yaml_config("%s/%s" % (test_dir, TESTS_CONFIG))
@@ -65,7 +55,7 @@ class TestSuite:
                 if val == "test":
                     tests.append(Test(path))
                 elif val == "dir":
-                    tests += self._parse_test_yaml(path, ast_version)
+                    tests += self._parse_test_yaml(path)
 
         return tests
 
@@ -127,8 +117,6 @@ def main(argv=None):
     test_suite.results_for('test_objects')
     test_suite.results_for('test_modules')
     test_suite.results_for('dependencies')
-    test_suite.results_for('maxversion')
-    test_suite.results_for('minversion')
 
 if __name__ == "__main__":
     sys.exit(main() or 0)

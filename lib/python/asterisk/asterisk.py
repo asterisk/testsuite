@@ -21,7 +21,6 @@ import fileinput
 import test_suite_utils
 
 from config import ConfigFile
-from version import AsteriskVersion
 
 from twisted.internet import reactor, protocol, defer, utils, error
 from twisted.python.failure import Failure
@@ -369,15 +368,10 @@ class Asterisk(object):
         self.process = None
         self.astetcdir = ""
         self.original_astmoddir = ""
-        self.ast_version = None
         self.remote_config = remote_config
         self.memcheck_delay_stop = 0
         if test_config is not None and 'memcheck-delay-stop' in test_config:
             self.memcheck_delay_stop = test_config['memcheck-delay-stop'] or 0
-
-        # If the process is remote, don't bother
-        if not self.remote_config:
-            self.ast_version = AsteriskVersion()
 
         valgrind_env = os.getenv("VALGRIND_ENABLE") or ""
         self.valgrind_enabled = True if "true" in valgrind_env else False
@@ -579,10 +573,7 @@ class Asterisk(object):
         def __send_stop_gracefully():
             """Send a core stop gracefully CLI command"""
             LOGGER.debug('sending stop gracefully')
-            if self.ast_version and self.ast_version < AsteriskVersion("1.6.0"):
-                cli_deferred = self.cli_exec("stop gracefully")
-            else:
-                cli_deferred = self.cli_exec("core stop gracefully")
+            cli_deferred = self.cli_exec("core stop gracefully")
             cli_deferred.addCallbacks(__stop_gracefully_callback, __stop_gracefully_error)
 
         def __stop_gracefully_callback(cli_command):
@@ -771,8 +762,7 @@ class Asterisk(object):
             LOGGER.error("Config file '%s' does not exist" % cfg_path)
             return
 
-        tmp = "%s/%s/%s" % (os.path.dirname(cfg_path),
-                            self.ast_version.branch if self.ast_version else '',
+        tmp = "%s/%s" % (os.path.dirname(cfg_path),
                             os.path.basename(cfg_path))
         if os.path.exists(tmp):
             cfg_path = tmp
@@ -860,10 +850,7 @@ class Asterisk(object):
                 "<tech/data> application <appname> appdata\n"
                 "<tech/data> extension <exten>@<context>")
 
-        if self.ast_version and self.ast_version < AsteriskVersion("1.6.2"):
-            return self.cli_exec("originate %s" % argstr)
-        else:
-            return self.cli_exec("channel originate %s" % argstr)
+        return self.cli_exec("channel originate %s" % argstr)
 
     def cli_exec(self, cli_cmd):
         """Execute a CLI command on this instance of Asterisk.
