@@ -13,7 +13,6 @@ from twisted.internet import reactor
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
 from asterisk.test_case import TestCase
-from asterisk.version import AsteriskVersion
 from twisted.internet import reactor, defer
 from starpy import manager
 
@@ -32,12 +31,6 @@ class QueuePenaltyTest(TestCase):
         self.state = 0 # State of the test... determines next action and next event expectations.
         self.passed = False
         self.state_passed_flags = 0 # Meant to be used like a bit array for storing condition successes on specific states.
-        self.ast_version = AsteriskVersion()
-
-        if self.ast_version < AsteriskVersion("12"):
-            self.interface = 'location'
-        else:
-            self.interface = 'interface'
 
     #Setup loopback for QueueMemberPenalty events and set first test state
     def ami_connect(self, ami):
@@ -53,7 +46,7 @@ class QueuePenaltyTest(TestCase):
     #Evaluates events according to the expectations of a given state and advances the state when finished.
     def state_receive(self, event, ami):
         if (self.state == 1):
-            if (event['queue'] == "queue1" and event[self.interface] == "sip/mem1" and event['penalty'] == "1"):
+            if (event['queue'] == "queue1" and event['interface'] == "sip/mem1" and event['penalty'] == "1"):
                 logger.info("state 1: Successfully Completed")
                 self.state_advance(ami)
 
@@ -62,11 +55,11 @@ class QueuePenaltyTest(TestCase):
                 self.stop_reactor()
 
         elif (self.state == 2):
-            if (event['queue'] == "queue1" and event[self.interface] == "sip/mem2" and event['penalty'] == "2"):
+            if (event['queue'] == "queue1" and event['interface'] == "sip/mem2" and event['penalty'] == "2"):
                 logger.info("state 2: verified condition 1")
                 self.state_passed_flags = self.state_passed_flags | 1
 
-            elif (event['queue'] == "queue2" and event[self.interface] == "sip/mem2" and event['penalty'] == '2'):
+            elif (event['queue'] == "queue2" and event['interface'] == "sip/mem2" and event['penalty'] == '2'):
                 logger.info("state 2: verified condition 2")
                 self.state_passed_flags = self.state_passed_flags | 2
 
@@ -79,15 +72,15 @@ class QueuePenaltyTest(TestCase):
                 self.state_advance(ami)
 
         elif (self.state == 3):
-            if (event['queue'] == "queue1" and event[self.interface] == "sip/mem3" and event['penalty'] == '3'):
+            if (event['queue'] == "queue1" and event['interface'] == "sip/mem3" and event['penalty'] == '3'):
                 logger.info("state 3: verified condition 1")
                 self.state_passed_flags = self.state_passed_flags | 1
 
-            elif (event['queue'] == "queue2" and event[self.interface] == "sip/mem3" and event['penalty'] == '3'):
+            elif (event['queue'] == "queue2" and event['interface'] == "sip/mem3" and event['penalty'] == '3'):
                 logger.info("state 3: verified condition 2")
                 self.state_passed_flags = self.state_passed_flags | 2
 
-            elif (event['queue'] == "queue3" and event[self.interface] == "sip/mem3" and event['penalty'] == '3'):
+            elif (event['queue'] == "queue3" and event['interface'] == "sip/mem3" and event['penalty'] == '3'):
                 logger.info("state 3: verified condition 3")
                 self.state_passed_flags = self.state_passed_flags | 4
 
@@ -100,7 +93,7 @@ class QueuePenaltyTest(TestCase):
                 self.state_advance(ami)
 
         elif (self.state == 4):
-            if (event['queue'] == "queue3" and event[self.interface] == "sip/mem1" and event['penalty'] == '4'):
+            if (event['queue'] == "queue3" and event['interface'] == "sip/mem1" and event['penalty'] == '4'):
                 logger.info("state 4: Successfully Completed")
                 self.state_advance(ami)
 

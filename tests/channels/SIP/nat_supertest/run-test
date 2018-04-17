@@ -23,21 +23,8 @@ TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 logger = logging.getLogger(__name__)
 INJECT_FILE = TEST_DIR + "/sipp/inject.csv"
 
-expected_failures = {
-    'branch-1.4': [4, 6, 8, 10],
-    'branch-1.6.2': [4, 6, 8, 10],
-    'branch-1.8': [4, 8],
-    'branch-10': [4, 8],
-    'trunk': [4, 8]
-}
-
-nat_modes = {
-    'branch-1.4': {False: 'no', True: 'route'},
-    'branch-1.6.2': {False: 'no', True: 'route'},
-    'branch-1.8': {False: 'no', True: 'force_rport'},
-    'branch-10': {False: 'no', True: 'force_rport'},
-    'trunk': {False: 'no', True: 'force_rport'},
-}
+expected_failures = [4, 8]
+nat_modes = {False: 'no', True: 'force_rport'}
 
 def compute_value(val):
     """ Take an iterable of booleans (MSB-first) and return their integer value
@@ -63,7 +50,7 @@ class SIPNatTest(TestCase):
         self.create_ami_factory()
 
     def get_nat_value(self, route):
-        return nat_modes[self.ast[0].ast_version.branch][route]
+        return nat_modes[route]
 
     def update_config(self, general_nat, peer_nat):
         global_nat = self.get_nat_value(general_nat)
@@ -131,15 +118,11 @@ class SIPNatTest(TestCase):
                 # order of variables is least significant first!
                 qm = QM(["port_matches_via", "rport_specified", "peer_nat", "general_nat"])
                 logger.debug("Failures: %s" % (self.failures,))
-                try:
-                    if self.failures == expected_failures[self.ast[0].ast_version.branch]:
-                        self.passed = True
-                        logger.info(qm.get_function(qm.solve(self.failures, [])[1]))
-                    else:
-                        logger.warn(qm.get_function(qm.solve(self.failures, [])[1]))
-                except KeyError:
-                    log.error("We don't know the expected failures for branch: %s\n" % (self.ast[0].ast_version.branch,))
+                if self.failures == expected_failures:
                     self.passed = True
+                    logger.info(qm.get_function(qm.solve(self.failures, [])[1]))
+                else:
+                    logger.warn(qm.get_function(qm.solve(self.failures, [])[1]))
             return result
 
         self.__test_counter = 0

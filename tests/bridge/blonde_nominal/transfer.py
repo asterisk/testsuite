@@ -11,7 +11,6 @@ import sys
 import logging
 
 sys.path.append("lib/python")
-from version import AsteriskVersion
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,8 +46,6 @@ class Transfer(object):
         self._current_feature = None
 
         self.test_object.register_feature_start_observer(self._handle_feature_start)
-        if AsteriskVersion() < AsteriskVersion('12'):
-            self.test_object.register_feature_end_observer(self._handle_feature_end)
         self.test_object.register_ami_observer(self._handle_ami_connect)
 
         if (Transfer.__singleton_instance == None):
@@ -59,8 +56,7 @@ class Transfer(object):
         if (ami.id != 0):
             return
         ami.registerEvent('Newstate', self._handle_new_state)
-        if AsteriskVersion() >= AsteriskVersion('12'):
-            ami.registerEvent('AttendedTransfer', self._handle_attended_transfer)
+        ami.registerEvent('AttendedTransfer', self._handle_attended_transfer)
 
     def _handle_new_state(self, ami, event):
         ''' Handle a new state change. When we get a ringing back on the
@@ -87,13 +83,8 @@ class Transfer(object):
         LOGGER.debug('Setting current feature to %s' % str(feature))
         self._current_feature = feature
 
-    def _handle_feature_end(self, test_object, feature):
-        ''' Callback for the BridgeTestCase feature detected event
-
-        Keyword Arguments:
-        test_object The BridgeTestCase object
-        feature The specific feature that was executed
-        '''
+    def _handle_feature_end(self):
+        ''' Callback for the BridgeTestCase feature detected event'''
         if self._current_feature['who'] == 'alice':
             ami = self.test_object.ami_bob
             channel = self.test_object.bob_channel
@@ -110,5 +101,5 @@ class Transfer(object):
     def _handle_attended_transfer(self, ami, event):
         ''' Handle the AttendedTransfer event. Once the event has
         triggered, the call can be torn down. '''
-        self._handle_feature_end(None, None)
+        self._handle_feature_end()
 

@@ -11,8 +11,6 @@ import sys
 
 LOGGER = logging.getLogger(__name__)
 
-from version import AsteriskVersion
-
 
 def eq(expected, actual):
     if expected != actual:
@@ -25,15 +23,10 @@ def get_vars(ari, channel_id):
     actual = resp.json()["value"]
     eq('works', actual)
 
-    if AsteriskVersion() >= AsteriskVersion('13'):
-        ari.set_allow_errors(True)
+    ari.set_allow_errors(True)
     resp = ari.get('channels', channel_id, 'variable', variable='SHELL(echo -n fail)')
-    if AsteriskVersion() >= AsteriskVersion('13'):
-        ari.set_allow_errors(False)
-        eq(500, resp.status_code)
-    else:
-        eq(200, resp.status_code)
-        eq(resp.json().get('value'), '')
+    ari.set_allow_errors(False)
+    eq(500, resp.status_code)
 
 
 def on_start(ari, event, test_object):

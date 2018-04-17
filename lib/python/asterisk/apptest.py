@@ -20,7 +20,6 @@ from twisted.internet import reactor, defer
 sys.path.append("lib/python")
 from test_case import TestCase
 from ami import AMIEventInstance
-from version import AsteriskVersion
 
 LOGGER = logging.getLogger(__name__)
 
@@ -87,14 +86,6 @@ class AppTest(TestCase):
 
     def _create_application_event_instances(self, channel_id, events):
         for event_config in events:
-            minversion = event_config.get('minversion')
-            maxversion = event_config.get('maxversion')
-            if (minversion is not None and
-                    AsteriskVersion() < AsteriskVersion(minversion)):
-                continue
-            if (maxversion is not None and
-                    AsteriskVersion() >= AsteriskVersion(maxversion)):
-                continue
             ae_instance = ApplicationEventInstance(channel_id,
                                                    event_config,
                                                    self)

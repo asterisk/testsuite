@@ -53,7 +53,6 @@ if os.getenv("PYTHONPATH"):
     new_PYTHONPATH.append(os.getenv("PYTHONPATH"))
 new_PYTHONPATH.append("lib/python")
 
-from asterisk.version import AsteriskVersion
 from asterisk.asterisk import Asterisk
 from asterisk.test_config import TestConfig
 from mailer import send_email
@@ -92,16 +91,15 @@ abandon_test_suite = False
 ref_debug_is_enabled = False
 
 class TestRun:
-    def __init__(self, test_name, ast_version, options, global_config=None, timeout=-1):
+    def __init__(self, test_name, options, global_config=None, timeout=-1):
         self.can_run = False
         self.did_run = False
         self.time = 0.0
         self.test_name = test_name
-        self.ast_version = ast_version
         self.options = options
         self.test_config = TestConfig(test_name, global_config)
         self.failure_message = ""
-        self.__check_can_run(ast_version)
+        self.__check_can_run()
         self.stdout = ""
         self.timeout = timeout
         self.cleanup = options.cleanup
@@ -133,7 +131,6 @@ class TestRun:
                 os.environ['PCAP'] = "yes"
 
             self.stdout_print("Running %s ..." % cmd)
-            cmd.append(str(self.ast_version).rstrip())
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
             self.pid = p.pid
@@ -445,9 +442,9 @@ class TestRun:
         self._archive_files(run_dir, archive_dir, 'dumpfile.pcap')
         self._archive_files(run_dir, archive_dir, 'packet.pcap')
 
-    def __check_can_run(self, ast_version):
+    def __check_can_run(self):
         """Check tags and dependencies in the test config."""
-        if self.test_config.check_deps(ast_version) and \
+        if self.test_config.check_deps() and \
                 self.test_config.check_tags(self.options.tags, self.options.skip_tags):
             self.can_run = True
 
@@ -456,13 +453,13 @@ class TestRun:
 
 
 class TestSuite:
-    def __init__(self, ast_version, options):
+    def __init__(self, options):
         self.options = options
 
         self.tests = []
         self.start_time = None
         self.global_config = self._parse_global_config()
-        self.tests = self._parse_test_yaml("tests", ast_version)
+        self.tests = self._parse_test_yaml("tests")
         if self.options.randomorder:
             random.shuffle(self.tests)
         else:
@@ -475,7 +472,7 @@ class TestSuite:
     def _parse_global_config(self):
         return TestConfig(os.getcwd())
 
-    def _parse_test_yaml(self, test_dir, ast_version):
+    def _parse_test_yaml(self, test_dir):
         tests = []
 
         config = load_yaml_config("%s/%s" % (test_dir, TESTS_CONFIG))
@@ -503,10 +500,10 @@ class TestSuite:
                                     for test in self.options.skip_tests_regex)):
                         continue
 
-                    tests.append(TestRun(path, ast_version, self.options,
+                    tests.append(TestRun(path, self.options,
                                          self.global_config, self.options.timeout))
                 elif val == "dir":
-                    tests += self._parse_test_yaml(path, ast_version)
+                    tests += self._parse_test_yaml(path)
 
         return tests
 
@@ -538,13 +535,6 @@ class TestSuite:
             print "      --> Summary: %s" % t.test_config.summary
             if t.test_config.skip is not None:
                 print "      --> Skip: %s" % t.test_config.skip
-            print ("      --> Minimum Version: %s (%s)" %
-                   (", ".join([str(v) for v in t.test_config.minversion]),
-                    t.test_config.minversion_check))
-            if t.test_config.maxversion is not None:
-                print ("      --> Maximum Version: %s (%s)" %
-                       (", ".join([str(v) for v in t.test_config.maxversion]),
-                        t.test_config.maxversion_check))
             if t.test_config.features:
                 print "      --> Features:"
                 for feature_name in t.test_config.features:
@@ -611,16 +601,6 @@ class TestSuite:
                     self.total_skipped += 1
                     continue
                 print "--> Cannot run test '%s'" % t.test_name
-                if t.test_config.forced_version is not None:
-                    print "--- --> Forced Asterisk Version: %s" % \
-                        (str(t.test_config.forced_version))
-                print ("--- --> Minimum Version: %s (%s)" %
-                       (", ".join([str(v) for v in t.test_config.minversion]),
-                        t.test_config.minversion_check))
-                if t.test_config.maxversion is not None:
-                    print ("--- --> Maximum Version: %s (%s)" %
-                           (", ".join([str(v) for v in t.test_config.maxversion]),
-                            t.test_config.maxversion_check))
                 for f in t.test_config.features:
                     print "--- --> Version Feature: %s - %s" % (
                         f, str(t.test_config.feature_check[f]))
@@ -873,10 +853,8 @@ def main(argv=None):
     signal.signal(signal.SIGUSR1, handle_usr1)
     signal.signal(signal.SIGTERM, handle_term)
 
-    ast_version = AsteriskVersion(default=options.version)
-
     if options.list_tests or options.list_tags or options.list_terse :
-        test_suite = TestSuite(ast_version, options)
+        test_suite = TestSuite(options)
 
         if options.list_tests:
             test_suite.list_tests()
@@ -912,10 +890,10 @@ def main(argv=None):
         syslog.openlog('AsteriskTestsuite', syslog.LOG_PID)
     while ((iteration < options.number or continue_forever) and not abandon_test_suite):
 
-        test_suite = TestSuite(ast_version, options)
+        test_suite = TestSuite(options)
 
-        running_str = "Running tests for Asterisk {0} (run {1} of {2})...\n".format(
-            str(ast_version).strip('\n'), iteration + 1, options.number)
+        running_str = "Running tests for Asterisk (run {0} of {1})...\n".format(
+            iteration + 1, options.number)
         print running_str
         if options.syslog:
             syslog.syslog(running_str)
