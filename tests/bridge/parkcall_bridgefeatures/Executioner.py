@@ -13,8 +13,6 @@ import re
 
 sys.path.append("lib/python")
 
-from version import AsteriskVersion
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -25,18 +23,9 @@ class Executioner(object):
         test_object.register_ami_observer(self.ami_connect)
         self.test_object = test_object
 
-        running_version = AsteriskVersion()
-
         self.calls = []
         self.calls.append({'parker': 'alice', 'parkee': 'bob'})
         self.calls.append({'parker': 'bob', 'parkee': 'alice'})
-
-        # Parking events for this test vary with Asterisk 12 and
-        # up from prior versions.
-        if (running_version < AsteriskVersion("12.0.0")):
-            self.asterisk12Events = False
-        else:
-            self.asterisk12Events = True
 
         self.parking_events_received = 0
 
@@ -55,8 +44,7 @@ class Executioner(object):
         # We only hangup when we know that both the channel that initiated
         # park and our zombie channel are gone. There are no zombies in
         # Asterisk 12 mode, so we hang up on the first hangup.
-        if not self.asterisk12Events and self.hangups_processed == 1 \
-                or self.asterisk12Events and self.hangups_processed == 0:
+        if self.hangups_processed == 0:
             ami.hangup(self.parked_channel)
 
         self.hangups_processed += 1
@@ -67,12 +55,8 @@ class Executioner(object):
         this_parker = this_expectation['parker']
         this_parkee = this_expectation['parkee']
 
-        if self.asterisk12Events:
-            parker_field = 'parkerdialstring'
-            parkee_field = 'parkeechannel'
-        else:
-            parker_field = 'from'
-            parkee_field = 'channel'
+        parker_field = 'parkerdialstring'
+        parkee_field = 'parkeechannel'
 
         this_result_parker = event.get(parker_field)
         this_result_parkee = event.get(parkee_field)

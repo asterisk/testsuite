@@ -15,7 +15,6 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
-from asterisk.version import AsteriskVersion
 from asterisk.test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
@@ -29,7 +28,6 @@ class PickupTest(TestCase):
         self.bridgeCount = 0
         self.create_asterisk()
 
-        self.bridgingModel12 = False
         self.bridge = None
         self.firstChannelBridged = False
         self.secondChannelBridged = False
@@ -40,7 +38,7 @@ class PickupTest(TestCase):
 
     def check_test_done(self):
 
-        if self.picked_up and (not self.bridgingModel12 or (self.firstChannelBridged and self.secondChannelBridged)):
+        if self.picked_up and self.firstChannelBridged and self.secondChannelBridged:
             self.set_passed(True)
             self.ami[0].hangup(self.firstChannel).addCallback(self.hangup)
             LOGGER.info("Both first and second channel detected; passing test")
@@ -91,8 +89,6 @@ class PickupTest(TestCase):
 
         LOGGER.info("Detected second channel in Pickup: %s" % self.secondChannel)
         self.picked_up = True
-        if not self.bridgingModel12:
-            self.ami[0].registerEvent('Bridge', self.check_Bridge)
         self.check_test_done()
 
     def check_UserEvent(self, ami, event):
@@ -105,8 +101,7 @@ class PickupTest(TestCase):
 
         self.ami[0].registerEvent('Pickup', self.check_Pickup)
 
-        if self.bridgingModel12:
-            self.ami[0].registerEvent('BridgeEnter', self.check_BridgeEnter)
+        self.ami[0].registerEvent('BridgeEnter', self.check_BridgeEnter)
 
         LOGGER.info("Originating Pickup attempt")
         self.ami[0].originate(
@@ -122,15 +117,7 @@ class PickupTest(TestCase):
         LOGGER.info("Detected first channel %s" % self.firstChannel)
 
     def ami_connect(self, ami):
-        running_version = AsteriskVersion()
-        post_version = AsteriskVersion("12.0.0")
-        if running_version < post_version:
-            # Pre-Asterisk 12
-            self.ami[0].registerEvent("Dial", self.check_Dial)
-        else:
-            # Asterisk 12+
-            self.bridgingModel12 = True
-            self.ami[0].registerEvent("DialBegin", self.check_Dial)
+        self.ami[0].registerEvent("DialBegin", self.check_Dial)
         self.ami[0].registerEvent("UserEvent", self.check_UserEvent)
         LOGGER.info("Originating channel to be picked up")
         self.ami[0].originate(

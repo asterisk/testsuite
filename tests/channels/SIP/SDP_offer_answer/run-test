@@ -14,7 +14,6 @@ sys.path.append("lib/python")
 
 from twisted.internet import reactor
 from asterisk.sipp import SIPpTest
-from asterisk.version import AsteriskVersion
 
 
 WORKING_DIR = "SIP/SDP_offer_answer"
@@ -41,11 +40,8 @@ SIPP_SCENARIOS = [
 
 # generate SIPP scenarios with appropriate port numbers and the config to go with it
 def main():
-    if AsteriskVersion() > AsteriskVersion("11"):
-        SIPP_SCENARIOS.append({'scenario' : 'decline_multistream.xml'})
-        SIPP_SCENARIOS.append({'scenario' : 'decline_unsupported_image_multi.xml'})
-    else:
-        SIPP_SCENARIOS.append({'scenario' : 'decline_unsupported_image_multi_1.8.xml'})
+    SIPP_SCENARIOS.append({'scenario' : 'decline_multistream.xml'})
+    SIPP_SCENARIOS.append({'scenario' : 'decline_unsupported_image_multi.xml'})
     test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
     reactor.run()
     if not test.passed:

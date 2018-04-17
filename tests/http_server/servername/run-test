@@ -11,17 +11,17 @@ the GNU General Public License Version 2.
 import logging
 import requests
 import sys
+import re
 
 sys.path.append("lib/python")
 
 from twisted.internet import reactor
 from asterisk.asterisk import Asterisk
-from asterisk.version import AsteriskVersion
 from asterisk.test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
 
-EXPECTED_NAMES = ["Peabody", "Asterisk/<version>", None]
+EXPECTED_NAMES = ["^Peabody$", "^Asterisk/", None]
 
 BASE_URL = "http://127.0.0.%d:8088/httpstatus"
 
@@ -43,9 +43,6 @@ class HttpClientTest(TestCase):
 
         for i in range(0, 3):
             name = EXPECTED_NAMES[i]
-            if name is not None:
-                name = name.replace("<version>",
-                                str(AsteriskVersion()).rstrip('\n'))
 
             url = BASE_URL % (i+1)
 
@@ -76,7 +73,7 @@ class HttpClientTest(TestCase):
         server = resp.headers.get('Server')
         LOGGER.debug("[server]: [%s]", server)
 
-        if server != expected_name:
+        if (not expected_name and server) or (expected_name is not None and re.match(expected_name, server) is None):
             LOGGER.debug("[%s] != [%s]", server, expected_name)
             self.set_passed(False)
             return

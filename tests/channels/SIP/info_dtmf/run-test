@@ -17,7 +17,6 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 
-from asterisk.version import AsteriskVersion
 from asterisk.sipp import SIPpScenario, SIPpScenarioSequence
 from asterisk.test_case import TestCase
 
@@ -54,10 +53,7 @@ class InfoDTMF(TestCase):
         Keyword Arguments:
         ami    -    The StarPY manager object that connected
         """
-        if (AsteriskVersion() >= AsteriskVersion('12')):
-            ami.registerEvent('DTMFEnd', self.handle_dtmf_end_event)
-        else:
-            ami.registerEvent('DTMF', self.handle_dtmf_event)
+        ami.registerEvent('DTMFEnd', self.handle_dtmf_end_event)
         sipp_scenario_params = [{'scenario':'dtmf-relay.xml','-p':'5061'}, {'scenario':'dtmf.xml','-p':'5061'}]
         sequence = SIPpScenarioSequence(test_case = self)
         for scenario_param in sipp_scenario_params:
@@ -81,22 +77,6 @@ class InfoDTMF(TestCase):
             LOGGER.info("Received all expected events, stopping test")
             self.stop_reactor()
 
-    def handle_dtmf_event(self, ami, event):
-        """
-        Callback handler for a DTMF Event received over AMI.
-
-        Keyword Arguments:
-        ami    -    The instance of AMI that received this event
-        event    -    The AMI event object
-        """
-        digit = event["digit"]
-        end = event["end"]
-        if (end == "Yes"):
-            LOGGER.debug("Received end of DTMF digit %s" % digit)
-            self.received_events.append(digit)
-        if (len(self.received_events) == len(self.expected_events)):
-            LOGGER.info("Received all expected events, stopping test")
-            self.stop_reactor()
 
 def main():
     """

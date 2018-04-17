@@ -16,7 +16,6 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 from asterisk.asterisk import Asterisk
-from asterisk.version import AsteriskVersion
 from asterisk.test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)
@@ -31,7 +30,6 @@ class CallPickupTest(TestCase):
         self.targetChannel = "SIP/faker-"
 
         self.bridge = None
-        self.bridgingModel12 = False
 
         self.bridgeComplete = False
         self.pickupComplete = False
@@ -76,23 +74,6 @@ class CallPickupTest(TestCase):
             else:
                 self.bridgeComplete = True
 
-    def check_bridge(self, ami, event):
-        if event.get("bridgestate") != "Link":
-            return
-
-        channel1 = event.get("channel1")
-        channel2 = event.get("channel2")
-
-        pattern1 = re.compile(self.pickeeChannel)
-        pattern2 = re.compile(self.pickerChannel)
-
-        if pattern1.match(channel1) and pattern2.match(channel2):
-            if self.pickupComplete:
-                self.set_passed(True)
-                self.ami[0].hangup(channel2).addCallback(self.hangup)
-            else:
-                self.bridgeComplete = True
-
     def check_pickup(self, ami, event):
         picker = event.get("channel")
         target = event.get("targetchannel")
@@ -114,10 +95,7 @@ class CallPickupTest(TestCase):
 
         self.ami[0].registerEvent('Pickup', self.check_pickup)
 
-        if self.bridgingModel12:
-            self.ami[0].registerEvent('BridgeEnter', self.check_bridge_enter)
-        else:
-            self.ami[0].registerEvent('Bridge', self.check_bridge)
+        self.ami[0].registerEvent('BridgeEnter', self.check_bridge_enter)
 
         LOGGER.info("Originating Pickup attempt")
 
@@ -134,14 +112,7 @@ class CallPickupTest(TestCase):
         if self.connectionsEstablished != 2:
             return
 
-        running_version = AsteriskVersion()
-        post_version = AsteriskVersion("12.0.0")
-        if running_version < post_version:
-            #Pre-Asterisk 12
-            self.ami[0].registerEvent("Dial", self.check_dial)
-        else:
-            self.bridgingModel12 = True
-            self.ami[0].registerEvent("DialBegin", self.check_dial)
+        self.ami[0].registerEvent("DialBegin", self.check_dial)
 
         LOGGER.info("Originating channel to be picked up")
         self.ami[0].originate(
