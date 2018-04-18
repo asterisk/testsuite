@@ -52,6 +52,12 @@ global-settings:
                 post:
                     typename: 'sip_channel_test_condition.SipChannelTestCondition'
             -
+                name: 'pjsip-channels'
+                pre:
+                    typename: 'pjsip_channel_test_condition.PJSipChannelTestCondition'
+                post:
+                    typename: 'pjsip_channel_test_condition.PJSipChannelTestCondition'
+            -
                 name: 'memory'
                 pre:
                     typename: 'memory_test_condition.MemoryPreTestCondition'
