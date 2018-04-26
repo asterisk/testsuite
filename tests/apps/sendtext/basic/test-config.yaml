@@ -1,0 +1,25 @@
+testinfo:
+    summary: 'Test SendText with Basic Messaging'
+    description: |
+        Make a call and check that a MESSAGE is sent to the caller with the
+        appropriate content.
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'app_sendtext'
+        - asterisk : 'chan_sip'
+    tags:
+        - sip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+               - { 'key-args': { 'scenario': 'message_recv.xml', '-p': '5061', '-s': 'alice' },
+                   'ordered-args': [ '-set', 'extn', 'sendtext' ] }
