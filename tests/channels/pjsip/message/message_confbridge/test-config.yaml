@@ -1,0 +1,32 @@
+testinfo:
+    summary: 'Test sending an in dialog MESSAGE to a confbridge.'
+    description: |
+        Alice and Bob call a confbridge.  Alice waits a few seconds to make sure
+        Bob is in the bridge then sends an in-dialog MESSAGE with a text/html
+        body.  Bob gets the MESSAGE and verifies that Content-Type was preserved
+        and that the body is intact.  
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_messaging'
+        - asterisk : 'bridge_softmix'
+        - asterisk : 'app_confbridge'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    reactor-timeout: 20
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario': 'message_recv.xml', '-p': '5061', '-s': 'alice' },
+                    'ordered-args': [ '-set', 'extn', 'confbridge' ] }
+                - { 'key-args': { 'scenario': 'message_send.xml', '-p': '5062', '-s': 'bob' },
+                    'ordered-args': [ '-set', 'extn', 'confbridge' ] }
