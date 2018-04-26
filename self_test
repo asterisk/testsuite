@@ -1,4 +1,5 @@
-#!/usr/bin/sh -e
+#!/usr/bin/env sh
+set -e
 
 PYTHON=""
 PYTHON2=$(which python2 2>/dev/null || true)
