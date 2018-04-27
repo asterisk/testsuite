@@ -195,6 +195,9 @@ class Ports(object):
         if not isinstance(ports, list):
             ports = list(ports)
 
+        LOGGER.debug("Checking the following {0}/{1} ports for availability: "
+            "{2}".format(socket_type(socktype), socket_family(family), ports))
+
         res = []
         for port in ports:
             for attempt in range(attempts):
@@ -238,11 +241,19 @@ class Ports(object):
 
             # Need a random port first
             port = self.get_avail(host, 0, socktype, family)
-            ports = self.get_avail(
-                host, range(port[0] + step, port[0] + num, step),
-                socktype, family, attempts)
-            if ports:
-                return port + ports
+
+            if abs(num) <= 1:
+                return port
+
+            try:
+                ports = self.get_avail(
+                    host, range(port[0] + step, port[0] + num, step),
+                    socktype, family, attempts)
+            except PortError:
+                # At least one port not free, try again
+                continue
+
+            return port + ports
 
         raise PortError(socktype, family, attempts=attempts)
 
