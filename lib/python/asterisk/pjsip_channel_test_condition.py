@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 '''
 Copyright (C) 2018, Digium, Inc.
 Torrey Searle  <tsearle@gmail.com>
@@ -7,7 +6,7 @@ Matt Jordan <mjordan@digium.com>
 
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
-"""
+'''
 
 from twisted.internet import defer
 from test_conditions import TestCondition
@@ -30,7 +29,7 @@ class PJSipChannelTestCondition(TestCondition):
         if ('allowedchannels' in test_config.config):
             self.allowed_channels = test_config.config['allowedchannels']
 
-    def evaluate(self, related_test_condition = None):
+    def evaluate(self, related_test_condition=None):
         """Evaluate the test condition"""
 
         def __channel_callback(result):
