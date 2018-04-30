@@ -240,20 +240,20 @@ class Ports(object):
                     socktype, family, attempts)
 
             # Need a random port first
-            port = self.get_avail(host, 0, socktype, family)
+            avail = self.get_avail(host, 0, socktype, family)
 
             if abs(num) <= 1:
-                return port
+                return avail
 
             try:
-                ports = self.get_avail(
-                    host, range(port[0] + step, port[0] + num, step),
+                avails = self.get_avail(
+                    host, range(avail[0] + step, avail[0] + num, step),
                     socktype, family, attempts)
             except PortError:
                 # At least one port not free, try again
                 continue
 
-            return port + ports
+            return avail + avails
 
         raise PortError(socktype, family, attempts=attempts)
 
