@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'Disabling in legacy because of ASTERISK-27818'
     summary: 'Test res_pjsip usage of endpoint ACLs'
     description: |
         This tests SIP calls originating from different addresses against
@@ -12,6 +13,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - app : 'sipp'
+        - asterisk : 'res_config_sqlite3'
         - asterisk : 'res_pjsip'
     tags:
         - pjsip
