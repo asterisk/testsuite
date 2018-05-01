@@ -11,6 +11,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - app : 'sipp'
+        - asterisk : 'res_config_sqlite3'
         - asterisk : 'res_pjsip'
     tags:
         - pjsip
