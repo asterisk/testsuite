@@ -52,7 +52,7 @@
         optional="true">
   </recv>
 
-  <recv response="403">
+  <recv response="401">
   </recv>
 
   <send>
