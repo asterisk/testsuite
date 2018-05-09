@@ -1,0 +1,65 @@
+testinfo:
+    summary: 'Test modification of an AOR from qualified to unqualified'
+    description: |
+        This test adds an endpoint referencing an AOR and then adds the AOR with a
+        static contact with qualify enabled. Once the endpoint becomes unreachable the
+        AOR is then modified to be unqualified. The test confirms that the endpoint
+        then becomes reachable.
+
+properties:
+    dependencies:
+        - python: autobahn.websocket
+        - python: requests
+        - python: twisted
+        - python: starpy
+        - asterisk: res_ari_asterisk
+        - asterisk: res_pjsip
+        - asterisk: res_sorcery_memory
+    tags:
+        - ARI
+        - pjsip
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/message'
+    test-object:
+        config-section: test-config
+        typename: ari.AriBaseTestObject
+    modules:
+        -
+            config-section: pluggable-config
+            typename: pluggable_modules.EventActionModule
+
+test-config:
+    apps: testsuite
+
+pluggable-config:
+    -
+        ari-start:
+        ari-requests:
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/endpoint/test'
+                body: { "fields": [ { 'attribute': 'aors', 'value': 'test'} ] }
+                expect: 200
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/aor/test'
+                body: { "fields": [ { 'attribute': 'qualify_frequency', 'value': '5' },
+                                    { 'attribute': 'contact', 'value': 'sip:127.0.0.1:5061'} ] }
+                expect: 200
+            -
+                method: 'put'
+                uri: 'asterisk/config/dynamic/res_pjsip/aor/test'
+                body: { "fields": [ { 'attribute': 'qualify_frequency', 'value': '0' },
+                                    { 'attribute': 'contact', 'value': 'sip:127.0.0.1:5061'} ] }
+                expect: 200
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'PeerStatus'
+                    Peer: 'PJSIP/test'
+                    PeerStatus: 'Reachable'
+            count: '1'
+        stop_test:

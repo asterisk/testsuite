@@ -1,0 +1,6 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'modify_aor_to_qualified'
+    - test: 'modify_aor_to_unqualified'
+    - test: 'delete_aor'
+    - test: 'modify_endpoint'
