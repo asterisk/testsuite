@@ -76,6 +76,7 @@ properties:
         - python: 'autobahn.websocket'
         - python: 'starpy'
         - python: 'twisted'
+        - app:    'statsd'
     tags:
         - statsd
         - apps
