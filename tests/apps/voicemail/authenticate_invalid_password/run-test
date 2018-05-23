@@ -135,15 +135,15 @@ class AuthenticateInvalidPassword(VoiceMailTest):
 
     def executeTest(self, ami):
         if self.test_counter == 0:
-            logger.debug("Originating call to sip/ast/9000")
-            df = ami.originate("sip/ast1/9000", "voicemailCaller", "wait", 1)
+            logger.debug("Originating call to PJSIP/9000@ast1")
+            df = ami.originate("PJSIP/9000@ast1", "voicemailCaller", "wait", 1)
             df.addErrback(self.handle_originate_failure)
         else:
-            self.sender_channel = "SIP/ast1-00000001"
+            self.sender_channel = "PJSIP/ast1-00000001"
             startObject = LoginWithoutMailbox(self.test_state_controller, self)
             self.test_state_controller.change_state(startObject)
-            logger.debug("Originating call to sip/ast/9001")
-            df = ami.originate("sip/ast1/9001", "voicemailCaller", "wait", 1)
+            logger.debug("Originating call to PJSIP/9001@ast1")
+            df = ami.originate("PJSIP/9001@ast1", "voicemailCaller", "wait", 1)
             df.addErrback(self.handle_originate_failure)
 
     def user_event(self, ami, event):

@@ -213,11 +213,6 @@ class CheckVoicemailWhileLeavingMessage(VoiceMailTest):
     testParentDir = "tests/apps/voicemail"
 
     """
-    The channel to connect to that acts as the voicemail server
-    """
-    channel = "sip/ast1/"
-
-    """
     The voicemail manager object
     """
     voicemailManager = None
@@ -284,8 +279,8 @@ class CheckVoicemailWhileLeavingMessage(VoiceMailTest):
                     self.stop_reactor()
 
         else:
-            logger.debug("Originating call to " + self.channel)
-            df = ami.originate(self.channel + "8052", "voicemailCaller", "wait", 1)
+            logger.debug("Originating call to PJSIP/8052@ast1")
+            df = ami.originate("PJSIP/8052@ast1", "voicemailCaller", "wait", 1)
             df.addErrback(self.handle_originate_failure)
             self.leaveVoicemail()
 
@@ -299,9 +294,9 @@ class CheckVoicemailWhileLeavingMessage(VoiceMailTest):
         self.stop_reactor()
 
     def leaveVoicemail(self):
-        logger.debug("Originating call to " + self.channel + "1234")
+        logger.debug("Originating call to PJSIP/1234@ast1")
         self.ast[self.ami_sender.id].cli_exec("dialplan set global TALK_AUDIO " + self.audioFile)
-        df = self.ami_sender.originate(self.channel + "1234", "voicemailCaller", "leaveVoicemail", 1)
+        df = self.ami_sender.originate("PJSIP/1234@ast1", "voicemailCaller", "leaveVoicemail", 1)
         df.addErrback(self.handle_originate_failure)
 
     def user_event(self, ami, event):
