@@ -9,3 +9,4 @@ tests:
     - test: 'message_retrans'
     - test: 'message_send_ami'
     - test: 'message_to_uri'
+    - test: 'message_confbridge'
