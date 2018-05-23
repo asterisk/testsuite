@@ -195,7 +195,7 @@ class CheckVoicemailDialout(VoiceMailTest):
     """
     The channel to connect to that acts as the voicemail server
     """
-    channel = "sip/ast1/8052"
+    channel = "PJSIP/8052@ast1"
 
     """
     The voicemail manager object

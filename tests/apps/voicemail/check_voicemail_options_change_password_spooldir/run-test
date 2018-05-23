@@ -182,7 +182,7 @@ class CheckVoicemailChangePassword(VoiceMailTest):
     """
 
     testParentDir = "tests/apps/voicemail"  # parent directory the test is in
-    channel = "sip/ast1/8052"  # channel to connect to that acts as vm server
+    channel = "PJSIP/8052@ast1"  # channel to connect to that acts as vm server
 
     def __init__(self):
         super(CheckVoicemailChangePassword, self).__init__()
