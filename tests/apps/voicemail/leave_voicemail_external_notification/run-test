@@ -144,23 +144,23 @@ class LeaveVoicemailExternNotify(TestCase):
     def executeTest(self):
         if self.testCounter == 0:
             logger.debug("Executing test [" + str(self.testCounter) + "] - send to 1234")
-            df = self.senderAmi.originate("sip/ast1/1234", "sendvoicemail", "1234", 1)
+            df = self.senderAmi.originate("PJSIP/1234@ast1", "sendvoicemail", "1234", 1)
             df.addErrback(self.handle_originate_failure)
         elif self.testCounter == 1:
             logger.debug("Executing test [" + str(self.testCounter) + "] - send to 9000")
-            df = self.senderAmi.originate("sip/ast1/9000", "sendvoicemail", "1234", 1)
+            df = self.senderAmi.originate("PJSIP/9000@ast1", "sendvoicemail", "1234", 1)
             df.addErrback(self.handle_originate_failure)
         elif self.testCounter == 2:
             logger.debug("Executing test [" + str(self.testCounter) + "] - send to 9001")
-            df = self.senderAmi.originate("sip/ast1/9001", "sendvoicemail", "1234", 1)
+            df = self.senderAmi.originate("PJSIP/9001@ast1", "sendvoicemail", "1234", 1)
             df.addErrback(self.handle_originate_failure)
         elif self.testCounter == 3:
             logger.debug("Executing test [" + str(self.testCounter) + "] - send to 9002")
-            df = self.senderAmi.originate("sip/ast1/9002", "sendvoicemail", "1234", 1)
+            df = self.senderAmi.originate("PJSIP/9002@ast1", "sendvoicemail", "1234", 1)
             df.addErrback(self.handle_originate_failure)
         elif self.testCounter == 4:
             logger.debug("Executing test [" + str(self.testCounter) + "] - send to 9003")
-            df = self.senderAmi.originate("sip/ast1/9003", "sendvoicemail", "1234", 1)
+            df = self.senderAmi.originate("PJSIP/9003@ast1", "sendvoicemail", "1234", 1)
             df.addErrback(self.handle_originate_failure)
 
         self.testCounter += 1
