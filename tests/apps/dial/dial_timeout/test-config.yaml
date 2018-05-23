@@ -13,7 +13,7 @@ properties:
         - asterisk : 'app_stack'
         - asterisk : 'app_userevent'
         - asterisk : 'cdr_csv'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
         - asterisk : 'func_channel'
         - asterisk : 'func_hangupcause'
         - asterisk : 'func_strings'
@@ -48,7 +48,7 @@ cdr-config-12:
                 dcontext: 'default'
                 callerid: '"" <>'
                 channel: 'Local/s@default-.{8};2'
-                dchannel: 'SIP/bob-.{8}'
+                dchannel: 'PJSIP/bob-.{8}'
                 lastapp: 'Dial'
                 disposition: 'NO ANSWER'
                 amaflags: 'DOCUMENTATION'
@@ -62,7 +62,7 @@ ami-config-12:
                 UserEvent: 'HangupCause'
         requirements:
             match:
-                HangupChannel: 'SIP/bob-.*'
+                HangupChannel: 'PJSIP/bob-.*'
                 TechCause: 'SIP 180 Ringing'
                 AsteriskCause: 'Normal Clearing'
         count: '1'
@@ -71,7 +71,7 @@ ami-config-12:
         conditions:
             match:
                 Event: 'DialEnd'
-                DestChannel: 'SIP/bob-.*'
+                DestChannel: 'PJSIP/bob-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
