@@ -13,7 +13,7 @@ properties:
         - asterisk : 'app_stack'
         - asterisk : 'app_userevent'
         - asterisk : 'cdr_csv'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
         - asterisk : 'func_channel'
         - asterisk : 'func_hangupcause'
         - asterisk : 'func_strings'
@@ -28,9 +28,6 @@ test-modules:
         config-section: sipp-config
         typename: 'sipp.SIPpTestCase'
     modules:
-        -
-            config-section: 'cdr-config-12'
-            typename: 'cdr.CDRModule'
         -
             config-section: ami-config-13-5
             typename: 'ami.AMIEventModule'
@@ -58,7 +55,7 @@ cdr-config-12:
                 dcontext: 'default'
                 callerid: '"" <>'
                 channel: 'Local/s@default-.{8};2'
-                dchannel: 'SIP/charlie-.{8}'
+                dchannel: 'PJSIP/charlie-.{8}'
                 lastapp: 'Dial'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
@@ -73,7 +70,7 @@ ami-config-13-5:
             match:
                 Event: 'UserEvent'
                 UserEvent: 'HangupCause'
-                HangupChannel: 'SIP/charlie-.*'
+                HangupChannel: 'PJSIP/charlie-.*'
         requirements:
             match:
                 TechCause: 'SIP 200 OK'
@@ -84,7 +81,7 @@ ami-config-13-5:
         conditions:
             match:
                 Event: 'DialBegin'
-                DestChannel: 'SIP/charlie-.*'
+                DestChannel: 'PJSIP/charlie-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
@@ -103,7 +100,7 @@ ami-config-13-5:
         conditions:
             match:
                 Event: 'DialEnd'
-                DestChannel: 'SIP/charlie-.*'
+                DestChannel: 'PJSIP/charlie-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
@@ -113,7 +110,7 @@ ami-config-13-5:
                 DestLinkedid: '.*'
                 CallerIDNum: '<unknown>'
                 CallerIDName: '<unknown>'
-                ConnectedLineNum: '<unknown>'
+                ConnectedLineNum: 's'
                 ConnectedLineName: '<unknown>'
                 DialStatus: 'ANSWER'
         count: '1'
