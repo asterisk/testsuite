@@ -22,11 +22,11 @@ run_test() {
 	fi
 }
 
-ALL_TESTS=$(find lib/python/asterisk/self_test -name 'test_*.py' -exec basename '{}' .py \;)
+ALL_TESTS=$(find lib/python/asterisk/self_test -name 'test*.py' -exec basename '{}' .py \;)
 for i in $ALL_TESTS; do
 	run_test $i python $PYTHON
 	run_test $i python2 $PYTHON2
-	run_test $i python3 $PYTHON3
+	[ "${i#test2}" = "${i}" ] && run_test $i python3 $PYTHON3
 done
 
 # Temporary code for running unit tests that are not compatible with python3

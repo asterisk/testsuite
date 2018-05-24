@@ -4,61 +4,57 @@ testinfo:
         'This test performs an outbound registration, and verifies that
         the expected StatsD statistics are generated as a result.'
 
-properties:
-    dependencies:
-        - python: 'twisted'
-        - python: 'starpy'
-        - asterisk: 'res_pjsip'
-        - asterisk: 'res_pjsip_outbound_registration'
-        - asterisk: 'res_statsd'
-        - sipp:
-            version: 'v3.0'
-    tags:
-        - pjsip
-
 test-modules:
-    add-test-to-search-path: 'True'
     test-object:
         config-section: test-object-config
         typename: 'sipp.SIPpTestCase'
     modules:
         -
-            typename: 'mockd.MockDServer'
-            config-section: 'statsd-config'
+            config-section: event-action-config
+            typename: 'pluggable_modules.EventActionModule'
 
-statsd-config:
-    prefix: 'PJSIP.registrations'
-    packets:
-        -
-            'PJSIP.registrations.count:0|g'
-        -
-            'PJSIP.registrations.state.Registered:0|g'
-        -
-            'PJSIP.registrations.state.Unregistered:0|g'
-        -
-            'PJSIP.registrations.state.Rejected:0|g'
-        -
-            'PJSIP.registrations.count:+1|g'
-        -
-            'PJSIP.registrations.state.Unregistered:+1|g'
-        -
-            'PJSIP.registrations.state.Unregistered:-1|g'
-        -
-            'PJSIP.registrations.state.Registered:+1|g'
-        -
-            'PJSIP.registrations.state.Registered:-1|g'
-        -
-            'PJSIP.registrations.state.Unregistered:+1|g'
-        -
-            'PJSIP.registrations.count:-1|g'
-        -
-            'PJSIP.registrations.state.Unregistered:-1|g'
 
 test-object-config:
-    fail-on-any: False
     test-iterations:
         -
             scenarios:
                 - { 'key-args': {'scenario': 'register.xml', '-i': '127.0.0.1', '-p': '5061'} }
 
+event-action-config:
+    event:
+        type: 'matcher_listener.Udp'
+        conditions:
+            -
+                'PJSIP\.registrations\.count:0\|g'
+            -
+                'PJSIP\.registrations\.state\.Registered:0\|g'
+            -
+                'PJSIP\.registrations\.state\.Unregistered:0\|g'
+            -
+                'PJSIP\.registrations\.state\.Rejected:0\|g'
+            -
+                'PJSIP\.registrations\.count:\+1\|g'
+            -
+                'PJSIP\.registrations\.state\.Registered:\+1\|g'
+            -
+                'PJSIP\.registrations\.state\.Registered:\-1\|g'
+            -
+                match: 'PJSIP\.registrations\.state\.Unregistered:\+1\|g'
+                count: 2
+            -
+                'PJSIP\.registrations\.count:\-1\|g'
+            -
+                match: 'PJSIP\.registrations\.state\.Unregistered:\-1\|g'
+                count: 2
 
+properties:
+    dependencies:
+        - python: 'twisted'
+        - asterisk: 'res_statsd'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_outbound_registration'
+        - sipp:
+            version: 'v3.0'
+    tags:
+        - statsd
+        - pjsip
