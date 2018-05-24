@@ -22,6 +22,8 @@ from pluggable_registry import PLUGGABLE_ACTION_REGISTRY,\
     PLUGGABLE_EVENT_REGISTRY,\
     PluggableRegistry
 
+import matcher
+
 LOGGER = logging.getLogger(__name__)
 
 
