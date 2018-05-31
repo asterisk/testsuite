@@ -9,6 +9,7 @@ tests:
     - test: 'confbridge_result'
     - test: 'confbridge_start_muted'
     - test: 'confbridge_talking'
+    - test: 'confbridge_talking_list'
     - test: 'confbridge_timeout'
     - test: 'confbridge_triple_lindy'
     - test: 'confbridge_waitmarked_kick'
