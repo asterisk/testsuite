@@ -297,7 +297,7 @@ properties:
       - asterisk : 'app_directory'
       - asterisk : 'app_playback'
       - asterisk : 'app_senddtmf'
-      - asterisk : 'app_userever'
+      - asterisk : 'app_userevent'
       - asterisk : 'app_verbose'
       - asterisk : 'pbx_config'
 
