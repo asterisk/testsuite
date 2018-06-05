@@ -51,6 +51,9 @@ properties:
         - python: 'autobahn.websocket'
         - python: 'starpy'
         - python: 'twisted'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_outbound_registration'
+        - asterisk: 'res_statsd'
     tags:
         - statsd
         - apps

@@ -73,6 +73,7 @@ properties:
         - asterisk: 'app_echo'
         - asterisk: 'chan_pjsip'
         - asterisk: 'res_endpoint_stats'
+        - asterisk: 'res_statsd'
         - python: 'autobahn.websocket'
         - python: 'starpy'
         - python: 'twisted'
