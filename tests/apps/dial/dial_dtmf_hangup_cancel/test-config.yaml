@@ -20,7 +20,7 @@ properties:
         - asterisk : 'func_hangupcause'
         - asterisk : 'pbx_config'
     tags:
-        - SIP
+        - pjsip
         - dial
         - CDR
 
@@ -89,7 +89,7 @@ ami-config-12:
                 DestUniqueid: '.*'
                 CallerIDNum: '<unknown>'
                 CallerIDName: '<unknown>'
-                ConnectedLineNum: '<unknown>'
+                ConnectedLineNum: 's'
                 ConnectedLineName: '<unknown>'
                 DialStatus: 'CANCEL'
         count: '1'
