@@ -21,7 +21,10 @@ import json
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 
-from construct import *
+try:
+    from construct_legacy import *
+except ImportError:
+    from construct import *
 
 LOGGER = logging.getLogger(__name__)
 
