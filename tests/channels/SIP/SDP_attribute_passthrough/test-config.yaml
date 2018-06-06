@@ -10,5 +10,6 @@ properties:
         - sipp :
             version : 'v3.0'
         - asterisk : 'chan_sip'
+        - asterisk : 'codec_speex'
     tags:
         - SIP
