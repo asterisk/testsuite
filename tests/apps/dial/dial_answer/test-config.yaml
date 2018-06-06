@@ -19,7 +19,7 @@ properties:
         - asterisk : 'func_strings'
         - asterisk : 'pbx_config'
     tags:
-        - SIP
+        - pjsip
         - dial
         - CDR
 
@@ -44,19 +44,19 @@ cdr-config-12:
                 destination: 's'
                 dcontext: 'default'
                 callerid: '"" <>'
-                channel: 'Local/s@default-.{8};1'
-                dchannel: ''
-                lastapp: 'Echo'
+                channel: 'Local/s@default-.{8};2'
+                dchannel: 'PJSIP/charlie-.{8}'
+                lastapp: 'Dial'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
             -
                 accountcode: ''
                 destination: 's'
                 dcontext: 'default'
-                callerid: '"" <>'
-                channel: 'Local/s@default-.{8};2'
-                dchannel: 'PJSIP/charlie-.{8}'
-                lastapp: 'Dial'
+                callerid: '"" <s>'
+                channel: 'Local/s@default-.{8};1'
+                dchannel: ''
+                lastapp: 'Echo'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
 
