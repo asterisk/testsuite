@@ -19,7 +19,7 @@ properties:
         - asterisk : 'func_strings'
         - asterisk : 'pbx_config'
     tags:
-        - SIP
+        - pjsip
         - dial
         - CDR
 
@@ -144,7 +144,7 @@ ami-config-12:
                 Channel: 'Local/s@default-.*'
                 CallerIDNum: '<unknown>'
                 CallerIDName: '<unknown>'
-                ConnectedLineNum: '<unknown>'
+                ConnectedLineNum: 's'
                 ConnectedLineName: '<unknown>'
                 DialStatus: 'ANSWER'
         count: '1'
