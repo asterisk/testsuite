@@ -11,7 +11,10 @@ from asterisk.test_case import TestCase
 from sip_message import SIPMessage, SIPMessageTest
 
 from twisted.internet import reactor
-from construct.protocols.ipstack import ip_stack
+try:
+    from construct_legacy.protocols.ipstack import ip_stack
+except ImportError:
+    from construct.protocols.ipstack import ip_stack
 
 logger = logging.getLogger(__name__)
 test1 = [
