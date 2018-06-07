@@ -129,8 +129,8 @@ class LeaveVoicemailForwardingAutoUrgent(VoiceMailTest):
 
     def originate_call(self):
         extension = self.extensions[self.test_counter]
-        logger.info("Originating call to sip/ast1/" + str(extension))
-        df = self.ami_sender.originate("sip/ast1/" + str(extension), "voicemailCaller", "wait", 1, None, "CallId-" + str(extension), None, None, None, {}, True )
+        logger.info("Originating call to PJSIP/" + str(extension) + "@ast1")
+        df = self.ami_sender.originate("PJSIP/" + str(extension) + "@ast1", "voicemailCaller", "wait", 1, None, "CallId-" + str(extension), None, None, None, {}, True )
         df.addErrback(self.handle_originate_failure)
 
     def user_event(self, ami, event):

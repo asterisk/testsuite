@@ -13,7 +13,7 @@ properties:
         - python : 'starpy'
         - asterisk: 'app_voicemail'
         - asterisk: 'app_senddtmf'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
         - voicemail
         - apps

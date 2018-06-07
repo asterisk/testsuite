@@ -86,7 +86,7 @@ class VoiceMailTest(TestCase):
 
     # The default expected channel to be used to send info to the voicemail
     # server
-    default_sender_channel = "SIP/ast1-00000000"
+    default_sender_channel = "PJSIP/ast1-00000000"
 
     def __init__(self):
         """Constructor"""
