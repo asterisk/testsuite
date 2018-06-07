@@ -106,9 +106,9 @@ class AuthenticateNominal(VoiceMailTest):
         and test controller object type
         """
         self.credentials = [
-            ("9000", "1234", "SIP/ast1-00000000", LoginWithMailbox),
-            ("9001", "0", "SIP/ast1-00000001", LoginWithoutMailbox),
-            ("9002", "1234567890", "SIP/ast1-00000002", LoginWithoutMailbox)]
+            ("9000", "1234", "PJSIP/ast1-00000000", LoginWithMailbox),
+            ("9001", "0", "PJSIP/ast1-00000001", LoginWithoutMailbox),
+            ("9002", "1234567890", "PJSIP/ast1-00000002", LoginWithoutMailbox)]
         self.create_asterisk(2)
         self.test_counter = 0
 
@@ -139,8 +139,8 @@ class AuthenticateNominal(VoiceMailTest):
         self.test_state_controller.change_state(startObject)
         self.sender_channel = tuple[2]
 
-        logger.debug("Originating call to sip/ast1/" + tuple[0])
-        df = self.ami_sender.originate("sip/ast1/" + tuple[0], "voicemailCaller", "wait", 1)
+        logger.debug("Originating call to PJSIP/" + tuple[0] + "@ast1")
+        df = self.ami_sender.originate("PJSIP/" + tuple[0] + "@ast1", "voicemailCaller", "wait", 1)
         df.addErrback(self.handle_originate_failure)
         self.test_counter += 1
 

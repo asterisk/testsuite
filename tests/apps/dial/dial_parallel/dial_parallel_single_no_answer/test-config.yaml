@@ -14,7 +14,7 @@ properties:
         - asterisk : 'app_stack'
         - asterisk : 'app_userevent'
         - asterisk : 'cdr_csv'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
         - asterisk : 'func_channel'
         - asterisk : 'func_hangupcause'
         - asterisk : 'func_strings'
@@ -49,7 +49,7 @@ cdr-config-12:
                 dcontext: 'default'
                 callerid: '"" <>'
                 channel: 'Local/s@default-.{8};2'
-                dchannel: 'SIP/bob-.{8}'
+                dchannel: 'PJSIP/bob-.{8}'
                 lastapp: 'Dial'
                 disposition: 'BUSY'
                 amaflags: 'DOCUMENTATION'
@@ -59,7 +59,7 @@ cdr-config-12:
                 dcontext: 'default'
                 callerid: '"" <>'
                 channel: 'Local/s@default-.{8};2'
-                dchannel: 'SIP/charlie-.{8}'
+                dchannel: 'PJSIP/charlie-.{8}'
                 lastapp: 'Dial'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
@@ -71,7 +71,7 @@ ami-config-12:
             match:
                 Event: 'UserEvent'
                 UserEvent: 'HangupCause'
-                HangupChannel: 'SIP/bob-.*'
+                HangupChannel: 'PJSIP/bob-.*'
         requirements:
             match:
                 TechCause: 'SIP 480 Temporarily Unavailable'
@@ -83,7 +83,7 @@ ami-config-12:
             match:
                 Event: 'UserEvent'
                 UserEvent: 'HangupCause'
-                HangupChannel: 'SIP/charlie-.*'
+                HangupChannel: 'PJSIP/charlie-.*'
         requirements:
             match:
                 TechCause: 'SIP 200 OK'
@@ -94,7 +94,7 @@ ami-config-12:
         conditions:
             match:
                 Event: 'DialBegin'
-                DestChannel: 'SIP/bob-.*'
+                DestChannel: 'PJSIP/bob-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
@@ -109,7 +109,7 @@ ami-config-12:
         conditions:
             match:
                 Event: 'DialBegin'
-                DestChannel: 'SIP/charlie-.*'
+                DestChannel: 'PJSIP/charlie-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
@@ -124,7 +124,7 @@ ami-config-12:
         conditions:
             match:
                 Event: 'DialEnd'
-                DestChannel: 'SIP/bob-.*'
+                DestChannel: 'PJSIP/bob-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
@@ -139,7 +139,7 @@ ami-config-12:
         conditions:
             match:
                 Event: 'DialEnd'
-                DestChannel: 'SIP/charlie-.*'
+                DestChannel: 'PJSIP/charlie-.*'
         requirements:
             match:
                 Channel: 'Local/s@default-.*'
