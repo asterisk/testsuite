@@ -17,6 +17,10 @@ test-object-config:
 
 properties:
     dependencies:
+        - python : 'autobahn.websocket'
+        - python : 'numpy'
+        - python : 'requests'
+        - python : 'twisted'
         - asterisk : 'res_pjsip'
         - asterisk : 'codec_opus'
     tags:
