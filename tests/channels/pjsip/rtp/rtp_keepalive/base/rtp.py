@@ -13,7 +13,10 @@ import time
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 
-from construct import *
+try:
+    from construct_legacy import *
+except ImportError:
+    from construct import *
 
 sys.path.append('lib/python')
 

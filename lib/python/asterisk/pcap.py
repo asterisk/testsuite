@@ -19,8 +19,12 @@ sys.path.append('lib/python')
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
-from construct import *
-from construct.protocols.ipstack import ip_stack
+try:
+    from construct_legacy import *
+    from construct_legacy.protocols.ipstack import ip_stack
+except ImportError:
+    from construct import *
+    from construct.protocols.ipstack import ip_stack
 try:
     from yappcap import PcapOffline
     PCAP_AVAILABLE = True
