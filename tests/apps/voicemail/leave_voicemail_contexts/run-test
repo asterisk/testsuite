@@ -132,12 +132,12 @@ class LeaveVoicemailContexts(VoiceMailTest):
         self.reset_timeout()
         if self.testCounter < 5:
             # The first 5 tests start out in extension 9000
-            self.ami_sender.originate(channel = "sip/ast1/9000",
+            self.ami_sender.originate(channel = "PJSIP/9000@ast1",
                 context = "voicemailCaller",
                 exten = "wait",
                 priority= 1).addErrback(self.handle_originate_failure)
         elif self.testCounter < len(self.expectedValues):
-            self.ami_sender.originate(channel = "sip/ast1/1234",
+            self.ami_sender.originate(channel = "PJSIP/1234@ast1",
                 context = "voicemailCaller",
                 exten = "wait",
                 priority = 1).addErrback(self.handle_originate_failure)
