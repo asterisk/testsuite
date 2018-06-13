@@ -18,7 +18,7 @@ properties:
         - asterisk : 'func_strings'
         - asterisk : 'pbx_config'
     tags:
-        - SIP
+        - pjsip
         - dial
         - CDR
 
@@ -49,7 +49,7 @@ cdr-config-12:
                 channel: 'Local/s@default-.{8};2'
                 dchannel: 'PJSIP/bob-.{8}'
                 lastapp: 'Dial'
-                disposition: 'BUSY'
+                disposition: 'NO ANSWER'
                 amaflags: 'DOCUMENTATION'
 
 ami-config-12:
@@ -95,9 +95,9 @@ ami-config-12:
                 DestUniqueid: '.*'
                 CallerIDNum: '<unknown>'
                 CallerIDName: '<unknown>'
-                ConnectedLineNum: '<unknown>'
+                ConnectedLineNum: 's'
                 ConnectedLineName: '<unknown>'
-                DialStatus: 'BUSY'
+                DialStatus: 'NOANSWER'
         count: '1'
 
 originator-config:
