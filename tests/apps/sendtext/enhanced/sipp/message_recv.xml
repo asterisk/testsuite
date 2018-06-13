@@ -49,7 +49,7 @@
         <action>
             <ereg regexp="From Someone Else" search_in="hdr" header="From:" check_it="true" assign_to="dummy"/>
             <ereg regexp="To Someone Else" search_in="hdr" header="To:" check_it="true" assign_to="dummy"/>
-            <ereg regexp="text/json" search_in="hdr" header="Content-Type:" check_it="true" assign_to="dummy"/>
+            <ereg regexp="application/x-asterisk\+json" search_in="hdr" header="Content-Type:" check_it="true" assign_to="dummy"/>
             <ereg regexp="\{\"foo\":666, \"bar\":\"666\"\}" search_in="body" check_it="true" assign_to="dummy"/>
         </action>
     </recv>
