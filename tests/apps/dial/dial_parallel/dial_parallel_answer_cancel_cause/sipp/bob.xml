@@ -5,7 +5,7 @@
 	<recv request="INVITE" crlf="true">
 		<!-- Save the from tag. We'll need it when we send our response -->
 		<action>
-			<ereg regexp=".*(;tag=.*)" header="From:" search_in="hdr"
+			<ereg regexp="(;tag=.*)" header="From:" search_in="hdr"
 				check_it="true" assign_to="remote_tag" />
 		</action>
 	</recv>

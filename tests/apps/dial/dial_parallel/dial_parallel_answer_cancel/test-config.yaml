@@ -21,7 +21,7 @@ properties:
         - asterisk : 'func_strings'
         - asterisk : 'pbx_config'
     tags:
-        - SIP
+        - pjsip
         - dial
         - CDR
 
@@ -146,7 +146,7 @@ ami-config-13-5:
                 DestLinkedid: '.*'
                 CallerIDNum: '<unknown>'
                 CallerIDName: '<unknown>'
-                ConnectedLineNum: '<unknown>'
+                ConnectedLineNum: 's'
                 ConnectedLineName: '<unknown>'
                 DialStatus: 'CANCEL'
         count: '1'
@@ -165,7 +165,7 @@ ami-config-13-5:
                 DestLinkedid: '.*'
                 CallerIDNum: '<unknown>'
                 CallerIDName: '<unknown>'
-                ConnectedLineNum: '<unknown>'
+                ConnectedLineNum: 's'
                 ConnectedLineName: '<unknown>'
                 DialStatus: 'ANSWER'
         count: '1'

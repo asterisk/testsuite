@@ -24,7 +24,7 @@
   <recv request="INVITE" crlf="true">
       <!-- Save the from tag. We'll need it when we send our BYE -->
       <action>
-          <ereg regexp=".*(;tag=.*)"
+          <ereg regexp="(;tag=.*)"
               header="From:"
               search_in="hdr"
               check_it="true"

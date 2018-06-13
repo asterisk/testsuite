@@ -18,7 +18,7 @@ properties:
         - asterisk : 'func_strings'
         - asterisk : 'pbx_config'
     tags:
-        - SIP
+        - pjsip
         - dial
         - CDR
 
@@ -95,7 +95,7 @@ ami-config-12:
                 DestUniqueid: '.*'
                 CallerIDNum: '<unknown>'
                 CallerIDName: '<unknown>'
-                ConnectedLineNum: '<unknown>'
+                ConnectedLineNum: 's'
                 ConnectedLineName: '<unknown>'
                 DialStatus: 'CONGESTION'
         count: '1'

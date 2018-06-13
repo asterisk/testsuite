@@ -18,7 +18,7 @@ properties:
         - asterisk : 'func_strings'
         - asterisk : 'pbx_config'
     tags:
-        - SIP
+        - pjsip
         - dial
         - CDR
 
