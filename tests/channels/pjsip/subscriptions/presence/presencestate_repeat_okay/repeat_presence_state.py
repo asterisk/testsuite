@@ -26,14 +26,17 @@ class RepeatPresenceState(object):
             'Value': INIT_STATE
         }
         test_object.register_ami_observer(self.ami_connect)
-        test_object.register_scenario_started_observer(self.scenario_started)
 
     def ami_connect(self, ami):
         self.ami = ami
+        self.ami.registerEvent('TestEvent', self.handle_sub_established)
         # Set initial presence state
         self.ami.sendMessage(self.ami_message)
 
-    def scenario_started(self, scenario):
+    def handle_sub_established(self, ami, event):
+        if event['state'] != 'SUBSCRIPTION_ESTABLISHED':
+            return
+
         # Set new presence subvalues. These should result in SIP NOTIFYs
         self.ami_message['Value'] = NEW_SUBTYPE
         self.ami.sendMessage(self.ami_message)
