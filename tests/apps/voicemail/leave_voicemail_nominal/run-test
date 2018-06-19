@@ -150,7 +150,7 @@ class LeaveVoicemailNominal(VoiceMailTest):
         else:
             """ Originate the next call and reset the state machine """
             self.test_counter += 1
-            self.sender_channel = "SIP/ast1-0000000" + str(self.test_counter)
+            self.sender_channel = "PJSIP/ast1-0000000" + str(self.test_counter)
             self.test_state_controller.change_state(StartVoiceMailState(self.test_state_controller, self))
             self.originate_call()
 
