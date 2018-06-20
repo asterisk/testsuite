@@ -14,10 +14,12 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-        - asterisk : 'app_voicemail'
-        - asterisk : 'app_senddtmf'
-        - asterisk : 'app_playback'
-        - asterisk : 'chan_pjsip'
+        - asterisk: 'app_playback'
+        - asterisk: 'app_senddtmf'
+        - asterisk: 'app_userevent'
+        - asterisk: 'app_voicemail'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
     tags:
         - voicemail
         - apps
