@@ -7,9 +7,11 @@ testinfo:
 
 properties:
     dependencies:
-        - asterisk : 'app_voicemail'
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk: 'app_userevent'
+        - asterisk: 'app_voicemail'
+        - asterisk: 'func_vmcount'
     tags:
         - voicemail
         - apps

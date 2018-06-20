@@ -107,7 +107,6 @@ class LeaveVoicemailForwarding(VoiceMailTest):
 
         self.create_asterisk(2)
 
-
     def ami_connect(self, ami):
         super(LeaveVoicemailForwarding, self).ami_connect(ami)
         self.audioFile = os.path.join(os.getcwd(), "%s/sounds/talking" % (self.testParentDir))
@@ -129,7 +128,7 @@ class LeaveVoicemailForwarding(VoiceMailTest):
 
     def originate_call(self):
         extension = self.extensions[self.test_counter]
-        logger.info("Originating call to PJSIP/" + str(extension)) + "@ast1"
+        logger.info("Originating call to PJSIP/" + str(extension) + "@ast1")
         df = self.ami_sender.originate("PJSIP/" + str(extension) + "@ast1", "voicemailCaller", "wait", 1, None, "CallId-" + str(extension), None, None, None, {}, True )
         df.addErrback(self.handle_originate_failure)
 
@@ -155,7 +154,6 @@ class LeaveVoicemailForwarding(VoiceMailTest):
             self.sender_channel = "PJSIP/ast1-0000000" + str(self.test_counter)
             self.test_state_controller.change_state(StartVoiceMailState(self.test_state_controller, self))
             self.originate_call()
-
 
     def run(self):
         super(LeaveVoicemailForwarding, self).run()
@@ -204,4 +202,4 @@ def main():
     return 0
 
 if __name__ == "__main__":
-   sys.exit(main() or 0)
+    sys.exit(main() or 0)
