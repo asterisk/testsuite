@@ -13,6 +13,7 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk: 'app_userevent'
         - asterisk: 'app_voicemail'
     tags:
         - voicemail
