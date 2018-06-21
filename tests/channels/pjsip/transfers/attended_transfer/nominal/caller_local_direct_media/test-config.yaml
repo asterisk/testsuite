@@ -247,6 +247,7 @@ properties:
         - python : pyxb
         - python : pjsua
         - asterisk : res_pjsip
+        - custom : rawsocket
     tags:
         - pjsip
 
