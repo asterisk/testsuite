@@ -26,6 +26,7 @@ properties:
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_exten_state'
         - asterisk: 'res_pjsip_pidf_body_generator'
+        - custom: 'rawsocket'
     tags:
         - pjsip
 
