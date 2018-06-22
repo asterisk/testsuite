@@ -110,18 +110,16 @@ class PluggableConditionsTests(unittest.TestCase):
         self.assertFalse(conditions.check_final())
 
         # Check with one message handled
-        self.test_object.set_passed(True)
         self.assertFalse(conditions.check('hello'))
         self.assertFalse(conditions.check_final())
 
         # Check with two messages handled
-        self.test_object.set_passed(True)
         self.assertTrue(conditions.check('hello'))
         self.assertTrue(conditions.check_final())
 
         # Check with three messages handled
         self.assertFalse(conditions.check('hello'))
-        self.assertFalse(conditions.check_final())
+        self.assertTrue(conditions.check_final())  # min met
 
     def test_005_count(self):
         """Test range count condition"""
@@ -138,12 +136,10 @@ class PluggableConditionsTests(unittest.TestCase):
         self.assertFalse(conditions.check_final())
 
         # Check with one message handled
-        self.test_object.set_passed(True)
         self.assertFalse(conditions.check('hello'))
         self.assertFalse(conditions.check_final())
 
         # Check with two messages handled
-        self.test_object.set_passed(True)
         self.assertTrue(conditions.check('hello'))
         self.assertTrue(conditions.check_final())
 
@@ -154,7 +150,7 @@ class PluggableConditionsTests(unittest.TestCase):
 
         # Check with five messages handled
         self.assertFalse(conditions.check('hello'))
-        self.assertFalse(conditions.check_final())
+        self.assertTrue(conditions.check_final())  # min met
 
     def test_006_min(self):
         """Test minimum condition"""
@@ -171,12 +167,10 @@ class PluggableConditionsTests(unittest.TestCase):
         self.assertFalse(conditions.check_final())
 
         # Check with one message handled
-        self.test_object.set_passed(True)
         self.assertFalse(conditions.check('hello'))
         self.assertFalse(conditions.check_final())
 
         # Check with two messages handled
-        self.test_object.set_passed(True)
         self.assertTrue(conditions.check('hello'))
         self.assertTrue(conditions.check_final())
 
@@ -200,7 +194,7 @@ class PluggableConditionsTests(unittest.TestCase):
 
         # Check with two messages handled
         self.assertFalse(conditions.check('hello'))
-        self.assertFalse(conditions.check_final())
+        self.assertTrue(conditions.check_final())  # min met
 
     def test_008_max(self):
         """Test no match condition"""
@@ -218,7 +212,7 @@ class PluggableConditionsTests(unittest.TestCase):
 
         # Check with one message handled
         self.assertFalse(conditions.check('hello'))
-        self.assertFalse(conditions.check_final())
+        self.assertTrue(conditions.check_final())  # min met
 
     def test_009_trigger_on_any(self):
         """Test trigger on any option"""
@@ -236,7 +230,6 @@ class PluggableConditionsTests(unittest.TestCase):
         self.assertFalse(conditions.check('world'))
         self.assertFalse(conditions.check_final())
 
-        self.test_object.set_passed(True)
         self.assertTrue(conditions.check('hello'))  # 'hello' is met
         self.assertFalse(conditions.check_final())  # 'world' not me
 
@@ -245,7 +238,6 @@ class PluggableConditionsTests(unittest.TestCase):
         self.assertFalse(conditions.check('world'))
         self.assertFalse(conditions.check_final())
 
-        self.test_object.set_passed(True)
         self.assertTrue(conditions.check('world'))  # 'world' is met
         self.assertFalse(conditions.check_final())  # 'hello' not met
 
@@ -265,11 +257,9 @@ class PluggableConditionsTests(unittest.TestCase):
         self.assertFalse(conditions.check('world'))
         self.assertFalse(conditions.check_final())
 
-        self.test_object.set_passed(True)
         self.assertFalse(conditions.check('hello'))  # 'world' not met
         self.assertFalse(conditions.check_final())
 
-        self.test_object.set_passed(True)
         self.assertTrue(conditions.check('world'))
         self.assertTrue(conditions.check_final())
 

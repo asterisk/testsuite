@@ -128,9 +128,13 @@ class Condition(object):
     def error(self):
         """Error out the conditional."""
 
-        return ("\nCondition: '{0}'\nExpected >= {1} and <= {2} but "
-                "received {3}".format(self.pattern, self.minimum,
-                                      self.maximum, self.count))
+        if self.minimum == self.maximum:
+            expected = "{0}".format(self.minimum)
+        else:
+            expected = ">= {0} and <= {1}".format(self.minimum, self.maximum)
+
+        return ("\nCondition: '{0}'\nExpected {1} but received {2}".format(
+            self.pattern, expected, self.count))
 
 
 class Conditions(object):
@@ -272,13 +276,14 @@ class PluggableConditions(object):
             return self.conditions.check(value)
         except ConditionError as e:
             self.fail_and_stop(e)
+        return False
 
     def check_final(self):
-        if self.test_object.passed:
-            try:
-                self.conditions.check_final()
-            except ConditionError as e:
-                self.fail_and_stop(e)
+        try:
+            self.test_object.set_passed(self.conditions.check_final())
+        except ConditionError as e:
+            self.fail_and_stop(e)
+
         return self.test_object.passed
 
     def __handle_stop(self, *args):
