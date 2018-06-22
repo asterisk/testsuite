@@ -37,6 +37,7 @@ properties:
         - asterisk : 'app_dial'
         - asterisk : 'res_pjsip'
         - asterisk : 'codec_opus'
+        - custom : 'rawsocket'
     tags:
         - pjsip
         - codec
