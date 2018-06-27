@@ -8,3 +8,4 @@ crash-mail-config.yaml
 /fastagi
 /run-local.conf
 /.valgrindrc
+__pycache__/
