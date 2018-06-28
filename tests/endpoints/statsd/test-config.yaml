@@ -12,8 +12,8 @@ test-modules:
         typename: 'test_case.TestCaseModule'
     modules:
         -
-            typename: 'mockd.MockDServer'
-            config-section: 'statsd-config'
+            config-section: event-action-config
+            typename: 'pluggable_modules.EventActionModule'
         -
             typename: 'pluggable_modules.Originator'
             config-section: 'originator-config'
@@ -29,38 +29,25 @@ test-object-config:
 hangup-monitor:
     ids: '0'
 
-# Note: due to a bug in getting duplicate endpoint events over
-# Stasis, we'll see two statsd messages for the channel counts
-# for an Endpoint. When that is fixed, the duplicate messages
-# below should be removed.
-statsd-config:
-    prefix: 'endpoints'
-    regex: True
-    packets:
-        -
-            'endpoints\.count:\+1\|g'
-        -
-            'endpoints\.state\.online:\+1\|g'
-        -
-            'endpoints\.count:\+1\|g'
-        -
-            'endpoints\.state\.unknown:\+1\|g'
-        -
-            'endpoints\.PJSIP\.test\.channels:1\|g'
-        -
-            'endpoints\.PJSIP\.test\.channels:2\|g'
-        -
-            'endpoints\.PJSIP\.test\.channels:1\|g'
-        -
-            'endpoints\.PJSIP\.test\.channels:0\|g'
-        -
-            'endpoints\.count:\-1\|g'
-        -
-            'endpoints\.state\.online:\-1\|g'
-        -
-            'endpoints\.count:\-1\|g'
-        -
-            'endpoints\.state\.unknown:\-1\|g'
+event-action-config:
+    event:
+        type: 'matcher_listener.Udp'
+        conditions:
+            -
+                'endpoints\.count:\+1\|g'
+            -
+                'endpoints\.state\.online:\+1\|g'
+            -
+                match: 'endpoints\.PJSIP\.test\.channels:1\|g'
+                count: 2
+            -
+                'endpoints\.PJSIP\.test\.channels:2\|g'
+            -
+                'endpoints\.PJSIP\.test\.channels:0\|g'
+            -
+                'endpoints\.state\.online:\-1\|g'
+            -
+                'endpoints\.count:\-1\|g'
 
 originator-config:
     channel: 'PJSIP/test'
@@ -77,7 +64,5 @@ properties:
         - python: 'autobahn.websocket'
         - python: 'starpy'
         - python: 'twisted'
-        - app:    'statsd'
     tags:
         - statsd
-        - apps
