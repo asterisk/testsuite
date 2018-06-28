@@ -11,8 +11,8 @@ test-modules:
         typename: 'test_case.TestCaseModule'
     modules:
         -
-            typename: 'mockd.MockDServer'
-            config-section: 'statsd-config'
+            config-section: event-action-config
+            typename: 'pluggable_modules.EventActionModule'
         -
             typename: 'pluggable_modules.Originator'
             config-section: 'originator-config'
@@ -22,10 +22,13 @@ test-object-config:
     connect-ami: True
     reactor-timeout: 15
 
-statsd-config:
-    packets:
-        -
-            'ReceiveNothing'
+event-action-config:
+    event:
+        type: 'matcher_listener.Udp'
+        conditions:
+            -
+                match: '.*'
+                count: 0
 
 originator-config:
     channel: 'Local/start@default'
@@ -41,6 +44,7 @@ properties:
         - python: 'starpy'
         - python: 'twisted'
         - asterisk: 'app_statsd'
+        - asterisk: 'res_statsd'
     tags:
         - statsd
         - apps
