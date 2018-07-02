@@ -1,0 +1,35 @@
+testinfo:
+    summary: 'Test receiving 1xx responses other than 100 before 200 to our T.38 reINVITE'
+    description: |
+        'Tests being able to receive 1xx responses other than 100 before
+        receiving a 200 to our T.38 reINVITE.  In addition we exercise the
+        T.38 auto-reject functionality when the asterisk side does not
+        respond within 5 seconds to the peer T.38 reINVITE.
+        The test passes if we do not crash and the SIPp scenario is successful.
+        See ASTERISK-27944'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'send_1xx.xml', '-i': '127.0.0.2', '-p': '5060', '-s': '1234'} }
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_fax'
+        - asterisk: 'res_pjsip_t38'
+    tags:
+        - pjsip
+        - fax
