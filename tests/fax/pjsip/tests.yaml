@@ -4,6 +4,7 @@ tests:
     - test: 'directmedia_reinvite_t38'
     - test: 'gateway_g711_t38'
     - test: 'gateway_native_t38'
+    - test: 'gateway_t38_g711_rx'
     - test: 'gateway_t38_g711_tx'
     - test: 't38'
     - test: 't38_1xx_response'
