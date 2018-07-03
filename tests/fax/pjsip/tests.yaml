@@ -2,6 +2,7 @@
 tests:
     - test: 'ast-2016-003'
     - test: 'directmedia_reinvite_t38'
+    - test: 'gateway_g711_t38'
     - test: 'gateway_native_t38'
     - test: 'gateway_t38_g711'
     - test: 't38'
