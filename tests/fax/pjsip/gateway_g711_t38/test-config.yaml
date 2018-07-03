@@ -1,0 +1,35 @@
+testinfo:
+    summary: 'Test the fax gateway.'
+    description: |
+        This test verifies proper gateway functionality when the calling leg
+        is g711 and the answering leg is t38. Two asterisk instances are
+        started and a call is made from ast1 to ast2. Ast2 will start a fax
+        gateway and send the call back to ast1. Ast1 runs SendFax() on the
+        calling side and ReceiveFax() on the answering side. If the fax is
+        successful, the test passes.
+
+        The call flow looks like this:
+         |send        |
+         |g711    g711|
+         |----------->|
+         |     gateway|
+         |t38      t38|
+         |<-----------|
+        \|receive     |/
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - custom : 'fax'
+        - asterisk : 'app_dial'
+        - asterisk : 'app_stack'
+        - asterisk : 'app_userevent'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'func_channel'
+        - asterisk : 'res_fax'
+        - asterisk : 'res_pjsip_t38'
+    tags:
+        - pjsip
+        - fax
+        - fax_gateway
