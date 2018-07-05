@@ -1,0 +1,27 @@
+testinfo:
+    summary:     'Test that an offer with audio and t38 has the t38 declined'
+    description: |
+        This tests an inbound initial offer containing audio and t38. As we do
+        not support t38 in an initial offer (only as a re-invite) the t38 stream
+        should be declined.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-audio-t38.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
