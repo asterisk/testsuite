@@ -676,6 +676,21 @@ class TestSuite:
         return data.translate(None, ''.join(char_list))
 
     def write_results_xml(self, doc, root):
+        # Java reserved words we need to munge so Jenkins doesn't barf
+        reserved = ['abstract', 'arguments', 'as', 'assert', 'await',
+            'boolean', 'break', 'byte', 'case', 'catch', 'char',
+            'class', 'const', 'continue', 'debugger', 'def',
+            'default', 'delete', 'do', 'double', 'else', 'enum',
+            'eval', 'export', 'extends', 'false', 'final',
+            'finally', 'float', 'for', 'function', 'goto', 'if',
+            'implements', 'import', 'in', 'instanceof', 'int',
+            'interface', 'let', 'long', 'native', 'new', 'null',
+            'package', 'private', 'protected', 'public', 'return',
+            'short', 'static', 'strictfp', 'string', 'super',
+            'switch', 'synchronized', 'this', 'throw', 'throws',
+            'trait', 'transient', 'true', 'try', 'typeof', 'var',
+            'void', 'volatile', 'while', 'with', 'yield'
+        ]
 
         ts = doc.createElement("testsuite")
         root.appendChild(ts)
@@ -694,7 +709,19 @@ class TestSuite:
             tc = doc.createElement("testcase")
             ts.appendChild(tc)
             tc.setAttribute("time", "%.2f" % t.time)
-            tc.setAttribute("name", t.test_name)
+
+            name = re.sub('[^A-Za-z0-9_/]', '_', t.test_name)
+            names = name.split('/')
+            for i, n in enumerate(names):
+                if n in reserved:
+                    names[i] = "_" + n
+
+            name_count = len(names)
+            classname = '.'.join(names[1:(name_count - 1)])
+            name = names[(name_count - 1)]
+
+            tc.setAttribute("classname", classname)
+            tc.setAttribute("name", name)
 
             if t.did_run is False:
                 tskip = doc.createElement("skipped")
@@ -872,7 +899,9 @@ def main(argv=None):
 
     # Ensure that there's a trailing '/' in the tests specified with -t
     for i, test in enumerate(options.tests):
-        if not test.endswith('/'):
+        if "/" not in test and "." in test:
+            options.tests[i] = "tests/" + test.replace(".", "/") + "/"
+        elif not test.endswith('/'):
             options.tests[i] = test + '/'
 
     if options.valgrind:
