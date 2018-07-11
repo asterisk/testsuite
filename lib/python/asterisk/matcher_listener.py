@@ -13,7 +13,7 @@ import re
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 
-from matcher import PluggableConditions
+from .matcher import PluggableConditions
 
 LOGGER = logging.getLogger(__name__)
 

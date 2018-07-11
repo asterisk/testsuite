@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 """Asterisk testsuite utils
 
 This module provides access to Asterisk testsuite utility
@@ -14,15 +13,19 @@ the GNU General Public License Version 2.
 import os
 import logging
 import re
+import sys
 
 from os import close
 from os import remove
 from shutil import move
 from tempfile import mkstemp
-from config import ConfigFile
+from .config import ConfigFile
 
 LOGGER = logging.getLogger(__name__)
 
+
+if sys.version_info[0] == 3:
+    unicode = str
 
 def which(program):
     """Find the executable for a specified program
@@ -100,7 +103,7 @@ def all_match(pattern, message):
     elif isinstance(pattern, dict):
         # Dict should match for every field in the pattern.
         # extra fields in the message are fine.
-        for key, value in pattern.iteritems():
+        for key, value in pattern.items():
             to_check = message.get(key)
             if to_check is None or not all_match(value, to_check):
                 return False

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Asterisk Build Options Handling
 
 This module implements an Asterisk build options parser.  It
@@ -13,7 +12,6 @@ the GNU General Public License Version 2.
 """
 
 import sys
-import unittest
 
 
 class AsteriskBuildOptions(object):
@@ -51,7 +49,7 @@ class AsteriskBuildOptions(object):
         except IOError:
             return ret_val
         except:
-            print "Unexpected error: %s" % sys.exc_info()[0]
+            print("Unexpected error: %s" % sys.exc_info()[0])
             return ret_val
         for line in file_lines:
             if "#define" in line:
@@ -59,7 +57,7 @@ class AsteriskBuildOptions(object):
                 if (define_tuple[0] == "" or define_tuple[2] == ""):
                     msg = ("Unable to parse build option line [%s] into "
                            "compiler flag token and value" % line)
-                    print msg
+                    print(msg)
                 else:
                     flag = define_tuple[0].strip()
                     allowed = define_tuple[2].strip()
@@ -89,22 +87,3 @@ class AsteriskBuildOptions(object):
         elif expected_value == "0":
             return True
         return False
-
-
-class AsteriskBuildOptionsTests(unittest.TestCase):
-    """Unit tests for AsteriskBuildOptions"""
-
-    def test_1(self):
-        """Test the defaults paths"""
-        build_options = AsteriskBuildOptions()
-        self.assertTrue(1)
-
-
-def main():
-    """Main entry point for unit tests"""
-
-    unittest.main()
-
-
-if __name__ == "__main__":
-    main()

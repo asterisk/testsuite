@@ -9,11 +9,10 @@ the GNU General Public License Version 2.
 """
 
 import sys
-import unittest
 import re
 sys.path.append("lib/python")
 
-import test_suite_utils
+from . import test_suite_utils
 
 class OpenSSLVersion:
     """An OpenSSL Version.

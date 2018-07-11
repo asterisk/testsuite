@@ -9,7 +9,7 @@ the GNU General Public License Version 2.
 import os
 from sqlalchemy import create_engine, MetaData, Table
 
-import astconfigparser
+from . import astconfigparser
 import logging
 
 LOGGER = logging.getLogger(__name__)
@@ -83,8 +83,8 @@ class SorceryRealtimeFile(object):
         self.filename = filename
         self.sections = sections
         # All affected database tables in list form. Used for convenience
-        self.tables = [table for section in sections.itervalues() for table in
-                       section.itervalues()]
+        self.tables = [table for section in sections.values() for table in
+                       section.values()]
         self.sorcery = None
         self.extconfig = None
 
@@ -111,9 +111,9 @@ class SorceryRealtimeFile(object):
         config_dir: The directory where Asterisk configuration can be found
         """
         with open(self.sorcery.file, 'a') as sorcery:
-            for section, items in self.sections.iteritems():
+            for section, items in self.sections.items():
                 sorcery.write('[{0}]\n'.format(section))
-                for obj, table in items.iteritems():
+                for obj, table in items.items():
                     sorcery.write('{0} = realtime,{1}\n'.format(obj, table))
 
     def write_extconfig_conf(self):
@@ -141,7 +141,7 @@ class SorceryRealtimeFile(object):
         """
         conf = astconfigparser.MultiOrderedConfigParser()
         conf.read(os.path.join(config_dir, self.filename))
-        for title, sections in conf.sections().iteritems():
+        for title, sections in conf.sections().items():
             LOGGER.info("Inspecting objects with title {0}".format(title))
             for section in sections:
                 obj_type = section.get('type')[0]
@@ -165,7 +165,7 @@ class SorceryRealtimeFile(object):
         Keyword Arguments:
         obj_type: The object type to find the section for
         """
-        for section, contents in self.sections.iteritems():
+        for section, contents in self.sections.items():
             if obj_type in contents:
                 return section
 
