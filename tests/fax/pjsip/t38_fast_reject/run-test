@@ -49,6 +49,7 @@ SIPP_SCENARIOS = [
         'scenario' : 'A_PARTY.xml',
         '-i' : '127.0.0.1',
         '-p' : '5061',
+        '-m' : '1',
         '-s' : e164,
         '-message_file' : sippA_logfile,
         '-error_file' : sippA_errfile,
@@ -62,33 +63,12 @@ def main():
     test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
     test.reactor_timeout = 100;
 
-    dump_A = WORKING_DIR + "/carrier_rtp.log"
-    dump_B = WORKING_DIR + "/customer_rtp.log"
-    rtpdump_A = subprocess.Popen(["rtpdump", "-t","5", "-F","ascii","-d","101","-o",dump_A, "127.0.0.1/9000"])
-    rtpdump_B = subprocess.Popen(["rtpdump", "-t","5", "-F","ascii","-d","101","-o",dump_B, "127.0.0.1/8000"])
-
-    time.sleep(10) #Wait 10 seconds to ensure that all the sockets are open before running the test	
-
     reactor.run()
-
-    # Kill the RTPDUMP, pass it the signal"
-    rtpdump_A.send_signal(signal.SIGINT)	
-    rtpdump_A.wait()
-    rtpdump_B.send_signal(signal.SIGINT)	
-    rtpdump_B.wait()
-
-    #Verify that audio packets were routed in both directions after G711 fallback
-    if (os.path.getsize(dump_B) == 0):
-    	logger.error("No RTP routed towards customer ...failing the test")
-	return 1
-    if (os.path.getsize(dump_A) == 0):
-    	logger.error("No RTP routed towards carrier ...failing the test")
-	return 1
 
     if not test.passed:
         return 1
 
-    ret_A = subprocess.call([WORKING_DIR + "/check_reinvite_rtt.pl", WORKING_DIR+"/A_PARTY_STAT.log"])
+    ret_A = subprocess.call([WORKING_DIR + "/check_reinvite_rtt.py", WORKING_DIR+"/A_PARTY_STAT.log"])
 
     if (ret_A != 0):
 	    logger.debug("Slow ReInvite Detected!")
