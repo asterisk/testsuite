@@ -8,7 +8,13 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
 
-from urllib import urlencode
+try:
+    # python 2 import
+    from urllib import urlencode
+except:
+    # python 3 import
+    from urllib.parse import urlencode
+
 from email.parser import HeaderParser
 try:
     from httplib import *
@@ -87,7 +93,7 @@ class SyncAMI(object):
         if res.status != 200:
             raise InvalidAMIResponse(res)
         self.cookie = res.getheader('set-cookie', None)
-        data = res.read()
+        data = res.read().decode('utf-8')
         parser = HeaderParser()
 
         return parser.parsestr(data)

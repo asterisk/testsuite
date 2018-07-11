@@ -13,7 +13,8 @@ import datetime
 import logging
 import re
 import json
-from pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
+from .test_runner import load_and_parse_module
+from .pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
     PLUGGABLE_ACTION_REGISTRY, var_replace
 
 LOGGER = logging.getLogger(__name__)
@@ -361,7 +362,7 @@ class CelRequirement(object):
             lower_key = key.lower()
             if lower_key == 'extra':
                 value = dict((key.lower(), value)
-                             for key, value in value.iteritems())
+                             for key, value in value.items())
             self.requirements[lower_key] = value
         self.orderings = requirements.get('partialorder') or []
         self.named_id = requirements.get('id')
@@ -529,8 +530,7 @@ class AMICallbackInstance(AMIEventInstance):
 
     def event_callback(self, ami, event):
         """Callback called when an event is received from AMI"""
-        callback_module = __import__(self.callback_module)
-        method = getattr(callback_module, self.callback_method)
+        method = load_and_parse_module(self.callback_module + '.' + self.callback_method)
         self.passed = method(ami, event)
         if self.passed is None:
             LOGGER.error("Callback %s.%s returned None instead of a boolean",
@@ -828,7 +828,7 @@ PLUGGABLE_EVENT_REGISTRY.register("ami-events", AMIPluggableEventModule)
 
 def replace_ami_vars(mydict, values):
     outdict = {}
-    for key, value in mydict.iteritems():
+    for key, value in mydict.items():
         outdict[key] = var_replace(value, values)
 
     return outdict

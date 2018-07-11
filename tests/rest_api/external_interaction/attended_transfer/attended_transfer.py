@@ -9,7 +9,7 @@ the GNU General Public License Version 2.
 import logging
 from sys import path
 
-from sipp import SIPpScenario
+from asterisk.sipp import SIPpScenario
 
 LOGGER = logging.getLogger(__name__)
 

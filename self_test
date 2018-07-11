@@ -28,17 +28,3 @@ for i in $ALL_TESTS; do
 	run_test $i python2 $PYTHON2
 	[ "${i#test2}" = "${i}" ] && run_test $i python3 $PYTHON3
 done
-
-# Temporary code for running unit tests that are not compatible with python3
-run_legacy_test() {
-	# Arguments: test_name python_name python_bin
-	if test -n "$3"; then
-		echo " ==> Executing $1 ($2)"
-		$3 lib/python/asterisk/${1}.py
-	fi
-}
-
-for i in buildoptions channel_test_condition sippversion; do
-	run_legacy_test $i python $PYTHON
-	run_legacy_test $i python2 $PYTHON2
-done
