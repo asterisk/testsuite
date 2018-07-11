@@ -16,7 +16,7 @@ from twisted.internet import reactor
 import json
 import requests
 
-import ari
+from . import ari
 
 LOGGER = logging.getLogger(__name__)
 

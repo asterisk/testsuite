@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Generic pluggable modules
 
 Copyright (C) 2012, Digium, Inc.
@@ -14,15 +13,15 @@ import shutil
 import re
 
 sys.path.append("lib/python")
-from ami import AMIEventInstance
+from .ami import AMIEventInstance
 from twisted.internet import reactor
 from starpy import fastagi
-from test_runner import load_and_parse_module
-from pluggable_registry import PLUGGABLE_ACTION_REGISTRY,\
+from .test_runner import load_and_parse_module
+from .pluggable_registry import PLUGGABLE_ACTION_REGISTRY,\
     PLUGGABLE_EVENT_REGISTRY,\
     PluggableRegistry
 
-import matcher
+from . import matcher
 
 LOGGER = logging.getLogger(__name__)
 
@@ -576,7 +575,7 @@ class SoundChecker(object):
             return
 
         current_trigger = config['trigger']['match']
-        for key, value in current_trigger.iteritems():
+        for key, value in current_trigger.items():
             if key.lower() not in event:
                 LOGGER.debug("Condition %s not in event, returning", key)
                 return
@@ -701,8 +700,7 @@ class FastAGIModule(object):
         if self.commands:
             return self.execute_command(agi, 0)
         else:
-            callback_module = __import__(self.callback_module)
-            method = getattr(callback_module, self.callback_method)
+            method = load_and_parse_module(self.callback_module + '.' + self.callback_method)
             method(self.test_object, agi)
 
     def on_command_failure(self, reason, agi, idx):
@@ -784,7 +782,7 @@ class EventActionModule(object):
 
         def register_modules(config, registry):
             """Register pluggable modules into the registry"""
-            for key, local_class_path in config.iteritems():
+            for key, local_class_path in config.items():
                 local_class = load_and_parse_module(local_class_path)
                 if not local_class:
                     raise Exception("Unable to load %s for module key %s"
@@ -804,7 +802,7 @@ class EventActionModule(object):
         for e_a_set in config["mapping"]:
             plug_set = {"events": [], "actions": []}
 
-            for plug_name, plug_config in e_a_set.iteritems():
+            for plug_name, plug_config in e_a_set.items():
                 self.parse_module_config(plug_set, plug_name, plug_config)
 
             if 0 == len(plug_set["events"]):
@@ -923,8 +921,7 @@ class CallbackActionModule(object):
 
     def run(self, triggered_by, source, extra):
         """Call the callback."""
-        module = __import__(self.module)
-        method = getattr(module, self.method)
+        method = load_and_parse_module(self.module + '.' + self.method)
         self.test_object.set_passed(method(self.test_object, triggered_by,
                                            source, extra))
 PLUGGABLE_ACTION_REGISTRY.register("callback", CallbackActionModule)
@@ -960,12 +957,12 @@ class PjsuaPhoneActionModule(object):
     def __init__(self, test_object, config):
         """Setup the test start observer"""
         self.test_object = test_object
-        self.module = __import__("phones")
+        self.module = "phones"
         self.method = config["action"]
         self.config = config
 
     def run(self, triggered_by, source, extra):
         """Instruct phone to perform action"""
-        method = getattr(self.module, self.method)
+        method = load_and_parse_module(self.module + "." + self.method)
         method(self.test_object, triggered_by, source, extra, self.config)
 PLUGGABLE_ACTION_REGISTRY.register("pjsua_phone", PjsuaPhoneActionModule)

@@ -14,7 +14,7 @@ import sqlite3
 import re
 
 sys.path.append("lib/python")
-from config import ConfigFile
+from asterisk.config import ConfigFile
 
 LOGGER = logging.getLogger(__name__)
 

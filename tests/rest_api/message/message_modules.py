@@ -14,7 +14,7 @@ import requests
 
 from twisted.internet import defer
 
-from sipp import SIPpScenario
+from asterisk.sipp import SIPpScenario
 
 LOGGER = logging.getLogger(__name__)
 

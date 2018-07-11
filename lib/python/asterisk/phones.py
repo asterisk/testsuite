@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Pluggable modules and classes to simulate phones.
 
 Copyright (C) 2015, Digium, Inc.
@@ -85,7 +84,7 @@ class PjsuaPhoneController(pjsua_mod.PJsua):
 
     def __setup_pjsua_acc_cb(self):
         """Setup PJSUA account callbacks"""
-        for name, phone_obj in self.__pjsua_phones.iteritems():
+        for name, phone_obj in self.__pjsua_phones.items():
             acc_cb = AccCallback()
             phone_obj.account.set_callback(acc_cb)
             LOGGER.info("%s is ready to receive calls." % name)
@@ -106,7 +105,7 @@ class PjsuaPhoneController(pjsua_mod.PJsua):
         if name:
             return self.__pjsua_phones.get(name)
         if account:
-            for name, phone_obj in self.__pjsua_phones.iteritems():
+            for name, phone_obj in self.__pjsua_phones.items():
                 if account is phone_obj.account:
                     return phone_obj
 

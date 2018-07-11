@@ -1,0 +1,5 @@
+=== Thread ID: 0x402c6940 (do_monitor           started at [25114] chan_sip.c restart_monitor())
+=== ---> Lock #0 (chan_sip.c): MUTEX 24629 handle_request_do &netlock 0x2aaabe671a40 (1)
+=== ---> Lock #1 (astobj2.c): MUTEX 657 internal_ao2_callback c 0x2aaaac491f50 (1)
+=== ---> Waiting for Lock #2 (channel.c): MUTEX 1691 ast_channel_cmp_cb chan 0x2aaaacd3a4e0 (1)
+=== --- ---> Locked Here: channel.c line 4304 (ast_indicate_data)

@@ -15,7 +15,7 @@ import re
 
 sys.path.append('lib/python')
 
-from pcap import VOIPListener
+from asterisk.pcap import VOIPListener
 from twisted.internet import reactor
 
 LOGGER = logging.getLogger(__name__)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Asterisk call detail record testing
 
 This module implements an Asterisk CEL parser.
@@ -11,8 +10,7 @@ the GNU General Public License Version 2.
 """
 
 import yaml
-import unittest
-import astcsv
+from . import astcsv
 import re
 import logging
 
@@ -176,37 +174,5 @@ class AsteriskCSVCEL(astcsv.AsteriskCSV):
             self, filename, records,
             AsteriskCSVCELLine.fields, AsteriskCSVCELLine)
 
-
-class AsteriskCSVCELTests(unittest.TestCase):
-    """Unit tests for AsteriskCSVCEL"""
-
-    def test_cel(self):
-        """Test CEL using self_test/CELMaster1.csv"""
-
-        cel = AsteriskCSVCEL("self_test/CELMaster1.csv")
-        self.assertEqual(len(cel), 16)
-        self.assertTrue(AsteriskCSVCELLine(
-            eventtype="LINKEDID_END",
-            channel="TinCan/string").match(cel[-1],
-                                           silent=True,
-                                           exact=(True, True)))
-        self.assertTrue(cel[-1].match(
-            AsteriskCSVCELLine(eventtype="LINKEDID_END",
-                               channel="TinCan/string"),
-            silent=True,
-            exact=(True, True)))
-
-        self.assertFalse(cel[1].match(cel[0], silent=True))
-        self.assertFalse(cel[0].match(cel[1], silent=True))
-        self.assertEqual(cel[-1].channel, "TinCan/string")
-
-        self.assertTrue(cel.match(cel))
-        cel2 = AsteriskCSVCEL("self_test/CELMaster2.csv")
-        self.assertFalse(cel.match(cel2))
-
-
-if __name__ == '__main__':
-    logging.basicConfig()
-    unittest.main()
 
 # vim:sw=4:ts=4:expandtab:textwidth=79
