@@ -27,9 +27,11 @@ fi
 
 SHOW_ERRORS=0
 VERBOSE=0
-TERM_WIDTH=$(tput cols)
 NO_COLOR=0
 NO_TIMER=0
+TERM_WIDTH=0
+declare -ix test_timeout=0
+
 for a in "$@" ; do
 	OPTION_COUNT+=1
 	case "$a" in
@@ -51,7 +53,16 @@ for a in "$@" ; do
 	esac
 done
 
-declare -ix test_timeout=0
+if [ x"$TERM" = x ] ; then
+	NO_TIMER=1
+	NO_COLOR=1
+	if [ $TERM_WIDTH -le 0 ] ; then
+		TERM_WIDTH=80
+	fi
+else
+	TERM_WIDTH=$(tput cols)
+fi
+
 
 if [ $NO_COLOR -gt 0 ] ; then
 	YELLOW=''
@@ -87,7 +98,7 @@ counter() {
 	done
 }
 
-echo -e -n "Calculating...\r"
+echo -e "Calculating..."
 declare -i run=0
 declare -i runs=0
 declare -ix runnable=0
@@ -120,9 +131,9 @@ while read line ; do
 	if [[ $run -eq 1 && $line =~ ^Tests\ to\ run:\ +([0-9]+)\ +\*\ +([0-9]+)\ +time\(s\)\ +=\ +([0-9]+)\ +Maximum.test.inactivity.time:.([-0-9-]+) ]] ; then
 		runnable=$(( ${BASH_REMATCH[1]} * $runs ))
 		export test_timeout=${BASH_REMATCH[4]}
-		printf "=%.0s" $(seq 1 ${TERM_WIDTH:-$(tput cols)}) ; echo
+		printf "=%.0s" $(seq 1 ${TERM_WIDTH}) ; echo
 		echo "${line/-1/unlimited}"
-		col=$(( ${TERM_WIDTH:-$(tput cols)} - ${#status_string} ))
+		col=$(( ${TERM_WIDTH} - ${#status_string} ))
 		printf "%-*.*s[%-12s][%s][${GREEN}%4s${NORM}][${RED}%4s${NORM}]\n" $col $col "Test" "  Test" "Status" "Pass" "Fail"
 	fi
 
@@ -130,7 +141,7 @@ while read line ; do
 		unset buffer
 		declare -a buffer
 		(( tests++ ))
-		col=$(( ${TERM_WIDTH:-$(tput cols)} - ${#status_string} -1 ))
+		col=$(( ${TERM_WIDTH} - ${#status_string} -1 ))
 		testname=${BASH_REMATCH[1]#*/}
 		tnl=$(( ${#testname} - $col ))
 		[ $tnl -le 0 ] && tnl=0
@@ -145,11 +156,11 @@ while read line ; do
 		fi
 	fi
 
-	if [[ $line =~ ^Test\ *\[(\'[^\']+\',)?\ *\'tests/([^\']+)\'(, \'[^\']+\')?\]\ *(passed|failed|timed\ out)$ ]] ; then
+	if [[ $line =~ ^Test\ *(\[\'[^\']+\',\ \')?tests/([^\' ]+)(\', \'[^\']+\'\])?\ *(passed|failed|timed\ out)$ ]] ; then
 		test=${BASH_REMATCH[2]}
 		_unused_arg=${BASH_REMATCH[3]}
 		status=${BASH_REMATCH[4]}
-		col=$(( ${TERM_WIDTH:-$(tput cols)} - ${#status_string} ))
+		col=$(( ${TERM_WIDTH} - ${#status_string} ))
 		et=$(( $SECONDS - $st ))
 		[ $countpid -gt 0 ] && kill $countpid
 		show=0
@@ -198,9 +209,9 @@ done
 
 elapsed=$(( $SECONDS - $starttime ))
 time="$(( $elapsed / 60 ))m $(( $elapsed % 60 ))s"
-printf "+%.0s" $(seq 1 ${TERM_WIDTH:-$(tput cols)}) ; echo
+printf "+%.0s" $(seq 1 ${TERM_WIDTH}) ; echo
 echo -e "Tests: $runnable   ${GREEN}Passed: $passed   ${RED}Failed: $failed   TimedOut: $timedout${NORM}   Time: $time\tLongest test: ${maxelapsed}s"
-printf "=%.0s" $(seq 1 ${TERM_WIDTH:-$(tput cols)}) ; echo
+printf "=%.0s" $(seq 1 ${TERM_WIDTH}) ; echo
 
 trap - INT ERR
 
