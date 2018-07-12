@@ -53,7 +53,10 @@ for a in "$@" ; do
 	esac
 done
 
-if [ x"$TERM" = x ] ; then
+tput longname 2&>/dev/null
+noterm=$?
+
+if [ $noterm -ne 0 -o x"$TERM" = x -o "$TERM" = "unknown" ] ; then
 	NO_TIMER=1
 	NO_COLOR=1
 	if [ $TERM_WIDTH -le 0 ] ; then
@@ -215,4 +218,4 @@ printf "=%.0s" $(seq 1 ${TERM_WIDTH}) ; echo
 
 trap - INT ERR
 
-[ $countpid -gt 0 ] && kill $countpid &>/dev/null
+[ ${countpid:-0} -gt 0 ] && kill $countpid &>/dev/null
