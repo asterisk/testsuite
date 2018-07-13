@@ -1,0 +1,27 @@
+testinfo:
+    summary: 'Test that if Asterisk does put ice in the response if it is requested'
+    description: |
+         'Endpôint A has ice enabled and sends an invite with ICE candidates in the SDP.  The
+          ANSWER from asterisk should contain ICE candidates'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'A_PARTY.xml', '-i': '127.0.0.1', '-p': '5061', '-s': '3200000000'} }
+
+
+properties:
+    dependencies:
+        - sipp :
+             version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
