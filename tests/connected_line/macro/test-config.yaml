@@ -6,6 +6,11 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_echo'
+        - asterisk: 'app_macro'
+        - asterisk: 'app_userevent'
+        - asterisk: 'func_callerid'
     tags:
         - connected_line
         - macro
