@@ -67,6 +67,14 @@ def on_start(ari, event, obj):
     LOGGER.info("Changed alice_mailbox. Confirmed new values.")
     LOGGER.info("Deleted bob_mailbox. Confirmed removal from list.")
 
+    ari.set_allow_errors(True)
+    resp = ari.get('mailboxes', 'bob_mailbox')
+    assert resp.status_code == 404
+
+    resp = ari.delete('mailboxes', 'bob_mailbox')
+    assert resp.status_code == 404
+    ari.set_allow_errors(False)
+
     # While this test doesn't actually use the channel for any of the ARI
     # operations that it does, its presence is necessary for triggering
     # the test and removing it is necessary for completing the test.
