@@ -116,10 +116,36 @@ pipeline {
 					def dockerOptions = "--ulimit core=0 --ulimit nofile=10240 " +
 						" -v /srv/jenkins:/srv/jenkins:rw -v /srv/cache:/srv/cache:rw " +
 						" --entrypoint='' --name ${bt}-build"
+					def outputDir = "CI/output"
+					def astDir = "${outputDir}/asterisk"
 
 					def img = docker.image(randomImage)
 					img.pull()
 					img.inside(dockerOptions) {
+						def asteriskUrl = env.GERRIT_PROJECT_URL.replaceAll(/\/(Security-)?[^\/]+$/, "/\$1asterisk")	
+						checkout scm: [$class: 'GitSCM',
+							branches: [[name: "${BRANCH_NAME}"]],
+							extensions: [
+								[$class: 'RelativeTargetDirectory', relativeTargetDir: astDir],
+								[$class: 'CloneOption',
+									noTags: true,
+									depth: 10,
+									honorRefspec: true,
+									shallow: true
+								],
+							],
+							userRemoteConfigs: [[name: env.GERRIT_NAME, url: asteriskUrl]]
+						]
+						
+						stage ('Build') {
+							echo 'Building..'
+
+							sh """
+								cd ${astDir}
+								./tests/CI/buildAsterisk.sh --output-dir=${env.WORKSPACE}/${outputDir} --cache-dir=/srv/cache
+								sudo ./tests/CI/installAsterisk.sh --user-group=jenkins:users
+							"""									
+						}
 						stage ('Test') {
 							sh "./self_test"
 						}
