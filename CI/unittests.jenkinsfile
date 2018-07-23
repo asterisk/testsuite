@@ -107,7 +107,7 @@ pipeline {
 						sh "sudo CI/setupJenkinsEnvironment.sh --output-dir=CI/output"
 					}
 
-					def images = env.DOCKER_IMAGES.split(' ')
+					def images = env.DOCKER_IMAGES_TESTSUITE.split(' ')
 					def r = currentBuild.startTimeInMillis % images.length
 					def ri = images[(int)r]
 					def randomImage = env.DOCKER_REGISTRY + "/" + ri;
