@@ -23,6 +23,7 @@ tests:
     - dir: 'transfers'
     - dir: 'transport'
     - dir: 'video_calls'
+    - dir: 'ice'
     - test: 'accountcode'
     - test: 'acl_call'
     - test: 'allow_overlap'
