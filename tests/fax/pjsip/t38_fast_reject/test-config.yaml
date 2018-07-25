@@ -7,7 +7,6 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-        - app    : 'rtpdump'
 
     tags:
         - PJSIP
