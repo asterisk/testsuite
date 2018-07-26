@@ -257,7 +257,11 @@ class RealtimeConverter(object):
         for realtime_file in REALTIME_FILE_REGISTRY:
             realtime_file.write_configs(self.config_dir, test_object.ast[0])
 
-        self.write_db()
+        try:
+            self.write_db()
+        except:
+            self.cleanup(None)
+            raise
 
     def write_extconfig_conf(self):
         """Write the initial extconfig.conf information
