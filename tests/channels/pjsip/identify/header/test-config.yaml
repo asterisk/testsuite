@@ -21,9 +21,11 @@ test-object-config:
             scenarios:
                 - { 'key-args': {'scenario': 'nominal.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 's'},
                     'ordered-args': ['-key', 'ident_key', 'e7657250-07fa-11e7-92f8-1b946c0c7e84'] }
-                - { 'key-args': {'scenario': 'off-nominal.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 's'},
-                    'ordered-args': ['-key', 'ident_key', 'derp'] }
+                - { 'key-args': {'scenario': 'nominal.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 's'},
+                    'ordered-args': ['-key', 'ident_key', 'Camp Winipcaca summer vacation'] }
                 - { 'key-args': {'scenario': 'off-nominal.xml', '-i': '127.0.0.1', '-p': '5063', '-s': 's'},
+                    'ordered-args': ['-key', 'ident_key', 'derp'] }
+                - { 'key-args': {'scenario': 'off-nominal.xml', '-i': '127.0.0.1', '-p': '5064', '-s': 's'},
                     'ordered-args': ['-key', 'ident_key', ''] }
 
 
@@ -33,5 +35,6 @@ properties:
             version : 'v3.0'
         - asterisk : 'app_echo'
         - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_endpoint_identifier_ip'
     tags:
         - pjsip
