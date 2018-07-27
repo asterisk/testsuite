@@ -20,7 +20,7 @@ test-object-config:
     test-iterations:
         -
             scenarios:
-                - { 'key-args': {'scenario': 'uas.xml', '-i': '[::1]', '-p': '5061'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'uas.xml', '-i': '[::1]', '-p': '5061'} }
 
 originator:
     trigger: 'ami_connect'
