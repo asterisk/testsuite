@@ -19,8 +19,8 @@ test-object-config:
     test-iterations:
         -
             scenarios:
-                - { 'key-args': { 'scenario': 'callee.xml', '-i': '127.0.0.1', '-p': '5063', '-trace_msg': '-pause_msg_ign' } }
-                - { 'key-args': { 'scenario': 'caller.xml', '-i': '127.0.0.1', '-p': '5062', '-trace_msg': '-pause_msg_ign' } }
+                - { 'key-args': { 'scenario': 'callee.xml', '-i': '127.0.0.1', '-p': '5063' } }
+                - { 'key-args': { 'scenario': 'caller.xml', '-i': '127.0.0.1', '-p': '5062' } }
 
 ami-config:
     -
