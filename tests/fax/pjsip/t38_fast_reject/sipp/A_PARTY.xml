@@ -1,153 +1,136 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <!DOCTYPE scenario SYSTEM "sipp.dtd">
 
-<scenario name="T38 REINVTE">
-  <send retrans="500">
-    <![CDATA[
+<scenario name="T38 REINVITE UAC">
+	<send retrans="500">
+		<![CDATA[
+			INVITE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/UDP [local_ip]:[local_port];branch=[branch]
+			From: <sip:390415094280@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+			To: <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			Supported: rel1xx,timer,replaces
+			Min-SE:  181
+			User-Agent: Cisco-SIPGateway/IOS-12.x
+			Allow: INVITE, OPTIONS, BYE, CANCEL, ACK, PRACK, COMET, REFER, SUBSCRIBE, NOTIFY, INFO, UPDATE, REGISTER
+			CSeq: 101 INVITE
+			Max-Forwards: 69
+			Contact: <sip:390415094280@[local_ip]:[local_port]>
+			Expires: 180
+			Allow-Events: telephone-event
+			Content-Type: application/sdp
+			Content-Length: [len]
 
-      INVITE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
-      Via: SIP/2.0/UDP [local_ip]:[local_port];branch=[branch]
-      From: <sip:390415094280@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
-      To: <sip:[service]@[remote_ip]:[remote_port]>
-      Call-ID: [call_id]
-      Supported: rel1xx,timer,replaces
-      Min-SE:  181
-      User-Agent: Cisco-SIPGateway/IOS-12.x
-      Allow: INVITE, OPTIONS, BYE, CANCEL, ACK, PRACK, COMET, REFER, SUBSCRIBE, NOTIFY, INFO, UPDATE, REGISTER
-      CSeq: 101 INVITE
-      Max-Forwards: 69
-      Contact: <sip:390415094280@[local_ip]:[local_port]>
-      Expires: 180
-      Allow-Events: telephone-event
-      Content-Type: application/sdp
-      Content-Length: [len]
-      
-      v=0
-      o=CiscoSystemsSIP-GW-UserAgent 9624 5279 IN IP4 [local_ip]
-      s=SIP Call
-      c=IN IP4 [media_ip]
-      t=0 0
-      m=audio 9000 RTP/AVP 0 18 101
-      c=IN IP[local_ip_type] [local_ip]
-      a=rtpmap:101 telephone-event/101
+			v=0
+			o=CiscoSystemsSIP-GW-UserAgent 9624 5279 IN IP4 [local_ip]
+			s=SIP Call
+			c=IN IP4 [media_ip]
+			t=0 0
+			m=audio 9000 RTP/AVP 0 18 101
+			c=IN IP[local_ip_type] [local_ip]
+			a=rtpmap:101 telephone-event/101
+		]]>
+	</send>
 
-    ]]>
-  </send>
+	<recv response="100" optional="true">
+	</recv>
 
-  <recv response="100">
-  </recv>
+	<recv response="180" optional="true">
+	</recv>
+	<recv response="183" optional="true">
+	</recv>
 
-  <recv response="100" optional="true">
-  </recv>
+	<recv response="200" rrs="true">
+		<action>
+			<ereg regexp="[[:punct:]](.*)[[:punct:]]" search_in="hdr" header="Contact:" check_it="true" assign_to="6,1" />
+			<ereg regexp=".*" search_in="hdr" header="From:" check_it="true" assign_to="2" />
+			<ereg regexp=".*" search_in="hdr" header="To:" check_it="true" assign_to="3" />
+			<log message="Log to avoid the problem of not using $6 [$6]"/>
+		</action>
+	</recv>
 
-  <recv response="100" optional="true">
-  </recv>
-
-  <recv response="180" optional="true">
-  </recv>
-  <recv response="183" optional="true">
-  </recv>
-
-  <recv response="200" rrs="true">
-    <action>
-    	<ereg regexp="[[:punct:]](.*)[[:punct:]]" search_in="hdr" header="Contact:" check_it="true" assign_to="6,1" />
-    	<ereg regexp=".*" search_in="hdr" header="From:" check_it="true" assign_to="2" />
-    	<ereg regexp=".*" search_in="hdr" header="To:" check_it="true" assign_to="3" />
-    	<log message="Log to avoid the problem of not using $6 [$6]"/>
-    </action>
-  </recv>
-
-  <send>
-    <![CDATA[
-
-      ACK [next_url] SIP/2.0
-      [routes]
-      Via: SIP/2.0/UDP [local_ip]:[local_port];branch=[branch]
-      From: [$2]
-      To: [$3]
-      Call-ID: [call_id]
-      Max-Forwards: 69
-      CSeq: 101 ACK
-      Content-Length: [len]
-
-    ]]>
-  </send>
+	<send crlf="true">
+		<![CDATA[
+			ACK [next_url] SIP/2.0
+			[routes]
+			Via: SIP/2.0/UDP [local_ip]:[local_port];branch=[branch]
+			From: [$2]
+			To: [$3]
+			Call-ID: [call_id]
+			Max-Forwards: 69
+			CSeq: 101 ACK
+			Content-Length: [len]
+		]]>
+	</send>
 
 
-  <!--Send the T38 REINVITE -->
-  <send retrans="500" start_rtd="reinvite">
-    <![CDATA[
+	<!--Send the T38 REINVITE -->
+	<send retrans="500" start_rtd="reinvite">
+		<![CDATA[
+			INVITE [$1] SIP/2.0
+			Via: SIP/2.0/UDP [local_ip]:[local_port];branch=[branch]
+			From: [$2]
+			To: [$3]
+			Call-ID: [call_id]
+			User-Agent: Cisco-SIPGateway/IOS-12.x
+			CSeq: 102 INVITE
+			Max-Forwards: 69
+			Contact: <sip:390415094280@[local_ip]:[local_port]>
+			Allow-Events: telephone-event
+			Content-Type: application/sdp
+			Content-Length: [len]
 
-      INVITE [$1] SIP/2.0
-      Via: SIP/2.0/UDP [local_ip]:[local_port];branch=[branch]
-      From: [$2]
-      To: [$3]
-      Call-ID: [call_id]
-      User-Agent: Cisco-SIPGateway/IOS-12.x
-      CSeq: 102 INVITE
-      Max-Forwards: 69
-      Contact: <sip:390415094280@[local_ip]:[local_port]>
-      Allow-Events: telephone-event
-      Content-Type: application/sdp
-      Content-Length: [len]
-            
-      v=0
-      o=CiscoSystemsSIP-GW-UserAgent 9624 5280 IN IP4 [local_ip]
-      s=Asterisk PBX 1.6.2.0
-      c=IN IP[local_ip_type] [local_ip]
-      t=0 0
-      m=image 4389 udptl t38
-      a=T38FaxVersion:0
-      a=T38MaxBitRate:14400
-      a=T38FaxRateManagement:transferredTCF
-      a=T38FaxMaxDatagram:1400
-      a=T38FaxUdpEC:t38UDPRedundancy
+			v=0
+			o=CiscoSystemsSIP-GW-UserAgent 9624 5280 IN IP4 [local_ip]
+			s=Asterisk PBX 1.6.2.0
+			c=IN IP[local_ip_type] [local_ip]
+			t=0 0
+			m=image 4389 udptl t38
+			a=T38FaxVersion:0
+			a=T38MaxBitRate:14400
+			a=T38FaxRateManagement:transferredTCF
+			a=T38FaxMaxDatagram:1400
+			a=T38FaxUdpEC:t38UDPRedundancy
+		]]>
+	</send>
 
-    ]]>
-  </send>
+	<recv response="100" optional="true">
+	</recv>
 
-  <recv response="100" optional="true">
-  </recv>
+	<recv response="488" rtd="reinvite">
+	</recv>
 
-  <recv response="488" rtd="reinvite" crlf="true">
-  </recv>
+	<send crlf="true">
+		<![CDATA[
+			ACK [$1] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			[last_Call-ID:]
+			From: [$2]
+			To: [$3]
+			CSeq: 102 ACK
+			Max-Forwards: 69
+			Content-Length: 0
+		]]>
+	</send>
 
-  <send>
-  <![CDATA[
+	<!-- Wait to see if Asterisk drops the call after rejecting the T.38 request -->
+	<pause milliseconds="50000" crlf="true" />
 
-  ACK [$1] SIP/2.0
-  Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-  [last_Call-ID:]
-  From: [$2]
-  To: [$3]
-  CSeq: 102 ACK
-  Max-Forwards: 69
-  Content-Length: 0
+	<send retrans="500">
+		<![CDATA[
+			BYE [$1] SIP/2.0
+			Via: SIP/2.0/UDP [local_ip]:[local_port];branch=[branch]
+			From: [$2]
+			To: [$3]
+			Call-ID: [call_id]
+			User-Agent: Cisco-SIPGateway/IOS-12.x
+			Max-Forwards: 69
+			CSeq: 104 BYE
+			Content-Length: 0
+		]]>
+	</send>
 
-  ]]>
-  </send>
-
-  <pause milliseconds="50000" />
-
-  <send retrans="500">
-    <![CDATA[
-
-      BYE [$1] SIP/2.0
-      Via: SIP/2.0/UDP [local_ip]:[local_port];branch=[branch]
-      From: [$2]
-      To: [$3]
-      Call-ID: [call_id]
-      User-Agent: Cisco-SIPGateway/IOS-12.x
-      Max-Forwards: 69
-      CSeq: 104 BYE
-      Content-Length: 0
-
-    ]]>
-  </send>
-
-  <recv response="200">
-  </recv>
-
-
+	<recv response="200">
+	</recv>
 </scenario>
 
