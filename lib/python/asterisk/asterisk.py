@@ -655,13 +655,19 @@ class Asterisk(object):
 
         return os.path.join(self.base + self.directories[astdirkey], *paths)
 
+    def configuration_replace_string(self, value):
+        """Replace variables in a string with directory paths"""
+        if "<<" not in value:
+            return value
+        for key in self.directories.keys():
+            value = value.replace("<<%s>>" % key,
+                              "%s%s" % (self.base, self.directories[key]))
+        return value
+
 # Quick little function for doing search and replace in a file used below.
     def _file_replace_string(self, file):
         for line in fileinput.input(file, inplace=1):
-            if "<<" in line:
-                for key in self.directories.keys():
-                    line = line.replace("<<%s>>" % key,
-                                    "%s%s" % (self.base, self.directories[key]))
+            line = self.configuration_replace_string(line)
             sys.stdout.write(line)
 
     def install_configs(self, cfg_path, deps=None):
