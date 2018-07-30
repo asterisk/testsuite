@@ -130,7 +130,7 @@ class SorceryRealtimeFile(object):
                 # res_odbc.conf.
                 extconfig.write('{0} = odbc,asterisk\n'.format(table))
 
-    def write_db(self, config_dir, meta, engine, conn):
+    def write_db(self, config_dir, meta, engine, conn, test_object):
         """Convert file contents into database entries
 
         Keyword Arguments:
@@ -154,8 +154,9 @@ class SorceryRealtimeFile(object):
                               autoload=True, autoload_with=engine)
                 vals = {'id': title}
                 for key in section.keys():
-                    if key != 'type':
-                        vals[key] = ";".join(value.replace(";", "^3B") for value in section.get(key))
+                    key_name = test_object.ast[0].configuration_replace_string(key)
+                    if key_name != 'type':
+                        vals[key_name] = ";".join(test_object.ast[0].configuration_replace_string(value).replace(";", "^3B") for value in section.get(key))
 
                 conn.execute(table.insert().values(**vals))
 
@@ -258,7 +259,7 @@ class RealtimeConverter(object):
             realtime_file.write_configs(self.config_dir, test_object.ast[0])
 
         try:
-            self.write_db()
+            self.write_db(test_object)
         except:
             self.cleanup(None)
             raise
@@ -299,11 +300,11 @@ password = {2}
         with open(self.modules.file, 'a+') as modules:
             modules.write('preload => res_odbc.so\npreload=>res_config_odbc.so')
 
-    def write_db(self):
+    def write_db(self, test_object):
         """Tell converters to write database information"""
         for realtime_file in REALTIME_FILE_REGISTRY:
             realtime_file.write_db(self.config_dir, self.meta, self.engine,
-                                   self.conn)
+                                   self.conn, test_object)
 
     def cleanup(self, result):
         """Cleanup information after test has completed.
