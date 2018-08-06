@@ -1,0 +1,16 @@
+testinfo:
+    summary:     'Test AGI with multiple calls in parallel'
+    description: |
+        'This test checks to make certain that multiple overlapping AGIs are executed'
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_userevent'
+        - asterisk : 'func_cdr'
+        - asterisk : 'func_logic'
+        - asterisk : 'pbx_config'
+        - asterisk : 'res_agi'
+    tags:
+        - AGI
