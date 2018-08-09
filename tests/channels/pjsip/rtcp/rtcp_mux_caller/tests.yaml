@@ -2,3 +2,5 @@
 tests:
     - test: 'direct'
     - test: 'ice'
+    - test: 'rtcp_mux_offered' 
+    - test: 'rtcp_mux_not_offered' 
