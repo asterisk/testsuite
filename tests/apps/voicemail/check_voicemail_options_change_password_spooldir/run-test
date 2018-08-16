@@ -200,7 +200,7 @@ class CheckVoicemailChangePassword(VoiceMailTest):
         self.register_stop_observer(self.__check_voicemail_pw_settings)
 
         self.reactor_timeout = 60
-        self.create_asterisk(2)
+        self.create_asterisk(2, test_config={'memcheck-delay-stop': 7})
 
     def __check_voicemail_pw_settings(self, result):
         """ Checks conditions and voicemail password settings file prior to

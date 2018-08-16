@@ -244,7 +244,7 @@ class CheckVoicemailReply(VoiceMailTest):
         self.add_test_condition("leftMessage", TestCondition(passValue, False))
 
         self.reactor_timeout = 120
-        self.create_asterisk(2)
+        self.create_asterisk(2, test_config={'memcheck-delay-stop': 7})
 
     def ami_connect(self, ami):
         super(CheckVoicemailReply, self).ami_connect(ami)

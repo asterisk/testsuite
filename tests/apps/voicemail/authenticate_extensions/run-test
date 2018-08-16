@@ -103,7 +103,7 @@ class AuthenticateExtensions(VoiceMailTest):
         super(AuthenticateExtensions, self).__init__()
 
         self.test_counter = 0
-        self.create_asterisk(2)
+        self.create_asterisk(2, test_config={'memcheck-delay-stop': 7})
         self.pass_results = 0
 
     def ami_connect(self, ami):
