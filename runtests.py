@@ -110,7 +110,7 @@ class TestRun:
         self.test_relpath = self.test_name[6:]
 
     def stdout_print(self, msg):
-        self.stdout += msg + "\n"
+        self.stdout += msg + u"\n"
         print(msg)
 
     def run(self):
