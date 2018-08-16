@@ -92,6 +92,7 @@ originator-config:
     async: True
 
 sipp-config:
+    memcheck-delay-stop: 34
     fail-on-any: True
     test-iterations:
         -

@@ -193,7 +193,7 @@ class CheckVoicemailRecordBusy(VoiceMailTest):
         self.add_test_condition("recordBusy", TestCondition(checkTrueCondition, False))
 
         self.reactor_timeout = 60
-        self.create_asterisk(2)
+        self.create_asterisk(2, test_config={'memcheck-delay-stop': 7})
 
     def ami_connect(self, ami):
         super(CheckVoicemailRecordBusy, self).ami_connect(ami)
