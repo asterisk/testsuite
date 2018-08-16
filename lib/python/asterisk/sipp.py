@@ -846,7 +846,7 @@ class SIPpTest(TestCase):
     for the location of configuration for a test.
     """
 
-    def __init__(self, working_dir, test_dir, scenarios):
+    def __init__(self, working_dir, test_dir, scenarios, test_config=None):
         """Constructor
 
         Keyword Arguments:
@@ -875,7 +875,7 @@ class SIPpTest(TestCase):
         self.test_dir = test_dir
         self.scenarios = scenarios
         self.result = []
-        self.create_asterisk()
+        self.create_asterisk(test_config=test_config)
         self._scenario_objects = []
 
     def stop_asterisk(self):
