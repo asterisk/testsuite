@@ -109,7 +109,7 @@ class AuthenticateNominal(VoiceMailTest):
             ("9000", "1234", "PJSIP/ast1-00000000", LoginWithMailbox),
             ("9001", "0", "PJSIP/ast1-00000001", LoginWithoutMailbox),
             ("9002", "1234567890", "PJSIP/ast1-00000002", LoginWithoutMailbox)]
-        self.create_asterisk(2)
+        self.create_asterisk(2, test_config={'memcheck-delay-stop': 7})
         self.test_counter = 0
 
     def ami_connect(self, ami):

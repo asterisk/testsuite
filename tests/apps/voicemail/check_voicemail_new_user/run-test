@@ -227,7 +227,7 @@ class CheckVoicemailNewUser(VoiceMailTest):
         self.add_test_condition("recordName", TestCondition(checkTrueCondition, False))
 
         self.reactor_timeout = 120
-        self.create_asterisk(2)
+        self.create_asterisk(2, test_config={'memcheck-delay-stop': 7})
 
     def ami_connect(self, ami):
         """ Record which AMI instance we've received and attempt to set up the test controller """
