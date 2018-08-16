@@ -217,7 +217,7 @@ class CheckVoicemailDialout(VoiceMailTest):
         self.add_test_condition("messagesHeard", TestCondition(checkMessages, 0))
 
         self.reactor_timeout = 90
-        self.create_asterisk(2)
+        self.create_asterisk(2, test_config={'memcheck-delay-stop': 7})
 
     def ami_connect(self, ami):
         super(CheckVoicemailDialout, self).ami_connect(ami)

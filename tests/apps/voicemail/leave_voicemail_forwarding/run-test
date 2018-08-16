@@ -105,7 +105,7 @@ class LeaveVoicemailForwarding(VoiceMailTest):
         self.test_counter = 0
         self.extensions = [1234,5678]
 
-        self.create_asterisk(2)
+        self.create_asterisk(2, test_config={'memcheck-delay-stop': 7})
 
     def ami_connect(self, ami):
         super(LeaveVoicemailForwarding, self).ami_connect(ami)

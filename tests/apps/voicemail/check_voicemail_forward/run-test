@@ -244,7 +244,7 @@ class CheckVoicemailForward(VoiceMailTest):
         self.add_test_condition("msgForwarded", TestCondition(returnValue, False))
 
         self.reactor_timeout = 90
-        self.create_asterisk(2)
+        self.create_asterisk(2, test_config={'memcheck-delay-stop': 7})
 
     def ami_connect(self, ami):
         super(CheckVoicemailForward, self).ami_connect(ami)
