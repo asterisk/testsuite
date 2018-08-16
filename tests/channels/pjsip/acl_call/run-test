@@ -129,7 +129,7 @@ def main():
     DB_PATH = TEST_DIR + "/realtime.sqlite3"
     TMP_DB_PATH = "/tmp/realtime.sqlite3"
     shutil.copyfile(DB_PATH, TMP_DB_PATH)
-    test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
+    test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS, test_config={'memcheck-delay-stop': 7})
     reactor.run()
     os.remove(TMP_DB_PATH)
 
