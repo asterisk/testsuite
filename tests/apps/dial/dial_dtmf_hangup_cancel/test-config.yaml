@@ -104,6 +104,7 @@ originator-config:
     trigger: 'scenario_start'
 
 sipp-config:
+    memcheck-delay-stop: 7
     fail-on-any: True
     test-iterations:
         -
