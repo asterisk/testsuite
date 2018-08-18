@@ -64,7 +64,7 @@ class LeaveVoicemailContexts(VoiceMailTest):
         super(LeaveVoicemailContexts, self).__init__()
 
         self.testCounter = 0
-        self.create_asterisk(2)
+        self.create_asterisk(2, test_config={'memcheck-delay-stop': 7})
         self.expectedValues = {'operator@voicemail': False,
                                'attendant@voicemail': False,
                                '1@voicemail': False,
