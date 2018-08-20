@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# TODO: fully implement AGI and check results of each command
+
+echo "EXEC PLAYBACK silence/3"
+echo "EXEC UserEvent AgiCompleted"
+
+exit 0
