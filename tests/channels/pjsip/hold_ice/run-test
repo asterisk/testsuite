@@ -26,7 +26,7 @@ class SIPHold(TestCase):
     def __init__(self):
         """ Constructor """
         super(SIPHold, self).__init__()
-        self.create_asterisk()
+        self.create_asterisk(test_config={'memcheck-delay-stop': 8})
 
         self.sipp_phone_a_scenario = {'scenario': 'phone_A.xml',
                                       '-i': '127.0.0.2',
