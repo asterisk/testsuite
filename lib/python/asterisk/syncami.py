@@ -15,6 +15,7 @@ except:
     # python 3 import
     from urllib.parse import urlencode
 
+from StringIO import StringIO
 from email.parser import HeaderParser
 try:
     from httplib import *
@@ -93,7 +94,8 @@ class SyncAMI(object):
         if res.status != 200:
             raise InvalidAMIResponse(res)
         self.cookie = res.getheader('set-cookie', None)
-        data = res.read().decode('utf-8')
-        parser = HeaderParser()
 
-        return parser.parsestr(data)
+        data = StringIO(res.read().decode('utf-8', 'ignore'))
+        res = HeaderParser().parse(data)
+        data.close()
+        return res
