@@ -118,6 +118,7 @@ originator-config:
 
 hangup-config:
     ids: ['0']
+    min_calls: 8
 
 properties:
     dependencies:
