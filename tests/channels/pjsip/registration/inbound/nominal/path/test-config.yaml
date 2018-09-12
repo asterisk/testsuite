@@ -30,7 +30,7 @@ test-modules:
             typename: 'pluggable_modules.Originator'
 
 originator-ua1_invite_recv:
-    trigger: 'ami_connect'
+    scenario-trigger-after: '3'
 
 sipp-config:
     memcheck-delay-stop: 7
