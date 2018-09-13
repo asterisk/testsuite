@@ -7,6 +7,7 @@ properties:
     dependencies:
         - app : 'sipp'
         - asterisk : 'res_pjsip'
+        - asterisk : 'app_dial'
         - custom : 'rawsocket'
     tags:
         - pjsip
