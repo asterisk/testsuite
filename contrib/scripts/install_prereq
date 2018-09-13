@@ -19,7 +19,7 @@ PACKAGES_DEBIAN="$PACKAGES_DEBIAN python python-pip python-setuptools python-dev
 # Testsuite: basic requirements:
 PACKAGES_DEBIAN="$PACKAGES_DEBIAN python-yaml python-twisted-core python-lxml liblua5.1-0-dev lua5.1 gdb"
 # Sipp requirements
-PACKAGES_DEBIAN="$PACKAGES_DEBIAN libpcap-dev libssl-dev libsctp-dev"
+PACKAGES_DEBIAN="$PACKAGES_DEBIAN libpcap-dev libssl-dev libsctp-dev libncurses5-dev"
 # pjsua requirements
 #PACKAGES_DEBIAN="$PACKAGES_DEBIAN python-dev"
 
@@ -189,7 +189,7 @@ install_sipp() {
 	$testcmd cd $PROJECT_DIR
 
 	# Checkout and build the current latest released version.
-	$testcmd git checkout v3.5.1
+	$testcmd git checkout v3.5.2
 
 	$testcmd ./build.sh --with-openssl --with-pcap --with-rtpstream --with-sctp
 	$testcmd sudo make install
