@@ -82,7 +82,8 @@ class StartConfBridgeState(ConfbridgeTestState):
 
         state = event['state']
         if state == 'CONF_START_RECORD':
-            logger.debug("Detected CONF_START_RECORD")
+            logger.debug("State: {0} - Detected CONF_START_RECORD".format(
+                self.get_state_name()))
             self.test_case.expected_events['recordingstarted'] = True
 
     def get_state_name(self):
@@ -126,7 +127,12 @@ class ActiveConfBridgeState(ConfbridgeTestState):
         """ TestEvent handler.  Check for end of recording. """
 
         state = event['state']
-        if state == 'CONF_STOP_RECORD':
+
+        if state == 'CONF_START_RECORD':
+            logger.debug("State: {0} - Detected CONF_START_RECORD".format(
+                self.get_state_name()))
+            self.test_case.expected_events['recordingstarted'] = True
+        elif state == 'CONF_STOP_RECORD':
             logger.debug("Detected CONF_STOP_RECORD")
             self.test_case.expected_events['recordingstopped'] = True
 
