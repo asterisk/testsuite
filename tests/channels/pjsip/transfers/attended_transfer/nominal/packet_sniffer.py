@@ -63,6 +63,7 @@ class Sniffer(VOIPListener):
 
         self.test_object = test_object
         self.ami = None
+        self.ports = []
         self.test_object.register_ami_observer(self.ami_connect)
         self.add_callback('SIP', self.__check_sip_packet)
         self.calls = {'alice': [], 'bob': [], 'charlie': []}
@@ -86,6 +87,25 @@ class Sniffer(VOIPListener):
         ami AMI instance
         """
         self.ami = ami
+
+        self.ami.registerEvent('TestEvent', self.on_ami_test_event)
+
+    def on_ami_test_event(self, ami, event):
+        """Handles an AMI TestEvent.
+
+        Routes the test data according to the state of the AMI event.
+
+        Keyword Arguments:
+        sender                 -- The ami instance that raised the event.
+        event                  -- The event payload.
+        """
+
+        state = event['state']
+        message = "In self.on_test_event. event[state]={0}."
+        LOGGER.debug(message.format(state))
+
+        if state == 'RTP_PORT_ALLOCATED':
+            self.ports.append(event['port'])
 
     def __check_sip_packet(self, packet):
         """Callback function for when we have a SIP packet
@@ -222,9 +242,8 @@ class Sniffer(VOIPListener):
 
         # We have an INVITE of an already known call from Asterisk (we know
         # it's using port 5060).
-        if self.get_rtp_data(packet) > 10000:
-            # The SDP has an RTP port within Asterisk's range (we know it uses
-            # 10000-20000).
+        if str(self.get_rtp_data(packet)) in self.ports:
+            # The SDP has an RTP port that Asterisk has allocated for use
             if self.get_call_state(callid) == "RTP_RB_STARTED":
                 # If the call is already in a remote RTP bridge, then this
                 # INVITE means the remote RTP bridge is being torn down.
