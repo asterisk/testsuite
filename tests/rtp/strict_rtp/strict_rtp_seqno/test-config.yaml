@@ -1,0 +1,32 @@
+testinfo:
+    summary: 'Verify strictrtp set to seqno ignores strictrtp time interval'
+    description: |
+        This test verifies that when strictrtp is set to seqno, Asterisk is
+        able to lock on to the target address, even if there is a burst of
+        packets during the learning period. It also ensures that packets from
+        other sources are dropped after we lock on to our target address.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'dummy-config'
+            typename: 'strict_rtp.StrictRtpTester'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'call_setup.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+dummy-config:
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'app_echo'
+        - asterisk : 'res_pjsip'
