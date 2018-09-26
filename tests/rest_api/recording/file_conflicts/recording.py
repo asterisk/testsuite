@@ -16,18 +16,21 @@ LOGGER = logging.getLogger(__name__)
 class TestLogic(object):
     def __init__(self):
         self.channel_id = None
+        self.step = 'baseline'
+
 
 TEST = TestLogic()
 
 
-def fail_test():
+def fail_test(msg):
+    LOGGER.error(msg)
     TEST.test_object.set_passed(False)
     TEST.test_object.stop_reactor()
+    return True
 
 
 def on_start(ari, event, test_object):
     TEST.test_object = test_object
-    TEST.ari = ari
 
     LOGGER.debug("on_start(%r)" % event)
     TEST.channel_id = event['channel']['id']
@@ -36,91 +39,68 @@ def on_start(ari, event, test_object):
     LOGGER.info("Attempting to answer the channel.")
 
     try:
-        TEST.ari.post('channels', TEST.channel_id, 'answer')
+        ari.post('channels', TEST.channel_id, 'answer')
     except requests.exceptions.HTTPError:
-        LOGGER.error('Failed to answer.')
-        fail_test()
-        return True
+        return fail_test('Failed to answer.')
 
     LOGGER.info("Answered the channel. Starting the baseline recording.")
 
     try:
-        TEST.ari.post('channels', TEST.channel_id, 'record',
+        ari.post('channels', TEST.channel_id, 'record',
                       name="superfly", format="wav")
     except requests.exceptions.HTTPError:
-        LOGGER.error("Failed to record.")
-        fail_test()
-        return True
+        return fail_test("Failed to record.")
 
-    LOGGER.info("Baseline recording started successfully.")
-
-    # XXX No recording started events yet, so we allow time before continuing.
-    reactor.callLater(0.2, step_two)
     return True
 
 
-def step_two():
-    LOGGER.info("Attempting to stop the baseline recording.")
+def on_recording_started(ari, event, test_object):
+    LOGGER.info("{0} recording started successfully".format(TEST.step))
+    LOGGER.info("Attempting to stop the {0} recording.".format(TEST.step))
 
     try:
-        TEST.ari.post('recordings/live', 'superfly', 'stop')
+        ari.post('recordings/live', 'superfly', 'stop')
     except requests.exceptions.HTTPError:
-        LOGGER.error('Failed to stop recording.')
-        fail_test()
-        return
+        return fail_test('Failed to stop {0} recording.'.format(TEST.step))
 
-    LOGGER.info("Baseline recording stopped.")
-    LOGGER.info("Attempting to start expected failure recording: "
-                "(file name conflict).")
+    return True
+
+
+def on_recording_finished(ari, event, test_object):
+    LOGGER.info("{0} recording stopped successfully.".format(TEST.step))
+
+    if TEST.step == 'overwrite':
+        # Once done with the overwrite recording end the test
+        LOGGER.info("Time to leave stasis.")
+
+        try:
+            ari.post('channels', TEST.channel_id, 'continue')
+        except requests.exceptions.HTTPError:
+            return fail_test('Failed to leave stasis.')
+
+        LOGGER.info("Tests completed: The channel should be out of stasis.")
+        return True
+
+    # Baseline recording done, so attempt overwrite tests
+    TEST.step = 'overwrite'
+    LOGGER.info("First overwrite attempt (expecting failure).")
 
     try:
         # Overwrite is not allowed and the file will already exist,
         # so this should fail.
-        TEST.ari.post('channels', TEST.channel_id, 'record',
-                      name="superfly", format="wav",
-                      ifExists="fail")
-        LOGGER.error('This recording was supposed to fail and it did not.')
-        fail_test()
-        return
+        ari.post('channels', TEST.channel_id, 'record', name="superfly",
+                      format="wav", ifExists="fail")
+        return fail_test('First overwrite attempt did not fail.')
     except requests.exceptions.HTTPError:
         pass
 
-    LOGGER.info("The recording failed as expected.")
-    LOGGER.info("Attempting to start recording with overwrite enabled")
+    LOGGER.info("Second overwrite attempt (expecting success).")
 
     try:
         # Overwrite is allowed, so recording should succeed this time.
-        TEST.ari.post('channels', TEST.channel_id, 'record',
-                      name="superfly", format="wav",
-                      ifExists="overwrite")
+        ari.post('channels', TEST.channel_id, 'record', name="superfly",
+                      format="wav", ifExists="overwrite")
     except requests.exceptions.HTTPError:
-        LOGGER.error('Failed to record in overwrite mode.')
-        fail_test()
-        return
+        return fail_test('Failed to record in overwrite mode.')
 
-    LOGGER.info("The overwrite recording started successfully")
-
-    # XXX No recording started events yet, so we allow time before continuing.
-    reactor.callLater(0.2, step_three)
-
-
-def step_three():
-    LOGGER.info("Attempting to stop the overwrite recording")
-
-    try:
-        TEST.ari.post('recordings/live', 'superfly', 'stop')
-    except requests.exceptions.HTTPError:
-        LOGGER.error('Failed to stop overwrite recording.')
-        fail_test()
-        return
-
-    LOGGER.info("Overwrite recording stopped successfully. Leave Stasis.")
-
-    try:
-        TEST.ari.post('channels', TEST.channel_id, 'continue')
-    except requests.exceptions.HTTPError:
-        LOGGER.error('Failed to leave stasis. Crud.')
-        fail_test()
-        return
-
-    LOGGER.info("All tests complete: The channel should be out of stasis.")
+    return True

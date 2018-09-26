@@ -25,6 +25,22 @@ ari-config:
             callback:
                 module: recording
                 method: on_start
+        -   conditions:
+                match:
+                    type: RecordingStarted
+                    application: testsuite
+            count: 2
+            callback:
+                module: recording
+                method: on_recording_started
+        -   conditions:
+                match:
+                    type: RecordingFinished
+                    application: testsuite
+            count: 2
+            callback:
+                module: recording
+                method: on_recording_finished
 
 properties:
     dependencies:
