@@ -217,6 +217,15 @@ class RLSTest(VOIPProxy):
 
         info_msg = "Resource ({0}) validated successfully."
         LOGGER.info(info_msg.format(self.packets_idx))
+
+        try:
+            action = self.packets[self.packets_idx]["ami-action"]
+            debug_msg = "Sending AMI action: {0}"
+            LOGGER.debug(debug_msg.format(action))
+            self.ami.sendMessage(action)
+        except KeyError:
+            pass
+
         self.packets_idx += 1
 
         if self.packets_idx == len(self.packets):

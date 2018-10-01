@@ -46,9 +46,7 @@ test-config:
         -
             full-state: True
             resources: { 'alice': {'type': 'PIDF', 'state': 'active'}, 'bob': {'type': 'PIDF', 'state': 'active'} }
+            ami-action: { 'Action': 'SetVar', 'Variable': 'DEVICE_STATE(Custom:alice)', 'Value': 'INUSE' }
         -
             full-state: False
             resources: { 'alice': {'type': 'PIDF', 'state': 'active' } }
-    ami-action:
-        -
-            { 'Action': 'SetVar', 'Variable': 'DEVICE_STATE(Custom:alice)', 'Value': 'INUSE' }
