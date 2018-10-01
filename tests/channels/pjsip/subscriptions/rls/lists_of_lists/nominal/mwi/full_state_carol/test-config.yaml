@@ -72,6 +72,7 @@ test-config:
                     'messages_waiting': 'no'
                 }
             }
+            ami-action: { 'action': 'MWIUpdate', 'Mailbox': 'carol@default', 'NewMessages': '1', 'OldMessages': '2' }
         -
             full-state: True
             resources: {
@@ -100,7 +101,3 @@ test-config:
                     'messages_waiting': 'yes'
                 }
             }
-
-    ami-action:
-        -
-            { 'action': 'MWIUpdate', 'Mailbox': 'carol@default', 'NewMessages': '1', 'OldMessages': '2' }
