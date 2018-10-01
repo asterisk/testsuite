@@ -54,6 +54,7 @@ test-config:
                 },
                 'carol': {'type': 'PIDF', 'state': 'active'}
             }
+            ami-action: { 'Action': 'SetVar', 'Variable': 'DEVICE_STATE(Custom:alice)', 'Value': 'INUSE' }
         -
             full-state: False
             resources: {
@@ -63,6 +64,3 @@ test-config:
                     }
                 }
             }
-    ami-action:
-        -
-            { 'Action': 'SetVar', 'Variable': 'DEVICE_STATE(Custom:alice)', 'Value': 'INUSE' }
