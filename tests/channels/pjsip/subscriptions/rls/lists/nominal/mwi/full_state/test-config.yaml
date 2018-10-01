@@ -47,9 +47,7 @@ test-config:
         -
             full-state: True
             resources: { 'alice': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'}, 'bob': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'} }
+            ami-action: { 'action': 'MWIUpdate', 'Mailbox': 'alice@default', 'NewMessages': '1', 'OldMessages': '2' }
         -
             full-state: True
             resources: { 'alice': {'type': 'MWI', 'state': 'active', 'voice_message': '1/2 (0/0)', 'messages_waiting': 'yes'}, 'bob': {'type': 'MWI', 'state': 'active', 'voice_message': '0/0 (0/0)', 'messages_waiting': 'no'} }
-    ami-action:
-        -
-            { 'action': 'MWIUpdate', 'Mailbox': 'alice@default', 'NewMessages': '1', 'OldMessages': '2' }
