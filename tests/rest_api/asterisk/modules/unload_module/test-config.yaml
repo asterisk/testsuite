@@ -25,11 +25,11 @@ ari-config:
             requests:
                 -
                     method: 'delete'
-                    uri: 'asterisk/modules/app_confbridge.so'
+                    uri: 'asterisk/modules/app_page.so'
                     expect: 204
                 -
                     method: 'get'
-                    uri: 'asterisk/modules/app_confbridge.so'
+                    uri: 'asterisk/modules/app_page.so'
                     expect: 404
                 -
                     method: 'delete'
