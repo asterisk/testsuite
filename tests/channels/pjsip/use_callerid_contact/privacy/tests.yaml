@@ -1,0 +1,4 @@
+tests:
+    - test: 'use_caller_contact_enabled'
+    - test: 'use_caller_contact_disabled'
+    - test: 'contact_user'
