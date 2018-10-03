@@ -1,0 +1,28 @@
+testinfo:
+    summary: 'Test that Asterisk honors privacy in contact if user_callerid_contact is enabled'
+    description: |
+         'Asterisk is configured with use_callerid_contact enabled, and the caller requests privacy, the forwarded contact header should have
+          anonymous in the user part'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'A_PARTY.xml', '-i': '127.0.0.1', '-p': '5061', '-s': '3200000000'} }
+                - { 'key-args': {'scenario': 'B_PARTY.xml', '-i': '127.0.0.1', '-p': '5700'} }
+
+
+properties:
+    dependencies:
+        - sipp :
+             version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
