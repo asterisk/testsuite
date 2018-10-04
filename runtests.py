@@ -225,6 +225,11 @@ class TestRun:
             if item.startswith('core') or item.startswith('vgcore'):
                 core_files.append(item)
 
+        contents = os.listdir('/tmp')
+        for item in contents:
+            if item.startswith('core') or item.startswith('vgcore'):
+                core_files.append(item)
+
         contents = os.listdir(self.test_name)
         for item in contents:
             if item.startswith('core') or item.startswith('vgcore'):
