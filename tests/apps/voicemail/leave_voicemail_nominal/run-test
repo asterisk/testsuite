@@ -102,7 +102,7 @@ class LeaveVoicemailNominal(VoiceMailTest):
         super(LeaveVoicemailNominal, self).__init__()
         self.testResultsReceived = 0
         self.reactor_timeout = 45
-        self.create_asterisk(2)
+        self.create_asterisk(2, test_config={'memcheck-delay-stop': 7})
         self.test_counter = 0
         self.extensions = [1234,1234,5678,5678,9000]
 

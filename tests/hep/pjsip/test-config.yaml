@@ -21,6 +21,7 @@ test-modules:
             config-section: hep-node-config
 
 test-object-config:
+    memcheck-delay-stop: 7
     fail-on-any: True
     test-iterations:
         -

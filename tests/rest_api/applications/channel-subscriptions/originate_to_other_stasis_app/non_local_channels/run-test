@@ -167,7 +167,7 @@ class OriginateToDifferentApp(TestCase):
     def __init__(self):
         """Constructor"""
         super(OriginateToDifferentApp, self).__init__()
-        self.create_asterisk(count=1)
+        self.create_asterisk(count=1, test_config={'memcheck-delay-stop': 7})
         self.phone_controller = None
         self.protocols = []
         # Name of apps to create
