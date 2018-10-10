@@ -52,7 +52,7 @@ def main():
         }
     ]
 
-    test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
+    test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS, test_config={'memcheck-delay-stop':7})
     test.reactor_timeout = 100
 
     reactor.run()
