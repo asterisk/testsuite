@@ -13,6 +13,7 @@ test-modules:
         typename: 'sipp.SIPpTestCase'
 
 test-object-config:
+    memcheck-delay-stop: 7
     fail-on-any: False
     test-iterations:
         -
