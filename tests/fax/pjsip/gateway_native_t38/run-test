@@ -29,7 +29,7 @@ class GatewayTest(TestCase):
    def __init__(self):
       TestCase.__init__(self)
       self.reactor_timeout = 120
-      self.create_asterisk(2)
+      self.create_asterisk(2, test_config={'memcheck-delay-stop': 7})
 
       # copy the tiff file we are going to send to a good known location
       shutil.copy("%s/send.tiff" % (os.path.dirname(os.path.realpath(__file__)),), "%s%s" % (self.ast[0].base, self.ast[0].directories['astdatadir']))
