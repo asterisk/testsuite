@@ -61,6 +61,7 @@ pjsua-config:
             transport: 'local-ipv4-1'
 
 originate-config:
+    memcheck-delay-stop: 7
     apps: testsuite
     test-iterations:
         -
