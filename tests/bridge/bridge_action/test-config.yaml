@@ -41,4 +41,4 @@ properties:
         - asterisk: 'app_echo'
     tags:
         - bridge
-
+        - refleaks

@@ -17,6 +17,7 @@ properties:
         - mwi_external
         - rls
         - pjsip
+        - refleaks
 
 test-modules:
     add-to-search-path:

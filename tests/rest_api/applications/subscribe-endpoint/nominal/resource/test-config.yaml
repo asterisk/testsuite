@@ -141,4 +141,5 @@ properties:
         - asterisk : chan_iax2
     tags:
         - ARI
+        - refleaks
 

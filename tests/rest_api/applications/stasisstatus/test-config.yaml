@@ -27,5 +27,6 @@ properties:
         - asterisk: 'res_ari_channels'
     tags:
         - ARI
+        - refleaks
     issues:
         - jira: 'ASTERISK-24802'

@@ -14,3 +14,4 @@ properties:
         - asterisk : 'res_pjsip'
     tags:
         - pjsip
+        - refleaks

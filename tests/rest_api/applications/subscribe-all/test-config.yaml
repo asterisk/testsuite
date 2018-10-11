@@ -273,5 +273,6 @@ properties:
         - asterisk : res_pjsip
     tags:
         - ARI
+        - refleaks
 
 

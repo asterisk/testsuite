@@ -27,3 +27,4 @@ properties:
         - asterisk : 'chan_sip'
     tags:
         - SIP
+        - refleaks

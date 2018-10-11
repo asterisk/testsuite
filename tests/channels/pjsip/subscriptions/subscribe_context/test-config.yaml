@@ -21,6 +21,7 @@ properties:
         - asterisk : 'res_pjsip_exten_state'
     tags:
         - pjsip
+        - refleaks
 
 test-modules:
     test-object:
