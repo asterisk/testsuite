@@ -17,6 +17,7 @@ properties:
         - asterisk: 'res_pjsip_mwi'
     tags:
         - pjsip
+        - refleaks
 
 test-modules:
     add-test-to-search-path: 'True'

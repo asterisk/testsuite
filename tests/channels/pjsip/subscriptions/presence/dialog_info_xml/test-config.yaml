@@ -16,6 +16,7 @@ properties:
         - asterisk: 'res_pjsip_dialog_info_body_generator'
     tags:
         - pjsip
+        - refleaks
 
 test-modules:
     add-test-to-search-path: 'True'

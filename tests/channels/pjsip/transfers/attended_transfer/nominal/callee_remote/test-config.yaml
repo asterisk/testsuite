@@ -85,4 +85,6 @@ properties:
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_session'
         - asterisk: 'res_pjsip_refer'
+    tags:
+        - refleaks
 

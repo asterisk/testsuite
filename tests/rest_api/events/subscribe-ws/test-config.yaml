@@ -197,5 +197,4 @@ properties:
         - asterisk : app_dial
     tags:
         - ARI
-
-
+        - refleaks
