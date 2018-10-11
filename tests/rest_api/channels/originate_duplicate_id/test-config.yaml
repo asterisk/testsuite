@@ -65,5 +65,6 @@ properties:
         - asterisk: 'res_stasis'
     tags:
         - ARI
+        - refleaks
     issues:
         - jira: 'ASTERISK-26241'

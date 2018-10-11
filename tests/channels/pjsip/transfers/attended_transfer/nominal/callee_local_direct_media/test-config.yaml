@@ -251,4 +251,5 @@ properties:
         - custom : rawsocket
     tags:
         - pjsip
+        - refleaks
 

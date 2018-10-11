@@ -75,4 +75,5 @@ properties:
         - asterisk : 'app_playback'
         - asterisk : 'app_userevent'
         - asterisk : 'res_pjsip'
-
+    tags:
+        - refleaks
