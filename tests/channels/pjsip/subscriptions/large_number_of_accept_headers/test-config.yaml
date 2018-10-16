@@ -25,3 +25,4 @@ properties:
         - asterisk: 'res_pjsip_mwi'
     tags:
         - pjsip
+        - refleaks

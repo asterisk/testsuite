@@ -29,6 +29,7 @@ properties:
         - custom: 'rawsocket'
     tags:
         - pjsip
+        - refleaks
 
 test-modules:
     add-relative-to-search-path: ['..']

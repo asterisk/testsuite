@@ -44,3 +44,4 @@ properties:
         - asterisk : chan_pjsip
     tags:
         - ARI
+        - refleaks

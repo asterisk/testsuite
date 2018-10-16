@@ -56,3 +56,4 @@ properties:
         - asterisk : chan_pjsip
     tags:
         - pjsip
+        - refleaks

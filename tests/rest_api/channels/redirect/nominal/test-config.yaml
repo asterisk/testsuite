@@ -34,3 +34,4 @@ properties:
         - asterisk : app_stasis
     tags:
         - ARI
+        - refleaks

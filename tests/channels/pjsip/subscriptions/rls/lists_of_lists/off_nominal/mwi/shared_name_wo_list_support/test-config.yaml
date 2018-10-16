@@ -22,6 +22,7 @@ properties:
         - mwi_external
         - rls
         - pjsip
+        - refleaks
 
 test-modules:
     test-object:
