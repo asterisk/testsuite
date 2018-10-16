@@ -132,3 +132,4 @@ properties:
     tags:
         - ARI
         - pjsip
+        - refleaks

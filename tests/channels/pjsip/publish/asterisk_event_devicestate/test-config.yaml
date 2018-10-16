@@ -17,6 +17,7 @@ properties:
         - asterisk: 'res_pjsip_publish_asterisk'
     tags:
         - pjsip
+        - refleaks
 
 test-modules:
     test-object:

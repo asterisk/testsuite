@@ -16,6 +16,7 @@ properties:
     tags:
         - rls
         - pjsip
+        - refleaks
 
 test-modules:
     test-object:

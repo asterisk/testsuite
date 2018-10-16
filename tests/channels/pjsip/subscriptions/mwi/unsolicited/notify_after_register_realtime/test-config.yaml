@@ -23,6 +23,7 @@ properties:
     tags:
         - pjsip
         - realtime
+        - refleaks
 
 test-modules:
     add-test-to-search-path: 'True'
