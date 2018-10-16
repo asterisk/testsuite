@@ -18,6 +18,7 @@ properties:
         - asterisk: 'app_voicemail'
     tags:
         - pjsip
+        - refleaks
 
 test-modules:
     add-test-to-search-path: 'True'

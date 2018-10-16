@@ -163,3 +163,4 @@ properties:
     -   asterisk: 'res_ari_bridges'
     tags:
     - ARI
+    - refleaks

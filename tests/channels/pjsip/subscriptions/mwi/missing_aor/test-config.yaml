@@ -16,3 +16,4 @@ properties:
     tags:
         - pjsip
         - mwi_external
+        - refleaks

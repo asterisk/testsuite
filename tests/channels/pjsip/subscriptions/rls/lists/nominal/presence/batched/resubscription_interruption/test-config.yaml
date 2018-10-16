@@ -19,6 +19,7 @@ properties:
     tags:
         - rls
         - pjsip
+        - refleaks
 
 test-modules:
     add-test-to-search-path: 'True'

@@ -16,6 +16,7 @@ properties:
             version: 'v3.0'
     tags:
         - pjsip
+        - refleaks
 
 test-modules:
     add-test-to-search-path: 'True'

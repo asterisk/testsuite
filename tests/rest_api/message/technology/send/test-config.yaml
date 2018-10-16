@@ -56,4 +56,5 @@ properties:
         - asterisk : res_pjsip_messaging
     tags:
         - ARI
+        - refleaks
 

@@ -21,6 +21,7 @@ properties:
          - asterisk: 'res_pjsip_send_to_voicemail'
     tags:
         - pjsip
+        - refleaks
 
 test-modules:
     test-object:

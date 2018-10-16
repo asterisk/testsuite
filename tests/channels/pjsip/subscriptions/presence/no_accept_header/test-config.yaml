@@ -14,3 +14,4 @@ properties:
         - asterisk : 'res_pjsip_pidf_digium_body_supplement'
     tags:
         - pjsip
+        - refleaks

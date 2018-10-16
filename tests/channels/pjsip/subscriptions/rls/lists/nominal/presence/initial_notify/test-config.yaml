@@ -33,6 +33,7 @@ properties:
     tags:
         - rls
         - pjsip
+        - refleaks
 
 test-modules:
     add-to-search-path:
