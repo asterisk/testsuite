@@ -1,0 +1,14 @@
+testinfo:
+    summary: 'Test that asterisk can convert 40ms audio in 20ms'
+    description: |
+        'When receiving 40ms audio verify that asterisk can convert it to 20m if customer requested'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - app : 'sipp'
+        - app : 'rtpdump'
+        - app : 'perl'
+        - custom : 'rawsocket'
+    tags:
+        - SIP

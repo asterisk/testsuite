@@ -27,6 +27,7 @@ tests:
     - dir: 'ice'
     - dir: 'use_callerid_contact'
     - dir: 'connected_line'
+    - dir: 'rtp_ptime'
     - test: 'accountcode'
     - test: 'acl_call'
     - test: 'allow_overlap'
