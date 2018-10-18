@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import logging
+import signal
+import subprocess
+import time
+
+sys.path.append("lib/python")
+sys.path.append("utils")
+
+from twisted.internet import reactor
+from asterisk.sipp import SIPpTest
+
+WORKING_DIR = os.path.abspath(os.path.dirname(__file__))
+TEST_DIR = os.path.dirname(os.path.realpath(__file__))
+
+logger = logging.getLogger(__name__)
+e164 = "3200000000"
+sippA_logfile = WORKING_DIR + "/A_PARTY.log"
+sippA_errfile = WORKING_DIR + "/A_PARTY_ERR.log"
+sippB_logfile = WORKING_DIR + "/B_PARTY.log"
+sippB_errfile = WORKING_DIR + "/B_PARTY_ERR.log"
+dump_B = WORKING_DIR + "/codec_B.log"
+
+SIPP_SCENARIOS = [
+    {
+        'scenario' : 'uas_asterisk.xml',
+        '-i' : '127.0.0.1',
+        '-p' : '5700',
+        '-mp' : '6300',
+        '-message_file' : sippB_logfile,
+        '-error_file' : sippB_errfile,
+        '-trace_msg' : '-trace_err',
+    },
+    {
+        'scenario' : 'uac_asterisk.xml',
+        '-i' : '127.0.0.1',
+        '-p' : '5061',
+        '-s' : e164,
+        '-d' : '5000',
+        '-message_file' : sippA_logfile,
+        '-error_file' : sippA_errfile,
+        '-trace_msg' : '-trace_err',
+    }
+]
+
+def cleanup():
+    filelist = [ f for f in os.listdir(WORKING_DIR) if f.endswith(".log") ]
+    for f in filelist:
+        os.remove(os.path.join(WORKING_DIR, f))
+
+def main():
+
+    test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS,test_config={'memcheck-delay-stop': 7})
+    test.reactor_timeout = 55;
+
+    # Run the RTPDUMP tool to capture the logs on B side
+    rtpdump = subprocess.Popen(["rtpdump", "-t","5", "-F","ascii","-o",dump_B, "127.0.0.1/8000"])
+
+    reactor.run()
+
+    # Kill the RTPDUMP, pass it the signal"
+    rtpdump.send_signal(signal.SIGINT)
+    rtpdump.wait()
+
+    ret_B = subprocess.call(["perl","contrib/scripts/verify_codecs.pl",dump_B ,"8"])
+    if (ret_B != 99):
+        ret_B = subprocess.call(["perl","contrib/scripts/verify_rtp_len.pl",dump_B ,"172"])
+    cleanup()
+    if(ret_B != 99):
+        return 0
+    else:
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
