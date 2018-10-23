@@ -26,8 +26,6 @@
       [last_To:];tag=[pid]SIPpTag01[call_number]
       [last_Call-ID:]
       [last_CSeq:]
-      Record-Route: <sip:127.0.0.1:5062;lr>
-      Record-Route: <sip:1.2.3.4:5061;lr>
       Contact: <sip:1.2.3.4:5063>
       Content-Type: application/sdp
       Content-Length: [len]
@@ -47,18 +45,14 @@
         rtd="true"
         crlf="true">
         <action>
-            <ereg regexp="ACK sip:1.2.3.4:5063.*"
+            <ereg regexp="ACK sip:127.0.0.1:5061.*"
                 search_in="msg"
                 check_it="true"
                 assign_to="1"/>
-            <ereg regexp="Route: &lt;sip:127.0.0.1:5061;lr&gt;\r\nRoute: &lt;sip:127.0.0.1:5062;lr&gt;"
-                search_in="msg"
-                check_it="true"
-                assign_to="2"/>
         </action>
   </recv>
 
-  <Reference variables="1,2" />
+  <Reference variables="1" />
 
   <pause/>
 

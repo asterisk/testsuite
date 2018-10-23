@@ -2,3 +2,5 @@ tests:
     - test: 'route_set_response'
     - test: 'route_set_request'
     - test: 'route_set_reinvite'
+    - test: 'contact_request'
+    - test: 'contact_response'
