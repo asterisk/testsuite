@@ -11,8 +11,6 @@
       To: sut <sip:[service]@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: 1 INVITE
-      Record-Route: <sip:1.2.3.4:5061;lr>
-      Record-Route: <sip:127.0.0.1:5062;lr>
       Contact: <sip:1.2.3.4:5063;transport=[transport]>
       Max-Forwards: 70
       Subject: Performance Test
@@ -56,7 +54,7 @@
       To: sut <sip:[service]@[remote_ip]:[remote_port]>[peer_tag_param]
       Call-ID: [call_id]
       CSeq: 1 ACK
-      Contact: sip:sipp@[local_ip]:[local_port]
+      Contact: sip:[local_ip]:[local_port]
       Max-Forwards: 70
       Subject: Performance Test
       Content-Length: 0
@@ -66,18 +64,14 @@
 
   <recv request="BYE">
       <action>
-          <ereg regexp="BYE sip:1.2.3.4:5063.*"
+          <ereg regexp="BYE sip:127.0.0.1:5061.*"
               search_in="msg"
               check_it="true"
               assign_to="1"/>
-          <ereg regexp="Route: &lt;sip:127.0.0.1:5061;lr&gt;\r\nRoute: &lt;sip:127.0.0.1:5062;lr&gt;"
-              search_in="msg"
-              check_it="true"
-              assign_to="2"/>
       </action>
   </recv>
 
-  <Reference variables="1,2" />
+  <Reference variables="1" />
 
   <send>
     <![CDATA[

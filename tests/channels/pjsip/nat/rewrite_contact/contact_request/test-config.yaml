@@ -1,0 +1,35 @@
+testinfo:
+    summary: 'Ensure that proper URI is rewritten on SIP responses'
+    description: |
+        'This test has SIPp place a call to Asterisk. The SIPp scenario
+        represents a proxy in the path to some endpoint. The INVITE that the
+        SIPp scenario sends does not have Record-Route headers in it.
+        We ensure that Asterisk correctly rewrites the Contact header in the
+        INVITE when the rewrite_contact option is enabled.  We then hang
+        up the call, and we ensure that the request URI is correct.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpAMIActionTestCase'
+
+sipp-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac-route-set.xml', '-p': '5061', '-s': 'echo'} }
+    ami-action:
+        delay: 1
+        args:
+            Action: 'Hangup'
+            Channel: '/PJSIP/sipp-.*/'
+
+properties:
+    dependencies:
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
