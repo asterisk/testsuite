@@ -6,9 +6,10 @@ testinfo:
         SIPp scenario sends has Record-Route headers in it. We ensure that
         Asterisk does not attempt to rewrite the Contact header in the INVITE
         despite the fact that the rewrite_contact option is enabled. We instead
-        ensure that the top-most Record-Route header is rewritten. We then hang
-        up the call, and we ensure that the request URI and the route set in
-        the BYE is correct.'
+        ensure that the top-most Record-Route header is rewritten. Also we verify
+        that if a re-invite w/o a Record-Route does not cause the contact to be
+        updated. We then hang up the call, and we ensure that the request URI
+        and the route set in the BYE is correct.'
 
 test-modules:
     test-object:
@@ -23,7 +24,7 @@ sipp-config:
             scenarios:
                 - { 'key-args': {'scenario': 'uac-route-set.xml', '-p': '5061', '-s': 'echo'} }
     ami-action:
-        delay: 1
+        delay: 2
         args:
             Action: 'Hangup'
             Channel: '/PJSIP/sipp-.*/'
