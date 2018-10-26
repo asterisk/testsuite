@@ -144,15 +144,18 @@ class BlindTransfer(TestCase):
     def start_processes(self):
         logger.debug("Starting Processes")
         self.pja = subprocess.Popen(['pjsua', '--local-port=5065',
-                                     '--auto-answer=200', '--null-audio'],
+                                     '--auto-answer=200', '--null-audio',
+                                     '--no-tcp'],
                                      stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE)
         self.pjb = subprocess.Popen(['pjsua', '--local-port=5066',
-                                     '--auto-answer=200', '--null-audio'],
+                                     '--auto-answer=200', '--null-audio',
+                                     '--no-tcp'],
                                      stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE)
         self.pjc = subprocess.Popen(['pjsua', '--local-port=5067',
-                                     '--auto-answer=200', '--null-audio'],
+                                     '--auto-answer=200', '--null-audio',
+                                     '--no-tcp'],
                                      stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE)
 

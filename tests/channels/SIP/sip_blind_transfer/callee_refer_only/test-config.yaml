@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'See ASTERISK-28085'
     summary:     'Test SIP Blind Transfer (callee transfers)'
     description: |
         This test verifies a SIP Blind transfer in which
