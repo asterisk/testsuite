@@ -1,0 +1,3 @@
+tests:
+    - dir: 'no_privacy'
+    - dir: 'privacy'
