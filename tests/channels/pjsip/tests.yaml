@@ -54,3 +54,4 @@ tests:
     - test: 'multipart_empty_part'
     - test: 'dtmf_info_fallback'
     - test: 'invalid_uris'
+    - test: 'use_callerid_contact'

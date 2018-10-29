@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="CONTENT_TYPE_PARAMS">
+
+<User variables="dummy" />
+<recv request="INVITE" crlf="true" rrs="true">
+  <action>
+        <ereg regexp=".*sip:anonymous@.*" search_in="hdr" header="Contact:" check_it="true" assign_to="dummy" />
+  </action>
+</recv>
+<Reference variables="dummy" />
+
+
+
+<send>
+<![CDATA[
+
+SIP/2.0 100 Trying
+[last_Via:]
+[last_Call-ID:]
+[last_From:]
+[last_To:]
+[last_CSeq:]
+Content-Length: 0
+
+]]>
+</send>
+
+<send>
+<![CDATA[
+
+SIP/2.0 180 Ringing
+[last_Via:]
+[last_Call-ID:]
+[last_From:]
+[last_To:]
+[last_CSeq:]
+Content-Length: 0
+
+]]>
+</send>
+
+<send retrans="500">
+<![CDATA[
+
+SIP/2.0 200 OK
+[last_Via:]
+[last_Call-ID:]
+[last_From:]
+[last_To:];tag=[call_number]
+[last_CSeq:]
+Contact: <sip:736596371553211257@[local_ip]:[local_port];user=phone>
+Content-Type: application/sdp
+Content-Length: [len]
+
+v=0
+o=HuaweiSoftX3000 6644052 6644052 IN IP[local_ip_type] [local_ip]
+s=Sip Call
+c=IN IP[local_ip_type] [local_ip]
+t=0 0
+m=audio 8000 RTP/AVP 0
+a=rtpmap:0 PCMU/8000
+
+]]>
+</send>
+
+
+<recv request="ACK" rtd="true" crlf="true">
+</recv>
+
+<recv request="BYE">
+</recv>
+
+<send>
+<![CDATA[
+
+SIP/2.0 200 OK
+[last_Via:]
+[last_From:]
+[last_To:]
+[last_Call-ID:]
+[last_CSeq:]
+Content-Length: 0
+
+]]>
+</send>
+</scenario>
