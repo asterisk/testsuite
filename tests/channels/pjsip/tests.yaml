@@ -25,6 +25,7 @@ tests:
     - dir: 'transport'
     - dir: 'video_calls'
     - dir: 'ice'
+    - dir: 'use_callerid_contact'
     - test: 'accountcode'
     - test: 'acl_call'
     - test: 'allow_overlap'
@@ -54,4 +55,3 @@ tests:
     - test: 'multipart_empty_part'
     - test: 'dtmf_info_fallback'
     - test: 'invalid_uris'
-    - test: 'use_callerid_contact'
