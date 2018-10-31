@@ -1,28 +1,65 @@
 testinfo:
-    summary:     'Test Chanspy with the \"B\" option for barging in on both channels.'
+    summary: 'Test Chanspy with the \"B\" option for barging in on both channels.'
     description: |
-        'This test verifies basic functionality of using ChanSpy with the 
-         barge option set. MixMonitor is used to record the audio on the
-         spied on channel to verify the barging spy channel audio is received.  
-         Also, since the Wait() application is used during barge, this verifies 
-         that the behavior of transmitting silence during ast_safe_sleep works with
-         transmit_silence=yes configured in asterisk.conf. Without transmitting
-         silence during wait, the barge audio will not be mixed and this test will
-         fail.'
+        'This test verifies basic functionality of using ChanSpy with the
+         barge option set. Both sides of the call transmit silence using
+         BackgroundDetect. This ensures that any noise/audio heard only
+         comes from the barging channel.'
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: event-action-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-config:
+    test-iterations:
+        -
+            channel: 'Local/detect_barge'
+            context: 'default'
+            exten: 'create_bridge'
+            priority: 1
+
+event-action-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Newexten'
+                    Application: 'BackgroundDetect'
+            count: '2'
+            trigger-on-count: True
+        ami-actions:
+            action:
+                Action: 'Originate'
+                Channel: 'Local/s'
+                Application: 'ChanSpy'
+                Data: 'Local/detect_barge,qBE'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Newexten'
+                    Application: 'Echo'
+            count: '2'
+            trigger-on-count: True
+        ami-actions:
+            action:
+                Action: 'UserEvent'
+                UserEvent: 'Done'
 
 properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-        - app : 'pjsua'
         - asterisk : 'app_chanspy'
         - asterisk : 'app_echo'
-        - asterisk : 'app_mixmonitor'
         - asterisk : 'app_playback'
         - asterisk : 'app_talkdetect'
-        - asterisk : 'chan_sip'
         - asterisk : 'pbx_config'
-        - asterisk : 'res_agi'
     tags:
-        - SIP
         - chanspy
+
