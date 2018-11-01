@@ -26,6 +26,7 @@ tests:
     - dir: 'video_calls'
     - dir: 'ice'
     - dir: 'use_callerid_contact'
+    - dir: 'connected_line'
     - test: 'accountcode'
     - test: 'acl_call'
     - test: 'allow_overlap'

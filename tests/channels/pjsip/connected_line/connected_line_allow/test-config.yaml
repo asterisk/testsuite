@@ -1,0 +1,30 @@
+testinfo:
+    summary: Test connected line updates are allowed both ways.
+    description: |
+        Alice calls Bob, verifies the RPID is changed on asnwer, updates connected line after answer.
+        Bob updates connected line before answer and verifies the RPID is changed on 2nd INVITE.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: sipp.SIPpTestCase
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario':'alice.xml', '-p':'5062'} }
+                - { 'key-args': {'scenario':'bob.xml', '-p':'5063'} }
+
+properties:
+    dependencies:
+        - python : twisted
+        - python : starpy
+        - asterisk : app_dial
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip_caller_id
+        - asterisk : res_pjsip_session
+    tags:
+        - pjsip
