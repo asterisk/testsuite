@@ -41,7 +41,7 @@ if not os.path.isdir("logs"):
     os.mkdir("logs")
 
 # The current sys.path is only used by runtests.py
-sys.path.append("lib/python")
+sys.path.insert(1,"lib/python")
 # The tests themselves are run in a separate process
 # so we're going to accumulate additional paths in
 # new_PYTHONPATH to pass to the new process.
@@ -51,7 +51,7 @@ sys.path.append("lib/python")
 new_PYTHONPATH=[]
 if os.getenv("PYTHONPATH"):
     new_PYTHONPATH.append(os.getenv("PYTHONPATH"))
-new_PYTHONPATH.append("lib/python")
+new_PYTHONPATH.insert(1,"lib/python")
 
 from asterisk.asterisk import Asterisk
 from asterisk.test_config import TestConfig
