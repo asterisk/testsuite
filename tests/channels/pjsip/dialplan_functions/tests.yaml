@@ -8,4 +8,5 @@ tests:
     - test: 'pjsip_dtmfmode'
     - test: 'pjsip_endpoint'
     - test: 'pjsip_header'
+    - test: 'pjsip_parse_uri'
     - test: 'pjsip_session_refresh'
