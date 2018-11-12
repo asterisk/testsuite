@@ -194,7 +194,7 @@ class SIPpTestCase(TestCase):
     def _handle_scenario_finished(self, result):
         """Handle whether or not a scenario finished successfully"""
         for (success, scenario) in result:
-            if (success):
+            if (success and scenario.passed):
                 LOGGER.info("Scenario %s passed" % (scenario.name))
                 self.set_passed(True)
             else:
