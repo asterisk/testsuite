@@ -296,7 +296,10 @@ class Asterisk(object):
 
         BINARY = /usr/sbin/asterisk (or found in PATH)
         SOURCE_ETC_DIR = /etc/asterisk
-        WORK_DIR = /tmp/asterisk-testsuite
+        If AST_WORK_DIR is unset (the default):
+            WORK_DIR = /tmp/asterisk-testsuite
+        If it is set:
+            WORK_DIR = AST_WORK_DIR/asterisk-testsuite
 
     If it is set:
 
@@ -318,8 +321,10 @@ class Asterisk(object):
         # The default etc directory for Asterisk
         default_etc_directory = os.path.join(localtest_root, "etc/asterisk")
     else:
-        # select tmp path with most available space
-        best_tmp = sorted(['/tmp', '/var/tmp'], key=lambda path: os.statvfs(path).f_bavail)[0]
+        best_tmp = os.getenv("AST_WORK_DIR")
+        if not best_tmp:
+            # select tmp path with most available space
+            best_tmp = sorted(['/tmp', '/var/tmp'], key=lambda path: os.statvfs(path).f_bavail)[0]
         # Base location of the temporary files created by the testsuite
         test_suite_root = best_tmp + "/asterisk-testsuite"
         # The default etc directory for Asterisk
