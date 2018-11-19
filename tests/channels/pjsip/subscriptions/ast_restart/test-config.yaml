@@ -1,5 +1,4 @@
 testinfo:
-    skip: 'See ASTERISK-28088'
     summary: 'Test subscription persistence over Asterisk restarts'
     description: |
         Tests that subscriptions survive an Asterisk restart.
