@@ -118,9 +118,9 @@ class ChanSpyMixMonitorTest(TestCase):
     def start_processes(self):
         """Start up the PJSUA processes"""
         LOGGER.info("Starting Processes")
-        self.pja = subprocess.Popen(['pjsua', '--local-port=5065', '--auto-answer=200', '--null-audio'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        self.pjb = subprocess.Popen(['pjsua', '--local-port=5066', '--auto-answer=200', '--null-audio'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        self.pjc = subprocess.Popen(['pjsua', '--local-port=5067', '--auto-answer=200', '--null-audio'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        self.pja = subprocess.Popen(['pjsua', '--local-port=5065', '--auto-answer=200', '--null-audio', '--no-tcp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        self.pjb = subprocess.Popen(['pjsua', '--local-port=5066', '--auto-answer=200', '--null-audio', '--no-tcp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        self.pjc = subprocess.Popen(['pjsua', '--local-port=5067', '--auto-answer=200', '--null-audio', '--no-tcp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
     def stop_processes(self):
         """Stop said processes with prejudice"""
