@@ -37,6 +37,7 @@ class SIPHold(TestCase):
                                       '-p': '6081',
                                       '-inf': INJECT_FILE}
 
+        self.reactor_timeout = 60
         self.moh_start_event = False
         self.moh_stop_event = False
         self.check_list_success_events = 0
