@@ -47,9 +47,9 @@ There are four parts to code testing:
   4) Tests running constantly using a continuous integration framework
 
 
-With the introduction of ReviewBoard (http://reviewboard.asterisk.org) code is
+With the introduction of Gerrit (https://gerrit.asterisk.org) code is
 now peer reviewed to a greater extent prior to being merged and the number of
-pre-commit bugs being found is tremendous. ReviewBoard satisfies the first
+pre-commit bugs being found is tremendous. Gerrit satisfies the first
 part: Testing with our eyes.
 
 But where peer reviewing fails is in the ability to verify that regressions are
