@@ -64,7 +64,7 @@ create_cert () {
 		exit 1
 	fi
 	echo "Creating certificate ${base}.crt"
-	openssl x509 -req -days 365 -in ${base}.csr -CA ${CACERT} -CAkey ${CAKEY} -set_serial 01 -out ${base}.crt > /dev/null
+	openssl x509 -req -days 3650 -in ${base}.csr -CA ${CACERT} -CAkey ${CAKEY} -set_serial 01 -out ${base}.crt > /dev/null
 	if [ $? -ne 0 ];
 	then
 		echo "Failed"
