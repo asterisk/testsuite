@@ -17,3 +17,4 @@ tests:
     - dir:  'events'
     - dir:  'message'
     - dir:  'external_interaction'
+    - test: 'move'
