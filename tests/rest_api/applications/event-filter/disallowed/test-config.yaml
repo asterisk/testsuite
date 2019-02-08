@@ -1,0 +1,82 @@
+testinfo:
+    summary: 'Test the event type disallowed filter'
+    description: |
+        Subscribe to all events. Then create an event type disallowed filter
+        that does not allow ChannelCreated and ChannelDestroyed events to be
+        sent to the app. Check to make sure those events are not and also make
+        sure other event types are.
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
+
+test-modules:
+    test-object:
+        config-section: test-object
+        typename: ari.AriBaseTestObject
+    modules:
+        -   typename: pluggable_modules.EventActionModule
+            config-section: event-actions
+
+test-object:
+    subscribe-all: True
+
+event-actions:
+    -
+        ari-start:
+        ari-requests:
+            -
+                method: 'put'
+                uri: 'applications/testsuite/eventFilter'
+                body: { 'disallowed': [ { 'type': 'ChannelCreated' }, { 'type': 'ChannelDestroyed' } ]}
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    app: 'testsuite'
+                    endpoint: 'Local/s@default'
+                    channelId: 'chan1'
+    -
+        ari-events:
+            match:
+                type: 'ChannelCreated'
+                application: 'testsuite'
+                channel:
+                    id: 'chan1'
+            count: 0
+    -
+        ari-events:
+            match:
+                type: 'ChannelDestroyed'
+                application: 'testsuite'
+                channel:
+                    id: 'chan1'
+            count: 0
+    -
+        ari-events:
+            match:
+                type: 'StasisStart'
+                application: 'testsuite'
+                channel:
+                    id: 'chan1'
+            count: 1
+        ari-requests:
+            -
+                method: 'delete'
+                uri: 'channels/chan1'
+    -
+        ari-events:
+            match:
+                type: 'StasisEnd'
+                application: 'testsuite'
+                channel:
+                    id: 'chan1'
+            count: 1
+        stop_test:

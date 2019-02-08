@@ -1,6 +1,7 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 'errors'
+    - dir: 'event-filter'
     - dir: 'subscribe-endpoint'
     - test: 'subscribe-all'
     - test: 'subscribe-all-bridge'
