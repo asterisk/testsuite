@@ -3,6 +3,7 @@ tests:
     - dir: 'unsolicited'
     - test: 'missing_aor'
     - test: 'mwi_aggregate'
+    - test: 'mwi_devstate'
     - test: 'no_accept_header'
     - test: 'sub_setup_teardown'
     - test: 'sub_setup_teardown_drop_options'
