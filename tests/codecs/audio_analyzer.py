@@ -41,7 +41,7 @@ def _get_media(test_object):
         for t in test_object.tones:
             tones += str(t['frequency']) + '/' + str(t['duration']) + ','
             duration += t['duration']
-        return ('tone:\"' + tones.rstrip(',') + '\"', duration / 1000)
+        return ('tone:' + tones.rstrip(','), duration / 1000)
 
     return __get_playback_file() if test_object.playback_file else __get_tones()
 
