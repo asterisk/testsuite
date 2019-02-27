@@ -68,7 +68,7 @@ pipeline {
 
 					stage ("Checkout") {
 						sh "sudo chown -R jenkins:users ."
-						env.GERRIT_PROJECT_URL = env.GERRIT_CHANGE_URL.replaceAll(/\/[0-9]+$/, "/${env.GERRIT_PROJECT}")
+						env.GERRIT_PROJECT_URL = env.GIT_URL.replaceAll(/[^\/]+$/, env.GERRIT_PROJECT)
 						sh "printenv | sort"
 
 						/*
