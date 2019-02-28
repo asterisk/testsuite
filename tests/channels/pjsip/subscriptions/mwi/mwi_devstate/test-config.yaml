@@ -1,0 +1,58 @@
+testinfo:
+    summary: 'Test res_mwi_devstate'
+    description: |
+        Tests the ability to subscribe to a voice mailbox with a presence event
+        instead of message-summary. This feature is provided by res_mwi_devstate
+        but the test also requires res_mwi_external_ami to set mailbox state.
+
+properties:
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_mwi_external'
+        - asterisk : 'res_mwi_external_ami'
+        - asterisk : 'res_mwi_devstate'
+
+    tags:
+        - pjsip
+        - mwi_external
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    connect-ami: True
+    reactor-timeout: 15
+    fail-on-any: True
+    stop-after-scenarios: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'subscribe.xml', '-p': '5061'} }
+
+ami-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_ESTABLISHED'
+            requirements:
+                match:
+                    AppFile: 'res_pjsip_pubsub.c'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'MWIUpdate'
+                ActionID: '12345'
+                Mailbox: 'alice@default'
+                OldMessages: '0'
+                NewMessages: '1'
