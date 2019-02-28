@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Subscribe MWI Presence">
+    <send retrans="500">
+        <![CDATA[
+        SUBSCRIBE sip:alice@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];rport;branch=[branch]
+        From: "user1" <sip:user1@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+        To: <sip:alice@[remote_ip]:[remote_port]>
+        Contact: <sip:user1@[local_ip]:[local_port]>
+        Call-ID: [call_id]
+        CSeq: [cseq] SUBSCRIBE
+        Max-Forwards: 70
+        Event: presence
+        Expires: 150
+        Supported: replaces, 100rel, timer, norefersub
+        Accept: application/pidf+xml, application/xpidf+xml, application/simple-message-summary
+        Allow-Events: presence, message-summary, refer
+        Content-Length: 0
+
+        ]]>
+    </send>
+
+    <recv response="200" rtd="true" />
+
+    <!-- Initial NOTIFY upon subscribing -->
+    <recv request="NOTIFY" crlf="true">
+        <action>
+            <ereg regexp=".*Unavailable.*closed.*" search_in="body" check_it="true" assign_to="0"/>
+        </action>
+    </recv>
+
+    <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+    </send>
+
+
+    <!-- NOTIFY upon MWI state change -->
+    <recv request="NOTIFY" crlf="true">
+        <action>
+            <ereg regexp=".*On the phone.*open.*" search_in="body" check_it="true" assign_to="0"/>
+        </action>
+    </recv>
+
+    <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+    </send>
+
+    <send retrans="500">
+        <![CDATA[
+        SUBSCRIBE sip:alice@[remote_ip]:[remote_port] SIP/2.0
+        Via: SIP/2.0/[transport] [local_ip]:[local_port];rport;branch=[branch]
+        From: "user1" <sip:user1@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+        To: <sip:alice@[remote_ip]:[remote_port]>[peer_tag_param]
+        Contact: <sip:user1@[local_ip]:[local_port]>
+        Call-ID: [call_id]
+        CSeq: [cseq] SUBSCRIBE
+        Max-Forwards: 70
+        Event: presence
+        Expires: 0
+        Supported: replaces, 100rel, timer, norefersub
+        Accept: application/pidf+xml, application/xpidf+xml, application/simple-message-summary
+        Allow-Events: presence, message-summary, refer
+        Content-Length: 0
+
+        ]]>
+    </send>
+
+    <recv response="200" rtd="true" />
+
+    <!-- Final NOTIFY -->
+    <recv request="NOTIFY" crlf="true">
+        <action>
+            <ereg regexp=".*On the phone.*open.*" search_in="body" check_it="true" assign_to="0"/>
+        </action>
+    </recv>
+
+    <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+    </send>
+
+    <Reference variables="0"/>
+</scenario>
