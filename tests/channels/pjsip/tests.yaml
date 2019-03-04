@@ -27,6 +27,7 @@ tests:
     - dir: 'use_callerid_contact'
     - dir: 'connected_line'
     - dir: 'rtp_ptime'
+    - dir: 'ignore_183_wo_sdp'
     - test: 'accountcode'
     - test: 'acl_call'
     - test: 'allow_overlap'
