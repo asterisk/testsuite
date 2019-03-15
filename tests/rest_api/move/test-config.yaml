@@ -30,8 +30,8 @@ ari-test-stopper:
     -
         ari-events:
             match:
-                type: ChannelDestroyed
-                application: testsuite
+                type: StasisEnd
+                application: multiple-args
                 channel:
                     id: 'testsuite-default-id'
         stop_test:
