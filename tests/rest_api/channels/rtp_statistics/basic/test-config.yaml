@@ -1,0 +1,123 @@
+
+testinfo:
+    summary: 'Test rtp_statistics'
+    description: |
+        'This attempts to test basic functionality of
+        /ari/channels/{channelId}/rtp_statistics ARI.
+        * Originate a channel
+        * Playback an audio file
+        * Get rtp statistics
+        * Pause it
+        * Unpause it
+        * Rewind it
+        * Delete the playback
+        * Delete the channel
+        * Validate all the events'
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
+
+test-object-config:
+    stop-on-end: False
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: ChannelDestroyed
+                application: testsuite
+                channel:
+                    id: 'testsuite-default-id$'
+        stop_test:
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: 'ChannelStateChange'
+            count: '>1'
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+            requests:
+                method: 'post'
+                uri: 'channels/testsuite-default-id/play/MyPlaybackId'
+                params:
+                    media: 'sound:silence/5'
+        -
+            conditions:
+                match:
+                    type: PlaybackStarted
+                    application: testsuite
+                    playback:
+                        id: 'MyPlaybackId'
+                        target_uri: 'channel:testsuite-default-id$'
+            count: 1
+            requests:
+                -
+                    instance: 1
+                    delay: 1
+                    method: 'get'
+                    uri: 'channels/testsuite-default-id/rtp_statistics'
+                    response_body:
+                        match:
+                            {
+                                "channel_uniqueid": "testsuite-default-id"
+                            }
+        -
+            conditions:
+                match:
+                    type: PlaybackFinished
+                    application: testsuite
+                    playback:
+                        target_uri: 'channel:testsuite-default-id$'
+            count: 1
+            requests:
+                # playback is already deleted
+                method: 'delete'
+                uri: 'channels/testsuite-default-id'
+        -
+            conditions:
+                match:
+                    type: ChannelHangupRequest
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+
+        -
+            conditions:
+                match:
+                    type: StasisEnd
+                    application: testsuite
+                    channel:
+                        id: 'testsuite-default-id$'
+            count: 1
+
