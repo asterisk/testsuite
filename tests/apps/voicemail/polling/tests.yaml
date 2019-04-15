@@ -1,0 +1,7 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'poll_multiple_mailboxes'
+    - test: 'poll_no_subs'
+    - test: 'poll_same_mailbox'
+    - test: 'poll_single_mailbox'
+    - test: 'poll_sub_unsub'
