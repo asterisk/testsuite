@@ -30,3 +30,4 @@ tests:
     - test: 'leave_voicemail_nominal'
     - test: 'leave_voicemail_priority'
     - test: 'play_message'
+    - dir: 'polling'

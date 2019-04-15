@@ -1,0 +1,19 @@
+testinfo:
+    summary: 'Test polling of multiple mailboxes'
+    description: |
+        This test verifies that polling multiple mailboxes works as intended. A fake
+        message is added to various mailboxes that triggers events when the polling
+        frequency timeout is reached, which will cause the test to then remove the
+        messages and end the test.
+
+properties:
+    buildoption: 'TEST_FRAMEWORK'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk: 'app_voicemail'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - voicemail
+        - apps
