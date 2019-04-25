@@ -772,7 +772,7 @@ def load_yaml_config(path):
         print("Unexpected error: %s" % sys.exc_info()[0])
         return None
 
-    config = yaml.load(f)
+    config = yaml.load(f, Loader=yaml.SafeLoader)
     f.close()
 
     return config
