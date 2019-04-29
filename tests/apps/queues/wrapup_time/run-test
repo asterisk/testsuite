@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
 set -e
-
-asttest -a /$AST_TEST_ROOT -s tests/queues/wrapup_time
+asttest -a /$AST_TEST_ROOT -s `dirname $0` $@
