@@ -1,6 +1,5 @@
 testinfo:
     summary:     'Test wrapuptime for queues'
-    skip: 'Skip while failures are debugged'
     description: |
         'This test runs two instances of Asterisk. One has shared_lastcall set in queues.conf
         and the other does not. Each instance of Asterisk contains two queues with the same two
