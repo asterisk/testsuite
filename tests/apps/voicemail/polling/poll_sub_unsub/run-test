@@ -72,24 +72,27 @@ class PollingTest(TestCase):
         if "Local/playback@default" in event.get("channel"):
             self.stop_test(True)
 
-    def handle_contact_status(self, ami, event):
+    def handle_test_event(self, ami, event):
 
-        if event.get("aor") != "1234":
+        state = event.get("state")
+
+        if state != "AOR_CONTACT_ADDED" and state != "AOR_CONTACT_REMOVED":
             return
 
-        status = event.get("contactstatus")
+        if event.get("contact") != "sip:1234@127.0.0.2:5061":
+            return
 
-        if status == "Created":
+        if state == "AOR_CONTACT_ADDED":
             self.voicemailManager = VoiceMailMailboxManagement(self.ast[0])
             self.voicemailManager.create_mailbox("default", "1234", True)
             formats = ["ulaw"]
             if not self.voicemailManager.create_dummy_voicemail("default", "1234", VoiceMailMailboxManagement.inbox_folder_name, 1, formats):
                 LOGGER.error("Failed to create voicemail")
                 self.stop_test()
-        elif status == "Removed":
+        elif state == "AOR_CONTACT_REMOVED":
             # Remove the voicemail from the mailbox
             self.voicemailManager.remove_mailbox("default", "1234")
-            
+
             # Originate a channel that will end the test on hangup
             variable = {}
             ami.originate(channel="Local/playback@default",
@@ -101,7 +104,7 @@ class PollingTest(TestCase):
 
     def ami_connect(self, ami):
 
-        ami.registerEvent("ContactStatus", self.handle_contact_status)
+        ami.registerEvent("TestEvent", self.handle_test_event)
         ami.registerEvent("MessageWaiting", self.handle_message_waiting)
         ami.registerEvent("Hangup", self.handle_hangup)
 
