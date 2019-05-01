@@ -233,7 +233,7 @@ def load_test_config(test_directory):
         return test_config
 
     with open(test_config_path) as file_stream:
-        test_config = yaml.load(file_stream, )
+        test_config = yaml.load(file_stream, Loader=yaml.SafeLoader)
 
     return test_config
 
