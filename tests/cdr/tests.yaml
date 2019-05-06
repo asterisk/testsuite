@@ -7,6 +7,7 @@ tests:
     - test: 'cdr_bridge_multi'
     - test: 'console_dial_sip_transfer'
     - test: 'cdr_unanswered_yes'
+    - test: 'cdr_newcdrcolumns_yes'
     - test: 'app_queue'
     - test: 'originate-cdr-disposition'
     - test: 'app_dial_G_flag'
