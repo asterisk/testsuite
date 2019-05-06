@@ -99,14 +99,16 @@ class AsteriskCSVCDRLine(astcsv.AsteriskCSVLine):
     fields = [
         'accountcode', 'source', 'destination', 'dcontext', 'callerid',
         'channel', 'dchannel', 'lastapp', 'lastarg', 'start', 'answer', 'end',
-        'duration', 'billsec', 'disposition', 'amaflags', 'uniqueid', 'userfield']
+        'duration', 'billsec', 'disposition', 'amaflags', 'uniqueid',
+        'userfield', 'peeraccount', 'linkedid', 'sequence']
 
     def __init__(
             self, accountcode=None, source=None, destination=None,
             dcontext=None, callerid=None, channel=None, dchannel=None,
             lastapp=None, lastarg=None, start=None, answer=None, end=None,
             duration=None, billsec=None, disposition=None, amaflags=None,
-            uniqueid=None, userfield=None):
+            uniqueid=None, userfield=None, peeraccount=None, linkedid=None,
+            sequence=None):
         """Construct an Asterisk CSV CDR.
 
         The arguments list definition must be in the same order that the
@@ -122,7 +124,8 @@ class AsteriskCSVCDRLine(astcsv.AsteriskCSVLine):
             dchannel=dchannel, lastapp=lastapp, lastarg=lastarg, start=start,
             answer=answer, end=end, duration=duration, billsec=billsec,
             disposition=disposition, amaflags=amaflags, uniqueid=uniqueid,
-            userfield=userfield)
+            userfield=userfield, peeraccount=peeraccount, linkedid=linkedid,
+            sequence=sequence)
 
 
 class AsteriskCSVCDR(astcsv.AsteriskCSV):

@@ -1,0 +1,56 @@
+testinfo:
+    summary: 'Test the newcdrcolumns=yes cdr.conf option'
+    description: |
+        'Do a simple call and check for a CDR record in csv file.
+         The call is dialed between two local channels.
+         Should be add the new fields into CDR record file for
+          - peeraccount
+          - sequence
+          - linkedid'
+
+    issues:
+        - jira: 'ASTERISK-24976'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config-12'
+            typename: 'cdr.CDRModule'
+
+test-object-config:
+    config-path: 'tests/cdr/configs/newcdrcolumns'
+    spawn-after-hangup: True
+    ignore-originate-failures: True
+    end-test-delay: 2
+    test-iterations:
+        -
+            channel: 'Local/alice@default'
+            application: 'Echo'
+            async: True
+            account: 'True'
+
+cdr-config-12:
+    -
+        file: 'alice_acct'
+        lines:
+            -
+                sequence: '1'
+                peeraccount: 'bob_peer'
+                linkedid: '.{10}.0'
+
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'cdr_csv'
+    tags:
+        - newcdrcolumns
+        - peeraccount
+        - sequence
+        - linkedid
+        - CDR
+        - chan_local
