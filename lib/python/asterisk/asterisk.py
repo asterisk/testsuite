@@ -31,7 +31,7 @@ try:
     from twisted.conch.ssh.keys import Key
     from twisted.conch.client.knownhosts import KnownHostsFile
     from twisted.conch.endpoints import SSHCommandClientEndpoint
-    from twisted.internet.error import ConnectionDone, ProcessTerminated
+    from twisted.internet.error import ProcessTerminated
 except ImportError as ie:
     # We cache any import errors here, as there's no point in bothering
     # things if we don't need the SSH connection to a remote Asterisk instance
