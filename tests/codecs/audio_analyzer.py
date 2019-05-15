@@ -8,12 +8,10 @@ the GNU General Public License Version 2.
 '''
 
 import os
-import shutil
 import sys
 import logging
 from twisted.internet import reactor
 
-from asterisk import ami
 from asterisk import ari
 import tonetest
 

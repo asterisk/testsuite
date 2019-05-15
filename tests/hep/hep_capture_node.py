@@ -15,7 +15,6 @@ the GNU General Public License Version 2.
 import socket
 import logging
 import re
-import sys
 import json
 
 from twisted.internet.protocol import DatagramProtocol

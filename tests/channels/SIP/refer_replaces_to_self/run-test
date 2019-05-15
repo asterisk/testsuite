@@ -8,7 +8,6 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-import os
 from twisted.internet import reactor
 import pjsua as pj
 import threading

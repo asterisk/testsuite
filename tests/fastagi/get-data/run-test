@@ -9,11 +9,9 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-import os
 import logging
 
 from twisted.internet import reactor
-from starpy import fastagi
 
 sys.path.append("lib/python")
 from asterisk.test_case import TestCase

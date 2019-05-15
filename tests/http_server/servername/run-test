@@ -16,7 +16,6 @@ import re
 sys.path.append("lib/python")
 
 from twisted.internet import reactor
-from asterisk.asterisk import Asterisk
 from asterisk.test_case import TestCase
 
 LOGGER = logging.getLogger(__name__)

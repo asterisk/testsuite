@@ -6,18 +6,16 @@ Jonathan Rose <jrose@digium.com>
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 '''
-import fileinput
 import sys
 import os
 import shutil
 import logging
-from twisted.internet import reactor, defer
+from twisted.internet import reactor
 
 sys.path.append("lib/python")
 from asterisk.test_case import TestCase
 from asterisk.test_suite_utils import file_replace_string
 from asterisk.sipp import SIPpScenario
-from starpy import manager
 
 logger = logging.getLogger(__name__)
 

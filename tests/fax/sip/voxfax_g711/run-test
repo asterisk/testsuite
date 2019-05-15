@@ -13,7 +13,6 @@ the GNU General Public License Version 2.
 
 import sys
 import logging
-import re
 import os
 import shutil
 

@@ -8,7 +8,6 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-import os
 import logging
 
 sys.path.append("lib/python")

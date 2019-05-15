@@ -11,7 +11,6 @@ the GNU General Public License Version 2.
 import sys
 import logging
 
-from asterisk.asterisk import Asterisk
 from asterisk.test_case import TestCase
 from asterisk.voicemail import VoiceMailMailboxManagement
 from twisted.internet import reactor
