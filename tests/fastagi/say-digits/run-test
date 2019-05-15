@@ -8,7 +8,6 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-import os
 import logging
 
 from twisted.internet import reactor

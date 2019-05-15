@@ -11,10 +11,7 @@ import logging
 from twisted.internet import reactor
 
 sys.path.append("lib/python")
-from asterisk.asterisk import Asterisk
 from asterisk.test_case import TestCase
-from twisted.internet import reactor, defer
-from starpy import manager
 
 logger = logging.getLogger(__name__)
 

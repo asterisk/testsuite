@@ -7,7 +7,6 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 '''
 
-import sys
 import logging
 
 LOGGER = logging.getLogger(__name__)

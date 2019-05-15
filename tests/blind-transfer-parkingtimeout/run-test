@@ -8,9 +8,6 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-import os
-import math
-from twisted.application import service, internet
 from twisted.internet import reactor
 from starpy import fastagi
 

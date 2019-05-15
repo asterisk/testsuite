@@ -14,7 +14,6 @@ import logging
 
 sys.path.append("lib/python")
 
-from asterisk.asterisk import Asterisk
 from asterisk.test_case import TestCase
 from asterisk.sipp import SIPpScenario
 from twisted.internet import reactor
