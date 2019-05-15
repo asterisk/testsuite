@@ -9,12 +9,9 @@ the GNU General Public License Version 2.
 '''
 
 import sys
-import os
-import math
 import logging
 
-from twisted.application import service, internet
-from twisted.internet import reactor, defer
+from twisted.internet import reactor
 
 sys.path.append("lib/python")
 from asterisk.test_case import TestCase

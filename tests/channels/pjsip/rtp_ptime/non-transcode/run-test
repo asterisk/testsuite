@@ -5,7 +5,6 @@ import os
 import logging
 import signal
 import subprocess
-import time
 
 sys.path.append("lib/python")
 sys.path.append("utils")
