@@ -13,5 +13,6 @@ tests:
     - test: 'macro_gosub_test'
     - test: 'ringinuse_and_pause'
     - test: 'wrapup_time'
+    - test: 'wrapup_time_per_member'
     - test: 'reason_pause_ami'
     - test: 'queue_member_forward'
