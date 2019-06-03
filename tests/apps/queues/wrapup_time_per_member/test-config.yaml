@@ -1,0 +1,13 @@
+testinfo:
+    summary:     'Test wrapuptime for queue and member'
+    description: |
+        'This test runs in one instance of Asterisk. We set a one queue with two members.
+        One member has set the wrapuptime and other no. We place calls to the queue
+        in a way such that we can properly   see if wrapuptime is honored per the member
+        and queue setting.'
+
+properties:
+    dependencies:
+        - app: 'asttest'
+    tags:
+        - queues
