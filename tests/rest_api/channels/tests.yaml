@@ -13,3 +13,4 @@ tests:
     - test: 'originate_to_dialplan'
     - dir: 'hold'
     - test: 'originate_duplicate_id'
+    - dir: 'rtp_statistics'
