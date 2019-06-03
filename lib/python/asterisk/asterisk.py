@@ -324,7 +324,10 @@ class Asterisk(object):
         best_tmp = os.getenv("AST_WORK_DIR")
         if not best_tmp:
             # select tmp path with most available space
-            best_tmp = sorted(['/tmp', '/var/tmp'], key=lambda path: os.statvfs(path).f_bavail)[0]
+            best_tmp = sorted(['/tmp', '/var/tmp'],
+                              key=lambda path: os.statvfs(path).f_bavail,
+                              reverse=True)[0]
+
         # Base location of the temporary files created by the testsuite
         test_suite_root = best_tmp + "/asterisk-testsuite"
         # The default etc directory for Asterisk
