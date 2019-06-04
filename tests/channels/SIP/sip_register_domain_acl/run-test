@@ -16,7 +16,6 @@ sys.path.append("lib/python")
 from asterisk.test_case import TestCase
 from asterisk.sipp import SIPpScenario, SIPpScenarioSequence
 from twisted.internet import reactor
-from starpy import manager
 
 TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 logger = logging.getLogger(__name__)

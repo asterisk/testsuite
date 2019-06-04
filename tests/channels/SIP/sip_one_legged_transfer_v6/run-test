@@ -12,8 +12,7 @@ import sys
 import os
 import signal
 import subprocess
-from twisted.application import service, internet
-from twisted.internet import reactor, defer
+from twisted.internet import reactor
 from starpy import manager
 
 sys.path.append("lib/python")

@@ -15,15 +15,10 @@ from twisted.internet import reactor
 
 sys.path.append("lib/python")
 
-from asterisk.asterisk import Asterisk
-from asterisk.test_case import TestCase
-from asterisk.test_state import TestStateController
-from asterisk.test_state import TestState
 from asterisk.test_state import FailureTestState
 from asterisk.voicemail import TestCondition
 from asterisk.voicemail import VoiceMailTest
 from asterisk.voicemail import VoiceMailState
-from asterisk.voicemail import VoiceMailMailboxManagement
 from asterisk.config import ConfigFile
 
 

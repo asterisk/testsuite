@@ -11,7 +11,6 @@ import sys
 from twisted.internet import reactor
 
 sys.path.append("lib/python")
-from asterisk.asterisk import Asterisk
 from asterisk.test_case import TestCase
 
 

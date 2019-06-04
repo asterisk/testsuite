@@ -10,10 +10,8 @@ the GNU General Public License Version 2.
 import sys
 import os
 from twisted.internet import reactor
-from starpy import fastagi
 
 sys.path.append("lib/python")
-from asterisk.asterisk import Asterisk
 from asterisk.test_case import TestCase
 
 testdir = "tests/fastagi"

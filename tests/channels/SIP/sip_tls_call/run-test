@@ -10,17 +10,12 @@ the GNU General Public License Version 2.
 import fileinput
 import sys
 import os
-import time
 import logging
 import shutil
-from twisted.internet import reactor, defer
-from starpy import fastagi
+from twisted.internet import reactor
 
 sys.path.append("lib/python")
-from asterisk.asterisk import Asterisk
 from asterisk.test_case import TestCase
-from asterisk.cdr import AsteriskCSVCDR, AsteriskCSVCDRLine
-from starpy import manager
 
 LOGGER = logging.getLogger(__name__)
 

@@ -10,19 +10,14 @@ the GNU General Public License Version 2.
 
 import sys
 import os
-import re
-import shutil
 import logging
-import signal
 import subprocess
-import time
 
 from twisted.internet import reactor
 
 sys.path.append("lib/python")
 sys.path.append("utils")
 from tempfile import NamedTemporaryFile
-from asterisk.asterisk import Asterisk
 from asterisk.sipp import SIPpTest
 
 logger = logging.getLogger(__name__)

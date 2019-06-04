@@ -9,7 +9,6 @@ the GNU General Public License Version 2.
 
 import sys
 import logging
-from twisted.internet import reactor
 
 sys.path.append("lib/python")
 
