@@ -11,6 +11,7 @@ the GNU General Public License Version 2.
 import sys
 import logging
 
+from asterisk.asterisk import Asterisk
 from asterisk.test_case import TestCase
 from asterisk.voicemail import VoiceMailMailboxManagement
 from twisted.internet import reactor
@@ -49,14 +50,14 @@ class PollingTest(TestCase):
                 LOGGER.error("Expected 'Old' to be 0")
                 self.stop_test()
             self.counter += 1
-            if self.counter == 3:
+            if self.counter == 1:
                 self.counter = 0
                 if not self.voicemailManager.remove_mailbox("default", "1234"):
                     LOGGER.error("Failed to remove voicemail")
                     self.stop_test()
         elif new == 0 and waiting == 0 and old == 0:
             self.counter += 1
-            if self.counter == 3:
+            if self.counter == 1:
                 self.stop_test(True)
 
     def ami_connect(self, ami):
