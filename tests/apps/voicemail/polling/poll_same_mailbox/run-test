@@ -20,13 +20,12 @@ LOGGER = logging.getLogger(__name__)
 class PollingTest(TestCase):
     def __init__(self):
         TestCase.__init__(self)
-        self.passed = False
         self.counter = 0
         self.create_asterisk()
 
     def stop_test(self, passed=False):
-        self.passed = passed
-        reactor.stop()
+        self.set_passed(passed)
+        self.stop_reactor()
 
     def handle_message_waiting(self, ami, event):
 
