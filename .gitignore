@@ -1,4 +1,5 @@
-*.pyc
+**.pyo
+**.pyc
 asterisk-test-suite-report.xml
 crash-mail-config.yaml
 /astroot
