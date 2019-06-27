@@ -32,6 +32,7 @@ properties:
         - asterisk : 'app_dial'
         - asterisk : 'chan_pjsip'
         - asterisk : 'res_pjsip_t38'
+        - custom : 'rawsocket'
     tags:
         - pjsip
         - fax
