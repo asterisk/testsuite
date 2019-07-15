@@ -8,6 +8,7 @@ tests:
     - test: 'caller_refer_only'
     - test: 'caller_with_hold'
     - test: 'caller_with_hold_drop_options'
+    - test: 'disallow'
     - test: 'goto_on_blindxfr'
     - test: 'no_target_in_refer'
     - test: 'immediate_ok_notify'

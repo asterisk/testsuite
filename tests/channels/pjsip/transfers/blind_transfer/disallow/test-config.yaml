@@ -1,0 +1,31 @@
+testinfo:
+    summary: 'Ensure setting allow_transfer=no prevents a blind transfer'
+    description: |
+        'With the allow_transfer option disabled Alice calls Bob. Bob then
+        tries to transfer Alice to Charlie. Bob then should receive a 603
+        decline since transfers have been blocked.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                # Bob receives the call and then attempts to blind transfer Alice to Charlie
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5062', '-i': '127.0.0.1', '-s': 'alice' } }
+                # Alice calls Bob
+                - { 'key-args': {'scenario': 'alice.xml', '-p': '5061', '-i': '127.0.0.1', '-s': 'bob' } }
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+        - transfer
+
