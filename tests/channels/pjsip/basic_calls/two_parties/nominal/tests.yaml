@@ -1,2 +1,3 @@
 tests:
     - dir: 'alice_initiated'
+    - test: 'two_servers'

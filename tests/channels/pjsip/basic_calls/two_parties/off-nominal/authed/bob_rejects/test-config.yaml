@@ -1,0 +1,41 @@
+testinfo:
+    summary: 'Ensure Asterisk sends a 503 to caller upon outbound auth failure'
+    description: |
+         'Two instances of SIPp are executed with "alice" being the caller and
+          "bob" being the callee. The inbound call from Alice is authenticated,
+          bob is called, and bob rejects the authentication with a 403. The
+          SIPp scenario for alice expects to receive a 503 from Asterisk.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # Bob receives call and rejects auth by sending a 403
+                - { 'key-args': { 'scenario': 'bob.xml',
+                                  '-i': '127.0.0.1',
+                                  '-p': '5061',
+                                  '-timeout': '10s'},
+                    'ordered-args': ['-timeout_error'] }
+                # Alice sends call and ensures a 503 is received
+                - { 'key-args': { 'scenario': 'alice.xml',
+                                  '-i': '127.0.0.1',
+                                  '-p': '5062',
+                                  '-au': 'alice',
+                                  '-ap': 'swordfish',
+                                  '-timeout': '10s'},
+                    'ordered-args': ['-timeout_error'] }
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.3'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
