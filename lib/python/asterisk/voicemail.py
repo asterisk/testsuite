@@ -429,8 +429,16 @@ class VoiceMailMailboxManagement(object):
                             'c': context, 'm': mailbox, 'f': folder, 'n': msg_env_name})
 
         random.seed()
+
+        # `maxint` was removed in Python 3
+        # https://docs.python.org/3.0/whatsnew/3.0.html#integers
+        if sys.version_info.major == 2:
+           maxint = sys.maxint
+        else:
+           maxint = sys.maxsize
+
         msg_id = (str(int(time.time())) + "-" +
-                  str(random.randrange(0, 1, sys.maxint - 1)))
+                  str(random.randrange(0, 1, maxint - 1)))
 
         with open(msg_env_path, 'w') as envelope_file:
             envelope_file.write(';\n')
