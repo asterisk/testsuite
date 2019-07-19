@@ -1,0 +1,35 @@
+info:
+    summary: 'Test pjsip send notify CLI command'
+    description: |
+        This Tests the 'pjsip send notify' command in order to make sure the
+        notify is properly formed and sent.
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: event-action-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-config:
+    reactor-timeout: 15
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'notify.xml', '-p': '5061'} }
+
+event-action-config:
+    -
+        sipp-start:
+        cli-cmds:
+            cmd: "pjsip send notify test endpoint alice"
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
