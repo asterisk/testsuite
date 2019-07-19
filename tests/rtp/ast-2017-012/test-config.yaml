@@ -1,0 +1,37 @@
+testinfo:
+    summary:     'Test for AST-2017-12 Remote Crash Vulnerability in RTCP Stack'
+    description: |
+        'A SIPp scenario send INVITE to create inbound call in a SIP channel
+        with device test1. After ANSWER by Asterisk, the device send RTP
+        traffic and RTCP packets contain more than one report (Receiver Report
+        and a Sender Report).
+        The test passes as long Asterisk does not crash and receive BYE by test1.'
+    issues:
+        - jira: 'ASTERISK-27382'
+        - jira: 'ASTERISK-27429'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'invalid-rtcp-packet.xml', '-p': '5061', '-s': 'test' } }
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - sipp :
+            version : 'v3.0'
+            feature : 'PCAP'
+        - asterisk: 'chan_pjsip'
+        - custom : 'rawsocket'
+    tags:
+        - pjsip
+        - RTP
+        - RTCP
