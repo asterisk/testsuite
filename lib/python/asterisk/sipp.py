@@ -16,6 +16,9 @@ from abc import ABCMeta, abstractmethod
 from twisted.internet import reactor, defer, protocol, error
 from .test_case import TestCase
 from .utils_socket import get_available_port
+from .pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
+    PLUGGABLE_ACTION_REGISTRY, var_replace
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -920,3 +923,42 @@ class SIPpTest(TestCase):
             deferds.append(deferred)
 
         defer.DeferredList(deferds).addCallback(__set_pass_fail)
+
+
+class SIPpStartEventModule(object):
+    """An event module that triggers when SIPp scenario(s) starts.
+
+    Optional options:
+      count - trigger event after 'count' scenarios
+      name - trigger event after matching 'name' to a scenario's name
+
+    If no options are specified then this event is triggered once the first
+    scenario has been started. If both options are set then the event is
+    triggered when 'count' scenarios named 'name' have started.
+    """
+
+    def __init__(self, test_object, triggered_callback, config):
+        """Setup the test start observer"""
+
+        if not isinstance(test_object, SIPpTestCase):
+            raise TypeError("Test case must be of type SIPpTestCase")
+
+        self.test_object = test_object
+        self.triggered_callback = triggered_callback
+
+        self.count = config and config.get('count', 0) or 0
+        self.name = config and config.get('name') or None
+
+        test_object.register_scenario_started_observer(self.handle_start)
+
+    def handle_start(self, scenario):
+        """Notify the event-action mapper that the test has started."""
+
+        if self.count > 0:
+            self.count -= 1
+
+        if self.count == 0 and (not self.name or self.name == scenario.name):
+            self.triggered_callback(self, scenario)
+
+
+PLUGGABLE_EVENT_REGISTRY.register("sipp-start", SIPpStartEventModule)
