@@ -1,0 +1,67 @@
+testinfo:
+    summary: 'Ensure the device_state_busy_at option works'
+    description: |
+        'An endpoint is configured with a device_state_busy_at set to one. Two
+        calls are made to the endpoint's extension. The first one succeeds,
+        while the second one gets a "busy". Device state is checked through
+        raised user events.'
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-config:
+    reactor_timeout: 10
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5061' } }
+
+ami-config:
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    state: 'NOT_INUSE'
+            requirements:
+                match:
+                    device: 'PJSIP/bob'
+            count: 1
+        ami-actions:
+            action:
+               action: 'Originate'
+               channel: 'Local/s'
+               application: 'Echo'
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    state: 'BUSY'
+            requirements:
+                match:
+                    device: 'PJSIP/bob'
+            count: 1
+        ami-actions:
+            action:
+                action: 'Hangup'
+                channel: '/^PJSIP/bob-.*$/'
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip

@@ -1,6 +1,8 @@
 tests:
     - test: 'playback'
+    - test: 'dialstring'
     - test: 'echo'
+    - test: 'from_user'
     - test: 'auth'
     - test: 'nat'
     - test: 'peer_in_dialog_auths'

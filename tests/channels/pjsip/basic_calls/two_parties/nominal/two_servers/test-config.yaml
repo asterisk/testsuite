@@ -1,0 +1,74 @@
+testinfo:
+    summary: 'Tests basic two party calls across two Asterisk servers'
+    description: |
+        'Run four instances of Asterisk, uut1 (ast1), uut2 (ast2), bob (ast3),
+        and alice (ast4) that test two party calls across two Asterisk servers.
+        Alice initiates the call through uut1 and uut2 to bob. Both alice and
+        bob send, and listen for audio in order to ensure audio is received.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: originator-config
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: hangup-monitor
+            typename: 'pluggable_modules.HangupMonitor'
+
+test-object-config:
+    reactor-timeout: 20
+    asterisk-instances: 4
+    connect-ami: True
+
+originator-config:
+    # Originate call from Alice
+    id: '3'
+    trigger: 'ami_connect'
+    channel: 'PJSIP/bob@uut1'
+    context: 'default'
+    exten: 'start'
+    priority: '1'
+
+ami-config:
+    # Alice events
+    -
+        type: 'headermatch'
+        id: '2'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'TalkDetect'
+        requirements:
+            match:
+                result: 'pass'
+        count: '1'
+    # Bob events
+    -
+        type: 'headermatch'
+        id: '3'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'TalkDetect'
+        requirements:
+            match:
+                result: 'pass'
+        count: '1'
+
+hangup-monitor:
+    ids: '0'
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
