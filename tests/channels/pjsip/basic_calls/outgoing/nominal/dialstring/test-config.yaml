@@ -1,0 +1,53 @@
+testinfo:
+    summary: 'Test that the PJSIP dial strings result in the call being rightly routed'
+    description: |
+        'See summary'
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: orig-config1
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: orig-config2
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: orig-config3
+            typename: 'pluggable_modules.Originator'
+
+orig-config1:
+    scenario-trigger-after: 1
+    channel: 'PJSIP/uas'
+
+orig-config2:
+    scenario-trigger-after: 1
+    channel: 'PJSIP/foo@uas'
+
+orig-config3:
+    scenario-trigger-after: 1
+    channel: 'PJSIP/uas/sip:foo@127.0.0.1:5062'
+
+test-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uas.xml', '-p': '5061', '-s': 'uas'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uas-checkuser.xml', '-p': '5061', '-s': 'foo'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uas-checkuser.xml', '-p': '5062', '-s': 'foo'} }
+
+properties:
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip

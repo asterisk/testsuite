@@ -1,0 +1,33 @@
+testinfo:
+    summary: 'Test that the from_user setting works properly'
+    description: |
+        'Send an outgoing call with from_user set on the definition, and then
+        validate it in the sipp scenario.'
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: orig-config
+            typename: 'pluggable_modules.Originator'
+
+test-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'check_from_user.xml', '-s': 'alice', '-p': '5061'} }
+
+orig-config:
+    channel: 'PJSIP/alice'
+
+properties:
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
