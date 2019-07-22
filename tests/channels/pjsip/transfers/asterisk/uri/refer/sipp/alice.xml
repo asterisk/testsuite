@@ -78,6 +78,27 @@
       ]]>
   </send>
 
+  <send retrans="500">
+    <![CDATA[
+      NOTIFY sip:alice@[local_ip]:[local_port] SIP/2.0
+      [last_Via:]
+      From: alice <sip:[service]@[local_ip]:[local_port]>;tag=[call_number]
+      To: s <sip:s@[remote_ip]:[remote_port]>[peer_tag_param]
+      [last_call-ID:]
+      CSeq: 2 NOTIFY
+      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Max-Forward: 70
+      Event: refer
+      Subscription-State: terminated
+      Content-Type: message/sipfrag
+      Content-Length: [len]
+
+      SIP/2.0 200 OK
+    ]]>
+  </send>
+
+  <recv response="200" rtd="true" />
+
   <recv request="BYE"/>
 
   <send retrans="500">
