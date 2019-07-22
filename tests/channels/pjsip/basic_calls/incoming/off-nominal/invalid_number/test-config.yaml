@@ -1,0 +1,27 @@
+testinfo:
+    summary: 'Ensure that Asterisk responds to a request for an invalid number with a 404.'
+    description: |
+        Make sure that Asterisk responds with a SIP 404 to an incoming request
+        for a dialed number that doesn't exist in the dial plan.
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'sipp.SIPpTestCase'
+
+test-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'inbound_to_asterisk.xml', '-p': '5061'} }
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - sipp :
+            version : 'v3.0'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
