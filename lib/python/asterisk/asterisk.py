@@ -37,6 +37,9 @@ except ImportError as ie:
     # things if we don't need the SSH connection to a remote Asterisk instance
     REMOTE_ERROR = ie
 
+from .pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
+    PLUGGABLE_ACTION_REGISTRY, var_replace
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -1070,5 +1073,36 @@ class Asterisk(object):
             for dirname in dirnames:
                 self._makedirs(os.path.join(target_dir, short_dirname, dirname))
 
+
+class CLIPluggableActionModule(object):
+    """Pluggable CLI action module.
+
+    Options:
+        id - The Asterisk id to execute the command on. This is optional and,
+             if not specified defaults to 0 (ast1).
+        cmd - The CLI command to execute
+    """
+
+    def __init__(self, test_object, config):
+        """Setup the CLI event observer"""
+
+        self.test_object = test_object
+
+        if not isinstance(config, list):
+            config = [config]
+
+        self.cmds = config
+
+    def run(self, triggered_by, source, extra):
+        """Callback called when this action is triggered."""
+
+        for cmd in self.cmds:
+            text = cmd.get('cmd')
+            if text:
+                instance = cmd.get('id', 0)
+                self.test_object.ast[instance].cli_exec(text)
+
+
+PLUGGABLE_ACTION_REGISTRY.register("cli-cmds", CLIPluggableActionModule)
 
 # vim: set ts=8 sw=4 sts=4 et ai tw=79:
