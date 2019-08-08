@@ -84,7 +84,7 @@ pipeline {
 					stage ("Checkout") {
 						sh "sudo chown -R jenkins:users ."
 						env.GERRIT_PROJECT_URL = env.GIT_URL.replaceAll(/[^\/]+$/, env.GERRIT_PROJECT)
-						sh "printenv -0 | sort -z | tr '\0' '\n'"
+						sh "printenv -0 | sort -z | tr '\\0' '\\n'"
 
 						/*
 						 * Jenkins has already automatically checked out the base branch
