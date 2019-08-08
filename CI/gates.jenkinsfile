@@ -10,7 +10,22 @@
  * we need to dynamically determine which docker image we're going to use and
  * you can't do that in a delcarative pipeline.
  */
+def timeoutTime = 60
+def timeoutUnits = 'MINUTES'
+if (env.TIMEOUT_GATES) {
+	def _timeout = env.TIMEOUT_GATES.split()
+	timeoutTime = _timeout[0].toInteger()
+	timeoutUnits = _timeout[1]
+}
+
 pipeline {
+    options {
+        ansiColor('gnome-terminal')
+        throttle(['testsuite-gate'])
+        timestamps()
+        timeout(time: timeoutTime, unit: timeoutUnits)
+    }
+
 	triggers {
 		/*
 		 * This trigger will match either the "asterisk" or "Security-asterisk"
@@ -56,7 +71,8 @@ pipeline {
 			 */
 			when {
 				not { environment name: 'GERRIT_CHANGE_NUMBER', value: '' }
-				not { environment name: 'GERRIT_EVENT_ACCOUNT_NAME', value: 'Jenkins2' }
+                /* If "skip_gate" is in the comments, don't run the job */
+				not { expression { env.GERRIT_EVENT_COMMENT_TEXT ==~ /.*skip_gate.*/ } }
 			}
 			steps {
 				script {
@@ -66,7 +82,7 @@ pipeline {
 					stage ("Checkout") {
 						sh "sudo chown -R jenkins:users ."
 						env.GERRIT_PROJECT_URL = env.GIT_URL.replaceAll(/[^\/]+$/, env.GERRIT_PROJECT)
-						sh "printenv | sort"
+						sh "printenv -0 | sort -z | tr '\0' '\n'"
 
 						/*
 						 * Jenkins has already automatically checked out the base branch
