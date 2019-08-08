@@ -10,7 +10,22 @@
  * we need to dynamically determine which docker image we're going to use and
  * you can't do that in a delcarative pipeline.
  */
+def timeoutTime = 30
+def timeoutUnits = 'MINUTES'
+if (env.TIMEOUT_UNITTESTS) {
+	def _timeout = env.TIMEOUT_UNITTESTS.split()
+	timeoutTime = _timeout[0].toInteger()
+	timeoutUnits = _timeout[1]
+}
+
 pipeline {
+    options {
+        ansiColor('gnome-terminal')
+        throttle(['testsuite-check'])
+        timestamps()
+        timeout(time: timeoutTime, unit: timeoutUnits)
+    }
+
 	triggers {
 		/*
 		 * This trigger will match either the "asterisk" or "Security-asterisk"
@@ -69,7 +84,7 @@ pipeline {
 					stage ("Checkout") {
 						sh "sudo chown -R jenkins:users ."
 						env.GERRIT_PROJECT_URL = env.GIT_URL.replaceAll(/[^\/]+$/, env.GERRIT_PROJECT)
-						sh "printenv | sort"
+						sh "printenv -0 | sort -z | tr '\0' '\n'"
 
 						/*
 						 * Jenkins has already automatically checked out the base branch
