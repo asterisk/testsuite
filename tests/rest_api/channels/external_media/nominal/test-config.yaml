@@ -1,0 +1,45 @@
+testinfo:
+    summary: Test External Media channel creation
+    description: |
+        Creates an externalMedia channel and checks to make sure the specified
+        channel variable(s) got set.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+test-object-config:
+    stop-on-end: True
+
+ari-config:
+    apps: testsuite
+    events:
+       # This is the StasisStart for the implicit Local channel
+       # created by the test object.  When we get it, we create
+       # the externalMedia channel.
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+                    channel:
+                       name: 'Local'
+            count: 1
+            callback:
+                module: create_with_vars
+                method: on_start
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+    tags:
+        - ARI
