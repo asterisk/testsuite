@@ -1,0 +1,74 @@
+testinfo:
+    summary: 'Test replacing an aggregated unsolicited subscription with a solicited one.'
+    description: |
+        'After enabling the mwi_subscribe_replaces_unsolicited option on an
+        endpoint, this tests to make sure an aggregated solicited subscription
+        for MWI is allowed to replace the unsolicited subscription, and
+        subsequently replaced by an unsolicited again when unsubscribed.
+
+        Note, this tests disables initial unsolicited at startup in order to
+        make the test a bit more deterministic.'
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_mwi'
+        - asterisk: 'res_mwi_external'
+        - asterisk: 'res_mwi_external_ami'
+        - sipp:
+            version: 'v3.0'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: 'sipp-config'
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'event-action-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    test-iterations:
+        -
+            # Due to the nature of SIPp, and it's handling of out of call messages
+            # we'll execute two scenarios. One to receive unsolicited MWI, and
+            # another to handle solicited MWI.
+            scenarios:
+                # For this test we expect to receive 2 unsolicited MWI messages.
+                # The first happens after the initial REGISTER (on contact
+                # updated). One NOTIFY is sent containing the combined message
+                # counts for "mb1" and "mb2". Upon unsubscribing, the replaced
+                # NOTIFY unsolicited subscription get recreated and sends out another
+                # again with the combined message count.
+                #
+                # Even though we expect only 2 unsolicited messages set the call count
+                # to 3 for the scenario. Once the expected call count is met the scenario
+                # is responsible for gracefully shutting itself down. See the scenario
+                # itself for more information.
+                #
+                # Note, we must tell SIPp to cause an error on scenario timeout.
+                # This way the test will fail if the expected number of calls is not met.
+                - { 'key-args': {'scenario': 'unsolicited.xml', '-i': '127.0.0.1', '-p': '5062', '-m': '3', '-timeout': '25', '-timeout_error': ''} }
+                - { 'key-args': {'scenario': 'solicited.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+event-action-config:
+    -
+        ami-start:
+        ami-actions:
+            action:
+                Action: 'MWIUpdate'
+                Mailbox: 'mb1'
+                NewMessages: 1
+                OldMessages: 1
+    -
+        ami-start:
+        ami-actions:
+            action:
+                Action: 'MWIUpdate'
+                Mailbox: 'mb2'
+                NewMessages: 2
+                OldMessages: 2
