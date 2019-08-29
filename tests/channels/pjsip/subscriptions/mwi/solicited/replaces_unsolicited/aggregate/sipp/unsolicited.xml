@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Unsolicited">
+
+  <recv request="NOTIFY">
+    <action>
+	  <ereg regexp="message-summary" check_it="true" search_in="hdr" header="Event" assign_to="event" />
+      <ereg regexp="terminated" check_it="true" search_in="hdr" header="Subscription-State" assign_to="state" />
+      <ereg regexp="Voice-Message: [3]\/[3]" check_it="true" search_in="body" assign_to="vm" />
+	  <!-- Get the call number and see if we've either met or acceded the expected number. -->
+      <assignstr assign_to="call_num" value="[call_number]" />
+      <todouble assign_to="count" variable="call_num" />
+      <test assign_to="expected" variable="count" compare="equal" value="2" />
+      <test assign_to="greater" variable="count" compare="greater_than" value="2" />
+    </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Fail the scenario if we've received more than the expected number of calls -->
+  <nop condexec="greater">
+    <action>
+      <error message="Received too many out of call NOTIFYs ([call_id])" />
+    </action>
+  </nop>
+
+  <!-- Pause for a time less than the global timeout, but long enough where we feel
+       that we won't potentially receive any erroneous calls after the expected call
+       count has been met. If we stop too soon then the scenario could have successfully
+       ended, but another unexpected message may have potentially arrived, which in
+       that case we should have failed the test. -->
+  <pause milliseconds="11000" />
+
+  <!-- Stop the scenario gracefully if we've received the expected number of calls
+	   Note, do this stops the test in a non-failure mode. -->
+  <nop condexec="expected">
+    <action>
+      <log message="call count met stopping test" />
+      <exec int_cmd="stop_gracefully" />
+    </action>
+  </nop>
+
+  <Reference variables="event,state,vm" />
+
+</scenario>
