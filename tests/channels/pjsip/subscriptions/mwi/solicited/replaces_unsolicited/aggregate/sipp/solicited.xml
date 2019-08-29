@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Solicited">
+
+  <!-- Wait a few seconds before initiating the scenario to make sure
+	   the mailbox(es) have been updated -->
+  <pause milliseconds="3000" />
+
+  <!-- Once the contact is registered a SIP NOTIFY (for unsolicited MWI) is sent to
+	   the contact. Note, this registers the contact to port 5062 where SIP NOTIFY's
+	   for unsolicited MWI are expected -->
+  <send retrans="500">
+    <![CDATA[
+
+      REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[call_number]
+      To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: [cseq] REGISTER
+      Max-Forwards: 70
+      Contact: <sip:[service]@[local_ip]:5062;transport=[transport]>
+      Expires: 60
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" />
+
+  <!-- Wait a few more seconds to make sure the unsolicited NOTIFY is received
+	   before subscribing -->
+  <pause milliseconds="3000" />
+
+  <!-- Now subscribe -->
+  <send retrans="500">
+    <![CDATA[
+      SUBSCRIBE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
+      To: "alice" <sip:[service]@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 SUBSCRIBE
+      Contact: "alice" <sip:alice@[local_ip]:[local_port]>
+      Max-Forwards: 70
+      Event: message-summary
+      Expires: 60
+      Accept: application/simple-message-summary
+      Allow-Events: message-summary
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200">
+    <action>
+          <!-- Get the tag to use when unsubscribing -->
+          <ereg regexp="(;tag=.*)" header="To:" search_in="hdr" check_it="true" assign_to="to_tag"/>
+    </action>
+  </recv>
+
+  <!-- Receive NOTIFY due to SUBSCRIBE -->
+  <recv request="NOTIFY">
+    <action>
+      <ereg regexp="message-summary" check_it="true" search_in="hdr" header="Event" assign_to="event" />
+      <ereg regexp="active;expires=[5,6][0-9]" check_it="true" search_in="hdr" header="Subscription-State" assign_to="state" />
+      <ereg regexp="Voice-Message: 1\/1" check_it="true" search_in="body" assign_to="vm" />
+    </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <pause milliseconds="1000" />
+
+  <!-- Unsubscribe -->
+  <send retrans="500">
+    <![CDATA[
+      SUBSCRIBE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
+      To: "alice" <sip:[service]@[remote_ip]:[remote_port]>[$to_tag]
+      Call-ID: [call_id]
+      CSeq: 3 SUBSCRIBE
+      Contact: "alice" <sip:alice@[local_ip]:[local_port]>
+      Max-Forwards: 70
+      Event: message-summary
+      Expires: 0
+      Accept: application/simple-message-summary
+      Allow-Events: message-summary
+      User-Agent: SIPp
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" />
+
+  <!-- Receive NOTIFY due to unsubscribe -->
+  <recv request="NOTIFY">
+    <action>
+      <ereg regexp="message-summary" check_it="true" search_in="hdr" header="Event" assign_to="event" />
+      <ereg regexp="terminated" check_it="true" search_in="hdr" header="Subscription-State" assign_to="state" />
+      <ereg regexp="Voice-Message: 1\/1" check_it="true" search_in="body" assign_to="vm" />
+    </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <Reference variables="event,state,vm" />
+
+</scenario>
