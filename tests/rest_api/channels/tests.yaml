@@ -16,3 +16,4 @@ tests:
     - test: 'originate_duplicate_id'
     - test: 'create_duplicate_id'
     - dir: 'rtp_statistics'
+    - dir: 'external_media'

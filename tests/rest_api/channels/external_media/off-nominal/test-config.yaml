@@ -1,0 +1,45 @@
+testinfo:
+    summary: Test External Media channel failure
+    description: |
+        Attempts to create an externalMedia channel with unsupported
+        or missing parameters.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+test-object-config:
+    stop-on-end: True
+
+ari-config:
+    apps: testsuite
+    events:
+       # This is the StasisStart for the implicit Local channel
+       # created by the test object.  When we get it, we
+       # try to create the externalMedia channels.
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+                    channel:
+                       name: 'Local'
+            count: 1
+            callback:
+                module: off_nominal
+                method: on_start
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+    tags:
+        - ARI
