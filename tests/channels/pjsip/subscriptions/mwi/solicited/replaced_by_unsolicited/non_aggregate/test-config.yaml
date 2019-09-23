@@ -33,6 +33,7 @@ test-modules:
             typename: 'pluggable_modules.EventActionModule'
 
 sipp-config:
+    reactor-timeout: 40
     test-iterations:
         -
             # Due to the nature of SIPp, and it's handling of out of call messages
@@ -48,9 +49,9 @@ sipp-config:
                 # is responsible for gracefully shutting itself down. See the scenario
                 # itself for more information.
                 #
-                # Note, we must tell SIPp to cause an error on scenario timeout (20 seconds).
+                # Note, we must tell SIPp to cause an error on scenario timeout (30 seconds).
                 # This way the test will fail if the expected number of calls is not met.
-                - { 'key-args': {'scenario': 'unsolicited.xml', '-i': '127.0.0.1', '-p': '5062', '-m': '3', '-timeout_error': ''} }
+                - { 'key-args': {'scenario': 'unsolicited.xml', '-i': '127.0.0.1', '-p': '5062', '-m': '3', '-timeout': '30', '-timeout_error': ''} }
                 - { 'key-args': {'scenario': 'solicited.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
 
 event-action-config:
