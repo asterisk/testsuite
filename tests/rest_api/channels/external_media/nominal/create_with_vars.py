@@ -22,12 +22,12 @@ def on_start(ari, event, obj):
 
     resp = ari.post('channels', 'externalMedia', **params)
 
-    assert resp.json()['channel']['caller']['name'] == 'foo'
-    assert resp.json()['local_address']
-    assert resp.json()['local_port']
+    assert resp.json()['caller']['name'] == 'foo'
+    assert resp.json()['channelvars']['UNICASTRTP_LOCAL_ADDRESS']
+    assert resp.json()['channelvars']['UNICASTRTP_LOCAL_PORT']
 
     # Delete the channel we just created
-    ari.delete('channels', resp.json()['channel']['id'])
+    ari.delete('channels', resp.json()['id'])
     # Delete the implicit channel created by the test object
     ari.delete('channels', event['channel']['id'])
 
