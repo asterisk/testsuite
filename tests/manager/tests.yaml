@@ -22,3 +22,4 @@ tests:
     - test: 'response-time'
     - test: 'escaped_values'
     - dir:  'redirect'
+    - test: 'playdtmf'

@@ -1,0 +1,68 @@
+testinfo:
+    summary: 'Test the receive parameter for the AMI PlayDTMF'
+    description: |
+        This testcase will call into a dialplan that immediately waits for DTMF input via WaitExten()
+        The caller will first call PlayDtmf(digit=1), which should have no effect since this will only
+        send DTMF to the Pjsip channel and not affect the dialplan side. Then, the caller will call
+        PlayDtmf(digit=2, receive=1) which will make the dialplan side receive the DTMF digit 2.
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'app_senddtmf'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'invite.xml', '-p':'5061' } }
+
+ami-config:
+    -
+        ami-events:
+            count: 1
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'ready'
+        ami-actions:
+            # without the "Receive" parameter, DTMF will be sent out on this channel and won't impact the PBX/dialplan side
+            -
+                action:
+                    Action: 'PlayDtmf'
+                    Channel: '{channel}'
+                    Digit: '1'
+            # with the "Receive" parameter, DTMF will be received on this channel and be caught by WaitExten() in the dialplan
+            -
+                action:
+                    Action: 'PlayDtmf'
+                    Channel: '{channel}'
+                    Digit: '2'
+                    Receive: '1'
+    -
+        ami-events:
+            count: 1
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'valid'
+    -
+        ami-events:
+            count: 0
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'invalid'
