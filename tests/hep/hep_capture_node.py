@@ -21,10 +21,8 @@ import json
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 
-try:
-    from construct_legacy import *
-except ImportError:
-    from construct import *
+from construct import *
+from construct.core import *
 
 LOGGER = logging.getLogger(__name__)
 
@@ -108,40 +106,40 @@ class HEPPacketHandler(DatagramProtocol):
 
         self.module = module
 
-        self.hep_chunk = Struct('hep_chunk',
-            UBInt16('vendor_id'),
-            UBInt16('type_id'),
-            UBInt16('length'))
-        hep_ctrl = Struct('hep_ctrl',
-            Array(4, UBInt8('id')),
-            UBInt16('length'))
-        hep_ip_family = Struct('hep_ip_family',
+        self.hep_chunk = 'hep_chunk' / Struct(
+            'vendor_id' / Int16ub,
+            'type_id' / Int16ub,
+            'length' / Int16ub)
+        hep_ctrl = 'hep_ctrl' / Struct(
+            'id' / Array(4, Int8ub),
+            'length' / Int16ub)
+        hep_ip_family = 'hep_ip_family' / Struct(
             self.hep_chunk,
-            UBInt8('ip_family'));
-        hep_ip_id = Struct('hep_ip_id',
+            'ip_family' / Int8ub);
+        hep_ip_id = 'hep_ip_id' / Struct(
             self.hep_chunk,
-            UBInt8('ip_id'))
-        hep_port = Struct('hep_port',
+            'ip_id' / Int8ub)
+        hep_port = 'hep_port' / Struct(
             self.hep_chunk,
-            UBInt16('port'))
-        hep_timestamp_sec = Struct('hep_timestamp_sec',
+            'port' / Int16ub)
+        hep_timestamp_sec = 'hep_timestamp_sec' / Struct(
             self.hep_chunk,
-            UBInt32('timestamp_sec'))
-        hep_timestamp_usec = Struct('hep_timestamp_usec',
+            'timestamp_sec' / Int32ub)
+        hep_timestamp_usec = 'hep_timestamp_usec' / Struct(
             self.hep_chunk,
-            UBInt32('timestamp_usec'))
-        hep_protocol_type = Struct('hep_protocol_type',
+            'timestamp_usec' / Int32ub)
+        hep_protocol_type = 'hep_protocol_type' / Struct(
             self.hep_chunk,
-            UBInt8('protocol_type'))
-        hep_capture_agent_id = Struct('hep_capture_agent_id',
+            'protocol_type' / Int8ub)
+        hep_capture_agent_id = 'hep_capture_agent_id' / Struct(
             self.hep_chunk,
-            UBInt32('capture_agent_id'))
-        self.hep_generic_msg = Struct('hep_generic',
+            'capture_agent_id' / Int32ub)
+        self.hep_generic_msg = 'hep_generic' / Struct(
             hep_ctrl,
             hep_ip_family,
             hep_ip_id,
-            Struct('src_port', hep_port),
-            Struct('dst_port', hep_port),
+            'src_port' / Struct(hep_port),
+            'dst_port' / Struct(hep_port),
             hep_timestamp_sec,
             hep_timestamp_usec,
             hep_protocol_type,
@@ -162,18 +160,18 @@ class HEPPacketHandler(DatagramProtocol):
         dst_addr = None
         if parsed_hdr.hep_ip_family.ip_family == IP_FAMILY.v4:
             # IPv4
-            hep_ipv4_addr = Struct('hep_ipv4_addr',
+            hep_ipv4_addr = 'hep_ipv4_addr' / Struct(
                 self.hep_chunk,
-                String('ipv4_addr', 4))
+                'ipv4_addr' / PaddedString(4, "ascii"))
             src_addr = hep_ipv4_addr.parse(data[length:])
             length += hep_ipv4_addr.sizeof()
             dst_addr = hep_ipv4_addr.parse(data[length:])
             length += hep_ipv4_addr.sizeof()
         elif parsed_hdr.hep_ip_family.ip_family == IP_FAMILY.v6:
             # IPv6
-            hep_ipv6_addr = Struct('hep_ipv6_addr',
+            hep_ipv6_addr = 'hep_ipv6_addr' / Struct(
                 self.hep_chunk,
-                String('ipv6_addr', 16))
+                'ipv6_addr' / PaddedString(16, "ascii"))
             src_addr = hep_ipv6_addr.parse(data[length:])
             length += hep_ipv6_addr.sizeof()
             dst_addr = hep_ipv6_addr.parse(data[length:])
@@ -186,20 +184,20 @@ class HEPPacketHandler(DatagramProtocol):
             hdr = self.hep_chunk.parse(data[length:])
             length += self.hep_chunk.sizeof()
             if hdr.type_id == HEP_VARIABLE_TYPES.auth_key:
-                hep_auth_key = String('hep_auth_key',
-                                      hdr.length - self.hep_chunk.sizeof())
+                hep_auth_key = 'hep_auth_key' / PaddedString(
+                                      hdr.length - self.hep_chunk.sizeof(), "ascii")
                 packet.auth_key = hep_auth_key.parse(data[length:])
                 length += hep_auth_key.sizeof() - self.hep_chunk.sizeof()
             elif hdr.type_id == HEP_VARIABLE_TYPES.payload:
-                hep_payload = String('hep_payload',
-                                     hdr.length - self.hep_chunk.sizeof())
+                hep_payload = 'hep_payload' / PaddedString(
+                                     hdr.length - self.hep_chunk.sizeof(), "ascii")
                 packet.payload = hep_payload.parse(data[length:])
                 length += hep_payload.sizeof() - self.hep_chunk.sizeof()
 
                 LOGGER.debug('Packet payload: %s' % packet.payload)
             elif hdr.type_id == HEP_VARIABLE_TYPES.uuid:
-                hep_uuid = String('hep_uuid',
-                                  hdr.length - self.hep_chunk.sizeof())
+                hep_uuid = 'hep_uuid' / PaddedString(
+                                  hdr.length - self.hep_chunk.sizeof(), "ascii")
                 packet.uuid = hep_uuid.parse(data[length:])
                 length += hep_uuid.sizeof() - self.hep_chunk.sizeof()
         self.module.verify_packet(packet)
@@ -380,4 +378,3 @@ class HEPCaptureNode(object):
                 LOGGER.error('Failed to match packet %d: %s' %
                     (self.current_packet, str(packet.__dict__)))
                 self.test_object.set_passed(False)
-
