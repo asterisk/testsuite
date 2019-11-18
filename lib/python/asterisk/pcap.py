@@ -13,18 +13,16 @@ the GNU General Public License Version 2.
 
 import sys
 import logging
+import signal
+import argparse
 import binascii
 
 sys.path.append('lib/python')
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
-try:
-    from construct_legacy import *
-    from construct_legacy.protocols.ipstack import ip_stack
-except ImportError:
-    from construct import *
-    from construct.protocols.ipstack import ip_stack
+from construct import *
+from construct.core import *
 try:
     from yappcap import PcapOffline
     PCAP_AVAILABLE = True
@@ -32,6 +30,9 @@ except:
     PCAP_AVAILABLE = False
 
 import rlmi
+
+from protocols.ipstack import ip_stack
+from pcap_listener import PcapListener as PacketCapturer
 
 LOGGER = logging.getLogger(__name__)
 
@@ -59,18 +60,13 @@ class PcapListener(object):
         filename = module_config.get('filename')
         snaplen = module_config.get('snaplen')
         buffer_size = module_config.get('buffer-size')
-        if (module_config.get('register-observer')):
-            test_object.register_pcap_observer(self.__pcap_callback)
         self.debug_packets = module_config.get('debug-packets', False)
 
         # Let exceptions propagate - if we can't create the pcap, this should
         # throw the exception to the pluggable module creation routines
-        test_object.create_pcap_listener(
-            device=device,
-            bpf_filter=bpf_filter,
-            dumpfile=filename,
-            snaplen=snaplen,
-            buffer_size=buffer_size)
+
+        PacketCapturer(device, bpf_filter, filename, self.__pcap_callback,
+            snaplen, buffer_size)
 
     def __pcap_callback(self, packet):
         """Private callback that logs packets if the configuration supports it
@@ -108,7 +104,6 @@ class Packet():
         packet_type A text string describing what type of packet this is
         raw_packet  The bytes comprising the packet
         """
-
         self.packet_type = packet_type
         self.raw_packet = raw_packet
         if isinstance(self.raw_packet, str):
@@ -154,43 +149,45 @@ class RTCPPacket(Packet):
         self.__parse_raw_data(self.transport_layer.next)
 
     def __parse_raw_data(self, binary_blob):
-        header_def = Struct('rtcp_header',
-                            BitStruct('header',
-                                      BitField('version', 2),
+        header_def = 'rtcp_header' / BitStruct(
+                            'header' / BitStruct(
+                                      'version' / BitsInteger(2),
                                       Padding(1),
-                                      BitField('reception_report_count', 5),
+                                      'reception_report_count' / BitsInteger(5),
                                       ),
-                            UBInt8('packet_type'),
-                            UBInt16('length'),
-                            UBInt32('ssrc'))
+                            'packet_type' / Bytewise(Int8ub),
+                            'length' / Bytewise(Int16ub),
+                            'ssrc' / Bytewise(Int32ub)
+                            )
         self.rtcp_header = header_def.parse(binary_blob)
+
         report_block_def = GreedyRange(
-            Struct(
-                'report_block',
-                UBInt32('ssrc'),
-                BitStruct(
-                    'lost_counts',
-                    BitField('fraction_lost', 8),
-                    BitField('packets_lost', 24)),
-                UBInt32('sequence_number_received'),
-                UBInt32('interarrival_jitter'),
-                UBInt32('last_sr'),
-                UBInt32('delay_last_sr')
+            'report_block' / BitStruct(
+                'ssrc' / Bytewise(Int32ub),
+                'lost_counts' / Struct(
+                    'fraction_lost' / BitsInteger(8),
+                    'packets_lost' / BitsInteger(24)
+                ),
+                'sequence_number_received' / Bytewise(Int32ub),
+                'interarrival_jitter' / Bytewise(Int32ub),
+                'last_sr' / Bytewise(Int32ub),
+                'delay_last_sr' / Bytewise(Int32ub)
             )
         )
         if self.rtcp_header.packet_type == 200:
             sender_def = Struct('sr',
-                                Struct('sender_info',
-                                       UBInt32('ntp_msw'),
-                                       UBInt32('ntp_lsw'),
-                                       UBInt32('rtp_timestamp'),
-                                       UBInt32('sender_packet_count'),
-                                       UBInt32('sender_octet_count')),
+                                'sender_info' / Struct(
+                                       'ntp_msw' / Int32ub,
+                                       'ntp_lsw' / Int32ub,
+                                       'rtp_timestamp' / Int32ub,
+                                       'sender_packet_count' / Int32ub,
+                                       'sender_octet_count' / Int32ub
+                                       ),
                                 report_block_def)
 
             self.sender_report = sender_def.parse(binary_blob[8:])
         elif self.rtcp_header.packet_type == 201:
-            receiver_def = Struct('rr',
+            receiver_def = 'rr' / Struct(
                                   report_block_def)
             self.receiver_report = receiver_def.parse(binary_blob[8:])
 
@@ -205,19 +202,16 @@ class RTPPacket(Packet):
     """An RTP Packet
     """
 
-    rtp_header = Struct(
-        "rtp_header",
-        EmbeddedBitStruct(
-            BitField("version", 2),
-            Bit("padding"),
-            Bit("extension"),
-            Nibble("csrc_count"),
-            Bit("marker"),
-            BitField("payload_type", 7),
-        ),
-        UBInt16("sequence_number"),
-        UBInt32("timestamp"),
-        UBInt32("ssrc"),
+    rtp_header = "rtp_header" / BitStruct(
+        "version" / BitsInteger(2),
+        "padding" / Bit,
+        "extension" / Bit,
+        "csrc_count" / Nibble,
+        "marker" / Bit,
+        "payload_type" / BitsInteger(7),
+        "sequence_number" / Bytewise(Int16ub),
+        "timestamp"  / Bytewise(Int32ub),
+        "ssrc" / Bytewise(Int32ub),
         # 'csrc' can be added later when needed
     )
 
@@ -748,6 +742,7 @@ class VOIPSniffer(object):
         """
         (host, port) = addr
         packet = self.packet_factory.interpret_packet(packet)
+
         if packet is None:
             return
 
@@ -760,10 +755,12 @@ class VOIPSniffer(object):
         if host not in self.traces:
             self.traces[host] = []
         self.traces[host].append(packet)
-        if packet.packet_type not in self.callbacks:
-            return
-        for callback in self.callbacks[packet.packet_type]:
-            callback(packet)
+        if packet.packet_type in self.callbacks:
+            for callback in self.callbacks[packet.packet_type]:
+                callback(packet)
+        if "*" in self.callbacks:
+            for callback in self.callbacks["*"]:
+                callback(packet)
 
     def add_callback(self, packet_type, callback):
         """Add a callback function for received packets of a particular type
@@ -872,11 +869,16 @@ class VOIPListener(VOIPSniffer, PcapListener):
         module_config The module configuration for this pluggable module
         test_object   The object we will attach to
         """
-        if not 'register-observer' in module_config:
-            raise Exception('VOIPListener needs register-observer to be set')
-        VOIPSniffer.__init__(self, module_config, test_object)
-        PcapListener.__init__(self, module_config, test_object)
 
+        VOIPSniffer.__init__(self, module_config, test_object)
+
+        packet_type = module_config.get("packet-type")
+        bpf = module_config.get("bpf-filter")
+
+        if packet_type:
+            self.add_callback(packet_type, module_config.get("callback"))
+
+        PcapListener.__init__(self, module_config, test_object)
 
     def pcap_callback(self, packet):
         """Packet capture callback function
@@ -888,5 +890,49 @@ class VOIPListener(VOIPSniffer, PcapListener):
         Keyword Arguments:
         packet A received packet from the pcap listener
         """
+
         self.process_packet(packet, (None, None))
 
+
+
+# This is a unit test for capture and parsing.
+# By default it listens on the loopback interface
+# UDP port 5060.
+
+if __name__ == "__main__":
+
+    def callback(packet):
+        print(packet)
+
+    def signal_handler(sig, frame):
+        print('You pressed Ctrl+C!')
+        reactor.stop()
+
+    signal.signal(signal.SIGINT, signal_handler)
+
+    parser = argparse.ArgumentParser(description="pcap unit test")
+    parser.add_argument("-i", "--interface", metavar="i", action="store",
+                      type=str, dest="interface", default="lo",
+                      help="Interface to listen on")
+    parser.add_argument("-f", "--filter", metavar="f", action="store",
+                      type=str, dest="filter", default="udp port 5060",
+                      help="BPF Filter")
+    parser.add_argument("-o", "--output", metavar="o", action="store",
+                      type=str, dest="output", default="/tmp/pcap_unit_test.pcap",
+                      help="Output file")
+    options = parser.parse_args()
+    print('Listening on "%s", using filter "%s", capturing to "%s"'
+          % (options.interface, options.filter, options.output))
+
+    module_config = {
+        "device": options.interface,
+        "bpf-filter": options.filter,
+        "filename": options.output,
+        "snaplen": 65535,
+        "buffer-size": 0,
+        "callback": callback,
+        "debug-packets": True,
+        "packet-type": "*"
+    }
+    pcap = VOIPListener(module_config, None)
+    reactor.run()

@@ -16,7 +16,6 @@ testinfo:
 properties:
     dependencies:
         - python : 'twisted'
-        - python : 'construct'
         - 'pcap'
         - asterisk : 'chan_sip'
     tags:
