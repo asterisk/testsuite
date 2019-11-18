@@ -138,7 +138,6 @@ class TestCase(object):
         self._stop_callbacks = []
         self._ami_connect_callbacks = []
         self._ami_reconnect_callbacks = []
-        self._pcap_callbacks = []
         self._stop_deferred = None
         log_full = True
         log_messages = True
@@ -396,7 +395,7 @@ class TestCase(object):
         # tests can create their own. Tests may only want to watch a specific
         # port, while a general logger will want to watch more general traffic
         # which can be filtered later.
-        return PcapListener(device, bpf_filter, dumpfile, self._pcap_callback,
+        return PcapListener(device, bpf_filter, dumpfile, self.pcap_callback,
                             snaplen, buffer_size)
 
     def start_asterisk(self):
@@ -622,12 +621,6 @@ class TestCase(object):
         """Virtual method used to receive captured packets."""
         pass
 
-    def _pcap_callback(self, packet):
-        """Packet capture callback"""
-        self.pcap_callback(packet)
-        for callback in self._pcap_callbacks:
-            callback(packet)
-
     def handle_originate_failure(self, reason):
         """Fail the test on an Originate failure
 
@@ -675,17 +668,6 @@ class TestCase(object):
             self.passed = False
 
         return self.passed
-
-    def register_pcap_observer(self, callback):
-        """Register an observer that will be called when a packet is received
-        from a created pcap listener
-
-        Keyword Arguments:
-        callback The callback to receive the packet. The callback function
-                 should take in a single parameter, which will be the packet
-                 received
-        """
-        self._pcap_callbacks.append(callback)
 
     def register_start_observer(self, callback):
         """Register an observer that will be called when all Asterisk instances
