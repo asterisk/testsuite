@@ -109,7 +109,7 @@ pipeline {
 								[$class: 'CloneOption',
 									honorRefspec: true,
 									noTags: true,
-									depth: 10,
+									depth: 100,
 									shallow: true
 								],
 								[$class: 'PruneStaleBranch'],
@@ -148,7 +148,7 @@ pipeline {
 								[$class: 'RelativeTargetDirectory', relativeTargetDir: astDir],
 								[$class: 'CloneOption',
 									noTags: true,
-									depth: 10,
+									depth: 100,
 									honorRefspec: true,
 									shallow: true
 								],
@@ -175,8 +175,11 @@ pipeline {
 	}
 	post {
 		cleanup {
-			sh "sudo make distclean 2&>/dev/null || : "
-			sh "sudo rm -rf CI/output 2&>/dev/null || : "
+			script {
+				if (env.CLEANUP_WS_UNITTESTS.toBoolean()) {
+					cleanWs deleteDirs: true, notFailBuild: false
+				}
+			}
 		}
 		/*
 		 * The Gerrit Trigger will automatically post the "Verified" results back
