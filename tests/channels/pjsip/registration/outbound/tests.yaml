@@ -2,6 +2,7 @@
 tests:
     - dir: 'unregister'
     - test: 'auth_loop'
+    - test: 'failover'
     - test: 'fatal_retry'
     - test: 'forbidden_retry'
     - test: 'interval_too_brief'
