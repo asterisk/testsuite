@@ -1,0 +1,137 @@
+testinfo:
+    summary: 'Test channel unhold when bridge transitions to softmix'
+    description: |
+        This tests that a channel on hold is taken off hold if the bridge
+        it's currently in transitions to softmix.
+
+        Add two channels to a mixing bridge. Then put one channel on hold.
+        Lastly, add a third channel to the bridge, and make sure the
+        appropriate unhold events are raised signifying that the channel
+        was take off of hold.
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
+
+test-modules:
+    test-object:
+        config-section: test-object
+        typename: ari.AriBaseTestObject
+    modules:
+        -   typename: pluggable_modules.EventActionModule
+            config-section: event-actions
+
+test-object:
+    reactor-timeout: 15
+    subscribe-all: True
+
+event-actions:
+    -
+        ari-start:
+        ari-requests:
+            -
+                # Make sure we have a bridge to put everyone in
+                method: 'post'
+                uri: 'bridges/lebridge'
+                params:
+                    app: 'testsuite'
+            -
+                # Go ahead and originate alice
+                method: 'post'
+                uri: 'channels'
+                params:
+                    app: 'testsuite'
+                    endpoint: 'Local/s@default'
+                    channelId: 'alice'
+            -
+                # Go ahead and originate bob
+                method: 'post'
+                uri: 'channels'
+                params:
+                    app: 'testsuite'
+                    endpoint: 'Local/s@default'
+                    channelId: 'bob'
+    -
+        ari-events:
+            match:
+                type: 'StasisStart'
+                application: 'testsuite'
+                channel:
+                    id: 'alice|bob'
+            count: 2
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'bridges/lebridge/addChannel'
+                params:
+                    channel: '{channel.id}'
+    -
+        ari-events:
+            match:
+                type: 'ChannelEnteredBridge'
+                channel:
+                    id: 'alice'
+            count: 1
+        ari-requests:
+            -
+                # Once alice is in the bridge apply the hold
+                method: 'post'
+                uri: 'channels/alice/hold'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'MusicOnHoldStart'
+                    Uniqueid: 'alice'
+            count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'channels'
+                params:
+                    app: 'testsuite'
+                    endpoint: 'Local/s@default'
+                    channelId: 'charlie'
+    -
+        ari-events:
+            match:
+                type: 'StasisStart'
+                application: 'testsuite'
+                channel:
+                    id: 'charlie'
+            count: 1
+        ari-requests:
+            -
+                # Adding charlie will switch the bridging tech to softmix
+                method: 'post'
+                uri: 'bridges/lebridge/addChannel'
+                params:
+                    channel: '{channel.id}'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'MusicOnHoldStop'
+                    Uniqueid: 'alice'
+            count: 1
+        ari-requests:
+            -
+                method: 'delete'
+                uri: 'channels/alice'
+            -
+                method: 'delete'
+                uri: 'channels/bob'
+            -
+                method: 'delete'
+                uri: 'channels/charlie'
+            -
+                method: 'delete'
+                uri: 'bridges/lebridge'
+        stop_test:
