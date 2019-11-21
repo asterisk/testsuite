@@ -11,4 +11,5 @@ tests:
     - test: 'id_propagate'
     - test: 'no_id_propagate'
     - dir: 'playback'
+    - test: 'softmix_unhold'
     - test: 'video'
