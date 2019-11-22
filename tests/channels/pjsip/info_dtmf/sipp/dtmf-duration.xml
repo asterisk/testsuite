@@ -68,6 +68,8 @@
   <recv response="200" crlf="true">
   </recv>
 
+  <pause milliseconds="1000"/>
+
   <send retrans="500">
     <![CDATA[
       INFO sip:test2@[remote_ip]:[remote_port] SIP/2.0
@@ -383,7 +385,7 @@
   <recv response="200" crlf="true">
   </recv>
 
-  <pause/>
+  <pause milliseconds="5000"/>
 
   <send retrans="500">
     <![CDATA[
