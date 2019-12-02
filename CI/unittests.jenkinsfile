@@ -109,8 +109,7 @@ pipeline {
 								[$class: 'CloneOption',
 									honorRefspec: true,
 									noTags: true,
-									depth: 100,
-									shallow: true
+									shallow: false
 								],
 								[$class: 'PruneStaleBranch'],
 								[$class: 'BuildChooserSetting',
@@ -148,9 +147,8 @@ pipeline {
 								[$class: 'RelativeTargetDirectory', relativeTargetDir: astDir],
 								[$class: 'CloneOption',
 									noTags: true,
-									depth: 100,
 									honorRefspec: true,
-									shallow: true
+									shallow: false
 								],
 							],
 							userRemoteConfigs: [[name: env.GERRIT_NAME, url: asteriskUrl]]
