@@ -12,11 +12,7 @@ import time
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
-
-try:
-    from construct_legacy import *
-except ImportError:
-    from construct import *
+from asterisk.pcap import RTPPacket
 
 sys.path.append('lib/python')
 
@@ -30,22 +26,9 @@ class RTP(DatagramProtocol):
         self.test_object.register_stop_observer(self.asterisk_stopped)
 
     def datagramReceived(self, data, (host, port)):
-        header = Struct('rtp_packet',
-                        BitStruct('header',
-                                  BitField('version', 2),
-                                  Bit('padding'),
-                                  Bit('extension'),
-                                  Nibble('csrc_count'),
-                                  Bit('marker'),
-                                  BitField('payload', 7)
-                                  ),
-                        UBInt16('sequence_number'),
-                        UBInt32('timestamp'),
-                        UBInt32('ssrc')
-                        )
-        rtp_header = header.parse(data)
+        rtp_header = RTPPacket.rtp_header.parse(data)
         LOGGER.debug("Parsed RTP packet is {0}".format(rtp_header))
-        if rtp_header.header.payload == 13:
+        if rtp_header.payload_type == 13:
             current_time = time.time()
             # Don't compare intervals on the first received CNG
             if self.last_rx_time:
