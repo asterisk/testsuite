@@ -1,0 +1,31 @@
+testinfo:
+    summary: 'Make sure the correct max datagram is sent in SDPs'
+    description: |
+        'The caller's t38_udptl_maxdatagram endpoint configuration option is set
+        to override what's declared in the SDP.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'bob.xml', '-p':'5062', '-s': 'bob'},
+                    'ordered-args': ['-key', 'exten', 'alice'] }
+                - { 'key-args': {'scenario': 'alice.xml', '-p':'5061', '-s': 'alice'},
+                    'ordered-args': ['-key', 'exten', 'bob'] }
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.5'
+        - asterisk : 'res_fax'
+        - asterisk : 'res_fax_spandsp'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip_t38'
+    tags:
+        - pjsip
+        - fax
