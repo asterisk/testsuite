@@ -73,7 +73,7 @@ hep-node-config-ast1:
                 value:
                     { ssrc: "\\d.*",
                       type: 201,
-                      report_blocks:[ { source_ssrc: "\\d.*",
+                      report_blocks: [ { source_ssrc: "\\d.*",
                                         highest_seq_no: "\\d.*",
                                         fraction_lost: 0,
                                         ia_jitter: "\\d.*",
@@ -137,7 +137,7 @@ hep-node-config-ast1:
                 value:
                     { ssrc: "\\d.*",
                       type: 201,
-                      report_blocks:[ { source_ssrc: "\\d.*",
+                      report_blocks: [ { source_ssrc: "\\d.*",
                                         highest_seq_no: "\\d.*",
                                         fraction_lost: 0,
                                         ia_jitter: "\\d.*",
@@ -180,7 +180,7 @@ hep-node-config-ast1:
                 value:
                     { ssrc: "\\d.*",
                       type: 201,
-                      report_blocks:[ { source_ssrc: "\\d.*",
+                      report_blocks: [ { source_ssrc: "\\d.*",
                                         highest_seq_no: "\\d.*",
                                         fraction_lost: 0,
                                         ia_jitter: "\\d.*",

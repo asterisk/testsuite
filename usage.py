@@ -11,6 +11,11 @@ the GNU General Public License Version 2.
 import sys
 import yaml
 
+try:
+    from yaml import CSafeLoader as MyLoader
+except ImportError:
+    from yaml import SafeLoader as MyLoader
+
 sys.path.append('lib/python')
 
 TESTS_CONFIG = "tests.yaml"
@@ -101,7 +106,7 @@ def load_yaml_config(path):
         print("Unexpected error: %s" % sys.exc_info()[0])
         return None
 
-    config = yaml.load(f, Loader=yaml.SafeLoader)
+    config = yaml.load(f, Loader=MyLoader)
     f.close()
 
     return config
