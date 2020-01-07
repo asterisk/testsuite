@@ -5,3 +5,4 @@ tests:
     - test: 'header_ordering_header_ip'
     - test: 'header_ordering_ip_header'
     - test: 'ordering'
+    - dir: 'port_matching'
