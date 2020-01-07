@@ -17,6 +17,11 @@ import logging.config
 import os
 import yaml
 
+try:
+    from yaml import CSafeLoader as MyLoader
+except ImportError:
+    from yaml import SafeLoader as MyLoader
+
 from twisted.internet import reactor
 
 LOGGER = logging.getLogger('test_runner')
@@ -233,7 +238,7 @@ def load_test_config(test_directory):
         return test_config
 
     with open(test_config_path) as file_stream:
-        test_config = yaml.load(file_stream, Loader=yaml.SafeLoader)
+        test_config = yaml.load(file_stream, Loader=MyLoader)
 
     return test_config
 

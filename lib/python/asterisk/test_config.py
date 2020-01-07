@@ -16,6 +16,11 @@ import yaml
 import socket
 import traceback
 
+try:
+    from yaml import CSafeLoader as MyLoader
+except ImportError:
+    from yaml import SafeLoader as MyLoader
+
 sys.path.append("lib/python")
 
 from . import test_suite_utils
@@ -374,7 +379,7 @@ class TestConfig(object):
 
         test_config = "%s/test-config.yaml" % self.test_name
         with open(test_config, "r") as config_file:
-            self.config = yaml.load(config_file, Loader=yaml.SafeLoader)
+            self.config = yaml.load(config_file, Loader=MyLoader)
 
         if not self.config:
             print("ERROR: Failed to load configuration for test '%s'" %
