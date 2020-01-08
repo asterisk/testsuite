@@ -217,17 +217,14 @@ class Dependency(object):
     def depend_pjsuav6(self):
         """This tests if pjsua was compiled with IPv6 support.
 
-        To do this, we run pjsua --help and parse the output to determine if
-        --ipv6 is a valid option
+        To do this, we check if the '--ipv6' command line flag is present
+        in the pjsua binary
         """
-        if test_suite_utils.which('pjsua') is None:
+        pjsua_bin = test_suite_utils.which('pjsua')
+        if pjsua_bin is None:
             return False
 
-        help_output = subprocess.Popen(['pjsua', '--help'],
-                                       stdout=subprocess.PIPE).communicate()[0]
-        if help_output.find('--ipv6') == -1:
-            return False
-        return True
+        return subprocess.call(['grep', pjsua_bin, '-qe', '--ipv6']) == 0
 
     def depend_fax(self):
         """Checks if Asterisk contains the necessary modules for fax tests"""
