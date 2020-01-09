@@ -281,6 +281,8 @@ class TestConfig(object):
     by that tests test.yaml file.
     """
 
+    dependency_cache = {}
+
     def __init__(self, test_name, global_test_config=None):
         """Create a new TestConfig
 
@@ -442,7 +444,7 @@ class TestConfig(object):
 
         if not self.deps:
             self.deps = [
-                Dependency(dep)
+                self.dependency_factory(dep)
                 for dep in self.config["properties"].get("dependencies") or []
             ]
         return self.deps
@@ -487,3 +489,23 @@ class TestConfig(object):
 
         # all tags matched successfully
         return self.can_run
+
+    def dependency_factory(self, dep):
+        """Creates a Dependency from the given specification or returns
+        the Dependency if it already exists
+
+        Returns:
+        A Dependency
+        """
+        # freeze() implementation from https://stackoverflow.com/a/13264725/21926
+        def freeze(d):
+            if isinstance(d, dict):
+                return frozenset((key, freeze(value)) for key, value in d.items())
+            elif isinstance(d, list):
+                return tuple(freeze(value) for value in d)
+            return d
+
+        key = freeze(dep)
+        if key not in TestConfig.dependency_cache:
+            TestConfig.dependency_cache[key] = Dependency(dep)
+        return TestConfig.dependency_cache[key]
