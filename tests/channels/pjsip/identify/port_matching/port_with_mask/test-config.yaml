@@ -1,0 +1,34 @@
+testinfo:
+    summary:     'Tests incoming calls identified by source network and port'
+    description: |
+        This test covers sending calls to an Asterisk instance
+        identified by a source network and source port.
+        It is expected that all scenarios pass, with the first
+        two accepting the INVITE and the second two rejecting
+        with a 401.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        # IPv4 & UDP
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'nominal.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 's'} }
+                - { 'key-args': {'scenario': 'nominal.xml', '-i': '127.0.0.2', '-p': '5061', '-s': 's'} }
+                - { 'key-args': {'scenario': 'off_nominal.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 's'} }
+                - { 'key-args': {'scenario': 'off_nominal.xml', '-i': '127.0.0.2', '-p': '5062', '-s': 's'} }
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'app_echo'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
