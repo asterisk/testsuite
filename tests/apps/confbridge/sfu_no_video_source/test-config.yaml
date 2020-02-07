@@ -1,0 +1,33 @@
+testinfo:
+    summary:     'Ensure that ConfBridge and PJSIP in SFU reinvite with video even if participant only provides audio'
+    description: |
+        'Two SIPp scenarios call into Asterisk which drops them both into a ConfBridge conference bridge. The
+        bridge is configured with SFU video support. The first participant has only audio while the second
+        participant has both audio and video. On join the first participant is reinvited to add video of the
+        second participant while the second participant is not reinvited at all. The second participant then
+        hangs up causing the first participant to be reinvited and the video stream removed. The first
+        participant then hangs up and the test ends.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # IPv4 & UDP
+                - { 'key-args': {'scenario': 'video_caller_first.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'video-caller'} }
+                - { 'key-args': {'scenario': 'video_caller_second.xml', '-i': '127.0.0.1', '-p': '5062', '-d': '5000', '-s': 'video-caller'} }
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'app_confbridge'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
