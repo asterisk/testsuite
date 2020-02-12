@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Re-Invite problem 1">
+
+<recv request="INVITE" crlf="true"  rrs="true">
+  <action>
+    <ereg regexp="[[:punct:]](.*)[[:punct:]]" search_in="hdr" header="Contact:" check_it="true" assign_to="6,1" />
+    <ereg regexp=".*" search_in="hdr" header="From:" check_it="true" assign_to="2" />
+    <ereg regexp=".*" search_in="hdr" header="To:" check_it="true" assign_to="3" />
+  </action>
+</recv>
+<Reference variables="9"/>
+
+
+<send>
+<![CDATA[
+
+SIP/2.0 100 Trying
+[last_Via:]
+[last_Call-ID:]
+[last_From:]
+[last_To:]
+[last_CSeq:]
+Content-Length: 0
+
+]]>
+</send>
+
+<send retrans="500">
+<![CDATA[
+
+SIP/2.0 200 OK
+[last_Via:]
+[last_Call-ID:]
+[last_From:]
+[last_To:];tag=[call_number]
+[last_CSeq:]
+Contact: <sip:736596371553211257@[local_ip]:[local_port];user=phone>
+Content-Type: application/sdp
+[last_Record-Route]
+Content-Length: [len]
+
+v=0
+o=HuaweiSoftX3000 6644052 6644052 IN IP[local_ip_type] [local_ip]
+s=Sip Call
+c=IN IP[media_ip_type] [media_ip]
+t=0 0
+m=audio [media_port] RTP/AVP 8 0 18 101
+a=rtpmap:8 PCMA/8000
+a=rtpmap:0 PCMU/8000
+a=rtpmap:18 G729/8000
+a=rtpmap:101 telephone-event/8000
+a=fmtp:101 0-15
+
+]]>
+</send>
+
+<recv request="ACK"
+      rtd="true"
+      crlf="true">
+</recv>
+
+<pause milliseconds="500"/>
+
+<send retrans="500">
+<![CDATA[
+
+INVITE [$1] SIP/2.0
+Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+[last_Call-ID:]
+From: [$3];tag=[call_number]
+To: [$2]
+CSeq: 1 INVITE
+Contact: <sip:[local_ip]:[local_port]>
+Max-Forwards: 70
+Content-Type: application/sdp
+[routes]
+Content-Length: [len] 
+
+v=0
+o=HuaweiSoftX3000 6644052 6644052 IN IP[local_ip_type] [local_ip]
+s=Sip Call
+c=IN IP[media_ip_type] 0.0.0.0
+t=0 0
+m=audio [media_port] RTP/AVP 8 0 18 101
+a=rtpmap:8 PCMA/8000
+a=rtpmap:0 PCMU/8000
+a=rtpmap:18 G729/8000
+a=rtpmap:101 telephone-event/8000
+a=fmtp:101 0-15
+a=sendonly
+
+]]>
+</send>
+
+<recv response="100" optional="true">
+</recv>
+
+<recv response="100" optional="true">
+</recv>
+
+<recv response="200" rtd="true" crlf="true">
+  <action>
+    <ereg regexp="a=recvonly" search_in="body" check_it="true" assign_to="9"/>
+  </action>
+</recv>
+<Reference variables="9"/>
+
+
+<send>
+<![CDATA[
+
+ACK [$1] SIP/2.0
+Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+[last_Call-ID:]
+From: [$3];tag=[call_number]
+To: [$2]
+CSeq: 1 ACK
+Max-Forwards: 70
+Content-Length: 0
+[routes]
+
+]]>
+</send>
+
+<recv request="INVITE" crlf="true">
+  <action>
+    <ereg regexp="a=inactive" search_in="body" check_it="true" assign_to="10"/>
+  </action>
+</recv>
+<Reference variables="10"/>
+
+<send retrans="500">
+<![CDATA[
+
+SIP/2.0 200 OK
+[last_Via:]
+[last_From:]
+[last_To:];tag=[call_number]
+[last_Call-ID:]
+[last_CSeq:]
+Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+[last_Record-Route]
+Content-Type: application/sdp
+Content-Length: [len]
+
+v=0
+o=user1 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+s=-
+c=IN IP[media_ip_type] [media_ip]
+t=0 0
+m=audio [media_port] RTP/AVP 0 101
+a=rtpmap:0 PCMU/8000
+a=rtpmap:101 telephone-event/8000
+a=fmtp:101 0-16
+a=inactive
+
+]]>
+</send>
+
+<recv request="ACK" rtd="true" crlf="true">
+</recv>
+
+<recv request="INVITE" crlf="true">
+  <action>
+    <ereg regexp="a=recvonly" search_in="body" check_it="true" assign_to="11"/>
+  </action>
+</recv>
+<Reference variables="11"/>
+
+<send retrans="500">
+<![CDATA[
+
+SIP/2.0 200 OK
+[last_Via:]
+[last_From:]
+[last_To:];tag=[call_number]
+[last_Call-ID:]
+[last_CSeq:]
+Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+[last_Record-Route]
+Content-Type: application/sdp
+Content-Length: [len]
+
+v=0
+o=user1 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+s=-
+c=IN IP[media_ip_type] [media_ip]
+t=0 0
+m=audio [media_port] RTP/AVP 0 101
+a=rtpmap:0 PCMU/8000
+a=rtpmap:101 telephone-event/8000
+a=fmtp:101 0-16
+a=sendonly
+
+]]>
+</send>
+
+<recv request="ACK" rtd="true" crlf="true">
+</recv>
+
+<recv request="BYE">
+</recv>
+
+<send>
+<![CDATA[
+
+SIP/2.0 200 OK
+[last_Via:]
+[last_From:]
+[last_To:]
+[last_Call-ID:]
+[last_CSeq:]
+Content-Length: 0
+
+]]>
+</send>
+
+
+<!-- Keep the call open for a while in case the 200 is lost to be     -->
+<!-- able to retransmit it if we receive the BYE again.               -->
+<pause milliseconds="4000"/>
+
+
+</scenario>
+
