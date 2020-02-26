@@ -1,0 +1,32 @@
+testinfo:
+    summary: 'Ensure call is not terminated when frame with new SSRC and format is received'
+    description: |
+         'If the SSRC of a received RTP packet differed from the previous SSRC
+          an SSRC change control frame would be queued ahead of the media
+          frame. In the case of audio this would result in the format of the
+          audio frame not being checked, and if it differed or was not allowed
+          then it could cause the call to drop due to failure to set up a
+          translation path. This test reproduces this scenario and ensures that
+          the call is not dropped but instead the media is ignored.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'uas_asterisk.xml', '-i': '127.0.0.1', '-p': '5700'} }
+                - { 'key-args': { 'scenario': 'uac_g719_g711.xml', '-i': '127.0.0.1', '-p': '5061', '-s': '3200000000', '-d': '20000', '-mp': '6000'} }
+
+properties:
+    dependencies:
+        - sipp :
+             version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
