@@ -58,3 +58,4 @@ tests:
     - test: 'dtmf_info_fallback'
     - test: 'invalid_uris'
     - test: 'moh_passthru_inactive'
+    - test: 'non_negotiated_frame_SSRC_change'
