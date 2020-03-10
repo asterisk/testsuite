@@ -10,8 +10,7 @@
     <ereg regexp=".*" search_in="hdr" header="To:" check_it="true" assign_to="3" />
   </action>
 </recv>
-<Reference variables="9"/>
-
+<Reference variables="6"/>
 
 <send>
 <![CDATA[
