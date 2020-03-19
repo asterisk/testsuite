@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE scenario SYSTEM "bansallaptop.dtd">
+<!-- This program is free software; you can redistribute it and/or      -->
+<!-- modify it under the terms of the GNU General Public License as     -->
+<!-- published by the Free Software Foundation; either version 2 of the -->
+<!-- License, or (at your option) any later version.                    -->
+<!--                                                                    -->
+<!-- This program is distributed in the hope that it will be useful,    -->
+<!-- but WITHOUT ANY WARRANTY; without even the implied warranty of     -->
+<!-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the      -->
+<!-- GNU General Public License for more details.                       -->
+<!--                                                                    -->
+<!-- You should have received a copy of the GNU General Public License  -->
+<!-- along with this program; if not, write to the                      -->
+<!-- Free Software Foundation, Inc.,                                    -->
+<!-- 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA             -->
+<!--                                                                    -->
+<!--                 Sipp default 'uac' scenario.                       -->
+<!--                                                                    -->
+<scenario name="A_PARTY.xml">
+  <!-- INVITE with application/ISUP and sdp body, asterisk should ignore ISUP body and still process the SDP -->
+  <send retrans="500">
+    <![CDATA[
+
+      INVITE sip:[service]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From:  <sip:bansallaptop@[local_ip]:[local_port]>;tag=[call_number]
+      To: bansalphone <sip:[service]@[remote_ip]>
+      Call-ID: [call_id]
+      X-VCC-UUID: [pid][clock_tick][call_number]
+      X-VCC-Provider: 61 [local_ip] BEL
+      CSeq: 1 INVITE
+      Contact: sip:bansallaptop@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Performance Test
+      Content-Type: multipart/mixed;boundary=ub-dialogic-sw-1
+      Content-Length: [len]
+
+      --ub-dialogic-sw-1
+      Content-Type: application/sdp
+
+      v=0
+      o=user1 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio 7000 RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+
+      --ub-dialogic-sw-1
+      Content-Type: application/ISUP;version=itu-t92+
+      Content-Disposition: signal;handling=required
+
+      \x01\x00\x20\x01\x0a\x00\x02\x0a\x08\x83\x90\x12\x31\x78\x98\x90\x09\x0a\x07\x03\x11\x12\x80\x81\x44\x10\x08\x01\x80\x31\x02\x00\x00\x3d\x01\x12\x03\x0c\x6d\x06\x80\x50\x31\x32\x33\x34\x7d\x02\x91\x81\x1d\x03\x80\x90\xa3\x20\x18\x04\x42\x69\x74\x74\x65\x20\x72\x75\x66\x65\x6e\x20\x53\x69\x65\x20\x7a\x75\x72\x75\x65\x63\x6b\x39\x06\x31\xc0\x3d\xc0\xfe\xd0\xfe\x01\x01\x00
+      --ub-dialogic-sw-1--
+    ]]>
+  </send>
+
+  <recv response="100" optional="true">
+  </recv>
+
+
+
+  <!-- By adding rrs="true" (Record Route Sets), the route sets         -->
+  <!-- are saved and used for following messages sent. Useful to test   -->
+  <!-- against stateful SIP proxies/B2BUAs.                             -->
+  <recv response="415" rtd="true" rrs="true">
+  </recv>
+
+
+  <!-- Packet lost can be simulated in any send/recv message by         -->
+  <!-- by adding the 'lost = "10"'. Value can be [1-100] percent.       -->
+  <send>
+    <![CDATA[
+
+      ACK [next_url] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: bansallaptop <sip:bansallaptop@[local_ip]:[local_port]>;tag=[call_number]
+      To: bansalphone <sip:[service]@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 1 ACK
+      Contact: sip:bansallaptop@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Performance Test
+      [routes]
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+
+</scenario>
