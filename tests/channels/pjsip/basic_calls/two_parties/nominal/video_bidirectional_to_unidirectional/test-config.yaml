@@ -1,0 +1,42 @@
+testinfo:
+    summary:     'Test changing a bidirectional video stream to unidirectional while in a two party call'
+    description: |
+        'A SIPp scenario calls into Asterisk and Asterisk then dials another. Once
+        answered the channels are placed into a bridge. The calling party adds a video
+        stream. The calling party then re-negotiates the stream from bidirectional to
+        unidirectional, so they are only a receiver. The test confirms that the called
+        party is reinvited initially to add a bidirectional video stream and then again
+        to turn it into a unidirectional stream with video going to Asterisk. Once
+        completed the calling party hangs up the call.'
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_dial'
+        - asterisk : 'res_pjsip'
+        - sipp :
+            version : 'v3.4.1'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-case-config
+        typename: 'sipp.SIPpTestCase'
+
+test-case-config:
+    memcheck-delay-stop: 7
+    connect-ami: 'True'
+    fail-on-any: False
+    test-iterations:
+        # First iteration
+        -
+            scenarios:
+                # Bob receives call from Alice
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-mi': '127.0.0.3'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
+                # Alice calls Bob
+                - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob', '-timeout': '20s', '-mi': '127.0.0.2'},
+                    'ordered-args': ['-timeout_error', '-key', 'custom_media_port', '6004'] }
