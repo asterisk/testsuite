@@ -1,0 +1,29 @@
+testinfo:
+    summary: 'Reject INVITE if unknown content type requires handling'
+    description: |
+         'If unknown media has handling=required in its content disposition reject the call with 415'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'A_PARTY.xml', '-p': '5061', '-i': '127.0.0.1', '-s': '3200000000' } }
+
+
+properties:
+    dependencies:
+        - sipp :
+             version : 'v3.0'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_session'
+        - asterisk : 'chan_pjsip'
+
+    tags:
+        - pjsip
