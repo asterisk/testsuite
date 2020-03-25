@@ -53,6 +53,7 @@ class Originator(object):
             'async': 'False',
             'event': None,
             'timeout': None,
+            'codecs': None,
         }
 
         # process config
@@ -122,6 +123,7 @@ class Originator(object):
                                        priority=self.config['priority'],
                                        timeout=self.config['timeout'],
                                        account=self.config['account'],
+                                       codecs=self.config['codecs'],
                                        async=self.config['async'])
         else:
             defer = self.ami.originate(channel=self.config['channel'],
@@ -129,6 +131,7 @@ class Originator(object):
                                        data=self.config['data'],
                                        timeout=self.config['timeout'],
                                        account=self.config['account'],
+                                       codecs=self.config['codecs'],
                                        async=self.config['async'])
         defer.addErrback(self.failure)
 
