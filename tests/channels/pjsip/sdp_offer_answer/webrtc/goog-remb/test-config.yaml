@@ -26,6 +26,7 @@ originator-config:
     context: 'default'
     exten: 'nowhere'
     priority: '1'
+    codecs: 'ulaw,vp9'
     trigger: 'scenario_start'
     scenario-name: 'reject.xml'
 
