@@ -5,9 +5,6 @@ testinfo:
         A SIPp scenario places an offer with only ulaw and alaw in it. We ensure that
         Asterisk responds with a 488.
 
-        The test also uses the file-descriptors test condition to ensure that
-        we do not leak any RTP ports.'
-
 test-modules:
     test-object:
         config-section: sipp-config
@@ -30,6 +27,3 @@ properties:
         - asterisk: 'res_pjsip_sdp_rtp'
     tags:
         - pjsip
-    testconditions:
-        -
-            name: 'file-descriptors'
