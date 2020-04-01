@@ -44,7 +44,7 @@
   <recv response="200" rtd="true">
     <action>
       <ereg regexp="a=fmtp:99 sr=8000,mode=any"
-	    search_in="body" check_it="false" assign_to="1"/>
+	    search_in="body" check_it_inverse="true" assign_to="1"/>
       <strcmp assign_to="1" variable="1" value=""/>
     </action>
   </recv>
