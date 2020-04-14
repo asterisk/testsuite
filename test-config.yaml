@@ -64,6 +64,13 @@ global-settings:
                 post:
                     typename: 'memory_test_condition.MemoryPostTestCondition'
                     related-type: 'memory_test_condition.MemoryPreTestCondition'
+            -
+                name: 'taskprocessors'
+                pre:
+                    typename: 'taskprocessor_test_condition.TaskprocessorPreTestCondition'
+                post:
+                    typename: 'taskprocessor_test_condition.TaskprocessorPostTestCondition'
+                    related-type: 'taskprocessor_test_condition.TaskprocessorPreTestCondition'
 
 # Exclude all long-running tests (greater than one minute)
 config-fast:
