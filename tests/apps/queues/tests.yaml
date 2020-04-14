@@ -15,3 +15,4 @@ tests:
     - test: 'wrapup_time'
     - test: 'reason_pause_ami'
     - test: 'queue_member_forward'
+    - test: 'redirect'
