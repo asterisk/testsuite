@@ -1,0 +1,162 @@
+testinfo:
+    summary: "Redirected queue call"
+    description: |
+        "We have Alice call the queue, which has Local/dialbob as member. Bob will
+        be called through this local channel. Upon answering, we'll have Carol call
+        the dialplan and Wait() there for further instructions.
+
+        After Carol's call is setup, we Redirect() Alice's call to the dialplan,
+        which will break her call/bridge with Bob. We then use Bridge() to bridge
+        Alice's call with Carol's call that was still waiting in the dialplan.
+
+        After this scenario succeeded, there should be no leaked Stasis subscriptions,
+        which we check by comparing the list of taskprocessors at the start of the test
+        with the list at the end of the test. ASTERISK-28829 will cause two subscriptions/
+        task processors to leak: stasis/p:bridge:all and stasis/p:channel:all"
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: pjsua-config
+            typename: 'phones.PjsuaPhoneController'
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    connect-ami: True
+
+pjsua-config:
+    transports:
+        -
+            name: 'local-ipv4-1'
+            bind: '127.0.0.1'
+            bindport: '5061'
+        -
+            name: 'local-ipv4-2'
+            bind: '127.0.0.1'
+            bindport: '5062'
+        -
+            name: 'local-ipv4-3'
+            bind: '127.0.0.1'
+            bindport: '5063'
+
+    accounts:
+        -
+            name: 'alice'
+            username: 'alice'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-1'
+        -
+            name: 'bob'
+            username: 'bob'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-2'
+        -
+            name: 'carol'
+            username: 'carol'
+            domain: '127.0.0.1'
+            transport: 'local-ipv4-3'
+
+pluggable-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'PJsuaPhonesReady'
+            count: 1
+        # alice dials the queue
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'alice'
+            call_uri: 'sip:101@127.0.0.1'
+    -
+        # queue rings bob, bob answers, alice is bridged with bob
+        ami-events:
+            conditions:
+                match:
+                    Event: 'BridgeEnter'
+                    Channel: 'PJSIP/alice-00000000'
+                    Context: 'default'
+            count: 1
+        # then carol starts a call that ends in the dialplan Wait()
+        pjsua_phone:
+            action: 'call'
+            pjsua_account: 'carol'
+            call_uri: 'sip:102@127.0.0.1'
+    -
+        # when we detect carol's call..
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Newexten'
+                    Channel: 'PJSIP/carol-00000002'
+                    Exten: '102'
+            count: 1
+        # .. we redirect alice to a park extension (this will halt her call with bob)
+        ami-actions:
+            -
+                action:
+                    Action: 'Redirect'
+                    Channel: 'PJSIP/alice-00000000'
+                    Context: 'park'
+                    Exten: 's'
+                    Priority: '1'
+    -
+        # wait for alice to be parked..
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Newexten'
+                    Channel: 'PJSIP/alice-00000000'
+                    Context: 'park'
+            count: 1
+        # .. then bridge alice with carol
+        ami-actions:
+            action:
+                Action: 'Bridge'
+                Channel1: 'PJSIP/alice-00000000'
+                Channel2: 'PJSIP/carol-00000002'
+    # once alice has entered the bridge with carol, we're done
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'BridgeEnter'
+                    Channel: 'PJSIP/carol-00000002'
+                    Context: 'default'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'Hangup'
+                Channel: 'PJSIP/alice-00000000'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'PJSIP/carol-00000002'
+                    Context: 'default'
+            count: 1
+        stop_test:
+
+properties:
+    minversion: '13.6.0'
+    dependencies:
+        - python : twisted
+        - python : starpy
+        - python : pjsua
+        - asterisk : res_pjsip
+        - asterisk : app_queue
+    tags:
+        - pjsip
+        - queues
+        - chan_local
+    testconditions:
+        -
+            # this will check for leaking stasis subscriptions/taskprocessors at the end of the testrun
+            name: 'taskprocessors'
