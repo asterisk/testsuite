@@ -22,7 +22,7 @@
 
     <recv response="200" rtd="true">
         <action>
-		<ereg regexp="sip:((alice|bob)-office@127.0.0.1:506[1-2]>;expires=(30|2[5-9])|(charlie|carol)-office@.::1.:506[3-4]>;expires=(30|2[5-9]))" search_in="hdr" header="Contact:" check_it="true" assign_to="1" />
+		<ereg regexp="sip:((alice|bob)-office@127.0.0.1:506[1-2]&gt;;expires=(30|2[5-9])|(charlie|carol)-office@.::1.:506[3-4]&gt;;expires=(30|2[5-9]))" search_in="hdr" header="Contact:" check_it="true" assign_to="1" />
 	</action>
     </recv>
 

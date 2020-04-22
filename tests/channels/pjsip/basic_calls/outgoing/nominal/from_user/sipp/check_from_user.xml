@@ -11,7 +11,7 @@
               search_in="hdr"
               check_it="true"
               assign_to="remote_tag"/>
-          <ereg regexp=".*<sip:banana@.*"
+          <ereg regexp=".*&lt;sip:banana@.*"
               header="From:"
               seach_in="hdr"
               check_it="true"

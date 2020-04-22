@@ -10,7 +10,7 @@
 				search_in="hdr"
 				check_it="true"
 				assign_to="to_hdr,remote_tag"/>
-			<ereg regexp="\"alice\" <sip:alice@anonymous.invalid>;party=calling;privacy=full;screen=yes"
+			<ereg regexp="\"alice\" &lt;sip:alice@anonymous.invalid&gt;;party=calling;privacy=full;screen=yes"
 				header="Remote-Party-ID:"
 				search_in="hdr"
 				check_it="true"

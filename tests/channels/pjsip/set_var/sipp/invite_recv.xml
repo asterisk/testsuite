@@ -6,7 +6,7 @@
   <recv request="INVITE" crlf="true">
       <!-- Save the from tag. We'll need it when we send our BYE -->
       <action>
-          <ereg regexp="\"foo\"\\s+<sip:foo.*(;tag=.*)"
+          <ereg regexp="\"foo\"\\s+&lt;sip:foo.*(;tag=.*)"
               search_in="hdr"
               header="From:"
               check_it="true"

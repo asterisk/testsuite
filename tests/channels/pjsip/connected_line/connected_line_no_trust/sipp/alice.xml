@@ -37,7 +37,7 @@
 
   <recv response="200" rtd="true">
       <action>
-          <ereg regexp="\"Bob\" <sip:bob@127.0.0.1>"
+          <ereg regexp="\"Bob\" &lt;sip:bob@127.0.0.1&gt;"
               header="Remote-Party-ID"
               search_in="hdr"
               check_it="true"
