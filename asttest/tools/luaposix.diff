@@ -82,7 +82,7 @@ diff -ruN a/Makefile b/Makefile
  CPPFLAGS=	-fPIC $(INCS) $(WARN)
  WARN=		-pedantic -Wall
 -INCS=		-I$(LUAINC)
-+INCS=		`pkg-config --cflags lua5.1 2> /dev/null || pkg-config --cflags lua 2> /dev/null`
++INCS=		`pkg-config --cflags lua5.1 2> /dev/null || pkg-config --cflags lua-5.1 2> /dev/null || pkg-config --cflags lua 2> /dev/null`
  
  MYNAME=		posix
  MYLIB= 		$(MYNAME)

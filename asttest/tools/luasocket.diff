@@ -13,7 +13,7 @@ diff -ruN a/config b/config
 -#LUAINC=-I/usr/local/include/lua50
 -#LUAINC=-I/usr/local/include/lua5.1
 -#LUAINC=-Ilua-5.1.1/src
-+LUAINC=`pkg-config --cflags lua5.1 2> /dev/null || pkg-config --cflags lua 2> /dev/null`
++LUAINC=`pkg-config --cflags lua5.1 2> /dev/null || pkg-config --cflags lua-5.1 2> /dev/null || pkg-config --cflags lua 2> /dev/null`
  
  #------
  # Compat-5.1 directory
