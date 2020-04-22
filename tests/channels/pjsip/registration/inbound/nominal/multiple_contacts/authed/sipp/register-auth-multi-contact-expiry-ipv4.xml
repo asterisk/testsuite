@@ -54,8 +54,8 @@
             <!--
 	     ensure the received expires parameters are what was sent in the expires header with a 5 second tolerance
             -->
-	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-office@127.0.0.2:5062>;expires=(10|[5-9])" search_in="msg" check_it="true" assign_to="1"/>
-	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-home@127.0.0.3:5063>;expires=(10|[5-9])" search_in="msg" check_it="true" assign_to="2" />
+	    <ereg regexp="Contact: &lt;sip:(alice|bob|charlie|carol)-office@127.0.0.2:5062&gt;;expires=(10|[5-9])" search_in="msg" check_it="true" assign_to="1"/>
+	    <ereg regexp="Contact: &lt;sip:(alice|bob|charlie|carol)-home@127.0.0.3:5063&gt;;expires=(10|[5-9])" search_in="msg" check_it="true" assign_to="2" />
         </action>
     </recv>
 
@@ -113,8 +113,8 @@
             <!--
 	     Ensure the received expires parameters are what was sent in the expires parameters with a 5 second tolerance
             -->
-	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-office@127.0.0.2:5062>;expires=1[0-5]" search_in="msg" check_it="true" assign_to="3"/>
-	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-home@127.0.0.3:5063>;expires=(20|1[5-9])" search_in="msg" check_it="true" assign_to="4" />
+	    <ereg regexp="Contact: &lt;sip:(alice|bob|charlie|carol)-office@127.0.0.2:5062&gt;;expires=1[0-5]" search_in="msg" check_it="true" assign_to="3"/>
+	    <ereg regexp="Contact: &lt;sip:(alice|bob|charlie|carol)-home@127.0.0.3:5063&gt;;expires=(20|1[5-9])" search_in="msg" check_it="true" assign_to="4" />
         </action>
     </recv>
 
@@ -176,8 +176,8 @@
             the Expires header for the other contact. Both with a 5 second
             tolerance.
             -->
-	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-office@127.0.0.2:5062>;expires=1[0-5]" search_in="msg" check_it="true" assign_to="5"/>
-	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-home@127.0.0.3:5063>;expires=(10|[5-9])" search_in="msg" check_it="true" assign_to="6" />
+	    <ereg regexp="Contact: &lt;sip:(alice|bob|charlie|carol)-office@127.0.0.2:5062&gt;;expires=1[0-5]" search_in="msg" check_it="true" assign_to="5"/>
+	    <ereg regexp="Contact: &lt;sip:(alice|bob|charlie|carol)-home@127.0.0.3:5063&gt;;expires=(10|[5-9])" search_in="msg" check_it="true" assign_to="6" />
         </action>
     </recv>
 
@@ -238,8 +238,8 @@
 	    the default_expiration Asterisk configuration option for the other
             contact. Both with a 5 second tolerance.
             -->
-	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-office@127.0.0.2:5062>;expires=1[0-5]" search_in="msg" check_it="true" assign_to="7"/>
-	    <ereg regexp="Contact: <sip:(alice|bob|charlie|carol)-home@127.0.0.3:5063>;expires=(30|2[5-9])" search_in="msg" check_it="true" assign_to="8" />
+	    <ereg regexp="Contact: &lt;sip:(alice|bob|charlie|carol)-office@127.0.0.2:5062&gt;;expires=1[0-5]" search_in="msg" check_it="true" assign_to="7"/>
+	    <ereg regexp="Contact: &lt;sip:(alice|bob|charlie|carol)-home@127.0.0.3:5063&gt;;expires=(30|2[5-9])" search_in="msg" check_it="true" assign_to="8" />
         </action>
     </recv>
 

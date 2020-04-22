@@ -23,7 +23,7 @@
 
     <recv response="200" rtd="true">
          <action>
-            <ereg regexp=".*<sip:P3.EXAMPLEHOME.COM;lr>,<sip:P1.EXAMPLEVISITED.COM;lr>.*"
+            <ereg regexp=".*&lt;sip:P3.EXAMPLEHOME.COM;lr&gt;,&lt;sip:P1.EXAMPLEVISITED.COM;lr&gt;.*"
                 search_in="hdr" header="Path:" check_it="true" assign_to="1"/>
             <ereg regexp=".*path.*"
                 search_in="hdr" header="Supported:" check_it="true" assign_to="2"/>

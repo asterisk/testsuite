@@ -5,12 +5,12 @@
 
   <recv request="INVITE">
       <action>
-          <ereg regexp="\"Alice\" <sip:alice@127.0.0.1>"
+          <ereg regexp="\"Alice\" &lt;sip:alice@127.0.0.1&gt;"
               header="From"
               search_in="hdr"
               check_it="true"
               assign_to="from"/>
-          <ereg regexp="\"Alice\" <sip:alice@127.0.0.1>"
+          <ereg regexp="\"Alice\" &lt;sip:alice@127.0.0.1&gt;"
               header="Remote-Party-ID"
               search_in="hdr"
               check_it="true"
@@ -81,12 +81,12 @@
 
   <recv request="INVITE">
       <action>
-          <ereg regexp="\"Alice\" <sip:alice@127.0.0.1>"
+          <ereg regexp="\"Alice\" &lt;sip:alice@127.0.0.1&gt;"
               header="From"
               search_in="hdr"
               check_it="true"
               assign_to="connected_from"/>
-          <ereg regexp="\"Charle\" <sip:charle@127.0.0.1>"
+          <ereg regexp="\"Charle\" &lt;sip:charle@127.0.0.1&gt;"
               header="Remote-Party-ID"
               search_in="hdr"
               check_it="true"
