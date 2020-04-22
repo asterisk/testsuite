@@ -26,17 +26,17 @@
 
 	<nop hide="true" next="4" test="rr_type">
 		<action>
-			<assignstr assign_to="rr_out" value="<test1-subsystem1@[local_ip]:[local_port]>,<test1-subsystem2@[local_ip]:[local_port]>" />
+			<assignstr assign_to="rr_out" value="&lt;test1-subsystem1@[local_ip]:[local_port]&gt;,&lt;test1-subsystem2@[local_ip]:[local_port]&gt;" />
 			<assignstr assign_to="rr_uri" value="test1-subsystem2@[local_ip]:[local_port]" />
-			<assignstr assign_to="rr_rcv" value="<test1-subsystem1@[local_ip]:[local_port]>,<sip:[local_ip]:[local_port]>" />
+			<assignstr assign_to="rr_rcv" value="&lt;test1-subsystem1@[local_ip]:[local_port]&gt;,&lt;sip:[local_ip]:[local_port]&gt;" />
 		</action>
 	</nop>
 
 	<nop hide="true">
 		<action>
-			<assignstr assign_to="rr_out" value="<test1-subsystem1@[local_ip]:[local_port];lr>,<test1-subsystem2@[local_ip]:[local_port];lr>" />
+			<assignstr assign_to="rr_out" value="&lt;test1-subsystem1@[local_ip]:[local_port];lr&gt;,&lt;test1-subsystem2@[local_ip]:[local_port];lr&gt;" />
 			<assignstr assign_to="rr_uri" value="sip:[local_ip]:[local_port]" />
-			<assignstr assign_to="rr_rcv" value="<test1-subsystem2@[local_ip]:[local_port];lr>,<test1-subsystem1@[local_ip]:[local_port];lr>" />
+			<assignstr assign_to="rr_rcv" value="&lt;test1-subsystem2@[local_ip]:[local_port];lr&gt;,&lt;test1-subsystem1@[local_ip]:[local_port];lr&gt;" />
 		</action>
 	</nop>
 

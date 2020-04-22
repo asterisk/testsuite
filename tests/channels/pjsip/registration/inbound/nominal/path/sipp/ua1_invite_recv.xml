@@ -29,13 +29,13 @@
               search_in="hdr"
               check_it="true"
               assign_to="remote"/>
-          <ereg regexp=".*<sip:127.0.0.1:5062;lr>.*"
+          <ereg regexp=".*&lt;sip:127.0.0.1:5062;lr&gt;.*"
               header="Route:"
               search_in="hdr"
               check_it="true"
               occurence="1"
               assign_to="1"/>
-          <ereg regexp=".*<sip:P1.EXAMPLEVISITED.COM;lr>.*"
+          <ereg regexp=".*&lt;sip:P1.EXAMPLEVISITED.COM;lr&gt;.*"
               header="Route:"
               search_in="hdr"
               check_it="true"

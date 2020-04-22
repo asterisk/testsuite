@@ -40,7 +40,7 @@
       <action>
           <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
 
-          <ereg regexp="<name>pres_list</name>.+<resource uri=\"sip:alice@127.0.0.1:5060\">.+<resource uri=\"sip:bob@127.0.0.1:5060\">"
+          <ereg regexp="&lt;name&gt;pres_list&lt;/name&gt;.+&lt;resource uri=\"sip:alice@127.0.0.1:5060\"&gt;.+&lt;resource uri=\"sip:bob@127.0.0.1:5060\"&gt;"
               search_in="body" check_it="true" assign_to="1" />
 
       </action>
@@ -67,7 +67,7 @@
       <action>
           <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
 
-          <ereg regexp="<presence entity=\"sip:alice@127.0.0.1:5060\"[^>]+>[^<]*<note>Ready</note>[^<]*<tuple id=\"alice\">[^<]*<status>[^<]*<basic>open</basic>[^<]*</status>"
+          <ereg regexp="&lt;presence entity=\"sip:alice@127.0.0.1:5060\"[^&gt;]+&gt;[^&lt;]*&lt;note&gt;Ready&lt;/note&gt;[^&lt;]*&lt;tuple id=\"alice\"&gt;[^&lt;]*&lt;status&gt;[^&lt;]*&lt;basic&gt;open&lt;/basic&gt;[^&lt;]*&lt;/status&gt;"
             search_in="body" check_it="true" assign_to="1" />
       </action>
   </recv>
@@ -148,7 +148,7 @@
       <action>
           <ereg regexp="eventlist" search_in="hdr" header="Require:" check_it="true" assign_to="1" />
 
-          <ereg regexp="<presence entity=\"sip:bob@127.0.0.1:5060\"[^>]+>[^<]*<note>Ready</note>[^<]*<tuple id=\"bob\">[^<]*<status>[^<]*<basic>open</basic>[^<]*</status>"
+          <ereg regexp="&lt;presence entity=\"sip:bob@127.0.0.1:5060\"[^&gt;]+&gt;[^&lt;]*&lt;note&gt;Ready&lt;/note&gt;[^&lt;]*&lt;tuple id=\"bob\"&gt;[^&lt;]*&lt;status&gt;[^&lt;]*&lt;basic&gt;open&lt;/basic&gt;[^&lt;]*&lt;/status&gt;"
             search_in="body" check_it="true" assign_to="1" />
       </action>
   </recv>

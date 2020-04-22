@@ -27,8 +27,8 @@
             <!--
             Ensure the received expires parameters are what was sent in the Expires header with a 5 second tolerance
             -->
-            <ereg regexp="Contact: <sip:(charlie|carol)-office@.::2.:5062>;expires=(60|5[5-9])" search_in="msg" check_it="true" assign_to="1"/>
-            <ereg regexp="Contact: <sip:(charlie|carol)-home@.::3.:5063>;expires=(60|5[5-9])" search_in="msg" check_it="true" assign_to="2" />
+            <ereg regexp="Contact: &lt;sip:(charlie|carol)-office@.::2.:5062&gt;;expires=(60|5[5-9])" search_in="msg" check_it="true" assign_to="1"/>
+            <ereg regexp="Contact: &lt;sip:(charlie|carol)-home@.::3.:5063&gt;;expires=(60|5[5-9])" search_in="msg" check_it="true" assign_to="2" />
 	</action>
     </recv>
 

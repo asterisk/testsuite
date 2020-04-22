@@ -8,7 +8,7 @@
       <!-- NOTE: The regexp action must assign_to a variable and that variable must be used. -->
       <ereg regexp=".*" search_in="hdr" header="From:" check_it="true" assign_to="1" />
       <log message="Received MESSAGE From header: [$1]." />
-      <ereg regexp=" \"user\" <sip:user@" search_in="hdr" header="From:" check_it="true" assign_to="2" />
+      <ereg regexp=" \"user\" &lt;sip:user@" search_in="hdr" header="From:" check_it="true" assign_to="2" />
       <log message="Using assigned value because I must: [$2]." />
     </action>
   </recv>

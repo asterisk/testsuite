@@ -23,7 +23,7 @@
   <Global variables="remote_tag" />
   <recv request="INVITE" crlf="true">
       <action>
-          <ereg regexp=".*<sip:P3.EXAMPLEHOME.COM;lr>,<sip:P1.EXAMPLEVISITED.COM;lr>.*"
+          <ereg regexp=".*&lt;sip:P3.EXAMPLEHOME.COM;lr&gt;,&lt;sip:P1.EXAMPLEVISITED.COM;lr&gt;.*"
               header="Route:"
               search_in="hdr"
               check_it="true"

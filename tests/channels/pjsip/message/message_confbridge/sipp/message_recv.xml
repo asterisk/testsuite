@@ -48,7 +48,7 @@
     <recv request="MESSAGE" timeout="15000">
         <action>
             <ereg regexp="text/html" search_in="hdr" header="Content-Type:" check_it="true" assign_to="dummy"/>
-            <ereg regexp="<head><body>this is a test</body></html>" search_in="body" check_it="true" assign_to="dummy"/>
+            <ereg regexp="&lt;head&gt;&lt;body&gt;this is a test&lt;/body&gt;&lt;/html&gt;" search_in="body" check_it="true" assign_to="dummy"/>
         </action>
     </recv>
 

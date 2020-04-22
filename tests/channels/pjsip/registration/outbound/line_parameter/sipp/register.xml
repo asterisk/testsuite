@@ -6,7 +6,7 @@
   <!-- UA registers -->
   <recv request="REGISTER">
     <action>
-      <ereg regexp="(\<.*\>)"
+      <ereg regexp="(\&lt;.*\&gt;)"
           header="Contact:"
           search_in="hdr"
           check_it="true"
