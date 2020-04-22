@@ -9,7 +9,7 @@
     <action>
       <!-- Check that the From header is what we expect -->
       <!-- note - from some reason the incoming header has leading spaces on it -->
-      <ereg regexp="\s*(.*>)" search_in="hdr" header="From:" assign_to="empty,from0" />
+      <ereg regexp="\s*(.*&gt;)" search_in="hdr" header="From:" assign_to="empty,from0" />
       <log message="Comparing from=[$from] with from0=[$from0]"/>
       <strcmp assign_to="result" variable="from" variable2="from0" />
       <test assign_to="empty" variable="result" compare="not_equal" value="" />

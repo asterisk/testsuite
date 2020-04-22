@@ -9,9 +9,9 @@
       <ereg regexp=".*" search_in="hdr" header="From:" check_it="true" assign_to="1" />
       <log message="Received MESSAGE From header: [$1]." />
       <!--
-      <ereg regexp="From: \"Johnny Appleseed\" <sip:9876@" search_in="msg" check_it="true" assign_to="2" />
+      <ereg regexp="From: \"Johnny Appleseed\" &lt;sip:9876@" search_in="msg" check_it="true" assign_to="2" />
       -->
-      <ereg regexp=" \"Johnny Appleseed\" <sip:9876@" search_in="hdr" header="From:" check_it="true" assign_to="2" />
+      <ereg regexp=" \"Johnny Appleseed\" &lt;sip:9876@" search_in="hdr" header="From:" check_it="true" assign_to="2" />
       <log message="Using assigned value because I must: [$2]." />
     </action>
   </recv>

@@ -26,19 +26,19 @@
 
 	<nop hide="true" next="4" test="rr_type">
 		<action>
-			<assignstr assign_to="rr_out" value="<strict1@[local_ip]:[local_port]>,<strict2@[local_ip]:[local_port]>" />
+			<assignstr assign_to="rr_out" value="&lt;strict1@[local_ip]:[local_port]&gt;,&lt;strict2@[local_ip]:[local_port]&gt;" />
 			<assignstr assign_to="rr_rcv" value="[$rr_out]" />
 			<assignstr assign_to="bye_uri" value="strict1@[local_ip]:[local_port]" />
-			<assignstr assign_to="rr_bye" value="<strict2@[local_ip]:[local_port]>,<sip:51@[local_ip]:[local_port]>" />
+			<assignstr assign_to="rr_bye" value="&lt;strict2@[local_ip]:[local_port]&gt;,&lt;sip:51@[local_ip]:[local_port]&gt;" />
 		</action>
 	</nop>
 
 	<nop hide="true">
 		<action>
-			<assignstr assign_to="rr_out" value="<loose1@[local_ip]:[local_port];lr>,<loose2@[local_ip]:[local_port];lr>" />
+			<assignstr assign_to="rr_out" value="&lt;loose1@[local_ip]:[local_port];lr&gt;,&lt;loose2@[local_ip]:[local_port];lr&gt;" />
 			<assignstr assign_to="rr_rcv" value="[$rr_out]" />
 			<assignstr assign_to="bye_uri" value="sip:51@[local_ip]:[local_port]" />
-			<assignstr assign_to="rr_bye" value="<loose1@[local_ip]:[local_port];lr>,<loose2@[local_ip]:[local_port];lr>" />
+			<assignstr assign_to="rr_bye" value="&lt;loose1@[local_ip]:[local_port];lr&gt;,&lt;loose2@[local_ip]:[local_port];lr&gt;" />
 		</action>
 	</nop>
 

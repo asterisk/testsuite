@@ -86,12 +86,12 @@
 
   <recv request="INVITE">
       <action>
-          <ereg regexp="\"Charlie\" <sip:charlie@127.0.0.1>"
+          <ereg regexp="\"Charlie\" &lt;sip:charlie@127.0.0.1&gt;"
               header="P-Asserted-Identity"
               search_in="hdr"
               check_it="true"
               assign_to="asserted_identity"/>
-          <ereg regexp="\"Charlie\" <sip:charlie@127.0.0.1>"
+          <ereg regexp="\"Charlie\" &lt;sip:charlie@127.0.0.1&gt;"
               header="Remote-Party-ID"
               search_in="hdr"
               check_it="true"

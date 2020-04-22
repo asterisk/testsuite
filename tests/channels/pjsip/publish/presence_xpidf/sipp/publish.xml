@@ -4,16 +4,16 @@
 <scenario name="PUBLISH">
   <recv request="PUBLISH" crlf="true">
     <action>
-      <ereg regexp="<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>
-<presence>
- <presentity uri=\"sip:presence@127.0.0.1:5061;method=SUBSCRIBE\" />
- <atom atomid=(.*?) id=\"presence\">
-  <address uri=\"sip:presence@127.0.0.1:5061;user=ip\" priority=\"0.80000\">
-   <status status=\"open\" />
-   <msnsubstatus substatus=\"online\" />
-  </address>
- </atom>
-</presence>" check_it="true" search_in="body" assign_to="presence1" />
+      <ereg regexp="&lt;\?xml version=\"1.0\" encoding=\"UTF-8\"\?&gt;
+&lt;presence&gt;
+ &lt;presentity uri=\"sip:presence@127.0.0.1:5061;method=SUBSCRIBE\" /&gt;
+ &lt;atom atomid=(.*?) id=\"presence\"&gt;
+  &lt;address uri=\"sip:presence@127.0.0.1:5061;user=ip\" priority=\"0.80000\"&gt;
+   &lt;status status=\"open\" /&gt;
+   &lt;msnsubstatus substatus=\"online\" /&gt;
+  &lt;/address&gt;
+ &lt;/atom&gt;
+&lt;/presence&gt;" check_it="true" search_in="body" assign_to="presence1" />
     </action>
   </recv>
 
@@ -36,16 +36,16 @@
 
   <recv request="PUBLISH" crlf="true">
     <action>
-      <ereg regexp="<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>
-<presence>
- <presentity uri=\"sip:presence@127.0.0.1:5061;method=SUBSCRIBE\" />
- <atom atomid=(.*?) id=\"presence\">
-  <address uri=\"sip:presence@127.0.0.1:5061;user=ip\" priority=\"0.80000\">
-   <status status=\"inuse\" />
-   <msnsubstatus substatus=\"onthephone\" />
-  </address>
- </atom>
-</presence>" check_it="true" search_in="body" assign_to="presence2" />
+      <ereg regexp="&lt;\?xml version=\"1.0\" encoding=\"UTF-8\"\?&gt;
+&lt;presence&gt;
+ &lt;presentity uri=\"sip:presence@127.0.0.1:5061;method=SUBSCRIBE\" /&gt;
+ &lt;atom atomid=(.*?) id=\"presence\"&gt;
+  &lt;address uri=\"sip:presence@127.0.0.1:5061;user=ip\" priority=\"0.80000\"&gt;
+   &lt;status status=\"inuse\" /&gt;
+   &lt;msnsubstatus substatus=\"onthephone\" /&gt;
+  &lt;/address&gt;
+ &lt;/atom&gt;
+&lt;/presence&gt;" check_it="true" search_in="body" assign_to="presence2" />
     </action>
   </recv>
 
@@ -68,16 +68,16 @@
 
   <recv request="PUBLISH" crlf="true">
     <action>
-      <ereg regexp="<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>
-<presence>
- <presentity uri=\"sip:presence@127.0.0.1:5061;method=SUBSCRIBE\" />
- <atom atomid=(.*?) id=\"presence\">
-  <address uri=\"sip:presence@127.0.0.1:5061;user=ip\" priority=\"0.80000\">
-   <status status=\"inuse\" />
-   <msnsubstatus substatus=\"onthephone\" />
-  </address>
- </atom>
-</presence>" check_it="true" search_in="body" assign_to="presence3" />
+      <ereg regexp="&lt;\?xml version=\"1.0\" encoding=\"UTF-8\"\?&gt;
+&lt;presence&gt;
+ &lt;presentity uri=\"sip:presence@127.0.0.1:5061;method=SUBSCRIBE\" /&gt;
+ &lt;atom atomid=(.*?) id=\"presence\"&gt;
+  &lt;address uri=\"sip:presence@127.0.0.1:5061;user=ip\" priority=\"0.80000\"&gt;
+   &lt;status status=\"inuse\" /&gt;
+   &lt;msnsubstatus substatus=\"onthephone\" /&gt;
+  &lt;/address&gt;
+ &lt;/atom&gt;
+&lt;/presence&gt;" check_it="true" search_in="body" assign_to="presence3" />
     </action>
   </recv>
 
@@ -100,16 +100,16 @@
 
   <recv request="PUBLISH" crlf="true">
     <action>
-      <ereg regexp="<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>
-<presence>
- <presentity uri=\"sip:presence@127.0.0.1:5061;method=SUBSCRIBE\" />
- <atom atomid=(.*?) id=\"presence\">
-  <address uri=\"sip:presence@127.0.0.1:5061;user=ip\" priority=\"0.80000\">
-   <status status=\"inuse\" />
-   <msnsubstatus substatus=\"onthephone\" />
-  </address>
- </atom>
-</presence>" check_it="true" search_in="body" assign_to="presence4" />
+      <ereg regexp="&lt;\?xml version=\"1.0\" encoding=\"UTF-8\"\?&gt;
+&lt;presence&gt;
+ &lt;presentity uri=\"sip:presence@127.0.0.1:5061;method=SUBSCRIBE\" /&gt;
+ &lt;atom atomid=(.*?) id=\"presence\"&gt;
+  &lt;address uri=\"sip:presence@127.0.0.1:5061;user=ip\" priority=\"0.80000\"&gt;
+   &lt;status status=\"inuse\" /&gt;
+   &lt;msnsubstatus substatus=\"onthephone\" /&gt;
+  &lt;/address&gt;
+ &lt;/atom&gt;
+&lt;/presence&gt;" check_it="true" search_in="body" assign_to="presence4" />
     </action>
   </recv>
 
@@ -132,16 +132,16 @@
 
   <recv request="PUBLISH" crlf="true">
     <action>
-      <ereg regexp="<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>
-<presence>
- <presentity uri=\"sip:presence@127.0.0.1:5061;method=SUBSCRIBE\" />
- <atom atomid=(.*?) id=\"presence\">
-  <address uri=\"sip:presence@127.0.0.1:5061;user=ip\" priority=\"0.80000\">
-   <status status=\"open\" />
-   <msnsubstatus substatus=\"online\" />
-  </address>
- </atom>
-</presence>" check_it="true" search_in="body" assign_to="presence5" />
+      <ereg regexp="&lt;\?xml version=\"1.0\" encoding=\"UTF-8\"\?&gt;
+&lt;presence&gt;
+ &lt;presentity uri=\"sip:presence@127.0.0.1:5061;method=SUBSCRIBE\" /&gt;
+ &lt;atom atomid=(.*?) id=\"presence\"&gt;
+  &lt;address uri=\"sip:presence@127.0.0.1:5061;user=ip\" priority=\"0.80000\"&gt;
+   &lt;status status=\"open\" /&gt;
+   &lt;msnsubstatus substatus=\"online\" /&gt;
+  &lt;/address&gt;
+ &lt;/atom&gt;
+&lt;/presence&gt;" check_it="true" search_in="body" assign_to="presence5" />
     </action>
   </recv>
 

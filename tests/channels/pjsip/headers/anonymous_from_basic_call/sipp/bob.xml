@@ -5,17 +5,17 @@
 
   <recv request="INVITE">
       <action>
-          <ereg regexp="\"Anonymous\" <sip:anonymous@anonymous.invalid>"
+          <ereg regexp="\"Anonymous\" &lt;sip:anonymous@anonymous.invalid&gt;"
               header="From"
               search_in="hdr"
               check_it="true"
               assign_to="from"/>
-          <ereg regexp="\"Alice\" <sip:alice@127.0.0.1>"
+          <ereg regexp="\"Alice\" &lt;sip:alice@127.0.0.1&gt;"
               header="P-Asserted-Identity"
               search_in="hdr"
               check_it="true"
               assign_to="asserted_identity"/>
-          <ereg regexp="\"Alice\" <sip:alice@127.0.0.1>"
+          <ereg regexp="\"Alice\" &lt;sip:alice@127.0.0.1&gt;"
               header="Remote-Party-ID"
               search_in="hdr"
               check_it="true"

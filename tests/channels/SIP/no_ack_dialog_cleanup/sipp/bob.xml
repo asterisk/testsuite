@@ -47,7 +47,7 @@
 
   <recv request="ACK">
     <action>
-      <ereg regexp="<(.*)>" search_in="hdr" header="Contact:" assign_to="_,contact"/>
+      <ereg regexp="&lt;(.*)&gt;" search_in="hdr" header="Contact:" assign_to="_,contact"/>
       <ereg regexp=".*" search_in="hdr" header="From:" assign_to="from"/>
       <ereg regexp=".*" search_in="hdr" header="To:" assign_to="to"/>
     </action>
