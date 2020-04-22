@@ -6,7 +6,7 @@ diff -ruN a/config b/config
  WARN= -O2 -Wall -fPIC -W -Waggregate-return -Wcast-align -Wmissing-prototypes -Wnested-externs -Wshadow -Wwrite-strings -pedantic
  INCS= -I$(LUA_INC)
 -CFLAGS= $(WARN) $(INCS)
-+LUA_CFLAGS=`pkg-config --cflags lua5.1 2> /dev/null || pkg-config --cflags lua 2> /dev/null`
++LUA_CFLAGS=`pkg-config --cflags lua5.1 2> /dev/null || pkg-config --cflags lua-5.1 2> /dev/null || pkg-config --cflags lua 2> /dev/null`
 +CFLAGS= $(WARN) $(LUA_CFLAGS)
  CC= gcc
  
