@@ -10,7 +10,7 @@
 				search_in="hdr"
 				check_it="true"
 				assign_to="to_hdr,remote_tag"/>
-			<ereg regexp="\"Anonymous\" <sip:anonymous@anonymous.invalid>"
+			<ereg regexp="\"Anonymous\" &lt;sip:anonymous@anonymous.invalid&gt;"
 				header="P-Asserted-Identity:"
 				search_in="hdr"
 				check_it="true"

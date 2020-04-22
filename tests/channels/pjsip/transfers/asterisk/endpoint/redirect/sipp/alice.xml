@@ -35,7 +35,7 @@
 
   <recv response="302" rtd="true">
     <action>
-      <ereg regexp="Contact: <sip:bob@127.0.0.1:5062>"
+      <ereg regexp="Contact: &lt;sip:bob@127.0.0.1:5062&gt;"
             check_it="true" assign_to="1"/>
       <test assign_to="1" variable="1" compare="equal" value=""/>
     </action>

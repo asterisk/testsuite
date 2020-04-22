@@ -26,7 +26,7 @@
             <!--
 	    Ensure the received expires parameter is ~60 as no expiration config options are set with a 5 second tolerance
             -->
-            <ereg regexp="sip:((alice|bob)@127.0.0.1:506[1-2]>;expires=(60|5[5-9])|(charlie|carol)@.::1.:506[3-4]>;expires=(60|5[5-9]))" search_in="hdr" header="Contact:" check_it="true" assign_to="1" />
+            <ereg regexp="sip:((alice|bob)@127.0.0.1:506[1-2]&gt;;expires=(60|5[5-9])|(charlie|carol)@.::1.:506[3-4]&gt;;expires=(60|5[5-9]))" search_in="hdr" header="Contact:" check_it="true" assign_to="1" />
 	</action>
     </recv>
 

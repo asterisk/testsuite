@@ -24,11 +24,11 @@
 
   <recv request="NOTIFY" crlf="true">
     <action>
-      <ereg regexp="<dialog-info xmlns=\"urn:ietf:params:xml:ns:dialog-info\" version=\"0\" state=\"full\" entity=\"sip:presence@127.0.0.1(:5060)?\">
- <dialog id=\"presence\">
-  <state>terminated</state>
- </dialog>
-</dialog-info>" check_it="true" search_in="body" assign_to="body1" />
+      <ereg regexp="&lt;dialog-info xmlns=\"urn:ietf:params:xml:ns:dialog-info\" version=\"0\" state=\"full\" entity=\"sip:presence@127.0.0.1(:5060)?\"&gt;
+ &lt;dialog id=\"presence\"&gt;
+  &lt;state&gt;terminated&lt;/state&gt;
+ &lt;/dialog&gt;
+&lt;/dialog-info&gt;" check_it="true" search_in="body" assign_to="body1" />
     </action>
   </recv>
 
@@ -51,11 +51,11 @@
 
   <recv request="NOTIFY" crlf="true">
     <action>
-      <ereg regexp="<dialog-info xmlns=\"urn:ietf:params:xml:ns:dialog-info\" version=\"1\" state=\"full\" entity=\"sip:presence@127.0.0.1(:5060)?\">
- <dialog id=\"presence\" direction=\"recipient\">
-  <state>early</state>
- </dialog>
-</dialog-info>" check_it="true" search_in="body" assign_to="body2" />
+      <ereg regexp="&lt;dialog-info xmlns=\"urn:ietf:params:xml:ns:dialog-info\" version=\"1\" state=\"full\" entity=\"sip:presence@127.0.0.1(:5060)?\"&gt;
+ &lt;dialog id=\"presence\" direction=\"recipient\"&gt;
+  &lt;state&gt;early&lt;/state&gt;
+ &lt;/dialog&gt;
+&lt;/dialog-info&gt;" check_it="true" search_in="body" assign_to="body2" />
     </action>
   </recv>
 
@@ -78,11 +78,11 @@
 
   <recv request="NOTIFY" crlf="true">
     <action>
-      <ereg regexp="<dialog-info xmlns=\"urn:ietf:params:xml:ns:dialog-info\" version=\"2\" state=\"full\" entity=\"sip:presence@127.0.0.1(:5060)?\">
- <dialog id=\"presence\">
-  <state>confirmed</state>
- </dialog>
-</dialog-info>" check_it="true" search_in="body" assign_to="body3" />
+      <ereg regexp="&lt;dialog-info xmlns=\"urn:ietf:params:xml:ns:dialog-info\" version=\"2\" state=\"full\" entity=\"sip:presence@127.0.0.1(:5060)?\"&gt;
+ &lt;dialog id=\"presence\"&gt;
+  &lt;state&gt;confirmed&lt;/state&gt;
+ &lt;/dialog&gt;
+&lt;/dialog-info&gt;" check_it="true" search_in="body" assign_to="body3" />
     </action>
   </recv>
 
@@ -105,16 +105,16 @@
 
   <recv request="NOTIFY" crlf="true">
     <action>
-      <ereg regexp="<dialog-info xmlns=\"urn:ietf:params:xml:ns:dialog-info\" version=\"3\" state=\"full\" entity=\"sip:presence@127.0.0.1(:5060)?\">
- <dialog id=\"presence\">
-  <state>confirmed</state>
-  <local>
-   <target uri=\"sip:presence@127.0.0.1(:5060)?\">
-    <param pname=\"\+sip.rendering\" pvalue=\"no\" />
-   </target>
-  </local>
- </dialog>
-</dialog-info>" check_it="true" search_in="body" assign_to="body4" />
+      <ereg regexp="&lt;dialog-info xmlns=\"urn:ietf:params:xml:ns:dialog-info\" version=\"3\" state=\"full\" entity=\"sip:presence@127.0.0.1(:5060)?\"&gt;
+ &lt;dialog id=\"presence\"&gt;
+  &lt;state&gt;confirmed&lt;/state&gt;
+  &lt;local&gt;
+   &lt;target uri=\"sip:presence@127.0.0.1(:5060)?\"&gt;
+    &lt;param pname=\"\+sip.rendering\" pvalue=\"no\" /&gt;
+   &lt;/target&gt;
+  &lt;/local&gt;
+ &lt;/dialog&gt;
+&lt;/dialog-info&gt;" check_it="true" search_in="body" assign_to="body4" />
     </action>
   </recv>
 

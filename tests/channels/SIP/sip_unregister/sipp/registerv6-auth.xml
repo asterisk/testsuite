@@ -44,7 +44,7 @@
 
     <recv response="200" rtd="true">
         <action>
-            <ereg regexp="Contact: <sip:ipv6-auth(1|2)@\[::2\]:5062>;expires=(3600|5[5-9])" search_in="msg" check_it="true" assign_to="1" />
+            <ereg regexp="Contact: &lt;sip:ipv6-auth(1|2)@\[::2\]:5062&gt;;expires=(3600|5[5-9])" search_in="msg" check_it="true" assign_to="1" />
         </action>
     </recv>
 

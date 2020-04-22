@@ -24,7 +24,7 @@
 
   <recv request="NOTIFY" crlf="true">
     <action>
-      <ereg regexp=".*\s*digium_presence type=\"away\" subtype=\"lunch\">banana" check_it="true" search_in="body" assign_to="body" />
+      <ereg regexp=".*\s*digium_presence type=\"away\" subtype=\"lunch\"&gt;banana" check_it="true" search_in="body" assign_to="body" />
     </action>
   </recv>
 
