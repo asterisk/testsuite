@@ -93,6 +93,8 @@ event-actions:
             count: 1
         ari-requests:
             -
+                # This delay is to work around ASTERISK-28862 for the moment
+                delay: 2
                 method: 'post'
                 uri: 'channels'
                 params:
