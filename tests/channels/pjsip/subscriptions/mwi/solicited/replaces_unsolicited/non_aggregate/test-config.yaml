@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'See ASTERISK-28861'
     summary: 'Test replacing an unsolicited subscription with a solicited one.'
     description: |
         'After enabling the mwi_subscribe_replaces_unsolicited option on an
