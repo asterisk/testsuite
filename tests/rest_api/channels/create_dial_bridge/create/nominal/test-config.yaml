@@ -1,8 +1,9 @@
 testinfo:
     summary: 'Test channels/create.'
     description: |
-        * Create channel 1 using channels/create with endpoint = Local/s@default
+        * Create channel 1 using channels/create with endpoint = Local/s@default and ALICE variable
         * Do a get to make sure it's actually there
+        * Do a variable get to make sure the ALICE variable is set on the channel
         * Delete the channel
         * Wait for ChannelHangupRequest
         * Do another get and test for 404
@@ -31,6 +32,7 @@ pluggable-config:
                     endpoint: 'Local/s@default'
                     app: 'testsuite'
                     channelId: 'channel1'
+                body: {'variables': {'ALICE': 'bob'}}
                 expect: 200
 
     -   ari-events:
@@ -43,6 +45,11 @@ pluggable-config:
         ari-requests:
             -   method: 'get'
                 uri: 'channels/channel1'
+                expect: 200
+            -   method: 'get'
+                uri: 'channels/channel1/variable'
+                params:
+                    variable: 'ALICE'
                 expect: 200
             -   method: 'delete'
                 uri: 'channels/channel1'
