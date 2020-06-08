@@ -18,6 +18,4 @@ tests:
     - test: 'confbridge_waitmarked_single'
     - test: 'muted_conference_start_muted'
     - test: 'regcontext'
-    - test: 'sfu_nominal'
-    - test: 'sfu_add_remove_sources'
-    - test: 'sfu_no_video_source'
+    - dir: 'sfu'

@@ -1,0 +1,36 @@
+testinfo:
+    summary:     'Ensure that ConfBridge and PJSIP in SFU reinvite appropriately when channels add/remove sources'
+    description: |
+        'Two SIPp scenarios call into Asterisk which drops them both into a ConfBridge conference bridge. A Local
+        channel is used in between each channel and the conference bridge. The bridge is configured with SFU video
+        support and the calls include video streams. Upon entering each side is reinvited with an additional
+        video stream of the other participant. Once this is done the second participant adds an additional
+        video source. A reinvite is then sent to the first participant adding an additional video stream for
+        this new source. The second participant then removes the new video source and a reinvite is sent to the
+        first participant removing the just added video stream. The second participant leaves and another
+        reinvite is sent to the first participant removing the video stream for the other participant that
+        just left. The first participant then hangs up and the test ends.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # IPv4 & UDP
+                - { 'key-args': {'scenario': 'video_caller_first.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'video-caller-first'} }
+                - { 'key-args': {'scenario': 'video_caller_second.xml', '-i': '127.0.0.1', '-p': '5062', '-d': '5000', '-s': 'video-caller-second'} }
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'app_confbridge'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
