@@ -1,0 +1,8 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'nominal'
+    - test: 'local_nominal'
+    - test: 'add_remove_sources'
+    - test: 'local_add_remove_sources'
+    - test: 'no_video_source'
+    - test: 'local_no_video_source'
