@@ -52,7 +52,7 @@ def var_replace(text, values):
     if not isinstance(text, str):
         return text
 
-    for match in re.findall(r'{[^}]*}', text):
+    for match in re.findall(r'(?<!\\){[^}]*(?<!\\)}', text):
         value = values
         for var in match[1:-1].split('.'):
             if not var in value:

@@ -1,0 +1,48 @@
+testinfo:
+    summary: 'Send a message via the AMI'
+    description: |
+        'Using AMI send a message containing JSON to the specified channel'
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'app_sendtext'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: event-action-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        -
+            scenarios:
+               - { 'key-args': { 'scenario': 'message_recv.xml', '-p': '5061', '-s': 'alice' },
+                   'ordered-args': [ '-set', 'extn', 'echo' ] }
+
+event-action-config:
+    -
+        ami-events:
+            id: '0'
+            conditions:
+                match:
+                    Event: 'Newchannel'
+                    Channel: 'PJSIP/alice-*'
+            count: '1'
+            trigger-on-count: True
+        ami-actions:
+            action:
+                Action: 'SendText'
+                Channel: '{channel}'
+                Content-Type: 'application/x-asterisk+json'
+                Message: '\{"name": "Sleeper", "status": "Awakened"\}'
+
