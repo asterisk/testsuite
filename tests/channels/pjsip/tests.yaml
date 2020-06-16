@@ -20,6 +20,7 @@ tests:
     - dir: 'sdp_offer_answer'
     - dir: 'secure_calling'
     - dir: 'statsd'
+    - dir: 'stir_shaken'
     - dir: 'subscriptions'
     - dir: 'transfers'
     - dir: 'transport'

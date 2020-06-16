@@ -1,0 +1,70 @@
+testinfo:
+    summary:     'Tests STIR_SHAKEN_SIGNATURE_FAILED'
+    description: |
+        'Run two instances of Asterisk and set up an outgoing call
+        via PJSIP. The outgoing side will have STIR/SHAKEN
+        configured, so an identity header should be present. The
+        incoming side will test this with the STIR_SHAKEN dialplan
+        function, ensuring that "Signature failed" is the result,
+        using private and public keys that do not match.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: 'originator-config'
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: 'http-server'
+            typename: 'http_static_server.HTTPStaticServer'
+        -
+            config-section: 'hangup-monitor'
+            typename: 'pluggable_modules.HangupMonitor'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    asterisk-instances: 2
+    connect-ami: True
+
+hangup-monitor:
+    ids: [ '1', ]
+
+http-server:
+    port: 8088
+    root-directory: 'contrib/keys'
+
+originator-config:
+    trigger: 'ami_connect'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/bob'
+    context: 'default'
+    exten: 'echo'
+    priority: '1'
+    async: 'True'
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '1'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'TestResult'
+        requirements:
+            match:
+                result: 'pass'
+        count: '1'
+
+properties:
+    dependencies:
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_stir_shaken'
+    tags:
+        - pjsip
+        - stir_shaken
