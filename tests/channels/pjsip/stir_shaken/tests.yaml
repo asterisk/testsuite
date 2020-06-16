@@ -1,0 +1,5 @@
+tests:
+    - test: 'stir_shaken_failed'
+    - test: 'stir_shaken_mismatch'
+    - test: 'stir_shaken_not_present'
+    - test: 'stir_shaken_success'

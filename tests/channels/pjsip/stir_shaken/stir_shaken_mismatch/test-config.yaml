@@ -1,0 +1,59 @@
+testinfo:
+    summary:     'Tests STIR_SHAKEN_VERIFY_MISMATCH'
+    description: |
+        'Run one instance of Asterisk and set up an incoming call
+        via PJSIP and SIPp. An identity header will be present in the
+        INVITE. The STIR_SHAKEN dialplan function will check that
+        "Verification mismatch" is the result.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: 'http-server'
+            typename: 'http_static_server.HTTPStaticServer'
+        -
+            config-section: 'hangup-monitor'
+            typename: 'pluggable_modules.HangupMonitor'
+
+hangup-monitor:
+    ids: [ '0', ]
+
+http-server:
+    port: 8088
+    root-directory: 'contrib/keys'
+
+sipp-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                    - { 'key-args': { 'scenario': 'send-invite.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'anon' }}
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'TestResult'
+        requirements:
+            match:
+                result: 'pass'
+        count: '1'
+
+properties:
+    dependencies:
+        - sipp:
+            version: 'v3.3'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_stir_shaken'
+    tags:
+        - pjsip
+        - stir_shaken
