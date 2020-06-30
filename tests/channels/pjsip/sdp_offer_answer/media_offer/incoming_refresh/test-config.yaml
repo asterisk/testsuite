@@ -1,0 +1,29 @@
+testinfo:
+    summary: 'Test PJSIP_MEDIA_OFFER overrides an endpoint config on refresh'
+    description: |
+        Using a local channel, this test originates an outgoing call to an
+        endpoint configured to allow 'ulaw'. However before dialing this is
+        overridden in the dialplan to only allow 'g722'. A refresh is also
+        sent, and checked to ensure the specified codec(s) are received.
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'sipp.SIPpTestCase'
+
+test-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'invite.xml', '-s': 'alice', '-p': '5061'},
+                    'ordered-args': ['-key', 'callee', 'bob'] }
+
+properties:
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
