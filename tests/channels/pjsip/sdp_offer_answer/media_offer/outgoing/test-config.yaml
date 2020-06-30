@@ -1,0 +1,35 @@
+testinfo:
+    summary: 'Test that PJSIP_MEDIA_OFFER overrides an endpoint config'
+    description: |
+        Using a local channel, this test originates an outgoing call to an
+        endpoint configured to allow 'ulaw'. However before dialing this is
+        overridden in the dialplan to only allow 'g722'. The test then
+        ensures the expected media is received.
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: orig-config
+            typename: 'pluggable_modules.Originator'
+
+test-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'invite_recv.xml', '-s': 'bob', '-p': '5062'} }
+
+orig-config:
+    channel: 'Local/bob'
+
+properties:
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip

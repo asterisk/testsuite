@@ -1,0 +1,29 @@
+testinfo:
+    summary: 'Test that PJSIP_MEDIA_OFFER overrides joint in/out codecs'
+    description: |
+        This tests that Asterisk can receive an incoming call that has joint
+        codec capabilities with the outgoing call, but are overridden in the
+        dialplan using PJSIP_MEDIA_OFFER.
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'sipp.SIPpTestCase'
+
+test-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'invite_recv.xml', '-s': 'bob', '-p': '5062'} }
+                - { 'key-args': {'scenario': 'invite.xml', '-s': 'alice', '-p': '5061'},
+                    'ordered-args': ['-key', 'callee', 'bob'] }
+
+properties:
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
