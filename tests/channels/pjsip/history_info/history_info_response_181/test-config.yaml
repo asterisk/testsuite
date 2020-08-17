@@ -1,0 +1,29 @@
+testinfo:
+    summary: 'Test to make sure a 181 response containing history-info headers gets
+             propagated as History-Info correctly.'
+
+    description: |
+        'user1 calls user2 which sends a 181 to indicate redirection.
+         Verify the 181 response coming from user2 contains History-Info headers.'
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'app_dial'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_diversion'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'user2.xml', '-p':'5062' } }
+                - { 'key-args': { 'scenario':'user1.xml', '-p':'5061' } }
