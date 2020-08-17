@@ -6,6 +6,7 @@ tests:
     - dir: 'configuration'
     - dir: 'dialplan_functions'
     - dir: 'diversion'
+    - dir: 'history_info'
     - dir: 'headers'
     - dir: 'identify'
     - dir: 'message'
