@@ -1,0 +1,7 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'diversion_request'
+    - test: 'history_info_request'
+    - test: 'history_info_response_181'
+    - test: 'diversion_response_181'
+    - test: 'no_diversion_response_181'

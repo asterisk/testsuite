@@ -29,7 +29,7 @@
 
 	<recv response="100" optional="true" />
 
-	<recv response="181" optional="true" />
+	<recv response="181" />
 
 	<recv response="180" optional="true" />
 
