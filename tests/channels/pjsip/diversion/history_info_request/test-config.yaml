@@ -1,0 +1,27 @@
+testinfo:
+    summary: 'Test to make sure the history-info headers on an invite gets
+              propagated as diversion correctly.'
+    description: |
+        'user1 calls user2 with an invite containing a diversion header.'
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'app_dial'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_diversion'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'user2.xml', '-p':'5062' } }
+                - { 'key-args': { 'scenario':'user1.xml', '-p':'5061' } }

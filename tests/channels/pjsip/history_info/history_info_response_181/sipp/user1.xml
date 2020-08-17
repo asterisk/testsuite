@@ -3,16 +3,16 @@
 <scenario name="send an invite to user2">
 	<send retrans="500">
 		<![CDATA[
-                        INVITE sip:user2@[remote_ip]:[remote_port] SIP/2.0
-                        Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-                        From: user1 <sip:user1@[local_ip]:[local_port]>;tag=[call_number]
-                        To: user2 <sip:user2@[remote_ip]:[remote_port]>
-                        Call-ID: [call_id]
-                        CSeq: [cseq] INVITE
-                        Contact: sip:user1@[local_ip]:[local_port]
-                        Max-Forwards: 70
-                        Content-Type: application/sdp
-                        Content-Length: [len]
+			INVITE sip:user2@[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: user1 <sip:user1@[local_ip]:[local_port]>;tag=[call_number]
+			To: user2 <sip:user2@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: [cseq] INVITE
+			Contact: sip:user1@[local_ip]:[local_port]
+			Max-Forwards: 70
+			Content-Type: application/sdp
+			Content-Length: [len]
 
 			v=0
 			o=- 1324901698 1324901698 IN IP[local_ip_type] [local_ip]
@@ -30,10 +30,12 @@
 	<recv response="100" optional="true" />
 
 	<recv response="181">
-                <action>
-                        <!-- Check that the Diversion header is present and contains the correct caller id. -->
-	        	<ereg regexp=".*sip:user3.*" search_in="hdr" header="Diversion:" check_it="true" assign_to="1" />
-		        <log message="Received INVITE with Diversion header: [$1]." />
+		<action>
+			<!-- Check that the Diversion header is present and contains the correct name. -->
+			<ereg regexp="user2" search_in="hdr" header="History-Info:" occurence="1" check_it="true" assign_to="1" />
+			<log message="Received 181 with History-Info header: [$1]." />
+			<ereg regexp="amenhotep" search_in="hdr" header="History-Info:" occurence="2" check_it="true" assign_to="2" />
+			<log message="Received 181 with History-Info header: [$2]." />
 		</action>
 	</recv>
 
