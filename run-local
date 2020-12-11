@@ -36,7 +36,7 @@ setup() {
 			menuselect/menuselect --enable DONT_OPTIMIZE --enable TEST_FRAMEWORK $MENUSELECT_OPTIONS
 		fi
 		make
-		make install samples DESTDIR="$HERE/astroot"
+		make install samples DESTDIR="$HERE/astroot" ASTCACHEDIR="/var/cache/asterisk"
 	)
 	if [ -x tests/custom/custom-setup ]; then
 		./tests/custom/custom-setup
