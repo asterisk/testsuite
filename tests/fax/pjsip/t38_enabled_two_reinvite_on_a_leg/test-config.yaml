@@ -1,0 +1,13 @@
+testinfo:
+    summary: 'Test that asterisk does not drop the call after it rejects the T38 reinvite from the carrier side because customer does not suport it and and continues to forward the audio packets after fallback to G711'
+    description: |
+        'Test that asterisk does not drop the call after it rejects the T38 reinvite from the carrier side because customer does not suport it and and continues to forward the audio packets after fallback to G711'
+
+properties:
+    minversion: '1.4'
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+
+    tags:
+        - SIP
