@@ -12,3 +12,5 @@ tests:
     - test: 't38_fast_reject'
     - test: 't38_with_auth'
     - test: 't38_initial_offer'
+    - test: 't38_enabled_two_reinvite_on_a_leg'
+    - test: 't38_enabled_two_reinvite_on_b_leg'
