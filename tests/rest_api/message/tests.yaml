@@ -1,3 +1,4 @@
 tests:
     - dir: 'endpoint'
     - dir: 'technology'
+    - test: 'mixed_endpoint_technology_subscriptions'
