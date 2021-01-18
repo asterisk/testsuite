@@ -911,7 +911,8 @@ class Asterisk(object):
         for (var, val) in dir_cat.options:
             # We cannot simply skip ``val`` here if we already processed it.
             # Some dirs are exempt from copying, based on ``var``.
-            self.__mirror_dir(var, val, cache)
+            if var != "astcachedir":
+                self.__mirror_dir(var, val, cache)
 
         self._directory_structure_made = True
 
