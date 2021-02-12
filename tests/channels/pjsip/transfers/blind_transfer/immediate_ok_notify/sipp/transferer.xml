@@ -100,7 +100,7 @@
           check_it="true"
           assign_to="dummy,sip_frag"/>
     </action>
-  </rcv>
+  </recv>
 
   <Reference variables="sip_frag" />
   <Reference variables="dummy" />

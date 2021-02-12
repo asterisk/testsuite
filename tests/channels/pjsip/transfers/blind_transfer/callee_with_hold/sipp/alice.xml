@@ -54,7 +54,7 @@
     <action>
       <exec rtp_stream="lib/python/asterisk/audio.ulaw,3,0"/>
     </action>
-  <nop>
+  </nop>
 
   <recv request="BYE" />
 
