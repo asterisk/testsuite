@@ -2,46 +2,94 @@ testinfo:
     summary:     'Test MixMonitor recording functionality applications'
     description: |
         'This test verifies basic functionality of the recording feature in
-         MixMonitor by creating a local channel that upon being answered triggers
-         the MixMonitor and records the playback of tt-monkeys. The test passes
-         when the SoundChecker pluggable module verifies that the file is the
-         correct size and contains energy, meaning a file was created and stored
-         the recording correctly.'
+         MixMonitor by creating a local channel that plays digits 1,2,3 and
+         triggers AMI actions to start, mute and stop MixMonitor.
+         The test passes when the according AMI events have been received, and
+         the SoundChecker pluggable module verifies that the file is the correct
+         size and contains energy, meaning a file was created and stored the
+         recording correctly.'
 test-modules:
         add-test-to-search-path: True
         test-object:
             config-section: test-object-config
             typename: 'test_case.TestCaseModule'
         modules:
-          - config-section: ami-config-12
-            typename: 'ami.AMIEventModule'
           - config-section: start-call
             typename: 'pluggable_modules.Originator'
-
+          - config-section: ami-actions
+            typename: 'pluggable_modules.EventActionModule'
           - config-section: sound-file-analyzer
             typename: 'pluggable_modules.SoundChecker'
+          - config-section: expected-ami-events
+            typename: 'ami.AMIEventModule'
 
 test-object-config:
     asterisk-instances: 1
     connect-ami: true
 
 start-call:
-    channel: 'Local/s@default'
+    channel: 'Local/talk@default'
     context: 'default'
     exten: 'echo'
     priority: 1
     trigger: 'ami_connect'
     async: True
 
-ami-config-12:
+ami-actions:
     -
-        type: 'callback'
-        conditions:
-            match:
-                Event: 'DialEnd'
-                DestChannel: 'Local/s@default-.*'
-        callbackModule: 'start_mix'
-        callbackMethod: 'record'
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'test-manager-monitor'
+                    Action: 'start'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'MixMonitor'
+                Channel: '{channel}'
+                File: 'theRecording.wav'
+                Options: 'r'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'test-manager-monitor'
+                    Action: 'mute'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'MixMonitorMute'
+                Channel: '{channel}'
+                Direction: 'both'
+                State: '1'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'test-manager-monitor'
+                    Action: 'unmute'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'MixMonitorMute'
+                Channel: '{channel}'
+                Direction: 'both'
+                State: '0'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'test-manager-monitor'
+                    Action: 'stop'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'StopMixMonitor'
+                Channel: '{channel}'
 
 sound-file-analyzer:
     auto-stop: True
@@ -59,14 +107,47 @@ sound-file-analyzer:
                     actions:
                         -
                             type: 'size_check'
-                            size: 258000
-                            tolerance: 5000
+                            size: 40400
+                            tolerance: 2000
                         -
                             type: 'energy_check'
                             channel: 'Local/audio@soundtest'
                             context: 'default'
                             exten: 's'
                             priority: '1'
+expected-ami-events:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'MixMonitorStart'
+                Channel: 'Local/talk@default-.*'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'MixMonitorMute'
+                Channel: 'Local/talk@default-.*'
+                Direction: 'both'
+                State: '1'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'MixMonitorMute'
+                Channel: 'Local/talk@default-.*'
+                Direction: 'both'
+                State: '0'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'MixMonitorStop'
+                Channel: 'Local/talk@default-.*'
+        count: '1'
 
 properties:
     dependencies:
