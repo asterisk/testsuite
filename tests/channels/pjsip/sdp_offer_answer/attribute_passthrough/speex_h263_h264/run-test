@@ -26,10 +26,8 @@ class SDPPassthrough(TestCase):
         TestCase.__init__(self)
         self.create_asterisk(test_config={'memcheck-delay-stop': 7})
         self.sipp_phone_a_scenarios = [{'scenario':'phone_A_speex.xml','-i':'127.0.0.2','-p':'5065'},
-					{'scenario':'phone_A_h263.xml','-i':'127.0.0.2','-p':'5061'},
 					{'scenario':'phone_A_h264.xml','-i':'127.0.0.2','-p':'5062'},]
         self.sipp_phone_b_scenarios = [{'scenario':'phone_B_speex.xml','-i':'127.0.0.3','-p':'5066'},
-					{'scenario':'phone_B_h263.xml','-i':'127.0.0.3','-p':'5063'},
 					{'scenario':'phone_B_h264.xml','-i':'127.0.0.3','-p':'5064'},]
 
         self.passed = True

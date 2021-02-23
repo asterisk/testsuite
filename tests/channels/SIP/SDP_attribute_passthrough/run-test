@@ -27,10 +27,8 @@ class SDPPassthrough(TestCase):
         self.create_asterisk()
         self.sipp_phone_a_scenarios = [{'scenario':'phone_A_speex.xml','-i':'127.0.0.2','-p':'5065'},]
         self.sipp_phone_b_scenarios = [{'scenario':'phone_B_speex.xml','-i':'127.0.0.3','-p':'5066'},]
-        self.sipp_phone_a_scenarios.extend([{'scenario':'phone_A_h263_13.xml','-i':'127.0.0.2','-p':'5061'},
-                                            {'scenario':'phone_A_h264_13.xml','-i':'127.0.0.2','-p':'5062'},])
-        self.sipp_phone_b_scenarios.extend([{'scenario':'phone_B_h263_13.xml','-i':'127.0.0.3','-p':'5063'},
-                                            {'scenario':'phone_B_h264_13.xml','-i':'127.0.0.3','-p':'5064'},])
+        self.sipp_phone_a_scenarios.extend([{'scenario':'phone_A_h264_13.xml','-i':'127.0.0.2','-p':'5062'},])
+        self.sipp_phone_b_scenarios.extend([{'scenario':'phone_B_h264_13.xml','-i':'127.0.0.3','-p':'5064'},])
 
         self.passed = True
         self.__test_counter = 0
