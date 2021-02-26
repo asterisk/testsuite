@@ -1,0 +1,108 @@
+testinfo:
+    summary:     'Test SIP Blind Transfer (caller transfers with hold and a 481)'
+    description: |
+        'This test verifies a SIP Blind transfer with putting the callee on
+        hold before the transfer occurs. This uses a SIPp instance each for
+        "Alice", "Bob", and "Charlie". Alice calls Bob through Asterisk. Alice
+        puts Bob on hold and Alice then blind transfers Bob to Charlie.
+        Charlie's dialplan sends a Progress to Alice but Alice sends a BYE
+        then a 481 reponse to the NOTIFY 183 sipfrag because the subscription
+        no longer exists.'
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_dial'
+        - asterisk : 'res_pjsip'
+        - sipp :
+            version : 'v3.4.1'
+    tags:
+        - pjsip
+        - transfer
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-case-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-case-config:
+    memcheck-delay-stop: 7
+    connect-ami: 'True'
+    fail-on-any: False
+    test-iterations:
+        # First iteration
+        -
+            scenarios:
+                # Charlie receives transfered call and sends audio to Bob.
+                - { 'key-args': {'scenario': 'charlie.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-mi': '127.0.0.4'},
+                    'ordered-args': ['-nd', '-timeout_error', '-key', 'custom_media_port', '6004'] }
+                # Bob receives call from Alice and sends audio.
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-mi': '127.0.0.3'},
+                    'ordered-args': ['-nd', '-timeout_error', '-key', 'custom_media_port', '6004'] }
+                # Alice calls Bob and sends audio. Alice then attempts to blind transfer Bob to Charlie.
+                - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob', '-timeout': '20s', '-mi': '127.0.0.2'},
+                    'ordered-args': ['-nd', '-timeout_error', '-key', 'custom_media_port', '6004'] }
+
+ami-config:
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'MusicOnHoldStart'
+                    Channel: 'PJSIP/bob-.{8}'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'MusicOnHoldStop'
+                    Channel: 'PJSIP/bob-.{8}'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Variable: 'SIPTRANSFER'
+                    Value: 'yes'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Channel: 'PJSIP/bob-.{8}'
+                    Variable: 'SIPREFERRINGCONTEXT'
+                    Value: 'transfertest'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Channel: 'PJSIP/bob-.{8}'
+                    Variable: '_{0,2}SIPREFERREDBYHDR'
+                    Value: 'sip:alice@127.0.0.2:5060'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'VarSet'
+                    Variable: 'SIPREFERTOHDR'
+                    Value: 'sip:charlie@127.0.0.1'
+            count: 1
+        -
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'BlindTransfer'
+                    TransfererChannel: 'PJSIP/alice-.{8}'
+            count: 1
+
