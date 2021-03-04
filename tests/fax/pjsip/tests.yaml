@@ -14,3 +14,4 @@ tests:
     - test: 't38_initial_offer'
     - test: 't38_enabled_two_reinvite_on_a_leg'
     - test: 't38_enabled_two_reinvite_on_b_leg'
+    - test: 't38_zero_port'
