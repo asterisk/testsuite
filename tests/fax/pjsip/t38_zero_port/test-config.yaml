@@ -1,0 +1,30 @@
+testinfo:
+    summary: 'Test for receiving fax with zero port in image line'
+    description: |
+        'Test to make sure that Asterisk does not crash when receiving
+        a T.38 INVITE with an image line and a zero port.'
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'endpoint_A.xml', '-i': '127.0.0.2', '-p': '5060'} }
+                - { 'key-args': {'scenario': 'endpoint_B.xml', '-i': '127.0.0.3', '-p': '5060'} }
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.5'
+        - asterisk : 'app_dial'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip_t38'
+    tags:
+        - pjsip
+        - fax
