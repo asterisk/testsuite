@@ -238,7 +238,7 @@ ari-config:
                                   "name": "res_http_websocket.so",
                                   "description": "HTTP WebSocket Support",
                                   "status": "Running",
-                                  "support_level": "extended"
+                                  "support_level": "core"
                                 }
                             -
                                 {
