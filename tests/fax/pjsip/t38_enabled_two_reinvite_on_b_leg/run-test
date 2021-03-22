@@ -60,7 +60,6 @@ SIPP_SCENARIOS = [
 
 def main():
     test = SIPpTest(WORKING_DIR, TEST_DIR, SIPP_SCENARIOS)
-    logger.info ("Running against asterisk version %s" %test.ast_version)
 		   
     test.reactor_timeout = 100;
 
