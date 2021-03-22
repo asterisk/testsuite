@@ -24,7 +24,7 @@
 		<action>
 			<ereg regexp="(;tag=.*)" header="To:" search_in="hdr" check_it="true" assign_to="to_tag"/>
 		</action>
-	</rcv>
+	</recv>
 
 	<!-- NOTIFY for the initial subscription -->
 	<recv request="NOTIFY" crlf="true">
@@ -106,6 +106,9 @@
 			Content-Length: 0
 		]]>
 	</send>
+
+	<!-- Wait for Asterisk to process the NOTIFY response -->
+	<pause milliseconds="2000" />
 
 	<!-- Unsubscribe  -->
 	<send retrans="500">
