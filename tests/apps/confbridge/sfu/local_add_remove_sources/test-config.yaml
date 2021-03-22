@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'See ASTERISK-29363'
     summary:     'Ensure that ConfBridge and PJSIP in SFU reinvite appropriately when channels add/remove sources'
     description: |
         'Two SIPp scenarios call into Asterisk which drops them both into a ConfBridge conference bridge. A Local
