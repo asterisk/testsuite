@@ -5,3 +5,4 @@ tests:
     - test: 'local_holding_bridge'
     - test: 'local_optimize_away'
     - test: 'local_loop'
+    - test: 'local_removed_audio_stream_request'

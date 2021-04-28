@@ -1,0 +1,37 @@
+testinfo:
+    summary:     'Test calling from PJSIP through a Local channel to PJSIP with a removed audio stream'
+    description: |
+        'A SIPp scenario calls into Asterisk and Asterisk then dials another through a Local
+        channel. The initial call leg contains both an accepted audio stream and a
+        removed/declined stream. The test confirms that the Local channel allows
+        dialing with the removed/declined stream and that the called party
+        receives the call.'
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_dial'
+        - asterisk : 'res_pjsip'
+        - sipp :
+            version : 'v3.4.1'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-case-config
+        typename: 'sipp.SIPpTestCase'
+
+test-case-config:
+    memcheck-delay-stop: 7
+    connect-ami: 'True'
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # Bob receives call from Alice
+                - { 'key-args': {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3', '-s': 'alice', '-timeout': '20s', '-mi': '127.0.0.3'} }
+                # Alice calls Bob
+                - { 'key-args': {'scenario': 'alice.xml', '-p': '5060', '-i': '127.0.0.2', '-s': 'bob', '-timeout': '20s', '-mi': '127.0.0.2'} }
