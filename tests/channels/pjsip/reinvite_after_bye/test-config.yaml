@@ -1,0 +1,30 @@
+testinfo:
+    summary: 'Ensure graceful operation when receiving a re-INVITE after sending a BYE.'
+    description: |
+        'A SIPp scenario places a call into Asterisk. Once the call has been answered, we
+        immediately hang it up causing a BYE to be sent to the caller. Upon the caller
+        receiving the BYE it sends a re-INVITE without SDP instead of responding to the BYE.
+        The re-INVITE is handled like normal and once the caller receives a retransmission
+        of the BYE it then handles the BYE like normal.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'reinvite-after-bye.xml'}}
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - app: 'sipp'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+    tags:
+        - pjsip
