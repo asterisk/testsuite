@@ -63,3 +63,4 @@ tests:
     - test: 'moh_passthru_inactive'
     - test: 'non_negotiated_frame_SSRC_change'
     - test: 'content_disposition'
+    - test: 'reinvite_after_bye'
