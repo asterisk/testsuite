@@ -82,7 +82,6 @@ pipeline {
 					stage ("Checkout") {
 						sh "sudo chown -R jenkins:users ."
 						env.GERRIT_PROJECT_URL = env.GIT_URL.replaceAll(/[^\/]+$/, env.GERRIT_PROJECT)
-						sh "printenv -0 | sort -z | tr '\\0' '\\n'"
 
 						/*
 						 * Jenkins has already automatically checked out the base branch
@@ -93,32 +92,45 @@ pipeline {
 						 *
 						 * The Gerrit Trigger provides all the URLs and refspecs to
 						 * check out the change.
+						 *
+						 * We need to retrieve the jenkins2 gerrit https credentials
+						 * in case this review is in a restricted project.
 						 */
-						checkout scm: [$class: 'GitSCM',
-							branches: [[name: env.GERRIT_BRANCH ]],
-							extensions: [
-								[$class: 'ScmName', name: env.GERRIT_NAME],
-								[$class: 'CleanBeforeCheckout'],
-								[$class: 'PreBuildMerge', options: [
-									mergeRemote: env.GERRIT_NAME,
-									fastForwardMode: 'NO_FF',
-									mergeStrategy: 'RECURSIVE',
-									mergeTarget: env.GERRIT_BRANCH]],
-								[$class: 'CloneOption',
-									honorRefspec: true,
-									noTags: true,
-									shallow: false
-								],
-								[$class: 'PruneStaleBranch'],
-								[$class: 'BuildChooserSetting',
-									buildChooser: [$class: 'GerritTriggerBuildChooser']
-								]
-							],
-							userRemoteConfigs: [
-								[name: env.GERRIT_NAME, refspec: env.GERRIT_REFSPEC, url: env.GERRIT_PROJECT_URL ]
-							]
-						]
+						withCredentials([usernamePassword(credentialsId: "${JENKINS_GERRIT_CREDS}",
+							passwordVariable: 'GERRIT_USER_PW', usernameVariable: 'GERRIT_USER_NAME')]) {
 
+							sh "printenv -0 | sort -z | tr '\\0' '\\n'"
+
+							checkout scm: [$class: 'GitSCM',
+								branches: [[name: env.GERRIT_BRANCH ]],
+								extensions: [
+									[$class: 'ScmName', name: env.GERRIT_NAME],
+									[$class: 'CleanBeforeCheckout'],
+									[$class: 'PreBuildMerge', options: [
+										mergeRemote: env.GERRIT_NAME,
+										fastForwardMode: 'NO_FF',
+										mergeStrategy: 'RECURSIVE',
+										mergeTarget: env.GERRIT_BRANCH]],
+									[$class: 'CloneOption',
+										honorRefspec: true,
+										noTags: true,
+										shallow: false
+									],
+									[$class: 'PruneStaleBranch'],
+									[$class: 'BuildChooserSetting',
+										buildChooser: [$class: 'GerritTriggerBuildChooser']
+									]
+								],
+								userRemoteConfigs: [
+									[
+									credentialsId: env.JENKINS_GERRIT_CREDS,
+									name: env.GERRIT_NAME,
+									refspec: env.GERRIT_REFSPEC,
+									url: env.GERRIT_PROJECT_URL.replaceAll("http(s)?://", "http\$1://${GERRIT_USER_NAME}@")
+									]
+								]
+							]
+						}
 						sh "sudo CI/setupJenkinsEnvironment.sh --output-dir=CI/output"
 					}
 
@@ -139,18 +151,27 @@ pipeline {
 					img.pull()
 					img.inside(dockerOptions) {
 						def asteriskUrl = env.GERRIT_PROJECT_URL.replaceAll(/\/(Security-)?[^\/]+$/, "/\$1asterisk")
-						checkout scm: [$class: 'GitSCM',
-							branches: [[name: "${BRANCH_NAME}"]],
-							extensions: [
-								[$class: 'RelativeTargetDirectory', relativeTargetDir: astDir],
-								[$class: 'CloneOption',
-									noTags: true,
-									honorRefspec: true,
-									shallow: false
+						withCredentials([usernamePassword(credentialsId: "${JENKINS_GERRIT_CREDS}",
+							passwordVariable: 'GERRIT_USER_PW', usernameVariable: 'GERRIT_USER_NAME')]) {
+							checkout scm: [$class: 'GitSCM',
+								branches: [[name: "${BRANCH_NAME}"]],
+								extensions: [
+									[$class: 'RelativeTargetDirectory', relativeTargetDir: astDir],
+									[$class: 'CloneOption',
+										noTags: true,
+										honorRefspec: true,
+										shallow: false
+									],
 								],
-							],
-							userRemoteConfigs: [[name: env.GERRIT_NAME, url: asteriskUrl]]
-						]
+								userRemoteConfigs: [
+									[
+									credentialsId: env.JENKINS_GERRIT_CREDS,
+									name: env.GERRIT_NAME,
+									url: asteriskUrl.replaceAll("http(s)?://", "http\$1://${GERRIT_USER_NAME}@")
+									]
+								]
+							]
+						}
 
 						stage ('Build') {
 							echo 'Building..'
