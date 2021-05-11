@@ -1,6 +1,7 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - dir: 'ami'
+    - dir: 'auth'
     - dir: 'basic_calls'
     - dir: 'config_wizard'
     - dir: 'configuration'
@@ -34,7 +35,6 @@ tests:
     - test: 'accountcode'
     - test: 'acl_call'
     - test: 'allow_overlap'
-    - test: 'auth_security_events'
     - test: 'call_pickup'
     - test: 'dtmf_incompatible'
     - test: 'forward_loop'
