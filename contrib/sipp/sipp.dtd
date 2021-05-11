@@ -78,6 +78,8 @@
 <!ATTLIST ereg regexp CDATA #REQUIRED >
 <!ATTLIST ereg search_in (msg|hdr) "msg" >
 <!ATTLIST ereg start_line (true|false) #IMPLIED >
+<!ATTLIST ereg occurence CDATA #IMPLIED >
+
 
 <!ELEMENT log EMPTY >
 <!ATTLIST log message CDATA #REQUIRED >

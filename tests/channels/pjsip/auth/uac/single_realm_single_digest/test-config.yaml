@@ -1,0 +1,62 @@
+tinfo:
+    summary: 'Test Single Realm Single Digest authentication using OPTIONS'
+    description: |
+        Each sipp scenario does exactly the same thing just listening on
+        different addresses. The endpoint we qualify determines the exact auth
+        scenario we're testing.
+        On fully-booted, we just send 1 Qualify command to each of the endpoints
+        and if any of the sipp instances fails to authenticate, the test fails.
+        See pjsip.conf for the exact auth scenarios.
+        The test is fast since the sipp instances are all run in parallel as are
+        the Qualify commands.  The test should also be immune to timing variances
+        since the test case doesn't issue the AMI commands until the sipp scenarios
+        are started.
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'single_realm_single_digest_options.xml', '-i': '127.0.0.2', '-p': '5060' },
+                    'ordered-args': ['-nd', '-bind_local'] }
+                - { 'key-args': {'scenario': 'single_realm_single_digest_options.xml', '-i': '127.0.0.3', '-p': '5060' },
+                    'ordered-args': ['-nd', '-bind_local'] }
+                - { 'key-args': {'scenario': 'single_realm_single_digest_options.xml', '-i': '127.0.0.4', '-p': '5060' },
+                    'ordered-args': ['-nd', '-bind_local'] }
+                - { 'key-args': {'scenario': 'single_realm_single_digest_options.xml', '-i': '127.0.0.5', '-p': '5060' },
+                    'ordered-args': ['-nd', '-bind_local'] }
+                - { 'key-args': {'scenario': 'single_realm_single_digest_options.xml', '-i': '127.0.0.6', '-p': '5060' },
+                    'ordered-args': ['-nd', '-bind_local'] }
+                - { 'key-args': {'scenario': 'single_realm_single_digest_options.xml', '-i': '127.0.0.7', '-p': '5060' },
+                    'ordered-args': ['-nd', '-bind_local'] }
+
+ami-config:
+    -
+        ami-start:
+        ami-actions:
+            - { action: { Action: 'PJSIPQualify', ActionID: '12342', Endpoint: 'sipp2' } }
+            - { action: { Action: 'PJSIPQualify', ActionID: '12343', Endpoint: 'sipp3' } }
+            - { action: { Action: 'PJSIPQualify', ActionID: '12344', Endpoint: 'sipp4' } }
+            - { action: { Action: 'PJSIPQualify', ActionID: '12345', Endpoint: 'sipp5' } }
+            - { action: { Action: 'PJSIPQualify', ActionID: '12346', Endpoint: 'sipp6' } }
+            - { action: { Action: 'PJSIPQualify', ActionID: '12347', Endpoint: 'sipp7' } }
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_outbound_registration'
+        - asterisk : 'res_pjsip_outbound_authenticator_digest'
+    tags:
+        - pjsip

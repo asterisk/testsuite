@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!-- If you have a smart XML editor, using the sipp dtd can be a big help -->
+<!DOCTYPE scenario SYSTEM "../../../../../../../contrib/sipp/sipp.dtd">
+<scenario name="single_realm_single_digest_options">
+
+	<recv request="OPTIONS">
+	</recv>
+
+	<!--
+		The nonce and opaque have no meaning other than they're properly formatted.
+		We're going to send a multiple challenges with the "star" realm and "md5",
+		"sha256" and "sha256-512" digest algorithms.  At the time this test was
+		written, only "md5" responses should be received from asterisk.
+	-->
+	<send>
+    <![CDATA[
+
+      SIP/2.0 401 Authorization Required
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+      WWW-Authenticate: Digest realm="ast",nonce="1618496418/76de4d6a2e8750da189999715d6d55b1",opaque="4982d4386a93d85d",algorithm=sha256,qop="auth"
+      WWW-Authenticate: Digest realm="star",nonce="1618496418/76de4d6a2e8750da189999715d6d55b1",opaque="4982d4386a93d85d",algorithm=sha256-512,qop="auth"
+      WWW-Authenticate: Digest realm="ast",nonce="1618496418/76de4d6a2e8750da189999715d6d55b1",opaque="4982d4386a93d85d",algorithm=md5,qop="auth"
+      WWW-Authenticate: Digest realm="star",nonce="1618496418/76de4d6a2e8750da189999715d6d55b1",opaque="4982d4386a93d85d",algorithm=sha256,qop="auth"
+      WWW-Authenticate: Digest realm="ast",nonce="1618496418/76de4d6a2e8750da189999715d6d55b1",opaque="4982d4386a93d85d",algorithm=sha256-512,qop="auth"
+      WWW-Authenticate: Digest realm="star",nonce="1618496418/76de4d6a2e8750da189999715d6d55b1",opaque="4982d4386a93d85d",algorithm=md5,qop="auth"
+
+    ]]>
+	</send>
+
+	<!--
+		sipp has issues with multiple headers with the same name.  If you don't specify
+		occurrence, it checks the first header it finds so both eregs below would be
+		matched against the first Authorization header.  To get around this, we
+		have to specify which header occurrence we want to test. Since Asterisk will
+		add Authorization headers in the same order as the WWW-Authenticate headers
+		it received, occurrence 1 has to match the first md5 header (ast) and occurrence
+		2 has to match the second (star).
+	-->
+	<recv request="OPTIONS">
+		<action>
+			<!-- Look for an "ast" realm -->
+			<ereg regexp="Digest .*username=.(astuser)..*realm=.(ast)."
+				search_in="hdr" header="Authorization:" occurence="1"
+				assign_to="junk,username_ast,realm_ast"/>
+
+			<log message="ast: [$username_ast]"/>
+
+			<!-- Look for a "star" realm -->
+			<ereg regexp="Digest .*username=.(staruser)..*realm=.(star)."
+				search_in="hdr" header="Authorization:"  occurence="2"
+				assign_to="junk,username_star,realm_star"/>
+
+			<log message="star: [$username_star]"/>
+
+		</action>
+	</recv>
+
+	<!--
+		One of the realms has to pass.
+	-->
+	<nop test="username_star" next="goodauth"/>
+	<nop test="username_ast" next="goodauth"/>
+
+	<!--
+		We're not testing Asterisk's ability to handle repeated auth failures
+		so we just send back a 503 and terminate the test with prejudice
+	-->
+	<send>
+    <![CDATA[
+
+      SIP/2.0 503 Service Unavailable
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+	</send>
+
+	<nop>
+		<action>
+			<!--
+				Terminate the test with prejudice.
+				sipp will return a non-zero return code which
+				will cause the test to fail.
+			-->
+			<exec int_cmd="stop_now"/>
+		</action>
+	</nop>
+
+	<!-- Auth passed so just send back an OK and we're done -->
+	<label id="goodauth"/>
+
+	<send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: [len]
+
+    ]]>
+	</send>
+
+	<Reference variables="junk,username_ast,username_star,realm_ast,realm_star"/>
+</scenario>

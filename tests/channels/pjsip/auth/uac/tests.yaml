@@ -1,0 +1,5 @@
+tests:
+    - test: 'single_realm_single_digest'
+    - test: 'single_realm_multiple_digest'
+    - test: 'multiple_realm_multiple_digest'
+    
