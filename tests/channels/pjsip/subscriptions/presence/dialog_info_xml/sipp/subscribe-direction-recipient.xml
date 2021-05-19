@@ -53,6 +53,10 @@
     <action>
       <ereg regexp="&lt;dialog-info xmlns=\"urn:ietf:params:xml:ns:dialog-info\" version=\"1\" state=\"full\" entity=\"sip:presence@127.0.0.1(:5060)?\"&gt;
  &lt;dialog id=\"presence\" direction=\"recipient\"&gt;
+  &lt;local&gt;
+   &lt;identity&gt;sip:presence@127.0.0.1:5060&lt;/identity&gt;
+   &lt;target uri=\"sip:presence@127.0.0.1:5060\" /&gt;
+  &lt;/local&gt;
   &lt;state&gt;early&lt;/state&gt;
  &lt;/dialog&gt;
 &lt;/dialog-info&gt;" check_it="true" search_in="body" assign_to="body2" />
