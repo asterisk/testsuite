@@ -1,0 +1,96 @@
+testinfo:
+    summary: 'Ensure that ConfKick application works as expected'
+    description: |
+        'This test ensures that ConfKick functions as expected by
+        testing that specific, non-admin, and all participants can
+        be successfully kicked from the bridge.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: user1-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: user2-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: user3-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: admin-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: kicker-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: hangup-monitor
+            typename: 'pluggable_modules.HangupMonitor'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    connect-ami: True
+
+user1-originator:
+    channel: 'Local/user1@default'
+    application: 'Echo'
+    trigger: 'ami_connect'
+
+user2-originator:
+    channel: 'Local/user2@default'
+    application: 'Echo'
+    trigger: 'ami_connect'
+
+user3-originator:
+    channel: 'Local/user3@default'
+    application: 'Echo'
+    trigger: 'ami_connect'
+
+admin-originator:
+    channel: 'Local/admin@default'
+    application: 'Echo'
+    trigger: 'ami_connect'
+
+kicker-originator:
+    channel: 'Local/kicker@default'
+    application: 'Echo'
+    trigger: 'ami_connect'
+
+hangup-monitor:
+    ids: '0'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'ConfBridgeKick'
+        requirements:
+            match:
+                Result: 'Pass'
+        count: 4
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'ConfKickSuccess'
+        requirements:
+            match:
+                Result: 'Pass'
+        count: 4
+
+properties:
+    tags:
+        - confbridge
+        - apps
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_confbridge'
+        - asterisk: 'app_userevent'
