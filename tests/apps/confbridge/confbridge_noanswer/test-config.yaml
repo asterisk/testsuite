@@ -1,0 +1,72 @@
+testinfo:
+    summary: 'Ensure that Confbridge user no answer option works as expected'
+    description: |
+        'This test configures ConfBridge user profiles with all combinations of
+        answer_channel options. We expect that a call to noanswer will not
+        be answered and calls to answer and default will be answered. We also
+        test that the default behavior remains unchanged.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: noanswer-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: answer-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: default-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: hangup-monitor
+            typename: 'pluggable_modules.HangupMonitor'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    connect-ami: True
+
+noanswer-originator:
+    channel: 'Local/noanswer@default'
+    application: 'Echo'
+    trigger: 'ami_connect'
+
+answer-originator:
+    channel: 'Local/answer@default'
+    application: 'Echo'
+    trigger: 'ami_connect'
+
+default-originator:
+    channel: 'Local/default@default'
+    application: 'Echo'
+    trigger: 'ami_connect'
+
+hangup-monitor:
+    ids: '0'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'ConfBridgeNoAnswer'
+        requirements:
+            match:
+                Result: 'Pass'
+        count: 3
+
+
+properties:
+    tags:
+        - confbridge
+        - apps
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_confbridge'
+        - asterisk: 'app_userevent'
