@@ -4,6 +4,7 @@ tests:
     - test: 'confbridge_end_marked'
     - test: 'confbridge_marked'
     - test: 'confbridge_marked_unmarked'
+    - test: 'confbridge_noanswer'
     - test: 'confbridge_nominal'
     - test: 'confbridge_recording'
     - test: 'confbridge_result'
