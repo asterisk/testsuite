@@ -4,6 +4,7 @@ tests:
     - dir: 'directory'
     - dir: 'bridge'
     - dir: 'dial'
+    - test: 'originate'
     - dir: 'voicemail'
     - dir: 'incomplete'
     - dir: 'confbridge'
