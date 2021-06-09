@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "../../../../../../contrib/sipp/sipp.dtd">
+
+<scenario name="Receive MESSAGE">
+	<recv request="MESSAGE" crlf="true">
+		<action>
+			<!-- We need to ensure that a display name never makes it into the request uri -->
+			<ereg regexp='MESSAGE\s+\"[^a-zA-Z]+\"' search_in="msg"
+				check_it_inverse="false" assign_to="junk"/>
+			<!-- We need to ensure that <> never makes it into the request uri -->
+			<ereg regexp='MESSAGE\s+&lt;.+&gt;' search_in="msg"
+				check_it_inverse="false" assign_to="junk"/>
+		</action>
+	</recv>
+
+	<send>
+    <![CDATA[
+      SIP/2.0 202 Accepted
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, SUBSCRIBE, NOTIFY, INFO, PUBLISH
+      Supported: replaces, timer
+      Content-Length: 0
+
+    ]]>
+	</send>
+
+	<Reference variables="junk"/>
+</scenario>
