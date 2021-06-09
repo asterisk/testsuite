@@ -10,3 +10,4 @@ tests:
     - test: 'message_send_ami'
     - test: 'message_to_uri'
     - test: 'message_confbridge'
+    - test: 'message_destination_parsing'
