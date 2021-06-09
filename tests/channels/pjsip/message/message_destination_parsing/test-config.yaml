@@ -1,0 +1,246 @@
+testinfo:
+    summary: 'Test Destination Parsing'
+    description: |
+        Test various permutations of MessageSend destinations to ensure we
+        can parse and locate an endpoint and URI.
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_messaging'
+        - buildoption: 'TEST_FRAMEWORK'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    stop-after-scenarios: true
+    test-iterations:
+        -
+             scenarios:
+             # We're running 3 identical scenarios, each on a different port so
+             # we can make sure the proper contact URIs are being used.
+             # '-m' is set to the number of MessageSend actions to each port so
+             # sipp will stop the scenario cleanly when the correct number of
+             # MESSAGE messages have been processed.  The test stops when all the
+             # scenarios end.
+                - { 'key-args': { 'scenario':'message_recv.xml', '-i': '127.0.0.2', '-p':'5060', '-m':'6' },
+                    'ordered-args': [ '-bind_local' ] }
+                - { 'key-args': { 'scenario':'message_recv.xml', '-i': '127.0.0.2', '-p':'5061', '-m':'4' },
+                    'ordered-args': [ '-bind_local' ] }
+                - { 'key-args': { 'scenario':'message_recv.xml', '-i': '127.0.0.2', '-p':'5062', '-m':'5' },
+                    'ordered-args': [ '-bind_local' ] }
+
+ami-config:
+
+    # Notes:
+    #
+    # The RequestURIs returned on the TestEvent may have things like display
+    # name and <> in them which aren't valid for a real RequestURI.  That's OK
+    # as pjproject strips those out for us automatically.  The sipp scenario
+    # ensures that neither a display name nor the <> make it out in the
+    # MESSAGE RequestURI.
+    #
+    # Don't forget that all of the condition match values are regexes.
+    # This means that without the ^ and $ anchors, a match value that starts
+    # with "sipp" will match anything that starts with sipp.  That's why the ^
+    # and $ are in the MdataDestination match values.
+    #
+    # It's just not possible to test every single variation of destination
+    # but the below test _should_ test all of the code branches in
+    # res_pjsip_messaging.c
+    #
+
+    -   ami-start:
+
+        # We're actually going to test some failures first since they'll never
+        # generate SIP messages.
+
+        # Send to non-existent endpoint sippppp. We need the '/nada' to force
+        # sipppp to be recognized as an endpoint name.
+        ami-actions: { action: { To: 'pjsip:sippppp/nada',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12331' } }
+    -   ami-events: { conditions: { match: { MdataDestination: '^sippppp/nada$',
+            Event: 'TestEvent', State: 'MSG_ENDPOINT_URI_FAIL' } }, count: 1 }
+
+        # Send to non-existent endpoint sippppp.
+        ami-actions: { action: { To: 'pjsip:sippppp/user@somedest.com',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12332' } }
+    -   ami-events: { conditions: { match: { MdataDestination: '^sippppp/nada$',
+            Event: 'TestEvent', State: 'MSG_ENDPOINT_URI_FAIL' } }, count: 1 }
+
+        # Send to non-existent endpoint sippppp using dialplan style destination.
+        ami-actions: { action: { To: 'pjsip:PJSIP/user@sippppp',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12333' } }
+    -   ami-events: { conditions: { match: { MdataDestination: '^PJSIP/user@sippppp$',
+            Event: 'TestEvent', State: 'MSG_ENDPOINT_URI_FAIL' } }, count: 1 }
+
+        # Send to non-existent endpoint sippppp using dialplan style destination.
+        ami-actions: { action: { To: 'pjsip:PJSIP/sippppp',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12334' } }
+    -   ami-events: { conditions: { match: { MdataDestination: '^PJSIP/sippppp$',
+            Event: 'TestEvent', State: 'MSG_ENDPOINT_URI_FAIL' } }, count: 1 }
+
+        # The endpoint exists but this format should never be used
+        # without a user preceeding the endpoint.
+        ami-actions: { action: { To: 'pjsip:PJSIP/sipp',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12361' } }
+    -   ami-events: { conditions: { match: { MdataDestination: '^PJSIP/sipp$',
+            Event: 'TestEvent', State: 'MSG_ENDPOINT_URI_FAIL' } }, count: 1 }
+
+
+        # Start of the real tests
+        # This set tests the endpoint/ scenarios
+
+        # Just send to endpoint sipp using its default aor and its configured
+        # contact uri 'sip:127.0.0.2'
+        ami-actions: { action: { To: 'pjsip:sipp',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12341' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'sipp',
+            RequestURI: 'sip:127.0.0.2',
+            MdataDestination: '^sipp$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+        # Send to endpoint sipp using its sipp2 configured contact's uri
+        # 'sip:harry@127.0.0.2:5061'
+        ami-actions: { action: { To: 'pjsip:sipp/sipp2',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12342' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'sipp',
+            RequestURI: 'sip:harry@127.0.0.2:5061',
+            MdataDestination: '^sipp/sipp2$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+        # Send to endpoint sipp with domain somedomain.com appended.
+        # Domain should be discarded and default aor used.
+        ami-actions: { action: { To: 'pjsip:sipp@somedomain.com',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12343' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'sipp',
+            RequestURI: 'sip:127.0.0.2',
+            MdataDestination: '^sipp@somedomain.com$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+        # Send to endpoint sipp with specified contact uri with no user or port.
+        # The endpoint's aors should be ignored.
+        ami-actions: { action: { To: 'pjsip:sipp/127.0.0.2',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12344' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'sipp',
+            RequestURI: 'sip:127.0.0.2',
+            MdataDestination: '^sipp/127.0.0.2$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+        # Send to endpoint sipp with specified contact uri with no port.
+        # The endpoint's aors should be ignored.
+        ami-actions: { action: { To: 'pjsip:sipp/charlie@127.0.0.2',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12345' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'sipp',
+            RequestURI: 'sip:charlie@127.0.0.2',
+            MdataDestination: '^sipp/charlie@127.0.0.2$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+        # Send to endpoint sipp with specified contact uri with no <> or user.
+        # The endpoint's aors should be ignored.
+        ami-actions: { action: { To: 'pjsip:sipp/127.0.0.2:5062',
+                Body: 'Test Message', Action: 'MessageSend', ActionID: '12346' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'sipp',
+            RequestURI: 'sip:127.0.0.2:5062',
+            MdataDestination: '^sipp/127.0.0.2:5062$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+        # Send to endpoint sipp with specified contact uri with no <> but with user.
+        # The endpoint's aors should be ignored.
+        ami-actions: { action: { To: 'pjsip:sipp/frank@127.0.0.2:5062',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12347' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'sipp',
+            RequestURI: 'sip:frank@127.0.0.2:5062',
+            MdataDestination: '^sipp/frank@127.0.0.2:5062$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+        # Send to endpoint sipp with specified contact uri with <>, display name and user.
+        # The endpoint's aors should be ignored.
+        # Although RequestURI shows the display name and <>, (which a real
+        # Request URI shouldn't have), pjproject will strip it out and sipp will
+        # verify that that happened.
+        ami-actions: { action: { To: 'pjsip:sipp/"Frankie" <sip:frank@127.0.0.2:5061>',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12348' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'sipp',
+            RequestURI: '"Frankie" <sip:frank@127.0.0.2:5061>',
+            MdataDestination: '^sipp/"Frankie" <sip:frank@127.0.0.2:5061>$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+
+        # The following tests are URI only and should all use the default endpoint (which doesn't have an aor)
+
+
+        # Send to specified contact uri with just host.
+        ami-actions: { action: { To: 'pjsip:127.0.0.2',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12351' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'default_endpoint',
+            RequestURI: 'sip:127.0.0.2',
+            MdataDestination: '^127.0.0.2$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+        # Send to specified contact uri with host and port.
+        ami-actions: { action: { To: 'pjsip:127.0.0.2:5062',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12352' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'default_endpoint',
+            RequestURI: 'sip:127.0.0.2:5062',
+            MdataDestination: '^127.0.0.2:5062$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+        # Send to specified contact uri with user, host and port.
+        ami-actions: { action: { To: 'pjsip:alice@127.0.0.2:5062',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12353' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'default_endpoint',
+            RequestURI: 'sip:alice@127.0.0.2:5062',
+            MdataDestination: '^alice@127.0.0.2:5062$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+        # Send to specified contact uri with scheme, user, host and port.
+        ami-actions: { action: { To: 'pjsip:sip:alice@127.0.0.2:5062',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12354' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'default_endpoint',
+            RequestURI: 'sip:alice@127.0.0.2:5062',
+            MdataDestination: '^sip:alice@127.0.0.2:5062$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+        # Send to specified contact uri with scheme, user, host and port. Add the <> to boot.
+        # Although RequestURI shows the <> (which a real Request URI shouldn't have), pjproject will
+        # strip it out and sipp will verify that that happened.
+        ami-actions: { action: { To: 'pjsip:<sip:alice@127.0.0.2:5061>',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12355' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'default_endpoint',
+            RequestURI: '<sip:alice@127.0.0.2:5061>',
+            MdataDestination: '^<sip:alice@127.0.0.2:5061>$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+        # Send to specified contact uri with scheme, user, host and port.
+        # Add the display name and <> to boot.
+        # Although RequestURI shows the display name and <> (which a real Request
+        # URI shouldn't have), pjproject will strip it out and sipp will verify
+        # that that happened.
+        ami-actions: { action: { To: 'pjsip:"Alice" <sip:alice@127.0.0.2:5061>',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12356' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'default_endpoint',
+            RequestURI: '"Alice" <sip:alice@127.0.0.2:5061>',
+            MdataDestination: '^"Alice" <sip:alice@127.0.0.2:5061>$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+
+        # The final test is for the dialstring format
+
+        ami-actions: { action: { To: 'pjsip:PJSIP/8005551212@sipp',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12361' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'sipp',
+            RequestURI: 'sip:8005551212@127.0.0.2',
+            MdataDestination: '^PJSIP/8005551212@sipp$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
