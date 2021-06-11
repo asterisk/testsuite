@@ -5,7 +5,7 @@
 	<recv request="MESSAGE" crlf="true">
 		<action>
 			<!-- We need to ensure that a display name never makes it into the request uri -->
-			<ereg regexp='MESSAGE\s+\"[^a-zA-Z]+\"' search_in="msg"
+			<ereg regexp='MESSAGE\s+"[^a-zA-Z]+"' search_in="msg"
 				check_it_inverse="false" assign_to="junk"/>
 			<!-- We need to ensure that <> never makes it into the request uri -->
 			<ereg regexp='MESSAGE\s+&lt;.+&gt;' search_in="msg"
@@ -27,6 +27,4 @@
 
     ]]>
 	</send>
-
-	<Reference variables="junk"/>
 </scenario>
