@@ -35,7 +35,7 @@ test-object-config:
              # scenarios end.
                 - { 'key-args': { 'scenario':'message_recv.xml', '-i': '127.0.0.2', '-p':'5060', '-m':'6' },
                     'ordered-args': [ '-bind_local' ] }
-                - { 'key-args': { 'scenario':'message_recv.xml', '-i': '127.0.0.2', '-p':'5061', '-m':'4' },
+                - { 'key-args': { 'scenario':'message_recv.xml', '-i': '127.0.0.2', '-p':'5061', '-m':'5' },
                     'ordered-args': [ '-bind_local' ] }
                 - { 'key-args': { 'scenario':'message_recv.xml', '-i': '127.0.0.2', '-p':'5062', '-m':'5' },
                     'ordered-args': [ '-bind_local' ] }
@@ -235,12 +235,24 @@ ami-config:
             Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
 
 
-        # The final test is for the dialstring format
+        # The final tests are for the dialstring format
 
+        # Simple <number>@<endpoint> where the endpoint's contact
+        # doesn't have a user in its URI.
         ami-actions: { action: { To: 'pjsip:PJSIP/8005551212@sipp',
             Body: 'Test Message', Action: 'MessageSend', ActionID: '12361' } }
     -   ami-events: { conditions: { match: { Endpoint: 'sipp',
             RequestURI: 'sip:8005551212@127.0.0.2',
             MdataDestination: '^PJSIP/8005551212@sipp$',
+            Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
+
+        # <number>@<endpoint> where the endpoint's contact
+        # has a user and port in its URI.  The existing user should be
+        # replaced by the number specified.
+        ami-actions: { action: { To: 'pjsip:PJSIP/8005551212@sipp_contact_user',
+            Body: 'Test Message', Action: 'MessageSend', ActionID: '12362' } }
+    -   ami-events: { conditions: { match: { Endpoint: 'sipp_contact_user',
+            RequestURI: 'sip:8005551212@127.0.0.2:5061',
+            MdataDestination: '^PJSIP/8005551212@sipp_contact_user$',
             Event: 'TestEvent', State: 'MSG_FROMTO_URI' } }, count: 1 }
 
