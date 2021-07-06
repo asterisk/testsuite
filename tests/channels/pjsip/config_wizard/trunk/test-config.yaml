@@ -187,7 +187,7 @@ ami-config:
                     ActionID: '12345'
                     ObjectType: 'identify'
                     ObjectName: 'trunk1-identify'
-                    Match: '127.0.0.[56]/255.255.255.255,127.0.0.[56]/255.255.255.255'
+                    Match: '127.0.0.[56]:410[67]0/255.255.255.255,127.0.0.[56]:410[67]0/255.255.255.255'
                     Endpoint: 'trunk1'
                     EndpointName: 'trunk1'
             count: 1
