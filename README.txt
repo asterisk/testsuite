@@ -182,8 +182,8 @@ Optional (needed by specific tests):
 --------------------------------------------------------------------------------
 
 Get the Asterisk source tree you want to test:
-    $ svn co http://svn.digium.com/svn/asterisk/trunk asterisk-trunk
-    $ cd asterisk-trunk
+    $ git clone https://gerrit.asterisk.org/asterisk
+    $ cd asterisk
 
 Build and install it.
     $ ./configure && make
@@ -216,8 +216,8 @@ For more syntax information:
 As an alternative to the above, you can use run-local:
 
 Get the Asterisk source tree you want to test:
-    $ svn co http://svn.digium.com/svn/asterisk/trunk asterisk-trunk
-    $ cd asterisk-trunk
+    $ git clone https://gerrit.asterisk.org/asterisk
+    $ cd asterisk
 
 Optionally configure and make it:
     $ ./configure && make
