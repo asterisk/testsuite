@@ -1,0 +1,122 @@
+testinfo:
+    summary:     'Register contacts to test the remove_unavailable option'
+    description: |
+        'When remove_existing is enabled:
+         When remove_unavailable is enabled, any existing AOR contacts not
+         affected by the new registration and are unavailable are removed
+         if they push the number of contacts over the max_contacts setting.
+         If there are no unavailable contacts for this AOR, then default back
+         to the regular remove_existing behavior and remove the contact that
+         is soonest to expire.
+         A single registration still cannot try to add more contacts than
+         the max_contacts setting.  The number of contacts cannot go over the
+         max_contacts setting.
+
+         Using IPv4 and UDP, run SIPp scenarios that register contacts in a
+         series of registrations. This ensures that with the remove_unavailable
+         pjsip.conf configuration option enabled, the unavailable contacts are
+         removed and the new contacts are added as expected.
+
+         When remove_existing is not enabled:
+         When remove_unavailable is enabled, search the AOR for any unavailable
+         contacts not involved in this registration, and remove enough contacts
+         so that the total number of registered contacts remains at or below
+         max_contacts.
+
+         Using IPv4 and UDP, run SIPp scenarios that register contacts in a
+         series of registrations. This ensures that with the remove_unavailable
+         pjsip.conf configuration option enabled, the unavailable contacts are
+         removed and the new contacts are added as expected.'
+
+test-modules:
+    test-object:
+        -
+            config-section: 'test-object-config'
+            typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # IPv4 & UDP & 1 existing contact
+                - { 'key-args': {'scenario': 'register-remove-existing-disabled-1.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+                # IPv4 & UDP & 2 existing contacts
+                - { 'key-args': {'scenario': 'register-remove-existing-disabled-2.xml', '-i': '127.0.0.1', '-p': '5161', '-s': 'bob'} }
+
+               # IPv4 & UDP & remove_existing
+                - { 'key-args': {'scenario': 'register-remove-existing-enabled.xml', '-i': '127.0.0.1', '-p': '5261', '-s': 'charlie'} }
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'alice'
+        count: '2'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_REMOVED'
+                AOR: 'alice'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'bob'
+        count: '3'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_REMOVED'
+                AOR: 'bob'
+        count: '1'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_ADDED'
+                AOR: 'charlie'
+        count: '3'
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'AOR_CONTACT_REMOVED'
+                AOR: 'charlie'
+        count: '1'
+
+properties:
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python: 'twisted'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.3'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+
