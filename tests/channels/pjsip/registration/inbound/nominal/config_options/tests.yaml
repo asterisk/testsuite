@@ -3,3 +3,4 @@ tests:
     - test: 'minimum_expiration'
     - test: 'maximum_expiration'
     - test: 'remove_existing'
+    - test: 'remove_unavailable'
