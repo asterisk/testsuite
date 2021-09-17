@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic Sipstone UAC">
+	<send retrans="500">
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]-1
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: 1 REGISTER
+			Max-Forwards: 70
+			Contact: "[service]" <sip:[service]-1@127.0.0.2:5062>;transport=[transport]
+			Subject: Performance Test
+			Expires: 600
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" rtd="true">
+		<action>
+			<!-- Ensure the expected contacts are present and that the expires is correct with a 5 second tolerance -->
+			<ereg regexp="Contact: &lt;sip:charlie-1@127.0.0.2:5062&gt;;expires=(600|59[5-9])" search_in="msg" check_it="true" assign_to="1"/>
+		</action>
+	</recv>
+
+	<pause milliseconds="15000"/>
+
+	<send retrans="500">
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]-2
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: 1 REGISTER
+			Max-Forwards: 70
+			Contact: "[service]" <sip:[service]-2@127.0.0.3:5063>;transport=[transport]
+			Subject: Performance Test
+			Expires: 60
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" rtd="true">
+		<action>
+			<!-- Ensure the expected contacts are present and that the expires is correct with a 5 second tolerance -->
+			<ereg regexp="Contact: &lt;sip:charlie-1@127.0.0.2:5062&gt;;expires=(58[0-5])" search_in="msg" check_it="true" assign_to="2"/>
+			<ereg regexp="Contact: &lt;sip:charlie-2@127.0.0.3:5063&gt;;expires=(60|5[5-9])" search_in="msg" check_it="true" assign_to="3"/>
+		</action>
+	</recv>
+
+	<send retrans="500">
+		<![CDATA[
+			REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+			Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+			From: "[service]" <sip:[service]@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]-3
+			To: "[service]" <sip:[service]@[remote_ip]:[remote_port]>
+			Call-ID: [call_id]
+			CSeq: 1 REGISTER
+			Max-Forwards: 70
+			Contact: "[service]" <sip:[service]-3@127.0.0.4:5064>;transport=[transport]
+			Subject: Performance Test
+			Expires: 70
+			Content-Length: 0
+		]]>
+	</send>
+
+	<recv response="200" rtd="true">
+		<action>
+			<!-- Ensure the expected contacts are present and that the expires is correct with a 5 second tolerance -->
+			<ereg regexp="Contact: &lt;sip:charlie-2@127.0.0.3:5063&gt;;expires=(60|5[5-9])" search_in="msg" check_it="true" assign_to="4"/>
+			<ereg regexp="Contact: &lt;sip:charlie-3@127.0.0.4:5064&gt;;expires=(70|6[5-9])" search_in="msg" check_it="true" assign_to="5"/>
+			<!-- Ensure the expected old contacts are *not* present -->
+			<ereg regexp="Contact: &lt;sip:charlie-1@127.0.0.2:5062&gt;" search_in="msg" check_it_inverse="true" assign_to="6" />
+		</action>
+	</recv>
+
+	<Reference variables="1" />
+	<Reference variables="2" />
+	<Reference variables="3" />
+	<Reference variables="4" />
+	<Reference variables="5" />
+	<Reference variables="6" />
+</scenario>
