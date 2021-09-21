@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'Skip until swapped to sipp, which will probably require additional work in the testsuite'
     summary:     'Tests STIR_SHAKEN_VERIFY_MISMATCH'
     description: |
         'Run one instance of Asterisk and set up an incoming call
