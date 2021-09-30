@@ -204,6 +204,25 @@ test-object-config:
     # large sets of tests that cover the same functionality, and allows them
     # to share config files.
     config-path: 'tests/foo'
+
+    # A path to a base directory containing abritrary files to be copied
+    # into the Asterisk well-known directories for Asterisk instances
+    # in this test.
+    # The directory should be relative to the testsuite top-level directory.
+    # For example... If set to 'tests/mytests/myfiles' then files in
+    # 'tests/mytest/myfiles/common/astvarlibdir/keys' would be copied to all
+    # of this test's Asterisk instances's '/var/lib/asterisk/keys' directories.
+    # Files in 'tests/mytest/myfiles/ast1/astvarlibdir/keys' would be copied
+    # into the first Asterisk instance's '/var/lib/asterisk/keys' directory.
+    # Files in 'tests/mytest/myfiles/ast2/astvarlibdir/keys' would be copied
+    # into the second Asterisk instance's '/var/lib/asterisk/keys' directory.
+    # etc.
+    # This is useful for tests that can share files like keys and certificates.
+    # NOTE: Files in individual '<testdir>/files' directories are automatically
+    # copied so you don't need this parameter to share files among instances
+    # in the same test.
+    base-files-directory: 'tests/mytests/myfiles'
+
     reactor-timeout: 30
     spawn-after-hangup: True
     # Indicate that the test is going to be restarting Asterisk so

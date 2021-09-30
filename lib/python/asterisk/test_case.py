@@ -122,6 +122,7 @@ class TestCase(object):
         self.ami = []
         self.fastagi = []
         self.base_config_path = None
+        self.base_files_path = None
         self.reactor_timeout = 30
         self.passed = None
         self.fail_tokens = []
@@ -149,6 +150,8 @@ class TestCase(object):
         if test_config:
             if 'config-path' in test_config:
                 self.base_config_path = test_config['config-path']
+            if 'base-files-path' in test_config:
+                self.base_files_path = test_config['base-files-path']
             if 'reactor-timeout' in test_config:
                 self.reactor_timeout = test_config['reactor-timeout']
             if 'memcheck-delay-stop' in test_config:
@@ -248,7 +251,8 @@ class TestCase(object):
                          for i in range(count)]
         return asterisks
 
-    def create_asterisk(self, count=1, base_configs_path=None, test_config=None):
+    def create_asterisk(self, count=1, base_configs_path=None, test_config=None,
+                        base_files_path=None):
         """Create n instances of Asterisk
 
         Note: if the instances of Asterisk being created are remote, the
@@ -264,6 +268,11 @@ class TestCase(object):
                           configuration can be overwritten by individual tests,
                           however.
         test_config       Test Configuration
+        base_files_path   Provides common files for Asterisk instances
+                          to use. This is useful for certain test types that use
+                          the same files, like keys, all the time. This
+                          configuration can be overwritten by individual tests,
+                          however.
         """
         for i, ast_config in enumerate(self.get_asterisk_hosts(count)):
             local_num = ast_config.get('num')
@@ -299,6 +308,19 @@ class TestCase(object):
                 self.ast[i].install_configs("%s/configs/ast%d" %
                                             (self.test_name, local_num),
                                             self.test_config.get_deps())
+
+                # If a base files directory exists for this Asterisk instance
+                # has been provided, install it first
+                if base_files_path is None:
+                    base_files_path = self.base_files_path
+                if base_files_path:
+                    self.ast[i].install_files("%s/common" % (base_files_path))
+                    self.ast[i].install_files("%s/ast%d" %
+                                            (base_files_path, local_num))
+                # Copy test specific config files
+                self.ast[i].install_files("%s/files/common" % (self.test_name))
+                self.ast[i].install_files("%s/files/ast%d" %
+                                            (self.test_name, local_num))
 
     def create_ami_factory(self, count=1, username="user", secret="mysecret",
                            port=5038):
