@@ -16,6 +16,7 @@ import time
 import shutil
 import logging
 import fileinput
+import polyfill
 
 from . import test_suite_utils
 
@@ -42,7 +43,6 @@ from .pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
 
 
 LOGGER = logging.getLogger(__name__)
-
 
 class AsteriskRemoteProtocol(protocol.Protocol):
     """Class that acts as a remote protocol to Asterisk"""
@@ -367,6 +367,7 @@ class Asterisk(object):
         self.original_astmoddir = ""
         self.remote_config = remote_config
         self.memcheck_delay_stop = 0
+        self.instance_id = 0
         if test_config is not None and 'memcheck-delay-stop' in test_config:
             self.memcheck_delay_stop = test_config['memcheck-delay-stop'] or 0
 
@@ -419,6 +420,7 @@ class Asterisk(object):
             while True:
                 if not os.path.isdir("%s/ast%d" % (self.base, i)):
                     self.base = "%s/ast%d" % (self.base, i)
+                    self.instance_id = i;
                     break
                 i += 1
 
@@ -673,6 +675,7 @@ class Asterisk(object):
         for key in self.directories.keys():
             value = value.replace("<<%s>>" % key,
                               "%s%s" % (self.base, self.directories[key]))
+            value = value.replace("<<instanceid>>", self.instance_id)
         return value
 
 # Quick little function for doing search and replace in a file used below.
@@ -786,6 +789,61 @@ class Asterisk(object):
                         (cfg_path, target_path))
         except IOError:
             LOGGER.warn("The destination is not writable '%s'" % target_path)
+
+    def install_files(self, source_path):
+        """Installs all files located in a directory to this
+        instance of Asterisk.
+
+        Keyword Arguments:
+        source_path This argument must be the path to the directory
+                 containing the files to be installed into standard
+                 locations.
+
+                 Example: tests/my-cool-test/files/ast1
+                 This directory must contain at least one sub-directory
+                 matching the name of an entry from the asterisk.conf
+                 "directories" category.  For example "astvarlibdir".
+                 Each entry in those directories will be copied to the
+                 runtime equivalent for the test.
+
+        Example:
+            Given the following filesystem layout:
+            tests/my-cool-test/files/ast1
+                                    - astvarlibdir/
+                                        - sounds/
+                                            - recordings/
+                                                - myrecording.ulaw
+                                    - astkeydir/keys/
+                                        - mykey.pem
+
+            ...and given the following entries in asterisk.conf:
+            astvarlibdir => /var/lib/asterisk
+            astkeydir => /var/lib/asterisk
+
+            The myrecording.ulaw and mykey.pem files would be copied to
+            <testroot>/var/lib/asterisk/sounds/recordings/ and
+            <testroot>/var/lib/asterisk/keys/ respectively.
+        """
+
+        self._make_directory_structure()
+        if not os.path.exists(source_path):
+            return
+
+        for fname in os.listdir(source_path):
+            source = "%s/%s" % (source_path, fname)
+
+            if os.path.isdir(source):
+                # If the directory name isn't one of the
+                # well known directories, just skip it.
+                if not self.directories[fname]:
+                    continue
+                # join() doesn't work if one of the paths is absolute
+                # so we have to skip the leading '/' in the directory
+                # entry.  I.E /var/lib/asterisk becomes var/lib/asterisk
+                direntry = self.directories[fname]
+                dirpath = direntry[1:] if direntry[0] == '/' else direntry
+                dest = os.path.join(self.base, dirpath)
+                polyfill.copytree(source, dest, dirs_exist_ok=True)
 
     def _overwrite_file(self, filename, values):
         """Overwrite a particular config file

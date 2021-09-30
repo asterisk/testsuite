@@ -335,6 +335,41 @@ configuration files SHOULD be copied into the root 'configs' directory.
 Since each Asterisk instance required difference SIP settings, each 'ast%d'
 folder will have a different sip.conf file.
 
+You can also copy arbitrary files like sound, key and certificate files into
+any of the entries in the asterisk.conf "directories" category using its
+entry name name.  All intermediate directories will be created if they
+don't already exist.
+
+For example, to have a certificate and keys copied to an Asterisk instance's
+'/var/lib/asterisk/keys' directory, you'd place it in...
+
+    basic-call/
+        files/
+            common/
+                astvarlibdir/
+                    keys/
+                        ca.crt
+            ast1/
+                astvarlibdir/
+                    keys/
+                        instance1-key.pem
+                ...
+            ast2/
+                astvarlibdir/
+                    keys/
+                        instance2-key.pem
+
+Since 'astvarlibdir' is defined in asterisk.conf as '/var/lib/asterisk',
+this would copy 'ca.crt' to both instance's '/var/lib/asterisk/keys/' directory,
+'instance1-key.pem' to instance 1's '/var/lib/asterisk/keys/' directory and
+'instance2-key.pem' to instance 2's '/var/lib/asterisk/keys/' directory.
+
+If you have files that can be shared among multiple tests, you can create a
+directory following the same structure as above in some parent directory and
+direct each test to include it with the 'base-files-path' parameter in
+its test-config.yaml file.  See sample-yaml/test-config.yaml.sample for
+more info.
+
 d) Test Execution
 
         The "run-test" executable will be run by a top level application in the
