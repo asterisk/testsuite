@@ -12,3 +12,42 @@ properties:
     tags:
         - pjsip
 
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    reactor-timeout: 15
+    connect-ami: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'message_recv.xml', '-i': '127.0.0.1', '-p': '5061'} }
+
+ami-config:
+    -
+        ami-start:
+        ami-actions:
+            action:
+                Action: 'MessageSend'
+                ActionID: '12345'
+                Destination: 'pjsip:user1'
+                From: 'sip:user0'
+                To: 'sip:ralph@somewhere.com'
+                Body: 'Watson, come here.'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+            requirements:
+                match:
+                    MdataDestination: 'user1'
+                    MdataFrom: 'sip:user0'
+                    MsgTo: 'sip:ralph@somewhere.com'
+            count: 1

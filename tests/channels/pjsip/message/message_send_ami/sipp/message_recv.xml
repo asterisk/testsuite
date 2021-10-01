@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<!DOCTYPE scenario SYSTEM "sipp.dtd">
+<!DOCTYPE scenario SYSTEM "../../../../../../contrib/sipp/sipp.dtd">
 
 <scenario name="MESSAGE receive from AMI">
-  <recv request="MESSAGE" crlf="true" />
+	<recv request="MESSAGE" crlf="true">
+		<action>
+			<ereg search_in="msg" regexp="^MESSAGE\s+sip:user1@127.0.0.1:5061\s+SIP/2[.]0"
+				check_it="true" assign_to="junk1"/>
+			<ereg search_in="hdr" header="From:" regexp="sip:user0"
+				check_it="true" assign_to="junk2"/>
+			<ereg search_in="hdr" header="To:" regexp="sip:ralph@somewhere.com"
+				check_it="true" assign_to="junk3"/>
+		</action>
+	</recv>
 
-  <send>
+	<send>
     <![CDATA[
       SIP/2.0 202 Accepted
       [last_Via:]
@@ -16,5 +25,7 @@
       Content-Length: 0
 
     ]]>
-  </send>
+	</send>
+	
+	<Reference variables="junk1,junk2,junk3"/>
 </scenario>
