@@ -44,8 +44,16 @@ class OpenSSLVersion:
         return self.version
 
     def __cmp__(self, other):
-        """Compare two SIPpVersion instances against each other"""
-        return cmp(self.version, other.version)
+        """Compare two OpenSSLVersion instances against each other"""
+        return (int(self.version) > int(other.version)) - (int(self.version) < int(other.version))
+
+    def __le__(self, other):
+        """Determine if this OpenSSLVersion instance is less than or equal to another"""
+        return int(self.version) <= int(other.version)
+
+    def __lt__(self, other):
+        """Determine if this OpenSSLVersion instance is less than another"""
+        return int(self.version) < int(other.version)
 
     def __ne__(self, other):
         return self.version != other.version
