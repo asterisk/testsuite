@@ -165,7 +165,7 @@ class Dependency(object):
                 self.met = True
         elif "pcap" in dep:
             self.name = "pcap"
-            from test_case import PCAP_AVAILABLE
+            from .test_case import PCAP_AVAILABLE
             self.met = PCAP_AVAILABLE
         else:
             print("Unknown dependency type specified:")
