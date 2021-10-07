@@ -675,7 +675,7 @@ class Asterisk(object):
         for key in self.directories.keys():
             value = value.replace("<<%s>>" % key,
                               "%s%s" % (self.base, self.directories[key]))
-            value = value.replace("<<instanceid>>", self.instance_id)
+        value = value.replace("<<instanceid>>", str(self.instance_id))
         return value
 
 # Quick little function for doing search and replace in a file used below.
