@@ -24,6 +24,7 @@ test-modules:
 test-object-config:
     reactor-timeout: 15
     connect-ami: True
+    stop-after-scenarios: False
     test-iterations:
         -
             scenarios:
@@ -51,3 +52,4 @@ ami-config:
                     MdataFrom: 'sip:user0'
                     MsgTo: 'sip:ralph@somewhere.com'
             count: 1
+        stop_test:
