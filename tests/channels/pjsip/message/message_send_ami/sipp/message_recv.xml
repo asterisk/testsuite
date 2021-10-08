@@ -4,7 +4,7 @@
 <scenario name="MESSAGE receive from AMI">
 	<recv request="MESSAGE" crlf="true">
 		<action>
-			<ereg search_in="msg" regexp="^MESSAGE\s+sip:user1@127.0.0.1:5061\s+SIP/2[.]0"
+			<ereg search_in="msg" regexp="MESSAGE sip:user1@127.0.0.1:5061 SIP/2.0"
 				check_it="true" assign_to="junk1"/>
 			<ereg search_in="hdr" header="From:" regexp="sip:user0"
 				check_it="true" assign_to="junk2"/>
