@@ -1,0 +1,28 @@
+testinfo:
+    summary: 'Verify Asterisk does not go into an infinite loop and uses correct range'
+    description:
+        This test verifies that the correct RTP Range is used and that Asterisk does not go
+        in to an infinite loop searching for a free RTP port.  Uses an even start and end port
+    issues:
+        - jira: 'ASTERISK-27406'
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        - scenarios:
+                - { 'key-args': {'scenario': 'call_accept_test_range.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice', '-timeout': '20s', '-r': '1', '-m': '6', '-l': '6'} }
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'chan_pjsip'
+
+    tags:
+        - pjsip
+        - RTP
