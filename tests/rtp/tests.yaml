@@ -2,3 +2,4 @@
 tests:
     - dir: 'strict_rtp'
     - test: 'ast-2017-012'
+    - dir: 'rtp_range'
