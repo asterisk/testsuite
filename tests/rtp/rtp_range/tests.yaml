@@ -1,0 +1,6 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'rtp_range_even_even'
+    - test: 'rtp_range_even_odd'
+    - test: 'rtp_range_odd_even'
+    - test: 'rtp_range_odd_odd'
