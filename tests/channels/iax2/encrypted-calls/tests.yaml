@@ -2,3 +2,4 @@
 tests:
     - test: 'md5'
     - test: 'rsa'
+    - test: 'rsa-dynamic'
