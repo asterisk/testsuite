@@ -2,3 +2,4 @@
 tests:
     - test: 'basic'
     - test: 'enhanced'
+    - test: 'receive'
