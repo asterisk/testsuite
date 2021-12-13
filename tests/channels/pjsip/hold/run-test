@@ -45,6 +45,9 @@ class SIPHold(TestCase):
                                   '-inf': INJECT_FILE},
                                  {'scenario': 'phone_A.xml',
                                   '-i': '127.0.0.2', '-p': '5060',
+                                  '-inf': INJECT_FILE},
+                                  {'scenario': 'phone_A.xml',
+                                  '-i': '127.0.0.2', '-p': '5060',
                                   '-inf': INJECT_FILE}]
         self.sipp_scn_phone_b = [{'scenario': 'phone_B_media_restrict.xml',
                                   '-i': '127.0.0.3', '-p': '5060',
@@ -62,6 +65,9 @@ class SIPHold(TestCase):
                                   '-i': '127.0.0.3', '-p': '5060',
                                   '-inf': INJECT_FILE},
                                  {'scenario': 'phone_B_IP_media_restrict.xml',
+                                  '-i': '127.0.0.3', '-p': '5060',
+                                  '-inf': INJECT_FILE},
+                                  {'scenario': 'phone_B_codec_order.xml',
                                   '-i': '127.0.0.3', '-p': '5060',
                                   '-inf': INJECT_FILE}]
 

@@ -5,6 +5,7 @@ testinfo:
         sending a re-INVITE with a modified SDP containing a restricted audio
         direction with and without an IP address of 0.0.0.0. Restricted audio
         direction is also tested for unholding by a re-INVITE without an SDP.
+        A scenario checks that the correct codec is selected after unholding.
 
 
 properties:
