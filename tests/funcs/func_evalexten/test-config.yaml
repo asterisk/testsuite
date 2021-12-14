@@ -1,0 +1,59 @@
+testinfo:
+    summary: 'Ensure that func_evalexten functions correctly.'
+    description: |
+        'This tests the EVAL_EXTEN function to ensure it properly
+        evaluates in different scenarios.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: caller-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: hangup-monitor
+            typename: 'pluggable_modules.HangupMonitor'
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    connect-ami: True
+
+caller-originator:
+    channel: 'Local/s@default'
+    context: 'nothing'
+    exten: '0'
+    priority: '1'
+    trigger: 'ami_connect'
+
+hangup-monitor:
+    ids: '0'
+
+ami-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'EvalExtenSuccess'
+            requirements:
+                match:
+                    Result: 'Pass'
+            count: 11
+        stop_test:
+
+properties:
+    tags:
+        - dial
+        - funcs
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_userevent'
+        - asterisk: 'app_originate'
+        - asterisk: 'func_evalexten'
+        - asterisk: 'pbx_config'
