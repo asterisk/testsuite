@@ -26,8 +26,4 @@ tests:
     - dir: 'statsd'
     - test: 'waitdigit'
     - dir: 'sendtext'
-<<<<<<< HEAD   (cbe0f8 app_mf: Add tests for app_mf module)
     - test: 'mf'
-=======
-    - test: 'read'
->>>>>>> CHANGE (5626f0 app_read: Add tests for Read application)
