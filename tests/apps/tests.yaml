@@ -29,3 +29,4 @@ tests:
     - test: 'mf'
     - test: 'sf'
     - test: 'read'
+    - test: 'if'
