@@ -30,3 +30,4 @@ tests:
     - test: 'sf'
     - test: 'read'
     - test: 'if'
+    - test: 'signal'
