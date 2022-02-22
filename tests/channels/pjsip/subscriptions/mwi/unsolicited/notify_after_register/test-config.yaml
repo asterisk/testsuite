@@ -32,5 +32,6 @@ sipp-config:
     test-iterations:
         -
             scenarios:
-                - { 'key-args': {'scenario': 'notify_after_register.xml', '-p': '5061', '-s': 'alice'} }
+                - { 'key-args': {'scenario': 'register_and_quit_two.xml', '-p': '5061', '-s': 'alice'} }
+                - { 'key-args': {'scenario': 'receive_notify.xml', '-p': '5062', '-s': 'alice'} }
 
