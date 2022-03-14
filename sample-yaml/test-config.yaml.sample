@@ -50,7 +50,6 @@ properties:
         # met.
         - python: 'twisted'
         - python: 'starpy'
-        - python: 'pjsua'
         - python: 'yaml'
 
         # Specifies attributes of SIPp that must be present for this test to execute

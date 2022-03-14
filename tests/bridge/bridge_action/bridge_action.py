@@ -53,7 +53,7 @@ class BridgeAction(object):
                       context='default',
                       exten='waiting_area',
                       priority=1,
-                      async=True).addErrback(self.test_object.
+                      nowait=True).addErrback(self.test_object.
                                              handle_originate_failure)
 
     def _new_channel_handler(self, ami, event):
@@ -71,7 +71,7 @@ class BridgeAction(object):
                           context='default',
                           exten='waiting_area',
                           priority=1,
-                          async=True).addErrback(self.test_object.
+                          nowait=True).addErrback(self.test_object.
                                                  handle_originate_failure)
 
     def _stop_handler(self, result):

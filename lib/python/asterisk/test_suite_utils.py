@@ -88,6 +88,9 @@ def all_match(pattern, message):
     :param message: Message to compare.
     :returns: True if message matches pattern; False otherwise.
     """
+    if isinstance(message, bytes) or isinstance(message, bytearray):
+        # bytes need to be decoded as the yaml config assumes string-like objects
+        message = message.decode('utf-8')
     LOGGER.debug('Pattern: %s, message %s' % (str(pattern), str(message)))
     if pattern is None:
         # Empty pattern always matches

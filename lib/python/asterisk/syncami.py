@@ -15,7 +15,7 @@ except:
     # python 3 import
     from urllib.parse import urlencode
 
-from StringIO import StringIO
+from io import StringIO
 from email.parser import HeaderParser
 try:
     from httplib import *

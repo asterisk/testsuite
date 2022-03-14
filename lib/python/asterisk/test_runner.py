@@ -11,11 +11,11 @@ the GNU General Public License Version 2.
 """
 
 import sys
-import imp
 import logging
 import logging.config
 import os
 import yaml
+from importlib.machinery import SourceFileLoader
 
 try:
     from yaml import CSafeLoader as MyLoader
@@ -86,7 +86,7 @@ class TestModuleLoader(object):
         else:
             mod = sys.modules.setdefault(
                 fullname,
-                imp.load_source(fullname, self._get_filename(fullname)))
+                SourceFileLoader(fullname, self._get_filename(fullname)).load_module())
 
         return mod
 

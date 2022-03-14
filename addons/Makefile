@@ -23,7 +23,7 @@ distclean: _clean
 	rm -rf starpy/install.record
 
 install:
-	(cd starpy; python setup.py install --prefix=~/.local --record install.record)
+	(cd starpy; python3 setup.py install --prefix=~/.local --record install.record)
 
 uninstall:
 	rm -rf $$(cat starpy/install.record)
@@ -31,10 +31,12 @@ uninstall:
 update:
 	@if [ -d starpy ]; then \
 		cd starpy; \
-		if [ `git config --get remote.origin.url` = git://github.com/asterisk-org/starpy.git ]; then \
-			git remote set-url origin git://github.com/asterisk/starpy.git git://github.com/asterisk-org/starpy.git; \
+		if [ `git config --get remote.origin.url` = https://github.com/asterisk-org/starpy.git ]; then \
+			git remote set-url origin https://github.com/asterisk/starpy.git https://github.com/asterisk-org/starpy.git; \
 		fi; \
+		git checkout 1.1; \
 		git pull; \
 	else \
-		git clone git://github.com/asterisk/starpy.git; \
+		git clone https://github.com/asterisk/starpy.git; \
+		git checkout 1.1; \
 	fi

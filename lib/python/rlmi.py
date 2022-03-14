@@ -32,7 +32,7 @@ def parsexml_(infile, parser=None, **kwargs):
     if parser is None:
         # Use the lxml ElementTree compatible parser so that, e.g.,
         #   we ignore comments.
-        parser = etree_.ETCompatXMLParser()
+        parser = etree_.ETCompatXMLParser(encoding="UTF-8")
     doc = etree_.parse(infile, parser=parser, **kwargs)
     return doc
 
@@ -1342,9 +1342,9 @@ def parseEtree(inFileName, silence=False):
 
 
 def parseString(inString, silence=False):
-    from StringIO import StringIO
+    from io import BytesIO
     parser = None
-    doc = parsexml_(StringIO(inString), parser)
+    doc = parsexml_(BytesIO(bytes(inString,"utf-8")), parser)
     rootNode = doc.getroot()
     rootTag, rootClass = get_root_tag(rootNode)
     if rootClass is None:

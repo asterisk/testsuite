@@ -15,24 +15,20 @@ usage() {
 # Basic build system:
 PACKAGES_DEBIAN="subversion git build-essential automake"
 # Python tools
-PACKAGES_DEBIAN="$PACKAGES_DEBIAN python python-pip python-setuptools python-dev cython"
+PACKAGES_DEBIAN="$PACKAGES_DEBIAN python3 python3-pip python3-setuptools python3-dev"
 # Testsuite: basic requirements:
-PACKAGES_DEBIAN="$PACKAGES_DEBIAN python-yaml python-twisted-core python-lxml liblua5.1-0-dev lua5.1 gdb"
+PACKAGES_DEBIAN="$PACKAGES_DEBIAN liblua5.1-0-dev lua5.1 gdb"
 # Sipp requirements
 PACKAGES_DEBIAN="$PACKAGES_DEBIAN libpcap-dev libssl-dev libsctp-dev libncurses5-dev"
-# pjsua requirements
-#PACKAGES_DEBIAN="$PACKAGES_DEBIAN python-dev"
 
 # Basic build system:
 PACKAGES_RH="subversion git gcc gcc-c++ patch"
 # Python tools
-PACKAGES_RH="$PACKAGES_RH python python-pip python-setuptools python-devel Cython"
+PACKAGES_RH="$PACKAGES_RH python3 python3-pip python3-setuptools python3-devel"
 # Testsuite: basic requirements:
-PACKAGES_RH="$PACKAGES_RH PyYAML python-twisted-core python-lxml lua-devel gdb"
+PACKAGES_RH="$PACKAGES_RH lua-devel gdb"
 # Sipp requirements
 PACKAGES_RH="$PACKAGES_RH libpcap-devel openssl-devel lksctp-tools-devel"
-# pjsua requirements
-#PACKAGES_RH="$PACKAGES_RH python-devel"
 
 LIBDIR=/usr/lib$(getconf LONG_BIT | fgrep 64)
 [ ! -d $LIBDIR ] && LIBDIR=/usr/lib
@@ -145,36 +141,11 @@ else
 	exit 1
 fi
 
-install_starpy() {
-	$testcmd cd addons
-	$testcmd make update
-	$testcmd cd starpy
-	$testcmd sudo python setup.py install
-	$testcmd cd ../..
-}
-
 install_asttest() {
 	$testcmd cd asttest
 	$testcmd make
 	$testcmd sudo make install
 	$testcmd cd ..
-}
-
-# Build and install yappcap
-install_yappcap() {
-	SAVE_DIR=`pwd`
-	$testcmd cd /tmp
-
-	PROJECT_DIR=yappcap
-
-	$testcmd sudo rm -rf $PROJECT_DIR
-	$testcmd git clone https://github.com/otherwiseguy/yappcap $PROJECT_DIR
-	$testcmd cd $PROJECT_DIR
-
-	$testcmd make
-	$testcmd sudo make install
-
-	$testcmd cd $SAVE_DIR
 }
 
 # Build and install sipp
@@ -223,7 +194,6 @@ install_pjsua() {
 
 	# The testsuite only cares about pjsua from what we have built.
 	$testcmd sudo cp -v pjsip-apps/bin/pjsua-`uname -m`-*-linux-gnu $MY_BIN/pjsua
-	$testcmd sudo make -C pjsip-apps/src/python install
 
 	$testcmd cd $SAVE_DIR
 }
@@ -232,24 +202,9 @@ install_testsuite_dependencies()
 {
 	$install_packages
 
-	if [ "x`find $LIBDIR/python* $LIBLOCALDIR/python* -name 'starpy*'`" = "x" ] ; then
-		install_starpy
-	fi
-
-	if [ "x`find $LIBDIR/python* $LIBLOCALDIR/python* -name yappcap.so`" = "x" ] ; then
-		install_yappcap
-	fi
-
 	which asttest > /dev/null || install_asttest
 	which sipp > /dev/null || install_sipp
 	which pjsua > /dev/null || install_pjsua
-
-	$testcmd sudo pip install construct
-	$testcmd sudo pip install requests
-
-	# The following is needed for ARI tests and may not install
-	# on older distributions.
-	$testcmd sudo pip install autobahn
 }
 
 if in_test_mode; then
@@ -266,7 +221,7 @@ if ! in_test_mode; then
 	echo "## $1 completed successfully"
 	echo "#############################################"
 	echo ""
-	echo "Testsuite requires 2.6.5 <= python version < 3"
+	echo "Testsuite requires python version >= 3.6.8"
 	echo "Your installed python is"
 	python --version
 fi

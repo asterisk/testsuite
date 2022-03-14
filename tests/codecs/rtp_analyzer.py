@@ -62,7 +62,7 @@ class Analyzer(object):
             'register-observer': True
         }
 
-        pcap_config = dict(pcap_defaults.items() + module_config.items())
+        pcap_config = dict(pcap_defaults, **module_config)
 
         self._sniffer = pcap.VOIPListener(pcap_config, test_object)
         self._sniffer.add_callback('RTP', self._handle_rtp)
