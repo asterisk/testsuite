@@ -315,7 +315,7 @@ class TestDriver(object):
         """
 
         try:
-            self.__current_user = self.__iterator.next()
+            self.__current_user = self.__iterator.__next__()
         except StopIteration:
             self.__current_user = None
             return

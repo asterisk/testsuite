@@ -26,11 +26,11 @@ class PbxMergeContextsTest(TestCase):
    def ami_connect(self, ami):
       if ami.id == 0:
 
-         print "sending a calls from ast1 to ast2"
+         print("sending a calls from ast1 to ast2")
 
          def handle_failure(reason):
-            print "error sending originate:"
-            print reason.getTraceback()
+            print("error sending originate:")
+            print(reason.getTraceback())
             self.stop_reactor()
 
             return reason
@@ -56,12 +56,12 @@ class PbxMergeContextsTest(TestCase):
       self.event_count += 1
 
       if event['result'] == "pass":
-         print "success"
+         print("success")
          self.pass_count += 1
       else:
-         print "error:"
-         print "result: %s" % (event['result'],)
-         print "error: %s" % (event['error'],)
+         print("error:")
+         print("result: %s" % (event['result']))
+         print("error: %s" % (event['error']))
 
       self.are_we_there_yet()
 

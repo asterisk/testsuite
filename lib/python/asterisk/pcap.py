@@ -11,6 +11,7 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
 
+from codecs import ascii_decode
 import sys
 import logging
 import signal
@@ -51,7 +52,6 @@ class PcapListener(object):
         module_config The YAML config object for this module
         test_object   The test object this module will attach to
         """
-
         if not PCAP_AVAILABLE:
             raise Exception('yappcap not installed')
 
@@ -111,7 +111,7 @@ class Packet():
             self.ip_layer = None
             self.transport_layer = None
         else:
-            self.eth_layer = ip_stack.parse(raw_packet.data)
+            self.eth_layer = ip_stack.parse(bytes(raw_packet.data))
             self.ip_layer = self.eth_layer.next
             self.transport_layer = self.ip_layer.next
 
@@ -558,8 +558,8 @@ class SIPPacketFactory():
         """
         ret_packet = None
         if not isinstance(packet, str):
-            hex_string = binascii.b2a_hex(packet.data[42:])
-            ascii_string = hex_string.decode('hex')
+            hex_string = packet.data[42:]
+            ascii_string = hex_string.decode('ascii')
         else:
             ascii_string = packet
 
@@ -704,8 +704,11 @@ class PacketFactoryManager():
                 interpreted_packet = factory.interpret_packet(packet)
             except Exception as e:
                 LOGGER.debug('{0} threw Exception {1}'.format(factory, e))
+
             if interpreted_packet is not None:
+                LOGGER.debug("Packet interpreted")
                 break
+
         return interpreted_packet
 
 
@@ -744,6 +747,7 @@ class VOIPSniffer(object):
         packet = self.packet_factory.interpret_packet(packet)
 
         if packet is None:
+            LOGGER.debug("Interpreted packet is empty")
             return
 
         if packet.ip_layer:
@@ -818,8 +822,9 @@ class VOIPProxy(VOIPSniffer):
             addr         Tuple of received host and port
             """
             (host, port) = addr
+            datastring = data.decode("utf-8")
             LOGGER.debug('Proxy received from {0}:{1}\n{2}'.format(
-                host, port, data))
+                host, port, datastring))
 
             if port not in self.rules:
                 LOGGER.debug('Dropping packet from {0}:{1}'.format(
@@ -827,7 +832,7 @@ class VOIPProxy(VOIPSniffer):
                 return
             dest_host = self.rules[port].get('host', host)
             dest_port = self.rules[port]['port']
-            self.cb(data, (host, port))
+            self.cb(datastring, (host, port))
             LOGGER.debug('Forwarding packet to {0}:{1}'.format(
                 dest_host, dest_port))
             self.transport.write(data, (dest_host, dest_port))

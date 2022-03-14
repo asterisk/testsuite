@@ -7,6 +7,8 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 '''
 
+from asyncio.log import logger
+from builtins import bytes, len, list, str
 import logging
 import requests
 import json
@@ -26,8 +28,9 @@ PASSWORD = 'testsuite'
 
 
 def build_url(*args):
-    return "http://%s:%d/%s" % \
-           (HOST, PORT, '/'.join([str(arg) for arg in args]))
+    url = "http://%s:%d/%s" % (HOST, PORT, '/'.join([str(arg) for arg in args]))
+    logger.info("built url %s" % url)
+    return bytes(url, "utf-8")
 
 
 def chunkizer(test):
@@ -50,20 +53,25 @@ class ARIChunkedTransferTest(TestCase):
     def run(self):
         pass1 = False
         pass2 = False
+        keystring = "%s:%s" % (USERNAME, PASSWORD)
+        paramstring = {'api_key': keystring}
+        databytes = b"{ b'variable': b'foo', b'value': b'bar'' }"
+        data = {b'variable': b'foo', b'value': b'bar'}
+        datachunks = chunkizer(databytes)
         try:
             ''' small chunks '''
             res = requests.post(
                 build_url('ari', 'asterisk', 'variable'),
-                params={'api_key': "%s:%s" % (USERNAME, PASSWORD)},
-                data=chunkizer('{ "variable": "foo", "value": "bar" }'),
-                headers={'Content-Type': 'application/json', })
+                data=data,
+                headers={b'Content-Type': b'application/json'},
+                auth = (USERNAME, PASSWORD))
             res.raise_for_status()
 
             res = requests.get(
                 build_url('ari', 'asterisk', 'variable'),
-                params={'api_key': "%s:%s" % (USERNAME, PASSWORD)},
-                data='{ "variable": "foo"}',
-                headers={'Content-Type': 'application/json', })
+                data=b'{ "variable": "foo"}',
+                headers={b'Content-Type': 'application/json', },
+                auth = (USERNAME, PASSWORD))
             res.raise_for_status()
 
             result = json.loads(res.text)
@@ -74,17 +82,17 @@ class ARIChunkedTransferTest(TestCase):
             value = 'all work and no play makes jack a dull boy.' * 5
             res = requests.post(
                 build_url('ari', 'asterisk', 'variable'),
-                params={'api_key': "%s:%s" % (USERNAME, PASSWORD)},
                 data=large_chunkizer('{ "variable": "foo2", "value": "' +
                                      value + '" }'),
-                headers={'Content-Type': 'application/json', })
+                headers={b'Content-Type': 'application/json', },
+                auth = (USERNAME, PASSWORD))
             res.raise_for_status()
 
             res = requests.get(
                 build_url('ari', 'asterisk', 'variable'),
-                params={'api_key': "%s:%s" % (USERNAME, PASSWORD)},
-                data='{ "variable": "foo2"}',
-                headers={'Content-Type': 'application/json', })
+                data=b'{ "variable": "foo2"}',
+                headers={b'Content-Type': 'application/json', },
+                auth = (USERNAME, PASSWORD))
             res.raise_for_status()
 
             result = json.loads(res.text)

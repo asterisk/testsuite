@@ -16,7 +16,7 @@ class RTP(DatagramProtocol):
     def __init__(self, test_object):
         self.test_object = test_object
 
-    def datagramReceived(self, data, (host, port)):
+    def datagramReceived(self, data, addr):
         LOGGER.error("Received RTP from Asterisk unexpectedly")
         self.test_object.set_passed(False)
         self.test_object.stop_reactor()

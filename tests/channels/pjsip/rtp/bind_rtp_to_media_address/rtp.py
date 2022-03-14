@@ -18,9 +18,10 @@ class RTP(DatagramProtocol):
     def __init__(self, test_object):
         self.test_object = test_object
 
-    def datagramReceived(self, data, (host, port)):
+    def datagramReceived(self, data, addr):
+        (host, port) = addr
         if self.packet_count == 0 and host != "127.0.0.3":
-            LOGGER.error("Received RTP from wrong ip address: %s %s" % (host,port))
+            LOGGER.error("Received RTP from wrong ip address: %s %s" % host,port)
             self.test_object.set_passed(False)
         self.packet_count += 1
 

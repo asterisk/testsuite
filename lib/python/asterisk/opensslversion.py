@@ -47,6 +47,10 @@ class OpenSSLVersion:
         """Compare two OpenSSLVersion instances against each other"""
         return (int(self.version) > int(other.version)) - (int(self.version) < int(other.version))
 
+    def __ge__(self, other):
+        """Determine if this OpenSSLVersion instance is greater than or equal to another"""
+        return int(self.version) >= int(other.version)
+
     def __le__(self, other):
         """Determine if this OpenSSLVersion instance is less than or equal to another"""
         return int(self.version) <= int(other.version)

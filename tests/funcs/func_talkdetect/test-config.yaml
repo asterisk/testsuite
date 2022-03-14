@@ -48,7 +48,7 @@ test-object-config:
             context: 'default'
             exten: 'stasis_app'
             priority: 'start'
-            async: True
+            nowait: True
 
 ari-config:
     events:

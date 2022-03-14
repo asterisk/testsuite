@@ -9,6 +9,7 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
 
+from builtins import range, super
 import sys
 import uuid
 import logging
@@ -97,7 +98,7 @@ class CallSpawner(BaseReceiver):
 
     def spawn_calls(self):
         """Make me a call!"""
-        for i in xrange(0, CHANNEL_COUNT):
+        for i in range(0, CHANNEL_COUNT):
             LOGGER.debug('Originating channel {0}'.format(i))
             self.client.post('channels',
                              endpoint='PJSIP/ast2',
@@ -226,10 +227,11 @@ class BalancerReceiver(BaseReceiver):
         message -- the JSON message
         """
         channel_id = message['channel']['id']
-        for c_list in self.channels.itervalues():
+
+        for c_list in self.channels.values():
             if channel_id in c_list:
                 c_list.remove(channel_id)
-        if sum(len(c_list) for c_list in self.channels.itervalues()) == 0:
+        if sum(len(c_list) for c_list in self.channels.values()) == 0:
             LOGGER.info('All channels hung up')
 
     def handle_stasisstart(self, message):
@@ -259,7 +261,7 @@ class BalancerReceiver(BaseReceiver):
         channels.append(channel_id)
 
         if all([len(chan_list) == (CHANNEL_COUNT / 2)
-                for chan_list in self.channels.itervalues()]):
+                for chan_list in self.channels.values()]):
             self.test_object.set_passed(True)
 
             LOGGER.info('All channels answered and balanced:')

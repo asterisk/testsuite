@@ -19,7 +19,7 @@ properties:
         - python: requests
         - python: twisted
         - python: starpy
-        - python: pjsua
+        - app: sipp
         - asterisk: app_playback
         - asterisk: res_ari_applications
         - asterisk: res_ari_channels

@@ -31,13 +31,13 @@ class FastAGIStreamFileTest(TestCase):
     # This gets invoked by the dialplan when the call is answered
     # send STREAM FILE command and wait for results
     def fastagi_connect(self, agi):
-        print "Connection established."
+        print("Connection established.")
         self.agi = agi
         return agi.streamFile("beep", "").addCallback(
             self.finish_test)
 
     def launch_test(self):
-        print "Originating call to begin test."
+        print("Originating call to begin test.")
         self.ast[0].cli_originate("Local/505@agitest extension echo@agitest")
 
     def run(self):
