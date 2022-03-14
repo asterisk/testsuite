@@ -17,12 +17,12 @@ INITIAL_STATE = 'NOT_INUSE'
 def on_start(ari, event, obj):
     try:
         ari.put(URL, INVALID_DEVICE, deviceState=INITIAL_STATE)
-    except requests.HTTPError, e:
+    except requests.HTTPError as e:
         assert 409 == e.response.status_code
 
     try:
         ari.put(URL, MISSING_DEVICE, deviceState=INITIAL_STATE)
-    except requests.HTTPError, e:
+    except requests.HTTPError as e:
         assert 404 == e.response.status_code
 
     ari.delete('channels', event['channel']['id'])

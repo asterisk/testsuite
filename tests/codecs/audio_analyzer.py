@@ -185,7 +185,7 @@ class Analyzer(ari.AriTestObject):
                 'channel': 'PJSIP/audio',
                 'application': 'Record',
                 'data': self.output_file + ',,,k',
-                'async': 'True'
+                'nowait': 'True'
             }]
 
         super(Analyzer, self).__init__(test_path, test_config)

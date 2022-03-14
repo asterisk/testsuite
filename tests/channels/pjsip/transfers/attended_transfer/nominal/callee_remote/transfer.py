@@ -7,7 +7,6 @@ the GNU General Public License Version 2.
 """
 
 import logging
-import pjsua as pj
 
 LOGGER = logging.getLogger(__name__)
 
@@ -24,19 +23,19 @@ TRANSFER_INITIATED = 3
 # up.
 HANGING_UP = 4
 
-class BobAccountCallback(pj.AccountCallback):
-    def __init__(self, account):
-        pj.AccountCallback.__init__(self, account)
-        self.incoming_call = None
-
-    def on_incoming_call(self, call):
-        LOGGER.info("Bob has incoming call from Asterisk A. Answering")
-        call.answer(200)
-        self.incoming_call = call
+#class BobAccountCallback(pj.AccountCallback):
+#    def __init__(self, account):
+#        pj.AccountCallback.__init__(self, account)
+#        self.incoming_call = None
+#
+#    def on_incoming_call(self, call):
+#        LOGGER.info("Bob has incoming call from Asterisk A. Answering")
+#        call.answer(200)
+#        self.incoming_call = call
 
 
 class Transfer(object):
-    def __init__(self, test_object, bob):
+    def __init__(self, test_object):
         super(Transfer, self).__init__()
         self.ami_a = test_object.ami[0]
 
@@ -64,10 +63,10 @@ class Transfer(object):
         self.ami_b.registerEvent('Hangup', self.ami_hangup)
         self.channels = 0
 
-        self.bob = bob
-        self.bob_callback = BobAccountCallback(self.bob)
-        self.bob.set_callback(self.bob_callback)
-        self.call_from_bob = None
+#        self.bob = bob
+#        self.bob_callback = BobAccountCallback(self.bob)
+#        self.bob.set_callback(self.bob_callback)
+#        self.call_from_bob = None
 
         self.test_object = test_object
         self.state = INITIAL
@@ -80,8 +79,8 @@ class Transfer(object):
             self.a_bridged_channels += 1
             if self.a_bridged_channels == 2:
                 LOGGER.info("Initial bridge complete, placing call from Bob to B")
-                self.call_from_bob = self.bob.make_call(
-                        'sip:echo@127.0.0.1:5061', pj.CallCallback())
+#                self.call_from_bob = self.bob.make_call(
+#                        'sip:echo@127.0.0.1:5061', pj.CallCallback())
                 self.state = AST_B_CALLED
         elif self.state == TRANSFER_INITIATED:
             self.a_bridged_channels += 1
@@ -110,7 +109,7 @@ class Transfer(object):
             self.b_bridged_channels += 1
             if self.b_bridged_channels == 2:
                 LOGGER.info("Initial bridge complete. Can now perform transfer")
-                self.bob_callback.incoming_call.transfer_to_call(self.call_from_bob)
+#                self.bob_callback.incoming_call.transfer_to_call(self.call_from_bob)
                 self.state = TRANSFER_INITIATED
 
     def ami_b_bridge_leave(self, ami, event):
@@ -142,7 +141,7 @@ class Transfer(object):
         self.state = BOB_CALLED
 
 
-def bob_registered(test_object, accounts):
-    transfer = Transfer(test_object, accounts.get('bob').account)
+def bob_registered(test_object, dummy):
+    transfer = Transfer(test_object)
     transfer.call_bob()
 

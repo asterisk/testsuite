@@ -28,8 +28,8 @@ class DialplanSaveTest(TestCase):
 
         def callback(defer):
             if defer.output.find("test1=Alert-Info: ;answer-after=0") == -1:
-                print "Dialplan did not load correctly"
-                print defer.output.strip()
+                print("Dialplan did not load correctly")
+                print(defer.output.strip())
                 reactor.callLater(1,self.failure)
             else:
                 reactor.callLater(3,self.save)
@@ -46,8 +46,8 @@ class DialplanSaveTest(TestCase):
 
         def callback(defer):
             if defer.output.find("Dialplan successfully saved into") == -1:
-                print "Dialplan did not save correctly"
-                print defer.output.strip()
+                print("Dialplan did not save correctly")
+                print(defer.output.strip())
                 reactor.callLater(1,self.failure)
             else:
                 reactor.callLater(3,self.reload)
@@ -64,8 +64,8 @@ class DialplanSaveTest(TestCase):
 
         def callback(defer):
             if defer.output.find("Dialplan reloaded.") == -1:
-                print "Dialplan did not reload correctly"
-                print defer.output.strip()
+                print("Dialplan did not reload correctly")
+                print(defer.output.strip())
                 reactor.callLater(1,self.failure)
             else:
                 reactor.callLater(3,self.retest)
@@ -83,8 +83,8 @@ class DialplanSaveTest(TestCase):
 
         def callback(defer):
             if defer.output.find("test1=Alert-Info: ;answer-after=0") == -1:
-                print "Dialplan did not reload correctly"
-                print defer.output.strip()
+                print("Dialplan did not reload correctly")
+                print(defer.output.strip())
                 reactor.callLater(1,self.failure)
             else:
                 reactor.callLater(3,self.success)

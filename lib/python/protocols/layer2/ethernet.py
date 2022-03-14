@@ -9,9 +9,9 @@ from construct.core import *
 
 class MacAddressAdapter(Adapter):
     def _encode(self, obj, context, path):
-        return unhexlify(obj.replace("-", ""))
+        return unhexlify(obj.replace(b"-", b""))
     def _decode(self, obj, context, path):
-        return "-".join(hexlify(b) for b in obj)
+        return b"-".join(hexlify(struct.pack('<i', b))[:2] for b in obj)
 
 def MacAddress():
     return MacAddressAdapter(Bytes(6))

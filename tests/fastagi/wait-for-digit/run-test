@@ -32,16 +32,16 @@ class FastAGIWaitForDigitTest:
         self.ast1.install_configs("%s/configs/ast1" % (testdir))
 
     def on_failure(self, reason):
-        print 'Could not run WAIT FOR DIGIT: ', reason.getTraceback()
+        print('Could not run WAIT FOR DIGIT: ', reason.getTraceback())
         self.agi.finish()
 
     # result is (str digits, bool timeout)
     def finish_test(self, result):
         self.passed = True
         if result == 3212:
-            print "Got the input we expected."
+            print("Got the input we expected.")
         else:
-            print "Got '%s' which wasn't what we expected." % result
+            print("Got '%s' which wasn't what we expected." % result)
             self.passed = False
 
         self.result_changed()
@@ -50,7 +50,7 @@ class FastAGIWaitForDigitTest:
     # send WAIT FOR DIGIT command and wait for results
     def do_test(self, agi):
         self.agi = agi
-        print "Connection established."
+        print("Connection established.")
         return agi.waitForDigit(60, 'silence/10', '1234567890*#ABCD', 4, '#').addCallback(
             self.finish_test).addErrback(self.on_failure)
 
@@ -58,13 +58,13 @@ class FastAGIWaitForDigitTest:
         self.stop_reactor()
 
         if self.passed is True:
-            print "Success"
+            print("Success")
         else:
-            print "Failed"
+            print("Failed")
 
     def stop_reactor(self):
         def __finish_stop(result):
-            print "Stopping Reactor ..."
+            print("Stopping Reactor ...")
             if reactor.running:
                 reactor.stop()
             return result
@@ -73,7 +73,7 @@ class FastAGIWaitForDigitTest:
         df.addCallback(__finish_stop)
 
     def launch_test(self):
-        print "Originating call to begin test."
+        print("Originating call to begin test.")
         self.ast1.cli_originate("Local/basic_agi@agitest extension play_dtmf@agitest")
 
     # Read result before timeout
@@ -87,7 +87,7 @@ class FastAGIWaitForDigitTest:
             reactor.callLater(self.timeout, self.stop_reactor)
             return result
 
-        print "Starting Asterisk"
+        print("Starting Asterisk")
         df = self.ast1.start()
         df.addCallback(__finish_start_ops)
 

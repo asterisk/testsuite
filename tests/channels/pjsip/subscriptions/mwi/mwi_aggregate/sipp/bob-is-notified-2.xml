@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="bob-is-notified">
+
+  <recv request="NOTIFY" crlf="true">
+    <action>
+      <ereg regexp="Messages-Waiting:.*" check_it="true" search_in="body" assign_to="mwi" />
+      <ereg regexp="Voice-Message:.*" check_it="true" search_in="body" assign_to="vms" />
+
+      <ereg regexp="yes" search_in="var" variable="mwi" check_it="true" assign_to="trash1"/>
+      <ereg regexp="3/3" search_in="var" variable="vms" check_it="true" assign_to="trash2"/>
+    </action>
+  </recv>
+
+  <Reference variables="trash1,trash2" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+</scenario>

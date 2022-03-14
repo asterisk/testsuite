@@ -90,7 +90,7 @@ class MasqueradeTest(TestCase):
         self.ami[0].originate(
             channel="Local/start@outgoing",
             context="parked", exten="parkme12", priority=1,
-            timeout=900, async=True, variable={'DEST': str(exten)}
+            timeout=900, nowait=True, variable={'DEST': str(exten)}
             ).addErrback(TestCase.handle_originate_failure)
 
     def get_parkedcall(self):
@@ -102,7 +102,7 @@ class MasqueradeTest(TestCase):
         self.ami[1].originate(
             channel=tech_prefix + str(self.expected_space),
             context="getit", exten="retrieve", priority=1,
-            timeout=30, async=True
+            timeout=30, nowait=True
             ).addErrback(TestCase.handle_originate_failure)
 
     def evt_parkedcall(self, ami, event):

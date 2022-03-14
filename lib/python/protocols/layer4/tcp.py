@@ -6,8 +6,6 @@ from binascii import unhexlify
 from construct import *
 from construct.core import *
 
-setGlobalPrintFullStrings(True)
-
 tcp_header = "tcp_header" / BitStruct(
     "source" / Bytewise(Int16ub),
     "destination" / Bytewise(Int16ub),

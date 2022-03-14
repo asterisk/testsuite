@@ -25,7 +25,7 @@ zone = [
         minimum = "1H"
     ),
 
-    NAPTR('naptr.example.com', 0, 1, 'S', 'SIP+D2U', '', '_sip._udp.example.com'),
+    NAPTR('naptr.example.com', 0, 1, b"S", b"SIP+D2U", b"", '_sip._udp.example.com'),
     SRV('_sip._udp.example.com', 0, 1, 5061, 'main.example.com'),
     A('main.example.com', '127.0.0.1'),
     AAAA('main.example.com', '::1'),

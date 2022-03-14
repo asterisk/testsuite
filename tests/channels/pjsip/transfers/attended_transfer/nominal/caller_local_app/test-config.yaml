@@ -12,55 +12,25 @@ testinfo:
 
 test-modules:
     test-object:
-        config-section: test-object-config
-        typename: 'test_case.TestCaseModule'
+        -
+            config-section: sipp-config
+            typename: 'sipp.SIPpTestCase'
     modules:
         -
-            config-section: 'pjsua-config'
-            typename: 'phones.PjsuaPhoneController'
-        -
-            config-section: pluggable-config
+            config-section: ami-config
             typename: 'pluggable_modules.EventActionModule'
 
-test-object-config:
+sipp-config:
     memcheck-delay-stop: 7
-    connect-ami: True
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'coordinated-sender': {'key-args': {'scenario':'alice-calls-101.xml', '-i': '127.0.0.1', '-p':'5061', '-sleep': '1'} },
+                    'coordinated-receiver': { 'key-args': {'scenario':'alice-calls-echo.xml', '-i': '127.0.0.1', '-p':'5161'} } }
+                - { 'key-args': {'scenario': 'bob-registers.xml', '-i': '127.0.0.1', '-p': '5062', '-oocsf': 'wait-for-a-call.xml'} }
 
-pjsua-config:
-    transports:
-        -
-            name: 'local-ipv4-1'
-            bind: '127.0.0.1'
-            bindport: '5061'
-        -
-            name: 'local-ipv4-2'
-            bind: '127.0.0.1'
-            bindport: '5062'
-    accounts:
-        -
-            name: 'alice'
-            username: 'alice'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-1'
-        -
-            name: 'bob'
-            username: 'bob'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-2'
-
-pluggable-config:
-    # Ensure our pjsua phones are ready. Then alice calls bob via exten 101.
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'UserEvent'
-                    UserEvent: 'PJsuaPhonesReady'
-            count: 1
-        pjsua_phone:
-            action: 'call'
-            pjsua_account: 'alice'
-            call_uri: 'sip:101@127.0.0.1'
+ami-config:
     # Ensure alice and bob are in a bridge. Then alice places bob on hold.
     -
         ami-events:
@@ -69,9 +39,6 @@ pluggable-config:
                     Event: 'BridgeEnter'
                     BridgeNumChannels: '2'
             count: 1
-        pjsua_phone:
-            action: 'hold'
-            pjsua_account: 'alice'
     # Ensure MOH starts on bob's channel. Then alice calls echo to enter the
     # Echo application.
     -
@@ -81,10 +48,6 @@ pluggable-config:
                     Event: 'MusicOnHoldStart'
                     Channel: 'PJSIP/bob-.*'
             count: 1
-        pjsua_phone:
-            action: 'call'
-            pjsua_account: 'alice'
-            call_uri: 'sip:echo@127.0.0.1'
     # Ensure alice enters the Echo application. Then transfer bob to the Echo
     # application.
     -
@@ -95,10 +58,6 @@ pluggable-config:
                     Channel: 'PJSIP/alice-.*'
                     Application: 'Echo'
             count: 1
-        pjsua_phone:
-            action: 'transfer'
-            pjsua_account: 'alice'
-            transfer_type: 'attended'
     # Ensure the attended transfer occurs with the proper info.
     -
         ami-events:
@@ -175,7 +134,7 @@ properties:
     dependencies:
         - python : twisted
         - python : starpy
-        - python : pjsua
+        - app : sipp
         - asterisk : res_pjsip
     tags:
         - pjsip

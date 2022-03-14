@@ -123,7 +123,7 @@ class AMILoginACLTest(TestCase):
     # Checks the test components and passes data to the ami_factory_test_function
     def ami_test_func(self):
         entry = 0
-        for key in self.test_components.iterkeys():
+        for key in self.test_components:
             this_dict_entry = self.test_components.get(key)
             for item in this_dict_entry:
                 if item[1] == "allow":

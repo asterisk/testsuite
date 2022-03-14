@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'Python3-issues'
     summary: Test performing a callee-initiated semi attended transfer with record-route header via chan_pjsip.
     description: |
         "Start four SIPp scenarios that do the following:
