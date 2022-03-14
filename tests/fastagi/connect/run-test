@@ -22,13 +22,13 @@ class FastAGIConnectTest(TestCase):
         self.create_fastagi_factory()
 
     def fastagi_connect(self, agi):
-        print "Connection established."
+        print("Connection established.")
         self.passed = True
         self.result_changed()
         return agi.finish()
 
     def launch_test(self):
-        print "Originating call to begin test."
+        print("Originating call to begin test.")
         self.ast[0].cli_originate("Local/501@agitest extension echo@agitest")
 
     def result_changed(self):

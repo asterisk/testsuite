@@ -6,10 +6,12 @@ Mark Michelson <mmichelson@digium.com>
 This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
+from encodings import utf_8
 import logging
 import sys
-import cgi
+import html
 import re
+from wsgiref.util import request_uri
 
 from twisted.internet import reactor
 from twisted.internet import error
@@ -157,8 +159,8 @@ class RootResource(Resource):
         TableResource is then called into to get the resource relating to the
         operation to perform on the table.
         """
-        LOGGER.debug("Asking root for child %s", name)
-        return TableResource(name, self.rt_data)
+        LOGGER.debug("Asking root for child %s", name.decode("utf-8"))
+        return TableResource(name.decode("utf-8"), self.rt_data)
 
 
 class TableResource(Resource):
@@ -192,7 +194,8 @@ class TableResource(Resource):
         these resources represents an operation to perform on the table.
         """
         try:
-            return getattr(THIS_MODULE, "_" + name + "Resource")(
+            attr_str = "_" + str(name, 'utf_8') + "Resource"
+            return getattr(THIS_MODULE, attr_str)(
                 self.table_name, self.rt_data
             )
         except AttributeError as ex:
@@ -221,6 +224,24 @@ class LeafResource(Resource):
         self.rt_data = rt_data
         LOGGER.debug("Constructing LeafResource")
 
+    def stringize_args(self, args):
+        """Convert lists of args to strings from bytes.
+        :param args: Dictionary of key-list pairs to unpack
+        :returns: Same dictionary with values replaced
+
+        A request object presents the URL and POST parameters as a dictionary
+        of the form {'param_name': [values]}. The values are placed in a list
+        to accommodate repeated parameter names that may appear in requests.
+        Since Asterisk does not repeat parameters, we are safe to unpack the
+        list. Assumes an unpacked args.
+
+        Example input: {b'foo': b'cat', b'bar': b'dog'}
+        Example output: {'foo': 'cat', 'bar': 'dog'}
+        """
+        stringDict = {k.decode("utf-8"):v.decode("utf-8") for (k,v) in args.items()}
+        LOGGER.debug('adjusted args is %s' % stringDict)
+        return stringDict
+
     def unpack_args(self, args):
         """Unpack lists used a args values.
         :param args: Dictionary of key-list pairs to unpack
@@ -240,9 +261,9 @@ class LeafResource(Resource):
         """
         filtered_args = {}
         for key, values in args.items():
-            if " LIKE" in key:
+            if b' LIKE' in key:
                 # Strip away " LIKE" and % from values
-                filtered_args[key[:-5]] = [val.replace('%', '.*')
+                filtered_args[key[:-5]] = [val.replace(b'%',b'.*')
                                            for val in values]
             else:
                 filtered_args[key] = values
@@ -260,7 +281,7 @@ class LeafResource(Resource):
         Example input: {'foo': 'cat, 'bar': 'dog', 'baz: 'donkey'}
         Example output: 'foo=cat&bar=dog&baz=donkey'
         """
-        string = '&'.join(['{0}={1}'.format(cgi.escape(key), cgi.escape(val))
+        string = '&'.join(['{0}={1}'.format(html.escape(key), html.escape(val))
                            for key, val in row.items()])
         LOGGER.debug("Returning response %s" % string)
         return string
@@ -303,9 +324,11 @@ class _singleResource(LeafResource):
         """
         LOGGER.debug("Asked to render_POST in the single resource")
         LOGGER.debug("request.args is %s" % request.args)
+        argstrings = self.stringize_args(self.unpack_args(request.args))
         try:
-            return self.encode_row(self.rt_data.retrieve_row(self.table_name,
-                                   self.unpack_args(request.args)))
+            return bytes(
+                self.encode_row(self.rt_data.retrieve_row(self.table_name, argstrings)),
+                "utf-8")
         except KeyError:
             return self.return_404(request)
 
@@ -330,11 +353,13 @@ class _multiResource(LeafResource):
         """
         # If this were python 2.7+ we could use a dict comprehension here
         LOGGER.debug("Asked to render POST on the multi resource")
-        LOGGER.debug("Multi URI: %s" % request.uri)
+        uristring = (request.uri).decode("utf-8")
+        LOGGER.debug("Multi URI: %s" % uristring)
+        stringedargs = self.stringize_args(self.unpack_args(request.args))
         try:
-            return self.encode_multi_row(
-                self.rt_data.retrieve_rows(self.table_name,
-                                           self.unpack_args(request.args)))
+            return bytes(
+                self.encode_multi_row(self.rt_data.retrieve_rows(self.table_name,stringedargs)),
+                "utf-8")
         except KeyError:
             return self.return_404(request)
 
@@ -358,27 +383,29 @@ class _updateResource(LeafResource):
         """
         LOGGER.debug("Asked to render POST in the update resource")
 
-        _, _, uri_params = request.uri.rpartition('?')
+        _, _, uri_params = request.uri.rpartition(b'?')
         # The odd slice notation gets the first and third items from the tuple
         # returned from item.partition
-        uri_args = dict(item.partition('=')[::2] for item in
-                        uri_params.split('&'))
+        uri_args = dict(item.partition(b'=')[::2] for item in
+                        uri_params.split(b'&'))
 
         # The dict() created as the argument to unpack args is essentially the
         # set difference between request.args and uri_args.
-        post_args = self.unpack_args(dict((key, request.args[key])
+        post_args = self.stringize_args( self.unpack_args(dict((key, request.args[key])
                                      for key in request.args
-                                     if key not in uri_args))
+                                     if key not in uri_args)))
 
-        LOGGER.debug("URI args: %s" % uri_args)
+        uri_string_args = self.stringize_args(uri_args)
+        LOGGER.debug("URI args: %s" % uri_string_args)
         LOGGER.debug("POST args: %s" % post_args)
         try:
-            affected = self.rt_data.update_rows(self.table_name, uri_args,
+            affected = self.rt_data.update_rows(self.table_name,
+                                                uri_string_args,
                                                 post_args)
         except KeyError:
             return self.return_404(request)
         else:
-            return str(affected)
+            return str(affected).encode("utf-8")
 
 
 class _storeResource(LeafResource):
@@ -395,9 +422,9 @@ class _storeResource(LeafResource):
         """
         LOGGER.debug("Asked to render POST in the store resource")
         self.rt_data.add_row(
-            self.table_name, self.unpack_args(request.args)
+            self.table_name, self.stringize_args(self.unpack_args(request.args))
         )
-        return "1"
+        return b'1'
 
 
 class _destroyResource(LeafResource):
@@ -411,12 +438,12 @@ class _destroyResource(LeafResource):
         LOGGER.debug("Asked to render POST in the destroy resource")
         try:
             affected = self.rt_data.delete_rows(
-                self.table_name, self.unpack_args(request.args)
+                self.table_name, self.stringize_args(self.unpack_args(request.args))
             )
         except KeyError:
             return self.return_404(request)
         else:
-            return str(affected)
+            return str(affected).encode("utf-8")
 
 
 class _requireResource(LeafResource):
@@ -433,7 +460,7 @@ class _requireResource(LeafResource):
         for the given tables. Returning a "0" body indicates we satisfy all
         requirements.
         """
-        return "0"
+        return b'0'
 
 
 class _staticResource(LeafResource):
@@ -449,11 +476,11 @@ class _staticResource(LeafResource):
         LOGGER.debug("Asked to render GET in the static resource")
         # Forego a more complicated unpack since the file is the only thing we
         # care about
-        where = {'filename': request.args['file'][0], 'commented': '0'}
+        where = {'filename': (request.args[b'file'][0]).decode("utf-8"), 'commented': '0'}
         try:
             return self.encode_multi_row(
                 self.rt_data.retrieve_rows(self.table_name, where)
-            )
+            ).encode("utf-8")
         except KeyError:
             return self.return_404(request)
 

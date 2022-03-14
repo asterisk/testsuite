@@ -23,12 +23,12 @@ we are connecting to a SIP socket, we write arbitrary non-SIP
 data in all cases.
 '''
 TCP_MESSAGES = [
-    [],
-    ['hi, this is your tester standby'],
-    ['INVITE sip:service@127.0.0.1:5060 SIP/2.0\r\n'],
-    ['hi, this is your tester standby',
-     'hi, this is your tester, again... standby',
-     'guess who?! yup, your tester... standby\r\n']
+    [b""],
+    [b"hi, this is your tester standby"],
+    [b"INVITE sip:service@127.0.0.1:5060 SIP/2.0\r\n"],
+    [b"hi, this is your tester standby",
+     b"hi, this is your tester, again... standby",
+     b"guess who?! yup, your tester... standby\r\n"]
 ]
 
 

@@ -16,12 +16,12 @@ from abc import ABCMeta, abstractmethod
 from twisted.internet import reactor, defer, protocol, error
 from .test_case import TestCase
 from .utils_socket import get_available_port
+from .test_runner import load_and_parse_module
 from .pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
     PLUGGABLE_ACTION_REGISTRY, var_replace
 
 
 LOGGER = logging.getLogger(__name__)
-
 
 class ScenarioGenerator(object):
     """Scenario Generators provide a generator function for creating scenario
@@ -87,7 +87,18 @@ class SIPpTestCase(TestCase):
         self._final_observers = []
         self._test_config = test_config
         self._current_test = 0
+        self._connected_amis = 0
         self.scenarios = []
+        self.start_CB_invoked = False
+        self.start_callback_module = test_config.get('start_callback_module')
+        self.start_callback_method = test_config.get('start_callback_method')
+        self.stop_CB_invoked = False
+        self.stop_callback_module = test_config.get('stop_callback_module')
+        self.stop_callback_method = test_config.get('stop_callback_method')
+
+
+        self.asterisk_instances = test_config.get('asterisk-instances') or 1
+        self.connect_ami = test_config.get('connect-ami') or False
 
         test_iterations = test_config.get('test-iterations')
         if test_iterations:
@@ -107,7 +118,7 @@ class SIPpTestCase(TestCase):
             self._stop_after_scenarios = True
 
         self.register_intermediate_obverver(self._handle_scenario_finished)
-        self.create_asterisk(test_config=test_config)
+        self.create_asterisk(count=self.asterisk_instances, test_config=test_config)
 
     def on_reactor_timeout(self):
         """Create a failure token when the test times out"""
@@ -128,10 +139,15 @@ class SIPpTestCase(TestCase):
         """
         super(SIPpTestCase, self).run()
 
-        self.ast[0].cli_exec('sip set debug on')
-        self.ast[0].cli_exec('pjsip set logger on')
+        for a in range(1, self.asterisk_instances):
+            self.ast[a-1].cli_exec('sip set debug on')
+            self.ast[a-1].cli_exec('pjsip set logger on')
 
-        self.create_ami_factory()
+        LOGGER.info("creating ami factory")
+        if not isinstance(self.connect_ami, dict):
+            self.create_ami_factory(count=self.asterisk_instances)
+        else:
+            self.create_ami_factory(**self.connect_ami)
 
     def stop_asterisk(self):
         """Kill any remaining SIPp scenarios"""
@@ -145,14 +161,19 @@ class SIPpTestCase(TestCase):
         """Handler for the AMI connect event"""
         super(SIPpTestCase, self).ami_connect(ami)
 
-        self._execute_test()
+        # keep track of number of connected amis and only start once they
+        # are all connected
+        self._connected_amis +=1
+        if self._connected_amis == self.asterisk_instances:
+            self._execute_test()
 
     def ami_reconnect(self, ami):
         """Handler for the AMI reconnect event"""
         super(SIPpTestCase, self).ami_reconnect(ami)
 
-        self.ast[0].cli_exec('sip set debug on')
-        self.ast[0].cli_exec('pjsip set logger on')
+        for a in range(1, self.asterisk_instances):
+            self.ast[a-1].cli_exec('sip set debug on')
+            self.ast[a-1].cli_exec('pjsip set logger on')
 
     def register_scenario_started_observer(self, observer):
         """Register a function to be called when a SIPp scenario starts.
@@ -277,13 +298,31 @@ class SIPpTestCase(TestCase):
 
         # Allow some time for the SIPp process to come up
         reactor.callLater(.25, __run_callback, result)
+        reactor.callLater(1, self.do_start_callback)
 
     def _scenario_stop_callback_fn(self, result):
         """Notify observers that the scenario has stopped"""
         for observer in self._scenario_stopped_observers:
             observer(result)
+        self.do_stop_callback()
         return result
 
+
+    def do_start_callback(self):
+        """Call the configured callback module/method"""
+        if self.start_callback_module is None or self.start_callback_method is None or self.start_CB_invoked is True:
+            return
+        self.start_CB_invoked = True
+        callback_method = load_and_parse_module(self.start_callback_module + '.' + self.start_callback_method)
+        callback_method(self, None)
+
+    def do_stop_callback(self):
+        """Call the configured callback module/method"""
+        if self.stop_callback_module is None or self.stop_callback_method is None or self.stop_CB_invoked is True:
+            return
+        self.stop_CB_invoked = True
+        callback_method = load_and_parse_module(self.stop_callback_module + '.' + self.stop_callback_method)
+        callback_method(self, None)
 
 class SIPpAMIActionTestCase(SIPpTestCase):
     """SIPpTestCase that also executes an AMI action"""
@@ -497,7 +536,8 @@ class SIPpProtocol(protocol.ProcessProtocol):
 
     def outReceived(self, data):
         """Override of ProcessProtocol.outReceived"""
-        LOGGER.debug("Received from SIPp scenario %s: %s" % (self._name, data))
+        LOGGER.debug("Received from SIPp scenario %s:\n %s" % (self._name,
+                        data.decode('utf-8', 'ignore')))
         self.output += data.decode('utf-8', 'ignore')
 
     def connectionMade(self):

@@ -72,7 +72,7 @@ class AGITest(TestCase):
         Checks to see if the AGI script was completed as expected.
         """
         if event['userevent'] != 'AgiCompleted':
-            print event['userevent']
+            print(event['userevent'])
             return
 
         self.call_count += 1

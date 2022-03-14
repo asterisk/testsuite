@@ -4,7 +4,7 @@ testinfo:
         bridge is blind transfered to the same Stasis application."
     description: |
         "Upon the kick off local channel entering into the Stasis(testsuite)
-         app, a Stasis bridge is created and two calls are placed using PJSUA
+         app, a Stasis bridge is created and two calls are placed using sipp
          accounts ('alice' & 'bob') with both dialing into the
          Stasis(testsuite,test) app. The alice & bob channels are placed into
          the Stasis bridge.
@@ -24,46 +24,12 @@ testinfo:
          channel halves used for the transfer."
 
 test-modules:
-    add-test-to-search-path: True
-    add-relative-to-search-path: ['..']
     test-object:
         typename: ari.AriTestObject
     modules:
         -
-            config-section: 'pjsua-config'
-            typename: 'call_transfer.InitMod'
-        -
             config-section: pluggable-config
             typename: 'pluggable_modules.EventActionModule'
-
-pjsua-config:
-    transports:
-        -
-            name: 'local-ipv4-1'
-            bind: '127.0.0.1'
-            bindport: '5061'
-        -
-            name: 'local-ipv4-2'
-            bind: '127.0.0.1'
-            bindport: '5062'
-    accounts:
-        # Use static contacts due to race condition between 'reg_success' and
-        # 'call_transfer' method calls.
-        -
-            name: 'alice'
-            username: 'alice'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-1'
-            call_uri: 'sip:stasis@127.0.0.1'
-            transfer_uri: 'sip:1000@127.0.0.1'
-            register: False
-        -
-            name: 'bob'
-            username: 'bob'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-2'
-            call_uri: 'sip:stasis@127.0.0.1'
-            register: False
 
 pluggable-config:
     # Upon kickoff channel entering Stasis app: create a bridge, don't add
@@ -81,8 +47,8 @@ pluggable-config:
             method: 'post'
             uri: 'bridges/test_bridge'
         callback:
-            module: call_transfer
-            method: exec_pjsua
+            module: extension_bank
+            method: alice_and_bob_call
     # Upon alice & bob entering Stasis app: add the channels to the bridge.
     -
         ari-events:
@@ -222,7 +188,7 @@ properties:
         - python : requests
         - python : twisted
         - python : starpy
-        - python : pjsua
+        - app : sipp
         - asterisk : app_stasis
         - asterisk : res_ari_channels
         - asterisk : res_ari_bridges

@@ -243,7 +243,7 @@ class AsteriskProtocol(protocol.ProcessProtocol):
 
     def errReceived(self, data):
         """Override of ProcessProtocol.errReceived"""
-        LOGGER.warn("Asterisk %s received error: %s" % (self._host, data))
+        LOGGER.warn("Asterisk %s received error: %s" % (self._host, data.decode('utf-8', 'ignore')))
 
     def processEnded(self, reason):
         """Override of ProcessProtocol.processEnded"""

@@ -7,6 +7,7 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 '''
 
+from builtins import bytes
 import sys
 import os
 import signal
@@ -121,17 +122,20 @@ class BlindTransfer(TestCase):
 
     def a_call_b(self):
         logger.debug("Phone A Calling Phone B (%s)" % BlindTransfer.phone_b_uri)
-        self.pja.stdin.write("m\n")
-        self.pja.stdin.write("%s\n" % BlindTransfer.phone_b_uri)
+        self.pja.stdin.write(b"m\n")
+        self.pja.stdin.write(b"%s\n" % bytes(BlindTransfer.phone_b_uri,"utf-8"))
+        self.pja.stdin.flush()
 
     def a_transfer_b_to_c(self):
         logger.debug("Phone A Transferring Phone B to Phone C (%s)" % BlindTransfer.phone_c_uri)
-        self.pja.stdin.write("x\n")
-        self.pja.stdin.write("%s\n" % BlindTransfer.phone_c_uri)
+        self.pja.stdin.write(b"x\n")
+        self.pja.stdin.write(b"%s\n" % bytes(BlindTransfer.phone_c_uri,"utf-8"))
+        self.pja.stdin.flush()
 
     def hangup_channel_c(self):
         logger.debug("Hanging up Phone C")
-        self.pjc.stdin.write("h\n")
+        self.pjc.stdin.write(b"h\n")
+        self.pjc.stdin.flush()
 
     def start_processes(self):
         logger.debug("Starting Processes")

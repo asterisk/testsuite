@@ -23,7 +23,7 @@ class srv_record():
         self.weight = weight
 
     def match(self, record):
-        print "Matching: %s/%s, %s/%s, %s/%s, %s/%s" % (self.host, record.host, self.port, record.port, self.priority, record.priority, self.weight, record.weight)
+        print("Matching: %s/%s, %s/%s, %s/%s, %s/%s" % (self.host, record.host, self.port, record.port, self.priority, record.priority, self.weight, record.weight))
         if self.host != record.host or self.port != record.port or self.priority != record.priority or self.weight != record.weight:
             return False
         else:
@@ -57,7 +57,7 @@ class func_srv_test(TestCase):
             return
 
         r = srv_record(event.get("recordnum"), event.get("host"), event.get("port"), event.get("priority"), event.get("weight"))
-        print "Got record (%s): Host - %s, Port - %s, Priority - %s, Weight - %s" % (r.record_num, r.host, r.port, r.priority, r.weight)
+        print("Got record (%s): Host - %s, Port - %s, Priority - %s, Weight - %s" % (r.record_num, r.host, r.port, r.priority, r.weight))
         records.append(r)
 
         if len(self.srv_records) == len(self.test1_records) and len(self.srv_records) == len(self.test2_records):
@@ -66,7 +66,7 @@ class func_srv_test(TestCase):
                     if not r.match(t[r.record_num - 1]):
                         # Records with the same priority are ordered randomly, so check 2/3 instead.
                         if not (r.record_num == 2 and r.match(t[2])) and not (r.record_num == 3 and r.match(t[1])):
-                            print "Record #%s did not match." % r.record_num
+                            print("Record #%s did not match." % r.record_num)
                             self.stop_reactor()
                             return
 

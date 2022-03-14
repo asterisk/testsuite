@@ -1,0 +1,59 @@
+testinfo:
+    skip: 'Python3-issues'
+    summary: Test performing a callee-initiated semi attended transfer with record-route header via chan_pjsip.
+    description: |
+        "Start four SIPp scenarios that do the following:
+        SIPp #1 (uac-no-hangup.xml) calls through Asterisk to SIPp #2 (referer_uas.xml)
+        SIPp #2 kicks off SIPp #3 (referee.xml) which calls SIPp #4 (uas.xml).
+        SIPp #3 passes call information back to SIPp #2.
+        Before SIPp #4 answers SIPp #2 initiates an attended transfer via REFER with Replaces information from SIPp #3.
+        SIPp #3 is hung up.
+        SIPp #2 hangs up.
+        SIPp #4 continues to ring until it answers.
+        SIPp #1 receives a connected line update and the values are checked.
+        SIPp #4 answers.
+        SIPp #1 and SIPp #4 are bridged.
+        SIPp #4 receives a connected line update and the values are checked.
+        SIPp #4 hangs up.
+        SIPp #1 is hung up."
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: sipp.SIPpTestCase
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'coordinated-sender': {'key-args': {'scenario':'referer_uas.xml', '-p':'5066', '-sleep': '2'} },
+                    'coordinated-receiver': { 'key-args': {'scenario':'referee.xml', '-p':'5065'} } }
+                - { 'key-args': {'scenario':'uas.xml', '-p':'5067', '-sleep': '2'} }
+                - { 'key-args': {'scenario':'uac-no-hangup.xml', '-p':'5068', '-s':'alice', '-sleep': '2'} }
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'AttendedTransfer'
+                Result: 'Success'
+        count: 1
+
+properties:
+    dependencies:
+        - python : twisted
+        - python : starpy
+        - asterisk : app_dial
+        - asterisk : chan_sip
+    tags:
+        - SIP
+        - transfer
+

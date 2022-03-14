@@ -14,107 +14,36 @@ testinfo:
 
          This then checks some data from the REFER and NOTIFY sipfrag. It
          also ensures MOH is stopped on alice and that alice and charlie are
-         remotely bridged. If a race condition occurs between pjsua putting a
-         call on hold and Asterisk setting up direct media, the resulting 491
-         Request Pending message is examined and hold is attempted again."
+         remotely bridged.
 
 test-modules:
-    add-relative-to-search-path: ['..']
     test-object:
-        config-section: test-object-config
-        typename: 'test_case.TestCaseModule'
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
     modules:
         -
-            config-section: packet-listener
-            typename: 'packet_sniffer.Sniffer'
-        -
-            config-section: pluggable-config
+            config-section: ami-config
             typename: 'pluggable_modules.EventActionModule'
-        -
-            config-section: pjsua-config
-            typename: 'phones.PjsuaPhoneController'
 
-test-object-config:
-    connect-ami: True
+sipp-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                # Pre-register alice and bob and charlie
+                - { 'key-args': {'scenario': 'alice-registers.xml', '-i': '127.0.0.1', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'bob-registers.xml', '-i': '127.0.0.1', '-p': '5062'} }
+                - { 'key-args': {'scenario': 'charlie-registers.xml', '-i': '127.0.0.1', '-p': '5063'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario':'alice-calls-101.xml', '-i': '127.0.0.1', '-p':'5061', '-mi': '127.0.0.3', '-sleep': '1'} }
+                - { 'coordinated-sender': {'key-args': {'scenario':'bob-does-a-transfer.xml', '-i': '127.0.0.1', '-p':'5062', '-mi': '127.0.0.3'} },
+                    'coordinated-receiver': { 'key-args': {'scenario':'bob-calls-102.xml', '-i': '127.0.0.1', '-p':'5162', '-mi': '127.0.0.3'} } }
+                - { 'key-args': {'scenario': 'wait-for-a-call-then-send-bye.xml', '-i': '127.0.0.1', '-p': '5063', '-mi': '127.0.0.3'} }
 
-packet-listener:
-    register-observer: True
-    device: 'lo'
-    bpf-filter: 'udp and port 5060'
-    debug-packets: False
 
-pjsua-config:
-    transports:
-        -
-            name: 'local-ipv4-1'
-            bind: '127.0.0.1'
-            bindport: '5061'
-        -
-            name: 'local-ipv4-2'
-            bind: '127.0.0.1'
-            bindport: '5062'
-        -
-            name: 'local-ipv4-3'
-            bind: '127.0.0.1'
-            bindport: '5063'
-    accounts:
-        -
-            name: 'alice'
-            username: 'alice'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-1'
-        -
-            name: 'bob'
-            username: 'bob'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-2'
-        -
-            name: 'charlie'
-            username: 'charlie'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-3'
-
-pluggable-config:
-    # Ensure our pjsua phones are ready. Then alice calls bob via exten 101.
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'UserEvent'
-                    UserEvent: 'PJsuaPhonesReady'
-            count: 1
-        pjsua_phone:
-            action: 'call'
-            pjsua_account: 'alice'
-            call_uri: 'sip:101@127.0.0.1'
-    # Ensure alice and bob are remotely bridged. Then bob places alice on hold.
-    # The remote bridge may be setup twice depending on how fast things occur
-    # but the hold is only executed upon the first occurrence of the event.
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'UserEvent'
-                    UserEvent: 'RemoteRTPBridgeStarted'
-                    Endpoint1: '(bob|alice)'
-                    Endpoint2: '(bob|alice)'
-            count: '>1'
-            trigger-on-count: True
-        pjsua_phone:
-            action: 'hold'
-            pjsua_account: 'bob'
-    # If this is received then there was a race condition with our hold and a
-    # reinvite. Therefore try hold again but use override method.
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'UserEvent'
-                    UserEvent: '491RequestPending'
-            count: <3
-        callback:
-            module: packet_sniffer
-            method: hold
+ami-config:
     # Ensure MOH starts on alice.
     -
         ami-events:
@@ -122,45 +51,6 @@ pluggable-config:
                 match:
                     Event: 'MusicOnHoldStart'
                     Channel: 'PJSIP/alice-.*'
-            count: 1
-    # Ensure remote bridge is torn down for alice since she's on hold. Then bob
-    # makes a call to charlie.
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'UserEvent'
-                    UserEvent: 'RemoteRTPBridgeStopped'
-                    Endpoint1: 'alice'
-            count: 1
-        pjsua_phone:
-            action: 'call'
-            pjsua_account: 'bob'
-            call_uri: 'sip:102@127.0.0.1'
-    # Ensure bob and charlie are remotely bridged. Then bob transfers alice
-    # to charlie via an attended transfer.
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'UserEvent'
-                    UserEvent: 'RemoteRTPBridgeStarted'
-                    Endpoint1: '(charlie|bob)'
-                    Endpoint2: '(charlie|bob)'
-            count: 1
-        pjsua_phone:
-            action: 'transfer'
-            pjsua_account: 'bob'
-            transfer_type: 'attended'
-    # Ensure the REFER contains correct info
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'UserEvent'
-                    UserEvent: 'ReferInfo'
-                    ReferTo: '.*102@127.0.0.1.*Replaces=.*'
-                    ReferredBy: '.*sip:bob@127.0.0.1.*'
             count: 1
     # Ensure MOH stops on alice's channel.
     -
@@ -181,15 +71,6 @@ pluggable-config:
                     TransfereeChannel: 'PJSIP/alice-.*'
                     TransferTargetChannel: 'PJSIP/charlie-.*'
                     Result: 'Success'
-            count: 1
-    # Ensure a 200 OK sipfrag NOTIFY occurred.
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'UserEvent'
-                    UserEvent: 'NotifySIPFrag'
-                    NotifyBody: 'SIP/2.0 200 OK'
             count: 1
     # Ensure each bob channel leaves the bridge it was in.
     -
@@ -218,27 +99,6 @@ pluggable-config:
                 nomatch:
                     Exten: '102'
             count: 1
-    # The remote bridge for charlie's call may or may not be torn down due to
-    # how fast things occur.
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'UserEvent'
-                    UserEvent: 'RemoteRTPBridgeStopped'
-                    Endpoint1: 'charlie'
-            count: <1
-    # The remote bridge may be setup twice depending on how fast things occur.
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'UserEvent'
-                    UserEvent: 'RemoteRTPBridgeStarted'
-                    Endpoint1: '(charlie|alice)'
-                    Endpoint2: '(charlie|alice)'
-            count: <2
-        stop_test:
 
 properties:
     dependencies:
@@ -246,9 +106,9 @@ properties:
         - python : starpy
         - python : yappcap
         - python : pyxb
-        - python : pjsua
         - asterisk : res_pjsip
         - custom : rawsocket
+        - app : sipp
     tags:
         - pjsip
         - refleaks

@@ -12,7 +12,7 @@ class IpAddressAdapter(Adapter):
         return "".join(chr(int(b)) for b in obj.split("."))
 
     def _decode(self, obj, context, path):
-        return ".".join(str(ord(b)) for b in obj)
+        return ".".join(str(b) for b in obj)
 
 def IpAddress():
     return IpAddressAdapter(Bytes(4))

@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'Python3-issues'
     summary: Test chunked Transfer-Encoding.
     description: |
         Check that the res_http supports chunked transfer encoding by

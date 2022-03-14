@@ -16,78 +16,25 @@ testinfo:
 
 test-modules:
     test-object:
-        config-section: test-object-config
-        typename: 'test_case.TestCaseModule'
+        -
+            config-section: sipp-config
+            typename: 'sipp.SIPpTestCase'
     modules:
         -
-            config-section: pjsua-config
-            typename: 'phones.PjsuaPhoneController'
-        -
-            config-section: pluggable-config
+            config-section: ami-config
             typename: 'pluggable_modules.EventActionModule'
 
-test-object-config:
-    connect-ami: True
+sipp-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice-calls-101.xml', '-i': '127.0.0.1', '-p': '5061', '-sleep':'1'} }
+                - { 'key-args': {'scenario': 'bob-registers.xml', '-i': '127.0.0.1', '-p': '5062', '-oocsf': 'bob-waits-for-a-call.xml'} }
+                - { 'key-args': {'scenario': 'carol-calls-102.xml', '-i': '127.0.0.1', '-p': '5063', '-sleep':'2'} }
 
-pjsua-config:
-    transports:
-        -
-            name: 'local-ipv4-1'
-            bind: '127.0.0.1'
-            bindport: '5061'
-        -
-            name: 'local-ipv4-2'
-            bind: '127.0.0.1'
-            bindport: '5062'
-        -
-            name: 'local-ipv4-3'
-            bind: '127.0.0.1'
-            bindport: '5063'
-
-    accounts:
-        -
-            name: 'alice'
-            username: 'alice'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-1'
-        -
-            name: 'bob'
-            username: 'bob'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-2'
-        -
-            name: 'carol'
-            username: 'carol'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-3'
-
-pluggable-config:
-    -
-        ami-events:
-            conditions:
-                match:
-                    Event: 'UserEvent'
-                    UserEvent: 'PJsuaPhonesReady'
-            count: 1
-        # alice dials the queue
-        pjsua_phone:
-            action: 'call'
-            pjsua_account: 'alice'
-            call_uri: 'sip:101@127.0.0.1'
-    -
-        # queue rings bob, bob answers, alice is bridged with bob
-        ami-events:
-            conditions:
-                match:
-                    Event: 'BridgeEnter'
-                    Channel: 'PJSIP/alice-00000000'
-                    Context: 'default'
-            count: 1
-        # then carol starts a call that ends in the dialplan Wait()
-        pjsua_phone:
-            action: 'call'
-            pjsua_account: 'carol'
-            call_uri: 'sip:102@127.0.0.1'
+ami-config:
     -
         # when we detect carol's call..
         ami-events:
@@ -149,7 +96,6 @@ properties:
     dependencies:
         - python : twisted
         - python : starpy
-        - python : pjsua
         - asterisk : res_pjsip
         - asterisk : app_queue
     tags:

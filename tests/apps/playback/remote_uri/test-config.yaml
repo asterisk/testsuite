@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'ASTERISK-30141'
     summary: 'Test Playback of a remote media resource'
     description: |
       'This tests Playback of a media resource from a remote HTTP server.

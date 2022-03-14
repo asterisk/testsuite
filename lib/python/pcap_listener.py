@@ -27,7 +27,7 @@ class PcapFile(abstract.FileDescriptor):
 
     def doRead(self):
         try:
-            pkt = self.pcap.next()
+            pkt = next(self.pcap)
         except PcapTimeout:
             return 0
 

@@ -82,11 +82,11 @@ class HEPPacket(object):
         self.protocol_type = hep_hdr.hep_protocol_type.protocol_type
         self.capture_agent_id = hep_hdr.hep_capture_agent_id.capture_agent_id
         if self.ip_family == IP_FAMILY.v4:
-            self.src_addr = socket.inet_ntop(socket.AF_INET, src_addr.ipv4_addr)
-            self.dst_addr = socket.inet_ntop(socket.AF_INET, dst_addr.ipv4_addr)
+            self.src_addr = socket.inet_ntop(socket.AF_INET, bytes(src_addr.ipv4_addr,"utf-8"))
+            self.dst_addr = socket.inet_ntop(socket.AF_INET, bytes(dst_addr.ipv4_addr,"utf-8"))
         elif self.ip_family == IP_FAMILY.v6:
-            self.src_addr = socket.inet_ntop(socket.AF_INET6, src_addr.ipv6_addr)
-            self.dst_addr = socket.inet_ntop(socket.AF_INET6, dst_addr.ipv6_addr)
+            self.src_addr = socket.inet_ntop(socket.AF_INET6, bytes(src_addr.ipv6_addr,"utf-8"))
+            self.dst_addr = socket.inet_ntop(socket.AF_INET6, bytes(dst_addr.ipv6_addr,"utf-8"))
         self.auth_key = None
         self.uuid = None
         self.payload = None
@@ -144,8 +144,10 @@ class HEPPacketHandler(DatagramProtocol):
             hep_protocol_type,
             hep_capture_agent_id)
 
-    def datagramReceived(self, data, (host, port)):
+    def datagramReceived(self, data, addr):
         """Process a received datagram"""
+
+        (host, port) = addr
 
         LOGGER.debug("Received %r from %s:%d (len: %d)" %
             (data, host, port, len(data)))

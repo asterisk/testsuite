@@ -26,7 +26,7 @@ properties:
         - python: requests
         - python: twisted
         - python: starpy
-        - python: pjsua
+        - app: sipp
         - asterisk: app_echo
         - asterisk: app_userevent
         - asterisk: res_ari_channels
@@ -41,24 +41,8 @@ test-modules:
         typename: ari.AriOriginateTestObject
     modules:
         -
-            config-section: pjsua-config
-            typename: phones.PjsuaPhoneController
-        -
             config-section: pluggable-config
             typename: pluggable_modules.EventActionModule
-
-pjsua-config:
-    transports:
-        -
-            name: 'local-ipv4-1'
-            bind: '127.0.0.1'
-            bindport: '5061'
-    accounts:
-        -
-            name: 'alice'
-            username: 'alice'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-1'
 
 originate-config:
     memcheck-delay-stop: 7
@@ -72,14 +56,16 @@ originate-config:
             priority: '1'
 
 pluggable-config:
-    # Upon phone being ready, originate the channels.
+    # Upon boot, start the test.
     -
         ami-events:
             conditions:
                 match:
-                    Event: 'UserEvent'
-                    UserEvent: 'PJsuaPhonesReady'
+                    Event: 'FullyBooted'
             count: 1
+        callback:
+            module: extension_bank
+            method: alice_registers_then_waits
         ari-requests:
             -
                 method: 'post'
