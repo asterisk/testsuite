@@ -243,7 +243,7 @@ class AsteriskProtocol(protocol.ProcessProtocol):
 
     def errReceived(self, data):
         """Override of ProcessProtocol.errReceived"""
-        LOGGER.warn("Asterisk %s received error: %s" % (self._host, data))
+        LOGGER.warn("Asterisk %s received error: %s" % (self._host, data.decode('utf-8', 'ignore')))
 
     def processEnded(self, reason):
         """Override of ProcessProtocol.processEnded"""
@@ -464,8 +464,12 @@ class Asterisk(object):
             self.process = reactor.spawnProcess(self.protocol,
                                                 cmd[0],
                                                 cmd, env=os.environ)
-            # Begin the wait fully booted cycle
-            reactor.callLater(1, __execute_wait_fully_booted)
+            # This was a one second delay, now two.  This is to allow
+            # asterisk sufficient time to actually start and create the ctl
+            # file. If we try to send the fully booted command before this
+            # happens we wait and try again, but this results in an unhandled
+            # error in twisted after the command succeeds.
+            reactor.callLater(2, __execute_wait_fully_booted)
 
         def __execute_wait_fully_booted():
             """Send the CLI command waitfullybooted"""
@@ -496,8 +500,9 @@ class Asterisk(object):
                 LOGGER.error(msg)
                 self._start_deferred.errback(Exception(msg))
             else:
-                msg = "Asterisk core waitfullybooted failed, attempting again"
-                LOGGER.debug(msg)
+                LOGGER.debug("Asterisk core waitfullybooted failed " +
+                             "with output '%s', attempting again..." %
+                             cli_command.value.err.decode('utf-8'))
                 reactor.callLater(1, __execute_wait_fully_booted)
             return cli_command
 

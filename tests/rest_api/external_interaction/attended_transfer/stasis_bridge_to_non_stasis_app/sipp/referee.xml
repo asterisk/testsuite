@@ -35,7 +35,7 @@
       INVITE sip:1000@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       From: <sip:bob@[local_ip]:[local_port]>;tag=[call_number]
-      To: <sip:transfer@[remote_ip]:[remote_port]>
+      To: <sip:1000@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: [cseq] INVITE
       Contact: <sip:bob@[local_ip]:[local_port]>

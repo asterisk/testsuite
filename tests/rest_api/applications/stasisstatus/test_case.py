@@ -7,6 +7,7 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
 
+from builtins import StopIteration, super
 import sys
 import logging
 
@@ -69,7 +70,7 @@ class StasisStatusTestCase(TestCase):
 
         scenario = None
         try:
-            scenario = self.__iterator.next()
+            scenario = self.__iterator.__next__()
         except StopIteration:
             pass
         return scenario

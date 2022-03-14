@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'ASTERISK-30141'
     summary: 'Test ControlPlayback of a remote media resource'
     description: |
       'This tests playing back a remote media resource using the

@@ -6,14 +6,17 @@ some solutions
 """
 from binascii import unhexlify
 #import six
-from construct import Struct, HexDump, Switch, Pass, Computed, Hex, Bytes, setGlobalPrintFullStrings
+#from construct import Struct, HexDump, Switch, Pass, Computed, Hex, Bytes, setGlobalPrintFullStrings
+#from construct import Struct, HexDump, Switch, Pass, Computed, Hex, Bytes, setglobalfullprinting
+from construct import Struct, HexDump, Switch, Pass, Computed, Hex, Bytes
 from protocols.layer2.ethernet import ethernet_header
 from protocols.layer3.ipv4 import ipv4_header
 from protocols.layer3.ipv6 import ipv6_header
 from protocols.layer4.tcp import tcp_header
 from protocols.layer4.udp import udp_header
 
-setGlobalPrintFullStrings(True)
+#setglobalfullprinting(True)
+#setGlobalPrintFullStrings(True)
 
 layer4_tcp = "layer4_tcp" / Struct(
     "layer" / Computed(4),

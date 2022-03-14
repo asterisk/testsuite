@@ -30,17 +30,20 @@ def filter_multipart_packet(packet):
     True if this is a multipart NOTIFY packet. Otherwise, returns False.
     """
 
+    LOGGER.debug("request line")
+    LOGGER.debug(packet.request_line)
     # If the packet is not a SIP NOTIFY, this is not a packet we care
     # about.
     if "NOTIFY" not in packet.request_line:
         LOGGER.debug("Ignoring packet, is not a NOTIFY")
         return False
 
+    LOGGER.debug("Packet IS A NOTIFY")
+
     # If the packet body is not a multipart packet body, this is not a
     # packet we care about.
     if packet.body.packet_type != "Multipart":
-        LOGGER.debug("Ignoring packet, NOTIFY does not contain "
-                     "multipart body")
+        LOGGER.debug("Ignoring packet, NOTIFY does not contain multipart body")
         return False
 
     return True
@@ -177,6 +180,7 @@ class RLSTest(VOIPProxy):
             LOGGER.debug('Test is stopping; ignoring packet')
             return
 
+        LOGGER.info("packet received")
         log_packet(packet, self.log_packets)
 
         if not filter_multipart_packet(packet):

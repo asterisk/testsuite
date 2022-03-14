@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'Python3-issues'
     summary: 'Test goto support in pbx_lua.'
     description: |
         This test verifies goto is properly detected in pbx_lua.

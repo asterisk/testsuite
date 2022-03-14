@@ -99,8 +99,9 @@ class ChanSpyMixMonitorTest(TestCase):
         name The name to call the instance
         """
         LOGGER.info("%s Calling into Playback" % name)
-        pjsua.stdin.write("m\n")
-        pjsua.stdin.write("sip:play_exten@127.0.0.1:5060\n")
+        pjsua.stdin.write(b"m\n")
+        pjsua.stdin.write(b"sip:play_exten@127.0.0.1:5060\n")
+        pjsua.stdin.flush()
 
     def hangup_pjsua(self, pjsua, name):
         """Hangup some PJSUA instance
@@ -110,7 +111,8 @@ class ChanSpyMixMonitorTest(TestCase):
         name The name to call the instance
         """
         LOGGER.info("Hanging up %s" % name)
-        pjsua.stdin.write("h\n")
+        pjsua.stdin.write(b"h\n")
+        pjsua.stdin.flush()
 
     def start_processes(self):
         """Start up the PJSUA processes"""

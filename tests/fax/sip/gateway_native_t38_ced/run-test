@@ -32,14 +32,14 @@ class GatewayTest(TestCase):
    def ami_connect(self, ami):
       if ami.id == 0:
 
-         print "sending a call from ast1 to ast2"
+         print("sending a call from ast1 to ast2")
 
          ami.registerEvent('UserEvent', self.fax_result)
          df = ami.originate("sip/ast2-t38/1234", "sendfax", "1234", 1)
 
          def handle_failure(reason):
-            print "error sending originate:"
-            print reason.getTraceback()
+            print("error sending originate:")
+            print(reason.getTraceback())
             self.stop_reactor()
 
             return reason
@@ -55,13 +55,13 @@ class GatewayTest(TestCase):
       self.event_count += 1
 
       if event['status'] == "SUCCESS" and event['error'] == "NATIVE_T38":
-         print "successful gateway operation"
+         print("successful gateway operation")
          self.success_count += 1
       else:
-         print "gateway result should have been SUCCESS with error NATIVE_T38"
-         print "status: %s" % (event['status'],)
-         print "error: %s" % (event['error'],)
-         print "statusstr: %s" % (event['statusstr'],)
+         print("gateway result should have been SUCCESS with error NATIVE_T38")
+         print("status: %s" % (event['status'],))
+         print("error: %s" % (event['error'],))
+         print("statusstr: %s" % (event['statusstr'],))
 
       self.are_we_there_yet()
 
@@ -72,14 +72,14 @@ class GatewayTest(TestCase):
       self.event_count += 1
 
       if event['status'] == "SUCCESS":
-         print "successful %s through gateway" % (event['operation'],)
+         print("successful %s through gateway" % (event['operation'],))
          self.success_count += 1
       else:
-         print "error sending fax through gateway:"
-         print "operation: %s" % (event['operation'],)
-         print "status: %s" % (event['status'],)
-         print "error: %s" % (event['error'],)
-         print "statusstr: %s" % (event['statusstr'],)
+         print("error sending fax through gateway:")
+         print("operation: %s" % (event['operation'],))
+         print("status: %s" % (event['status'],))
+         print("error: %s" % (event['error'],))
+         print("statusstr: %s" % (event['statusstr'],))
 
       self.are_we_there_yet()
 

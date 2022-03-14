@@ -68,7 +68,8 @@ class StartConfBridgeState(ConfbridgeTestState):
             return
         if len(self.calls) > 1:
             logger.warning("More then one channel in ConfBridge, using first")
-        self.conf_bridge_channel = self.calls.keys()[0]
+        keys = list(self.calls.keys())
+        self.conf_bridge_channel = keys[0]
 
         if event['channel'] == self.conf_bridge_channel:
             self.test_case.expected_events['confbridgejoined'] = True
@@ -112,7 +113,8 @@ class ActiveConfBridgeState(ConfbridgeTestState):
 
         if len(calls) != 1:
             logger.warning("Multiple channels detected in ConfBridge, only the first will be used")
-        self._bridge_channel = calls.keys()[0]
+        keys = list(calls.keys())
+        self._bridge_channel = keys[0]
 
         # Schedule actions to take place
         audio_file = os.path.join(os.getcwd(), "tests/apps/confbridge/sounds/talking")

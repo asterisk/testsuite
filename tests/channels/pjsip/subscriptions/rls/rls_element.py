@@ -1109,7 +1109,7 @@ class RLSPacket(RLSElement):
         LOGGER.debug("Processing RLS packet -- Validation check passed. "
                      "Received expected number of Content IDs.")
 
-        for uri, cid in rlmi_cids.iteritems():
+        for uri, cid in rlmi_cids.items():
             if uri not in resource_cids:
                 message = (
                     "Processing RLS packet -- Validation check "

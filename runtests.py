@@ -66,26 +66,6 @@ from asterisk import test_suite_utils
 TESTS_CONFIG = "tests.yaml"
 TEST_RESULTS = "asterisk-test-suite-report.xml"
 
-# If using embedded pjproject, we need to add the
-# astdatadir/third-party/pjproject directory to sys.path
-# so pjsua can be found.
-ast_config = test_suite_utils.get_asterisk_conf()
-astdatadir = ast_config.directories.get("astdatadir", '/var/lib/asterisk')
-if astdatadir[0] == os.path.sep:
-     astdatadir = astdatadir[1:]
-
-pjproject_lib = os.path.join(os.getenv("AST_TEST_ROOT") or os.path.sep, astdatadir, "third-party/pjproject")
-if os.path.exists(pjproject_lib):
-    # runtests.py needs pjproject_lib for the dependency checks.
-    sys.path.append(pjproject_lib)
-    # And of course, the tests need it.
-    new_PYTHONPATH.append(pjproject_lib)
-    new_SYSPATH = []
-    if os.getenv("PATH"):
-        new_SYSPATH.append(os.getenv("PATH"))
-    new_SYSPATH.append(pjproject_lib)
-    os.environ['PATH'] = os.pathsep.join(new_SYSPATH)
-
 # If True, abandon the current running TestRun. Used by SIGTERM.
 abandon_test = False
 
@@ -525,7 +505,7 @@ class TestSuite:
 
     def list_tags(self):
         def chunks(l, n):
-            for i in xrange(0, len(l), n):
+            for i in range(0, len(l), n):
                 yield l[i:(i + n)]
 
         tags = set()

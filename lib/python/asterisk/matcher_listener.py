@@ -72,7 +72,8 @@ class Udp(PluggableConditions):
         msg -- The message received via the udp
         """
 
-        if not any(f for f in self.filter_msgs if re.match(f, msg)):
+        msgstring = msg.decode('utf8')
+        if not any(f for f in self.filter_msgs if re.match(f, msgstring)):
             self.check(msg)
 
 

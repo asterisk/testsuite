@@ -19,7 +19,7 @@ def on_start(ari, event, obj):
 
     try:
         ari.post('bridges', bridge_id, 'addChannel', channel=channel_id)
-    except requests.HTTPError, e:
+    except requests.HTTPError as e:
         # assert '409' not in e
         assert 409 == e.response.status_code
     finally:

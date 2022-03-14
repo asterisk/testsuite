@@ -22,7 +22,7 @@ sys.path.append("lib/python")
 
 from asterisk.test_case import TestCase
 from asterisk.ari import ARI, AriClientFactory
-from asterisk import phones
+from asterisk import extension_bank
 
 LOGGER = logging.getLogger(__name__)
 
@@ -168,7 +168,7 @@ class OriginateToDifferentApp(TestCase):
         """Constructor"""
         super(OriginateToDifferentApp, self).__init__()
         self.create_asterisk(count=1, test_config={'memcheck-delay-stop': 7})
-        self.phone_controller = None
+        self.sippstarted = False
         self.protocols = []
         # Name of apps to create
         self.app_names = ('AppA', 'AppB')
@@ -187,19 +187,6 @@ class OriginateToDifferentApp(TestCase):
         self.expected = {self.app_names[0]: {'stasisstart': 0},
                          self.app_names[1]: {'stasisstart': 1}}
 
-    def pjsua_phone_controller(self):
-        """Initialize PJSUA phone controller
-
-        Returns instance of phones.PjsuaPhoneController
-        """
-        transport = {'name': 'local-ipv4-1', 'bind': '127.0.0.1',
-                     'bindport': '5061'}
-        account = {'name': 'alice', 'username': 'alice', 'domain':
-                   '127.0.0.1', 'transport': 'local-ipv4-1'}
-        pjsua_config = {'transports': [transport], 'accounts': [account]}
-        # Create a PJSUA phone so it can receive the originated call.
-        return phones.PjsuaPhoneController(pjsua_config, self)
-
     def run(self):
         """Entry point for the twisted reactor"""
         super(OriginateToDifferentApp, self).run()
@@ -210,8 +197,8 @@ class OriginateToDifferentApp(TestCase):
 
         # Create AMI factory
         self.create_ami_factory()
-        # Create a PJSUA phone so it can receive the originated call.
-        self.phone_controller = self.pjsua_phone_controller()
+        # Create a sipp instance so it can receive the originated call.
+        extension_bank.alice_registers_then_waits(self)
         # Create the first ARI app
         self.apps[name] = App(self.ast[0], self, name)
 
@@ -241,8 +228,10 @@ class OriginateToDifferentApp(TestCase):
 
     def check_phone_reg(self):
         """Check if phone is registered"""
-        if self.phone_controller.num_regs != 1:
-            reactor.callLater(.5, self.check_phone_reg)
+        # a bit cheeky, but we need this thing to chill and let sipp register
+        if self.sippstarted is False:
+            self.sippstarted = True
+            reactor.callLater(2, self.check_phone_reg)
             return
         self.originate_call()
 

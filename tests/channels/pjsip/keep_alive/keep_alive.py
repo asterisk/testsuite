@@ -34,7 +34,7 @@ class KeepAliveProtocol(protocol.Protocol):
 
     def dataReceived(self, data):
         LOGGER.debug('Received packet: {0}'.format(data))
-        received_packets.append((datetime.utcnow(), data))
+        received_packets.append((datetime.utcnow(), data.decode('utf-8')))
         if len(received_packets) == 5:
             self.transport.loseConnection()
 

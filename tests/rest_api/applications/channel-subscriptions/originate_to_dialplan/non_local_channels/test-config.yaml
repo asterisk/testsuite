@@ -26,6 +26,7 @@ properties:
         - python: requests
         - python: twisted
         - python: starpy
+        - app: sipp
         - asterisk: app_echo
         - asterisk: app_userevent
         - asterisk: res_ari_channels
@@ -55,13 +56,16 @@ originate-config:
             priority: '1'
 
 pluggable-config:
+    # Upon boot, start the test.
     -
         ami-events:
             conditions:
                 match:
-                    Event: 'UserEvent'
-                    UserEvent: 'Start'
-            count: '1'
+                    Event: 'FullyBooted'
+            count: 1
+        callback:
+            module: extension_bank
+            method: alice_waits_twelve
         ari-requests:
             -
                 method: 'post'

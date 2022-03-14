@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Basic UAS responder">
+
+  <recv request="INVITE" crlf="true">
+    <!-- Save the From tag. We'll need it when we send the REFER -->
+    <action>
+      <ereg regexp="(;tag=.*)"
+          header="From:"
+          search_in="hdr"
+          check_it="true"
+          assign_to="remote_tag"/>
+    </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 180 Ringing
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:bob@[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:bob@[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=user1 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+
+    ]]>
+  </send>
+
+  <recv request="ACK"
+    rtd="true"
+    crlf="true">
+  </recv>
+
+  <!-- Send audio -->
+  <nop>
+    <action>
+      <exec rtp_stream="lib/python/asterisk/audio.ulaw,3,0"/>
+    </action>
+  </nop>
+
+  <pause milliseconds="1000" />
+
+  <!-- Put call on hold -->
+  <send retrans="500">
+    <![CDATA[
+
+      INVITE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:bob@[local_ip]:[local_port]>;tag=[pid]SIPpTag[call_number]
+      To: <sip:[service]@[remote_ip]:[remote_port]>[$remote_tag]
+      Call-ID: [call_id]
+      CSeq: [cseq] INVITE
+      Contact: <sip:bob@[local_ip]:[local_port];transport=[transport]>
+      Max-Forwards: 70
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=- 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+      a=sendonly
+
+    ]]>
+  </send>
+
+  <recv response="100" optional="true" />
+
+  <recv response="200" rtd="true">
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      ACK sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      Call-ID: [call_id]
+      CSeq: [cseq] ACK
+      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Max-Forwards: 70
+      Content-Length: 0
+    ]]>
+  </send>
+
+  <pause milliseconds="4000" />
+
+  <!-- Blind transfer alice to charlie -->
+  <send retrans="500">
+    <![CDATA[
+
+      REFER sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      Call-ID: [call_id]
+      CSeq: [cseq] REFER
+      Contact: sip:bob@[local_ip]:[local_port];transport=[transport]
+      Max-Forwards: 70
+      Subject: Performance Test
+      Refer-To: sip:charlie@[remote_ip]:[remote_port];user=phone
+      Referred-By: sip:bob@[local_ip]:[local_port]
+      Content-Length: 0
+
+    ]]>
+
+  </send>
+
+  <recv response="202" rtd="true">
+  </recv>
+
+  <!-- We should receive a NOTIFY from Asterisk with a 100 trying sipfrag -->
+  <recv request="NOTIFY" crlf="true">
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      [last_Event:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+    ]]>
+  </send>
+
+  <!-- We should receive a NOTIFY from Asterisk with a '200 OK' sipfrag -->
+  <recv request="NOTIFY" crlf="true">
+    <!-- Check if 'SIP/2.0 200 OK' is in the body -->
+    <action>
+       <ereg regexp="(SIP/2.0 200 OK)"
+          search_in="msg"
+          check_it="true"
+          assign_to="sip_frag_ok"/>
+    </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      [last_Event:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+    ]]>
+  </send>
+
+  <!-- Transfer should have successfully occurred so now we need to hang up -->
+  <send retrans="500">
+    <![CDATA[
+
+      BYE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      [last_Via:]
+      From: <sip:bob@[local_ip]:[local_port]>;tag=[pid]SIPpTag[call_number]
+      To: <sip:[service]@[remote_ip]:[remote_port]>[$remote_tag]
+      Call-ID: [call_id]
+      CSeq: [cseq] BYE
+      Contact: sip:bob@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Performance Test
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+  <Reference variables="sip_frag_ok" />
+
+</scenario>
