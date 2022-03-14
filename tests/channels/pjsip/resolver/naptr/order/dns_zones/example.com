@@ -25,8 +25,8 @@ zone = [
         minimum = "1H"
     ),
 
-    NAPTR('example.com', 50, 50, 'S', 'SIP+D2T', '', '_sip._tcp.example.com'),
-    NAPTR('example.com', 90, 40, 'S', 'SIP+D2U', '', '_sip._udp.example.com'),
+    NAPTR('example.com', 50, 50, b"S", b"SIP+D2T", b"", '_sip._tcp.example.com'),
+    NAPTR('example.com', 90, 40, b"S", b"SIP+D2U", b"", '_sip._udp.example.com'),
     SRV('_sip._tcp.example.com', 0, 1, 5061, 'pbx.example.com'),
     SRV('_sip._udp.example.com', 0, 1, 5061, 'pbx.example.com'),
     A('pbx.example.com', '127.0.0.1'),

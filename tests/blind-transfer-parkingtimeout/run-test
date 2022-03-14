@@ -66,7 +66,7 @@ class BlindTransferTest:
              "'core show globals' in log for more detailed failure results.")
 
         if reactor.running:
-            print "Stopping Reactor ..."
+            print("Stopping Reactor ...")
             reactor.stop()
 
     # This is a blind transfer test with parkingtimeout.
@@ -89,7 +89,7 @@ class BlindTransferTest:
         self.ast2.stop()
 
     def log_last_step(self, step):
-        print step
+        print(step)
         self.last_step = step
 
     def run(self):

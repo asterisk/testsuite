@@ -1,20 +1,20 @@
 testinfo:
     summary: "Ensure that a nominal remote attended transfer works as expected."
     description: |
-        "This test uses two Asterisk and a PJSUA instance to perform a remote attended
-        transfer. The PJSUA instance registers to Asterisk B, but Asterisk A has been
-        configured to be able to call the PJSUA instance directly.
+        "This test uses two Asterisk and a sipp instance to perform a remote attended
+        transfer. The sipp instance registers to Asterisk B, but Asterisk A has been
+        configured to be able to call the sipp instance directly.
 
         Asterisk A originates a call. The first leg of the origination goes into the
         dialplan and runs Echo(). The second leg of the origination places a call to
-        the PJSUA instance.
+        the sipp instance.
 
-        Once it is confirmed that Asterisk A and the PJSUA instance are bridged, the
-        PJSUA issues a call to Asterisk B. Asterisk B dials a local channel that runs
+        Once it is confirmed that Asterisk A and the sipp instance are bridged, the
+        sipp issues a call to Asterisk B. Asterisk B dials a local channel that runs
         Echo().
 
-        Once it is confirmed that the PJSUA instance and Asterisk 2 are bridged, the
-        PJSUA instance performs an attended transfer. This results in the PJSUA instance
+        Once it is confirmed that the sipp instance and Asterisk 2 are bridged, the
+        sipp instance performs an attended transfer. This results in the sipp instance
         sending a REFER request to Asterisk A. Since the referenced dialog in the
         REFER's Refer-To header is not in Asterisk A, Asterisk A must perform a remote
         attended transfer.
@@ -24,7 +24,7 @@ testinfo:
         BlindTransfer event is emitted during this transfer.
 
         The end result should be that Asterisk A and Asterisk B are connected via SIP,
-        and the PJSUA instance has hung up.
+        and the sipp instance has hung up.
 
         This test kills two birds with one stone. Asterisk A is tested to ensure
         that it properly handles a REFER that refers to a remote dialog. Asterisk B
@@ -34,12 +34,9 @@ testinfo:
 test-modules:
     add-test-to-search-path: True
     test-object:
-        config-section: test-object-config
-        typename: test_case.TestCaseModule
+            config-section: sipp-config
+            typename: sipp.SIPpTestCase
     modules:
-        -
-            config-section: pjsua-config
-            typename: 'pjsua_mod.PJsua'
         -
             config-section: ami-config
             typename: 'ami.AMIEventModule'
@@ -48,20 +45,18 @@ test-object-config:
     connect-ami: True
     asterisk-instances: 2
 
-pjsua-config:
-    callback_module: 'transfer'
-    callback_method: 'bob_registered'
-    transports:
+sipp-config:
+    asterisk-instances: 2
+    memcyheck-delay-stop: 7
+    connect-ami: True
+    fail-on-any: True
+    start_callback_module: 'transfer'
+    start_callback_method: 'bob_registered'
+    test-iterations:
         -
-            name: 'local-ipv4'
-            bind: '127.0.0.1'
-            bindport: '5062'
-    accounts:
-        -
-            name: 'bob'
-            username: 'bob'
-            password: 'bob'
-            domain: '127.0.0.1:5061'
+            scenarios:
+                - { 'coordinated-sender': {'key-args': {'scenario':'referer_uas.xml', '-i': '127.0.0.1', '-p':'5062', '-sleep': '2'}, 'target':'127.0.0.1'},
+                    'coordinated-receiver': {'key-args': {'scenario':'referee.xml', '-i': '127.0.0.1', '-p':'5072'}, 'target':'127.0.0.1:5061' } }
 
 ami-config:
     -
@@ -81,7 +76,7 @@ properties:
     dependencies:
         - python: 'twisted'
         - python: 'starpy'
-        - python: 'pjsua'
+        - app: 'sipp'
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_session'
         - asterisk: 'res_pjsip_refer'

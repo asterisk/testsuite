@@ -25,7 +25,7 @@ class RTP(DatagramProtocol):
         self.test_object = test_object
         self.test_object.register_stop_observer(self.asterisk_stopped)
 
-    def datagramReceived(self, data, (host, port)):
+    def datagramReceived(self, data, addr):
         rtp_header = RTPPacket.rtp_header.parse(data)
         LOGGER.debug("Parsed RTP packet is {0}".format(rtp_header))
         if rtp_header.payload_type == 13:

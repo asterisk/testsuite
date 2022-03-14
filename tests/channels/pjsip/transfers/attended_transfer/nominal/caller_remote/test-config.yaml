@@ -1,11 +1,11 @@
 testinfo:
     summary: "Nominal caller initiated remote attended transfer."
     description: |
-        "This test uses two Asterisk and a PJSUA instance to perform a remote
-        attended transfer. For PJSUA to properly perform the transfer, it does
+        "This test uses two Asterisk and a sipp instance to perform a remote
+        attended transfer. For sipp to properly perform the transfer, it does
         not register to either Asterisk instance.
 
-        Alice (PJSUA) first calls Asterisk 1 which goes into the dialplan and
+        Alice (sipp) first calls Asterisk 1 which goes into the dialplan and
         dials a Local channel that executes Echo(). Once it is confirmed that
         Alice and Asterisk 1 are bridged, Alice places the call on hold. Alice
         then calls Asterisk 2 which goes into the dialplan and dials a Local
@@ -28,58 +28,33 @@ testinfo:
         INVITE with Replaces."
 
 test-modules:
+    add-test-to-search-path: True
     test-object:
-        config-section: test-object-config
-        typename: test_case.TestCaseModule
+            config-section: sipp-config
+            typename: sipp.SIPpTestCase
     modules:
         -
             config-section: ami-config
             typename: 'pluggable_modules.EventActionModule'
         -
-            config-section: pjsua-config
-            typename: 'phones.PjsuaPhoneController'
-        -
             config-section: hangup-config
             typename: 'pluggable_modules.HangupMonitor'
 
-test-object-config:
+sipp-config:
+    asterisk-instances: 2
     memcheck-delay-stop: 7
     connect-ami: True
-    asterisk-instances: 2
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'coordinated-sender': {'key-args': {'scenario':'referer.xml', '-i': '127.0.0.3', '-p':'5060', '-sleep': '2'}, 'target':'127.0.0.1'},
+                    'coordinated-receiver': {'key-args': {'scenario':'referee.xml', '-i': '127.0.0.3', '-p':'5062'}, 'target':'127.0.0.2' } }
 
 hangup-config:
     ids: [ '0', '1' ]
 
-pjsua-config:
-    # For this test to properly work, the PJSUA account must *not* register.
-    register: False
-    transports:
-        -
-            name: 'local-ipv4'
-            bind: '127.0.0.3'
-            bindport: '5060'
-    accounts:
-        -
-            name: 'alice'
-            username: 'alice'
-            domain: '127.0.0.3'
-            transport: 'local-ipv4'
-
 ami-config:
-    # Ensure our pjsua phones are ready. Then alice calls exten 101 which
-    # creates a Local channel that enters Echo().
-    -
-        ami-events:
-            id: '0'
-            conditions:
-                match:
-                    Event: 'UserEvent'
-                    UserEvent: 'PJsuaPhonesReady'
-            count: 1
-        pjsua_phone:
-            action: 'call'
-            pjsua_account: 'alice'
-            call_uri: 'sip:101@127.0.0.1'
     # Ensure first alice channel and the Local echo channel are bridged. Then
     # alice places the call on hold.
     -
@@ -93,9 +68,6 @@ ami-config:
                 nomatch:
                     ConnectedLineNum: 'external_replaces'
             count: 1
-        pjsua_phone:
-            action: 'hold'
-            pjsua_account: 'alice'
     # Ensure MOH starts on Local/echo@default. Then alice places another call,
     # this time to Asterisk instance 2.
     -
@@ -106,10 +78,6 @@ ami-config:
                     Event: 'MusicOnHoldStart'
                     Channel: 'Local/echo@default-.*'
             count: 1
-        pjsua_phone:
-            action: 'call'
-            pjsua_account: 'alice'
-            call_uri: 'sip:102@127.0.0.2'
     # Ensure second alice channel and the Local echo2 channel are bridged on
     # Asterisk instance 2. Then alice transfers the first call (bridged
     # to Local/echo@default on Asterisk instance 1) to the second call (bridged
@@ -123,10 +91,6 @@ ami-config:
                     Channel: '(PJSIP/alice-.*|Local/echo2@default-.*)'
                     BridgeNumChannels: '2'
             count: 1
-        pjsua_phone:
-            action: 'transfer'
-            pjsua_account: 'alice'
-            transfer_type: 'attended'
     # Ensure MOH stops on Local/echo@default.
     -
         ami-events:
@@ -218,7 +182,7 @@ properties:
     dependencies:
         - python: 'twisted'
         - python: 'starpy'
-        - python: 'pjsua'
+        - app: 'sipp'
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_session'
         - asterisk: 'res_pjsip_refer'

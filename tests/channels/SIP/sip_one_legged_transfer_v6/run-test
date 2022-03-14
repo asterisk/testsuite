@@ -38,12 +38,12 @@ class AttTransferTest:
         self.stopProcesses()
 
         if self.passed == True:
-            print 'SIP Attended Transfer Test Passed!'
+            print('SIP Attended Transfer Test Passed!')
         else:
-            print 'SIP Attended Transfer Test Failed'
+            print('SIP Attended Transfer Test Failed')
 
         if reactor.running:
-            print "Stopping Reactor ..."
+            print("Stopping Reactor ...")
             reactor.stop()
 
     def amiOnConnect(self, ami):
@@ -60,14 +60,14 @@ class AttTransferTest:
         self.ami_factory.login('127.0.0.1', 5038).addCallbacks(self.amiOnConnect, self.amiLoginError)
 
     def checkBridgeResult(self, result):
-        print 'Result', result
+        print('Result', result)
         if "bridgedchannel" not in result[0]:
-            print "bridgedchannel was not a valid key."
+            print("bridgedchannel was not a valid key.")
         elif result[0]['bridgedchannel'] == 'SIP/end_b-00000001':
             self.passed = True
 
         if "link" not in result[0]:
-            print "'link' was not a valid key."
+            print("'link' was not a valid key.")
         elif result[0]['link'] == 'SIP/end_b-00000001': # check link for older versions of asterisk
             self.passed = True
 
@@ -78,7 +78,7 @@ class AttTransferTest:
 
 
     def checkBridgeError(self, reason):
-        print reason.getTraceback()
+        print(reason.getTraceback())
         self.logLastStep("Checking Bridge failed.  Channel did not exist.")
         reactor.callLater(1, self.readResult)
 
@@ -88,18 +88,21 @@ class AttTransferTest:
 
     def cCallB(self):
         self.logLastStep("C Calling B")
-        self.pjc.stdin.write("m\n")
-        self.pjc.stdin.write("sip:[::1]:5066\n")
+        self.pjc.stdin.write(b"m\n")
+        self.pjc.stdin.write(b"sip:[::1]:5066\n")
+        self.pjc.stdin.flush()
 
     def bCallA(self):
         self.logLastStep("B Calling A")
-        self.pjb.stdin.write("m\n")
-        self.pjb.stdin.write("sip:call_a@[::1]:5060\n")
+        self.pjb.stdin.write(b"m\n")
+        self.pjb.stdin.write(b"sip:call_a@[::1]:5060\n")
+        self.pjb.stdin.flush()
 
     def bTransferAToC(self):
         self.logLastStep("B Transfering A to C")
-        self.pjb.stdin.write("X\n")
-        self.pjb.stdin.write("1\n")
+        self.pjb.stdin.write(b"X\n")
+        self.pjb.stdin.write(b"1\n")
+        self.pjb.stdin.flush()
 
     def startProcesses(self):
         self.logLastStep("Starting Processes")
@@ -126,7 +129,7 @@ class AttTransferTest:
 
 
     def logLastStep(self, step):
-        print step
+        print(step)
         self.lastStep = step
 
     def run(self):

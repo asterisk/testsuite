@@ -39,11 +39,11 @@ class FastAGIRecordFileTest(TestCase):
 
     def on_record_failure(self, reason):
         if os.path.exists(self.audio_file):
-            print "file exists"
-            print "file size is", os.path.getsize(self.audio_file)
+            print("file exists")
+            print("file size is", os.path.getsize(self.audio_file))
 
         self.results[self.test] = False
-        print 'Could not record file:', reason.getTraceback()
+        print('Could not record file:', reason.getTraceback())
         if self.test is "DTMF":
             self.test = "HANGUP"
             reactor.callLater(0, self.launch_test)
@@ -56,23 +56,23 @@ class FastAGIRecordFileTest(TestCase):
         except:
             digit = None
 
-        print "Recording terminated by %s (%s) after %s bytes." \
-            % (result[1], digit, result[2])
+        print("Recording terminated by %s (%s) after %s bytes." \
+            % (result[1], digit, result[2]))
         if os.path.exists(self.audio_file):
             file_size = os.path.getsize(self.audio_file)
             if file_size == 0:
-                print "The file was created, but it is empty."
+                print("The file was created, but it is empty.")
                 self.results[self.test] = False
             elif result[2] == file_size:
-                print "Data was recorded, and data length matches what was", \
-                    "reported during the %s test." % self.test
+                print("Data was recorded, and data length matches what was", \
+                    "reported during the %s test." % self.test)
                 self.results[self.test] = True
             else:
-                print "Some data was recorded, but the data length does not", \
-                    "match what was reported during the %s test." % self.test
+                print("Some data was recorded, but the data length does not", \
+                    "match what was reported during the %s test." % self.test)
                 self.results[self.test] = False
         else:
-            print "The file doesn't exist."
+            print("The file doesn't exist.")
             self.results[self.test] = False
 
         self.agi.finish()
@@ -99,8 +99,8 @@ class FastAGIRecordFileTest(TestCase):
         if os.path.exists(self.audio_file):
             os.unlink(self.audio_file)
 
-        print "Originating call to begin test which terminates recording",\
-            "with", self.test
+        print("Originating call to begin test which terminates recording",\
+            "with", self.test)
         if self.test is "DTMF":
             self.ast[0].cli_originate("Local/508@agitest extension 1@record-file")
         elif self.test is "HANGUP":

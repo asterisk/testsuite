@@ -9,7 +9,7 @@ with open(sys.argv[1]) as csvfile:
     reader = csv.DictReader(csvfile, delimiter=';')
     for row in reader:
         if 'ResponseTimereinvite(P)' not in row:
-            print "column not found! make sure scenario is correct!\n"
+            print("column not found! make sure scenario is correct!\n")
             exit(-1)
         parts = regex.match(row['ResponseTimereinvite(P)'])
         hours = int(parts.group(1))
@@ -17,7 +17,7 @@ with open(sys.argv[1]) as csvfile:
         seconds = (minutes * 60) + int(parts.group(3))
         milliseconds = (seconds * 1000) + int(parts.group(4))
         if (milliseconds > 500):
-            print "Slow 488 Rejection detected (" + str(milliseconds) + " ms)!\n"
+            print("Slow 488 Rejection detected (" + str(milliseconds) + " ms)!\n")
             exit(-2)
 
 csvfile.close()

@@ -56,8 +56,9 @@ class AttTransferTestTcp(TestCase):
         self.ami[0].registerEvent('VarSet', self.bridgepeer_callback)
 
         LOGGER.info("Kicking off A-to-B call")
-        self.pja.stdin.write("m\n")
-        self.pja.stdin.write("sip:call_b@127.0.0.1:5060;transport=TCP\n")
+        self.pja.stdin.write(b"m\n")
+        self.pja.stdin.write(b"sip:call_b@127.0.0.1:5060;transport=TCP\n")
+        self.pja.stdin.flush()
 
     def bridge_callback(self, ami, event):
         '''Handle Bridge events to catch.'''
@@ -65,12 +66,14 @@ class AttTransferTestTcp(TestCase):
         numchans = len(self.chans)
         if numchans == 1:
             LOGGER.info("Kicking off A-to-C call")
-            self.pja.stdin.write("m\n")
-            self.pja.stdin.write("sip:call_c@127.0.0.1:5060;transport=TCP\n")
+            self.pja.stdin.write(b"m\n")
+            self.pja.stdin.write(b"sip:call_c@127.0.0.1:5060;transport=TCP\n")
+            self.pja.stdin.flush()
         elif numchans == 2:
             LOGGER.info("Kicking off transfer")
-            self.pja.stdin.write("X\n")
-            self.pja.stdin.write("1\n")
+            self.pja.stdin.write(b"X\n")
+            self.pja.stdin.write(b"1\n")
+            self.pja.stdin.flush()
 
     def bridgepeer_callback(self, ami, event):
         '''Handle BRIDGEPEER VarSet events to check for successful transfers.'''

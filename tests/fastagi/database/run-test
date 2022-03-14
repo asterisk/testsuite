@@ -25,55 +25,55 @@ class FastAGIDatabaseTest(TestCase):
         self.create_fastagi_factory()
 
     def on_del_failure(self, reason):
-        print 'Could not delete the data from the database.'
-        print reason.getTraceback()
+        print('Could not delete the data from the database.')
+        print(reason.getTraceback())
         self.passed["Del"] = False
         self.result_changed()
 
     def on_set_failure(self, reason):
-        print 'Could not set a new value.'
-        print reason.getTraceback()
+        print('Could not set a new value.')
+        print(reason.getTraceback())
         self.passed["Set"] = False
 
     def on_get_failure(self, reason):
-        print 'Could not get the data from the database.'
-        print reason.getTraceback()
+        print('Could not get the data from the database.')
+        print(reason.getTraceback())
         self.passed["Get"] = False
 
     # We expect this to get called when we try to select
     # the key we've just deleted from the database.
     def on_get3_failure(self, reason):
-        print "%s is no longer a valid key." % self.key
+        print("%s is no longer a valid key." % self.key)
         self.passed["Del"] = True
         self.result_changed()
 
     def on_put_failure(self, reason):
-        print 'Could not put the data into the database.'
-        print reason.getTraceback()
+        print('Could not put the data into the database.')
+        print(reason.getTraceback())
         self.passed["Put"] = False
         self.result_changed()
 
     def get_result_from_put(self, result):
         self.passed["Put"] = True
         # 2. Retrieve that key from the database
-        print "Retrieving key from the database."
+        print("Retrieving key from the database.")
         self.agi.databaseGet("secret", self.key).addCallback(
             self.get_result_from_get).addErrback(self.on_get_failure)
 
     # 2. Retrieve that key from the database
     def get_result_from_get(self, result):
-        print 'Value of %s is "%s"' % (self.key, result)
+        print('Value of %s is "%s"' % (self.key, result))
         if result == "juststarted":
             self.passed["Get"] = True
         else:
             # If the call to databaseGet() succeeds but the value is wrong,
             # the previous call to databasePut() failed.
             self.passed["Put"] = False
-            print "Call to DATABASE GET succeeded, but value is wrong."
-            print 'Expected value of "juststarted" but got "%s"' % result
+            print("Call to DATABASE GET succeeded, but value is wrong.")
+            print('Expected value of "juststarted" but got "%s"' % result)
 
         # 3. Update the value of the key in the database
-        print "Updating value of key."
+        print("Updating value of key.")
         self.agi.databaseSet("secret", self.key, "halfwaydone").addCallback(
             self.get_result_from_set).addErrback(self.on_set_failure)
 
@@ -84,25 +84,25 @@ class FastAGIDatabaseTest(TestCase):
         # This should never happen.
         else:
             self.passed["Set"] = False
-            print "Something went horribly wrong."
+            print("Something went horribly wrong.")
 
         # 4. Test for new value
-        print "Checking new value of key."
+        print("Checking new value of key.")
         self.agi.databaseGet("secret",self.key).addCallback(
             self.get_result_from_get2
         ).addErrback(self.on_get_failure)
 
     # 4. Test for new value
     def get_result_from_get2(self, result):
-        print 'Value of %s is "%s"' % (self.key, result)
+        print('Value of %s is "%s"' % (self.key, result))
         if result != "halfwaydone":
             self.passed["Set"] = False
-            print "Call to DATABASE SET succeeded, \
-                but value did not get updated."
-            print 'Expected value of "halfwaydone" but got "%s"' % result
+            print("Call to DATABASE SET succeeded, \
+                but value did not get updated.")
+            print('Expected value of "halfwaydone" but got "%s"' % result)
 
         # 5. Delete that key from the database
-        print "Deleting key from database."
+        print("Deleting key from database.")
         self.agi.databaseDel("secret",self.key).addCallback(
             self.get_result_from_del).addErrback(self.on_del_failure)
 
@@ -113,17 +113,17 @@ class FastAGIDatabaseTest(TestCase):
         # This should never happen.
         else:
             self.passed["Del"] = False
-            print "Something went horribly wrong."
+            print("Something went horribly wrong.")
 
         # 6. Test that key was deleted.
-        print "Checking that key was deleted."
+        print("Checking that key was deleted.")
         self.agi.databaseGet("secret",self.key).addCallback(
             self.get_result_from_get3).addErrback(self.on_get3_failure)
 
     # 6. Test that key was deleted.
     # This should never be called if databaseDel() succeeded.
     def get_result_from_get3(self, result):
-        print "Value of %s is %s" % (self.key, result)
+        print("Value of %s is %s" % (self.key, result))
         if result is not None:
             self.passed["Del"] = False
         # This should never happen.
@@ -141,13 +141,13 @@ class FastAGIDatabaseTest(TestCase):
     # 6. Test that key was deleted.
     def fastagi_connect(self, agi):
         self.agi = agi
-        print "Inserting key into database."
+        print("Inserting key into database.")
         return agi.databaseSet("secret", self.key, "juststarted").addCallback(
             self.get_result_from_put).addErrback(self.on_put_failure)
 
 
     def launch_test(self):
-        print "Originating call to begin test."
+        print("Originating call to begin test.")
         self.ast[0].cli_originate("Local/506@agitest extension echo@agitest")
 
     # Read result before timeout

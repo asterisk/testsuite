@@ -89,20 +89,23 @@ class OneLeggedTransfer(TestCase):
 
     def cCallB(self):
         LOGGER.info("C Calling B")
-        self.pjc.stdin.write("m\n")
-        self.pjc.stdin.write("sip:127.0.0.1:5066\n")
+        self.pjc.stdin.write(b"m\n")
+        self.pjc.stdin.write(b"sip:127.0.0.1:5066\n")
+        self.pjc.stdin.flush()
         self.reset_timeout()
 
     def bCallA(self):
         LOGGER.info("B Calling A")
-        self.pjb.stdin.write("m\n")
-        self.pjb.stdin.write("sip:call_a@127.0.0.1:5060\n")
+        self.pjb.stdin.write(b"m\n")
+        self.pjb.stdin.write(b"sip:call_a@127.0.0.1:5060\n")
+        self.pjb.stdin.flush()
         self.reset_timeout()
 
     def bTransferAToC(self):
         LOGGER.info("B Transfering A to C")
-        self.pjb.stdin.write("X\n")
-        self.pjb.stdin.write("1\n")
+        self.pjb.stdin.write(b"X\n")
+        self.pjb.stdin.write(b"1\n")
+        self.pjb.stdin.flush()
         self.reset_timeout()
 
     def startProcesses(self):

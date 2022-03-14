@@ -48,7 +48,7 @@ def main(argv=None):
         result.append(blob)
     raw_yaml = yaml.dump(result)
     raw_yaml = raw_yaml.replace(',', '\n').replace('}', '').replace('{', '')
-    print raw_yaml
+    print(raw_yaml)
 
     return 0
 

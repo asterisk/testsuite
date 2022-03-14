@@ -17,12 +17,12 @@ class UserEventGenerator(object):
     def ami_connect(self, ami):
         ami.registerEvent('UserEvent', self.userevent)
         message = [
-            'FootBoneConnectedToThe: AnkleBone',
-            'AnkleBoneConnectedToThe: ShinBone',
-            'Action: UserEvent',
-            'ShinBoneConnectedToThe: KneeBone',
-            'UserEvent: AnatomyLesson',
-            'KneeBoneConnectedToThe: ThighBone',
+            b"FootBoneConnectedToThe: AnkleBone",
+            b"AnkleBoneConnectedToThe: ShinBone",
+            b"Action: UserEvent",
+            b"ShinBoneConnectedToThe: KneeBone",
+            b"UserEvent: AnatomyLesson",
+            b"KneeBoneConnectedToThe: ThighBone",
         ]
         # We have to forego the typical methods of sending an AMI command
         # because the order the headers are sent in matters for this test.
@@ -36,7 +36,7 @@ class UserEventGenerator(object):
             message.append(message.pop(0))
             for line in message:
                 ami.sendLine(line)
-            ami.sendLine('')
+            ami.sendLine(b"")
 
     def userevent(self, ami, event):
         # This isn't strictly necessary, but without it, the test will take 30
