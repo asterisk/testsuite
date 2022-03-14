@@ -24,13 +24,13 @@ class PbxLuaTest(TestCase):
    def ami_connect(self, ami):
       if ami.id == 0:
 
-         print "sending a call from ast1 to ast2"
+         print("sending a call from ast1 to ast2")
 
          df = ami.originate("sip/ast2/1234", "test", "1234", 1)
 
          def handle_failure(reason):
-            print "error sending originate:"
-            print reason.getTraceback()
+            print("error sending originate:")
+            print(reason.getTraceback())
             self.stop_reactor()
 
             return reason
@@ -44,12 +44,12 @@ class PbxLuaTest(TestCase):
          return
 
       if event['result'] == "pass":
-         print "success"
+         print("success")
          self.passed = True
       else:
-         print "error:"
-         print "result: %s" % (event['result'],)
-         print "error: %s" % (event['error'],)
+         print("error:")
+         print("result: %s" % (event['result']))
+         print("error: %s" % (event['error']))
 
       self.stop_reactor()
 

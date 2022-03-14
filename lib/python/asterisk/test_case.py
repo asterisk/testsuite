@@ -21,17 +21,10 @@ from starpy import manager, fastagi
 
 from .asterisk import Asterisk
 from .test_config import TestConfig
+from .test_config import PCAP_AVAILABLE
 from .test_conditions import TestConditionController
 
-
-try:
-    from pcap_listener import PcapListener
-    PCAP_AVAILABLE = True
-except:
-    PCAP_AVAILABLE = False
-
 LOGGER = None
-
 
 def setup_logging(log_dir, log_full, log_messages):
     """Initialize the logger"""
@@ -873,7 +866,7 @@ class SimpleTestCase(TestCase):
                 application=call_details['application'],
                 variable=call_details['variable'],
                 account=call_details['account'],
-                async=call_details['async'],
+                nowait=call_details['async'],
                 channelid=call_details['channelid'],
                 otherchannelid=call_details['otherchannelid'])
         else:
@@ -887,7 +880,7 @@ class SimpleTestCase(TestCase):
                 priority=call_details['priority'],
                 variable=call_details['variable'],
                 account=call_details['account'],
-                async=call_details['async'],
+                nowait=call_details['async'],
                 channelid=call_details['channelid'],
                 otherchannelid=call_details['otherchannelid'])
         if self._ignore_originate_failures:

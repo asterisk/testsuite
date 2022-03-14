@@ -19,7 +19,7 @@ workingdir = "sip/refer_replaces_to_self"
 testdir = "tests/%s" % workingdir
 
 def log_cb(level, str, len=len(str(str))):
-    print str,
+    print(str,)
 
 class TestAccountCallback(pj.AccountCallback):
 
@@ -60,28 +60,28 @@ class TestCallCallback(pj.CallCallback):
 
             if call_sem:
                 call_sem.release()
- 
+
 
 class ReplaceSelfTest:
     def __init__(self):
         reactor.callWhenRunning(self.run)
 
-        print "Creating Asterisk instance ..."
+        print("Creating Asterisk instance ...")
 
         self.ast1 = Asterisk(base=workingdir)
         self.ast1.install_configs("%s/configs" % (testdir))
 
     def stop_reactor(self):
-        print "Stopping Reactor ..."
+        print("Stopping Reactor ...")
         if reactor.running:
             reactor.stop()
 
     def start_asterisk(self):
-        print "Starting Asterisk instance ..."
+        print("Starting Asterisk instance ...")
         self.ast1.start()
 
     def stop_asterisk(self):
-        print "Stopping Asterisk instance ..."
+        print("Stopping Asterisk instance ...")
         self.ast1.stop()
 
     def run(self):
@@ -126,7 +126,7 @@ class ReplaceSelfTest:
             self.stop_reactor()
 
         except pj.Error, e:
-            print "Exception: " + str(e)
+            print("Exception: " + str(e))
             self.stop_reactor()
 
 def main():
@@ -136,10 +136,10 @@ def main():
 
     global passed
     if passed:
-        print "PASSED"
+        print("PASSED")
         return 0
 
-    print "FAILED"
+    print("FAILED")
     return 1
 
 

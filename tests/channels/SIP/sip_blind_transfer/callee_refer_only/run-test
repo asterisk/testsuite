@@ -7,6 +7,7 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 '''
 
+from builtins import bytes
 import sys
 import os
 import signal
@@ -56,10 +57,13 @@ class BlindTransfer(TestCase):
     def ami_connect(self, ami):
         TestCase.ami_connect(self, ami)
 
+        ami.registerEvent('FullyBooted', self.fully_booted_event_handler)
         ami.registerEvent('BridgeEnter', self.bridge_enter_event_handler)
         ami.registerEvent('BlindTransfer', self.blind_transfer_event_handler)
         ami.registerEvent('Hangup', self.hangup_event_handler)
 
+    def fully_booted_event_handler(self, ami, event):
+        logger.debug("received fully booted event")
         self.a_call_b()
 
     def bridge_enter_event_handler(self, ami, event):
@@ -120,14 +124,16 @@ class BlindTransfer(TestCase):
 
     def a_call_b(self):
         logger.debug("Phone A Calling Phone B (%s)" % BlindTransfer.phone_b_uri)
-        self.pja.stdin.write("m\n")
-        self.pja.stdin.write("%s\n" % BlindTransfer.phone_b_uri)
+        self.pja.stdin.write(b"m\n")
+        self.pja.stdin.write(b"%s\n" % bytes(BlindTransfer.phone_b_uri,"utf-8"))
+        self.pja.stdin.flush()
         self.reset_timeout()
 
     def b_transfer_a_to_c(self):
         logger.debug("Phone B Transferring Phone A to Phone C (%s)" % BlindTransfer.phone_c_uri)
-        self.pjb.stdin.write("x\n")
-        self.pjb.stdin.write("%s\n" % BlindTransfer.phone_c_uri)
+        self.pjb.stdin.write(b"x\n")
+        self.pjb.stdin.write(b"%s\n" % bytes(BlindTransfer.phone_c_uri,"utf-8"))
+        self.pjb.stdin.flush()
         self.reset_timeout()
 
     def start_processes(self):
@@ -150,7 +156,8 @@ class BlindTransfer(TestCase):
 
     def hangup_channel_c(self):
         logger.debug("Hanging up Phone C")
-        self.pjc.stdin.write("h\n")
+        self.pjc.stdin.write(b"h\n")
+        self.pjc.stdin.flush()
 
     def stop_processes(self):
         logger.debug("Stopping Processes")

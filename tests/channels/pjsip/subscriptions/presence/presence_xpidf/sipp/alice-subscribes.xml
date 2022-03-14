@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Subscribe">
+  <send retrans="500">
+    <![CDATA[
+      SUBSCRIBE sip:bob@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:bob@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 SUBSCRIBE
+      Contact: "alice" <sip:alice@[local_ip]:[local_port]>
+      Expires: 3600
+      Max-Forwards: 70
+      Event: presence
+      Accept: application/xpidf+xml
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" rtd="true" />
+
+  <!-- Asterisk sends and initial NOTIFY we don't care about -->
+  <recv request="NOTIFY" crlf="true" />
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Check NOTIFY body for bob's status inuse, onthephone -->
+  <recv request="NOTIFY" crlf="true" >
+    <action>
+        <ereg regexp="<status status=(.*) />" search_in="body" check_it="true" assign_to="status"/>
+        <ereg regexp="<msnsubstatus substatus=(.*) />" search_in="body" check_it="true" assign_to="substatus"/>
+
+        <ereg regexp="inuse" search_in="var" variable="status" check_it="true" assign_to="trash1"/>
+        <ereg regexp="onthephone" search_in="var" variable="substatus" check_it="true" assign_to="trash2"/>
+    </action>
+  </recv>
+  <Reference variables="trash1,trash2"/>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Check NOTIFY body for bob's status inuse, onthephone -->
+  <recv request="NOTIFY" crlf="true" >
+    <action>
+        <ereg regexp="<status status=(.*) />" search_in="body" check_it="true" assign_to="status"/>
+        <ereg regexp="<msnsubstatus substatus=(.*) />" search_in="body" check_it="true" assign_to="substatus"/>
+
+        <ereg regexp="inuse" search_in="var" variable="status" check_it="true" assign_to="trash1"/>
+        <ereg regexp="onthephone" search_in="var" variable="substatus" check_it="true" assign_to="trash2"/>
+    </action>
+  </recv>
+  <Reference variables="trash1,trash2"/>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Check NOTIFY body for bob's status inuse, onthephone -->
+  <recv request="NOTIFY" crlf="true" >
+    <action>
+        <ereg regexp="<status status=(.*) />" search_in="body" check_it="true" assign_to="status"/>
+        <ereg regexp="<msnsubstatus substatus=(.*) />" search_in="body" check_it="true" assign_to="substatus"/>
+
+        <ereg regexp="inuse" search_in="var" variable="status" check_it="true" assign_to="trash1"/>
+        <ereg regexp="onthephone" search_in="var" variable="substatus" check_it="true" assign_to="trash2"/>
+    </action>
+  </recv>
+  <Reference variables="trash1,trash2"/>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Check NOTIFY body for bob's status 4 -->
+  <recv request="NOTIFY" crlf="true" >
+    <action>
+        <ereg regexp="<status status=(.*) />" search_in="body" check_it="true" assign_to="status"/>
+        <ereg regexp="<msnsubstatus substatus=(.*) />" search_in="body" check_it="true" assign_to="substatus"/>
+
+        <ereg regexp="inuse" search_in="var" variable="status" check_it="true" assign_to="trash1"/>
+        <ereg regexp="onthephone" search_in="var" variable="substatus" check_it="true" assign_to="trash2"/>
+    </action>
+  </recv>
+  <Reference variables="trash1,trash2"/>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Check NOTIFY body for bob's status 5 -->
+  <recv request="NOTIFY" crlf="true" >
+    <action>
+        <ereg regexp="<status status=(.*) />" search_in="body" check_it="true" assign_to="status"/>
+        <ereg regexp="<msnsubstatus substatus=(.*) />" search_in="body" check_it="true" assign_to="substatus"/>
+
+        <ereg regexp="closed" search_in="var" variable="status" check_it="true" assign_to="trash1"/>
+        <ereg regexp="offline" search_in="var" variable="substatus" check_it="true" assign_to="trash2"/>
+    </action>
+  </recv>
+  <Reference variables="trash1,trash2"/>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Check NOTIFY body for bob's status 6 -->
+  <recv request="NOTIFY" crlf="true" >
+    <action>
+        <ereg regexp="<status status=(.*) />" search_in="body" check_it="true" assign_to="status"/>
+        <ereg regexp="<msnsubstatus substatus=(.*) />" search_in="body" check_it="true" assign_to="substatus"/>
+
+        <ereg regexp="open" search_in="var" variable="status" check_it="true" assign_to="trash1"/>
+        <ereg regexp="online" search_in="var" variable="substatus" check_it="true" assign_to="trash2"/>
+    </action>
+  </recv>
+  <Reference variables="trash1,trash2"/>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Stay alive in case Asterisk erroneously sends another NOTIFY -->
+  <timewait milliseconds="2000"/>
+</scenario>

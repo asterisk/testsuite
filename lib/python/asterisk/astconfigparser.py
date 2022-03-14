@@ -119,7 +119,7 @@ class Section(MultiOrderedDict):
             for key in d.keys():
                 if key not in res:
                     res.append(key)
-        return res
+        return list(res.keys())
 
     def add_defaults(self, defaults):
         """

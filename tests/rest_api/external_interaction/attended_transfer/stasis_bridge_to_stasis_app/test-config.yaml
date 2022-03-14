@@ -33,10 +33,6 @@ testinfo:
         test ends."
 
 test-modules:
-    add-test-to-search-path: True
-    add-to-search-path:
-        -
-            'tests/rest_api/external_interaction/attended_transfer'
     test-object:
         typename: ari.AriTestObject
     modules:
@@ -64,8 +60,8 @@ pluggable-config:
                 params:
                     channel: '{channel.id}'
         callback:
-            module: attended_transfer
-            method: on_kickoff_start
+            module: extension_bank
+            method: bob_and_charlie_wait_while_alice_calls
     -
         ari-events:
             match:

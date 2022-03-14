@@ -24,10 +24,10 @@ class FastAGIChannelStatusTest(TestCase):
         self.create_fastagi_factory()
 
     def on_answer_failure(self, reason):
-        print 'Could not answer the call:', reason.getTraceback()
+        print('Could not answer the call:', reason.getTraceback())
 
     def on_failure(self, reason):
-        print 'Could not run deferred:', reason.getTraceback()
+        print('Could not run deferred:', reason.getTraceback())
 
     def on_answer(self, status):
         self.fastagi_connect(self.agi)
@@ -36,10 +36,10 @@ class FastAGIChannelStatusTest(TestCase):
         return agi.channelStatus(agi.variables['agi_channel'])
 
     def finish_test(self, status):
-        print "status is", status
+        print("status is", status)
         self.test_status[status] = (self.test == status)
         if self.test == 4:
-            print "Answering call"
+            print("Answering call")
             self.test = 6
             self.agi.answer().addCallback(self.on_answer).addErrback(
                 self.on_answer_failure)
@@ -51,9 +51,9 @@ class FastAGIChannelStatusTest(TestCase):
     def fastagi_connect(self, agi):
         self.agi = agi
         if self.test == 4:
-            print "Connection established. Testing for channel status code 4."
+            print("Connection established. Testing for channel status code 4.")
         elif self.test == 6:
-            print "Testing for channel status code 6."
+            print("Testing for channel status code 6.")
 
         return self.get_deferred(agi).addCallback(
             self.finish_test).addErrback(self.on_failure)
@@ -63,15 +63,15 @@ class FastAGIChannelStatusTest(TestCase):
         self.agi.finish()
         self.stop_reactor()
         if self.test_status[4] is True and self.test_status[6] is True:
-            print "Success"
+            print("Success")
         else:
-            print "Failed"
+            print("Failed")
 
     def launch_test(self):
-        print "Originating call to begin test."
+        print("Originating call to begin test.")
         self.ast[0].cli_originate("Local/no_answer@agitest extension echo@agitest")
 
-    # Read result before timeout 
+    # Read result before timeout
     def result_changed(self):
         if self.test_status[6] is not None:
             self.read_result()

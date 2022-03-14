@@ -14,7 +14,7 @@ properties:
     dependencies:
         - python: 'twisted'
         - python: 'starpy'
-        - python: 'pjsua'
+        - app: 'sipp'
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_mwi'
         - asterisk: 'res_mwi_external'
@@ -27,32 +27,30 @@ properties:
 test-modules:
     add-test-to-search-path: 'True'
     test-object:
-        config-section: test-case-config
-        typename: 'test_case.TestCaseModule'
-    modules:
-        -
-            config-section: 'pjsua-config'
-            typename: 'pjsua_mod.PJsua'
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
 
-test-case-config:
+sipp-config:
     connect-ami: 'True'
-
-pjsua-config:
-    callback_module: 'mwi_check'
-    callback_method: 'mwi_callback'
-    transports:
+    reactor-timeout: 30
+    fail-on-any: True
+    start_callback_module: 'mwi_check'
+    start_callback_method: 'walk_states'
+    test-iterations:
+        # We pass the initial registers the -aa flag then let them run for a second so they can get the
+        # 1-2 initial NOTIFY messages we don't care about.  The MWI AMI updates are set to start after
         -
-            name: 'local-ipv4'
-            bind: '127.0.0.1'
-            bindport: '5061'
-    accounts:
+            scenarios:
+                - { 'key-args': {'scenario': 'alice-registers.xml', '-p': '5061'},
+                    'ordered-args': {'-aa'} }
+                - { 'key-args': {'scenario': 'bob-registers.xml', '-p': '5062'},
+                    'ordered-args': {'-aa'}  }
+        # Combining this with the -m makes the scripts regex conditional on call_number
         -
-            name: 'alice'
-            username: 'alice'
-            password: 'alice'
-            domain: '127.0.0.1'
+            scenarios:
+                - { 'key-args': {'scenario': 'alice-is-notified-1.xml', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'bob-is-notified-1.xml', '-p': '5062'} }
         -
-            name: 'bob'
-            username: 'bob'
-            password: 'bob'
-            domain: '127.0.0.1'
+            scenarios:
+                - { 'key-args': {'scenario': 'alice-is-notified-2.xml', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'bob-is-notified-2.xml', '-p': '5062'} }

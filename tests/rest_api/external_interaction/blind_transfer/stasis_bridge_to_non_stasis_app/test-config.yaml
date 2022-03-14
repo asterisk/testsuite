@@ -4,149 +4,164 @@ testinfo:
          Stasis application, bridged, and one channel is blind transferred to
          a non-stasis application."
     description: |
-        "A dummy local channel is created with half the channel placed into the
-         Stasis(testsuite,dummy) application and the other half placed into the
-         Echo() application. This sole purpose of this dummy channel is to have
-         a channel up preventing the test from immediately ending and thus
-         keeping the websocket connected, to allow StasisEnd events for all
-         other channels to be verified.
+         "Upon the kick off local channel entering into the Stasis(testsuite)
+         app, a Stasis bridge is created and two calls are placed using sipp
+         accounts ('alice' & 'bob') with both dialing into the
+         Stasis(testsuite,test) app. The alice & bob channels are placed into
+         the Stasis bridge.
 
-         The kick off local channel ('Alice') is entered into the
-         Stasis(testsuite) app and a Stasis bridge is created. A SIP channel
-         ('Bob') is then entered into the Stasis(testsuite,test) app and added
-         to the bridge with alice. Bob blind transfers Alice to the Echo() app
-         via extension 1000. The local channel half replacing Bob's is added to
-         the bridge with Alice. The other local channel half executes the Echo()
-         app. The StasisStart events for all channels (except the dummy halves)
-         are verified.
+         Alice blind transfers bob to the Echo application via
+         dial plan extension 1000. The local channel half replacing Alice's
+         channel is added to the bridge with Bob. The other local channel half
+         executes the Echo application and is not added to a
+         bridge. The StasisStart events for all channels along with the
+         StasisEnd event for Alice's channel are verified by this point in time
 
-         Upon the local channel half entering the bridge replacing Bob's
-         channel, the channel and Alice's channel are hung up. The bridge is
-         then also destroyed. Once all StasisEnd events have been verified,
-         the dummy channel halves are hung up thus ending the test."
+         A StasisEnd event for Alice's channel triggers an AMI hangup of Bob's
+         channel. A StasisEnd event for Bob's channel then triggers an AMI
+         hangup of the local channels halves used for the transfer, the local
+         channel halves for kicking off the test, and destruction of the bridge.
+         The StasisEnd events are verified for Bob's channel and the local
+         channel halves used for the transfer."
 
 test-modules:
-    add-test-to-search-path: True
     test-object:
         config-section: test-object-config
-        typename: ari.AriOriginateTestObject
+        typename: 'ari.AriTestObject'
     modules:
-        -   config-section: ari-config
-            typename: ari.WebSocketEventModule
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
 
 test-object-config:
     apps: testsuite
-    test-iterations:
-        - [ { channelId: 'dummy',
-              endpoint: 'Local/dummy@default',
-              context: 'default',
-              extension: '1000',
-              priority: '1' },
-            { channelId: 'alice',
-              endpoint: 'Local/s@default',
-              context: 'default',
-              extension: '1000',
-              priority: '1' } ]
 
-ari-config:
-    events:
-        -   conditions:
-                match:
-                    type: StasisStart
-                    application: testsuite
-                    args: ['dummy']
-                    channel:
-                        id: 'dummy;2'
+pluggable-config:
+    # Upon kickoff channel entering Stasis app: create a bridge, don't add
+    # kickoff channel to bridge, initiate SIPp calls.
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: []
+                channel:
+                    name: 'Local/s@default-.*'
             count: 1
-        -   conditions:
-                match:
-                    type: StasisStart
-                    application: testsuite
-                    args: []
-                    channel:
-                        id: 'alice;2'
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/test_bridge'
+        callback:
+            module: extension_bank
+            method: alice_and_bob_call
+    # Upon alice & bob entering Stasis app: add the channels to the bridge.
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: ['test']
+                channel:
+                    name: 'PJSIP/(alice|bob)-.*'
+            count: 2
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/test_bridge/addChannel'
+            params:
+                channel: '{channel.id}'
+    # Ensure the blind transfer is occurring how it should.
+    -
+        ari-events:
+            match:
+                type: BridgeBlindTransfer
+                application: testsuite
+                channel:
+                    name: 'PJSIP/alice-.*'
+                transferee:
+                    name: 'PJSIP/bob-.*'
+                replace_channel:
+                    name: "Local/1000@default-.*"
+                result: 'Success'
             count: 1
-            callback:
-                module: blind_transfer
-                method: on_kickoff_start
-        -   conditions:
-                match:
-                    type: StasisStart
-                    application: testsuite
-                    args: ['test']
-                    channel:
-                        name: 'PJSIP/bob-0000000.'
+    # Ensure the local channel half for the transfer that is replacing Alice's
+    # channel enters the Stasis(testsuite,test) application and then add it to
+    # the bridge.
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: []
+                channel:
+                    name: 'Local/1000@default-.*'
+                replace_channel:
+                    name: 'PJSIP/alice-.*'
             count: 1
-            callback:
-                module: blind_transfer
-                method: on_test_start
-        -   conditions:
-                match:
-                    type: ChannelEnteredBridge
-                    channel:
-                        id: 'alice;2'
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/test_bridge/addChannel'
+            params:
+                channel: '{channel.id}'
+    # Ensure the local channel half entering the bridge is the one that
+    # replaced alice's channel.
+    -
+        ari-events:
+            match:
+                type: ChannelEnteredBridge
+                application: testsuite
+                channel:
+                    name: 'Local/1000@default-.*'
+                    state: 'Up'
+                    connected:
+                        number: 'bob'
             count: 1
-        -   conditions:
-                match:
-                    type: ChannelEnteredBridge
-                    channel:
-                        name: 'PJSIP/.*'
+    # Ensure the alice channel exits the Stasis app.
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: testsuite
+                channel:
+                    name: 'PJSIP/alice-.*'
             count: 1
-            callback:
-                module: blind_transfer
-                method: on_channel_entered_bridge
-        -   conditions:
-                match:
-                    type: StasisStart
-                    application: testsuite
-                    args: []
-                    channel:
-                        name: 'Local/1000@default-0000000.;1'
-                    replace_channel:
-                        name: 'PJSIP/bob-0000000.'
+        ami-actions:
+            action:
+               action: 'Hangup'
+               channel: '/^PJSIP/bob-.*$/'
+    # Upon bob hanging up: Ensure the bob channel exits the Stasis app, hang up
+    # both local channel halves used for the transfer.
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: testsuite
+                channel:
+                    name: 'PJSIP/bob-.*'
             count: 1
-        -   conditions:
-                match:
-                    type: BridgeBlindTransfer
-                    application: testsuite
+        ami-actions:
+            action:
+               action: 'Hangup'
+               channel: '/^Local/1000@default-.*$/'
+    # Ensure the bridged local channel half used for the transfer exits the
+    # Stasis app. Additionally hang up the kickoff local channel halves and
+    # destroy the bridge.
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: testsuite
+                channel:
+                    name: 'Local/1000@default-.*'
+                    connected:
+                        number: 'bob'
             count: 1
-            callback:
-                module: blind_transfer
-                method: on_blind_transfer
-        -   conditions:
-                match:
-                    type: ChannelEnteredBridge
-                    channel:
-                        name: 'Local/1000@default-0000000.;1'
-            count: 1
-            callback:
-                module: blind_transfer
-                method: on_replace_channel_enter
-        -   conditions:
-                match:
-                    type: StasisEnd
-                    application: testsuite
-                    channel:
-                        name: 'PJSIP/bob-0000000.'
-            count: 1
-        -   conditions:
-                match:
-                    type: StasisEnd
-                    application: testsuite
-                    channel:
-                        id: 'alice;2'
-            count: 1
-        -   conditions:
-                match:
-                    type: StasisEnd
-                    application: testsuite
-                    channel:
-                        name: 'Local/1000@default-0000000.;1'
-            count: 1
-            requests:
-                -
-                    method: 'delete'
-                    uri: 'channels/dummy;2'
+        ami-actions:
+            action:
+               action: 'Hangup'
+               channel: '/^Local/s@default-.*;1$/'
+        ari-requests:
+            method: 'delete'
+            uri: 'bridges/test_bridge'
 
 properties:
     dependencies:
@@ -154,12 +169,13 @@ properties:
         - python : requests
         - python : twisted
         - python : starpy
-        - app : pjsua
+        - app : sipp
         - asterisk : app_stasis
-        - asterisk : app_echo
         - asterisk : res_ari_channels
         - asterisk : res_ari_bridges
         - asterisk : res_pjsip
     tags:
         - ARI
+        - pjsip
         - refleaks
+

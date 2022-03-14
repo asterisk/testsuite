@@ -15,7 +15,7 @@ CHANNELS = 0
 
 def on_kickoff_start(ari, event, test_object):
     LOGGER.debug("on_kickoff_start(%r)" % event)
-    for x in xrange(15):
+    for x in range(15):
         ari.post('channels',
                  endpoint='Local/1000@default',
                  app='testsuite',

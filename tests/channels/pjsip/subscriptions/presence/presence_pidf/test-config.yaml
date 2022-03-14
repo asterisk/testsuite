@@ -1,16 +1,16 @@
 testinfo:
     summary:     'Test PJSIP PIDF presence notification'
     description: |
-        'This test creates a PJSUA account, "alice", that subscribes to
+        'This test creates a sipp account, "alice", that subscribes to
         buddy "bob". Asterisk changes the state of Bob to device states that
-        map to each of the extension states. We then ensure that PJSUA was
+        map to each of the extension states. We then ensure that sipp was
         given the state we expected for each state change.'
 
 properties:
     dependencies:
         - python: 'twisted'
         - python: 'starpy'
-        - python: 'pjsua'
+        - app: 'sipp'
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_exten_state'
     tags:
@@ -19,31 +19,19 @@ properties:
 test-modules:
     add-test-to-search-path: 'True'
     test-object:
-        config-section: test-case-config
-        typename: 'test_case.TestCaseModule'
-    modules:
-        -
-            config-section: 'pjsua-config'
-            typename: 'pjsua_mod.PJsua'
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
 
-test-case-config:
+sipp-config:
     connect-ami: 'True'
-
-pjsua-config:
-    callback_module: 'state_check'
-    callback_method: 'buddy_subscribe'
-    transports:
+    reactor-timeout: 30
+    fail-on-any: True
+    start_callback_module: 'state_check'
+    start_callback_method: 'walk_states'
+    test-iterations:
         -
-            name: 'local-ipv4'
-            bind: '127.0.0.1'
-            bindport: '5061'
-    accounts:
+            scenarios:
+                - { 'key-args': {'scenario': 'alice-registers.xml', '-p': '5061'} }
         -
-            name: 'alice'
-            username: 'alice'
-            password: 'alice'
-            domain: '127.0.0.1'
-            buddies:
-                -
-                    name: 'bob'
-                    uri: 'sip:bob@127.0.0.1'
+            scenarios:
+                - { 'key-args': {'scenario': 'alice-subscribes.xml', '-p': '5061'} }

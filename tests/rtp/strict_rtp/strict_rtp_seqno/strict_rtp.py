@@ -32,7 +32,7 @@ class StrictRtpTester(object):
             """
             self.test_object = test_object
 
-        def datagramReceived(self, data, (host, port)):
+        def datagramReceived(self, data, addr):
             """Callback for when a datagram is received.
             We don't want anything to happen here because we do all
             of the handling ourselves via TestEvent.
@@ -41,6 +41,7 @@ class StrictRtpTester(object):
             data         The actual packet
             (host, port) Tuple of source host and port
             """
+            (host, port) = addr
             LOGGER.debug('Packet received from {0}:{1}\n{2}'.format(
                 host, port, data))
 

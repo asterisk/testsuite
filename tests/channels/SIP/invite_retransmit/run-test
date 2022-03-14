@@ -56,7 +56,7 @@ def main():
     # we were on pause.
     sipplog.seek(0)
     for line in sipplog:
-        if 'SIP/2.0 5' in line:
+        if b'SIP/2.0 5' in line:
             # Collect entire message for debugging purposes.
             debug = [line]
             for line in sipplog:

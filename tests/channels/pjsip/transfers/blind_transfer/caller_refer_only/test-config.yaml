@@ -15,7 +15,7 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-        - python: 'pjsua'
+        - app : 'sipp'
         - asterisk : 'res_pjsip'
     tags:
         - pjsip
@@ -24,52 +24,37 @@ properties:
 test-modules:
     add-test-to-search-path: 'True'
     test-object:
-        config-section: test-case-config
-        typename: 'test_case.TestCaseModule'
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
     modules:
-        -
-            config-section: 'pjsua-config'
-            typename: 'pjsua_mod.PJsua'
         -
             config-section: 'ami-config'
             typename: 'ami.AMIEventModule'
 
-test-case-config:
+sipp-config:
     memcheck-delay-stop: 7
     connect-ami: 'True'
+    fail-on-any: False
+    test-iterations:
+        # Pre-register alice and bob and charlie
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice-registers.xml', '-i': '127.0.0.1', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'bob-registers.xml', '-i': '127.0.0.1', '-p': '5062'} }
+                - { 'key-args': {'scenario': 'charlie-registers.xml', '-i': '127.0.0.1', '-p': '5063'} }
+        # First iteration
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'charlie.xml', '-i': '127.0.0.1', '-p': '5063'} }
+                - { 'key-args': {'scenario': 'bob.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice'} }
+                - { 'key-args': {'scenario': 'alice.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'bob', '-sleep': '1'} }
+        # Second iteration
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'charlie.xml', '-i': '127.0.0.1', '-p': '5063'} }
+                - { 'key-args': {'scenario': 'bob.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'alice'} }
+                - { 'key-args': {'scenario': 'alice_two.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'bob_two', '-sleep': '1'} }
 
-pjsua-config:
-    callback_module: 'transfer'
-    callback_method: 'transfer'
-    transports:
-        -
-            name: 'local-ipv4-1'
-            bind: '127.0.0.1'
-            bindport: '5061'
-        -
-            name: 'local-ipv4-2'
-            bind: '127.0.0.1'
-            bindport: '5062'
-        -
-            name: 'local-ipv4-3'
-            bind: '127.0.0.1'
-            bindport: '5063'
-    accounts:
-        -
-            name: 'alice'
-            username: 'alice'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-1'
-        -
-            name: 'bob'
-            username: 'bob'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-2'
-        -
-            name: 'charlie'
-            username: 'charlie'
-            domain: '127.0.0.1'
-            transport: 'local-ipv4-3'
 
 ami-config:
         -

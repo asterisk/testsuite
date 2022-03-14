@@ -31,6 +31,11 @@ from .buildoptions import AsteriskBuildOptions
 from .sippversion import SIPpVersion
 from .opensslversion import OpenSSLVersion
 
+try:
+    from pcap_listener import PcapListener
+    PCAP_AVAILABLE = True
+except:
+    PCAP_AVAILABLE = False
 
 class TestConditionConfig(object):
     """This class creates a test condition config and will build up an
@@ -165,7 +170,6 @@ class Dependency(object):
                 self.met = True
         elif "pcap" in dep:
             self.name = "pcap"
-            from .test_case import PCAP_AVAILABLE
             self.met = PCAP_AVAILABLE
         else:
             print("Unknown dependency type specified:")
