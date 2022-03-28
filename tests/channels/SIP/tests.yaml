@@ -67,6 +67,7 @@ tests:
     - test: 'sip_outbound_proxy'
     - test: 'sip_register'
     - test: 'sip_register_domain_acl'
+    - test: 'sip_semi_attended_transfer_record_route'
     - test: 'sip_tls_call'
     - test: 'sip_tls_register'
     - test: 'sip_unregister'
