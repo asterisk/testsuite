@@ -10,3 +10,4 @@ tests:
     - test: 'callee_local_app'
     - test: 'caller_local_direct_media'
     - test: 'callee_local_direct_media'
+    - test: 'callee_local_semi_attended_transfer_record_route'
