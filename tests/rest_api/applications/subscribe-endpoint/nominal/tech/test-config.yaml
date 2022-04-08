@@ -28,10 +28,7 @@ test-modules:
             config-section: subscriber
             typename: 'subscriber.ResourceSubscription'
         -
-            config-section: ari-config
-            typename: ari.WebSocketEventModule
-        -
-            config-section: ari-test-stopper
+            config-section: event-action-config
             typename: pluggable_modules.EventActionModule
 
 test-object-config:
@@ -58,19 +55,11 @@ subscriber:
     subscriptions:
         - { event-source: 'endpoint:IAX2', app: 'testsuite' }
 
-ari-config:
-    events:
-        -   conditions:
-                match:
-                    type: EndpointStateChange
-                    application: testsuite
-                    endpoint:
-                        technology: IAX2
-                        resource: alice
-                        state: unknown
-                        channel_ids: ['.*']
-            count: 1
-        -   conditions:
+event-action-config:
+    event:
+        type: 'matcher_listener.Ari'
+        conditions:
+            -
                 match:
                     type: EndpointStateChange
                     application: testsuite
@@ -79,8 +68,17 @@ ari-config:
                         resource: bob
                         state: online
                         channel_ids: ['.*']
-            count: 0
-        -   conditions:
+                count: 0
+            -
+                match:
+                    type: EndpointStateChange
+                    application: testsuite
+                    endpoint:
+                        technology: IAX2
+                        resource: alice
+                        state: unknown
+                        channel_ids: ['.*']
+            -
                 match:
                     type: ChannelCreated
                     application: testsuite
@@ -88,32 +86,28 @@ ari-config:
                         name: 'IAX2/alice-.*'
                         state: Down
                         dialplan: { context: 'default', exten: 's', priority: 1 }
-            count: 1
-        -   conditions:
+            -
                 match:
                     type: ChannelStateChange
                     application: testsuite
                     channel:
                         name: 'IAX2/alice-.*'
                         state: Ringing
-            count: 1
-        -   conditions:
+            -
                 match:
                     type: ChannelStateChange
                     application: testsuite
                     channel:
                         name: 'IAX2/alice-.*'
                         state: Up
-            count: 1
-        -   conditions:
+            -
                 match:
                     type: ChannelHangupRequest
                     application: testsuite
                     channel:
                         name: 'IAX2/alice-.*'
                         state: Up
-            count: 1
-        -   conditions:
+            -
                 match:
                     type: ChannelDestroyed
                     application: testsuite
@@ -122,20 +116,16 @@ ari-config:
                     channel:
                         name: 'IAX2/alice-.*'
                         state: Up
-            count: 1
-
-ari-test-stopper:
-    -
-        ari-events:
-            match:
-                type: EndpointStateChange
-                application: testsuite
-                endpoint:
-                    technology: IAX2
-                    resource: alice
-                    state: unknown
-                    channel_ids: []
-        stop_test:
+            -
+                match:
+                    type: EndpointStateChange
+                    application: testsuite
+                    endpoint:
+                        technology: IAX2
+                        resource: alice
+                        state: unknown
+                        channel_ids: []
+    stop_test:
 
 properties:
     dependencies:

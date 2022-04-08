@@ -39,6 +39,40 @@ def socket_family(family):
     }.get(family, 'Unknown Family')
 
 
+def get_resolved(host='', family=None):
+    """Get and/or validate the family and host and/or resolve it"""
+
+    def get_family(h, f):
+        try:
+            inet_pton(f, h)
+            return f
+        except:
+            return None
+
+    if not host:
+        return ('', family or AF_INET)
+
+    host = host.lstrip('[').rstrip(']')
+
+    if family == None:
+        family = get_family(host, AF_INET) or get_family(host, AF_INET6)
+
+        if family:
+            # host is already an ip address, so go ahead and return
+            return (host, family)
+
+    if family == None:
+        family = AF_INET
+
+    try:
+        host = getaddrinfo(host, None, family)[0][4][0]
+    except:
+        raise ValueError("Unable to resolve host '{0}' ({1}) ".format(
+            host, socket_family(family)))
+
+    return (host, family)
+
+
 def get_unused_os_port(host='', port=0, socktype=SOCK_STREAM, family=AF_INET):
     """Retrieve an unused port from the OS.
 
@@ -73,6 +107,9 @@ def get_unused_os_port(host='', port=0, socktype=SOCK_STREAM, family=AF_INET):
     res = 0
     s = socket(family, socktype)
     try:
+        if socktype == SOCK_STREAM:
+            s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+
         s.bind((host, port))
         res = s.getsockname()[1]
     except error as e:
@@ -285,8 +322,8 @@ class Ports(object):
 PORTS = Ports()
 
 
-def get_available_port(host='', socktype=0, family=0, num=0,
-                       port=0, config=None):
+def get_available_port(host='', port=0, socktype=SOCK_DGRAM,
+                       family=None, num=0):
     """Retrieve the primary available port, and reserve it and its offsets.
 
     The majority of use cases probably involve the need to reserve multiple
@@ -304,20 +341,8 @@ def get_available_port(host='', socktype=0, family=0, num=0,
     The singular primary available port.
     """
 
-    if config:
-        host = host or config.get('-i')
-        socktype = SOCK_STREAM if '-t' in config else SOCK_DGRAM
+    host, family = get_resolved(host, family)
 
-    # The family (without a host) and socktype should really always be
-    # specified when calling this function, but just in case use some defaults
-    if family < 1:
-        if host:
-            family = AF_INET6 if ':' in host else AF_INET
-        else:
-            family = AF_INET
-
-    if socktype < 1:
-        socktype = SOCK_DGRAM  # Most tests are UDP based
     available = PORTS.get_range_and_reserve(
         host, port, socktype, family, num)
     # If we don't have a valid socktype and family badness happens
