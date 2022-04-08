@@ -144,20 +144,20 @@ class PortTests(unittest.TestCase):
         p = 50000
 
         def test(h, s, f):
-            self.assertEqual(get_available_port(h, s, f, 0, p), p)
+            self.assertEqual(get_available_port(h, p, s, f, 0), p)
         # Limit to single host since using global object
         self._on_socktype(None, test)
 
         p = 50001
 
         self.assertEqual(get_available_port(
-            config={'-i': '0.0.0.0'}, num=2, port=p), p)
+            '0.0.0.0', p, num=2,), p)
         self.assertEqual(get_available_port(
-            config={'-i': '0.0.0.0',  '-t': ''}, num=2, port=p), p)
+            '0.0.0.0', p, SOCK_STREAM, num=2), p)
         self.assertEqual(get_available_port(
-            config={'-i': '[::]'}, num=2, port=p), p)
+            '[::]', p, family=AF_INET6, num=2), p)
         self.assertEqual(get_available_port(
-            config={'-i': '[::]',  '-t': ''}, num=2, port=p), p)
+            '[::]', p, SOCK_STREAM, AF_INET6, 2), p)
 
 
 if __name__ == "__main__":
