@@ -17,7 +17,7 @@ from twisted.internet import reactor, defer, protocol, error
 from .test_case import TestCase
 from .utils_socket import get_available_port
 from .pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
-    PLUGGABLE_ACTION_REGISTRY, var_replace
+    PLUGGABLE_ACTION_REGISTRY
 
 
 LOGGER = logging.getLogger(__name__)
@@ -686,7 +686,7 @@ class SIPpScenario(object):
             #
             # num = 4 = ports for audio rtp/rtcp and video rtp/rtcp
             default_args['-mp'] = str(get_available_port(
-                config=default_args, num=4))
+                default_args.get('-i'), num=4))
 
         for (key, val) in default_args.items():
             sipp_args.extend([key, val])
@@ -962,3 +962,41 @@ class SIPpStartEventModule(object):
 
 
 PLUGGABLE_EVENT_REGISTRY.register("sipp-start", SIPpStartEventModule)
+
+
+class SIPpActionModule(object):
+    """An action module that initiates SIPp scenarios."""
+
+    def __init__(self, test_object, config):
+        """Initialize SIPp action module"""
+
+        scenarios = config.get('scenarios')
+        if not scenarios:
+            # This is more of a fix the test error. Either this action
+            # is not needed, or a scenario needs to be properly added
+            LOGGER.error("No registered SIPp scenarios (action does nothing).")
+            test_object.set_passed(False)
+            test_object.stop_reactor()
+            return
+
+        self.sequence = SIPpScenarioSequence(test_object,
+            fail_on_any=config.get('fail-on-any', True),
+            stop_on_done=config.get('stop-after-scenarios', True))
+
+        for s in scenarios:
+            if ('coordinated-sender' in s and 'coordinated-receiver' in s):
+                self.sequence.register_scenario(CoordinatedScenario(
+                    test_object.test_name, s))
+            else:
+                self.sequence.register_scenario(SIPpScenario(
+                    test_object.test_name, s['key-args'],
+                    s.get('ordered-args') or [],
+                    s.get('target') or '127.0.0.1'))
+
+    def run(self, triggered_by, source, extra):
+        """Execute specified SIPp scenarios"""
+
+        self.sequence.execute()
+
+
+PLUGGABLE_ACTION_REGISTRY.register("sipp", SIPpActionModule)
