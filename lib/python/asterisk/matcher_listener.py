@@ -74,3 +74,20 @@ class Udp(PluggableConditions):
 
         if not any(f for f in self.filter_msgs if re.match(f, msg)):
             self.check(msg)
+
+
+class Ari(PluggableConditions):
+    """Pluggable module that that checks messages received over ARI"""
+
+    def __init__(self, config, test_object, on_match=None):
+        """Constructor
+
+        Keyword Arguments:
+        config - configuration for this module
+        test_object - the TestCase driver
+        on_match - Optional callback called upon a conditional match
+        """
+
+        super(Ari, self).__init__(config, test_object, on_match)
+
+        test_object.register_ws_event_handler(self.check)

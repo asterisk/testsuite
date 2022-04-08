@@ -18,6 +18,7 @@ test-object-config:
     connect-ami: True
     fail-on-any: False
     reactor-timeout: 15
+    stop-after-scenarios: False
     test-iterations:
         -
             scenarios:
