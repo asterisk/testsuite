@@ -25,7 +25,7 @@
 		<action>
 			<assignstr
 				assign_to="rr_out"
-				value="&lt;sip:[local_ip]:[local_port];transport=[transport];lr&gt;" />
+				value="\x3Csip:[local_ip]:[local_port];transport=[transport];lr\x3E" />
 		</action>
 	</nop>
 
