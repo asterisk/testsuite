@@ -1,0 +1,61 @@
+testinfo:
+    summary: Test originating calls with PJSIP have a protocol_id set
+    description: |
+        Originate a call to a PJSIP endpoint using ARI and verify they have a protocol_id set (SIP Call-ID)
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip
+    tags:
+        - ARI
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriOriginateTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
+
+test-object-config:
+    stop-on-end: False
+    test-iterations:
+        -
+            endpoint: 'PJSIP/1000@endpoint1'
+            channelId: 'MyCustomId'
+            otherChannelId: 'MyOtherCustomId'
+            app: 'testsuite'
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: ChannelDestroyed
+                application: testsuite
+                channel:
+                    id: 'MyCustomId$'
+        stop_test:
+
+ari-config:
+    apps: testsuite
+    events:
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    channel:
+                        protocol_id: '^.{8}-.{4}-.{4}-.{4}-.{12}$'
+                        id: 'MyCustomId'
+            count: 1
