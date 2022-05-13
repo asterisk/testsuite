@@ -66,7 +66,7 @@ int mkstring(struct mkstring_options *opts) {
 }
 
 int parse_cmdline(int argc, char *argv[], struct mkstring_options *opts) {
-	char c;
+	signed char c;
 	int i;
 	while ((c = getopt(argc, argv, "n:o:")) != -1) {
 		switch (c) {

@@ -73,7 +73,7 @@ void usage(const char *prog_name) {
  * @return 0 success
  */
 int parse_cmdline(int argc, char *argv[], struct asttest_opts *opts) {
-	char c;
+	signed char c;
 	memset(opts, 0, sizeof(struct asttest_opts));
 
 	/* set some default options */
