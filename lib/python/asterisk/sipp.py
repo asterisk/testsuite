@@ -646,7 +646,7 @@ class SIPpScenario(object):
         sipp_args = [
             self.sipp, self.target,
             '-sf',
-            '%s/sipp/%s' % (self.test_dir, self.scenario['scenario']),
+            '%s' % (self.scenario['scenario']),
             '-nostdin',
             '-skip_rlimit',
         ]
@@ -719,7 +719,7 @@ class SIPpScenario(object):
                              sipp_args[0],
                              sipp_args,
                              {"TERM": "vt100", },
-                             None,
+                             "{0}/sipp".format(self.test_dir),
                              None)
         return self._our_exit_deferred
 
