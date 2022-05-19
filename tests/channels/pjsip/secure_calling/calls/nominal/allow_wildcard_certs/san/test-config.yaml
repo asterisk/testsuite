@@ -1,0 +1,44 @@
+testinfo:
+    summary: 'Test TLS using a certificate with a wildcard SAN'
+    description: |
+        'Originate a call using TLS from Asterisk to a remote endpoint,
+         and verify usage of a wildcard certificate. If the call is
+         successfully established then it worked.'
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: orig-config
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: dns-server-config
+            typename: 'dns_server.DNSServer'
+
+test-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'invite_recv.xml', '-s': 'uas', '-p': '5062', '-t': 'l1', '-tls_version': '1.2' } }
+
+orig-config:
+    channel: 'PJSIP/uas'
+    application: 'Echo'
+    async: 'True'
+
+dns-server-config:
+    port: 10053
+    python-zones:
+        -
+            example.com
+
+properties:
+    dependencies:
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_session'
+        - asterisk : 'res_pjsip_sips_contact'
+    tags:
+        - pjsip
