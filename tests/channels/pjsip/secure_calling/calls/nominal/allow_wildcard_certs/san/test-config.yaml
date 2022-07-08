@@ -21,7 +21,8 @@ test-config:
     test-iterations:
         -
             scenarios:
-                - { 'key-args': {'scenario': 'invite_recv.xml', '-s': 'uas', '-p': '5062', '-t': 'l1', '-tls_version': '1.2' } }
+                - { 'key-args': {'scenario': 'invite_recv.xml', '-s': 'uas', '-p': '5062', '-t': 'l1',
+                    '-tls_version': '1.2', '-tls_cert': 'cacert.pem', '-tls_key': 'cakey.pem' } }
 
 orig-config:
     channel: 'PJSIP/uas'
