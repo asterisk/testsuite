@@ -646,7 +646,7 @@ class SIPpScenario(object):
         sipp_args = [
             self.sipp, self.target,
             '-sf',
-            '%s' % (self.scenario['scenario']),
+            '%s/sipp/%s' % (self.test_dir, self.scenario['scenario']),
             '-nostdin',
             '-skip_rlimit',
         ]
@@ -662,18 +662,12 @@ class SIPpScenario(object):
         default_args.update(self.scenario)
         del default_args['scenario']
 
-        # correct the path specified by -slave_cfg
-        if '-slave_cfg' in default_args:
-            default_args['-slave_cfg'] = ('%s/sipp/%s' % (
-                self.test_dir, default_args['-slave_cfg']))
-
-        if '-inf' in default_args:
-            default_args['-inf'] = ('%s/sipp/%s' % (
-                self.test_dir, default_args['-inf']))
-
-        if '-oocsf' in default_args:
-            default_args['-oocsf'] = ('%s/sipp/%s' % (
-                self.test_dir, default_args['-oocsf']))
+        # correct file paths to be relative to the test's sipp directory
+        correctable_paths = { "-slave_cfg", "-inf", "-oocsf", "-tls_cert", "-tls_key", "-tls_ca", "-tls_crl" }
+        for defarg in default_args:
+            if defarg in correctable_paths:
+                default_args[defarg] = ('%s/sipp/%s' % (
+                    self.test_dir, default_args[defarg]))
 
         if '-mp' not in default_args:
             # Current SIPp correctly chooses an available port for audio, but
@@ -719,7 +713,7 @@ class SIPpScenario(object):
                              sipp_args[0],
                              sipp_args,
                              {"TERM": "vt100", },
-                             "{0}/sipp".format(self.test_dir),
+                             None,
                              None)
         return self._our_exit_deferred
 
