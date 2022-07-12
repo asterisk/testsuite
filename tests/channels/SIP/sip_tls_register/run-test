@@ -85,8 +85,8 @@ class SIPTLS_Register_Test(TestCase):
             '-p': '5061',
             '-s': 'SIP/v4-in',
             '-t': 'ln',
-            '-tls_cert': '%s/configs/keys/serverA.crt' % self.test_name,
-            '-tls_key': '%s/configs/keys/serverA.key' % self.test_name,
+            '-tls_cert': '../configs/keys/serverA.crt',
+            '-tls_key': '../configs/keys/serverA.key',
         }
 
         scenario = SIPpScenario("tests/channels/SIP/sip_tls_register", scenario_def)
