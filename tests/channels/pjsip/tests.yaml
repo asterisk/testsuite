@@ -15,6 +15,7 @@ tests:
     - dir: 'message'
     - dir: 'nat'
     - dir: 'one_touch_recording'
+    - dir: 'parameters'
     - dir: 'publish'
     - dir: 'qualify'
     - dir: 'registration'
