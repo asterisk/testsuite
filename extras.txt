@@ -1,2 +1,2 @@
 https://github.com/asterisk/starpy/archive/refs/heads/1.1.zip
-git+https://github.com/asterisk/yappcap.git
+https://github.com/asterisk/yappcap/archive/refs/heads/python3.zip
