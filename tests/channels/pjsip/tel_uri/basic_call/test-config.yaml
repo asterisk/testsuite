@@ -1,0 +1,29 @@
+testinfo:
+    summary: 'Ensure that a call with tel URI works.'
+    description: |
+        Test to make sure calls with tel URIs in request, from,
+        and to headers works.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'invite.xml', '-i': '127.0.0.1', '-p': '5061'} }
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - sipp :
+            version : 'v3.0'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
