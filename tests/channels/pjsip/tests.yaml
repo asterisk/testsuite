@@ -25,6 +25,7 @@ tests:
     - dir: 'statsd'
     - dir: 'stir_shaken'
     - dir: 'subscriptions'
+    - dir: 'tel_uri'
     - dir: 'transfers'
     - dir: 'transport'
     - dir: 'video_calls'

@@ -2,7 +2,7 @@ testinfo:
     summary: 'Verifies that non sip(s) uri requests are rejected'
     description: |
         This test verifies that non sip(s) URIs are rejected when appearing in
-        the Request Line or in the From/To/Contact headers.
+        the Contact header.
 
 properties:
     dependencies:
