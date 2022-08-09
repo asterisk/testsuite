@@ -1,0 +1,62 @@
+testinfo:
+    summary: 'Check handling of security agreement mechanisms'
+    description: |
+        'Asterisk attempts to use the security agreement mechanisms as defined
+        in RFC 3329. The server rejects the initial registration with a 494
+        Security Agreement Required or some non-RFC compliant servers with 401
+        Unauthorized. Asterisk should then attempt to register with the correct
+        Security-Verify headers which have been obtained from the server's
+        response.
+
+        There are two scenarios:
+        1) The server responds with status code 494.
+        2) The server responds with status code 401.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'ami.AMIEventModule'
+            config-section: ami-config
+
+sipp-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'uas-reg-494-scenario.xml', '-p': '5061'} }
+                - { 'key-args': { 'scenario': 'uas-reg-401-scenario.xml', '-p': '5062'} }
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Registry'
+                ChannelType: 'PJSIP'
+                Username: 'sip:us@127.0.0.1'
+                Domain: 'sip:them@127.0.0.1:5061'
+                Status: 'Registered'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Registry'
+                ChannelType: 'PJSIP'
+                Username: 'sip:us@127.0.0.1'
+                Domain: 'sip:them@127.0.0.1:5062'
+                Status: 'Registered'
+        count: '1'
+
+properties:
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_outbound_authenticator_digest'
+        - asterisk: 'res_pjsip_outbound_registration'
+    tags:
+        - pjsip
