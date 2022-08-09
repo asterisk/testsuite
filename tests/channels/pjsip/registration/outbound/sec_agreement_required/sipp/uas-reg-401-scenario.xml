@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Security agreement scenario 2: 401 response received">
+    <recv request="REGISTER" crlf="true">
+        <action>
+            <ereg regexp="sdes-srtp;mediasec"
+                search_in="hdr"
+                check_it="true"
+                header="Security-Client: "
+                assign_to="1" />
+            <ereg regexp="mediasec"
+                search_in="hdr"
+                check_it="true"
+                header="Require: "
+                assign_to="4" />
+            <ereg regexp="mediasec"
+                search_in="hdr"
+                check_it="true"
+                header="Proxy-Require: "
+                assign_to="4" />
+        </action>
+    </recv>
+
+    <send>
+        <![CDATA[
+            SIP/2.0 401 Unauthorized
+            [last_Via:]
+            [last_From:]
+            [last_To:];tag=[pid]SIPpTag01[call_number]
+            [last_Call-ID:]
+            [last_CSeq:]
+            Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+            Security-Server: msrp-tls;mediasec
+            Security-Server: sdes-srtp;mediasec
+            Security-Server: dtls-srtp;mediasec
+            WWW-Authenticate: Digest realm="asterisk", nonce="47ebe028cda119c35d4877b383027d28da013815"
+            Content-Length: 0
+        ]]>
+    </send>
+
+    <recv request="REGISTER">
+        <action>
+            <ereg regexp="msrp-tls;mediasec"
+                search_in="hdr"
+                check_it="true"
+                occurrence="1"
+                header="Security-Verify: "
+                assign_to="2" />
+            <ereg regexp="sdes-srtp;mediasec"
+                search_in="hdr"
+                check_it="true"
+                occurrence="2"
+                header="Security-Verify: "
+                assign_to="3" />
+            <ereg regexp="dtls-srtp;mediasec"
+                search_in="hdr"
+                check_it="true"
+                occurrence="3"
+                header="Security-Verify: "
+                assign_to="4" />
+            <ereg regexp="mediasec"
+                search_in="hdr"
+                check_it="true"
+                header="Require: "
+                assign_to="4" />
+            <ereg regexp="mediasec"
+                search_in="hdr"
+                check_it="true"
+                header="Proxy-Require: "
+                assign_to="4" />
+        </action>
+    </recv>
+
+    <send>
+        <![CDATA[
+            SIP/2.0 200 OK
+            [last_Via:]
+            [last_From:]
+            [last_To:];tag=[pid]SIPpTag01[call_number]
+            [last_Call-ID:]
+            [last_CSeq:]
+            Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+            Expires: 12
+            Content-Length: 0
+        ]]>
+    </send>
+
+    <!--  This could be a re- or un- register -->
+    <recv request="REGISTER" crlf="true">
+    </recv>
+
+    <send>
+       <![CDATA[
+            SIP/2.0 200 OK
+            [last_Via:]
+            [last_From:]
+            [last_To:];tag=[pid]SIPpTag01[call_number]
+            [last_Call-ID:]
+            [last_CSeq:]
+            Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+            Expires: 0
+            Content-Length: 0
+        ]]>
+    </send>
+
+    <Reference variables="1,2,3,4" />
+
+</scenario>
