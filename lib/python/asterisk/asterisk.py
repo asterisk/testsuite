@@ -465,7 +465,7 @@ class Asterisk(object):
                                                 cmd[0],
                                                 cmd, env=os.environ)
             # Begin the wait fully booted cycle
-            reactor.callLater(1, __execute_wait_fully_booted)
+            reactor.callLater(2, __execute_wait_fully_booted)
 
         def __execute_wait_fully_booted():
             """Send the CLI command waitfullybooted"""
@@ -496,8 +496,9 @@ class Asterisk(object):
                 LOGGER.error(msg)
                 self._start_deferred.errback(Exception(msg))
             else:
-                msg = "Asterisk core waitfullybooted failed, attempting again"
-                LOGGER.debug(msg)
+                LOGGER.debug("Asterisk core waitfullybooted failed " +
+                             "with output '%s', attempting again..." %
+                             cli_command.value.err.decode('utf-8'))
                 reactor.callLater(1, __execute_wait_fully_booted)
             return cli_command
 
