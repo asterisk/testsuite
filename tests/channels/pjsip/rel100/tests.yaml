@@ -1,0 +1,3 @@
+tests:
+    - dir: 'incoming'
+    - dir: 'outgoing'
