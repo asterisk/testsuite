@@ -1,0 +1,30 @@
+testinfo:
+    summary:     'Tests 100rel=peer_supported option when caller supports it'
+    description: |
+        'Asterisk receives an incoming call with caller indicating support for
+        100rel and Asterisk should send provisional responses reliably.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    reactor-timeout: 80
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'check_100rel.xml', '-i': '127.0.0.1', '-p': '5061'} }
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_session'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip_endpoint_identifier_ip'
+    tags:
+        - pjsip
