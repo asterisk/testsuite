@@ -1,0 +1,32 @@
+testinfo:
+    summary: 'Test that the 100rel=peer_supported setting works properly'
+    description: |
+        'Establish an outgoing call with 100rel in the Supported header.'
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: orig-config
+            typename: 'pluggable_modules.Originator'
+
+test-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'check_100rel.xml', '-s': 'alice', '-p': '5061'} }
+
+orig-config:
+    channel: 'PJSIP/alice'
+
+properties:
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
