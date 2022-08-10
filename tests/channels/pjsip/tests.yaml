@@ -18,6 +18,7 @@ tests:
     - dir: 'publish'
     - dir: 'qualify'
     - dir: 'registration'
+    - dir: 'rel100'
     - dir: 'resolver'
     - dir: 'rtp'
     - dir: 'rtcp'

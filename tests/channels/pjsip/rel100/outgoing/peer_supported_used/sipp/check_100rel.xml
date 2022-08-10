@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Testing 100rel support and usage when required by callee">
+  <recv request="INVITE" rtd="true" crlf="true">
+      <!-- Save the from tag. We'll need it when we send our BYE -->
+      <action>
+          <ereg regexp=".*(;tag=.*)"
+              header="From:"
+              search_in="hdr"
+              check_it="true"
+              assign_to="remote_tag"/>
+          <ereg regexp="100rel"
+              header="Supported:"
+              search_in="hdr"
+              check_it="true"
+              assign_to="1"/>
+      </action>
+  </recv>
+  
+  <send>
+    <![CDATA[
+
+      SIP/2.0 183 Call progress
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[service]@[local_ip]:[local_port];transport=[transport]>
+      Require: 100rel
+      RSeq: 3000
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=user1 100 100 IN IP[local_ip_type] 127.0.0.2
+      s=-
+      c=IN IP[media_ip_type] 127.0.0.2
+      t=0 0
+      m=audio [media_port] RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+
+    ]]>
+    <action>
+      <assignstr assign_to="invite_via" value="[last_Via:]" />
+      <assignstr assign_to="invite_from" value="[last_From:]" />
+      <assignstr assign_to="invite_to" value="[last_To:]" />
+      <assignstr assign_to="invite_cseq" value="[last_CSeq:]" />
+    </action>
+  </send>
+
+  <recv request="PRACK" rtd="true" crlf="true">
+      <!-- Save the from tag. We'll need it when we send our BYE -->
+      <action>
+          <ereg regexp="3000 ([0-9]{1,5}) INVITE"
+              header="RAck: "
+              search_in="hdr"
+              check_it="true"
+              assign_to="1"/>
+      </action>
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[service]@[local_ip]:[local_port];transport=[transport]>
+
+    ]]>
+  </send>
+
+  <pause/>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [$invite_via]
+      [$invite_from]
+      [$invite_to];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [$invite_cseq]
+      Contact: <sip:[service]@[local_ip]:[local_port];transport=[transport]>
+      Supported: 100rel
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=user1 5 5 IN IP[local_ip_type] 127.0.0.3
+      s=-
+      c=IN IP[media_ip_type] 127.0.0.3
+      t=0 0
+      m=audio [media_port] RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+
+    ]]>
+  </send>
+
+  <recv request="ACK"
+        rtd="true"
+        crlf="true">
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+      BYE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: sipp <sip:sipp@[local_ip]:[local_port]>;tag=[pid]SIPpTag01[call_number]
+      To: [$remote_tag]
+      [last_Call-ID:]
+      CSeq: [cseq] BYE
+      Contact: sip:sipp@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Performance Test
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" />
+
+  <Reference variables="remote_tag,invite_via,invite_from,invite_to,invite_cseq,1" />
+
+</scenario>
+

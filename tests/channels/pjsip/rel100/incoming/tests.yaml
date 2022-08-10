@@ -1,0 +1,4 @@
+tests:
+    - test: 'peer_supported_not_used'
+    - test: 'peer_supported_require'
+    - test: 'peer_supported_used'
