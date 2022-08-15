@@ -11,13 +11,34 @@
               search_in="hdr"
               check_it="true"
               assign_to="remote_tag"/>
-          <ereg regexp=".*;user=phone.*"
+          <!-- Check the R-URI, To, From and Priv headers for the tag-->
+          <ereg regexp=".*;user=phone SIP.*"
               search_in="msg"
               check_it="true"
               assign_to="1"/>
+          <ereg regexp=".*;user=phone.*"
+              search_in="hdr"
+              check_it="true"
+              header="From"
+              assign_to="2"/>
+          <ereg regexp=".*;user=phone.*"
+              search_in="hdr"
+              check_it="true"
+              header="To"
+              assign_to="3"/>
+          <ereg regexp=".*;user=phone.*"
+              search_in="hdr"
+              check_it="true"
+              header="P-Asserted-Identity"
+              assign_to="4"/>
+          <ereg regexp=".*;user=phone.*"
+              search_in="hdr"
+              check_it="true"
+              header="Remote-Party-ID"
+              assign_to="5"/>
       </action>
   </recv>
-  <Reference variables="1" />
+  <Reference variables="1,2,3,4,5" />
 
   <send retrans="500">
     <![CDATA[
