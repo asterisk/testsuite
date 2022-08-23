@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd" [
+<!ENTITY geopriv SYSTEM "geopriv.xml">
+]>
+<scenario name="INVITE with Civic Address PIDF-LO">
+
+    <send retrans="500">
+    <![CDATA[
+
+    INVITE sip:[dest]@[remote_ip]:[remote_port] SIP/2.0
+    Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+    From: <sip:[service]@[local_ip]:[local_port]>;tag=[call_number]
+    To: <sip:[dest]@[remote_ip]:[remote_port]>
+    Call-ID: [call_id]
+    CSeq: 1 INVITE
+    Max-Forwards: 70
+    Contact: <sip:[service]@[local_ip]:[local_port]>
+    Subject: Test
+    Geolocation: <cid:target123@atlanta.example.com>
+    Allow: OPTIONS, SUBSCRIBE, NOTIFY, PUBLISH, INVITE, ACK, BYE, CANCEL, PRACK, REGISTER, REFER, MESSAGE
+    User-Agent: Test
+    Content-Type: multipart/mixed;boundary=boundary
+    Content-Length: [len]
+
+    --boundary
+    Content-Type: application/pidf+xml
+    Content-ID: <target123@atlanta.example.com>
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <presence entity="pres:ness@example.com"
+      xmlns="urn:ietf:params:xml:ns:pidf"
+      xmlns:ca="urn:ietf:params:xml:ns:pidf:geopriv10:civicAddr"
+      xmlns:dm="urn:ietf:params:xml:ns:pidf:data-model"
+      xmlns:gbp="urn:ietf:params:xml:ns:pidf:geopriv10:basicPolicy"
+      xmlns:gml="http://www.opengis.net/gml"
+      xmlns:gp="urn:ietf:params:xml:ns:pidf:geopriv10"
+      xmlns:con="urn:ietf:params:xml:ns:geopriv:conf"
+      xmlns:gs="http://www.opengis.net/pidflo/1.0">
+      <dm:person id="civicaddr">
+        <gp:geopriv>
+        <gp:location-info>
+          <ca:civicAddress xml:lang="en-AU">
+            <ca:country>AU</ca:country>
+            <ca:A1>NSW</ca:A1>
+            <ca:A3>Wollongong</ca:A3>
+            <ca:A4>North Wollongong</ca:A4>
+            <ca:RD>Flinders</ca:RD>
+            <ca:STS>Street</ca:STS>
+            <ca:RDBR>Campbell Street</ca:RDBR>
+            <ca:LMK>Gilligan's Island</ca:LMK>
+            <ca:LOC>Corner</ca:LOC>
+            <ca:NAM> Video Rental Store </ca:NAM>
+            <ca:PC>2500</ca:PC>
+            <ca:ROOM> Westerns and Classics </ca:ROOM>
+            <ca:PLC>store</ca:PLC>
+            <ca:POBOX>Private Box 15</ca:POBOX>
+          </ca:civicAddress>
+          <con:confidence pdf="normal">77</con:confidence>
+        </gp:location-info>
+        <gp:usage-rules>
+          <gp:retransmission-allowed>yes</gp:retransmission-allowed>
+          <gp:ruleset-preference>https:/www/more.com</gp:ruleset-preference>
+          <gp:retention-expires>2007-06-22T20:57:29Z</gp:retention-expires>
+        </gp:usage-rules>
+        </gp:geopriv>
+        <dm:timestamp>2007-06-22T20:57:29Z</dm:timestamp>
+      </dm:person>
+    </presence>
+    --boundary
+    Content-Type: application/sdp
+
+    v=0
+    o=- 20110306451 20110306451 IN IP[media_ip_type] [media_ip]
+    s=-
+    c=IN IP[media_ip_type] [media_ip]
+    t=0 0
+    m=audio [media_port] RTP/AVP 0
+    a=rtpmap:0 PCMU/8000
+    a=ptime:20
+    a=sendrecv
+
+    --boundary--
+    ]]>
+
+    </send>
+
+    <recv response="100" optional="true">
+    </recv>
+
+    <recv response="486" rtd="true"/>
+
+
+    <send>
+    <![CDATA[
+
+    ACK sip:[dest]@[remote_ip]:[remote_port] SIP/2.0
+    [last_Via:]
+    [last_From:]
+    [last_To:]
+    [last_Call-ID:]
+    CSeq: 1 ACK
+    [last_Contact:]
+    [last_Allow:]
+    Content-Length: 0
+
+    ]]>
+    </send>
+
+</scenario>

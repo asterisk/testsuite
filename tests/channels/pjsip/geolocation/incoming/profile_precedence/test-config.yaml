@@ -1,0 +1,164 @@
+testinfo:
+    summary: 'Test profile_precedence on incoming requests.'
+
+    description: |
+        Test profile_precedence on incoming requests.
+
+        - Sipp sends 4 parallel invites to Asterisk for various
+        profile precedences.
+
+        - Bob has no geolocation profile at all so his info gets dropped.
+
+        - Charlie has prefer_config set so the incoming info is dropped
+        and the configured info is used.
+
+        - David has prefer_incoming set to the configured info is dropped
+        and the incoming info is used.
+
+        - Eddie also has prefer_incoming set but he's not sending any info
+        in the invite so the configured info gets used.
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'app_userevent'
+        - asterisk : 'res_geolocation'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_config_wizard'
+        - asterisk : 'res_pjsip_geolocation'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: sipp.SIPpTestCase
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    reactor-timeout: 15
+    memcheck-delay-stop: 7
+    stop-after-scenarios: false
+    fail-on-any: false
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'invite_ca.xml', '-i':'127.0.0.2',
+                        '-p':'5060', '-t': 't1', '-s':'bob' },
+                  'ordered-args': [ '-bind_local', '-key', 'dest', 'alice']}
+                - { 'key-args': { 'scenario':'invite_uri.xml', '-i':'127.0.0.3',
+                        '-p':'5060', '-t': 't1', '-s':'charlie' },
+                  'ordered-args': [ '-bind_local', '-key', 'dest', 'alice']}
+                - { 'key-args': { 'scenario':'invite_gml.xml', '-i':'127.0.0.4',
+                        '-p':'5060', '-t': 't1', '-s':'david' },
+                  'ordered-args': [ '-bind_local', '-key', 'dest', 'alice']}
+                - { 'key-args': { 'scenario':'invite.xml', '-i':'127.0.0.5',
+                        '-p':'5060', '-t': 't1', '-s':'eddie' },
+                  'ordered-args': [ '-bind_local', '-key', 'dest', 'alice']}
+
+ami-config:
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'Geoloc'
+                    CallerIDNum: 'bob'
+                    Exten: 'alice'
+            requirements:
+                match:
+#                   Bob has no geoloc profile so there should be nothing here.
+                    LocInfo: "^$"
+            count: '2'
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    CallerIDNum: 'bob'
+            count: '1'
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'Geoloc'
+                    CallerIDNum: 'charlie'
+                    Exten: 'alice'
+                    LocInfo: 'URI=http://something.com/\${CALLERID\(num\)}'
+            count: '1'
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'Geoloc'
+                    CallerIDNum: 'charlie'
+                    Exten: 'alice'
+                    LocInfo: 'URI=http://something.com/charlie'
+            count: '1'
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    CallerIDNum: 'charlie'
+            count: '1'
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'Geoloc'
+                    CallerIDNum: 'david'
+                    Exten: 'alice'
+                    LocInfo: "shape=Ellipsoid,crs=3d,orientation=90 radians,pos=42.5463 -73.2512 26.3,semiMajorAxis=7.7156,semiMinorAxis=3.31,verticalAxis=28.7"
+            count: '2'
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    CallerIDNum: 'david'
+            count: '1'
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'Geoloc'
+                    CallerIDNum: 'eddie'
+                    Exten: 'alice'
+                    LocInfo: 'URI=http://something.com/\${CALLERID\(num\)}'
+            count: '1'
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'Geoloc'
+                    CallerIDNum: 'eddie'
+                    Exten: 'alice'
+                    LocInfo: 'URI=http://something.com/eddie'
+            count: '1'
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    CallerIDNum: 'eddie'
+            count: '1'
+        stop_test:
