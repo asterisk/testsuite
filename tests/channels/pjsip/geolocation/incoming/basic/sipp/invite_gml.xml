@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd" [
+<!ENTITY geopriv SYSTEM "geopriv.xml">
+]>
+<scenario name="INVITE with Civic Address PIDF-LO">
+
+    <send retrans="500">
+    <![CDATA[
+
+    INVITE sip:[dest]@[remote_ip]:[remote_port] SIP/2.0
+    Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+    From: <sip:[service]@[local_ip]:[local_port]>;tag=[call_number]
+    To: <sip:[dest]@[remote_ip]:[remote_port]>
+    Call-ID: [call_id]
+    CSeq: 1 INVITE
+    Max-Forwards: 70
+    Contact: <sip:[service]@[local_ip]:[local_port]>
+    Subject: Test
+    Geolocation: <cid:target123@atlanta.example.com>
+    Allow: OPTIONS, SUBSCRIBE, NOTIFY, PUBLISH, INVITE, ACK, BYE, CANCEL, PRACK, REGISTER, REFER, MESSAGE
+    User-Agent: Test
+    Content-Type: multipart/mixed;boundary=boundary
+    Content-Length: [len]
+
+    --boundary
+    Content-Type: application/pidf+xml
+    Content-ID: <target123@atlanta.example.com>
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <presence xmlns="urn:ietf:params:xml:ns:pidf"
+    xmlns:gp="urn:ietf:params:xml:ns:pidf:geopriv10"
+    xmlns:gbp="urn:ietf:params:xml:ns:pidf:geopriv10:basicPolicy"
+    xmlns:cl="urn:ietf:params:xml:ns:pidf:geopriv10:civicAddr"
+    xmlns:gml="http://www.opengis.net/gml"
+    xmlns:gs="http://www.opengis.net/pidflo/1.0"
+    xmlns:dm="urn:ietf:params:xml:ns:pidf:data-model"
+    entity="pres:alice@atlanta.example.com">
+        <dm:device id="target123-1">
+            <gp:geopriv>
+                <gp:location-info>
+                    <gs:Ellipsoid srsName="urn:ogc:def:crs:EPSG::4979">
+                        <gs:orientation uom="urn:ogc:def:uom:EPSG::9102">90</gs:orientation>
+                        <gml:pos>42.5463 -73.2512 26.3</gml:pos>
+                        <gs:semiMajorAxis uom="urn:ogc:def:uom:EPSG::9001">7.7156</gs:semiMajorAxis>
+                        <gs:semiMinorAxis uom="urn:ogc:def:uom:EPSG::9001">3.31</gs:semiMinorAxis>
+                        <gs:verticalAxis uom="urn:ogc:def:uom:EPSG::9001">28.7</gs:verticalAxis>
+                    </gs:Ellipsoid>
+                </gp:location-info>
+                <gp:usage-rules>
+                    <gbp:retransmission-allowed>no
+                    </gbp:retransmission-allowed>
+                    <gbp:retention-expiry>2010-11-14T20:00:00Z
+                    </gbp:retention-expiry>
+                </gp:usage-rules>
+                <gp:method>802.11</gp:method>
+            </gp:geopriv>
+            <dm:deviceID>mac:1234567890ab</dm:deviceID>
+            <dm:timestamp>2010-11-04T20:57:29Z</dm:timestamp>
+        </dm:device>
+    </presence>
+    --boundary
+    Content-Type: application/sdp
+
+    v=0
+    o=- 20110306451 20110306451 IN IP[media_ip_type] [media_ip]
+    s=-
+    c=IN IP[media_ip_type] [media_ip]
+    t=0 0
+    m=audio [media_port] RTP/AVP 0
+    a=rtpmap:0 PCMU/8000
+    a=ptime:20
+    a=sendrecv
+
+    --boundary--
+    ]]>
+
+    </send>
+
+    <recv response="100" optional="true">
+    </recv>
+
+    <recv response="486" rtd="true"/>
+
+    <send>
+    <![CDATA[
+
+    ACK sip:[dest]@[remote_ip]:[remote_port] SIP/2.0
+    [last_Via:]
+    [last_From:]
+    [last_To:]
+    [last_Call-ID:]
+    CSeq: 1 ACK
+    [last_Contact:]
+    [last_Allow:]
+    Content-Length: 0
+
+    ]]>
+    </send>
+
+</scenario>
