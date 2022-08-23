@@ -1,0 +1,66 @@
+testinfo:
+    summary: 'Test Geolocation GML Round-Trip.'
+
+    description: |
+        'Test GML parsing and the GEOLOC_PROFILE dialplan function
+        using sipp to create the incoming document and send it to the first
+        asterisk instance.  The dialplan function alters the verticalAxis
+        and orientation and calls "bob" on the second asterisk instance.
+        The second instance dialplan sends a UserEvent with the parsed
+        effective location which is checked below.
+        '
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'app_userevent'
+        - asterisk : 'res_geolocation'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_geolocation'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: sipp.SIPpTestCase
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    reactor-timeout: 15
+    asterisk-instances: 2
+    memcheck-delay-stop: 7
+    stop-after-scenarios: false
+    fail-on-any: false
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'invite_gml.xml', '-i':'127.0.0.3', '-p':'5060', '-t': 't1', '-s':'alice' },
+                  'ordered-args': [ '-bind_local', '-key', 'dest', 'bob']}
+
+ami-config:
+    -
+        ami-events:
+            id: '1'
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'GeolocInfo'
+#                   In the original request, the verticalAxis was 28.7.
+#                   The GEOLOC_PROFILE dialplan app should have changed
+#                   it to 99.99.
+                    LocInfo: "shape=Ellipsoid,crs=3d,orientation=180 degrees,pos=42.5463 -73.2512 26.3,semiMajorAxis=7.7156,semiMinorAxis=3.31,verticalAxis=99.99"
+            count: '1'
+    -
+        ami-events:
+            id: '0'
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'Hangup'
+            count: '2'
+        stop_test:
