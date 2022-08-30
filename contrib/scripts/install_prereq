@@ -30,6 +30,15 @@ PACKAGES_RH="$PACKAGES_RH lua-devel gdb"
 # Sipp requirements
 PACKAGES_RH="$PACKAGES_RH libpcap-devel openssl-devel lksctp-tools-devel"
 
+# Basic build system:
+PACKAGES_ARCH="git gcc"
+# Python tools
+PACKAGES_ARCH="$PACKAGES_ARCH python python-pip python-setuptools"
+# Testsuite: basic requirements:
+PACKAGES_ARCH="$PACKAGES_ARCH lua51 gdb"
+# Sipp requirements
+PACKAGES_ARCH="$PACKAGES_ARCH libpcap openssl lksctp-tools"
+
 LIBDIR=/usr/lib$(getconf LONG_BIT | fgrep 64)
 [ ! -d $LIBDIR ] && LIBDIR=/usr/lib
 
@@ -82,6 +91,15 @@ check_installed_rpms() {
 	done
 }
 
+check_installed_pacman() {
+	for pack in "$@"
+	do
+		if ! pacman -Q --explicit $pack >/dev/null 2>/dev/null
+		then echo $pack
+		fi
+	done
+}
+
 install_debian() {
 	if ! [ -x "$(command -v aptitude)" ]; then
 		if in_test_mode; then
@@ -102,6 +120,13 @@ install_rh() {
 	extra_packs=`check_installed_rpms $PACKAGES_RH`
 	if [ x"$extra_packs" != "x" ] ; then
 		$testcmd yum install -y $extra_packs
+	fi
+}
+
+install_arch() {
+	extra_packs=`check_installed_pacman $PACKAGES_ARCH`
+	if [ x"$extra_packs" != "x" ] ; then
+		$testcmd pacman -S --asexplicit --noconfirm $extra_packs
 	fi
 }
 
@@ -136,6 +161,8 @@ if [ -r /etc/debian_version ]; then
 	install_packages=install_debian
 elif [ -r /etc/redhat-release ]; then
 	install_packages=install_rh
+elif [ -r /etc/arch-release ]; then
+	install_packages=install_arch
 else
 	echo >&2 "$0: Your distribution is currently not supported. Aborting."
 	exit 1
