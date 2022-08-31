@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'See ASTERISK-30199 - test unstable'
     summary: "Caller initiated attended transfer w/Replaces, direct media, hold"
     description: |
         "This verifies a caller initiated local attended transfer with
