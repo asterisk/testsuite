@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'ASTERISK-30203: Hangs forever'
     summary: 'Say Application tests for SAY_DTMF_INTERRUPT'
     description: |
         Tests all core say applications for the ability to jump via DTMF
