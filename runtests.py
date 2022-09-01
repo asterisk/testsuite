@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''Asterisk external test suite driver.
 
 Copyright (C) 2015, Digium, Inc.
