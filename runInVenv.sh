@@ -16,7 +16,7 @@ fi
 if [ $REINSTALL -eq 1 ] ; then
     echo "Reinstall required, removing and recreating venv"
 	rm -rf .venv
-    ./setupVenv.sh > /dev/null 2>&1
+    ./setupVenv.sh > /dev/null
 
 fi
 
