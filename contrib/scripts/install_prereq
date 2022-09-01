@@ -85,23 +85,23 @@ check_installed_rpms() {
 install_debian() {
 	if ! [ -x "$(command -v aptitude)" ]; then
 		if in_test_mode; then
-			echo sudo apt-get install aptitude
+			echo apt-get install aptitude
 			echo "$0: Please install aptitude and try again. Aborting."
 			exit 1
 		fi
-		sudo apt-get install aptitude
+		apt-get install aptitude
 	fi
-	$testcmd sudo aptitude update
+	$testcmd aptitude update
 	extra_packs=`check_installed_debs $PACKAGES_DEBIAN`
 	if [ x"$extra_packs" != "x" ] ; then
-		$testcmd sudo aptitude install -y $extra_packs
+		$testcmd aptitude install -y $extra_packs
 	fi
 }
 
 install_rh() {
 	extra_packs=`check_installed_rpms $PACKAGES_RH`
 	if [ x"$extra_packs" != "x" ] ; then
-		$testcmd sudo yum install -y $extra_packs
+		$testcmd yum install -y $extra_packs
 	fi
 }
 
@@ -144,7 +144,7 @@ fi
 install_asttest() {
 	$testcmd cd asttest
 	$testcmd make
-	$testcmd sudo make install
+	$testcmd make install
 	$testcmd cd ..
 }
 
@@ -155,7 +155,7 @@ install_sipp() {
 
 	PROJECT_DIR=sipp
 
-	$testcmd sudo rm -rf $PROJECT_DIR
+	$testcmd rm -rf $PROJECT_DIR
 	$testcmd git clone https://github.com/SIPp/sipp $PROJECT_DIR
 	$testcmd cd $PROJECT_DIR
 
@@ -163,7 +163,7 @@ install_sipp() {
 	$testcmd git checkout v3.5.1
 
 	$testcmd ./build.sh --with-openssl --with-pcap --with-rtpstream --with-sctp
-	$testcmd sudo make install
+	$testcmd make install
 
 	$testcmd cd $SAVE_DIR
 }
@@ -175,7 +175,7 @@ install_pjsua() {
 
 	PROJECT_DIR=pjsua
 
-	$testcmd sudo rm -rf pjsua
+	$testcmd rm -rf pjsua
 	$testcmd git clone https://github.com/asterisk/pjproject $PROJECT_DIR
 	$testcmd cd $PROJECT_DIR
 
@@ -193,7 +193,7 @@ install_pjsua() {
 	$testcmd make
 
 	# The testsuite only cares about pjsua from what we have built.
-	$testcmd sudo cp -v pjsip-apps/bin/pjsua-`uname -m`-*-linux-gnu $MY_BIN/pjsua
+	$testcmd cp -v pjsip-apps/bin/pjsua-`uname -m`-*-linux-gnu $MY_BIN/pjsua
 
 	$testcmd cd $SAVE_DIR
 }
