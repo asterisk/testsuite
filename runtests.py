@@ -153,7 +153,6 @@ class TestRun:
                 self.stdout_print("Test passed but was expected to fail.")
             if not did_pass and not self.test_config.expect_pass:
                 print("Test failed as expected.")
-
             self.passed = (did_pass == self.test_config.expect_pass)
             if abandon_test:
                 self.passed = False
@@ -202,23 +201,59 @@ class TestRun:
             print("FAILED TO EXECUTE %s, it must exist and be executable" % cmd)
         self.time = time.time() - start_time
 
+    def _is_asterisk_coredump(self, corefile):
+        file_cmd = ["file", corefile]
+        try:
+            cp = subprocess.run(file_cmd, capture_output=True, universal_newlines=True)
+            if not re.search("LSB core file", cp.stdout):
+                return False
+        except:
+            print("Unknown exception occurred while executing %r" % (file_cmd,))
+            return False
+
+        gdb_cmd = ["gdb",
+            "-nh", "--batch-silent",
+            "-iex", "set auto-solib-add off",
+            "-ex", "set logging file /dev/stderr",
+            "-ex", "set logging redirect",
+            "-ex", "set logging enabled",
+            "-ex", "info proc exe",
+            "asterisk", corefile
+            ]
+        try:
+            reg = re.compile(r"exe\s+=\s+.*/asterisk.*")
+            # The output of the gdb command will be something like...
+            # exe = '/usr/sbin/asterisk -fcg'
+            # We'll check it for "asterisk" and if it doesn't
+            # match it's not an asterisk coredump
+            cp = subprocess.run(gdb_cmd, capture_output=True, universal_newlines=True)
+            if reg.match(cp.stderr):
+                return True
+            else:
+                return False
+        except:
+            print("Unknown exception occurred while executing %r" % (gdb_cmd,))
+        return False
+
     def _check_for_core(self):
         core_files = []
 
         contents = os.listdir('.')
         for item in contents:
-            if item.startswith('core') or item.startswith('vgcore'):
+            if self._is_asterisk_coredump(item):
                 core_files.append(item)
 
         contents = os.listdir('/tmp')
         for item in contents:
-            if item.startswith('core') or item.startswith('vgcore'):
-                core_files.append(os.path.join('/tmp', item))
+            corepath = os.path.join('/tmp', item);
+            if self._is_asterisk_coredump(corepath):
+                core_files.append(corepath)
 
         contents = os.listdir(self.test_name)
         for item in contents:
-            if item.startswith('core') or item.startswith('vgcore'):
-                core_files.append(os.path.join(self.test_name, item))
+            corepath = os.path.join(self.test_name, item);
+            if self._is_asterisk_coredump(corepath):
+                core_files.append(corepath)
 
         return core_files
 
