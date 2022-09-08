@@ -23,7 +23,7 @@ from . import test_suite_utils
 
 from .config import ConfigFile
 
-from subprocess import PIPE
+from subprocess import PIPE, TimeoutExpired
 
 from twisted.internet import reactor, protocol, defer, utils, error
 from twisted.python.failure import Failure
@@ -372,7 +372,6 @@ class Asterisk(object):
         self.memcheck_delay_stop = 0
         self.instance_id = 0
         self.wfbdelay = bootdelay
-        self.wfbfailures = 0
         if test_config is not None and 'memcheck-delay-stop' in test_config:
             self.memcheck_delay_stop = test_config['memcheck-delay-stop'] or 0
 
@@ -479,20 +478,25 @@ class Asterisk(object):
         def __execute_wait_fully_booted():
             """Send the CLI command waitfullybooted"""
 
-            # try to send the command three times, then assume asterisk won't start and error out
+            # try to send the command until we timeout,
+            # then assume asterisk won't start and error out
+            timeout = 90 if self.valgrind_enabled else 45
             CLIRetVal = self.cli_exec_blocking("core waitfullybooted", "Asterisk has fully booted")
             if CLIRetVal == 0:
                 msg = "Successfully started Asterisk %s" % self.host
                 self._start_deferred.callback(msg)
-            elif self.wfbfailures < 2:
-                self.wfbfailures +=1
-                msg = "Asterisk core waitfullybooted for %s failed, retrying" % self.host
-                LOGGER.warning(msg)
-                reactor.callLater(self.wfbdelay, __execute_wait_fully_booted)
-            else:
-                msg = "Asterisk core waitfullybooted for %s failed too many times, exiting" % self.host
+            elif time.time() - self.__start_asterisk_time > timeout:
+                msg = "Asterisk core waitfullybooted for %s failed" % self.host
                 LOGGER.error(msg)
                 self._start_deferred.errback(Exception(msg))
+            else:
+                msg = "Asterisk core waitfullybooted for %s failed, retrying" % self.host
+                LOGGER.warning(msg)
+                # wait twice as long as last time up until half timeout
+                self.wfbdelay = self.wfbdelay*2
+                if self.wfbdelay > (timeout/2):
+                    self.wfbdelay = (timeout/2)
+                reactor.callLater(self.wfbdelay, __execute_wait_fully_booted)
 
         self.install_configs(os.getcwd() + "/configs", deps)
         self._setup_configs()
@@ -935,18 +939,24 @@ class Asterisk(object):
             cli_protocol = AsteriskRemoteCliCommand(self.remote_config, cmd)
         return cli_protocol.execute()
 
-    def cli_exec_blocking(self, cli_cmd, responsekey=""):
+    def cli_exec_blocking(self, cli_cmd, responsekey="", timeout=10):
         """Execute a CLI command on this instance of Asterisk.
 
         Keyword Arguments:
         cli_cmd The command to execute.
+        responsekey Optional string to look for in the stdout of the comand
+        timeout How long to let the run before timeout, default 10s
 
         Returns:
         A integer indicating success/failure, looking for the
-        response key in stdout
+        optional response key in stdout.
+        0 = success
+        1 = command failed
+        2 = command missing key
+        3 = command timed out
 
         Example Usage:
-        asterisk.cli_exec_immediate("core set verbose 10")
+        asterisk.cli_exec_blocking("core waitfullybooted", "Asterisk has fully booted")
         """
         CLIRetVal = 0
         # If this is going to a remote system, make sure we enclose
@@ -962,12 +972,20 @@ class Asterisk(object):
         LOGGER.debug("Executing \"%s\"", cmd)
 
         if not self.remote_config:
-            completed = subprocess.run([self.ast_binary,
-                "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
-                "-rx", "%s" % cli_cmd],
-                stdout=PIPE, stderr=PIPE, encoding='utf-8')
+            try:
+                # allow 10 seconds for the command itself to run or timeout, just
+                # so we don't sit forever.
+                completed = subprocess.run([self.ast_binary,
+                    "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
+                    "-rx", "%s" % cli_cmd],
+                    timeout=timeout,
+                    stdout=PIPE, stderr=PIPE, encoding='utf-8')
+            except TimeoutExpired:
+                # Catch the timeout and return
+                CLIRetVal = 3
+                return CLIRetVal
 
-            if responsekey not in completed.stdout:
+            if responsekey and responsekey not in completed.stdout:
                 CLIRetVal = 2
             else:
                 CLIRetVal = completed.returncode
