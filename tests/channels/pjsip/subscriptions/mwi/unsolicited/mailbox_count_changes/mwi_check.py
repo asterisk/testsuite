@@ -30,7 +30,7 @@ def walk_states(test_object, junk):
             'OldMessages': mwi['old']
         }
         reactor.callLater(statedelay, testami.sendMessage, message)
-        statedelay += .25
+        statedelay += 1
 
     # delete mailbox after walking states
     LOGGER.info("Deleting Mailbox")
