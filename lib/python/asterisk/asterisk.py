@@ -23,6 +23,8 @@ from . import test_suite_utils
 
 from .config import ConfigFile
 
+from subprocess import PIPE
+
 from twisted.internet import reactor, protocol, defer, utils, error
 from twisted.python.failure import Failure
 
@@ -963,7 +965,7 @@ class Asterisk(object):
             completed = subprocess.run([self.ast_binary,
                 "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
                 "-rx", "%s" % cli_cmd],
-                capture_output=True, encoding='utf-8')
+                stdout=PIPE, stderr=PIPE, encoding='utf-8')
 
             if responsekey not in completed.stdout:
                 CLIRetVal = 2
