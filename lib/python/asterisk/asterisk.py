@@ -10,6 +10,7 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
 
+import subprocess
 import sys
 import os
 import time
@@ -337,7 +338,7 @@ class Asterisk(object):
         default_etc_directory = "/etc/asterisk"
 
     def __init__(self, base=None, ast_conf_options=None, host="127.0.0.1",
-                 remote_config=None, test_config=None):
+                 remote_config=None, test_config=None, bootdelay=1):
         """Construct an Asterisk instance.
 
         Keyword Arguments:
@@ -368,6 +369,8 @@ class Asterisk(object):
         self.remote_config = remote_config
         self.memcheck_delay_stop = 0
         self.instance_id = 0
+        self.wfbdelay = bootdelay
+        self.wfbfailures = 0
         if test_config is not None and 'memcheck-delay-stop' in test_config:
             self.memcheck_delay_stop = test_config['memcheck-delay-stop'] or 0
 
@@ -464,47 +467,30 @@ class Asterisk(object):
             self.process = reactor.spawnProcess(self.protocol,
                                                 cmd[0],
                                                 cmd, env=os.environ)
-            # This was a one second delay, now two.  This is to allow
+            # This was a one second delay, now is passed in.  This is to allow
             # asterisk sufficient time to actually start and create the ctl
             # file. If we try to send the fully booted command before this
             # happens we wait and try again, but this results in an unhandled
             # error in twisted after the command succeeds.
-            reactor.callLater(2, __execute_wait_fully_booted)
+            reactor.callLater(self.wfbdelay, __execute_wait_fully_booted)
 
         def __execute_wait_fully_booted():
             """Send the CLI command waitfullybooted"""
 
-            cli_deferred = self.cli_exec("core waitfullybooted")
-            cli_deferred.addCallbacks(__wait_fully_booted_callback,
-                                      __wait_fully_booted_error)
-
-        def __wait_fully_booted_callback(cli_command):
-            """Callback for CLI command waitfullybooted"""
-
-            if "Asterisk has fully booted" in cli_command.output:
+            # try to send the command three times, then assume asterisk won't start and error out
+            CLIRetVal = self.cli_exec_blocking("core waitfullybooted", "Asterisk has fully booted")
+            if CLIRetVal == 0:
                 msg = "Successfully started Asterisk %s" % self.host
                 self._start_deferred.callback(msg)
+            elif self.wfbfailures < 2:
+                self.wfbfailures +=1
+                msg = "Asterisk core waitfullybooted for %s failed, retrying" % self.host
+                LOGGER.warning(msg)
+                reactor.callLater(self.wfbdelay, __execute_wait_fully_booted)
             else:
-                LOGGER.debug("Asterisk core waitfullybooted failed " +
-                             "with output '%s', attempting again..." %
-                             cli_command.output)
-                reactor.callLater(1, __execute_wait_fully_booted)
-            return cli_command
-
-        def __wait_fully_booted_error(cli_command):
-            """Errback for CLI command waitfullybooted"""
-
-            timeout = 90 if self.valgrind_enabled else 45
-            if time.time() - self.__start_asterisk_time > timeout:
-                msg = "Asterisk core waitfullybooted for %s failed" % self.host
+                msg = "Asterisk core waitfullybooted for %s failed too many times, exiting" % self.host
                 LOGGER.error(msg)
                 self._start_deferred.errback(Exception(msg))
-            else:
-                LOGGER.debug("Asterisk core waitfullybooted failed " +
-                             "with output '%s', attempting again..." %
-                             cli_command.value.err.decode('utf-8'))
-                reactor.callLater(1, __execute_wait_fully_booted)
-            return cli_command
 
         self.install_configs(os.getcwd() + "/configs", deps)
         self._setup_configs()
@@ -946,6 +932,47 @@ class Asterisk(object):
         else:
             cli_protocol = AsteriskRemoteCliCommand(self.remote_config, cmd)
         return cli_protocol.execute()
+
+    def cli_exec_blocking(self, cli_cmd, responsekey=""):
+        """Execute a CLI command on this instance of Asterisk.
+
+        Keyword Arguments:
+        cli_cmd The command to execute.
+
+        Returns:
+        A integer indicating success/failure, looking for the
+        response key in stdout
+
+        Example Usage:
+        asterisk.cli_exec_immediate("core set verbose 10")
+        """
+        CLIRetVal = 0
+        # If this is going to a remote system, make sure we enclose
+        # the command in quotes
+        if self.remote_config:
+            cli_cmd = '"{0}"'.format(cli_cmd)
+
+        cmd = [self.ast_binary,
+            "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
+            "-rx", "%s" % cli_cmd
+        ]
+        cmd = " ".join(cmd)
+        LOGGER.debug("Executing \"%s\"", cmd)
+
+        if not self.remote_config:
+            completed = subprocess.run([self.ast_binary,
+                "-C", "%s" % os.path.join(self.astetcdir, "asterisk.conf"),
+                "-rx", "%s" % cli_cmd],
+                capture_output=True, encoding='utf-8')
+
+            if responsekey not in completed.stdout:
+                CLIRetVal = 2
+            else:
+                CLIRetVal = completed.returncode
+        else:
+            LOGGER.debug("remote not quite supported")
+            CLIRetVal = 1
+        return CLIRetVal
 
     def _make_directory_structure(self):
         """ Mirror system directory structure """
