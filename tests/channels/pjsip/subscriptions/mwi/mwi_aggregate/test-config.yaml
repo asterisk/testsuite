@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'Unstable - ASTERISK-30214'
     summary:     'Ensures mailbox state is aggregated or not aggregated when appropriate'
     description: |
         "Alice and Bob both receive mailbox updates for mailbox_a and mailbox_b. However, Alice
