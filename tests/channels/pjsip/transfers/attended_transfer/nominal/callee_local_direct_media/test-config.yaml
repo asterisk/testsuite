@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'Unstable - ASTERISK-30199'
     summary: "Callee initiated attended transfer w/Replaces, direct media, hold"
     description: |
         "This verifies a callee initiated local attended transfer with
