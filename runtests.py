@@ -208,7 +208,6 @@ class TestRun:
             if not re.search("LSB core file", cp.stdout):
                 return False
         except:
-            print("Unknown exception occurred while executing %r" % (file_cmd,))
             return False
 
         gdb_cmd = ["gdb",
@@ -232,7 +231,7 @@ class TestRun:
             else:
                 return False
         except:
-            print("Unknown exception occurred while executing %r" % (gdb_cmd,))
+            pass
         return False
 
     def _check_for_core(self):
