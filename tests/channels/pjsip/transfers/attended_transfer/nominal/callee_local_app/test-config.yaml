@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'Unstable - ASTERISK-30199'
     summary: "Callee initiated attended transfer to a dialplan application."
     description: |
         "Alice calls Bob via extension '101' and Bob answers. Bob places Alice
