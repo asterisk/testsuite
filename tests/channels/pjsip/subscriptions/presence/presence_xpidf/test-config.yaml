@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'Unstable - ASTERISK-30214'
     summary:     'Test PJSIP XPIDF presence notification'
     description: |
         'This test creates a sipp account, "alice", that subscribes to
