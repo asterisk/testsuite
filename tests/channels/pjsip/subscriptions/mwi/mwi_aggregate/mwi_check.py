@@ -8,32 +8,39 @@ This program is free software, distributed under the terms of
 the GNU General Public License Version 2.
 """
 
+import mailbox
 import sys
 import logging
 
 sys.path.append("lib/python")
-from twisted.internet import reactor
+from asterisk.scenario_iterator import multiIterator
 
 LOGGER = logging.getLogger(__name__)
 
-mwis = [
-    {'mailbox': 'mailbox_a', 'new': '2', 'old': '1'},
-    {'mailbox': 'mailbox_b', 'new': '3', 'old': '3'},
+mwiscenarios = [
+        {'Name': 'mailbox_a', 'sequence': [
+                {'Name': 'alice-is-notified-1.xml', 'port': '5061', 'target': '127.0.0.1'},
+                {'Name': 'bob-is-notified-1.xml', 'port': '5062', 'target': '127.0.0.1'} ]},
+        {'Name': 'mailbox_b', 'sequence': [
+                {'Name': 'alice-is-notified-2.xml', 'port': '5061', 'target': '127.0.0.1'},
+                {'Name': 'bob-is-notified-2.xml', 'port': '5062', 'target': '127.0.0.1'} ]},
+        {'Name': 'done'}
 ]
 
-def walk_states(test_object, accounts):
+mwis = [
+        {'Messages': [
+                {'Action': 'MWIUpdate', 'Mailbox': 'mailbox_a', 'NewMessages':'2', 'OldMessages':'1'} ]},
+        {'Messages': [
+                {'Action': 'MWIUpdate', 'Mailbox': 'mailbox_b', 'NewMessages':'3', 'OldMessages':'3'} ]},
+        {'Messages': [
+                {'Action': 'UserEvent', 'UserEvent': 'testComplete'} ]}
+]
 
-    testami = test_object.ami[0]
-    statedelay = 2
-    for mwi in mwis:
-        LOGGER.info("Sending MWI update. new: %s, old %s" %
-                    (mwi['new'],
-                     mwi['old']))
-        message = {
-            'Action': 'MWIUpdate',
-            'Mailbox': mwi['mailbox'],
-            'NewMessages': mwi['new'],
-            'OldMessages': mwi['old']
-        }
-        reactor.callLater(statedelay, testami.sendMessage, message)
-        statedelay += 1
+def start_test(test_object, junk):
+    LOGGER.info("Starting mwi_check")
+    testrunner = multiIterator(test_object, mwiscenarios, mwis)
+    testrunner.run(junk)
+
+def stop_test():
+    return
+
