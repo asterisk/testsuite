@@ -6,36 +6,31 @@ import logging
 sys.path.append("lib/python")
 
 from twisted.internet import reactor
+from asterisk.scenario_iterator import singleIterator
 
 LOGGER = logging.getLogger(__name__)
 
-mwis = [
-        {'new': '2', 'old': '0'},
-        {'new': '1', 'old': '1'},
-        {'new': '0', 'old': '2'},
+mwiscenarios = [
+    {'Name': 'alice-is-notified-1.xml', 'port': '5061', 'target': '127.0.0.1'},
+    {'Name': 'alice-is-notified-2.xml', 'port': '5061', 'target': '127.0.0.1'},
+    {'Name': 'alice-is-notified-3.xml', 'port': '5061', 'target': '127.0.0.1'},
+    {'Name': 'alice-is-notified-4.xml', 'port': '5061', 'target': '127.0.0.1'},
+    {'Name': 'done'}
 ]
 
-def walk_states(test_object, junk):
+mwis = [
+        {'Action': 'MWIUpdate', 'Mailbox': 'alice', 'NewMessages':'2', 'OldMessages':'0'},
+        {'Action': 'MWIUpdate', 'Mailbox': 'alice', 'NewMessages':'1', 'OldMessages':'1'},
+        {'Action': 'MWIUpdate', 'Mailbox': 'alice', 'NewMessages':'0', 'OldMessages':'2'},
+        {'Action': 'MWIDelete', 'Mailbox': 'alice'},
+        {'Action': 'UserEvent', 'UserEvent': 'testComplete'}
+]
 
-    testami = test_object.ami[0]
-    statedelay = 2
-    for mwi in mwis:
-        LOGGER.info("Sending MWI update. new: %s, old %s" %
-                    (mwi['new'],
-                     mwi['old']))
-        message = {
-            'Action': 'MWIUpdate',
-            'Mailbox': 'alice',
-            'NewMessages': mwi['new'],
-            'OldMessages': mwi['old']
-        }
-        reactor.callLater(statedelay, testami.sendMessage, message)
-        statedelay += 1
+def start_test(test_object, junk):
+    LOGGER.info("Starting mwi_check")
+    testrunner = singleIterator(test_object, mwiscenarios, mwis)
+    testrunner.run(junk)
 
-    # delete mailbox after walking states
-    LOGGER.info("Deleting Mailbox")
-    message = {
-            'Action': 'MWIDelete',
-            'Mailbox': 'alice',
-        }
-    reactor.callLater(statedelay, testami.sendMessage, message)
+def stop_test():
+    return
+
