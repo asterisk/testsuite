@@ -50,6 +50,7 @@
 			Content-Length: 0
 
 		]]></send>
+	<pause milliseconds="1000"/>
 	<send retrans="500"><![CDATA[
 
 			SIP/2.0 200 OK
