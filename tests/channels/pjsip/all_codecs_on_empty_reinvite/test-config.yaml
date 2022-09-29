@@ -1,0 +1,30 @@
+testinfo:
+    summary: 'Ensure correct operation regarding the all_codecs_on_empty_reinvite setting'
+    description: |
+        'A SIPp scenario places a call into Asterisk. Once the call has been answered, we
+        send an re-INVITE without SDP. Asterisk should send an SDP offer in the 200 OK
+        response containing all configured codecs on the endpoint if the parameter
+        all_codecs_on_empty_reinvite is activated. An re-INVITE with SDP should be
+        answered normally.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'empty-reinvite-all-codecs.xml'}}
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - app: 'sipp'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+    tags:
+        - pjsip
