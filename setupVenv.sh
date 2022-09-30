@@ -2,10 +2,10 @@
 set -e
 
 function do_pip_setup {
-	python -m pip install --upgrade pip
-	python -m pip install wheel setuptools build
-	python -m pip install -r ./requirements.txt
-	python -m pip install -r ./extras.txt
+	python3 -m pip install --upgrade pip
+	python3 -m pip install wheel setuptools build
+	python3 -m pip install -r ./requirements.txt
+	python3 -m pip install -r ./extras.txt
 	md5sum requirements.txt extras.txt > $1/checksums
 }
 
