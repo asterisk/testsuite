@@ -6,3 +6,5 @@ tests:
     - test: 'nocdr'
     - test: 'cdr_prop_disable'
     - test: 'func_cdr'
+    - test: 'cdr_ignore_state_changes'
+    - test: 'cdr_ignore_dial_changes'
