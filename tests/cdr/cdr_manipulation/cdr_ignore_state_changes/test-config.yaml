@@ -1,0 +1,46 @@
+testinfo:
+    summary: 'Test ignorestatechanges'
+    description: |
+        'This test makes sure that bridging changes, such
+        as entering and leaving bridges like ConfBridge, do not affect the
+        CDR when the ignorestatechanges option is set to yes.'
+
+test-modules:
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: 'cdr-config'
+            typename: 'cdr.CDRModule'
+
+test-object-config:
+    spawn-after-hangup: True
+    test-iterations:
+        -
+            channel: 'Local/nostatechanges@default'
+            context: 'default'
+            exten: 'echo'
+            priority: '1'
+
+cdr-config:
+    -
+        file: 'Master'
+        lines:
+            -
+                destination: 'nostatechanges'
+                dcontext: 'default'
+                channel: 'Local/nostatechanges@default-.*'
+                disposition: 'ANSWERED'
+                amaflags: 'DOCUMENTATION'
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_echo'
+        - asterisk: 'app_dial'
+        - asterisk: 'func_cdr'
+    tags:
+        - CDR
+
