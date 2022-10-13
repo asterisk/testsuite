@@ -14,6 +14,8 @@ import os
 import logging
 import re
 import sys
+import stat
+import numpy as np
 
 from os import close
 from os import remove
@@ -210,3 +212,41 @@ def get_asterisk_conf():
                 _ast_conf.directories[var] = val
 
     return _ast_conf
+
+def set_file_permissions(dir_path, permissions_file):
+    """Set permissions on files from a file
+
+    The permissions_file must be a list in the format
+    <relative_path>:<octal_permissions>
+    <relative_path>:<octal_permissions>
+    ...
+
+    relative_path: A path relative to dir_path.  If a directory
+                   is specified, only the directory permissions
+                   are changed not the contents.
+    permissions: 3 or 4 digit octal permissions
+    
+    Whitespace and blank lines are ignored.
+    The '#' is the comment character.
+    
+    Example:
+    <testdir>/files/ast1/astvarlibdir/.permissions:
+    # My permissions file
+    keys/key.pem: 0600
+
+    Note: The paths in the .permissions file must be below the
+    last replaceable element in the dir_path.  In this example,
+    it has to be below astvarlibdir.
+
+    :param dir_path: Path containing the directories/files to change
+    :param permissions_file: File with the subdirectories/files and new permissions.
+    """
+    converter = lambda x: int(x, 8)
+    permlist=np.genfromtxt(permissions_file,
+        dtype="S255,I", names="filename,permissions",
+        delimiter=':', autostrip=True,
+        converters={"permissions": converter})
+    for filename, permissions in permlist.flat:
+        path=os.path.join(dir_path, filename.decode('utf-8'))
+        os.chmod(path,permissions)
+    return None
