@@ -723,6 +723,15 @@ class Asterisk(object):
             if os.path.isfile(target):
                 self.install_config(target)
 
+        permissions_file = os.path.join(cfg_path, ".permissions")
+        if os.path.exists(permissions_file):
+            try:
+                test_suite_utils.set_file_permissions(
+                    self.astetcdir, permissions_file)
+            except BaseException as err:
+                raise Exception("All permissions were not applied to '%s': %s" % (target_path, str(err)))
+                
+
     def install_config(self, cfg_path, target_filename=None):
         """Install a custom configuration file for this instance of Asterisk.
 
@@ -841,6 +850,13 @@ class Asterisk(object):
                 dirpath = direntry[1:] if direntry[0] == '/' else direntry
                 dest = os.path.join(self.base, dirpath)
                 polyfill.copytree(source, dest, dirs_exist_ok=True)
+                permissions_file = os.path.join(source, ".permissions")
+                if os.path.exists(permissions_file):
+                    try:
+                        test_suite_utils.set_file_permissions(
+                            dest, permissions_file)
+                    except BaseException as err:
+                        raise Exception("All permissions were not applied to '%s': %s" % (dest, str(err)))
 
     def _overwrite_file(self, filename, values):
         """Overwrite a particular config file
