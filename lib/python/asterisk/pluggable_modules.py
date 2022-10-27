@@ -18,6 +18,7 @@ from twisted.internet import reactor
 from starpy import fastagi
 from .test_runner import load_and_parse_module
 from .sipp import SIPpActionModule, SIPpStartEventModule
+from .sipp_iterator import SIPpIteratorActionModule
 from .pluggable_registry import PLUGGABLE_ACTION_REGISTRY,\
     PLUGGABLE_EVENT_REGISTRY,\
     PluggableRegistry
