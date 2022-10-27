@@ -28,7 +28,7 @@ test-modules:
     add-test-to-search-path: 'True'
     test-object:
         config-section: sipp-config
-        typename: 'sipp.SIPpTestCase'
+        typename: 'sipp_iterator.SIPpIteratorTestCase'
     modules:
         -
             config-section: 'ami-config'
@@ -37,19 +37,31 @@ test-modules:
 sipp-config:
     connect-ami: 'True'
     reactor-timeout: 30
-    fail-on-any: True
-    stop-after-scenarios: False
-    stop_callback_module: 'mwi_check'
-    stop_callback_method: 'start_test'
-    test-iterations:
-        # We pass the initial registers the -aa flag then let them run for a second so they can get the
-        # 1-2 initial NOTIFY messages we don't care about.  The MWI AMI updates are set to start after
-        -
-            scenarios:
-                - { 'key-args': {'scenario': 'alice-registers.xml', '-p': '5061'},
-                    'ordered-args': {'-aa'} }
-                - { 'key-args': {'scenario': 'bob-registers.xml', '-p': '5062'},
-                    'ordered-args': {'-aa'}  }
+    type: 'multi'
+    scenarios:
+        # Alice and bob register, receive initial NOTIFYs. No actions
+        - { 'scenario': {'Name': 'register', 'sequence': [
+                {'Name': 'alice-registers.xml', 'port': '5061', 'target': '127.0.0.1', 'ordered-args': {'-aa'}},
+                {'Name': 'bob-registers.xml', 'port': '5062', 'target': '127.0.0.1', 'ordered-args': {'-aa'}} ]},
+            'action': {'Messages': [
+                {'Action': 'none'} ]}}
+        # Alice and Bob are both sent NOTIFY messages, triggered by the MWIUpdate
+        - { 'scenario': {'Name': 'mailbox_a', 'sequence': [
+                {'Name': 'alice-is-notified-1.xml', 'port': '5061', 'target': '127.0.0.1'},
+                {'Name': 'bob-is-notified-1.xml', 'port': '5062', 'target': '127.0.0.1'} ]},
+            'action': {'Messages': [
+                {'Action': 'MWIUpdate', 'Mailbox': 'mailbox_a', 'NewMessages':'2', 'OldMessages':'1'} ]}}
+        # Alice and Bob are both sent NOTIFY messages, triggered by the MWIUpdate
+        - { 'scenario': {'Name': 'mailbox_b', 'sequence': [
+                {'Name': 'alice-is-notified-2.xml', 'port': '5061', 'target': '127.0.0.1'},
+                {'Name': 'bob-is-notified-2.xml', 'port': '5062', 'target': '127.0.0.1'} ]},
+            'action': {'Messages': [
+                {'Action': 'MWIUpdate', 'Mailbox': 'mailbox_b', 'NewMessages':'3', 'OldMessages':'3'} ]}}
+        # indicate no more scenarios to run, send testComplete Event
+        - { 'scenario': {'Name': 'done'},
+            'action': {'Messages': [
+                {'Action': 'UserEvent', 'UserEvent': 'testComplete'} ]}}
+
 ami-config:
     -
         ami-events:
@@ -59,3 +71,4 @@ ami-config:
                     UserEvent: 'testComplete'
             count: 1
         stop_test:
+
