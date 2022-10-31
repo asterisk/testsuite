@@ -827,6 +827,13 @@ PLUGGABLE_EVENT_REGISTRY.register("ami-events", AMIPluggableEventModule)
 
 
 def replace_ami_vars(mydict, values):
+    if type(mydict) is list:
+        outlist = []
+        for item in mydict:
+            for key, value in item.items():
+                outlist.append((key, var_replace(value, values)))
+        return outlist
+
     outdict = {}
     for key, value in mydict.items():
         outdict[key] = var_replace(value, values)

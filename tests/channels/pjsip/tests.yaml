@@ -2,6 +2,7 @@
 tests:
     - dir: 'allow_sending_180_after_183'
     - dir: 'ami'
+    - dir: 'aoc'
     - dir: 'auth'
     - dir: 'basic_calls'
     - dir: 'config_wizard'

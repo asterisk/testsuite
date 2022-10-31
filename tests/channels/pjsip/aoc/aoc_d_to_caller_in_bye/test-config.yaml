@@ -1,0 +1,67 @@
+info:
+    summary: 'Test AOC-D to caller after callee hangs up'
+    description: |
+        This uses an AOCMessage AMI to generate an AOC-D
+        event, adding to the BYE message sent to the caller'.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: sipp.SIPpTestCase
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'caller.xml', '-i': '127.0.0.1', '-p': '5062' } }
+
+ami-config:
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'Newexten'
+                    Channel: 'PJSIP/caller-.*'
+                    Application: 'Wait'
+        ami-actions:
+            action:
+                Action: 'AOCMessage'
+                Channel: '{channel}'
+                MsgType: 'D'
+                ChargeType: 'Currency'
+                CurrencyAmount: 3
+                CurrencyName: 'EUR'
+                CurrencyMultiplier: 'OneTenth'
+                TotalType: 'SubTotal'
+            expected:
+                Response: 'Success'
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'Newexten'
+                    Channel: 'PJSIP/caller-.*'
+                    Application: 'Echo'
+        ami-actions:
+            action:
+                Action: 'Hangup'
+                Channel: '{channel}'
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip_aoc'
+        - asterisk : 'app_dial'
+    tags:
+        - PJSIP
+

@@ -1,0 +1,17 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'aoc_d_to_callee_in_200'
+    - test: 'aoc_d_to_callee_in_bye'
+    - test: 'aoc_d_to_callee_in_info'
+    - test: 'aoc_d_to_caller_in_200'
+    - test: 'aoc_d_to_caller_in_bye'
+    - test: 'aoc_d_to_caller_in_info'
+    - test: 'aoc_e_to_callee_in_200'
+    - test: 'aoc_e_to_callee_in_bye'
+    - test: 'aoc_e_to_caller_in_200'
+    - test: 'aoc_e_to_caller_in_bye'
+    - test: 'aoc_s_to_callee_in_info'
+    - test: 'aoc_s_to_caller_in_180'
+    - test: 'aoc_s_to_caller_in_183'
+    - test: 'aoc_s_to_caller_in_200'
+    - test: 'aoc_s_to_caller_in_info'
