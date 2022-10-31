@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Receive AOC-D on outbound call">
+  <send retrans="500">
+    <![CDATA[
+      INVITE sip:echo@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: caller <sip:caller@[local_ip]:[local_port]>;tag=[call_number]
+      To: echo <sip:echo@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 INVITE
+      Contact: <sip:caller@[local_ip]:[local_port];transport=[transport]>
+      Max-Forwards: 70
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=phoneA 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio 6000 RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+    ]]>
+  </send>
+
+  <recv response="100" optional="true">
+  </recv>
+
+  <recv response="180" optional="true">
+  </recv>
+
+  <recv response="200" rtd="true">
+  </recv>
+
+  <send>
+    <![CDATA[
+      ACK sip:echo@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: caller <sip:caller@[local_ip]:[local_port]>;tag=[call_number]
+      To: echo <sip:echo@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 1 ACK
+      Contact: <sip:caller@[local_ip]:[local_port];transport=[transport]>
+      Max-Forwards: 70
+      Content-Length: 0
+    ]]>
+  </send>
+
+  <recv request="INFO">
+    <action>
+        <ereg regexp="application/vnd.etsi\.aoc\+xml" header="Content-Type:" search_in="hdr" check_it="true" assign_to="_"/>
+        <ereg regexp="&lt;\?xml version=&quot;1\.0&quot; encoding=&quot;UTF-8&quot;\?&gt;
+&lt;aoc xmlns=&quot;http://uri\.etsi\.org/ngn/params/xml/simservs/aoc&quot;&gt;
+ &lt;aoc-d&gt;
+  &lt;charging-info&gt;subtotal&lt;/charging-info&gt;
+  &lt;recorded-charges&gt;
+   &lt;free-charge /&gt;
+  &lt;/recorded-charges&gt;
+ &lt;/aoc-d&gt;
+&lt;/aoc&gt;" check_it="true" search_in="body" assign_to="_" />
+    </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      Call-ID: [call_id]
+      CSeq: [cseq] INFO
+      Contact: <sip:caller@[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+    ]]>
+  </send>
+
+  <send retrans="500">
+    <![CDATA[
+      BYE sip:echo@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: caller <sip:[service]@[local_ip]:[local_port]>;tag=[call_number]
+      To: echo <sip:echo@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 2 BYE
+      Contact: <sip:caller@[local_ip]:[local_port];transport=[transport]>
+      Max-Forwards: 70
+      Subject: Test
+      Content-Length: 0
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+</scenario>

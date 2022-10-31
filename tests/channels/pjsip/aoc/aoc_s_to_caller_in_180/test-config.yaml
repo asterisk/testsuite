@@ -1,0 +1,51 @@
+info:
+    summary: 'Test AOC-S to caller in ringing'
+    description: |
+        This uses an AOCMessage AMI to generate an AOC-S
+        event, adding to the 180 message sent in reply to
+        the caller's INVITE message.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: sipp.SIPpTestCase
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'caller.xml', '-i': '127.0.0.1', '-p': '5062' } }
+
+ami-config:
+    -
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'Newexten'
+                    Channel: 'PJSIP/caller-.*'
+                    Application: 'Wait'
+        ami-actions:
+            action:
+                Action: 'AOCMessage'
+                Channel: '{channel}'
+                MsgType: 'S'
+                ChargedItem: 'BasicCommunication'
+                RateType: 'Free'
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip_aoc'
+        - asterisk : 'app_dial'
+    tags:
+        - PJSIP
+
