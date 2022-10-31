@@ -1,0 +1,67 @@
+testinfo:
+    summary:    'Test Manager GetConfig and UpdateConfig Basic Ops'
+    description: |
+        'Test Manager GetConfig and UpdateConfig Basic Ops'
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+    tags:
+        - manager
+        - AMI
+
+test-modules:
+    add-test-to-search-path: 'True'
+    add-relative-to-search-path: ['..']
+    test-object:
+        config-section: object-config
+        typename: 'ManagerConfigTest.ManagerConfigTest'
+
+ast-config-options:
+    live_dangerously: 'no'
+
+object-config:
+    reactor-timeout: 15
+    ami-config:
+        - ###  Create a new config file outside the asterisk config directory
+            message:
+                Action: 'GetConfig'
+                Filename: '/tmp/test.conf'
+            expected:
+                Response: 'Error'
+                Message: 'File requires escalated priveledges'
+        - ###  Update a config file outside the asterisk config directory
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: '/tmp/test.conf'
+                DstFilename: '/tmp/test.conf'
+
+                Action-000000: 'NewCat'
+                Cat-000000: 'Cat1'
+            expected:
+                Response: 'Error'
+                Message: 'File requires escalated priveledges'
+        - ###  Update from a config file outside the asterisk config directory
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: '/tmp/test.conf'
+                DstFilename: 'test.conf'
+
+                Action-000000: 'NewCat'
+                Cat-000000: 'Cat1'
+            expected:
+                Response: 'Error'
+                Message: 'File requires escalated priveledges'
+        - ###  Update to a config file outside the asterisk config directory
+            message:
+                Action: 'UpdateConfig'
+                SrcFilename: 'test.conf'
+                DstFilename: '/tmp/test.conf'
+
+                Action-000000: 'NewCat'
+                Cat-000000: 'Cat1'
+            expected:
+                Response: 'Error'
+                Message: 'File requires escalated priveledges'
+
+

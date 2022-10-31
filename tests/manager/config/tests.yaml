@@ -2,4 +2,5 @@
 tests:
     - test: 'basic'
     - test: 'advanced'
+    - test: 'restricted'
     - test: 'no_preserve_effective_context'
