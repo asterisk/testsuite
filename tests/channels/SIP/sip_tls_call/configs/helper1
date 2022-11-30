@@ -1,3 +1,0 @@
-tlscertfile=<<path>>/configs/keys/serverA.pem
-tlscafile=<<path>>/configs/keys/ca.crt
-

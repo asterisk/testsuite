@@ -1,6 +1,5 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
-    - dir: 'SIP'
     - dir: 'iax2'
     - dir: 'local'
     - dir: 'pjsip'
