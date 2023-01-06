@@ -10,7 +10,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk: 'app_dial'
-        - asterisk: 'chan_sip'
+        - asterisk: 'chan_pjsip'
     tags:
         - bridge
 
@@ -32,7 +32,7 @@ test-modules:
 bridge-config:
   test-runs:
     -
-        originate_channel: 'SIP/alice_blind@uut'
+        originate_channel: 'PJSIP/alice_blind@uut'
         hangup: 'alice'
         features:
             -
@@ -41,7 +41,7 @@ bridge-config:
                 success: 'true'
                 exten: '77'
     -
-        originate_channel: 'SIP/alice_attended@uut'
+        originate_channel: 'PJSIP/alice_attended@uut'
         hangup: 'alice'
         features:
             -
@@ -50,7 +50,7 @@ bridge-config:
                 success: 'true'
                 exten: '77'
     -
-        originate_channel: 'SIP/bob_blind@uut'
+        originate_channel: 'PJSIP/bob_blind@uut'
         hangup: 'bob'
         features:
             -
@@ -59,7 +59,7 @@ bridge-config:
                 success: 'true'
                 exten: '77'
     -
-        originate_channel: 'SIP/bob_attended@uut'
+        originate_channel: 'PJSIP/bob_attended@uut'
         hangup: 'bob'
         features:
             -
@@ -90,7 +90,7 @@ ami-cel-config-12:
         type: 'cel'
         conditions:
             match:
-                Channel: 'SIP/alice-.*'
+                Channel: 'PJSIP/alice-.*'
         requirements:
             -
                 match:

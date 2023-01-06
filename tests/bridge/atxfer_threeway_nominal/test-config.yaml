@@ -23,7 +23,7 @@ bridge-config:
     asterisk-instances: 4
     test-runs:
       -
-          originate_channel: 'SIP/alice_atxfer@uut'
+          originate_channel: 'PJSIP/alice_atxfer@uut'
           features:
               -
                   who: 'alice'
@@ -35,7 +35,7 @@ bridge-config:
                   what: 'atxferthreeway'
                   success: 'true'
       -
-          originate_channel: 'SIP/bob_atxfer@uut'
+          originate_channel: 'PJSIP/bob_atxfer@uut'
           features:
               -
                   who: 'bob'
@@ -65,10 +65,10 @@ ami-config:
         conditions:
             match:
                 Event: 'AttendedTransfer'
-                OrigTransfererChannel: 'SIP/alice-*'
+                OrigTransfererChannel: 'PJSIP/alice-*'
                 OrigTransfererConnectedLineNum: '5678'
                 OrigTransfererConnectedLineName: 'Charlie'
-                SecondTransfererChannel: 'SIP/alice-*'
+                SecondTransfererChannel: 'PJSIP/alice-*'
                 SecondTransfererConnectedLineNum: '5678'
                 SecondTransfererConnectedLineName: 'Charlie'
                 DestType: 'Threeway'
@@ -82,10 +82,10 @@ ami-config:
         conditions:
             match:
                 Event: 'AttendedTransfer'
-                OrigTransfererChannel: 'SIP/bob-*'
+                OrigTransfererChannel: 'PJSIP/bob-*'
                 OrigTransfererConnectedLineNum: '5678'
                 OrigTransfererConnectedLineName: 'Charlie'
-                SecondTransfererChannel: 'SIP/bob-*'
+                SecondTransfererChannel: 'PJSIP/bob-*'
                 SecondTransfererConnectedLineNum: '5678'
                 SecondTransfererConnectedLineName: 'Charlie'
                 DestType: 'Threeway'
@@ -100,10 +100,10 @@ hangup-config:
     conditions:
         match:
             Event: 'VarSet'
-            Channel: 'SIP/charlie-*'
+            Channel: 'PJSIP/charlie-*'
             ChannelState: '6'
             Variable: 'BRIDGEPEER'
-            Value: '(SIP/bob-.{8},SIP/alice-.{8}|SIP/alice-.{8},SIP/bob-.{8})'
+            Value: '(PJSIP/bob-.{8},PJSIP/alice-.{8}|PJSIP/alice-.{8},PJSIP/bob-.{8})'
 
 properties:
     dependencies:
@@ -112,6 +112,6 @@ properties:
         - python : 'starpy'
         - asterisk: 'app_dial'
         - asterisk: 'app_echo'
-        - asterisk: 'chan_sip'
+        - asterisk: 'chan_pjsip'
     tags:
         - bridge

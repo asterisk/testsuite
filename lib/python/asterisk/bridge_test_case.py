@@ -126,7 +126,7 @@ class BridgeTestCase(TestCase):
         """AMI connect handler"""
 
         self.connections += 1
-        self.ast[ami.id].cli_exec("sip set debug on")
+        self.ast[ami.id].cli_exec("pjsip set debug on")
         self.ast[ami.id].cli_exec("iax2 set debug on")
         self.ast[ami.id].cli_exec("xmpp set debug on")
         if (ami.id == 0):

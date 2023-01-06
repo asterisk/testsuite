@@ -42,7 +42,7 @@ cdr-config:
                 accountcode: 'cdrtest_sip'
                 destination: '2'
                 dcontext: 'test'
-                channel: 'SIP/test-.*'
+                channel: 'PJSIP/test-.*'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
 
@@ -52,7 +52,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'cdr_csv'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
         - accountcode
         - CDR

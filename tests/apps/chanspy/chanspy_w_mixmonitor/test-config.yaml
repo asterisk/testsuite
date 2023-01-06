@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'pjsua requirement, see ASTERISK-30292'
     summary:     'Test Chanspy with MixMonitor'
     description: |
         'This test verifies basic functionality of using both ChanSpy
@@ -19,7 +20,7 @@ properties:
         - asterisk : 'app_mixmonitor'
         - asterisk : 'app_playback'
         - asterisk : 'app_talkdetect'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
         - asterisk : 'pbx_config'
         - asterisk : 'res_agi'
         - asterisk : 'res_musiconhold'

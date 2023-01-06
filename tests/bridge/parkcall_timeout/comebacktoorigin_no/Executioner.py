@@ -23,11 +23,11 @@ class Executioner(object):
         self.test_object = test_object
 
         self.calls = []
-        self.calls.append({'test': '1', 'parker': 'SIP/alice',
+        self.calls.append({'test': '1', 'parker': 'PJSIP/alice',
                           'lot': 'parkinglot_test1', 'slot': '401'})
-        self.calls.append({'test': '2', 'parker': 'SIP/alice',
+        self.calls.append({'test': '2', 'parker': 'PJSIP/alice',
                           'lot': 'parkinglot_test2', 'slot': '501'})
-        self.calls.append({'test': '3', 'parker': 'SIP/alice',
+        self.calls.append({'test': '3', 'parker': 'PJSIP/alice',
                            'lot': 'parkinglot_test3', 'slot': '601'})
         self.userevents_received = 0
         self.passed_dialplan = 0
@@ -56,7 +56,7 @@ class Executioner(object):
         appdata = event.get('appdata')
         registrar = event.get('registrar')
 
-        if appdata != 'SIP/alice,3':
+        if appdata != 'PJSIP/alice,3':
             not_right = True
         if registrar != 'res_parking':
             not_right = True

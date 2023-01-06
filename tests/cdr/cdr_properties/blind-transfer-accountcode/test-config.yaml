@@ -1,5 +1,6 @@
 testinfo:
-    summary:     'Test account code propagation for SIP blind transfers.'
+    skip: 'requires further rework for pjsip, see ASTERISK-30292'
+    summary:     'Test account code propagation for PJSIP blind transfers.'
     description: |
         "This test ensures that when a channel with an account code, dials a
         channel without an account code, then transfers the dialed channel to
@@ -15,11 +16,11 @@ properties:
             version : 'v3.0'
             feature : 'TLS'
         - asterisk : 'cdr_csv'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
         - accountcode
         - CDR
-        - SIP
+        - PJSIP
         - transfer
 
 test-modules:
@@ -124,15 +125,15 @@ cdr-config:
                 destination: 'test3'
                 accountcode: 'account1'
                 disposition: 'ANSWERED'
-                channel: 'SIP/test1-.*'
-                dchannel: 'SIP/test3-.*'
+                channel: 'PJSIP/test1-.*'
+                dchannel: 'PJSIP/test3-.*'
             -
                 source: 'test3'
                 destination: 'test2'
                 accountcode: 'account1'
                 disposition: 'ANSWERED'
-                channel: 'SIP/test3-.*'
-                dchannel: 'SIP/test2-.*'
+                channel: 'PJSIP/test3-.*'
+                dchannel: 'PJSIP/test2-.*'
     -
         file: 'account1'
         lines:
@@ -141,14 +142,14 @@ cdr-config:
                 destination: 'test3'
                 accountcode: 'account1'
                 disposition: 'ANSWERED'
-                channel: 'SIP/test1-.*'
-                dchannel: 'SIP/test3-.*'
+                channel: 'PJSIP/test1-.*'
+                dchannel: 'PJSIP/test3-.*'
             -
                 source: 'test3'
                 destination: 'test2'
                 accountcode: 'account1'
                 disposition: 'ANSWERED'
-                channel: 'SIP/test3-.*'
-                dchannel: 'SIP/test2-.*'
+                channel: 'PJSIP/test3-.*'
+                dchannel: 'PJSIP/test2-.*'
 
 

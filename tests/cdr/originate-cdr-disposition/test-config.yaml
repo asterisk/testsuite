@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'requires further rework for pjsip, see ASTERISK-30292'
     summary: 'Test for proper CDR dispositions when originating calls.'
     description: |
         "This test verifies that the CDRs generated during originates have the
@@ -14,9 +15,9 @@ properties:
         - sipp :
             version : 'v3.0'
         - asterisk : 'cdr_csv'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
-        - SIP
+        - PJSIP
         - CDR
 
 test-modules:
@@ -40,40 +41,40 @@ cdr-config:
         lines:
             -
                 disposition: 'ANSWERED'
-                channel: 'SIP/test1-.*'
+                channel: 'PJSIP/test1-.*'
                 dchannel: ''
             -
                 disposition: 'BUSY'
-                channel: 'SIP/test1-.*'
+                channel: 'PJSIP/test1-.*'
                 dchannel: ''
             -
                 disposition: 'FAILED'
-                channel: 'SIP/test1-.*'
+                channel: 'PJSIP/test1-.*'
                 dchannel: ''
             -
                 disposition: 'NO ANSWER'
-                channel: 'SIP/test1-.*'
+                channel: 'PJSIP/test1-.*'
                 dchannel: ''
             -
                 disposition: 'NO ANSWER'
-                channel: 'SIP/test1-.*'
-                dchannel: 'SIP/test2-.*'
+                channel: 'PJSIP/test1-.*'
+                dchannel: 'PJSIP/test2-.*'
 
 sequence-originator:
     -
-        parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1' }
+        parameters: { channel: 'pjsip/test1', context: 'default', exten: 'wait', priority: '1' }
         ignore-originate-failure: False
     -
-        parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1' }
+        parameters: { channel: 'pjsip/test1', context: 'default', exten: 'wait', priority: '1' }
         ignore-originate-failure: True
     -
-        parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1' }
+        parameters: { channel: 'pjsip/test1', context: 'default', exten: 'wait', priority: '1' }
         ignore-originate-failure: True
     -
-        parameters: { channel: 'sip/test1', context: 'default', exten: 'wait', priority: '1', timeout: 1 }
+        parameters: { channel: 'pjsip/test1', context: 'default', exten: 'wait', priority: '1', timeout: 1 }
         ignore-originate-failure: True
     -
-        parameters: { channel: 'sip/test1', context: 'default', exten: 'dial', priority: '1' }
+        parameters: { channel: 'pjsip/test1', context: 'default', exten: 'dial', priority: '1' }
         ignore-originate-failure: True
 
 

@@ -24,11 +24,11 @@ class Executioner(object):
         self.test_object = test_object
 
         self.calls = []
-        self.calls.append({'parker': 'SIP/alice', 'lot': 'parkinglot_test1',
+        self.calls.append({'parker': 'PJSIP/alice', 'lot': 'parkinglot_test1',
                           'slot': '401', 'status': 'ANSWER', 'post': False})
-        self.calls.append({'parker': 'SIP/alice', 'lot': 'parkinglot_test1',
+        self.calls.append({'parker': 'PJSIP/alice', 'lot': 'parkinglot_test1',
                           'slot': '402', 'status': 'NOANSWER', 'post': True})
-        self.calls.append({'parker': 'SIP/alice', 'lot': 'parkinglot_test1',
+        self.calls.append({'parker': 'PJSIP/alice', 'lot': 'parkinglot_test1',
                           'slot': '403', 'status': 'BUSY', 'post': True})
         self.current_call = None
         self.current_call_post = False

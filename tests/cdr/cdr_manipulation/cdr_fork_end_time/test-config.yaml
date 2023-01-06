@@ -43,7 +43,7 @@ cdr-config-12:
                 destination: '1'
                 dcontext: 'default'
                 channel: 'Local/1@default-.*'
-                dchannel: 'SIP/test-.*'
+                dchannel: 'PJSIP/test-.*'
                 disposition: 'NO ANSWER'
             -
                 accountcode: 'cdrtest_local'
@@ -68,7 +68,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'cdr_csv'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
         - accountcode
         - CDR

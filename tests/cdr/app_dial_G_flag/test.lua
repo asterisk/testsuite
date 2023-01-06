@@ -37,7 +37,7 @@ end
 print("starting asterisk")
 a = ast.new()
 a:load_config("configs/ast1/extensions.conf")
-a:load_config("configs/ast1/sip.conf")
+a:load_config("configs/ast1/pjsip.conf")
 a:generate_manager_conf()
 a:spawn()
 

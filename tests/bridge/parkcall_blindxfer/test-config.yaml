@@ -23,7 +23,7 @@ bridge-config:
     test-runs:
         # Alice blind xfers Bob to the empty default lot.
         -
-            originate_channel: 'SIP/bob@uut'
+            originate_channel: 'PJSIP/bob@uut'
             features:
                 -
                     who: 'alice'
@@ -33,7 +33,7 @@ bridge-config:
 
         # Alice blind xfers Bob to an empty static custom lot.
         -
-            originate_channel: 'SIP/bob-static@uut'
+            originate_channel: 'PJSIP/bob-static@uut'
             features:
                 -
                     who: 'alice'
@@ -45,7 +45,7 @@ bridge-config:
         # create a local channel and park it to prevent bob's channel from being
         # parked.
         -
-            originate_channel: 'SIP/bob-static-full@uut'
+            originate_channel: 'PJSIP/bob-static-full@uut'
             features:
                 -
                     who: 'alice'
@@ -55,7 +55,7 @@ bridge-config:
 
         # Alice blind xfers Bob to an empty dynamically created lot.
         -
-            originate_channel: 'SIP/bob-dynamic@uut'
+            originate_channel: 'PJSIP/bob-dynamic@uut'
             features:
                 -
                     who: 'alice'
@@ -67,7 +67,7 @@ bridge-config:
         # will create a local channel and park it to prevent bob's channel from
         # being parked.
         -
-            originate_channel: 'SIP/bob-dynamic-full@uut'
+            originate_channel: 'PJSIP/bob-dynamic-full@uut'
             features:
                 -
                     who: 'alice'
@@ -83,7 +83,7 @@ ami-config-12:
         conditions:
             match:
                 Event: 'Hangup'
-                Channel: 'SIP/alice-0000000(0|2|4|6|8)'
+                Channel: 'PJSIP/alice-0000000(0|2|4|6|8)'
         requirements:
             match:
                 Cause: '16'
@@ -98,10 +98,10 @@ ami-config-12:
         conditions:
             match:
                 Event: 'ParkedCall'
-                ParkeeChannel: 'SIP/bob-00000001'
+                ParkeeChannel: 'PJSIP/bob-00000001'
                 ParkingSpace: '701'
                 Parkinglot: 'default'
-                ParkerDialString: 'SIP/alice'
+                ParkerDialString: 'PJSIP/alice'
         callbackModule: 'Hangup'
         callbackMethod: 'handle_parkedcall'
         count: '1'
@@ -115,10 +115,10 @@ ami-config-12:
         conditions:
             match:
                 Event: 'ParkedCall'
-                ParkeeChannel: 'SIP/bob-00000003'
+                ParkeeChannel: 'PJSIP/bob-00000003'
                 ParkingSpace: '801'
                 Parkinglot: 'parkinglot_static'
-                ParkerDialString: 'SIP/alice'
+                ParkerDialString: 'PJSIP/alice'
         callbackModule: 'Hangup'
         callbackMethod: 'handle_parkedcall'
         count: '1'
@@ -151,7 +151,7 @@ ami-config-12:
                 Type: 'StateChange'
                 State: 'PLAYBACK'
                 Message: 'pbx-parkingfailed'
-                Channel: 'SIP/alice-0000000(4|8)'
+                Channel: 'PJSIP/alice-0000000(4|8)'
         callbackModule: 'Hangup'
         callbackMethod: 'handle_testevent'
         count: '2'
@@ -165,10 +165,10 @@ ami-config-12:
         conditions:
             match:
                 Event: 'ParkedCall'
-                ParkeeChannel: 'SIP/bob-00000007'
+                ParkeeChannel: 'PJSIP/bob-00000007'
                 ParkingSpace: '901'
                 Parkinglot: 'parkinglot_dynamic'
-                ParkerDialString: 'SIP/alice'
+                ParkerDialString: 'PJSIP/alice'
         callbackModule: 'Hangup'
         callbackMethod: 'handle_parkedcall'
         count: '1'
@@ -197,7 +197,7 @@ properties:
         - asterisk: 'app_dial'
         - asterisk: 'app_echo'
         - asterisk: 'app_stack'
-        - asterisk: 'chan_sip'
+        - asterisk: 'chan_pjsip'
         - asterisk: 'func_channel'
     tags:
         - bridge

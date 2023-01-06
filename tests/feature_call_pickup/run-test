@@ -23,9 +23,9 @@ class CallPickupTest(TestCase):
     def __init__(self):
         TestCase.__init__(self)
 
-        self.pickeeChannel = "Local/dial_faker@pickuptest-"
-        self.pickerChannel = "SIP/sip_receive-"
-        self.targetChannel = "SIP/faker-"
+        self.pickeeChannel = "Local/dial_faker@pickuptest"
+        self.pickerChannel = "PJSIP/sip_receive"
+        self.targetChannel = "PJSIP/faker"
 
         self.bridge = None
 

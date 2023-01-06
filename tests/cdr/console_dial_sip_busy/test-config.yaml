@@ -1,7 +1,7 @@
 testinfo:
-    summary: CLI exec console dial which dials via SIP which returns busy
+    summary: CLI exec console dial which dials via PJSIP which returns busy
     description: |
-        'An Asterisk instance dials itself from a local channel via SIP.
+        'An Asterisk instance dials itself from a local channel via PJSIP.
         The extension sends a busy indication.'
 
 test-modules:
@@ -33,7 +33,7 @@ cdr-config:
                 destination: '1'
                 dcontext: 'default'
                 channel: 'Local/1@default-.*'
-                dchannel: 'SIP/test-.*'
+                dchannel: 'PJSIP/test-.*'
                 disposition: 'BUSY'
                 amaflags: 'DOCUMENTATION'
 
@@ -42,10 +42,10 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'cdr_csv'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
         - accountcode
         - dial
         - CDR
-        - SIP
+        - PJSIP
         - chan_local

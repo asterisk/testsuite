@@ -1,8 +1,8 @@
 testinfo:
-    summary: CLI exec console dial which dials via SIP which returns congestion
+    summary: CLI exec console dial which dials via PJSIP which returns congestion
     description: |
-        'An Asterisk instance originates a local channel to dial itself via SIP.
-        Upon reaching the extension the SIP channel dials, Asterisk will return congestion.'
+        'An Asterisk instance originates a local channel to dial itself via PJSIP.
+        Upon reaching the extension the PJSIP channel dials, Asterisk will return congestion.'
 
 test-modules:
     test-object:
@@ -33,7 +33,7 @@ cdr-config:
                 destination: '1'
                 dcontext: 'default'
                 channel: 'Local/1@default-.*'
-                dchannel: 'SIP/test-.*'
+                dchannel: 'PJSIP/test-.*'
                 disposition: 'FAILED'
                 amaflags: 'DOCUMENTATION'
 
@@ -42,10 +42,10 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'cdr_csv'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
         - accountcode
         - dial
-        - SIP
+        - PJSIP
         - CDR
         - chan_local

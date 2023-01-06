@@ -1,8 +1,8 @@
 testinfo:
-    summary: CLI exec console dial which calls ForkCDR before dialing via SIP which answers
+    summary: CLI exec console dial which calls ForkCDR before dialing via PJSIP which answers
     description: |
         'An Asterisk instance originates a Local channel which will play silence for about
-        3 seconds before using ForkCDR and then dial itself via SIP. The receiving channel
+        3 seconds before using ForkCDR and then dial itself via PJSIP. The receiving channel
         answers and then immediately hangs up. CDRs are tested for expected behavior.'
 
 test-modules:
@@ -52,7 +52,7 @@ cdr-config:
                 accountcode: 'cdrtest_sip'
                 destination: '2'
                 dcontext: 'default'
-                channel: 'SIP/test-.*'
+                channel: 'PJSIP/test-.*'
                 disposition: 'ANSWERED'
                 amaflags: 'DOCUMENTATION'
 
@@ -61,7 +61,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'cdr_csv'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
         - accountcode
         - dial

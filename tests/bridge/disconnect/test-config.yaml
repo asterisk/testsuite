@@ -19,7 +19,7 @@ test-modules:
 bridge-config:
   test-runs:
     -
-        originate_channel: 'SIP/alice_disconnect@uut'
+        originate_channel: 'PJSIP/alice_disconnect@uut'
         features:
             -
                 who: 'bob'
@@ -30,7 +30,7 @@ bridge-config:
                 what: 'disconnect'
                 success: 'true'
     -
-        originate_channel: 'SIP/alice_disconnect2@uut'
+        originate_channel: 'PJSIP/alice_disconnect2@uut'
         features:
             -
                 who: 'bob'
@@ -41,7 +41,7 @@ bridge-config:
                 what: 'disconnect'
                 success: 'true'
     -
-        originate_channel: 'SIP/bob_disconnect@uut'
+        originate_channel: 'PJSIP/bob_disconnect@uut'
         features:
             -
                 who: 'alice'
@@ -299,6 +299,6 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk: 'app_dial'
-        - asterisk: 'chan_sip'
+        - asterisk: 'chan_pjsip'
     tags:
         - bridge
