@@ -34,17 +34,17 @@ def handle_testevent(ami, event):
     if parkee is None:
         LOGGER.error("Received TestEvent without a channel.\n")
 
-    if parkee == 'SIP/alice-00000004':
+    if parkee == 'PJSIP/alice-00000004':
         # channel which parking failed for
-        LOGGER.info("Hanging up channel: SIP/bob-00000005")
-        ami.hangup('SIP/bob-00000005')
+        LOGGER.info("Hanging up channel: PJSIP/bob-00000005")
+        ami.hangup('PJSIP/bob-00000005')
         # the call that was parked
         LOGGER.info("Hanging up channel: Local/fill-park@default-00000000;2")
         ami.hangup('Local/fill-park@default-00000000;2')
-    elif parkee == 'SIP/alice-00000008':
+    elif parkee == 'PJSIP/alice-00000008':
         # channel which parking failed for
-        LOGGER.info("Hanging up channel: SIP/bob-00000009")
-        ami.hangup('SIP/bob-00000009')
+        LOGGER.info("Hanging up channel: PJSIP/bob-00000009")
+        ami.hangup('PJSIP/bob-00000009')
         # the call that was parked
         LOGGER.info("Hanging up channel: Local/fill-park@default-00000001;2")
         ami.hangup('Local/fill-park@default-00000001;2')

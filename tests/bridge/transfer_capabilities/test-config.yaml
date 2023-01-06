@@ -11,7 +11,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk: 'app_dial'
-        - asterisk: 'chan_sip'
+        - asterisk: 'chan_pjsip'
     tags:
         - bridge
 
@@ -33,7 +33,7 @@ test-modules:
 bridge-config:
   test-runs:
     -
-        originate_channel: 'SIP/alice_opt@uut'
+        originate_channel: 'PJSIP/alice_opt@uut'
         hangup: 'alice'
         features:
             -
@@ -53,7 +53,7 @@ bridge-config:
                 what: 'atxfer'
                 success: 'true'
     -
-        originate_channel: 'SIP/bob_opt@uut'
+        originate_channel: 'PJSIP/bob_opt@uut'
         hangup: 'alice'
         features:
             -

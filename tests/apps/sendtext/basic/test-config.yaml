@@ -8,7 +8,7 @@ properties:
     dependencies:
         - app : 'sipp'
         - asterisk : 'app_sendtext'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
         - sip
 

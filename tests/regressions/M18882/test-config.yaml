@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'chan_sip dependancy, '
     summary:     'Test loggin in to the Asterisk Manager Interface'
     description: |
         'This test provides a basic AMI sanity check.  It will log in,
@@ -8,6 +9,6 @@ properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
         - AMI

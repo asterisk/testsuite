@@ -187,7 +187,8 @@ class ConfBridgeNominal(TestCase):
 
         self.reactor_timeout = 30
         self.create_asterisk(ConfBridgeNominal.asterisk_instances)
-        self.ami_1_originates = ["sip/ast1/parameterless", "sip/ast1/user_profile", "sip/ast1/admin_profile"]
+        #self.ami_1_originates = ["pjsip/ast1/parameterless", "pjsip/ast1/user_profile", "pjsip/ast1/admin_profile"]
+        self.ami_1_originates = ["pjsip/parameterless@ast1", "pjsip/user_profile@ast1", "pjsip/admin_profile@ast1"]
         self.__amis_connected = 0
         self.__user_events_confbridge = 0
         self.__user_events_hangup = 0

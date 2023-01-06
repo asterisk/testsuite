@@ -16,7 +16,7 @@ from asterisk.test_case import TestCase
 logger = logging.getLogger(__name__)
 
 """
-Creates an Asterisk instance with some premade queues containing some premade sip peers as members
+Creates an Asterisk instance with some premade queues containing some premade pjsip peers as members
 and changes penalties by using CLI commands and manager actions.
 
 Tests against regression such as the one discussed in https://reviewboard.asterisk.org/r/1609/
@@ -43,7 +43,7 @@ class QueuePenaltyTest(TestCase):
     #Evaluates events according to the expectations of a given state and advances the state when finished.
     def state_receive(self, event, ami):
         if (self.state == 1):
-            if (event['queue'] == "queue1" and event['interface'] == "sip/mem1" and event['penalty'] == "1"):
+            if (event['queue'] == "queue1" and event['interface'] == "pjsip/mem1" and event['penalty'] == "1"):
                 logger.info("state 1: Successfully Completed")
                 self.state_advance(ami)
 
@@ -52,11 +52,11 @@ class QueuePenaltyTest(TestCase):
                 self.stop_reactor()
 
         elif (self.state == 2):
-            if (event['queue'] == "queue1" and event['interface'] == "sip/mem2" and event['penalty'] == "2"):
+            if (event['queue'] == "queue1" and event['interface'] == "pjsip/mem2" and event['penalty'] == "2"):
                 logger.info("state 2: verified condition 1")
                 self.state_passed_flags = self.state_passed_flags | 1
 
-            elif (event['queue'] == "queue2" and event['interface'] == "sip/mem2" and event['penalty'] == '2'):
+            elif (event['queue'] == "queue2" and event['interface'] == "pjsip/mem2" and event['penalty'] == '2'):
                 logger.info("state 2: verified condition 2")
                 self.state_passed_flags = self.state_passed_flags | 2
 
@@ -69,15 +69,15 @@ class QueuePenaltyTest(TestCase):
                 self.state_advance(ami)
 
         elif (self.state == 3):
-            if (event['queue'] == "queue1" and event['interface'] == "sip/mem3" and event['penalty'] == '3'):
+            if (event['queue'] == "queue1" and event['interface'] == "pjsip/mem3" and event['penalty'] == '3'):
                 logger.info("state 3: verified condition 1")
                 self.state_passed_flags = self.state_passed_flags | 1
 
-            elif (event['queue'] == "queue2" and event['interface'] == "sip/mem3" and event['penalty'] == '3'):
+            elif (event['queue'] == "queue2" and event['interface'] == "pjsip/mem3" and event['penalty'] == '3'):
                 logger.info("state 3: verified condition 2")
                 self.state_passed_flags = self.state_passed_flags | 2
 
-            elif (event['queue'] == "queue3" and event['interface'] == "sip/mem3" and event['penalty'] == '3'):
+            elif (event['queue'] == "queue3" and event['interface'] == "pjsip/mem3" and event['penalty'] == '3'):
                 logger.info("state 3: verified condition 3")
                 self.state_passed_flags = self.state_passed_flags | 4
 
@@ -90,7 +90,7 @@ class QueuePenaltyTest(TestCase):
                 self.state_advance(ami)
 
         elif (self.state == 4):
-            if (event['queue'] == "queue3" and event['interface'] == "sip/mem1" and event['penalty'] == '4'):
+            if (event['queue'] == "queue3" and event['interface'] == "pjsip/mem1" and event['penalty'] == '4'):
                 logger.info("state 4: Successfully Completed")
                 self.state_advance(ami)
 
@@ -106,17 +106,17 @@ class QueuePenaltyTest(TestCase):
 
         #state specific:
         if (self.state == 1): #state 1 - cli command with specific queue on mem1
-            ami.command('queue set penalty 1 on sip/mem1 in queue1')
+            ami.command('queue set penalty 1 on pjsip/mem1 in queue1')
 
         elif (self.state == 2): #state 2 - cli command with unspecified queue on mem2
-            ami.command('queue set penalty 2 on sip/mem2')
+            ami.command('queue set penalty 2 on pjsip/mem2')
 
         elif (self.state == 3): #state 3 - manager action queuePenalty with unspecified queue on mem3
-            message = {'action': 'queuepenalty', 'penalty': '3', 'interface': 'sip/mem3'}
+            message = {'action': 'queuepenalty', 'penalty': '3', 'interface': 'pjsip/mem3'}
             ami.sendMessage(message)
 
         elif (self.state == 4): #state 4 - mamager action queuePenalty with specific queue on mem1
-            message = {'action': 'queuepenalty', 'penalty': '4', 'interface': 'sip/mem1', 'queue': 'queue3'}
+            message = {'action': 'queuepenalty', 'penalty': '4', 'interface': 'pjsip/mem1', 'queue': 'queue3'}
             ami.sendMessage(message)
 
         #states exhausted:

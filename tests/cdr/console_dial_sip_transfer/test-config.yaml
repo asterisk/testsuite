@@ -1,7 +1,7 @@
 testinfo:
-    summary: CLI exec console dial which dials via SIP which transfers the call
+    summary: CLI exec console dial which dials via PJSIP which transfers the call
     description: |
-        'One Asterisk instance with console dial calls another instance via SIP.
+        'One Asterisk instance with console dial calls another instance via PJSIP.
         the other instance transfers to another extension and the CDRs are
         tested for expected behavior.'
 
@@ -34,7 +34,7 @@ cdr-config-12:
                 destination: '1'
                 dcontext: 'default'
                 channel: 'Local/1@default-.*'
-                dchannel: 'SIP/test-.*'
+                dchannel: 'PJSIP/test-.*'
                 disposition: 'NO ANSWER'
                 amaflags: 'DOCUMENTATION'
             -
@@ -61,11 +61,11 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'cdr_csv'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
         - accountcode
         - dial
-        - SIP
+        - PJSIP
         - CDR
         - chan_local
         - transfer

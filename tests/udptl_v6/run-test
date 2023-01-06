@@ -25,7 +25,7 @@ class UdptlTest(TestCase):
 
     def ami_connect(self, ami):
         if ami.id == 0:
-            self.ami[0].originate(channel = "SIP/666@receiver",
+            self.ami[0].originate(channel = "PJSIP/666@receiver",
                     application = "SendFax",
                     data = "tests/udptl_v6/1page.tif")
         elif ami.id == 1:

@@ -1,5 +1,6 @@
 testinfo:
-    summary:     'Test T.38 FAX transmission over SIP'
+    skip: 'requires further rework for pjsip, see ASTERISK-30292'
+    summary:     'Test T.38 FAX transmission over PJSIP'
     description: |
         'One Asterisk instance sends a FAX to another Asterisk instance.
          This test uses IPv6 addressing.'
@@ -12,7 +13,7 @@ properties:
         - python : 'starpy'
         - custom : 'fax'
         - custom : 'ipv6'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
-        - SIP
+        - PJSIP
         - fax

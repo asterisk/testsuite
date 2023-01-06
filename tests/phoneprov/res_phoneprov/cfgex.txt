@@ -1,3 +1,0 @@
-username_${LINE}: ${USERNAME}
-display_name_${LINE}: ${DISPLAY_NAME}
-context_${LINE}: ${SIPPEER(${CALLERID},context)}

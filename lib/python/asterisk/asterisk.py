@@ -743,15 +743,15 @@ class Asterisk(object):
         instance, install_config() will use the sub-directories version in place
         of the top-level version.
 
-        For example, testsuite is running a test against 1.4 (branch-1.4):
+        For example, testsuite is running a test against 18.9 (branch-18.9):
 
             configs/manager.conf
-            configs/sip.conf
-            configs/branch-1.4/sip.conf
+            configs/pjsip.conf
+            configs/branch-18.9/pjsip.conf
 
-        Because the sip.conf file exists in the branch-1.4 directory, it will
-        be used in place of the top-level sip.conf.  As for the manager.conf
-        file, because it does not exists in the branch-1.4 direcory, the
+        Because the pjsip.conf file exists in the branch-18.9 directory, it will
+        be used in place of the top-level pjsip.conf.  As for the manager.conf
+        file, because it does not exists in the branch-18.9 direcory, the
         top-level manager.conf will be used.
 
         Keyword Arguments:

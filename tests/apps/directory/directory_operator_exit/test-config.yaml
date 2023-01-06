@@ -11,7 +11,7 @@ properties:
         - asterisk : 'app_directory'
         - asterisk : 'app_senddtmf'
         - asterisk : 'app_userevent'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
         - asterisk : 'pbx_config'
     tags:
         - directory

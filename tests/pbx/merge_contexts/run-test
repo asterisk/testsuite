@@ -36,15 +36,15 @@ class PbxMergeContextsTest(TestCase):
             return reason
 
          # pbx_ael
-         df = ami.originate("sip/ast2/12", "test", "1234", 1)
+         df = ami.originate("PJSIP/12@ast2", "test", "1234", 1)
          df.addErrback(handle_failure)
 
          # pbx_config
-         df = ami.originate("sip/ast2/123", "test", "1234", 1)
+         df = ami.originate("PJSIP/123@ast2", "test", "1234", 1)
          df.addErrback(handle_failure)
 
          # pbx_lua
-         df = ami.originate("sip/ast2/1234", "test", "1234", 1)
+         df = ami.originate("PJSIP/1234@ast2", "test", "1234", 1)
          df.addErrback(handle_failure)
       else:
          ami.registerEvent('UserEvent', self.test_result)

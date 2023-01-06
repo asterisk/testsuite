@@ -26,7 +26,7 @@ class PbxLuaTest(TestCase):
 
          print("sending a call from ast1 to ast2")
 
-         df = ami.originate("sip/ast2/1234", "test", "1234", 1)
+         df = ami.originate("PJSIP/1234@ast2", "test", "1234", 1)
 
          def handle_failure(reason):
             print("error sending originate:")
