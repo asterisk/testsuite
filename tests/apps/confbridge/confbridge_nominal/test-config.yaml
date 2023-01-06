@@ -18,5 +18,5 @@ properties:
         - asterisk : 'app_playback'
         - asterisk : 'app_senddtmf'
         - asterisk : 'app_userevent'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
         - asterisk : 'pbx_config'

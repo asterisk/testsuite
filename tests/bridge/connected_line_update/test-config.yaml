@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'requires further rework for pjsip, see ASTERISK-30292'
     summary: 'Connected line update propagation across a bridge'
     description: |
         'Set up a bridge between two endpoints and ensure that the initial connected line update moves across the bridge as well as subsequent updates.'
@@ -20,7 +21,7 @@ test-modules:
 bridge-config:
   test-runs:
     -
-        originate_channel: 'SIP/uut/simple_bridge'
+        originate_channel: 'PJSIP/simple_bridge@uut'
 
 ami-uut:
     -
@@ -86,7 +87,7 @@ properties:
         - asterisk: 'app_dial'
         - asterisk: 'app_stack'
         - asterisk: 'app_userevent'
-        - asterisk: 'chan_sip'
+        - asterisk: 'chan_pjsip'
         - asterisk: 'func_callerid'
     tags:
         - bridge

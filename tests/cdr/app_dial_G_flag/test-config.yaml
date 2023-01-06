@@ -13,7 +13,7 @@ properties:
         - app : 'asttest'
         - sipp :
             version : 'v3.0'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
         - SIP
         - CDR

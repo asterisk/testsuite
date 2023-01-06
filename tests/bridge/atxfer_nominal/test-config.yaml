@@ -42,7 +42,7 @@ bridge-config:
     asterisk-instances: 4
     test-runs:
       -
-          originate_channel: 'SIP/alice_atxfer@uut'
+          originate_channel: 'PJSIP/alice_atxfer@uut'
           features:
               -
                   who: 'alice'
@@ -50,7 +50,7 @@ bridge-config:
                   success: 'true'
                   exten: '123'
       -
-          originate_channel: 'SIP/bob_atxfer@uut'
+          originate_channel: 'PJSIP/bob_atxfer@uut'
           features:
               -
                   who: 'bob'
@@ -66,6 +66,6 @@ properties:
         - asterisk: 'app_dial'
         - asterisk: 'app_echo'
         - asterisk: 'app_userevent'
-        - asterisk: 'chan_sip'
+        - asterisk: 'chan_pjsip'
     tags:
         - bridge

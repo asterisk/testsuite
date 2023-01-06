@@ -25,10 +25,10 @@ test-modules:
 bridge-config:
   test-runs:
     -
-        originate_channel: 'SIP/test_call@uut'
+        originate_channel: 'PJSIP/test_call@uut'
         hangup: 'alice'
     -
-        originate_channel: 'SIP/test_call@uut'
+        originate_channel: 'PJSIP/test_call@uut'
         hangup: 'bob'
 
 ami-uut-v12:
@@ -49,7 +49,7 @@ ami-uut-v12:
         conditions:
             match:
                 Event: 'BridgeEnter'
-                Channel: 'SIP/alice-.*'
+                Channel: 'PJSIP/alice-.*'
         requirements:
             match:
                 BridgeUniqueid: '.*-.*-.*'
@@ -72,7 +72,7 @@ ami-uut-v12:
         conditions:
             match:
                 Event: 'BridgeEnter'
-                Channel: 'SIP/bob-.*'
+                Channel: 'PJSIP/bob-.*'
         requirements:
             match:
                 BridgeUniqueid: '.*-.*-.*'
@@ -94,7 +94,7 @@ ami-uut-v12:
         conditions:
             match:
                 Event: 'BridgeLeave'
-                Channel: 'SIP/alice-.*'
+                Channel: 'PJSIP/alice-.*'
         requirements:
             match:
                 BridgeUniqueid: '.*-.*-.*'
@@ -117,7 +117,7 @@ ami-uut-v12:
         conditions:
             match:
                 Event: 'BridgeLeave'
-                Channel: 'SIP/bob-.*'
+                Channel: 'PJSIP/bob-.*'
         requirements:
             match:
                 BridgeUniqueid: '.*-.*-.*'
@@ -362,6 +362,6 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk: 'app_dial'
-        - asterisk: 'chan_sip'
+        - asterisk: 'chan_pjsip'
     tags:
         - bridge

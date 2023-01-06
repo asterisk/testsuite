@@ -1,4 +1,5 @@
 testinfo:
+    skip: 'requires further rework for pjsip, see ASTERISK-30292'
     summary: 'Test call parking timeouts for comebacktoorigin off'
     description: |
         'This test builds on the more generic parkcall test. With comebacktoorigin disabled,
@@ -22,21 +23,21 @@ test-modules:
 bridge-config:
   test-runs:
     -
-        originate_channel: 'SIP/test1@uut'
+        originate_channel: 'PJSIP/test1@uut'
         features:
             -
                 who: 'alice'
                 what: 'parkcall'
                 success: 'true'
     -
-        originate_channel: 'SIP/test2@uut'
+        originate_channel: 'PJSIP/test2@uut'
         features:
             -
                 who: 'alice'
                 what: 'parkcall'
                 success: 'true'
     -
-        originate_channel: 'SIP/test3@uut'
+        originate_channel: 'PJSIP/test3@uut'
         features:
             -
                 who: 'alice'
@@ -145,7 +146,7 @@ properties:
         - python : 'starpy'
         - asterisk: 'app_dial'
         - asterisk: 'app_userevent'
-        - asterisk: 'chan_sip'
+        - asterisk: 'chan_pjsip'
         - asterisk: 'func_channel'
     tags:
         - bridge

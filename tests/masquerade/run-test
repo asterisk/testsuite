@@ -37,7 +37,7 @@ class MasqueradeTest(TestCase):
         self.expected_space = 701
         # Use IAX calls
         # self.use_sip_calls = False
-        # Use SIP calls
+        # Use PJSIP calls
         self.use_sip_calls = True
 
         if self.use_sip_calls:
@@ -98,7 +98,7 @@ class MasqueradeTest(TestCase):
         LOGGER.info("Fetching parked call at " + str(self.expected_space))
         tech_prefix = "IAX2/ast1/"
         if self.use_sip_calls:
-            tech_prefix = "SIP/ast1/"
+            tech_prefix = "PJSIP/ast1/"
         self.ami[1].originate(
             channel=tech_prefix + str(self.expected_space),
             context="getit", exten="retrieve", priority=1,

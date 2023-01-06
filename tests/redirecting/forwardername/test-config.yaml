@@ -55,6 +55,6 @@ properties:
         - asterisk: 'app_queue'
         - asterisk: 'app_originate'
         - asterisk: 'app_userevent'
-        - asterisk: 'chan_sip'
+        - asterisk: 'chan_pjsip'
     tags:
         - bridge

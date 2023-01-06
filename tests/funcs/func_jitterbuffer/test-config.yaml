@@ -17,4 +17,4 @@ properties:
         - python : 'starpy'
         - asterisk: 'app_talkdetect'
         - asterisk: 'func_jitterbuffer'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'

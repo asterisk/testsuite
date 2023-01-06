@@ -28,7 +28,7 @@ class DirectoryTest(TestCase):
       if ami.id == 0:
          print("sending a call from ast1 to ast2")
 
-         df = ami.originate("sip/ast2/1234", "senddtmf", "1234", 1)
+         df = ami.originate("pjsip/1234@ast2", "senddtmf", "1234", 1)
 
          def handle_failure(reason):
             print("error sending originate:")

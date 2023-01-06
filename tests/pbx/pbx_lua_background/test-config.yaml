@@ -8,7 +8,7 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk : 'pbx_lua'
-        - asterisk : 'chan_sip'
+        - asterisk : 'chan_pjsip'
     tags:
         - dialplan
         - dialplan_lua

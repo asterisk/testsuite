@@ -19,7 +19,7 @@ class AsteriskTest(TestCase):
         TestCase.__init__(self)
         self.create_asterisk()
         self.peer = '0004f2040001'
-        self.family = 'SIP'
+        self.family = 'PJSIP'
         self.key = 'Registry/0004f2040001'
         self.value = '172.16.0.100:5300:360:0004f2040001:sip:0004f2040001@172.16.0.100:5300'
         self.reload = False
@@ -33,14 +33,11 @@ class AsteriskTest(TestCase):
     def ami_dbGet(self, ami):
         def onResult(result):
             if result != self.value:
-		self.ami[0].logoff().addCallbacks(self.ami_logoff)
+                self.ami[0].logoff().addCallbacks(self.ami_logoff)
+
             if self.reload == False:
-                self.ast[0].cli_exec('module unload chan_sip')
-                self.ast[0].cli_exec('module load chan_sip')
                 self.reload = True
                 self.ami_dbGet(ami)
-            else:
-                self.sipShowPeers()
 
         self.ami[0].dbGet(self.family, self.key).addCallbacks(onResult)
 

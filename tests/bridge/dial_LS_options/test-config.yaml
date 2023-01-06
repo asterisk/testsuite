@@ -17,21 +17,21 @@ test-modules:
 bridge-config:
   test-runs:
     -
-        originate_channel: 'SIP/uut/no_warning'
+        originate_channel: 'PJSIP/no_warning@uut'
     -
-        originate_channel: 'SIP/uut/caller_warning'
+        originate_channel: 'PJSIP/caller_warning@uut'
     -
-        originate_channel: 'SIP/uut/callee_warning'
+        originate_channel: 'PJSIP/callee_warning@uut'
     -
-        originate_channel: 'SIP/uut/both_warning'
+        originate_channel: 'PJSIP/both_warning@uut'
     -
-        originate_channel: 'SIP/uut/no_warning_s'
+        originate_channel: 'PJSIP/no_warning_s@uut'
 
 properties:
     dependencies:
         - python : 'twisted'
         - python : 'starpy'
         - asterisk: 'app_dial'
-        - asterisk: 'chan_sip'
+        - asterisk: 'chan_pjsip'
     tags:
         - bridge
