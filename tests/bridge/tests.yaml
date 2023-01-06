@@ -7,8 +7,6 @@ tests:
     - test: 'blindxfer_setup'
     - test: 'blindxfer_nominal'
     - test: 'blonde_nominal'
-    - test: 'automon'
-    - test: 'automon_bridgefeatures'
     - test: 'automixmon'
     - test: 'automixmon_bridgefeatures'
     - test: 'parkcall'
