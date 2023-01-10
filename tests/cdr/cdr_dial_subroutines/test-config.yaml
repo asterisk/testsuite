@@ -111,7 +111,6 @@ properties:
         - asterisk : 'cdr_csv'
         - asterisk : 'app_dial'
         - asterisk : 'app_echo'
-        - asterisk : 'app_macro'
         - asterisk : 'app_playback'
         - asterisk : 'app_stack'
     tags:

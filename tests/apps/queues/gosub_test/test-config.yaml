@@ -3,8 +3,8 @@ testinfo:
     skip: 'Skip while failures are debugged'
     description: |
         'This test runs two calls through a queue. The queue is configured to run
-        a particular macro and gosub when a member answers. For the first call, we
-        ensure that the configured membermacro and membergosub are executed. In the
+        a particular gosub when a member answers. For the first call, we
+        ensure that the configured membergosub are executed. In the
         second call, we give overriding parameters to the Queue() application and
         ensure that those are run instead.'
 
@@ -12,6 +12,5 @@ properties:
     dependencies:
         - app: 'asttest'
     tags:
-        - macro
         - gosub
         - queues

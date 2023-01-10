@@ -21,11 +21,6 @@ function manager_setup(a)
 end
 
 function primary(event)
-	if event["Variable"] == "MACROVAR" then
-		if event["Value"] == "primarymacro" then
-			passmacro = true
-		end
-	end
 	if event["Variable"] == "GOSUBVAR" then
 		if event["Value"] == "primarygosub" then
 			passgosub = true
@@ -34,11 +29,6 @@ function primary(event)
 end
 
 function secondary(event)
-	if event["Variable"] == "MACROVAR" then
-		if event["Value"] == "secondarymacro" then
-			passmacro = true
-		end
-	end
 	if event["Variable"] == "GOSUBVAR" then
 		if event["Value"] == "secondarygosub" then
 			passgosub = true
@@ -47,7 +37,6 @@ function secondary(event)
 end
 
 function test_call(exten, man, handler)
-	passmacro = false
 	passgosub = false
 	local orig = ast.manager.action:new("Originate")
 	man:register_event("VarSet", handler)
@@ -66,8 +55,8 @@ function test_call(exten, man, handler)
 
 	--When the originate returns, we know that the member
 	--has answered the call, but we can't guarantee that
-	--the macro or gosub has actually run, so sleep for a
-	--sec for safety's sake
+	--the gosub has actually run, so sleep for a sec for
+	--safety's sake
 	posix.sleep(1)
 	res, err = man:pump_messages()
 	if not res then
@@ -76,10 +65,6 @@ function test_call(exten, man, handler)
 
 	man:process_events()
 	man:unregister_event("VarSet", handler)
-
-	if not passmacro then
-		fail("Did not get expected macro variable set")
-	end
 
 	if not passgosub then
 		fail("Did not get expected gosub variable set")

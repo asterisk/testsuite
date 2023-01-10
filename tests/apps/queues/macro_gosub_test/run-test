@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-set -e
-
-asttest -a /$AST_TEST_ROOT -s tests/queues/macro_gosub_test
