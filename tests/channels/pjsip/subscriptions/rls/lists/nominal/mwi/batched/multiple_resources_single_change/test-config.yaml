@@ -40,7 +40,7 @@ test-modules:
             typename: 'driver.TestDriver'
 
 test-case-config:
-    stop-after-scenarios: False
+    stop-after-scenarios: True
     test-iterations:
         -
             scenarios:
