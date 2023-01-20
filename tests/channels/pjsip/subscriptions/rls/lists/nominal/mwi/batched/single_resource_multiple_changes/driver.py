@@ -127,4 +127,5 @@ class TestDriver(object):
         self.state = TERMINATED
         # If we've made it here, then the test has passed!
         self.test_object.set_passed(True)
-        self.test_object.stop_reactor()
+        # Let the test timeout based on sipp or messages, don't stop it here in case
+        # there are any pending messages in the ether.
