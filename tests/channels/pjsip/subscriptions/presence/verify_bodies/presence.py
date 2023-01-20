@@ -417,4 +417,5 @@ class Validator(object):
         """
         LOGGER.error(message)
         self.test_object.set_passed(False)
-        self.test_object.stop_reactor()
+        # Let the test timeout based on sipp or messages, don't stop it here in case
+        # there are any pending messages in the ether.
