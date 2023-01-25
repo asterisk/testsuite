@@ -1,0 +1,73 @@
+testinfo:
+    summary: 'Test that app_directory can read from a specified conf file.'
+    description: |
+        Tests that directory app can read extension configuration from a
+        specified file, in this test 'directory.conf'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'Directory'
+  scenarios:
+    -
+      # Send DTMF for extension's name
+      channels:
+        -
+          channel-id: 'selectchan'
+          channel-name: 'LOCAL/select@directory'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'QueueSelect'
+                  Channel: 'Local/select@directory-.*'
+              actions:
+                # select user 'dog'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '364'
+                # choose to direct to selected user
+                -
+                  action-type: 'send-dtmf'
+                  delay: '4'
+                  dtmf: '1'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Send DTMF'
+
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'TestStatus'
+                  Status: 'SELECTED'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Success'
+
+properties:
+    tags:
+      - apps
+      - directory
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_directory'
+      - asterisk : 'app_playback'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_userevent'
+      - asterisk : 'app_verbose'
+      - asterisk : 'pbx_config'
+
