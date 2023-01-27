@@ -1,0 +1,72 @@
+testinfo:
+    summary: 'Test the skip calling directory option'
+    description: |
+        Tests that the directory 's' option sets the selected extension as
+        the channel variable 'DIRECTORY_EXTEN' instead of dialing it.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'apptest.AppTest'
+
+test-object-config:
+  app: 'Directory'
+  scenarios:
+     -
+      channels:
+        -
+          channel-id: 'selectchan'
+          channel-name: 'LOCAL/select@directory'
+          context: 'default'
+          exten: 'wait'
+          start-on-create: True
+          events:
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'DirectoryEnter'
+                  Channel: 'Local/select@directory-.*'
+              actions:
+                # select user 'dog'
+                -
+                  action-type: 'send-dtmf'
+                  delay: '1'
+                  dtmf: '364'
+                # choose to direct to selected user
+                -
+                  action-type: 'send-dtmf'
+                  delay: '4'
+                  dtmf: '1'
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Send DTMF'
+
+            -
+              type: 'headermatch'
+              conditions:
+                match:
+                  Event: 'UserEvent'
+                  UserEvent: 'ExtensionSelect'
+                  Status: '2020'
+              actions:
+                -
+                  action-type: 'set-expected-result'
+                  expected-result: 'Success'
+
+properties:
+    tags:
+      - apps
+      - directory
+    dependencies:
+      - buildoption: 'TEST_FRAMEWORK'
+      - python : 'twisted'
+      - python : 'starpy'
+      - asterisk : 'app_directory'
+      - asterisk : 'app_playback'
+      - asterisk : 'app_senddtmf'
+      - asterisk : 'app_userevent'
+      - asterisk : 'app_verbose'
+      - asterisk : 'pbx_config'
+

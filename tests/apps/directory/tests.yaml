@@ -5,3 +5,4 @@ tests:
     - test: 'directory_attendant_exit'
     - test: 'directory_result'
     - test: 'directory_file'
+    - test: 'directory_skip'
