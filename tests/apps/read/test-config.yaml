@@ -42,7 +42,7 @@ ami-config:
             requirements:
                 match:
                     Result: 'Pass'
-            count: 9
+            count: 11
         stop_test:
 
 properties:
