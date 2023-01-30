@@ -27,4 +27,5 @@ tests:
     - test: 'waitdigit'
     - dir: 'sendtext'
     - test: 'senddtmf'
+    - test: 'read'
 
