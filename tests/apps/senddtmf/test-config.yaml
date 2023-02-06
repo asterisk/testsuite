@@ -1,0 +1,64 @@
+testinfo:
+    summary: 'Ensure that Senddtmf no answer option works as expected'
+    description: |
+        'We expect that a call to senddtmf by default will not be
+         answered while calls to senddtmf with the 'a' = answer flag
+         should.'
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: noanswer-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: answer-originator
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: hangup-monitor
+            typename: 'pluggable_modules.HangupMonitor'
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    connect-ami: True
+
+noanswer-originator:
+    channel: 'Local/noanswer@default'
+    application: 'Echo'
+    trigger: 'ami_connect'
+
+answer-originator:
+    channel: 'Local/answer@default'
+    application: 'Echo'
+    trigger: 'ami_connect'
+
+hangup-monitor:
+    ids: '0'
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'SendDtmfNoAnswer'
+        requirements:
+            match:
+                Result: 'Pass'
+        count: 2
+
+properties:
+    tags:
+        - senddtmf
+        - apps
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'app_userevent'
+        - asterisk: 'app_originate'
+        - asterisk: 'app_read'
+        - asterisk: 'pbx_config'
