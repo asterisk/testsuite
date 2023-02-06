@@ -26,3 +26,5 @@ tests:
     - dir: 'statsd'
     - test: 'waitdigit'
     - dir: 'sendtext'
+    - test: 'senddtmf'
+
