@@ -30,3 +30,4 @@ tests:
     - test: 'read'
     - test: 'if'
     - test: 'signal'
+    - test: 'senddtmf'
