@@ -6,7 +6,7 @@ cffi==1.15.0
 charset-normalizer==2.0.12
 constantly==15.1.0
 construct==2.10.68
-cryptography==37.0.2
+cryptography==39.0.1
 Cython==0.29.28
 hyperlink==21.0.0
 idna==3.3
