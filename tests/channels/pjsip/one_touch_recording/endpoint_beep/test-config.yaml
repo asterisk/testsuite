@@ -1,0 +1,45 @@
+testinfo:
+    summary:     'Tests One Touch Recording beep touch variable.'
+    description: |
+        'Run two SIPp scenarios, one that dials the beep extension which sets
+        TOUCH_MIXMONITOR_BEEP to 5s before Dial and one that does not. Each
+        SIPp scenario enables one touch recording, we expect the beep extension
+        to trigger a periodic hook and the nobeep extension to not.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'beep.xml', '-i': '127.0.0.1', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'nobeep.xml', '-i': '127.0.0.1', '-p': '5062'} }
+
+ami-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    Channel: 'Local/waiter@waitstaff-*'
+                    state: 'PERIODIC_HOOK_ENABLED'
+            count: 1
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'chan_pjsip'
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
