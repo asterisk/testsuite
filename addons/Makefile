@@ -38,5 +38,6 @@ update:
 		git pull; \
 	else \
 		git clone https://github.com/asterisk/starpy.git; \
+		cd starpy; \
 		git checkout 1.1; \
 	fi
