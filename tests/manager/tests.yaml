@@ -14,7 +14,7 @@ tests:
     - test: 'exten_state_list'
     - test: 'presence_state_changed'
     - test: 'presence_state_list'
-    - test: 'mixmonitor'
+    - dir: 'mixmonitor'
     - test: 'manager_vars'
     - test: 'status'
     - test: 'status_all_vars'

@@ -1,0 +1,15 @@
+testinfo:
+    summary:     'Tests that the MixMonitor id channel variable'
+    description: |
+        'This test verifies that the MixMonitor id channel variable can be used to
+         stop and mute individually running MixMonitor instances.'
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_echo'
+        - asterisk : 'app_mixmonitor'
+        - asterisk : 'app_userevent'
+    tags:
+        - mixmonitor

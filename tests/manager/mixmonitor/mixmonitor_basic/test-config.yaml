@@ -49,7 +49,7 @@ ami-actions:
                 Action: 'MixMonitor'
                 Channel: '{channel}'
                 File: 'theRecording.wav'
-                Options: 'r'
+                Options: 'ri(monty)'
     -
         ami-events:
             conditions:
