@@ -1,0 +1,159 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2023, Sangoma Technologies.
+Michael Bradeen <mbradeen@sangoma.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import logging
+from twisted.internet import reactor
+from asterisk.test_case import TestCase
+
+LOGGER = logging.getLogger(__name__)
+
+class MixMonitorTest(TestCase):
+    def __init__(self):
+        super(MixMonitorTest, self).__init__()
+
+        self.passed = False
+        self.startCount = 0
+        self.passedStart = False
+        self.muteCount = 0
+        self.passedMute = False
+        self.passedUnMute = False
+        self.stopCount = 0
+        self.passedStop = False
+        self.mixmonid1 = ""
+        self.mixmonid2 = ""
+        self.create_asterisk()
+
+
+    def __checkPass(self):
+        self.passed = self.passedStart and self.passedMute and self.passedUnMute and self.passedStop
+
+        LOGGER.info("Checking Test Pass/Fail")
+        LOGGER.info("Passed Start: " + str(self.passedStart))
+        LOGGER.info("Passed Mute: " + str(self.passedMute))
+        LOGGER.info("Passed UnMute: " + str(self.passedUnMute))
+        LOGGER.info("Passed Stop: " + str(self.passedStop))
+        LOGGER.info("Passed All: " + str(self.passed))
+
+    def launch_test(self):
+        LOGGER.info("Placing call to local talking extension")
+        self.ami.originate(channel="Local/talk@default",
+                           context="default",
+                           exten="echo",
+                           priority="1")
+
+    def check_teststate(self, ami, event):
+
+        def switchState(teststate, channel):
+            message = {'Action': 'None', }
+            if teststate == "startone":
+                message = {'Action': 'MixMonitor', 'Channel': channel,
+                           'File': 'oneRecording.wav', 'Options': 'ri(idone)'}
+            elif teststate == "starttwo":
+                message = {'Action': 'MixMonitor', 'Channel': channel,
+                           'File': 'twoRecording.wav', 'Options': 'ri(idtwo)'}
+            elif teststate == "muteone":
+                message = {'Action': 'MixMonitorMute', 'Channel': channel,
+                           'Direction': 'both', 'State': '1', 'MixMonitorID': self.mixmonid1}
+            elif teststate == "mutetwo":
+                message = {'Action': 'MixMonitorMute', 'Channel': channel,
+                           'Direction': 'both', 'State': '1', 'MixMonitorID': self.mixmonid2}
+            elif teststate == "unmute":
+                message = {'Action': 'MixMonitorMute', 'Channel': channel,
+                           'Direction': 'both', 'State': '0'}
+            elif teststate == "stopone":
+                message = {'Action': 'StopMixMonitor', 'Channel': channel,
+                           'MixMonitorID': self.mixmonid1}
+            elif teststate == "stoptwo":
+                message = {'Action': 'StopMixMonitor', 'Channel': channel,
+                           'MixMonitorID': self.mixmonid2}
+            return message
+
+        LOGGER.info("Checking UserEvent")
+        self.ami.sendMessage(switchState(event.get("userevent").lower(), event.get("channel")))
+        return
+
+    def check_start_mixmonitor(self, ami, event):
+
+        self.startCount+=1
+        LOGGER.info("Checking MixMonitorStart " + str(self.startCount))
+        if self.startCount == 2 :
+            self.passedStart = True
+        return
+
+    def check_chanvar(self, ami, event):
+
+        def switchState(event):
+            VarName = event.get("variable").lower()
+            VarVal = event.get("value")
+            if VarName == "idone":
+                LOGGER.info("Setting idone:" + VarVal)
+                self.mixmonid1 = VarVal
+            elif VarName == "idtwo":
+                LOGGER.info("Setting idtwo:" + VarVal)
+                self.mixmonid2 = VarVal
+
+        LOGGER.info("Checking VarSet")
+        switchState(event)
+        return
+
+    def check_mute_mixmonitor(self, ami, event):
+        self.muteCount+=1
+        LOGGER.info("Checking MixMonitorMute " + str(self.muteCount))
+        if self.muteCount == 2 :
+            self.passedMute = True
+        return
+
+    def check_testevent(self, ami, event):
+        LOGGER.info("Checking TestEvent")
+
+        # only look for source and count for a mute toggle
+        if event.get("state") == "AUDIOHOOK_GROUP_MUTE_TOGGLE":
+            if event.get("source") == "MixMonitor" and event.get("count") == "2" :
+                self.passedUnMute = True
+        return
+
+    def check_stop_mixmonitor(self, ami, event):
+        self.stopCount+=1
+        LOGGER.info("Checking MixMonitorStop " + str(self.stopCount))
+        if self.stopCount == 2 :
+            self.passedStop = True
+            self.__checkPass()
+            # stop reactor at final MixMonitorStop
+            reactor.stop()
+        return
+
+    def ami_connect(self, ami):
+        self.ami = ami
+        self.ami.registerEvent("UserEvent", self.check_teststate)
+        self.ami.registerEvent("TestEvent", self.check_testevent)
+        self.ami.registerEvent("MixMonitorStart", self.check_start_mixmonitor)
+        self.ami.registerEvent("MixMonitorMute", self.check_mute_mixmonitor)
+        self.ami.registerEvent("MixMonitorStop", self.check_stop_mixmonitor)
+        self.ami.registerEvent("VarSet", self.check_chanvar)
+
+        self.launch_test()
+
+    def run(self):
+        self.create_ami_factory()
+
+
+def main():
+    test = MixMonitorTest()
+    reactor.run()
+    if test.passed:
+        return 0
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
