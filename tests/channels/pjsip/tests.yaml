@@ -38,6 +38,7 @@ tests:
     - dir: 'connected_line'
     - dir: 'rtp_ptime'
     - dir: 'ignore_183_wo_sdp'
+    - dir: 'all_codecs_on_empty_reinvite'
     - test: 'accountcode'
     - test: 'acl_call'
     - test: 'allow_overlap'
@@ -70,4 +71,3 @@ tests:
     - test: 'non_negotiated_frame_SSRC_change'
     - test: 'content_disposition'
     - test: 'reinvite_after_bye'
-    - test: 'all_codecs_on_empty_reinvite'
