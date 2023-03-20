@@ -5,7 +5,8 @@ testinfo:
         send an re-INVITE without SDP. Asterisk should send an SDP offer in the 200 OK
         response containing all configured codecs on the endpoint if the parameter
         all_codecs_on_empty_reinvite is activated. An re-INVITE with SDP should be
-        answered normally.'
+        answered normally. In this scenario the usual early SDP offer in the INVITE is
+        used.'
 
 test-modules:
     test-object:
