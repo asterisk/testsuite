@@ -107,16 +107,17 @@ def get_unused_os_port(host='', port=0, socktype=SOCK_STREAM, family=AF_INET):
     res = 0
     s = socket(family, socktype)
     try:
-        if socktype == SOCK_STREAM:
-            s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        s.setsockopt(SOL_SOCKET, SO_REUSEPORT, 1)
 
         s.bind((host, port))
         res = s.getsockname()[1]
     except error as e:
         # errno = 98 is 'Port already in use'. However, if any error occurs
         # just fail since we probably don't want to bind to it anyway.
-        LOGGER.debug("{0}/{1} port '{2}' is in use".format(
-            socket_type(socktype), socket_family(family), port))
+        LOGGER.debug(e)
+        LOGGER.debug("{3}: {0}/{1} port '{2}' is in use".format(
+            socket_type(socktype), socket_family(family), port, host))
 
     s.close()
     return res
