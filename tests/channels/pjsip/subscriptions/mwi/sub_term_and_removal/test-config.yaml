@@ -1,0 +1,75 @@
+testinfo:
+    summary:     'Test MWI that subscriptions are cleaned upon termination.'
+    description: |
+        'This creates an MWI subscribtion, then lets the subscription terminate in the following 3 ways:
+         1 - unsubscribe with expires = 0
+         2 - allow subscription to timeout on the server side
+         3 - send a 5xx response to the initial notify
+
+         In all three cases we test to make sure that there are no active subscriptions
+         at the end.  If we receive any InboundSubscriptionDetail events, the test fails.'
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - sipp:
+            version: 'v3.0'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp_iterator.SIPpIteratorTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    connect-ami: 'True'
+    reactor-timeout: 30
+    type: 'single'
+    scenarios:
+        # Alice subscribes and unsubscribes
+        - { 'scenario': {'Name': 'mwi_subscription_sub_unsub.xml', 'port': '5061', 'target': '127.0.0.1'},
+            'action': {'Action': 'none'}}
+        # Make sure the susbscription is cleaned
+        - { 'scenario': {'Name': 'none'},
+            'action': {'Action': 'PJSIPShowSubscriptionsInbound'}}
+        # Alice subscribes then waits for the server to timeout the subscription
+        - { 'scenario': {'Name': 'mwi_subscription_server_timeout.xml', 'port': '5061', 'target': '127.0.0.1'},
+            'action': {'Action': 'none'}}
+        # Make sure the susbscription is cleaned
+        - { 'scenario': {'Name': 'none'},
+            'action': {'Action': 'PJSIPShowSubscriptionsInbound'}}
+        # Alice subscribes and then sends a 5xx in response to the NOTIFY
+        - { 'scenario': {'Name': 'mwi_subscription_term.xml', 'port': '5061', 'target': '127.0.0.1'},
+            'action': {'Action': 'none'}}
+        # Make sure the susbscription is cleaned
+        - { 'scenario': {'Name': 'none'},
+            'action': {'Action': 'PJSIPShowSubscriptionsInbound'}}
+        # indicate no more scenarios to run, send testComplete Event
+        - { 'scenario': {'Name': 'done'},
+            'action': {'Action': 'UserEvent', 'UserEvent': 'testComplete'}}
+
+ami-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'InboundSubscriptionDetail'
+            count: 0
+        stop_test:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'testComplete'
+            count: 1
+        stop_test:
+
