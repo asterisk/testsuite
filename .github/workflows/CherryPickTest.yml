@@ -40,7 +40,6 @@ jobs:
         with:
           repo:                    ${{github.repository}}
           pr_number:               ${{env.PR_NUMBER}}
-          cherry_pick_test_label:  ${{vars.CHERRY_PICK_TEST_LABEL}}
           cherry_pick_regex:       ${{vars.CHERRY_PICK_REGEX}}
           github_token:            ${{secrets.GITHUB_TOKEN}}
 
@@ -57,7 +56,8 @@ jobs:
       - name: Run Unit Tests for branch ${{matrix.branch}}
         uses: asterisk/asterisk-ci-actions/TestsuiteUnitComposite@main
         with:
-          asterisk_repo:     ${{github.repository}}
+          testsuite_repo:    ${{github.repository}}
+          asterisk_repo:     ${{vars.ASTERISK_REPO}}
           pr_number:         ${{env.PR_NUMBER}}
           base_branch:       ${{matrix.branch}}
           is_cherry_pick:    true
