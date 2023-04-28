@@ -9,3 +9,4 @@ tests:
     - test: 'no_accept_header'
     - test: 'sub_setup_teardown'
     - test: 'sub_setup_teardown_drop_options'
+    - test: 'sub_term_and_removal'
