@@ -44,7 +44,7 @@ jobs:
           cherry_pick_regex:       ${{vars.CHERRY_PICK_REGEX}}
           github_token:            ${{secrets.GITHUB_TOKEN}}
 
-  TestsuiteUnitTestMatrix:
+  UnitTestMatrix:
     needs: [ IdentifyBranches ]
     if: needs.IdentifyBranches.outputs.branch_count > 0
     continue-on-error: false
@@ -65,14 +65,14 @@ jobs:
           github_token:      ${{secrets.GITHUB_TOKEN}}
           unittest_command:  ${{vars.UNITTEST_COMMAND}}
 
-  TestsuiteUnitTests:
+  UnitTests:
     if: ${{ always() }}
     runs-on: ubuntu-latest
-    needs: [ TestsuiteUnitTestMatrix ] 
+    needs: [ UnitTestMatrix ]
     steps:
       - name: Check unit test matrix status
         env:
-          RESULT: ${{needs.TestsuiteUnitTestMatrix.result}}
+          RESULT: ${{needs.UnitTestMatrix.result}}
         run: |
           case $RESULT in
             success)
