@@ -1,0 +1,55 @@
+name: PROpenedOrUpdated
+run-name: "PR ${{github.event.number}} ${{github.event.action}} by ${{ github.actor }}"
+on:
+#  workflow_dispatch:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+#concurrency:
+#  group: ${{github.workflow}}-${{github.event.number}}
+#  cancel-in-progress: true
+
+env:
+  ASTERISK_REPO:    ${{vars.ASTERISK_REPO}}
+  TESTSUITE_REPO:     ${{github.repository}}
+  PR_NUMBER:         ${{github.event.number}}
+  BRANCH:            ${{github.event.pull_request.base.ref}}
+  GITHUB_TOKEN:      ${{secrets.GITHUB_TOKEN}}
+  MODULES_BLACKLIST: ${{vars.GATETEST_MODULES_BLACKLIST}} ${{vars.UNITTEST_MODULES_BLACKLIST}}
+
+jobs:
+  AsteriskUnitTests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Unit Tests for branch ${{matrix.branch}}
+        uses: asterisk/asterisk-ci-actions/TestsuiteUnitComposite@main
+        with:
+          asterisk_repo:     ${{env.ASTERISK_REPO}}
+          testsuite_repo:    ${{env.TESTSUITE_REPO}}
+          pr_number:         ${{env.PR_NUMBER}}
+          base_branch:       ${{env.BRANCH}}
+          modules_blacklist: ${{env.MODULES_BLACKLIST}}
+          github_token:      ${{secrets.GITHUB_TOKEN}}
+          unittest_command:  ${{vars.UNITTEST_COMMAND}}
+
+      - name: Get Token needed to add reviewers
+        id: get_workflow_token
+        uses: peter-murray/workflow-application-token-action@v1
+        with:
+          application_id: ${{secrets.ASTERISK_ORG_ACCESS_APP_ID}}
+          application_private_key: ${{secrets.ASTERISK_ORG_ACCESS_APP_PRIV_KEY}}
+          organization: asterisk
+
+      - name: Add Reviewers
+        if: ${{ success() }}
+        env:
+          GITHUB_TOKEN: ${{steps.get_workflow_token.outputs.token}}
+          GH_TOKEN: ${{steps.get_workflow_token.outputs.token}}
+          REVIEWERS: ${{vars.PR_REVIEWERS}}
+        run: |
+          echo "${{env.GITHUB_ACTION}} Add reviewers"
+          IFS=$'; \n'
+          for r in $REVIEWERS ; do
+            gh pr edit --repo ${TESTSUITE_REPO} ${PR_NUMBER} --add-reviewer $r
+          done
+
