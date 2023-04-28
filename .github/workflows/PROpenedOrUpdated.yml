@@ -10,15 +10,15 @@ on:
 #  cancel-in-progress: true
 
 env:
-  ASTERISK_REPO:    ${{vars.ASTERISK_REPO}}
-  TESTSUITE_REPO:     ${{github.repository}}
+  ASTERISK_REPO:     ${{vars.ASTERISK_REPO}}
+  TESTSUITE_REPO:    ${{github.repository}}
   PR_NUMBER:         ${{github.event.number}}
   BRANCH:            ${{github.event.pull_request.base.ref}}
   GITHUB_TOKEN:      ${{secrets.GITHUB_TOKEN}}
   MODULES_BLACKLIST: ${{vars.GATETEST_MODULES_BLACKLIST}} ${{vars.UNITTEST_MODULES_BLACKLIST}}
 
 jobs:
-  AsteriskUnitTests:
+  UnitTests:
     runs-on: ubuntu-latest
     steps:
       - name: Run Unit Tests for branch ${{matrix.branch}}
