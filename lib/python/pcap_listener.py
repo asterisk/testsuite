@@ -9,7 +9,7 @@ class PcapFile(abstract.FileDescriptor):
         abstract.FileDescriptor.__init__(self)
 
         p = PcapLive(interface, autosave=dumpfile, snaplen=snaplen,
-                     buffer_size=buffer_size)
+                     buffer_size=buffer_size, timeout=1000)
         p.activate()
         p.blocking = False
 
