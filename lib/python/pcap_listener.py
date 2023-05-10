@@ -10,6 +10,7 @@ class PcapFile(abstract.FileDescriptor):
 
         p = PcapLive(interface, autosave=dumpfile, snaplen=snaplen,
                      buffer_size=buffer_size)
+        p.immediate = True
         p.activate()
         p.blocking = False
 
@@ -17,7 +18,7 @@ class PcapFile(abstract.FileDescriptor):
             p.filter = xfilter
 
         self.pcap = p
-        self.fd = p.fileno
+        self.fd = p.selectable_fd
         self.protocol = protocol
         self.protocol.makeConnection(self)
         self.startReading()
