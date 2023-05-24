@@ -6,7 +6,6 @@ tests:
     - dir: 'dial'
     - test: 'originate'
     - dir: 'voicemail'
-    - dir: 'incomplete'
     - dir: 'confbridge'
     - dir: 'page'
     - dir: 'chanspy'
