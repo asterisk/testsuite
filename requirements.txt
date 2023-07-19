@@ -11,7 +11,7 @@ Cython==0.29.28
 hyperlink==21.0.0
 idna==3.3
 incremental==21.3.0
-lxml==4.8.0
+lxml==4.9.2
 netifaces>=0.10.4
 numpy>=1.19.5
 pycparser==2.21
