@@ -16,7 +16,7 @@ then
 	echo "Skipping creation of new environment, configuring"
 	do_pip_setup $VIRTUAL_ENV
 else
-	python3 -m venv .venv
+	python3 -m venv $@ .venv
 	source .venv/bin/activate
 	echo "Activated virtual environment:" $VIRTUAL_ENV
 	if [[ "$VIRTUAL_ENV" != "" ]]
