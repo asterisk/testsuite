@@ -52,7 +52,7 @@
       <ereg regexp="a=ptime:40+..*"
             search_in="body" check_it="true" assign_to="2"/>
       <test assign_to="2" variable="2" compare="equal" value=""/>
-      <ereg regexp="a=maxptime:150+..*"
+      <ereg regexp="a=maxptime:140+..*"
             search_in="body" check_it="true" assign_to="3"/>
       <test assign_to="3" variable="3" compare="equal" value=""/>
     </action>
