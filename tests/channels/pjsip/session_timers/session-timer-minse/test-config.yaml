@@ -1,0 +1,27 @@
+testinfo:
+    summary: 'Ensure Session Interval Too Small response'
+    description: |
+        'A SIPp scenario places a call into Asterisk w/ Session-Expires smaller than
+        configured Min-SE. Asterisk should respond w/ 422.'
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'session-timer-minse.xml'}}
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - app: 'sipp'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+    tags:
+        - pjsip
