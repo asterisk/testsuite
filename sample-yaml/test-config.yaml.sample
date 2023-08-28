@@ -1,7 +1,7 @@
 # This is a sample configuration that describes many of the available settings.
 # Also see the following URL's:
-# https://wiki.asterisk.org/wiki/display/AST/Test+Configuration
-# https://wiki.asterisk.org/wiki/display/AST/Pluggable+Component+Framework
+# https://docs.asterisk.org/Test-Suite-Documentation/Test-Development/Test-Suite-Configuration/
+# https://docs.asterisk.org/Test-Suite-Documentation/Test-Development/Pluggable-Component-Framework/
 
 # The testinfo section contains information that describes the purpose of an
 # individual test
