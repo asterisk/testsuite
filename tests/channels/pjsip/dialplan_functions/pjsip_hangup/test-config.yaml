@@ -1,0 +1,47 @@
+testinfo:
+    summary: 'Tests PJSIPHangup'
+    description:
+        'Checks PJSIPHangup with good parameters (437 and UNSUPPORTED_CERTIFICATE)
+        which should return 437, and with bad parameters (999 and SOMETHINGOROTHER),
+        which should return 603.  Also test PJSIPHangup after an Answer() which should
+        be ignored and return a 200, then a BYE.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario':'invite-expects-200-then-bye.xml', '-i':'127.0.0.1',
+                        '-p':'5061', '-s':'alice' },
+                  'ordered-args': [ '-bind_local', '-key', 'dest', 'expect_200']}
+
+                - { 'key-args': { 'scenario':'invite-expects-437.xml', '-i':'127.0.0.1',
+                        '-p':'5062', '-s':'alice' },
+                  'ordered-args': [ '-bind_local', '-key', 'dest', 'expect_437_1']}
+
+                - { 'key-args': { 'scenario':'invite-expects-437.xml', '-i':'127.0.0.1',
+                        '-p':'5063', '-s':'alice' },
+                  'ordered-args': [ '-bind_local', '-key', 'dest', 'expect_437_2']}
+
+                - { 'key-args': { 'scenario':'invite-expects-603.xml', '-i':'127.0.0.1',
+                        '-p':'5064', '-s':'alice' },
+                  'ordered-args': [ '-bind_local', '-key', 'dest', 'expect_603_1']}
+
+                - { 'key-args': { 'scenario':'invite-expects-603.xml', '-i':'127.0.0.1',
+                        '-p':'5065', '-s':'alice' },
+                  'ordered-args': [ '-bind_local', '-key', 'dest', 'expect_603_2']}
+
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
