@@ -9,7 +9,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ASTERISK_REPO:     ${{vars.ASTERISK_REPO}}
   TESTSUITE_REPO:    ${{github.repository}}
   PR_NUMBER:         ${{github.event.number}}
   PR_COMMIT:         ${{github.event.pull_request.head.sha}}
@@ -41,6 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       UNITTEST_COMMAND: ${{ fromJSON(needs.PRSGetControlData.outputs.control_data).UNITTEST_COMMAND }}
+      ASTERISK_REPO: ${{ fromJSON(needs.PRSGetControlData.outputs.control_data).ASTERISK_REPO }}
     steps:
       - name: Run Unit Tests
         uses: asterisk/asterisk-ci-actions/TestsuiteUnitComposite@main
