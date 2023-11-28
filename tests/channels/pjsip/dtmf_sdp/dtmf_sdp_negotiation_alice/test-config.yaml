@@ -1,0 +1,105 @@
+testinfo:
+    summary: 'This test case verifies the use of 2833 digits with multiple bitrate codecs'
+    description: |
+        'This test case verifies the use of 2833 digits with multiple bitrate codecs in different combinations'
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'app_dial'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        typename: sipp.SIPpTestCase
+        config-section: sipp-config
+
+sipp-config:
+    connect-ami: True
+    reactor-timeout: 30
+    fail-on-any: True
+    stop-after-scenarios: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_ulaw_ulaw.xml', '-p': '5061', '-s': 'alicepriorityulaw'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_ulaw_ulaw.xml', '-p': '5061', '-s': 'alicepriorityopus'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_ulaw_ulaw.xml', '-p': '5061', '-s': 'aliceonlyulaw'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_opus_opus.xml', '-p': '5061', '-s': 'alicepriorityulaw'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_opus_opus.xml', '-p': '5061', '-s': 'alicepriorityopus'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_opus_opus.xml', '-p': '5061', '-s': 'aliceonlyopus'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_ulaw-opus_opus-ulaw.xml', '-p': '5061', '-s': 'alicepriorityopus'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_ulaw-opus_opus.xml', '-p': '5061', '-s': 'aliceonlyopus'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_ulaw-opus_ulaw-opus.xml', '-p': '5061', '-s': 'alicepriorityulaw'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_ulaw-opus_ulaw.xml', '-p': '5061', '-s': 'aliceonlyulaw'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_opus-ulaw_opus-ulaw.xml', '-p': '5061', '-s': 'alicepriorityopus'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_opus-ulaw_opus.xml', '-p': '5061', '-s': 'aliceonlyopus'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_opus-ulaw_ulaw-opus.xml', '-p': '5061', '-s': 'alicepriorityulaw'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_opus-ulaw_ulaw.xml', '-p': '5061', '-s': 'aliceonlyulaw'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_ulaw-amr16-opus_opus-ulaw.xml', '-p': '5061', '-s': 'alicepriorityopus'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_ulaw-amr16-opus_opus.xml', '-p': '5061', '-s': 'aliceonlyopus'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_ulaw-amr16-opus_ulaw-opus.xml', '-p': '5061', '-s': 'alicepriorityulaw'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_ulaw-amr16-opus_ulaw.xml', '-p': '5061', '-s': 'aliceonlyulaw'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_opus-amr16-ulaw_opus-ulaw.xml', '-p': '5061', '-s': 'alicepriorityopus'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_opus-amr16-ulaw_opus.xml', '-p': '5061', '-s': 'aliceonlyopus'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_opus-amr16-ulaw_ulaw-opus.xml', '-p': '5061', '-s': 'alicepriorityulaw'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_opus-amr16-ulaw_ulaw.xml', '-p': '5061', '-s': 'aliceonlyulaw'} }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

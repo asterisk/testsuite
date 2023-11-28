@@ -1,0 +1,6 @@
+tests:
+    - test: 'dtmf_sdp_negotiation_alice'
+    - test: 'dtmf_sdp_negotiation_alice_asym'
+    - test: 'dtmf_sdp_negotiation_bob'
+    - test: 'dtmf_sdp_recognition'
+    - dir:  'dtmf_sdp_generation'
