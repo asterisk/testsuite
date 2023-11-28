@@ -40,6 +40,7 @@ tests:
     - dir: 'ignore_183_wo_sdp'
     - dir: 'all_codecs_on_empty_reinvite'
     - dir: 'session_timers'
+    - dir: 'dtmf_sdp'
     - test: 'accountcode'
     - test: 'acl_call'
     - test: 'allow_overlap'
