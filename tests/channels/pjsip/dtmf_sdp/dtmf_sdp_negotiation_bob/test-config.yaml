@@ -1,0 +1,55 @@
+testinfo:
+    summary: 'This test case verifies the DTMF INFO FALLBACK i.e fallback tO INFO instead of INBAND'
+    description: |
+        'This test case verifies the DTMF INFO FALLBACK i.e fallback tO INFO instead of INBAND'
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'app_dial'
+        - custom : 'rawsocket'
+    tags:
+        - pjsip
+        - refleaks
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp_iterator.SIPpIteratorTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    connect-ami: 'True'
+    reactor-timeout: 30
+    type: 'single'
+    scenarios:
+        # Asterisk offers ulaw and Alaw with telephone-event, Bob answers.
+        - { 'scenario': {'Name': 'bob_wants_ulaw_only.xml', 'port': '5067', 'target': '127.0.0.1', 'ordered-args': {'-s','bobonlyulaw'}},
+            'action': {'Action': 'Originate', 'Channel': 'PJSIP/bobonlyulaw', 'Exten':'555', 'Priority':'1', 'context':'default', 'CallerID':'Asterisk Testsuite <900>'}}
+        # Asterisk offers opus with telephone-event, Bob answers.
+        - { 'scenario': {'Name': 'bob_wants_opus_only.xml', 'port': '5068', 'target': '127.0.0.1', 'ordered-args': {'-s','bobonlyopus'}},
+            'action': {'Action': 'Originate', 'Channel': 'PJSIP/bobonlyopus', 'Exten':'555', 'Priority':'1', 'context':'default', 'CallerID':'Asterisk Testsuite <900>'}}
+        # Asterisk offers multiple codecs, opus prioritized with ulaw and Alaw as options.
+        - { 'scenario': {'Name': 'bob_wants_opus.xml', 'port': '5066', 'target': '127.0.0.1', 'ordered-args': {'-s','bobmultiopus'}},
+            'action': {'Action': 'Originate', 'Channel': 'PJSIP/bobmultiopus', 'Exten':'555', 'Priority':'1', 'context':'default', 'CallerID':'Asterisk Testsuite <900>'}}
+        # Asterisk offers multiple codecs, ulaw prioritized with opus and Alaw as options.
+        - { 'scenario': {'Name': 'bob_wants_ulaw.xml', 'port': '5065', 'target': '127.0.0.1', 'ordered-args': {'-s','bobmultiulaw'}},
+            'action': {'Action': 'Originate', 'Channel': 'PJSIP/bobmultiulaw', 'Exten':'555', 'Priority':'1', 'context':'default', 'CallerID':'Asterisk Testsuite <900>'}}
+        # indicate no more scenarios to run, send testComplete Event
+        - { 'scenario': {'Name': 'done'},
+            'action': {'Action': 'UserEvent', 'UserEvent': 'testComplete'}}
+
+ami-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'testComplete'
+            count: 1
+        stop_test:
