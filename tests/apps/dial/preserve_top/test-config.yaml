@@ -1,0 +1,108 @@
+---
+testinfo:
+    summary: |
+        'Test the Dial option "j" which preserver the initial topology of the caller.'
+    description: |
+        'Alice calls Bob whose 200 SDP answer contains an audio stream and a
+        video stream which is set to recvonly. Bob hangs up and then the Dial
+        application calls Carol with the "j" option. It is expected that Carol
+        is offered a sendrecv video stream because this is what Alice offered
+        initially. The test is then repeated without the "j" option and it is
+        confirmed that now Carol is offered a sendonly video stream because this
+        is what Alice\'s topology is after talking to Bob.'
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'res_pjsip'
+        - sipp:
+              version: 'v3.6.0'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-case-config
+        typename: 'sipp.SIPpTestCase'
+
+test-case-config:
+    memcheck-delay-stop: 7
+    # connect-ami: 'False'
+    fail-on-any: false
+    test-iterations:
+        # First iteration
+        -
+            scenarios:
+                # Alice calls Bob
+                - {'key-args':
+                       {'scenario': 'alice.xml', '-p': '5060',
+                        '-i': '127.0.0.2', '-s': 'bob', '-timeout': '20s',
+                        '-mi': '127.0.0.2'},
+                   'ordered-args':
+                       ['-timeout_error', '-key', 'custom_media_port', '6004']}
+                # Bob receives call from Alice
+                - {'key-args':
+                       {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3',
+                        '-s': 'alice', '-timeout': '20s', '-mi': '127.0.0.3'
+                       },
+                   'ordered-args':
+                       ['-timeout_error', '-key', 'custom_media_port', '6004']}
+                # Carol receives the second call from Alice
+                - {'key-args':
+                       {'scenario': 'carol.xml', '-p': '5060',
+                        '-i': '127.0.0.4', '-s': 'alice', '-timeout': '20s',
+                        '-mi': '127.0.0.4'
+                       },
+                   'ordered-args':
+                       ['-timeout_error', '-key', 'custom_media_port', '6004']}
+        -
+            scenarios:
+                # Alice calls no_pres extension
+                - {'key-args':
+                       {'scenario': 'alice.xml', '-p': '5060',
+                        '-i': '127.0.0.2', '-s': 'no_pres', '-timeout': '20s',
+                        '-mi': '127.0.0.2'},
+                   'ordered-args':
+                       ['-timeout_error', '-key', 'custom_media_port', '6004']}
+                # Bob receives call from Alice
+                - {'key-args':
+                       {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3',
+                        '-s': 'alice', '-timeout': '20s', '-mi': '127.0.0.3'
+                       },
+                   'ordered-args':
+                       ['-timeout_error', '-key', 'custom_media_port', '6004']}
+                # Carol2 receives the second call from Alice
+                - {'key-args':
+                       {'scenario': 'carol2.xml', '-p': '5060',
+                        '-i': '127.0.0.4', '-s': 'alice', '-timeout': '20s',
+                        '-mi': '127.0.0.4'
+                       },
+                   'ordered-args':
+                       ['-timeout_error', '-key', 'custom_media_port', '6004']}
+        -
+            scenarios:
+                # Alice calls part_pres extension
+                - {'key-args':
+                       {'scenario': 'alice.xml', '-p': '5060',
+                        '-i': '127.0.0.2', '-s': 'part_pres', '-timeout': '20s',
+                        '-mi': '127.0.0.2'},
+                   'ordered-args':
+                       ['-timeout_error', '-key', 'custom_media_port', '6004']}
+                # Bob receives call from Alice
+                - {'key-args':
+                       {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3',
+                        '-s': 'alice', '-timeout': '20s', '-mi': '127.0.0.3'
+                       },
+                   'ordered-args':
+                       ['-timeout_error', '-key', 'custom_media_port', '6004']}
+                # Carol2 receives the second call from Alice
+                - {'key-args':
+                       {'scenario': 'carol2.xml', '-p': '5060',
+                        '-i': '127.0.0.4', '-s': 'alice', '-timeout': '20s',
+                        '-mi': '127.0.0.4'
+                       },
+                   'ordered-args':
+                       ['-timeout_error', '-key', 'custom_media_port', '6004']}
