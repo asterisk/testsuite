@@ -1,0 +1,3 @@
+tests:
+    - test: 'if_comprehensive'
+    - test: 'if_endif'
