@@ -28,6 +28,6 @@ tests:
     - test: 'mf'
     - test: 'sf'
     - test: 'read'
-    - test: 'if'
+    - dir: 'if'
     - test: 'signal'
     - test: 'senddtmf'
