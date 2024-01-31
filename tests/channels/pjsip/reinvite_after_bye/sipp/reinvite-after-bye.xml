@@ -85,6 +85,9 @@
     ]]>
   </send>
 
+  <label id="waitbye"/>
+  <recv request="BYE" crlf="true" optional="true" next="respondbye"/>
+
   <recv response="200" rtd="true">
   </recv>
 
@@ -116,8 +119,10 @@
     ]]>
   </send>
 
-  <recv request="BYE" crlf="true" />
-
+  <!-- Allow for 2 optional BYE's at the end. Depending on timing
+       we will handle either handle both at the end or one in the
+       middle. -->
+  <recv request="BYE" crlf="true" timeout="1000" ontimeout="end"/>
   <send retrans="500">
     <![CDATA[
       SIP/2.0 200 OK
@@ -132,6 +137,42 @@
       Content-Length: 0
     ]]>
   </send>
+
+  <recv request="BYE" crlf="true" timeout="1000" ontimeout="end"/>
+  <send retrans="500" next="end">
+    <![CDATA[
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Allow: INVITE, ACK, MESSAGE, BYE
+      Content-Type: application/sdp
+      Content-Length: 0
+    ]]>
+  </send>
+
+  <label id="respondbye"/>
+  <send retrans="500" next="waitbye">
+    <![CDATA[
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Allow: INVITE, ACK, MESSAGE, BYE
+      Content-Type: application/sdp
+      Content-Length: 0
+    ]]>
+  </send>
+
+  <label id="end"/>
+
+  <pause/>
 
 </scenario>
 
