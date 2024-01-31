@@ -148,10 +148,12 @@
     ]]>
   </send>
 
-  <recv response="200" crlf="true">
-  </recv>
+  <recv response="200" crlf="true" optional="true" next="sendack"/>
 
-  <send>
+  <recv request="BYE" next="sendtwohundred"/>
+
+  <label id="sendack"/>
+  <send >
     <![CDATA[
 
       ACK sip:sipp@[remote_ip]:[remote_port] SIP/2.0
@@ -168,7 +170,22 @@
   </send>
 
   <recv request="BYE" timeout="5000"/>
+  <send next="end">
+    <![CDATA[
 
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      [last_Event:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+    ]]>
+  </send>
+
+  <label id="sendtwohundred"/>
   <send>
     <![CDATA[
 
@@ -183,5 +200,25 @@
       Content-Length: 0
     ]]>
   </send>
+
+  <recv response="200" crlf="true"/>
+
+  <send >
+    <![CDATA[
+
+      ACK sip:sipp@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port]
+      From: sip:sipp@[local_ip]:[local_port];tag=[pid]SIPpTag00[call_number]
+      To: sut <sip:sipp@[remote_ip]:[remote_port]>[$remote_tag]
+      Contact: sip:[service]@[local_ip]:[local_port]
+      Call-ID: [call_id]
+      CSeq: [cseq] ACK
+      Max-Forwards: 70
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <label id="end"/>
 </scenario>
 
