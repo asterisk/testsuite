@@ -59,8 +59,21 @@
 		]]>
 	</send>
 
-	<pause/>
+	<recv request="CANCEL" rtd="true" crlf="true" timeout="500" ontimeout="sendtwohundred"/>
 
+	<send next="end">
+		<![CDATA[
+			SIP/2.0 200 OK
+			[last_Via:]
+			[last_From:]
+			[last_To:]
+			[last_Call-ID:]
+			[last_CSeq:]
+			Content-Length: 0
+		]]>
+	</send>
+
+	<label id="sendtwohundred"/>
 	<send retrans="500">
 		<![CDATA[
 			SIP/2.0 200 OK
@@ -110,6 +123,7 @@
 		]]>
 	</send>
 
+	<label id="end"/>
 	<!-- Linger awhile in case we get some unexpected message. -->
 	<pause/>
 	<pause/>
