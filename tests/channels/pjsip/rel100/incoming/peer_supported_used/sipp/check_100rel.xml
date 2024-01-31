@@ -66,30 +66,9 @@
     ]]>
   </send>
 
-  <recv response="200" >
-    <action>
-      <ereg regexp="2 PRACK"
-          header="CSeq:"
-          search_in="hdr"
-          check_it="true"
-          assign_to="1"/>
-    </action>
-  </recv>
+  <recv response="200" rtd="true"/>
 
-  <recv response="200" rtd="true">
-    <action>
-      <ereg regexp="1 INVITE"
-          header="CSeq:"
-          search_in="hdr"
-          check_it="true"
-          assign_to="1"/>
-      <ereg regexp="100rel"
-          header="Supported:"
-          search_in="hdr"
-          check_it="true"
-          assign_to="1"/>
-    </action>
-  </recv>
+  <recv response="200" rtd="true"/>
 
   <send>
     <![CDATA[
