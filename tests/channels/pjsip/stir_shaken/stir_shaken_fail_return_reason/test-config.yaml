@@ -1,0 +1,61 @@
+testinfo:
+    summary:     'Tests failure with return_reason'
+    description: |
+        'Run Asterisk as a VS with the failure_action set to
+        continue_return_reason.  Use sipp to send an INVITE
+        without an identity header verify that Asterisk accepts
+        the call but sends back a Reason header.
+        '
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: sipp.SIPpTestCase
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: 'http-server'
+            typename: 'http_static_server.HTTPStaticServer'
+        -
+            config-section: 'hangup-monitor'
+            typename: 'pluggable_modules.HangupMonitor'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    asterisk-instances: 1
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'inv_expect_reason.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-mi': '127.0.0.4', '-s': 'sipp'},
+                    'ordered-args': ['-timeout_error', '-key', 'dest', '18005556666'] }
+
+hangup-monitor:
+    ids: [ '1', ]
+
+http-server:
+    port: 8087
+    root-directory: 'tests/channels/pjsip/stir_shaken/webroot'
+
+
+ami-config:
+    -
+        type: 'headermatch'
+        id: '0'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'TestResult'
+        requirements:
+            match:
+                result: 'missing_identity_hdr'
+        count: '1'
+
+properties:
+    dependencies:
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_stir_shaken'
+    tags:
+        - pjsip
+        - stir_shaken
