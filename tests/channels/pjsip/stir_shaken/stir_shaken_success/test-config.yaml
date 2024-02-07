@@ -1,20 +1,17 @@
 testinfo:
-    summary:     'Tests STIR_SHAKEN_VERIFY_PASSED'
+    summary:     'Tests success'
     description: |
         'Run two instances of Asterisk and set up an outgoing call
         via PJSIP. The outgoing side will have STIR/SHAKEN
         configured, so an identity header should be present. The
         incoming side will test this with the STIR_SHAKEN dialplan
-        function, ensuring that "Verification passed" is the result.'
+        function, ensuring that "success" is the result.'
 
 test-modules:
     test-object:
         config-section: test-object-config
-        typename: 'test_case.TestCaseModule'
+        typename: sipp.SIPpTestCase
     modules:
-        -
-            config-section: 'originator-config'
-            typename: 'pluggable_modules.Originator'
         -
             config-section: 'ami-config'
             typename: 'ami.AMIEventModule'
@@ -28,24 +25,19 @@ test-modules:
 test-object-config:
     memcheck-delay-stop: 7
     asterisk-instances: 2
-    connect-ami: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'invite.xml', '-p': '5060', '-i': '127.0.0.4', '-timeout': '20s', '-mi': '127.0.0.4', '-s': 'sipp'},
+                    'ordered-args': ['-timeout_error', '-key', 'dest', '18005556666'] }
 
 hangup-monitor:
     ids: [ '1', ]
 
 http-server:
-    port: 8088
-    root-directory: 'contrib/keys'
+    port: 8087
+    root-directory: 'tests/channels/pjsip/stir_shaken/webroot'
 
-originator-config:
-    trigger: 'ami_connect'
-    ignore-originate-failure: 'no'
-    id: '0'
-    channel: 'PJSIP/bob'
-    context: 'default'
-    exten: 'echo'
-    priority: '1'
-    async: 'True'
 
 ami-config:
     -
@@ -57,7 +49,7 @@ ami-config:
                 UserEvent: 'TestResult'
         requirements:
             match:
-                result: 'pass'
+                result: 'success'
         count: '1'
 
 properties:
