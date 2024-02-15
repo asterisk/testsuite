@@ -24,7 +24,7 @@ LOGGER = logging.getLogger(__name__)
 
 def is_blank_line(line):
     """Is this a blank line?"""
-    return re.match("\s*(?:;.*)?$", line) is not None
+    return re.match("\\s*(?:;.*)?$", line) is not None
 
 
 class Category(object):
