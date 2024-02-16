@@ -6,7 +6,6 @@ cffi==1.15.0
 charset-normalizer==2.0.12
 constantly==15.1.0
 construct==2.10.68
-cryptography==37.0.2
 Cython==0.29.30
 hyperlink==21.0.0
 idna==3.3
@@ -15,10 +14,12 @@ lxml==5.1.0
 netifaces>=0.10.4
 numpy>=1.19.5
 pycparser==2.21
+pyOpenSSL==24.0.0
 PyYAML==6.0.1
 PyXB-X==1.2.6.1
 rawsocket==0.2
 requests==2.27.1
+service_identity==24.1.0
 six==1.16.0
 Twisted==22.4.0
 txaio==22.2.1
