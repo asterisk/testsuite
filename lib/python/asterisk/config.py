@@ -40,10 +40,10 @@ class Category(object):
         self.name = name
         self.template = template
         self.varval_re = re.compile("""
-            \s*                                # Leading whitespace
-            (?P<name>[\w|,\.-]+)               # Option name
-            \s*=>?\s*                          # Separator, = or =>
-            (?P<value>[\w\s=_()/@|,'"\.<>:-]*) # Option value (can be zero-length)
+            \\s*                                # Leading whitespace
+            (?P<name>[\\w|,\\.-]+)               # Option name
+            \\s*=>?\\s*                          # Separator, = or =>
+            (?P<value>[\\w\\s=_()/@|,'"\\.<>:-]*) # Option value (can be zero-length)
             (?:;.*)?$                          # Optional comment before end of line
             """, re.VERBOSE)
 
@@ -71,10 +71,10 @@ class ConfigFile(object):
         """
         self.categories = []
         self.category_re = re.compile("""
-            \s*                        # Leading Whitespace
-            \[(?P<name>[\w,\.-]+)\]    # Category name in square brackets
-            (?:\((?P<template>[!])\))? # Optionally marked as a template
-            \s*(?:;.*)?$               # trailing whitespace or a comment
+            \\s*                        # Leading Whitespace
+            \\[(?P<name>[\\w,\\.-]+)\\]    # Category name in square brackets
+            (?:\\((?P<template>[!])\\))? # Optionally marked as a template
+            \\s*(?:;.*)?$               # trailing whitespace or a comment
             """, re.VERBOSE)
 
         if config_str is None:
