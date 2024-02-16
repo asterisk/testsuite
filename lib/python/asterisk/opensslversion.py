@@ -69,7 +69,7 @@ class OpenSSLVersion:
         """Parse the version string"""
         vv = 0
         if version_str is not None:
-            parts = re.split("(\d+)[.](\d+)[.](\d+)([a-z]+)?(?:-(.+))?", version_str)
+            parts = re.split("(\\d+)[.](\\d+)[.](\\d+)([a-z]+)?(?:-(.+))?", version_str)
             if parts[1]:
                 vv += int(parts[1]) << 28
             if parts[2]:
