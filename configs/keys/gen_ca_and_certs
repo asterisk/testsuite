@@ -50,7 +50,7 @@ create_ca () {
 create_cert () {
 	local base=${OUTPUT_DIR}/${OUTPUT_BASE}
 	echo "Creating certificate ${base}.key"
-	openssl genrsa -out ${base}.key 1024 > /dev/null
+	openssl genrsa -out ${base}.key 2048 > /dev/null
 	if [ $? -ne 0 ];
 	then
 		echo "Failed"
