@@ -2,6 +2,7 @@
 tests:
     - test: 'dial_announcements'
     - test: 'dial_answer'
+    - test: 'dial_progress'
     - test: 'dial_busy'
     - test: 'dial_congestion'
     - test: 'dial_hangup'
