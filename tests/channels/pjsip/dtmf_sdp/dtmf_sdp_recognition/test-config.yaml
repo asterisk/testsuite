@@ -1,0 +1,56 @@
+testinfo:
+    summary: 'This test case verifies the use of 2833 digits with multiple bitrate codecs'
+    description: |
+        'This test case verifies the use of 2833 digits with multiple bitrate codecs in different combinations'
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'app_dial'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        typename: sipp.SIPpTestCase
+        config-section: sipp-config
+    modules:
+        -
+            config-section: ami-events
+            typename: 'ami.AMIEventModule'
+
+sipp-config:
+    connect-ami: True
+    reactor-timeout: 90
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_ulaw_2013785496.xml', '-p': '5061', '-s': 'aliceulaw'} }
+                - { 'key-args': {'scenario': 'alice_ulaw_3125894607.xml', '-p': '5062', '-s': 'aliceulaw'} }
+                - { 'key-args': {'scenario': 'alice_opus_2013785496.xml', '-p': '5063', '-s': 'aliceopus'} }
+                - { 'key-args': {'scenario': 'alice_opus_3125894607.xml', '-p': '5064', '-s': 'aliceopus'} }
+
+ami-events:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'DigitDetectPassA'
+        count: '2'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'DigitDetectPassB'
+        count: '2'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'DigitDetectFail'
+        count: '0'

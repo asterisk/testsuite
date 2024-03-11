@@ -1,0 +1,135 @@
+testinfo:
+    summary: 'This test case verifies the use of 2833 digits with multiple bitrate codecs'
+    description: |
+        'This test case verifies the use of 2833 digits with multiple bitrate codecs in different combinations'
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'app_dial'
+        - buildoption: 'TEST_FRAMEWORK'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        typename: sipp.SIPpTestCase
+        config-section: sipp-config
+    modules:
+        -
+            config-section: ami-events
+            typename: 'ami.AMIEventModule'
+
+sipp-config:
+    connect-ami: True
+    reactor-timeout: 90
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_ulaw-amr16-opus_ulaw-opus.xml', '-p': '5061', '-s': 'alicepriorityulaw'} }
+
+ami-events:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '1'
+                    Payload: '101'
+                    rate: '8000'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '2'
+                    Payload: '101'
+                    rate: '8000'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '3'
+                    Payload: '101'
+                    rate: '8000'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '4'
+                    Payload: '101'
+                    rate: '8000'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '5'
+                    Payload: '101'
+                    rate: '8000'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '6'
+                    Payload: '101'
+                    rate: '8000'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '7'
+                    Payload: '101'
+                    rate: '8000'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '8'
+                    Payload: '101'
+                    rate: '8000'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '9'
+                    Payload: '101'
+                    rate: '8000'
+        count: 1
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '0'
+                    Payload: '101'
+                    rate: '8000'
+        count: 1
+
+
