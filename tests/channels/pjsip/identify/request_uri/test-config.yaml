@@ -1,0 +1,40 @@
+testinfo:
+    summary:     'Tests incoming calls identified by request URI'
+    description: |
+        This test covers sending calls to an Asterisk instance
+        identified by the request URI. If the request URI
+        matches, the call is accepted; if not, Asterisk responds
+        with a 401 (as we 401 any non-matching call for security
+        reasons).
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        # IPv4 & UDP
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'nominal.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 's'},
+                    'ordered-args': ['-key', 'ident_key', 'yep'] }
+                - { 'key-args': {'scenario': 'nominal.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 's'},
+                    'ordered-args': ['-key', 'ident_key', 'superlongtoregexpmatch'] }
+                - { 'key-args': {'scenario': 'off-nominal.xml', '-i': '127.0.0.1', '-p': '5063', '-s': 's'},
+                    'ordered-args': ['-key', 'ident_key', 'nope'] }
+                - { 'key-args': {'scenario': 'off-nominal.xml', '-i': '127.0.0.1', '-p': '5064', '-s': 's'},
+                    'ordered-args': ['-key', 'ident_key', ''] }
+
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'app_echo'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_endpoint_identifier_ip'
+    tags:
+        - pjsip
