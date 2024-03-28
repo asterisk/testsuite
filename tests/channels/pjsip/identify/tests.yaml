@@ -3,6 +3,7 @@ tests:
     - test: 'header'
     - test: 'header_or_ip'
     - test: 'request_uri'
+    - test: 'transport'
     - test: 'header_ordering_header_ip'
     - test: 'header_ordering_ip_header'
     - test: 'ordering'
