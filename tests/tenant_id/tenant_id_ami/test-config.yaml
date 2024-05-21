@@ -1,0 +1,47 @@
+info:
+    summary: 'Test tenantid presence in AMI Events'
+    description: |
+        This tests that tenantid is either present or not
+        in AMI events depending on whether it was set on
+        the channel.
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'ami.AMIEventModule'
+
+test-config:
+    memcheck-delay-stop: 7
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'echo.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice'} }
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'Newchannel'
+                Channel: 'PJSIP/alice-.{8}'
+        requirements:
+            match:
+                Tenantid: 'Test ID'
+        count: '1'
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_session'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'app_echo'
+    tags:
+        - pjsip
+        - manager
