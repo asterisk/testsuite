@@ -1,0 +1,39 @@
+testinfo:
+    summary: Tests that Tenant ID is present in Stasis events.
+    description: |
+        Put a channel in Stasis. If the event shows up with Tenant ID
+        present, end the test successfully.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -   config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+ari-config:
+    apps: testsuite
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: []
+                    channel:
+                        tenantid: "Test ID"
+            count: 1
+            callback:
+                module: tenant_id
+                method: on_stasis_start
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
