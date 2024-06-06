@@ -1,4 +1,7 @@
 testinfo:
+    skip: |
+      See https://github.com/asterisk/asterisk/security/advisories/GHSA-qqxj-v78h-hrf9
+      And the revert of https://github.com/asterisk/asterisk/pull/602
     summary:     'Tests incoming calls identified by header'
     description: |
         This test covers sending calls to an Asterisk instance
