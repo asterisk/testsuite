@@ -46,8 +46,10 @@
 		<ereg regexp="RTP/AVP 97" search_in="body" check_it="true" assign_to = "1" />
 		<ereg regexp="a=rtpmap:97 opus/48000/2" search_in="body" check_it="true" assign_to = "2" />
 		<ereg regexp="a=fmtp:97 maxplaybackrate=24000;sprop-maxcapturerate=24000;maxaveragebitrate=96000" search_in="body" check_it="true" assign_to = "3" />
-		<!-- No telephone-events should be in the response -->
-		<ereg regexp="telephone-event" search_in="body" check_it_inverse="true" assign_to = "4" />
+		<ereg regexp="a=rtpmap:101 telephone-event/8000" search_in="body" check_it="true" assign_to = "4" />
+		<ereg regexp="a=fmtp:101 0-16" search_in="body" check_it="true" assign_to = "5" />
+		<!-- Only 8K telephone-events should be in the response -->
+		<ereg regexp="telephone-event/48000" search_in="body" check_it_inverse="true" assign_to = "6" />
 	</action>
 </recv>
 
@@ -88,6 +90,6 @@
 
 <recv response="200" crlf="true"/>
 
-<Reference variables="1,2,3,4"/>
+<Reference variables="1,2,3,4,5,6"/>
 
 </scenario>
