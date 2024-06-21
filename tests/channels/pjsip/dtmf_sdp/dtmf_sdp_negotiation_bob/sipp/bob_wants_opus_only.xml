@@ -4,12 +4,12 @@
 <scenario name="Basic UAS responder">
   <recv request="INVITE" crlf="true">
 	<action>
-		<ereg regexp="RTP/AVP 107 101" search_in="body" check_it="true" assign_to = "1" />
+		<ereg regexp="RTP/AVP 107 101 102" search_in="body" check_it="true" assign_to = "1" />
 		<ereg regexp="a=rtpmap:107 opus/48000/2" search_in="body" check_it="true" assign_to = "2" />
 		<ereg regexp="a=rtpmap:101 telephone-event/48000" search_in="body" check_it="true" assign_to = "3" />
 		<ereg regexp="a=fmtp:101 0-16" search_in="body" check_it="true" assign_to = "4" />
-    <!-- Only 48K telephone-events should be in the response -->
-		<ereg regexp="telephone-event/8000" search_in="body" check_it_inverse="true" assign_to = "5" />
+		<ereg regexp="a=rtpmap:102 telephone-event/8000" search_in="body" check_it="true" assign_to = "5" />
+		<ereg regexp="a=fmtp:102 0-16" search_in="body" check_it="true" assign_to = "6" />
 	</action>
   </recv>
 
@@ -82,7 +82,7 @@
 
   <timewait milliseconds="500"/>
 
-  <Reference variables="1,2,3,4,5"/>
+  <Reference variables="1,2,3,4,5,6"/>
 
   <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
 
