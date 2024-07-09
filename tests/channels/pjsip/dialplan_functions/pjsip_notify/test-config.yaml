@@ -1,0 +1,39 @@
+testinfo:
+    summary: 'Test sending NOTIFY messages via dialplan'
+    description: |
+        'Test the following-
+        Send NOTIFY with dialplan set headers in-dialog
+        Send NOTIFY with pre-configured headers in dialog
+        Send NOTIFY with pre-configured headers to an arbitrary
+        uri'
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'res_pjsip'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    reactor-timeout: 30
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_1212.xml', '-p': '5161'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_2323.xml', '-p': '5161'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'notified.xml', '-p': '5260'} }
+                - { 'key-args': {'scenario': 'alice_3434.xml', '-p': '5161'} }
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice_4545.xml', '-p': '5161'} }
