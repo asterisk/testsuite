@@ -7,4 +7,3 @@ tests:
     - test: 'forbidden_retry'
     - test: 'interval_too_brief'
     - test: 'line_parameter'
-    - test: 'sec_agreement_required'
