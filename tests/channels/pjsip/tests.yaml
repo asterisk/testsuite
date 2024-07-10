@@ -13,6 +13,7 @@ tests:
     - dir: 'history_info'
     - dir: 'headers'
     - dir: 'identify'
+    - dir: 'mediasec'
     - dir: 'message'
     - dir: 'nat'
     - dir: 'one_touch_recording'

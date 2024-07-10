@@ -1,0 +1,69 @@
+testinfo:
+    summary: 'Check handling of security agreement mechanisms on INVITE'
+    description: |
+        'Asterisk attempts to use the security agreement mechanisms as defined
+        in RFC 3329. The server rejects the initial registration with a 401
+        Unauthorized. Asterisk should then attempt to register with the correct
+        Security-Verify headers which have been obtained from the server's
+        response.  Asterisk should then send an INVITE with Security-Verify
+        headers matching the Security-Server ones received in the 401. 
+
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'originator'
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: 'hangup-monitor'
+            typename: 'pluggable_modules.HangupMonitor'
+
+sipp-config:
+    test-iterations:
+        -
+            scenarios:
+# A single sipp scenario can't act as a UAS for both a REGISTER and
+# and INVITE so there needs to be two instances on two different
+# IP addresses.  The first acts as the registrar and the second
+# as the call UAS.
+                - { 'key-args': { 'scenario': 'uas-reg.xml', '-p': '5060',
+                    '-i': '127.0.0.2'} }
+                - { 'key-args': { 'scenario': 'uas-invite.xml', '-p': '5060',
+                    '-i': '127.0.0.3'} }
+
+hangup-monitor:
+    ids: [ '1', ]
+
+originator:
+    trigger: 'event'
+    event:
+        id: '0'
+        conditions:
+            match:
+                Event: 'Registry'
+                ChannelType: 'PJSIP'
+                Username: 'sip:alice@127.0.0.1'
+                Domain: 'sip:127.0.0.2:5060'
+                Status: 'Registered'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/alice'
+    context: 'default'
+    exten: 'success'
+    priority: '1'
+    async: 'True'
+
+properties:
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_outbound_authenticator_digest'
+        - asterisk: 'res_pjsip_outbound_registration'
+        - asterisk: 'res_pjsip_rfc3329'
+    tags:
+        - pjsip
