@@ -7,4 +7,5 @@ tests:
     - test: 'func_push'
     - test: 'func_srv'
     - test: 'func_talkdetect'
+    - test: 'func_tonedetect'
     - test: 'func_evalexten'
