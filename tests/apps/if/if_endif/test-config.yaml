@@ -24,9 +24,6 @@ test-object-config:
 
 caller-originator:
     channel: 'Local/s@default'
-    context: 'nothing'
-    exten: '0'
-    priority: '1'
     trigger: 'ami_connect'
 
 hangup-monitor:
