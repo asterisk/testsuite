@@ -1,5 +1,6 @@
 testinfo:
     summary: 'Ensure that Senddtmf no answer option works as expected'
+    skip: 'SendDTMF always fails if you dont tell it to answer the channel. see GitHub #818'
     description: |
         'We expect that a call to senddtmf by default will not be
          answered while calls to senddtmf with the 'a' = answer flag

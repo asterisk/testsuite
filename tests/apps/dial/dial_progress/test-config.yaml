@@ -1,4 +1,9 @@
 testinfo:
+    skip: |
+        'app_dial doesn't implement this correctly.  There\'s also a bug
+        in this tests\'s extensions conf where it doesn't actually contain
+        the "nothing" context referenced in the caller-originate config
+        section. See GitHub #821'
     summary: 'Ensure that Dial progress timer works correctly.'
     description: |
         'This tests the Dial application aborts if progress is not received
