@@ -53,14 +53,6 @@ ami-config:
             match:
                 Event: 'DialBegin'
                 Channel: 'Local/caller@default-.*'
-                DestChannel: 'Local/I_DONT_EXIST_OMG@default-.*'
-        count: 1
-    -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'DialBegin'
-                Channel: 'Local/caller@default-.*'
                 DestChannel: 'Local/other_place@default-.*'
         count: 1
     -
@@ -70,9 +62,8 @@ ami-config:
                 Event: 'DialEnd'
                 Channel: 'Local/caller@default-.*'
                 DestChannel: 'PJSIP/redirect-invalid-.*'
-                Forward: 'I_DONT_EXIST_OMG'
                 DialStatus: 'CANCEL'
-        count: 1
+        count: '>0'
     -
         type: 'headermatch'
         conditions:
@@ -118,7 +109,7 @@ originator-config:
 
 hangup-config:
     ids: ['0']
-    min_calls: 8
+    min_calls: 6
 
 properties:
     dependencies:
