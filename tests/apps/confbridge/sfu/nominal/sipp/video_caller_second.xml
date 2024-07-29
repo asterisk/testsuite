@@ -2,6 +2,7 @@
 <!DOCTYPE scenario SYSTEM "sipp.dtd">
 
 <scenario name="INVITE to ConfBridge with SDP in initial INVITE">
+  <pause milliseconds="2000"/>
   <send retrans="500">
     <![CDATA[
 
@@ -98,6 +99,8 @@
         rtd="true"
         crlf="true">
   </recv>
+
+  <pause milliseconds="1000"/>
 
   <send retrans="500">
     <![CDATA[
