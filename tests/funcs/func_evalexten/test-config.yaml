@@ -31,6 +31,7 @@ caller-originator:
 
 hangup-monitor:
     ids: '0'
+    min_calls: 24
 
 ami-config:
     -
