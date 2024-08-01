@@ -1,8 +1,7 @@
 ---
 testinfo:
     summary: |
-        'Test the Dial option "j" which preserver the initial topology of the caller.'
-    skip: 'The middle sipp scenario fails often.  See https://github.com/asterisk/testsuite/issues/60'
+        'Test the Dial option "j" which preserves the initial topology of the caller.'
     description: |
         'Alice calls Bob whose 200 SDP answer contains an audio stream and a
         video stream which is set to recvonly. Bob hangs up and then the Dial
