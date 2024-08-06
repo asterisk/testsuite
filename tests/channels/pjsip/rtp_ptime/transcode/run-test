@@ -28,7 +28,7 @@ SIPP_SCENARIOS = [
         'scenario' : 'uas_asterisk.xml',
         '-i' : '127.0.0.1',
         '-p' : '5700',
-        '-mp' : '6300',
+        '-min_rtp_port' : '6300',
         '-message_file' : sippB_logfile,
         '-error_file' : sippB_errfile,
         '-trace_msg' : '-trace_err',
