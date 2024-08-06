@@ -8,6 +8,7 @@ the GNU General Public License Version 2.
 '''
 
 import sys
+import os
 import logging
 
 sys.path.append("lib/python")
@@ -22,12 +23,16 @@ class ManagerConfigTest(TestCase):
         super(ManagerConfigTest, self).__init__(path, config)
         self.create_asterisk()
         self.config = config
+        self.testfile = config.get('testfile')
 
     def run(self):
         super(ManagerConfigTest, self).run()
         self.passed = True
 
         try:
+            # Create a temporary file for the "restricted" test
+            if self.testfile:
+                open(self.testfile, 'a').close()
             self.syncami = SyncAMI()
             for x in self.config.get('ami-config'):
                 self.run_test(x)
@@ -40,6 +45,8 @@ class ManagerConfigTest(TestCase):
             raise
         finally:
             self.stop_reactor()
+            if self.testfile:
+                os.remove(self.testfile)
 
     def run_test(self, test):
         message = test.get('message')
