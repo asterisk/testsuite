@@ -22,6 +22,7 @@ ast-config-options:
 
 object-config:
     reactor-timeout: 15
+    testfile: '/tmp/test.conf'
     ami-config:
         - ###  Create a new config file outside the asterisk config directory
             message:
