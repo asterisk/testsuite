@@ -1,14 +1,13 @@
 testinfo:
-    summary: 'This test case verifies the DTMF INFO FALLBACK i.e fallback tO INFO instead of INBAND'
+    summary: 'This test case verifies the egress negotiation of 2833 digits with multiple bitrate codecs'
     description: |
-        'This test case verifies the DTMF INFO FALLBACK i.e fallback tO INFO instead of INBAND'
+        'This test case verifies the correct negotiation of digits with multiple bitrate codecs on the egress leg'
 
 properties:
     dependencies:
         - app : 'sipp'
         - asterisk : 'res_pjsip'
         - asterisk : 'app_dial'
-        - custom : 'rawsocket'
     tags:
         - pjsip
         - refleaks
