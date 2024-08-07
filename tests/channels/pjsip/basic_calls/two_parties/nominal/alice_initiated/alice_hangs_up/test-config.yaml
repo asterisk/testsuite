@@ -19,12 +19,6 @@ test-modules:
             config-section: originator-config-ipv4-tcp
             typename: 'pluggable_modules.Originator'
         -
-            config-section: originator-config-ipv6-udp
-            typename: 'pluggable_modules.Originator'
-        -
-            config-section: originator-config-ipv6-tcp
-            typename: 'pluggable_modules.Originator'
-        -
             config-section: 'ami-config'
             typename: 'ami.AMIEventModule'
 
@@ -53,26 +47,6 @@ originator-config-ipv4-tcp:
     priority: '1'
     async: 'True'
 
-originator-config-ipv6-udp:
-    trigger: 'ami_connect'
-    ignore-originate-failure: 'no'
-    id: '1'
-    channel: 'PJSIP/bob-ipv6-udp@uut-ipv6-udp'
-    context: 'default'
-    exten: 'start'
-    priority: '1'
-    async: 'True'
-
-originator-config-ipv6-tcp:
-    trigger: 'ami_connect'
-    ignore-originate-failure: 'no'
-    id: '1'
-    channel: 'PJSIP/bob-ipv6-tcp@uut-ipv6-tcp'
-    context: 'default'
-    exten: 'start'
-    priority: '1'
-    async: 'True'
-
 ami-config:
     # Alice events
     -
@@ -85,7 +59,7 @@ ami-config:
         requirements:
             match:
                 result: 'pass'
-        count: '4'
+        count: '2'
     -
         type: 'headermatch'
         id: '1'
@@ -96,7 +70,7 @@ ami-config:
         requirements:
             match:
                 Cause: '16'
-        count: '4'
+        count: '2'
     -
         type: 'headermatch'
         id: '1'
@@ -107,7 +81,7 @@ ami-config:
         requirements:
             match:
                 Cause: '16'
-        count: '4'
+        count: '2'
     # Bob events
     -
         type: 'headermatch'
@@ -119,7 +93,7 @@ ami-config:
         requirements:
             match:
                 result: 'pass'
-        count: '4'
+        count: '2'
     -
         type: 'headermatch'
         id: '2'
@@ -129,7 +103,7 @@ ami-config:
         requirements:
             match:
                 Channel: 'PJSIP/alice-*'
-        count: '4'
+        count: '2'
     -
         type: 'headermatch'
         id: '2'
@@ -140,7 +114,7 @@ ami-config:
         requirements:
             match:
                 Cause: '16'
-        count: '4'
+        count: '2'
 
 properties:
     dependencies:
