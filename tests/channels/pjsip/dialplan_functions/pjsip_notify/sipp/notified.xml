@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="notified">
+
+  <recv request="NOTIFY">
+    <action>
+      <ereg regexp="Fun" check_it="true" search_in="hdr" header="X-Data" assign_to="state" />
+      <ereg regexp="Test" check_it="true" search_in="hdr" header="Event" assign_to="event" />
+    </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <Reference variables="event,state" />
+
+
+</scenario>
