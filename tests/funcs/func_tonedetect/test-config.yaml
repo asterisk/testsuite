@@ -1,0 +1,86 @@
+testinfo:
+    summary: Test TONE_DETECT function emitting ARI events
+    description: |
+        "Takes a Local channel and sets the TONE_DETECT function
+        on one half of the channel, and streaming audio through
+        on the other half.
+
+        When the test starts, both Local channel halves are placed
+        into a Stasis application. A subscription is made to the
+        ;1 channel, which is released into the dialplan.
+
+        The dialplan manages each iteration of the test; when
+        the ;1 channel has the appropriate TONE_DETECT settings
+        enabled on it, it enters into another Stasis application.
+        This Stasis application causes media to be played on the
+        ;2 channel.
+
+        The test consists of 2 iterations:
+         - An iteration that tests the base settings for TONE_DETECT.
+           1 event is expected.
+         - An iteration with TONE_DETECT on another frequency than played.
+           No events are expected."
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+
+test-object-config:
+    test-iterations:
+        -
+            channel: 'Local/stasis_app@default'
+            context: 'default'
+            exten: 'stasis_app'
+            priority: 'start'
+            nowait: True
+
+ari-config:
+    events:
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: ['subscribe']
+            count: 2
+            callback:
+                module: tone_detect
+                method: on_start
+        -   conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+                    args: ['playback']
+            count: 2
+            callback:
+                module: tone_detect
+                method: do_playback
+        -   conditions:
+                match:
+                    type: PlaybackFinished
+            callback:
+                module: tone_detect
+                method: check_playback
+        -   conditions:
+                match:
+                    type: ChannelToneDetected
+            count: 1
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : starpy
+        - python : twisted
+        - asterisk : app_stack
+        - asterisk : app_stasis
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_playbacks
+        - asterisk : res_stasis
+    tags:
+        - ARI
