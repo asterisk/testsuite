@@ -36,6 +36,9 @@ sipp-config:
         # Asterisk offers multiple codecs, opus prioritized with ulaw and Alaw as options.
         - { 'scenario': {'Name': 'bob_wants_opus.xml', 'port': '5066', 'target': '127.0.0.1', 'ordered-args': {'-s','bobmultiopus'}},
             'action': {'Action': 'Originate', 'Channel': 'PJSIP/bobmultiopus', 'Exten':'555', 'Priority':'1', 'context':'default', 'CallerID':'Asterisk Testsuite <900>'}}
+        # Asterisk offers multiple codecs, opus prioritized with ulaw and Alaw as options.
+        - { 'scenario': {'Name': 'bob_wants_opus_8kdtmf.xml', 'port': '5069', 'target': '127.0.0.1', 'ordered-args': {'-s','bobmultiopus2'}},
+            'action': {'Action': 'Originate', 'Channel': 'PJSIP/bobmultiopus2', 'Exten':'555', 'Priority':'1', 'context':'default', 'CallerID':'Asterisk Testsuite <900>'}}
         # Asterisk offers multiple codecs, ulaw prioritized with opus and Alaw as options.
         - { 'scenario': {'Name': 'bob_wants_ulaw.xml', 'port': '5065', 'target': '127.0.0.1', 'ordered-args': {'-s','bobmultiulaw'}},
             'action': {'Action': 'Originate', 'Channel': 'PJSIP/bobmultiulaw', 'Exten':'555', 'Priority':'1', 'context':'default', 'CallerID':'Asterisk Testsuite <900>'}}
