@@ -2,4 +2,6 @@ tests:
     - test: 'dtmf_sdp_8k_priority_match'
     - test: 'dtmf_sdp_8k_priority_diff'
     - test: 'dtmf_sdp_48k_priority_match'
+    - test: 'dtmf_sdp_48k_priority_match_8k_digits'
     - test: 'dtmf_sdp_48k_priority_diff'
+    - test: 'dtmf_sdp_48k_audio_8k_digits_bob'
