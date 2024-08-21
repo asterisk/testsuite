@@ -1,0 +1,151 @@
+testinfo:
+    summary: 'This test case verifies the use of 2833 digits with a bitrate mismatch on egress'
+    description: |
+        'This test case verifies the use of 2833 digits with a bitrate mismatch on egress where the audio
+        codec is opus but the requested dtmf format sample rate is 8K.y'
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'app_dial'
+    tags:
+        - pjsip
+        - refleaks
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp_iterator.SIPpIteratorTestCase'
+    modules:
+        -
+            config-section: ami-events
+            typename: 'ami.AMIEventModule'
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    connect-ami: 'True'
+    reactor-timeout: 30
+    type: 'single'
+    scenarios:
+        # Asterisk offers multiple codecs, opus prioritized with ulaw and Alaw as options.
+        - { 'scenario': {'Name': 'bob_wants_opus_8kdtmf.xml', 'port': '5069', 'target': '127.0.0.1', 'ordered-args': {'-s','bobmultiopus2'}},
+            'action': {'Action': 'Originate', 'Channel': 'PJSIP/bobmultiopus2', 'Exten':'555', 'Priority':'1', 'context':'default', 'CallerID':'Asterisk Testsuite <900>'}}
+        # indicate no more scenarios to run, send testComplete Event
+        - { 'scenario': {'Name': 'done'},
+            'action': {'Action': 'UserEvent', 'UserEvent': 'testComplete'}}
+
+ami-events:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '1'
+                    Payload: '102'
+                    rate: '8000'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '2'
+                    Payload: '102'
+                    rate: '8000'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '3'
+                    Payload: '102'
+                    rate: '8000'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '4'
+                    Payload: '102'
+                    rate: '8000'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '5'
+                    Payload: '102'
+                    rate: '8000'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '6'
+                    Payload: '102'
+                    rate: '8000'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '7'
+                    Payload: '102'
+                    rate: '8000'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '8'
+                    Payload: '102'
+                    rate: '8000'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '9'
+                    Payload: '102'
+                    rate: '8000'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                    Event: 'TestEvent'
+                    state: 'DTMF_BEGIN'
+                    Digit: '0'
+                    Payload: '102'
+                    rate: '8000'
+        count: '1'
+
+ami-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'testComplete'
+            count: 1
+        stop_test:
