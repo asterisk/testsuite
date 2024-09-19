@@ -1,0 +1,5 @@
+# These packages are required if running the testsuite with
+# the realtime_converter
+SQLAlchemy==2.0.30
+alembic==1.13.1
+psycopg2==2.9.9
