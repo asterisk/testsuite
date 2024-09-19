@@ -106,7 +106,7 @@ class Section(MultiOrderedDict):
         keys from this section's defaults and templates are not
         included in the returned value
         """
-        res = MultiOrderedDict.keys(self)
+        res = list(MultiOrderedDict.keys(self))
         if self_only:
             return res
 
@@ -119,7 +119,7 @@ class Section(MultiOrderedDict):
             for key in d.keys():
                 if key not in res:
                     res.append(key)
-        return list(res.keys())
+        return res
 
     def add_defaults(self, defaults):
         """

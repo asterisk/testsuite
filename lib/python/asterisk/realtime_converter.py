@@ -151,7 +151,7 @@ class SorceryRealtimeFile(object):
                                 "type {0}".format(obj_type))
                     continue
                 table = Table(self.sections[sorcery_section][obj_type], meta,
-                              autoload=True, autoload_with=engine)
+                              autoload_with=engine)
                 vals = {'id': title}
                 for key in section.keys():
                     key_name = test_object.ast[0].configuration_replace_string(key)
@@ -190,10 +190,9 @@ class SorceryRealtimeFile(object):
         conn: sqlalchemy Connection to database
         """
         for table_name in self.tables:
-            table = Table(table_name, meta, autoload=True,
-                          autoload_with=engine)
+            table = Table(table_name, meta, autoload_with=engine)
             conn.execute(table.delete())
-
+        conn.commit()
 
 class RealtimeConverter(object):
     """Pluggable module used to convert configuration files to database data.
@@ -302,9 +301,14 @@ password = {2}
 
     def write_db(self, test_object):
         """Tell converters to write database information"""
-        for realtime_file in REALTIME_FILE_REGISTRY:
-            realtime_file.write_db(self.config_dir, self.meta, self.engine,
-                                   self.conn, test_object)
+        try:
+            for realtime_file in REALTIME_FILE_REGISTRY:
+                realtime_file.write_db(self.config_dir, self.meta, self.engine,
+                                       self.conn, test_object)
+        except:
+            self.conn.rollback()
+            raise
+        self.conn.commit()
 
     def cleanup(self, result):
         """Cleanup information after test has completed.
