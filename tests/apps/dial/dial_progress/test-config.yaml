@@ -13,9 +13,6 @@ test-modules:
             config-section: caller-originator
             typename: 'pluggable_modules.Originator'
         -
-            config-section: hangup-monitor
-            typename: 'pluggable_modules.HangupMonitor'
-        -
             config-section: ami-config
             typename: 'pluggable_modules.EventActionModule'
 
@@ -25,12 +22,9 @@ test-object-config:
 caller-originator:
     channel: 'Local/s@default'
     context: 'noanswer'
-    exten: '0'
+    exten: 's'
     priority: '1'
     trigger: 'ami_connect'
-
-hangup-monitor:
-    ids: '0'
 
 ami-config:
     -
@@ -42,7 +36,14 @@ ami-config:
             requirements:
                 match:
                     Result: 'Pass'
-            count: 2
+            count: 3
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Hangup'
+                    Channel: 'Local/s@default-00000000;1'
+            count: 1
         stop_test:
 
 properties:
