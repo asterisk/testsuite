@@ -16,7 +16,12 @@ function do_pip_setup {
 	python3 -m pip install --upgrade pip
 	python3 -m pip install wheel setuptools build
 	python3 -m pip install -r ./requirements.txt
-	python3 -m pip install -r ./extras.txt
+	python3 -m pip install -r ./extras.txt || {
+		echo "**************************" >&2
+		echo "Some optional python requirements failed to install. The following tests may not run:" >&2
+		grep -lEr "python\s*:\s*[']?yappcap" tests >&2
+		echo "**************************" >&2
+	}
 	$REALTIME && python3 -m pip install -r ./requirements-realtime.txt
 	md5sum requirements.txt extras.txt requirements-realtime.txt > $1/checksums
 }
