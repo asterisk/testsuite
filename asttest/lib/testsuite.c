@@ -26,9 +26,36 @@
 #include "asttest/asttest.h"
 #include "asttest/testsuite.h"
 
+static int make_asterisk_path_absolute(struct testsuite *ts, struct asttest_opts *opts)
+{
+	char cwd[PATH_MAX];
+	int bytes;
+
+	/* make asterisk_path absolute */
+	if (opts->asterisk_path[0] == '/') {
+		/* path starts with '/' we will assume it is absolute */
+		bytes = snprintf(ts->asterisk_path, sizeof(ts->asterisk_path), "%s", opts->asterisk_path);
+	} else {
+		if (!getcwd(cwd, sizeof(cwd))) {
+			fprintf(stderr, "Error determining the current working directory\n");
+			return 1;
+		}
+
+		bytes = snprintf(ts->asterisk_path, sizeof(ts->asterisk_path), "%s/%s", cwd, opts->asterisk_path);
+	}
+
+	if (bytes >= sizeof(ts->asterisk_path)) {
+		fprintf(stderr, "Asterisk path is too long (needed space for %d bytes but only have room for %zu)\n",
+			bytes,
+			sizeof(ts->asterisk_path));
+		return 1;
+	}
+
+	return 0;
+}
+
 int ts_init(struct testsuite *ts, const char *path, struct asttest_opts *opts) {
 	char log_path[PATH_MAX];
-	char cwd[PATH_MAX];
 	
 	memset(ts, 0, sizeof(struct testsuite));
 	
@@ -42,17 +69,8 @@ int ts_init(struct testsuite *ts, const char *path, struct asttest_opts *opts) {
 		goto e_return;
 	}
 
-	/* make asterisk_path absolute */
-	if (opts->asterisk_path[0] == '/') {
-		/* path starts with '/' we will assume it is absolute */
-		snprintf(ts->asterisk_path, sizeof(ts->asterisk_path), "%s", opts->asterisk_path);
-	} else {
-		if (!getcwd(cwd, sizeof(cwd))) {
-			fprintf(stderr, "Error determining the current working directory\n");
-			goto e_close_log;
-		}
-
-		snprintf(ts->asterisk_path, sizeof(ts->asterisk_path), "%s/%s", cwd, opts->asterisk_path);
+	if (make_asterisk_path_absolute(ts, opts)) {
+		goto e_close_log;
 	}
 
 	return 0;
@@ -64,25 +82,14 @@ e_return:
 }
 
 int ts_init_single(struct testsuite *ts, struct asttest_opts *opts) {
-	char cwd[PATH_MAX];
-
 	memset(ts, 0, sizeof(struct testsuite));
 
 	ts->log = stdout;
 	ts->single_test_mode = 1;
 	ts->asterisk_version = opts->asterisk_version;
 
-	/* make asterisk_path absolute */
-	if (opts->asterisk_path[0] == '/') {
-		/* path starts with '/' we will assume it is absolute */
-		snprintf(ts->asterisk_path, sizeof(ts->asterisk_path), "%s", opts->asterisk_path);
-	} else {
-		if (!getcwd(cwd, sizeof(cwd))) {
-			printf("Error determining the current working directory\n");
-			goto e_return;
-		}
-
-		snprintf(ts->asterisk_path, sizeof(ts->asterisk_path), "%s/%s", cwd, opts->asterisk_path);
+	if (make_asterisk_path_absolute(ts, opts)) {
+		goto e_return;
 	}
 
 	return 0;
