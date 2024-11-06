@@ -18,7 +18,7 @@ class AsteriskBuildOptionsTests(unittest.TestCase):
 
     def test_1(self):
         """Test the defaults paths"""
-        build_options = AsteriskBuildOptions()
+        build_options = AsteriskBuildOptions("./lib/python/asterisk/self_test/buildopts.h")
         self.assertTrue(build_options)
 
 
