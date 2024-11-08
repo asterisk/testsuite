@@ -1,5 +1,6 @@
 tests:
     - test: 'stir_shaken_success'
+    - test: 'stir_shaken_success_unknown_tn'
     - test: 'stir_shaken_exp_ca'
     - test: 'stir_shaken_no_identity'
     - test: 'stir_shaken_tn_mismatch'
