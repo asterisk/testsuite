@@ -272,7 +272,7 @@
       Content-Type: application/dtmf-relay
       Content-Length: [len]
 
-      Signal=10
+      Signal=A
       Duration=150
     ]]>
   </send>
@@ -293,7 +293,7 @@
       Content-Type: application/dtmf-relay
       Content-Length: [len]
 
-      Signal=11
+      Signal=B
       Duration=150
     ]]>
   </send>
@@ -314,7 +314,7 @@
       Content-Type: application/dtmf-relay
       Content-Length: [len]
 
-      Signal=12
+      Signal=C
       Duration=150
     ]]>
   </send>
@@ -335,7 +335,7 @@
       Content-Type: application/dtmf-relay
       Content-Length: [len]
 
-      Signal=13
+      Signal=D
       Duration=150
     ]]>
   </send>
@@ -356,7 +356,7 @@
       Content-Type: application/dtmf-relay
       Content-Length: [len]
 
-      Signal=14
+      Signal=*
       Duration=150
     ]]>
   </send>
@@ -377,7 +377,7 @@
       Content-Type: application/dtmf-relay
       Content-Length: [len]
 
-      Signal=15
+      Signal=#
       Duration=150
     ]]>
   </send>
@@ -385,24 +385,22 @@
   <recv response="200" crlf="true">
   </recv>
 
-  <pause milliseconds="5000"/>
+  <recv request="BYE">
+  </recv>
 
-  <send retrans="500">
+  <send>
     <![CDATA[
-      BYE sip:test2@[remote_ip]:[remote_port] SIP/2.0
-      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: test2 <sip:test2@[local_ip]:[local_port]>;tag=[call_number]
-      To: dtmf <sip:dtmf@[remote_ip]:[remote_port]>[peer_tag_param]
-      Call-ID: [call_id]
-      CSeq: 18 BYE
-      Contact: sip:test2@[local_ip][local_port]
-      Max-Forwards: 70
-      Subject: INFO Test
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
       Content-Length: 0
+
     ]]>
   </send>
-
-  <recv response="200" crlf="true">
-  </recv>
 
 </scenario>

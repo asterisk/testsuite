@@ -1,7 +1,7 @@
 testinfo:
     summary: 'Test that asterisk correctly handles DTMF in SIP packets when using PJSIP.'
     description:
-        'Tests all DMTF characters (0-9 A-D # * !) with and without duration.
+        'Tests all DMTF characters (0-9 A-D * #) with and without duration.
         #Due to a bug (ASTERISK-23537), ignoring "!" and blank DTMF characters.'
 
 test-modules:
