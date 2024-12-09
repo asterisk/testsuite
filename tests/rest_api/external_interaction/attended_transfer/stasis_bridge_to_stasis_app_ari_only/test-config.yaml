@@ -1,0 +1,166 @@
+testinfo:
+    summary: |
+        "Verifies that appropriate ChannelTransfer, StasisStart,
+        and StasisEnd events are delivered when an ari-only transfer
+        occurs between a Stasis App and a Stasis Bridge."
+    description: |
+        "This test originates one call into Stasis():
+
+          Originated Channel -> Stasis(testsuite)
+
+        It then starts two SIPp scenarios that call into the dialplan:
+
+          SIPp #1 (referer.xml) -> Stasis(testsuite)
+          SIPp #2 (referee.xml) -> Stasis(testsuite,no_bridge)
+
+        The two SIPp scenarios work together via 3PCC mode to pass
+        SIPp #2's call information back to SIPp #1 once both calls are up:
+
+          SIPp #2 --3PCC(call information)-> SIPp #1
+
+        The test bridges the two channels in Stasis(testsuite):
+
+          Originated Channel -> Stasis(testsuite) -> Bridge -> Stasis(testsuite) -> SIPp #1
+
+        SIPp #1 then performs an attended transfer using a REFER with
+        SIPp #2's call information which results in a ChannelTransferEvent with
+        the right information.
+
+        Now that we have received the ChannelTransfer event we can delete the
+        channels and the test eneds."
+
+test-modules:
+    test-object:
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: pluggable-config
+            typename: 'pluggable_modules.EventActionModule'
+
+pluggable-config:
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: []
+                channel:
+                    name: 'Local/s@default-.*'
+            count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'bridges/test_bridge'
+            -
+                method: 'post'
+                uri: 'bridges/test_bridge/addChannel'
+                params:
+                    channel: '{channel.id}'
+        callback:
+            module: extension_bank
+            method: default_attended_transfer
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: ['test']
+            count: 1
+        ari-requests:
+            method: 'post'
+            uri: 'bridges/test_bridge/addChannel'
+            params:
+                channel: '{channel.id}'
+    -
+        ari-events:
+            match:
+                type: StasisStart
+                application: testsuite
+                args: ['no_bridge']
+            count: 1
+    -
+        ari-events:
+            match:
+                type: ChannelTransfer
+                refer_to:
+                  destination_channel:
+                    name: 'PJSIP/bob-.*'
+                    dialplan:
+                      app_data: 'testsuite,no_bridge'
+                      app_name: 'Stasis'
+                      context: 'default'
+                      exten: '1000'
+                  requested_destination:
+                    destination: '1000'
+                    protocol_id: 'REMOTE1-.*'
+                    additional_protocol_params:
+                      - parameter_name: 'from'
+                        parameter_value: '1'
+                      - parameter_name: 'to'
+                        parameter_value: '.*'
+                referred_by:
+                  bridge:
+                    id: 'test_bridge'
+                  connected_channel:
+                    name: 'Local/s.*'
+                  source_channel:
+                    name: 'PJSIP/bob-.*'
+                    dialplan:
+                      app_data: 'testsuite,test'
+            nomatch:
+                state: 'channel.*'
+            count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'channels/{referred_by.source_channel.id}/transfer_progress'
+                params:
+                  states: 'channel_progress'
+    -
+        ari-events:
+            match:
+                type: ChannelTransfer
+                refer_to:
+                  requested_destination:
+                    destination: '1000'
+                state: 'channel_progress'
+            count: 1
+        ari-requests:
+            -
+                method: 'post'
+                uri: 'channels/{referred_by.source_channel.id}/transfer_progress'
+                params:
+                  states: 'channel_answered'
+    -
+        ari-events:
+            match:
+                type: ChannelTransfer
+                refer_to:
+                  requested_destination:
+                    destination: '1000'
+                state: 'channel_answered'
+            count: 1
+        ari-requests:
+            -
+                method: 'delete'
+                uri: 'channels/{referred_by.connected_channel.id}'
+            -
+                method: 'delete'
+                uri: 'channels/{refer_to.destination_channel.id}'
+            -
+                method: 'delete'
+                uri: 'bridges/test_bridge'
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_ari_channels
+        - asterisk : res_ari_bridges
+        - asterisk : chan_pjsip
+    tags:
+        - ARI
+        - pjsip
+        - refleaks
