@@ -7,3 +7,4 @@ tests:
     - test: 'stir_shaken_sig_fail'
     - test: 'stir_shaken_acl_fail'
     - test: 'stir_shaken_fail_return_reason'
+    - test: 'stir_shaken_anon_callerid'
