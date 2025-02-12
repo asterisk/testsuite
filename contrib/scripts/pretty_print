@@ -53,7 +53,7 @@ for a in "$@" ; do
 	esac
 done
 
-tput longname 2&>/dev/null
+tput longname &>/dev/null
 noterm=$?
 
 if [ $noterm -ne 0 -o x"$TERM" = x -o "$TERM" = "unknown" ] ; then
