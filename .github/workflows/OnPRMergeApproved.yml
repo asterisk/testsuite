@@ -1,19 +1,14 @@
-name: MergePR
-run-name: "PR ${{ github.event.number }} MergeApproved"
+name: PRMerge
+run-name: "PR ${{ github.event.number }} Merge by ${{ github.actor }}"
 on:
   pull_request_target:
-    types: [labeled]
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.label.name }}-${{ github.event.number }}
-  cancel-in-progress: true
+    types: [ labeled ]
 
 jobs:
-  MergePR:
-    name: MergePR
+  PRMerge:
+    name: "run-merge"
     if: contains(fromJSON(vars.MERGE_APPROVED_LABELS), github.event.label.name)
-    uses: asterisk/asterisk-ci-actions/.github/workflows/TestsuiteMergePR.yml@main
-    secrets:
-      TOKEN:                   ${{ secrets.GITHUB_TOKEN }}
-      application_id:          ${{ secrets.ASTERISK_ORG_ACCESS_APP_ID }}
-      application_private_key: ${{ secrets.ASTERISK_ORG_ACCESS_APP_PRIV_KEY }}
+    concurrency:
+      group: merge-${{ github.base_ref }}-${{ github.ref_name }}
+      cancel-in-progress: true
+    uses: asterisk/asterisk-ci-actions/.github/workflows/TestsuitePRMerge.yml@main-pr-target
