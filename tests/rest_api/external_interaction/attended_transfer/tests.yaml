@@ -1,7 +1,7 @@
 tests:
     - test: 'stasis_bridge_to_non_stasis_app'
     - test: 'stasis_bridge_to_stasis_app'
+    - test: 'stasis_bridge_to_stasis_app_ari_only'
     - test: 'non_stasis_app_to_stasis_bridge'
     - test: 'non_stasis_bridge_to_stasis_bridge'
     - dir: 'stasis_bridge_to_stasis_bridge'
-
