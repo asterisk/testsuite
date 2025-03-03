@@ -1,5 +1,6 @@
 testinfo:
     summary:     'Test the presence and absence of a response from the Events manager action'
+    skip: 'Lua test that needs to be updated'
     description: |
         "This test ensure asterisk either responds or does not respond to
         various values of the EventMaks parameter of the Events manager
