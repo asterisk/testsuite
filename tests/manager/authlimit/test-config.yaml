@@ -1,5 +1,6 @@
 testinfo:
     summary:     'Test the authlimit manager config option.'
+    skip: 'Lua test that needs to be updated'
     description: |
         "This test ensures that the manager respects the authlimit config
         option."

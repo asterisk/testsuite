@@ -24,13 +24,34 @@ object-config:
     reactor-timeout: 15
     testfile: '/tmp/test.conf'
     ami-config:
-        - ###  Create a new config file outside the asterisk config directory
+        - ###  Create a config file outside the asterisk config directory
+            message:
+                Action: 'CreateConfig'
+                Filename: '/tmp/test.conf'
+            expected:
+                Response: 'Error'
+                Message: 'File requires escalated privileges'
+        - ###  Create a config file outside the asterisk config directory
+            message:
+                Action: 'CreateConfig'
+                Filename: '../test.conf'
+            expected:
+                Response: 'Error'
+                Message: 'File requires escalated privileges'
+        - ###  Create a config file outside the asterisk config directory
+            message:
+                Action: 'CreateConfig'
+                Filename: '/etc/asterisk/../test.conf'
+            expected:
+                Response: 'Error'
+                Message: 'File requires escalated privileges'
+        - ###  Retrieve a config file outside the asterisk config directory
             message:
                 Action: 'GetConfig'
                 Filename: '/tmp/test.conf'
             expected:
                 Response: 'Error'
-                Message: 'File requires escalated priveledges'
+                Message: 'File requires escalated privileges'
         - ###  Update a config file outside the asterisk config directory
             message:
                 Action: 'UpdateConfig'
@@ -41,7 +62,7 @@ object-config:
                 Cat-000000: 'Cat1'
             expected:
                 Response: 'Error'
-                Message: 'File requires escalated priveledges'
+                Message: 'File requires escalated privileges'
         - ###  Update from a config file outside the asterisk config directory
             message:
                 Action: 'UpdateConfig'
@@ -52,7 +73,7 @@ object-config:
                 Cat-000000: 'Cat1'
             expected:
                 Response: 'Error'
-                Message: 'File requires escalated priveledges'
+                Message: 'File requires escalated privileges'
         - ###  Update to a config file outside the asterisk config directory
             message:
                 Action: 'UpdateConfig'
@@ -63,6 +84,6 @@ object-config:
                 Cat-000000: 'Cat1'
             expected:
                 Response: 'Error'
-                Message: 'File requires escalated priveledges'
+                Message: 'File requires escalated privileges'
 
 
