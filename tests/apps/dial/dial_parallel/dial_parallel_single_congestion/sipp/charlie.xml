@@ -78,24 +78,7 @@
         crlf="true">
   </recv>
 
-  <recv request="BYE" timeout="2000" ontimeout="send_bye"/>
-
-  <send next="done">
-    <![CDATA[
-
-      SIP/2.0 200 OK
-      [last_Via:]
-      [last_From:]
-      [last_To:]
-      [last_Call-ID:]
-      [last_CSeq:]
-      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
-      Content-Length: 0
-
-    ]]>
-  </send>
-
-  <label id="send_bye"/>
+  <pause milliseconds="2000" />
 
   <send retrans="500">
     <![CDATA[
@@ -117,6 +100,9 @@
   <recv response="200">
   </recv>
 
-  <label id="done"/>
+  <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
+
+  <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
 
 </scenario>
+
