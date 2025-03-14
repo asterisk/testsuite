@@ -44,15 +44,6 @@ cdr-config-12:
         lines:
             -
                 accountcode: ''
-                destination: 'echo'
-                dcontext: 'default'
-                callerid: '"" <s>'
-                channel: 'Local/s@default-.{8};1'
-                lastapp: 'AppDial2'
-                disposition: 'ANSWERED'
-                amaflags: 'DOCUMENTATION'
-            -
-                accountcode: ''
                 destination: 's'
                 dcontext: 'default'
                 callerid: '"" <>'
