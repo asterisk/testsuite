@@ -1,0 +1,22 @@
+testinfo:
+    summary: Test REST over Websocket - Bad requests
+    description: |
+        This test simply runs a few bad "asterisk" resource scenarios to
+        ensure that requests and responses are working over the
+        websocket.
+
+test-object-config:
+  reactor-timeout: 10
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - asterisk : res_ari
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_asterisk
+        - asterisk : chan_pjsip
+    tags:
+        - ARI
