@@ -1,0 +1,4 @@
+tests:
+    - test: 'single_requests'
+    - test: 'parallel_requests'
+    - test: 'bad_requests'
