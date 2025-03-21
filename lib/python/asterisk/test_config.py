@@ -100,13 +100,14 @@ class Dependency(object):
     except:
         ast = None
 
-    def __init__(self, dep):
+    def __init__(self, dep, global_config=None):
         """Construct a new dependency
 
         Keyword arguments:
         dep A tuple containing the dependency type name and its subinformation.
         """
 
+        self.global_config = global_config
         self.name = ""
         self.version = ""
         self.met = False
@@ -178,7 +179,7 @@ class Dependency(object):
 
     def depend_remote(self):
         """Check to see if we run against a remote instance of Asterisk"""
-        test_config = TestConfig(os.getcwd())
+        test_config = self.global_config
         if not test_config.config:
             return False
         if test_config.config.get('asterisk-instances'):
@@ -330,9 +331,10 @@ class TestConfig(object):
             settings = self.config['global-settings']
             self.condition_definitions = settings.get('condition-definitions', [])
             self.test_configuration = settings.get('test-configuration')
-
             if self.test_configuration and self.test_configuration in self.config:
                 self.config = self.config[self.test_configuration]
+                if self.config is None:
+                    self.config = {}
 
                 if self.config is not None and 'exclude-tests' in self.config:
                     self.excluded_tests = self.config['exclude-tests']
@@ -380,7 +382,11 @@ class TestConfig(object):
     def _parse_config(self):
         """Parse the test-config YAML file."""
 
-        test_config = "%s/test-config.yaml" % self.test_name
+        if os.path.isdir(self.test_name):
+            test_config = "%s/test-config.yaml" % self.test_name
+        else:
+            test_config = self.test_name
+
         with open(test_config, "r") as config_file:
             self.config = yaml.load(config_file, Loader=MyLoader)
 
@@ -508,5 +514,5 @@ class TestConfig(object):
 
         key = freeze(dep)
         if key not in TestConfig.dependency_cache:
-            TestConfig.dependency_cache[key] = Dependency(dep)
+            TestConfig.dependency_cache[key] = Dependency(dep, self.global_test_config)
         return TestConfig.dependency_cache[key]

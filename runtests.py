@@ -102,6 +102,8 @@ class TestRun:
         self.passed = False
         self.did_run = True
         start_time = time.time()
+        if self.options.testsuite_config:
+            os.environ['TESTSUITE_CONFIG'] = self.options.testsuite_config
         os.environ['TESTSUITE_ACTIVE_TEST'] = self.test_name
         os.environ['PYTHONPATH'] = os.pathsep.join(new_PYTHONPATH)
         cmd = [
@@ -500,6 +502,8 @@ class TestSuite:
         self.total_skipped = 0
 
     def _parse_global_config(self):
+        if self.options.testsuite_config is not None:
+            return TestConfig(self.options.testsuite_config)
         return TestConfig(os.getcwd())
 
     def _parse_test_yaml(self, test_dir):
@@ -660,19 +664,34 @@ class TestSuite:
                 t.passed = True
             else:
                 # Establish Preconditions
-                print("Making sure Asterisk isn't running ...")
-                if os.system("if pidof asterisk >/dev/null; then "
-                             "killall -9 asterisk >/dev/null 2>&1; "
-                             "sleep 1; ! pidof asterisk >/dev/null; fi"):
-                    print("Could not kill asterisk.")
-                print("Making sure SIPp isn't running...")
-                if os.system("if pidof sipp >/dev/null; then "
-                             "killall -9 sipp >/dev/null 2>&1; "
-                             "sleep 1; ! pidof sipp >/dev/null; fi"):
-                    print("Could not kill sipp.")
-                # XXX TODO Hard coded path, gross.
-                os.system("rm -f /var/run/asterisk/asterisk.ctl")
-                os.system("rm -f /var/run/asterisk/asterisk.pid")
+                # If there are asterisk-instances defined in the
+                # global config, we assume that an existing Asterisk
+                # instance, which may be local or remote, is to be
+                # used for the tests. In this case, we don't want to
+                # stop Asterisk or SIPp, nor do we want to remove
+                # the asterisk.ctl and asterisk.pid files.
+                is_remote = False
+                if (self.global_config and self.global_config.config
+                    and 'asterisk-instances' in self.global_config.config):
+                    for instance in self.global_config.config['asterisk-instances']:
+                        if instance.get('host'):
+                            is_remote = True
+
+                if is_remote is False:
+                    print("Making sure Asterisk isn't running ...")
+                    if os.system("if pidof asterisk >/dev/null; then "
+                                 "killall -9 asterisk >/dev/null 2>&1; "
+                                 "sleep 1; ! pidof asterisk >/dev/null; fi"):
+                        print("Could not kill asterisk.")
+                    print("Making sure SIPp isn't running...")
+                    if os.system("if pidof sipp >/dev/null; then "
+                                 "killall -9 sipp >/dev/null 2>&1; "
+                                 "sleep 1; ! pidof sipp >/dev/null; fi"):
+                        print("Could not kill sipp.")
+                    # XXX TODO Hard coded path, gross.
+                    os.system("rm -f /var/run/asterisk/asterisk.ctl")
+                    os.system("rm -f /var/run/asterisk/asterisk.pid")
+
                 os.chdir(test_suite_dir)
 
                 # Run Test
@@ -903,6 +922,9 @@ def main(argv=None):
     parser.add_option("--keep-full-logs", action="store_true",
                       dest="keep_full_logs", default=False,
                       help="Keep full logs even if test passes.")
+    parser.add_option("--testsuite-config",
+                      dest="testsuite_config", default=None,
+                      help="Specify an alternate top-level testsuite test-config.yaml file.")
     (options, args) = parser.parse_args(argv)
 
     # Install a signal handler for USR1/TERM, and use it to bail out of running
