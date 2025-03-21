@@ -120,7 +120,10 @@ class TestCase(object):
         self.passed = None
         self.fail_tokens = []
         self.timeout_id = None
-        self.global_config = TestConfig(os.getcwd())
+        if os.environ.get('TESTSUITE_CONFIG'):
+            self.global_config = TestConfig(os.environ['TESTSUITE_CONFIG'])
+        else:
+            self.global_config = TestConfig(os.getcwd())
         self.test_config = TestConfig(self.test_name, self.global_config)
         self.condition_controller = None
         self.pcap = None
