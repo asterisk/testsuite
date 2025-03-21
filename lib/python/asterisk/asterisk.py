@@ -478,6 +478,9 @@ class Asterisk(object):
         def __execute_wait_fully_booted():
             """Send the CLI command waitfullybooted"""
 
+            if self.remote_config:
+                return
+
             # try to send the command until we timeout,
             # then assume asterisk won't start and error out
             timeout = 90 if self.valgrind_enabled else 45
