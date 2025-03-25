@@ -230,7 +230,7 @@ class BridgeErrorTest(object):
                        as the current baseline bridge, but with no name \
                        and a different type specified"
         self.__create_bridge(ari,
-                             'conflict',
+                             'internal_server_error',
                              description,
                              bridge_info.uid,
                              type=self.DEFAULT_TEST_TYPE)
@@ -240,7 +240,7 @@ class BridgeErrorTest(object):
                        and name as the current baseline bridge but a \
                        different type specified"
         self.__create_bridge(ari,
-                             'conflict',
+                             'internal_server_error',
                              description,
                              bridge_info.uid,
                              name=bridge_info.name,
@@ -251,7 +251,7 @@ class BridgeErrorTest(object):
                        as the current baseline bridge but with a \
                        different name and no type specified"
         self.__create_bridge(ari,
-                             'conflict',
+                             'internal_server_error',
                              description,
                              bridge_info.uid,
                              name=self.DEFAULT_TEST_NAME)
@@ -261,7 +261,7 @@ class BridgeErrorTest(object):
                        and type as the current baseline bridge but with a \
                        different name specified"
         self.__create_bridge(ari,
-                             'conflict',
+                             'internal_server_error',
                              description,
                              bridge_info.uid,
                              name=self.DEFAULT_TEST_NAME,
@@ -272,7 +272,7 @@ class BridgeErrorTest(object):
                        as the current baseline bridge but with a \
                        different name and a different type"
         self.__create_bridge(ari,
-                             'conflict',
+                             'internal_server_error',
                              description,
                              bridge_info.uid,
                              name=self.DEFAULT_TEST_NAME,
