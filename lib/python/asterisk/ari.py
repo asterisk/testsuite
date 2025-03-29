@@ -12,6 +12,7 @@ import logging
 import re
 import requests
 import traceback
+import uuid
 try:
     from urllib.parse import urlencode
 except:
@@ -419,6 +420,29 @@ class AriClientProtocol(WebSocketClientProtocol):
         msg = json.loads(msg)
         self.receiver.on_ws_event(msg)
 
+    def sendRequest(self, method, uri, **kwargs):
+        """Send a REST Request over Websocket.
+
+        :param method: Method.
+        :param path: Resource URI without query string.
+        :param kwargs: Additional request parameters
+        :returns: Request UUID
+        """
+        uuidstr = kwargs.pop('request_id', str(uuid.uuid4()))
+        req = {
+            'type': 'RESTRequest',
+            'request_id': uuidstr,
+            'method': method,
+            'uri': uri
+        }
+
+        for k,v in kwargs.items():
+            req[k] = v
+
+        msg = json.dumps(req)
+        LOGGER.info("Sending request message: %s", msg)
+        self.sendMessage(msg.encode('utf-8'))
+        return uuidstr
 
 class ARI(object):
     """Bare bones object for an ARI interface."""
