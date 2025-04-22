@@ -1,6 +1,6 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
-    - dir:  'websocket_requests'
+    - dir:  'websocket'
     - test: 'continue'
     - test: 'authentication'
     - test: 'CORS'
