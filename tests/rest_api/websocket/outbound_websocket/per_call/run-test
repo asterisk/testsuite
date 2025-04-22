@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+
+"""A test that creates a websocket server and waits for events
+
+Copyright (C) 2025, Sangoma Technologies Corporation
+George Joseph <gjoseph@sangoma.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+"""
+
+import sys
+import logging
+import json
+import os
+import time
+from twisted.internet import reactor
+
+sys.path.append("lib/python")
+
+from asterisk.test_case import TestCase
+from asterisk.ari import AriServerFactory
+
+LOGGER = logging.getLogger(__name__)
+
+class PerCallWebsocketTest(TestCase):
+
+    def __init__(self):
+        TestCase.__init__(self)
+        self.protocol = None
+        self.connection_count = 0
+        self.peer = ""
+        self.auth_header = ""
+        self.auth_failed = False
+        self.channel_id = ""
+
+        self.reactor_timeout = 10
+        if self.test_config.config and 'test-object-config' in self.test_config.config:
+            self.reactor_timeout = self.test_config.config['test-object-config'].get('reactor-timeout', 10)
+
+        self.factory = AriServerFactory(self, "ws://localhost:9000/ari",
+                                        ['ari'], "localhost", reactor)
+        def on_startup(ast):
+            LOGGER.info("Asterisk started")
+            # We want the stasis extension to answer first
+            self.ast[0].cli_exec("channel originate Local/stasis@default extension echo@default")
+
+        LOGGER.info("Registering startup observer")
+        self.register_start_observer(on_startup)
+        self.create_asterisk()
+
+    def run(self):
+        """Entry point for the twisted reactor"""
+        super(PerCallWebsocketTest, self).run()
+        LOGGER.info("Binding websocket server")
+        reactor.listenTCP(9000, self.factory, 10, "127.0.0.1")
+
+    def on_reactor_timeout(self):
+        LOGGER.info("on_reactor_timeout")
+        self.passed = False
+
+    def on_ws_connect(self, request):
+        self.connection_count +=1
+        LOGGER.info("WebSocket connection %d from %s attempted" % (self.connection_count, request.peer))
+        self.peer = request.peer
+        """
+        Normally authentication would be done by the web server
+        but trying to integrate that here would be too complicated.
+        Instead we simply check the raw value of the Authorization
+        header.
+        """
+        if 'authorization' in request.headers:
+            auth_header = request.headers['authorization']
+            # base64(myuser:mypass) = bXl1c2VyOm15cGFzcw==
+            if auth_header != "Basic bXl1c2VyOm15cGFzcw==":
+                LOGGER.error("Authentication failed")
+                self.auth_failed = True
+        return "ari"
+
+    def on_ws_open(self, protocol):
+        LOGGER.info("WebSocket connection %d from %s opened" % (self.connection_count, self.peer))
+        self.protocol = protocol
+
+    def on_ws_closed(self, protocol):
+        LOGGER.info("WebSocket connection %d from %s closed.  Stopping reactor" % (self.connection_count, self.peer))
+        if self.connection_count > 1 or self.auth_failed:
+            self.stop_reactor()
+
+    def on_ws_event(self, message):
+        if self.auth_failed:
+            self.passed = False
+            self.ast[0].cli_exec("ari shutdown websocket sessions")
+            return
+        msg_type = message.get('type')
+        LOGGER.info("Received message: %s" % json.dumps(message))
+
+        def closer():
+            self.protocol.sendClose()
+
+        if msg_type == "ApplicationRegistered":
+            if self.connection_count > 1:
+                self.protocol.sendRequest("DELETE", "channels/%s" % self.channel_id)
+        elif msg_type == "StasisStart":
+            self.channel_id = message['channel']['id']
+            self.protocol.sendRequest("POST", "channels/%s/answer" % self.channel_id)
+        elif msg_type == "ChannelStateChange" and message['channel']['state'] == "Up":
+            reactor.callLater(2, closer)
+        elif msg_type == "StasisEnd":
+            self.passed = True
+
+def main():
+    test = PerCallWebsocketTest()
+    reactor.run()
+
+    if not test.passed:
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
