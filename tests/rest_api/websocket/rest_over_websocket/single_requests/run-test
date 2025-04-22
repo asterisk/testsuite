@@ -51,8 +51,9 @@ class RESToverWebsocketTest(TestCase):
 
     def run(self):
         """Entry point for the twisted reactor"""
+        LOGGER.info("In test.run()")
         super(RESToverWebsocketTest, self).run()
-        reactor.run()
+        LOGGER.info("test.run() returning")
 
     def on_reactor_timeout(self):
         self.passed = False
@@ -87,6 +88,7 @@ class RESToverWebsocketTest(TestCase):
         LOGGER.info("WebSocket connection made: %s" % protocol)
         self.protocol = protocol
 
+        # Start the test by sending a handshake.
         self.expect['status_code'] = 200
         self.expect['state'] = self.protocol.sendRequest(
             "GET", "asterisk/info",
@@ -104,12 +106,6 @@ class RESToverWebsocketTest(TestCase):
 
         # If the state in the response doesn't match what's
         # expected, just bail now.
-        if state == "":
-            if self.expect['state'] == "missing-type":
-                state = self.expect['state']
-            if self.expect['state'] == "unparsable":
-                state = self.expect['state'] 
-        
         if state != self.expect['state']:
             LOGGER.error("State mismatch.  Expected %s, received %s"
                          % (self.expect['state'], state))
@@ -140,89 +136,77 @@ class RESToverWebsocketTest(TestCase):
                 self.expect['status_code'] = 409
                 self.expect['state'] = self.protocol.sendRequest(
                     "PUT", "asterisk/modules/chan_pjsip.so",
-                    request_id="upgrade-fail")
-            case "upgrade-fail":
-                self.expect['status_code'] = 400
-                self.expect['state'] = self.protocol.sendRequest(
-                    "GET", "events",
                     request_id="reload-fail")
             case "reload-fail":
-                self.expect['status_code'] = 400
-                self.expect['state'] = "unparsable"
-                msg = "something not parsable"
-                self.protocol.sendMessage(msg.encode('utf-8'))
-            case "unparsable":
-                self.expect['status_code'] = 400
-                self.expect['state'] = "missing-type"
-                req = {
-                    'tye': 'RESTRequest',
-                    'request_id': self.expect['state'],
-                }
-                msg = json.dumps(req)
-                self.protocol.sendMessage(msg.encode('utf-8'))
-            case "missing-type":
-                self.expect['status_code'] = 400
-                self.expect['state'] = "unknown-type"
-                req = {
-                    'type': 'RESquest',
-                    'request_id': self.expect['state'],
-                }
-                msg = json.dumps(req)
-                self.protocol.sendMessage(msg.encode('utf-8'))
-            case "unknown-type":
-                self.expect['status_code'] = 400
-                self.expect['state'] = "missing-method"
-                req = {
-                    'type': 'RESTRequest',
-                    'request_id': self.expect['state'],
-                }
-                msg = json.dumps(req)
-                self.protocol.sendMessage(msg.encode('utf-8'))
-            case "missing-method":
-                self.expect['status_code'] = 400
-                self.expect['state'] = "unknown-method"
-                req = {
-                    'type': 'RESTRequest',
-                    'request_id': self.expect['state'],
-                    'method': 'ABC'
-                }
-                msg = json.dumps(req)
-                self.protocol.sendMessage(msg.encode('utf-8'))
-            case "unknown-method":
-                self.expect['status_code'] = 400
-                self.expect['state'] = "missing-path"
-                req = {
-                    'type': 'RESTRequest',
-                    'request_id': self.expect['state'],
-                    'method': 'GET',
-                }
-                msg = json.dumps(req)
-                self.protocol.sendMessage(msg.encode('utf-8'))
-            case "missing-path":
-                self.expect['status_code'] = 400
-                self.expect['state'] = "empty-path"
-                req = {
-                    'type': 'RESTRequest',
-                    'request_id': self.expect['state'],
-                    'method': 'GET',
-                    'uri': ''
-                }
-                msg = json.dumps(req)
-                self.protocol.sendMessage(msg.encode('utf-8'))
-            case "empty-path":
-                self.expect['status_code'] = 400
+                # res_pjsip CAN be reloaded so 204 should be returned.
+                self.expect['status_code'] = 204
+                self.expect['state'] = self.protocol.sendRequest(
+                    "PUT", "asterisk/modules/res_pjsip.so",
+                    request_id="reload-success")
+            case "reload-success":
+                # Create a new log channel using query_strings.
+                self.expect['status_code'] = 204
                 self.expect['state'] = self.protocol.sendRequest(
                     "POST", "asterisk/logging/testlog",
-                    request_id="bad-content-type",
-                    content_type="application/something",
-                    message_body='{ "configuration": "verbose" }')
-            case "bad-content-type":
-                self.expect['status_code'] = 400
+                    request_id="create-log-channel",
+                    query_strings=[ { 'name': 'configuration', 'value': 'verbose' } ])
+            case "create-log-channel":
+                # Now let's get the list of log channels.
+                self.expect['status_code'] = 200
+                self.expect['state'] = self.protocol.sendRequest(
+                    "GET", "asterisk/logging",
+                    request_id="list-log-channels")
+            case "list-log-channels":
+                # We should see the log channel we just created.
+                msg_body = json.loads(response['message_body'])
+                found = False
+                for l in msg_body:
+                    if os.path.basename(l['channel']) == "testlog":
+                        if l['configuration'].strip() == "VERBOSE":
+                            found = True
+                        else:
+                            self.passed = False
+                            self.protocol.sendClose()
+                if not found:
+                    LOGGER.error("Logger channel config mismatch")
+                    self.passed = False
+                    self.protocol.sendClose()
+                    return
+                # So now lets delete it.
+                self.expect['status_code'] = 204
+                self.expect['state'] = self.protocol.sendRequest(
+                    "DELETE", "asterisk/logging/testlog",
+                    request_id="delete-log-channel")
+            case "delete-log-channel":
+                # Lets create it again but this time put the configuration
+                # in the message body as json.
+                self.expect['status_code'] = 204
                 self.expect['state'] = self.protocol.sendRequest(
                     "POST", "asterisk/logging/testlog",
-                    request_id="final",
+                    request_id="create-log-channel2",
                     content_type="application/json",
-                    message_body='"configuration": "verbose"')
+                    message_body='{ "configuration": "verbose" }')
+            case "create-log-channel2":
+                # So now lets delete it again.
+                self.expect['status_code'] = 204
+                self.expect['state'] = self.protocol.sendRequest(
+                    "DELETE", "asterisk/logging/testlog",
+                    request_id="delete-log-channel2")
+            case "delete-log-channel2":
+                # Lets create it again but this time put the configuration
+                # in the message body as form-url-encoded.
+                self.expect['status_code'] = 204
+                self.expect['state'] = self.protocol.sendRequest(
+                    "POST", "asterisk/logging/testlog",
+                    request_id="create-log-channel3",
+                    content_type="application/x-www-form-urlencoded",
+                    message_body='configuration=verbose')
+            case "create-log-channel3":
+                # So now lets delete it again.
+                self.expect['status_code'] = 204
+                self.expect['state'] = self.protocol.sendRequest(
+                    "DELETE", "asterisk/logging/testlog",
+                    request_id="final")
             case "final":
                 # We're done.
                 self.passed = True
@@ -241,7 +225,7 @@ def main():
     """
 
     test = RESToverWebsocketTest()
-    test.run()
+    reactor.run()
 
     if not test.passed:
         return 1

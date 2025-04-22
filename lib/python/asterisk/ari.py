@@ -26,10 +26,12 @@ from .test_suite_utils import all_match
 from twisted.internet import reactor
 try:
     from autobahn.websocket import WebSocketClientFactory, \
-        WebSocketClientProtocol, connectWS
+        WebSocketClientProtocol, connectWS, WebSocketServerFactory, \
+        WebSocketServerProtocol
 except:
     from autobahn.twisted.websocket import WebSocketClientFactory, \
-        WebSocketClientProtocol, connectWS
+        WebSocketClientProtocol, connectWS, WebSocketServerFactory, \
+        WebSocketServerProtocol
 
 LOGGER = logging.getLogger(__name__)
 
@@ -443,6 +445,99 @@ class AriClientProtocol(WebSocketClientProtocol):
         LOGGER.info("Sending request message: %s", msg)
         self.sendMessage(msg.encode('utf-8'))
         return uuidstr
+
+class AriServerFactory(WebSocketServerFactory):
+    """Twisted protocol factory for building ARI WebSocket clients."""
+
+    def __init__(self, receiver, uri, protocols, server_name, reactor):
+        """Constructor
+
+        :param receiver The object that will receive events from the protocol
+        :param uri: URI to be served.
+        :param protocols: List of protocols to accept.
+        :param reactor: The twisted reactor.
+        """
+        try:
+            WebSocketServerFactory.__init__(self, uri, protocols, server_name,
+                                            reactor=reactor)
+        except TypeError:
+            WebSocketServerFactory.__init__(self, uri, protocols=['ari'])
+        self.attempts = 0
+        self.start = None
+        self.receiver = receiver
+
+    def buildProtocol(self, addr):
+        """Make the protocol"""
+        return AriServerProtocol(self.receiver, self)
+
+class AriServerProtocol(WebSocketServerProtocol):
+    """Twisted protocol for handling a ARI WebSocket connection."""
+
+    def __init__(self, receiver, factory):
+        """Constructor.
+
+        :param receiver The event receiver
+        """
+        try:
+            super(AriServerProtocol, self).__init__()
+        except TypeError as te:
+            # Older versions of Autobahn use old style classes with no initializer.
+            # Newer versions must have their initializer called by derived
+            # implementations.
+            LOGGER.debug("AriServerProtocol: TypeError thrown in init: {0}".format(te))
+        LOGGER.debug("Made me a client protocol!")
+        self.receiver = receiver
+        self.factory = factory
+
+    def onConnect(self, request):
+        """Called back when connection is open."""
+        LOGGER.debug("New WebSocket Connected")
+        self.receiver.on_ws_connect(request)
+
+    def onOpen(self):
+        """Called back when connection is open."""
+        LOGGER.debug("WebSocket Open")
+        self.receiver.on_ws_open(self)
+
+    def onClose(self, wasClean, code, reason):
+        """Called back when connection is closed."""
+        LOGGER.debug("WebSocket closed(%r, %d, %s)", wasClean, code, reason)
+        self.receiver.on_ws_closed(self)
+
+    def onMessage(self, msg, binary):
+        """Called back when message is received.
+
+        :param msg: Received text message.
+        """
+        LOGGER.debug("rxed: %s", msg)
+        msg = json.loads(msg)
+        self.receiver.on_ws_event(msg)
+
+    def sendRequest(self, method, uri, **kwargs):
+        """Send a REST Request over Websocket.
+
+        :param method: Method.
+        :param path: Resource URI without query string.
+        :param kwargs: Additional request parameters
+        :returns: Request UUID
+        """
+        uuidstr = kwargs.pop('request_id', str(uuid.uuid4()))
+        req = {
+            'type': 'RESTRequest',
+            'request_id': uuidstr,
+            'method': method,
+            'uri': uri
+        }
+
+        for k,v in kwargs.items():
+            req[k] = v
+
+        msg = json.dumps(req)
+        LOGGER.info("Sending request message: %s", msg)
+        self.sendMessage(msg.encode('utf-8'))
+        return uuidstr
+
+
 
 class ARI(object):
     """Bare bones object for an ARI interface."""
