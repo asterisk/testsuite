@@ -1,0 +1,3 @@
+tests:
+    - dir: 'rest_over_websocket'
+    - dir: 'outbound_websocket'

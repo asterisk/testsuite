@@ -1,0 +1,4 @@
+tests:
+    - test: 'persistent'
+    - test: 'per_call'
+    - test: 'local_ari_user_read_only'

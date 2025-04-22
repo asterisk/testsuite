@@ -1,0 +1,34 @@
+testinfo:
+    summary: Test Persistent Outbound Websocket
+    description: |
+        Test Steps
+         * The test script starts a websocket server and waits for asterisk to connect.
+         * Asterisk connects and sends ApplicationRegistered.
+         * The test script verifies that the Authorization header is present and correct.
+         * The test script detects the first ApplicationRegistered and
+           closes the websocket to test reconnection.
+         * When asterisk detects the websocket close it reconnects and sends
+           another ApplicationRegistered event.
+         * The test script detects the first close which it ignores.
+         * The test script detects the second ApplicationRegistered and
+           issues the CLI 'ari shutdown websocket sessions' command to asterisk.
+         * Asterisk sends ApplicationUnregistered and closes the websocket.
+         * The test script detects ApplicationUnregistered and marks the
+           test as passed.
+         * The test script detects the second websocket close and stops the reactor.
+
+test-object-config:
+  reactor-timeout: 10
+
+properties:
+    dependencies:
+        - python : autobahn
+        - python : requests
+        - python : twisted
+        - asterisk : res_ari
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_asterisk
+        - asterisk : chan_pjsip
+    tags:
+        - ARI
