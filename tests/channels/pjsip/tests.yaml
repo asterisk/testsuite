@@ -42,6 +42,7 @@ tests:
     - dir: 'all_codecs_on_empty_reinvite'
     - dir: 'session_timers'
     - dir: 'dtmf_sdp'
+    - dir: 'oli'
     - test: 'accountcode'
     - test: 'acl_call'
     - test: 'allow_overlap'
