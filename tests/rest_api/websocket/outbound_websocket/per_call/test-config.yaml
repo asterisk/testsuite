@@ -1,0 +1,38 @@
+testinfo:
+    summary: Test Per-call Outbound Websocket
+    description: |
+        Test Steps
+         * The test script originates a call between the 'stasis' and 'echo'
+           extensions. This causes asterisk to open a websocket connection to the
+           test script and send ApplicationRegistered and StasisStart.
+         * The test script verifies that the Authorization header is present and correct.
+         * The test script detects the first ApplicationRegistered which it ignores.
+         * The test script detects StasisStart and answers the call using a
+           REST over Websocket request.
+         * Asterisk sends ChannelStateChange/Up.
+         * The test script detects ChannelStateChange/Up and schedules
+           a websocket close for 2 seconds in the future to test reconnection.
+         * The test script detects the first websocket close which it ignores.
+         * When asterisk detects the websocket close it reconnects and sends
+           another ApplicationRegistered event.
+         * The test script detects the second ApplicationRegistered and
+           hangs up the call using another REST over Websocket request.
+         * Asterisk sends StasisEnd then closes the websocket.
+         * The test script detects the StasisEnd and marks the test as passed.
+         * The test script detects the second websocket close and stops the reactor.
+
+test-object-config:
+  reactor-timeout: 10
+
+properties:
+    dependencies:
+        - python : autobahn
+        - python : requests
+        - python : twisted
+        - asterisk : res_ari
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_asterisk
+        - asterisk : chan_pjsip
+    tags:
+        - ARI
