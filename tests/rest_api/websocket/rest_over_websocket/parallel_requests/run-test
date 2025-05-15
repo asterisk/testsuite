@@ -51,7 +51,6 @@ class RESToverWebsocketTest(TestCase):
     def run(self):
         """Entry point for the twisted reactor"""
         super(RESToverWebsocketTest, self).run()
-        reactor.run()
 
     def on_reactor_timeout(self):
         self.passed = False
@@ -164,7 +163,7 @@ def main():
     """
 
     test = RESToverWebsocketTest()
-    test.run()
+    reactor.run()
 
     if not test.passed:
         return 1

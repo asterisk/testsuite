@@ -242,6 +242,13 @@ ari-config:
                                 }
                             -
                                 {
+                                  "name": "res_sorcery_config.so",
+                                  "description": "Sorcery Configuration File Object Wizard",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
                                   "name": "res_stasis.so",
                                   "description": "Stasis application support",
                                   "status": "Running",
@@ -279,6 +286,13 @@ ari-config:
                                 {
                                   "name": "res_stasis_snoop.so",
                                   "description": "Stasis application snoop support",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
+                                  "name": "res_websocket_client.so",
+                                  "description": "WebSocket Client Support",
                                   "status": "Running",
                                   "support_level": "core"
                                 }
@@ -324,11 +338,13 @@ properties:
         - asterisk: res_ari_recordings
         - asterisk: res_ari_sounds
         - asterisk: res_http_websocket
+        - asterisk: res_sorcery_config
         - asterisk: res_stasis
         - asterisk: res_stasis_answer
         - asterisk: res_stasis_device_state
         - asterisk: res_stasis_playback
         - asterisk: res_stasis_recording
         - asterisk: res_stasis_snoop
+        - asterisk: res_websocket_client
     tags:
         - ARI
