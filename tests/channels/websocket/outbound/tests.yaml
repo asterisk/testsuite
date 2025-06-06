@@ -1,0 +1,4 @@
+tests:
+    - test: 'basic-call'
+    - test: 'flow-control'
+    
