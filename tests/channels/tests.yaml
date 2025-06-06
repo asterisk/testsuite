@@ -2,4 +2,5 @@
 tests:
     - dir: 'iax2'
     - dir: 'local'
+    - dir: 'websocket'
     - dir: 'pjsip'

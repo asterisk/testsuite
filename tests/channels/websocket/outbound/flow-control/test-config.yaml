@@ -1,0 +1,23 @@
+testinfo:
+    summary: Test Media Websocket Flow Control
+    description: |
+        Send a large file and make sure we get XOFF and XOFF messages.
+        We also test sending REPORT_QUEUE_DRAINED and receiving the
+        QUEUE_DRAINED message.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object
+        typename: media_server.ChanWebSocketTest
+
+test-object:
+  reactor-timeout: 15
+
+properties:
+    dependencies:
+        - python : autobahn
+        - python : twisted
+        - asterisk : res_http_websocket
+        - asterisk : res_websocket_client
+        - asterisk : chan_websocket

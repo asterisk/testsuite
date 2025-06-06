@@ -1,0 +1,29 @@
+testinfo:
+    summary: Test Inbound Media Websocket
+    description: |
+        This test verifies the basic functionality of inbound media over
+        websocket connections. A call is established between the Echo()
+        dialplan app and chan_websocket which waits for an incoming
+        connection.  The media client gets the connection id from the
+        Dial event and opens a connection back to chan_websocket.  Once
+        connected, the media client answers the call, sends the
+        "test.ulaw" file and captures the echoed bytes.  When the transfer
+        is finished, the media client compares what was sent to what was
+        received and marks the test as passed if the bytes match.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object
+        typename: media_client.AriMediaClient
+
+test-object:
+  reactor-timeout: 15
+
+properties:
+    dependencies:
+        - python : autobahn
+        - python : twisted
+        - asterisk : res_http_websocket
+        - asterisk : res_websocket_client
+        - asterisk : chan_websocket
