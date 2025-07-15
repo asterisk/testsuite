@@ -8,6 +8,7 @@ the GNU General Public License Version 2.
 
 import os
 from sqlalchemy import create_engine, MetaData, Table
+from pathlib import Path
 
 from . import astconfigparser
 import logging
@@ -50,9 +51,11 @@ class ConfigFile(object):
     """
 
     def __init__(self, config_dir, filename):
-        self.file = os.path.join(config_dir, filename)
+        file_path = os.path.join(config_dir, filename)
+        self.file = Path(file_path)
+        self.file.parent.mkdir(parents=True, exist_ok=True)
         self.orig_file_content = None
-        if os.path.exists(self.file):
+        if self.file.exists():
             with open(self.file, 'r') as config:
                 self.orig_file_content = config.read()
 
@@ -144,7 +147,20 @@ class SorceryRealtimeFile(object):
         for title, sections in conf.sections().items():
             LOGGER.info("Inspecting objects with title {0}".format(title))
             for section in sections:
-                obj_type = section.get('type')[0]
+                try:
+                    obj_type = section.get('type')[0]
+                except KeyError:
+                    # type is not manditory for global and system sections in pjsip.conf
+                    if title == 'global' and self.filename == 'pjsip.conf':
+                        LOGGER.info("Assuming section {0} in pjsip.conf type is global".format(section))
+                        obj_type = 'global'
+                    elif title == 'system' and self.filename == 'pjsip.conf':
+                        LOGGER.info("Assuming section {0} in pjsip.conf type is system".format(section))
+                        obj_type = 'system'
+                    else:
+                        raise KeyError("No type found for section {0} in file {1}".format(
+                            section, self.filename))
+
                 sorcery_section = self.find_section_for_object(obj_type)
                 if not sorcery_section:
                     LOGGER.info("No corresponding section found for object "
