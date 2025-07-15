@@ -75,3 +75,4 @@ properties:
         - asterisk: 'chan_sip'
     tags:
         - bridge
+        - realtime-incompatible
