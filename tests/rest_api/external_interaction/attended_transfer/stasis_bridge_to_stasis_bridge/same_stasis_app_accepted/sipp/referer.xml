@@ -105,10 +105,39 @@
 
   <recv response="202" rtd="true" crlf="true" />
 
-  <!-- In a nominal attended transfer Asterisk should always
-       be sending two notifies (SIP frags of 100 and 200)
-       In this case however, we send BYE as soon as the
-       REFER is accepted-->
+ <!-- In a nominal attended transfer Asterisk should always
+       be sending two notifies (SIP frags of 100 and 200) -->
+  <recv request="NOTIFY" />
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To]
+      Call-ID: [call_id]
+      [last_CSeq:]
+      Contact: <sip:alice@[local_ip]:[local_port]>
+      Content-Length:0
+
+    ]]>
+  </send>
+
+  <recv request="NOTIFY" />
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To]
+      Call-ID: [call_id]
+      [last_CSeq:]
+      Contact: <sip:alice@[local_ip]:[local_port]>
+      Content-Length:0
+
+    ]]>
+  </send>
 
 
   <send retrans="500">
