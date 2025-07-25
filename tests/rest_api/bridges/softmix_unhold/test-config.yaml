@@ -123,17 +123,4 @@ event-actions:
                     Event: 'MusicOnHoldStop'
                     Uniqueid: 'alice'
             count: 1
-        ari-requests:
-            -
-                method: 'delete'
-                uri: 'channels/alice'
-            -
-                method: 'delete'
-                uri: 'channels/bob'
-            -
-                method: 'delete'
-                uri: 'channels/charlie'
-            -
-                method: 'delete'
-                uri: 'bridges/lebridge'
         stop_test:

@@ -103,28 +103,17 @@ ari-config:
                         name: 'PJSIP/bob-00000000'
                         state: Up
             count: 1
-        -   conditions:
-                match:
-                    type: ChannelDestroyed
-                    application: testsuite
-                    cause: 16
-                    cause_txt: 'Normal Clearing'
-                    channel:
-                        name: 'PJSIP/bob-00000000'
-                        state: Up
-            count: 1
 
 ari-test-stopper:
     -
         ari-events:
             match:
-                type: EndpointStateChange
+                type: ChannelDestroyed
                 application: testsuite
-                endpoint:
-                    technology: PJSIP
-                    resource: bob
-                    state: online
-                    channel_ids: []
+                cause: 16
+                cause_txt: 'Normal Clearing'
+                channel:
+                    name: 'PJSIP/bob-00000000'
         stop_test:
 
 
