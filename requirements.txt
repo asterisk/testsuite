@@ -26,4 +26,4 @@ txaio==22.2.1
 typing_extensions==4.12.2
 urllib3==1.26.9
 zope.interface==7.0.1
-https://github.com/asterisk/starpy/archive/refs/heads/1.1.zip
+starpy @ git+https://github.com/asterisk/starpy@1.1.1
