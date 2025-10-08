@@ -20,8 +20,8 @@ test-object-config:
     test-iterations:
         -
             scenarios:
-                - { 'key-args': { 'scenario': 'uas_asterisk.xml', '-i': '127.0.0.1', '-p': '5700'} }
-                - { 'key-args': { 'scenario': 'uac_g719_g711.xml', '-i': '127.0.0.1', '-p': '5061', '-s': '3200000000', '-d': '20000', '-mp': '6000'} }
+                - { 'key-args': { 'scenario': 'uas_asterisk.xml', '-i': '127.0.0.1', '-p': '5700', '-timeout': '30000'} }
+                - { 'key-args': { 'scenario': 'uac_g719_g711.xml', '-i': '127.0.0.1', '-p': '5061', '-s': '3200000000', '-d': '20000', '-mp': '6000', '-timeout': '30000'} }
 
 properties:
     dependencies:
