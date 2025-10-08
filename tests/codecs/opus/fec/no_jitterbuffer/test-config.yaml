@@ -21,10 +21,10 @@ test-object-config:
     test-iterations:
         -
             scenarios:
-                - { 'key-args': { 'scenario':'invite_recv.xml', '-p':'5062', '-mp':'16002' } }
+                - { 'key-args': { 'scenario':'invite_recv.xml', '-p':'5062', '-min_rtp_port':'16002' } }
                   # Specify the RTP port so the rtp analyzer knows where to
                   # listen for packets. The analyzer defaults to 6001.
-                - { 'key-args': { 'scenario':'invite.xml', '-p':'5061', '-mp':'16001' } }
+                - { 'key-args': { 'scenario':'invite.xml', '-p':'5061', '-min_rtp_port':'16001' } }
 
 rtp-analyzer-config:
     # Expected time difference for ulaw

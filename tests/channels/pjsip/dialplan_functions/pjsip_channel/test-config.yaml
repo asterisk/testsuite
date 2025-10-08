@@ -21,7 +21,7 @@ test-object-config:
         -
              scenarios:
                 - { 'key-args': { 'scenario': 'uac-no-hangup.xml', '-p': '5062', '-i': '127.0.0.1',
-                '-s': 'alice', '-rsa': '127.0.0.1:5061', '-s': 'alice', '-mp': '9050'} }
+                '-s': 'alice', '-rsa': '127.0.0.1:5061', '-s': 'alice', '-min_rtp_port': '9050'} }
 
 
 ami-config:

@@ -714,7 +714,7 @@ class SIPpScenario(object):
                 default_args[defarg] = ('%s/sipp/%s' % (
                     self.test_dir, default_args[defarg]))
 
-        if '-mp' not in default_args:
+        if '-min_rtp_port' not in default_args:
             # Current SIPp correctly chooses an available port for audio, but
             # unfortunately it then attempts to bind to the audio port + n for
             # things like rtcp and video without first checking if those other
@@ -724,8 +724,9 @@ class SIPpScenario(object):
             # ourselves, and make sure all associated ports are available.
             #
             # num = 4 = ports for audio rtp/rtcp and video rtp/rtcp
-            default_args['-mp'] = str(get_available_port(
-                default_args.get('-i'), num=4))
+            port = get_available_port(default_args.get('-i'), num=4)
+            default_args['-min_rtp_port'] = str(port)
+            default_args['-max_rtp_port'] = str(port + 3)
 
         for (key, val) in default_args.items():
             sipp_args.extend([key, val])
