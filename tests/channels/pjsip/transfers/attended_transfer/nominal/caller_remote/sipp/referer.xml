@@ -274,7 +274,14 @@
     ]]>
   </send>
 
-  <recv response="200"/>
+  <recv response="200" />
+
+  <!-- send an empty command to the referee signaling it to complete -->
+  <sendCmd>
+    <![CDATA[
+      Call-ID: REMOTE[call_id]
+    ]]>
+  </sendCmd>
 
   <!-- definition of the response time repartition table (unit is ms)   -->
   <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>

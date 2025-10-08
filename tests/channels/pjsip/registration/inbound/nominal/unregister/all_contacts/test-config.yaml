@@ -31,12 +31,12 @@ test-object-config:
                                     '-p': '5061', '-t': 't1', '-s': 'bob'} }
 
                 # IPv6 & UDP
-                - { 'key-args': {'scenario': 'register-noauth-ipv6.xml', 'target': '[::1]',
+                - { 'target': '[::1]', 'key-args': {'scenario': 'register-noauth-ipv6.xml',
                                     '-i': '[::1]', '-p': '5061', '-s': 'charlie'},
                     'ordered-args': ['-key', 'customip1', '[::2]', '-key', 'customip2', '[::3]'] }
 
                 # IPv6 & TCP
-                - { 'key-args': {'scenario': 'register-noauth-ipv6.xml', 'target': '[::1]',
+                - { 'target': '[::1]', 'key-args': {'scenario': 'register-noauth-ipv6.xml',
                                     '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'carol'},
                     'ordered-args': ['-key', 'customip1', '[::2]', '-key', 'customip2', '[::3]'] }
 

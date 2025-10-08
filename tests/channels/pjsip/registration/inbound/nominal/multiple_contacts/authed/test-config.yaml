@@ -26,23 +26,25 @@ test-object-config:
                 # IPv4 & UDP - register with authentication
                 - { 'key-args': {'scenario': 'register-auth-multi-contact-expiry-ipv4.xml',
                                     '-i': '127.0.0.1', '-p': '5061', '-s': 'alice',
-                                    '-au': 'alice', '-ap': 'swordfish'} }
+                                    '-au': 'alice', '-ap': 'swordfish', '-timeout': '40000'} }
 
                 # IPv4 & TCP - register with authentication
                 - { 'key-args': {'scenario': 'register-auth-multi-contact-expiry-ipv4.xml',
                                     '-i': '127.0.0.1', '-p': '5061', '-t': 't1', '-s': 'bob',
-                                    '-au': 'bob', '-ap': 'swordfish'} }
+                                    '-au': 'bob', '-ap': 'swordfish', '-timeout': '40000'} }
 
                 # IPv6 & UDP - register with authentication
-                - { 'key-args': {'scenario': 'register-auth-multi-contact-expiry-ipv6.xml',
-                                    'target': '[::1]', '-i': '[::1]', '-p': '5061', '-s': 'charlie',
-                                    '-au': 'charlie', '-ap': 'swordfish'},
+                - { 'target': '[::1]',
+                    'key-args': {'scenario': 'register-auth-multi-contact-expiry-ipv6.xml',
+                                    '-i': '[::1]', '-p': '5061', '-s': 'charlie',
+                                    '-au': 'charlie', '-ap': 'swordfish', '-timeout': '40000'},
                     'ordered-args': ['-key', 'customip1', '[::2]', '-key', 'customip2', '[::3]'] }
 
                 # IPv6 & TCP - register with authentication
-                - { 'key-args': {'scenario': 'register-auth-multi-contact-expiry-ipv6.xml',
-                                    'target': '[::1]', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'carol',
-                                    '-au': 'carol', '-ap': 'swordfish'},
+                - { 'target': '[::1]',
+                    'key-args': {'scenario': 'register-auth-multi-contact-expiry-ipv6.xml',
+                                    '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'carol',
+                                    '-au': 'carol', '-ap': 'swordfish', '-timeout': '40000'},
                     'ordered-args': ['-key', 'customip1', '[::2]', '-key', 'customip2', '[::3]'] }
 
 ami-config:
