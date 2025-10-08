@@ -33,10 +33,10 @@ test-object-config:
    test-iterations:
        -
            scenarios:
-               - { 'key-args': {'scenario': 'receive.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'bob-ipv4-udp'}, 'ordered-args': ['-enable-retrans'] }
-               - { 'key-args': {'scenario': 'receive.xml', '-i': '127.0.0.1', '-p': '5063', '-t': 't1', '-s': 'bob-ipv4-tcp'} }
-               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5064', '-s': 'bob-ipv6-udp'}, 'ordered-args': ['-enable-retrans'] }
-               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5065', '-t': 't1', '-s': 'bob-ipv6-tcp'} }
+               - { 'key-args': {'scenario': 'receive.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'bob-ipv4-udp', '-timeout': '30000'}, 'ordered-args': ['-enable-retrans'] }
+               - { 'key-args': {'scenario': 'receive.xml', '-i': '127.0.0.1', '-p': '5063', '-t': 't1', '-s': 'bob-ipv4-tcp', '-timeout': '30000'} }
+               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5064', '-s': 'bob-ipv6-udp', '-timeout': '30000'}, 'ordered-args': ['-enable-retrans'] }
+               - { 'target': '[::1]', 'key-args': {'scenario': 'receive.xml', '-i': '[::1]', '-p': '5065', '-t': 't1', '-s': 'bob-ipv6-tcp', '-timeout': '30000'} }
 
 originator-config-ipv4-udp:
     trigger: 'scenario_start'
