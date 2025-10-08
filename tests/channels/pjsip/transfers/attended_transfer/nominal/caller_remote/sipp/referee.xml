@@ -117,6 +117,9 @@
     ]]>
   </send>
 
+  <!-- wait for referer scenario to finish -->
+  <recvCmd />
+
   <!-- definition of the response time repartition table (unit is ms)   -->
   <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
 
