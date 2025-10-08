@@ -28,10 +28,10 @@ test-object-config:
                 - { 'key-args': {'scenario': 'register-noauth.xml', '-i': '127.0.0.1', '-p': '5062', '-t': 't1', '-s': 'bob'} }
 
                 # IPv6 & UDP
-                - { 'key-args': {'scenario': 'register-noauth.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5063', '-s': 'charlie'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'register-noauth.xml', '-i': '[::1]', '-p': '5063', '-s': 'charlie'} }
 
                 # IPv6 & TCP
-                - { 'key-args': {'scenario': 'register-noauth.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5064', '-t': 't1', '-s': 'carol'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'register-noauth.xml', '-i': '[::1]', '-p': '5064', '-t': 't1', '-s': 'carol'} }
 
 ami-config:
     -

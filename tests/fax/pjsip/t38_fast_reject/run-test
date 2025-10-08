@@ -55,7 +55,7 @@ def main():
     if not test.passed:
         return 1
 
-    ret_A = subprocess.call([WORKING_DIR + "/check_reinvite_rtt.py", sippA_statfile.name])
+    ret_A = subprocess.call(["python3", WORKING_DIR + "/check_reinvite_rtt.py", sippA_statfile.name])
     if (ret_A != 0):
         logger.debug("Slow ReInvite Detected!")
         return 1
