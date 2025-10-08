@@ -48,8 +48,8 @@ sipp-config:
     test-iterations:
         -
             scenarios:
-                - { 'coordinated-sender': {'key-args': {'scenario':'referer.xml', '-i': '127.0.0.3', '-p':'5060', '-sleep': '2'}, 'target':'127.0.0.1'},
-                    'coordinated-receiver': {'key-args': {'scenario':'referee.xml', '-i': '127.0.0.3', '-p':'5062'}, 'target':'127.0.0.2' } }
+                - { 'coordinated-sender': {'key-args': {'scenario':'referer.xml', '-i': '127.0.0.3', '-p':'5060', '-sleep': '2', '-timeout': '30000'}, 'target':'127.0.0.1'},
+                    'coordinated-receiver': {'key-args': {'scenario':'referee.xml', '-i': '127.0.0.3', '-p':'5062', '-timeout': '30000'}, 'target':'127.0.0.2' } }
 
 hangup-config:
     ids: [ '0', '1' ]
