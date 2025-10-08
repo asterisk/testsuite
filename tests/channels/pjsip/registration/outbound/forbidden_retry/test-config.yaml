@@ -17,8 +17,8 @@ test-object-config:
     test-iterations:
         -
             scenarios:
-                - { 'key-args': { 'scenario': 'register-retry.xml', '-p': '5065' } }
-                - { 'key-args': { 'scenario': 'register-no-retry.xml', '-p': '5066' } }
+                - { 'key-args': { 'scenario': 'register-retry.xml', '-p': '5065', '-timeout': '30000' } }
+                - { 'key-args': { 'scenario': 'register-no-retry.xml', '-p': '5066', '-timeout': '30000' } }
 
 properties:
     dependencies:

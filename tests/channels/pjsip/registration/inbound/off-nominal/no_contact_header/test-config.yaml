@@ -25,10 +25,10 @@ test-object-config:
                 - { 'key-args': {'scenario': 'register-noauth-no-contact-header.xml', '-i': '127.0.0.1', '-p': '5061', '-t': 't1', '-s': 'alice'} }
 
                 # IPv6 & UDP - register with no contact header
-                - { 'key-args': {'scenario': 'register-noauth-no-contact-header.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-s': 'alice'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'register-noauth-no-contact-header.xml', '-i': '[::1]', '-p': '5061', '-s': 'alice'} }
 
                 # IPv6 & TCP - register with no contact header
-                - { 'key-args': {'scenario': 'register-noauth-no-contact-header.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'alice'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'register-noauth-no-contact-header.xml', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'alice'} }
 
 properties:
     dependencies:
