@@ -24,10 +24,10 @@ test-object-config:
                 - { 'key-args': {'scenario': 'register-wrong-password.xml', '-i': '127.0.0.1', '-p': '5061', '-t': 't1', '-s': 'alice', '-au': 'alice', '-ap': 'wrong'} }
 
                 # IPv6 & UDP - register attempt with wrong password
-                - { 'key-args': {'scenario': 'register-wrong-password.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-s': 'alice', '-au': 'alice', '-ap': 'wrong'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'register-wrong-password.xml', '-i': '[::1]', '-p': '5061', '-s': 'alice', '-au': 'alice', '-ap': 'wrong'} }
 
                 # IPv6 & TCP - register attempt with wrong password
-                - { 'key-args': {'scenario': 'register-wrong-password.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'alice', '-au': 'alice', '-ap': 'wrong'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'register-wrong-password.xml', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'alice', '-au': 'alice', '-ap': 'wrong'} }
         -
             scenarios:
                 # IPv4 & UDP - register attempt with no password
@@ -37,10 +37,10 @@ test-object-config:
                 - { 'key-args': {'scenario': 'register-wrong-password.xml', '-i': '127.0.0.1', '-p': '5061', '-t': 't1', '-s': 'alice', '-au': 'alice'} }
 
                 # IPv6 & UDP - register attempt with no password
-                - { 'key-args': {'scenario': 'register-wrong-password.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-s': 'alice', '-au': 'alice'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'register-wrong-password.xml', '-i': '[::1]', '-p': '5061', '-s': 'alice', '-au': 'alice'} }
 
                 # IPv6 & TCP - register attempt with no password
-                - { 'key-args': {'scenario': 'register-wrong-password.xml', 'target': '[::1]', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'alice', '-au': 'alice'} }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'register-wrong-password.xml', '-i': '[::1]', '-p': '5061', '-t': 't1', '-s': 'alice', '-au': 'alice'} }
 
 properties:
     dependencies:
