@@ -58,7 +58,7 @@ class Packet():
             self.ip_layer = None
             self.transport_layer = None
         else:
-            self.eth_layer = ip_stack.parse(bytes(raw_packet.data))
+            self.eth_layer = ip_stack.parse(bytes(raw_packet))
             self.ip_layer = self.eth_layer.next
             self.transport_layer = self.ip_layer.next
 
@@ -505,7 +505,7 @@ class SIPPacketFactory():
         """
         ret_packet = None
         if not isinstance(packet, str):
-            hex_string = packet.data[42:]
+            hex_string = packet[42:]
             ascii_string = hex_string.decode('ascii')
         else:
             ascii_string = packet

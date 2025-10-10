@@ -1,1 +1,0 @@
-https://github.com/asterisk/yappcap/archive/refs/tags/v0.0.5-py3.zip
