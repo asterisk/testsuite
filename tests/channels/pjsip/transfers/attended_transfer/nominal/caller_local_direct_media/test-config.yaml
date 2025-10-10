@@ -107,11 +107,8 @@ properties:
     dependencies:
         - python : twisted
         - python : starpy
-        - python : yappcap
-        - python : pyxb
         - app: 'sipp'
         - asterisk : res_pjsip
-        #- custom : rawsocket
     tags:
         - pjsip
         - refleaks

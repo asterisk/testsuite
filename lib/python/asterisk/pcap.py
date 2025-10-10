@@ -26,7 +26,7 @@ from construct import *
 from construct.core import *
 from asterisk.pcap_proxy import *
 try:
-    from yappcap import PcapOffline
+    from scapy import interfaces, sendrecv, packet
     PCAP_AVAILABLE = True
 except:
     PCAP_AVAILABLE = False
