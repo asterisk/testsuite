@@ -1,50 +1,15 @@
 from twisted.internet import abstract, protocol
-from yappcap import PcapLive, findalldevs, PcapTimeout
+import logging
+import scapy
+from scapy.all import *
+from scapy.config import conf
+import socket
+import os
 
+LOGGER = logging.getLogger(__name__)
 
-class PcapFile(abstract.FileDescriptor):
-    """Treat a live pcap capture as a file for Twisted to call select() on"""
-    def __init__(self, protocol, interface, xfilter=None, dumpfile=None,
-                 snaplen=65535, buffer_size=0):
-        abstract.FileDescriptor.__init__(self)
-
-        p = PcapLive(interface, autosave=dumpfile, snaplen=snaplen,
-                     buffer_size=buffer_size)
-        p.immediate = True
-        p.activate()
-        p.blocking = False
-
-        if xfilter is not None:
-            p.filter = xfilter
-
-        self.pcap = p
-        self.fd = p.selectable_fd
-        self.protocol = protocol
-        self.protocol.makeConnection(self)
-        self.startReading()
-
-    def fileno(self):
-        return self.fd
-
-    def doRead(self):
-        try:
-            pkt = next(self.pcap)
-        except PcapTimeout:
-            return 0
-
-        # we may not have a packet if something weird happens
-        if not pkt:
-            # according to the twisted docs 0 implies no write done
-            return 0
-
-        self.protocol.dataReceived(pkt)
-
-    def connectionLost(self, reason):
-        self.protocol.connectionLost(reason)
-
-
-class PcapListener(protocol.Protocol):
-    """A Twisted protocol wrapper for a pcap capture"""
+class PcapListener():
+    """A A wrapper for a scapy pcap capture"""
     def __init__(self, interface, bpf_filter=None, dumpfile=None,
                  callback=None, snaplen=None, buffer_size=None):
         """Initialize a new PcapListener
@@ -58,19 +23,41 @@ class PcapListener(protocol.Protocol):
         buffer_size - The ring buffer size. If None, then 0.
 
         """
+
         if interface is None:
-            interface = [x.name for x in findalldevs() if x.loopback][0]
+            interface = self.find_first_loopback_device()
         if buffer_size is None:
-            buffer_size = 0
+            buffer_size = 8192
         if snaplen is None:
             snaplen = 65535
-        self.pf = PcapFile(self, interface, bpf_filter, dumpfile, snaplen,
-                           buffer_size)
+        self.pcap_writer = None
+
+        scapy.config.conf.use_pcap = True
         self.callback = callback
 
-    def makeConnection(self, transport):
-        self.connectionMade()
+        LOGGER.info("Starting capture.  if: %s dumpfile: %s snap: %d  bs: %d",
+                    interface, dumpfile, snaplen, buffer_size)
 
-    def dataReceived(self, data):
+        if dumpfile is not None:
+            self.pcap_writer = PcapWriter(dumpfile, sync=True,
+                nano=True, snaplen=snaplen, bufsz=buffer_size)
+
+        self.pf = AsyncSniffer(iface=interface,filter=bpf_filter,
+            prn=self._callback)
+
+        self.pf.start()
+
+    def _callback(self, packet: scapy.packet.Packet):
         if self.callback:
-            self.callback(data)
+            self.callback(packet.original)
+
+        if self.pcap_writer:
+            self.pcap_writer.write(packet)
+        return None
+
+    def find_first_loopback_device(self):
+        iflist = scapy.interfaces.get_working_ifaces()
+        for i in iflist:
+            if "LOOPBACK" in i.flags and "UP" in i.flags:
+                return i.name
+        return None
