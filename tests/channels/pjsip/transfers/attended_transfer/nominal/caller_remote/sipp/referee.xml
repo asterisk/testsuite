@@ -101,6 +101,9 @@
     ]]>
   </sendCmd>
 
+
+  <recvCmd optional="true" next="done" />
+
   <recv request="BYE" />
   <send>
     <![CDATA[
@@ -119,6 +122,8 @@
 
   <!-- wait for referer scenario to finish -->
   <recvCmd />
+
+  <label id="done" />
 
   <!-- definition of the response time repartition table (unit is ms)   -->
   <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
