@@ -52,7 +52,7 @@ def log_packet(packet, write_packet_contents):
     """Writes the contents of a SIP packet to the log.
 
     Keyword Arguments:
-    packet                  -- A yappcap.PcapPacket
+    packet                  -- A PcapPacket
     write_packet_contents   -- Whether or not to dump the contents of the
                                packet to the log.
     """

@@ -6,7 +6,6 @@ cffi==1.17.1
 charset-normalizer==2.0.12
 constantly==15.1.0
 construct==2.10.68
-Cython>=0.29.34,<3.0.0
 hyperlink==21.0.0
 idna==3.3
 incremental==24.7.2
@@ -27,3 +26,4 @@ typing_extensions==4.12.2
 urllib3==1.26.9
 zope.interface==7.0.1
 starpy @ git+https://github.com/asterisk/starpy@1.1.1
+scapy==2.6.1
