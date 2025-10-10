@@ -22,7 +22,7 @@ properties:
             version : 'v3.0'
         - python: 'twisted'
         - python: 'starpy'
-        - python: 'yappcap'
+        - python: 'scapy'
         - asterisk: 'res_pjsip'
         - asterisk: 'res_pjsip_exten_state'
         - asterisk: 'res_pjsip_pidf_body_generator'
@@ -47,6 +47,7 @@ test-modules:
 sipp-config:
     reactor-timeout: 30
     fail-on-any: True
+    stop-after-scenarios: False
     test-iterations:
         -
             scenarios:
