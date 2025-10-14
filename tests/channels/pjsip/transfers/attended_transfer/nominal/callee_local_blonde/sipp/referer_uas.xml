@@ -190,6 +190,9 @@
     ]]>
   </send>
 
+  <!-- wait for referee scenario to finish -->
+  <recvCmd />
+
   <send retrans="500">
     <![CDATA[
 
@@ -207,10 +210,7 @@
     ]]>
   </send>
 
-  <recv response="200" rtd="true" crlf="true" />
-
-  <!-- wait for referee scenario to finish -->
-  <recvCmd />
+  <recv response="200" rtd="true" crlf="true"/>
 
   <!-- definition of the response time repartition table (unit is ms)   -->
   <ResponseTimeRepartition value="10, 20, 30, 40, 50, 100, 150, 200"/>
