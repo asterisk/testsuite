@@ -15,6 +15,7 @@ tests:
     - test: 'mixmonitor_rxtx'
     - test: 'mixmonitor_audiohook_inherit'
     - test: 'mixmonitor_func'
+    - test: 'mixmonitor_loop'
     - dir: 'control_playback'
     - dir: 'playback'
     - test: 'say_interrupt'
