@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Verify no MESSAGE received at redirect destination">
+  <!-- This scenario verifies that NO MESSAGE is received at the redirect destination.
+
+       Approach:
+       1. Send OPTIONS to Asterisk to establish the scenario
+       2. Receive response to OPTIONS (typically 401 Unauthorized)
+       3. Pause for 5 seconds
+       4. If any MESSAGE arrives during this time, SIPp will fail with "unexpected message"
+       5. If no MESSAGE arrives, test passes -->
+
+  <!-- Send OPTIONS to establish the scenario -->
+  <send>
+    <![CDATA[
+
+      OPTIONS sip:127.0.0.1 SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: sipp <sip:sipp@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: sip:127.0.0.1
+      Call-ID: [call_id]
+      CSeq: 1 OPTIONS
+      Contact: sip:sipp@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Receive response to OPTIONS (typically 401 Unauthorized) -->
+  <recv response="401">
+  </recv>
+
+  <!-- Wait 5 seconds. If MESSAGE arrives during this pause, SIPp will fail automatically -->
+  <pause milliseconds="5000" />
+
+</scenario>
