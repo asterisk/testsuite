@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="MESSAGE redirect with 305">
+  <recv request="MESSAGE" crlf="true">
+    <action>
+      <ereg search_in="body" regexp="My test redirect message"
+            check_it="true" assign_to="junk"/>
+    </action>
+  </recv>
+  <Reference variables="junk"/>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 305 Use Proxy
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:redirected@127.0.0.1:5062>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <pause milliseconds="1000" />
+
+</scenario>

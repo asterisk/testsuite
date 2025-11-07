@@ -1,0 +1,102 @@
+testinfo:
+    summary: 'Test MESSAGE redirect with 305 Use Proxy - multiple Contact headers'
+    description: |
+        'This test verifies that when an outgoing SIP MESSAGE receives a 305
+         redirect response with multiple Contact headers having different q-values,
+         Asterisk properly follows the redirect to the URIs in order of q-value
+         priority. The endpoint is configured with redirect_method=uri_pjsip.
+
+         Test iterations:
+         1. First contact (q=1.0) accepts - verify only highest priority is tried
+         2. First contact rejects, second accepts - verify failover to next q-value
+         3. All contacts reject - verify all contacts are tried in q-value order
+         4. Loop prevention - verify redirect loops are detected and stopped'
+
+properties:
+    dependencies:
+        - app: 'sipp'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_messaging'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    reactor-timeout: 20
+    connect-ami: true
+    stop-after-scenarios: true
+    test-iterations:
+        # Iteration 1: First contact (q=1.0) accepts
+        -
+            scenarios:
+                - {'key-args': {'scenario': 'redirect_305_three_contacts.xml', '-p': '5061'}}
+                - {'key-args': {'scenario': 'contact1_accept.xml', '-p': '5062'}}
+                - {'key-args': {'scenario': 'no_message_expected.xml', '-p': '5063', '-default_behaviors': 'abortunexp'}}
+                - {'key-args': {'scenario': 'no_message_expected.xml', '-p': '5064', '-default_behaviors': 'abortunexp'}}
+        # Iteration 2: First contact rejects (4xx), second accepts
+        -
+            scenarios:
+                - {'key-args': {'scenario': 'redirect_305_three_contacts.xml', '-p': '5061'}}
+                - {'key-args': {'scenario': 'contact1_reject.xml', '-p': '5062'}}
+                - {'key-args': {'scenario': 'contact2_accept.xml', '-p': '5063'}}
+                - {'key-args': {'scenario': 'no_message_expected.xml', '-p': '5064', '-default_behaviors': 'abortunexp'}}
+        # Iteration 3: All contacts reject (4xx)
+        -
+            scenarios:
+                - {'key-args': {'scenario': 'redirect_305_three_contacts.xml', '-p': '5061'}}
+                - {'key-args': {'scenario': 'contact1_reject.xml', '-p': '5062'}}
+                - {'key-args': {'scenario': 'contact2_reject.xml', '-p': '5063'}}
+                - {'key-args': {'scenario': 'contact3_reject.xml', '-p': '5064'}}
+        # Iteration 4: Loop prevention - contact1 redirects to contact2, which redirects back to contact1
+        -
+            scenarios:
+                - {'key-args': {'scenario': 'redirect_305_three_contacts.xml', '-p': '5061'}}
+                - {'key-args': {'scenario': 'contact1_redirect_loop.xml', '-p': '5062'}}
+                - {'key-args': {'scenario': 'contact2_redirect_loop.xml', '-p': '5063'}}
+                - {'key-args': {'scenario': 'no_message_expected.xml', '-p': '5064', '-default_behaviors': 'abortunexp'}}
+
+ami-config:
+    -
+        ami-start:
+        ami-actions:
+            -
+                action:
+                    Action: 'MessageSend'
+                    To: 'pjsip:first_dest'
+                    From: 'sip:sender-iter1@asterisk'
+                    Body: 'Iteration 1: first contact accepts'
+    -
+        ami-start:
+        ami-actions:
+            -
+                action:
+                    Action: 'MessageSend'
+                    To: 'pjsip:first_dest'
+                    From: 'sip:sender-iter2@asterisk'
+                    Body: 'Iteration 2: first rejects, second accepts'
+    -
+        ami-start:
+        ami-actions:
+            -
+                action:
+                    Action: 'MessageSend'
+                    To: 'pjsip:first_dest'
+                    From: 'sip:sender-iter3@asterisk'
+                    Body: 'Iteration 3: all contacts reject'
+    -
+        ami-start:
+        ami-actions:
+            -
+                action:
+                    Action: 'MessageSend'
+                    To: 'pjsip:first_dest'
+                    From: 'sip:sender-iter4@asterisk'
+                    Body: 'Iteration 4: loop prevention test'

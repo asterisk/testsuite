@@ -1,0 +1,53 @@
+testinfo:
+    summary: 'Test MESSAGE does NOT redirect when redirect_method is not set'
+    description: |
+        'This test verifies that when an outgoing SIP MESSAGE receives a 305
+         redirect response, Asterisk does NOT follow the redirect when the
+         endpoint is configured without redirect_method (default behavior).
+
+         Test flow:
+         1. AMI MessageSend action triggers MESSAGE to first_dest endpoint
+         2. SIPp scenario at port 5061 responds with 305 Use Proxy
+         3. 305 response contains Contact header pointing to port 5062
+         4. SIPp scenario at port 5062 sends OPTIONS and waits 5 seconds
+         5. Asterisk should NOT send a MESSAGE to port 5062 (no redirect)
+         6. If unexpected MESSAGE received on 5062, SIPp fails the test
+         7. Test passes if both scenarios complete without unexpected messages'
+
+properties:
+    dependencies:
+        - app: 'sipp'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_messaging'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    reactor-timeout: 15
+    connect-ami: true
+    stop-after-scenarios: true
+    test-iterations:
+        -
+            scenarios:
+                - {'key-args': {'scenario': 'no_redirect_305.xml', '-p': '5061', '-m': '1'}}
+                - {'key-args': {'scenario': 'no_message_expected.xml', '-p': '5062', '-m': '1', '-default_behaviors': 'abortunexp'}}
+
+ami-config:
+    -
+        ami-start:
+        ami-actions:
+            delay: 1
+            action:
+                Action: 'MessageSend'
+                To: 'pjsip:first_dest'
+                From: 'sip:sender@asterisk'
+                Body: 'Test message that should not be redirected'

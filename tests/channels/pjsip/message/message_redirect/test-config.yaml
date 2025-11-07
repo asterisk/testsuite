@@ -1,0 +1,51 @@
+testinfo:
+    summary: 'Test MESSAGE redirect with 305 Use Proxy'
+    description: |
+        'This test verifies that when an outgoing SIP MESSAGE receives a 305
+         redirect response, Asterisk properly follows the redirect to the URI
+         specified in the Contact header. The endpoint is configured with
+         redirect_method=uri_pjsip.
+
+         Test flow:
+         1. AMI MessageSend action triggers MESSAGE to first_dest endpoint
+         2. SIPp scenario at port 5061 responds with 305 Use Proxy
+         3. 305 response contains Contact header with redirected destination
+         4. Asterisk sends new MESSAGE to the redirected URI
+         5. SIPp scenario at port 5062 receives redirected MESSAGE and responds 202'
+
+properties:
+    dependencies:
+        - app: 'sipp'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_messaging'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    reactor-timeout: 15
+    connect-ami: true
+    stop-after-scenarios: true
+    test-iterations:
+        -
+            scenarios:
+                - {'key-args': {'scenario': 'redirect_305.xml', '-p': '5061'}}
+                - {'key-args': {'scenario': 'final_destination.xml', '-p': '5062'}}
+
+ami-config:
+    -
+        ami-start:
+        ami-actions:
+            action:
+                Action: 'MessageSend'
+                To: 'pjsip:first_dest'
+                From: 'sip:sender@asterisk'
+                Body: 'My test redirect message'

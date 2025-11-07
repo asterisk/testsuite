@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="MESSAGE redirect with 305 - three contacts">
+  <recv request="MESSAGE" crlf="true">
+    <action>
+      <ereg search_in="body" regexp="Iteration [0-9]+:"
+            check_it="true" assign_to="junk"/>
+    </action>
+  </recv>
+  <Reference variables="junk"/>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 305 Use Proxy
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:contact1@127.0.0.1:5062>;q=1.0
+      Contact: <sip:contact2@127.0.0.1:5063>;q=0.5
+      Contact: <sip:contact3@127.0.0.1:5064>;q=0.1
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <pause milliseconds="1000" />
+
+</scenario>
