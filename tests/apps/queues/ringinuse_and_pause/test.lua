@@ -118,7 +118,7 @@ function test_call(queue, originate_result, expected_call_result, pause_expectat
 	actual_call_result = false
 	actual_pause_result = false
 	man:register_event("AgentCalled", agent_called_handler)
-	man:register_event("QueueMemberPaused", agent_paused_handler)
+	man:register_event("QueueMemberPause", agent_paused_handler)
 	orig["Channel"] = "Local/" .. queue .. "@test_context/n"
 	orig["Application"] = "Wait"
 	orig["Data"] = "3"
@@ -149,10 +149,10 @@ function test_call(queue, originate_result, expected_call_result, pause_expectat
 	end
 
 	if actual_pause_result ~= pause_expectation then
-		fail("Unexpected QueueMemberPaused result")
+		fail("Unexpected QueueMemberPause result")
 	end
 	man:unregister_event("AgentCalled", agent_called_handler)
-	man:unregister_event("QueueMemberPaused", agent_paused_handler)
+	man:unregister_event("QueueMemberPause", agent_paused_handler)
 end
 
 sipp_proc = sipp_exec("sipp/uas.xml", "5061")
