@@ -24,6 +24,31 @@ test-object-config:
                 - { 'key-args': {'scenario': 'outbound-headers.xml', '-i': '127.0.0.1', '-p': '5062'} }
                 # Outbound-recv-headers receives the call
                 - { 'key-args': {'scenario': 'outbound-recv-headers.xml', '-i': '127.0.0.1', '-p': '5063'} }
+        -
+            scenarios:
+                # Use pass function to add headers on the inbound channel that are inherited to the outbound channel
+                - { 'key-args': {'scenario': 'pass-headers.xml', '-i': '127.0.0.1', '-p': '5064', '-s': 'inbound-pass'} }
+                # Outbound-recv-headers receives the call
+                - { 'key-args': {'scenario': 'pass-recv-headers.xml', '-i': '127.0.0.1', '-p': '5065', '-d': '3000'} }
+        -
+            scenarios:
+                # Use pass function to add headers on the inbound channel that are inherited to the outbound channel via local channel
+                - { 'key-args': {'scenario': 'pass-headers.xml', '-i': '127.0.0.1', '-p': '5064', '-s': 'inbound-pass-local'} }
+                # Outbound-recv-headers receives the call
+                - { 'key-args': {'scenario': 'pass-recv-headers.xml', '-i': '127.0.0.1', '-p': '5065', '-d': '3000'} }
+        -
+            scenarios:
+                # Use pass function to add headers on a local channel that are inherited to the outbound channel via local channel
+                - { 'key-args': {'scenario': 'pass-headers.xml', '-i': '127.0.0.1', '-p': '5064', '-s': 'inbound-pass-local-2'} }
+                # Outbound-recv-headers receives the call
+                - { 'key-args': {'scenario': 'pass-recv-headers.xml', '-i': '127.0.0.1', '-p': '5065', '-d': '3000'} }
+        -
+            scenarios:
+                # Use pass function to add then modify a numbered header on the inbound channel that is inherited to the outbound channel
+                - { 'key-args': {'scenario': 'pass-headers.xml', '-i': '127.0.0.1', '-p': '5064', '-s': 'inbound-pass-numbered'} }
+                # Outbound-recv-headers receives the call
+                - { 'key-args': {'scenario': 'pass-recv-headers-numbered.xml', '-i': '127.0.0.1', '-p': '5067', '-d': '3000'} }
+
 
 ami-config:
     -
