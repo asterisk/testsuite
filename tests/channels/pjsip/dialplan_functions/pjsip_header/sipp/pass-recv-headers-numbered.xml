@@ -3,18 +3,20 @@
 
 <scenario name="Receive INVITE">
   <Global variables="remote_tag" />
+  <User variables="NUM1,NUM2,NUM3,NUM-3,NUM4" />
   <recv request="INVITE" crlf="true">
       <!-- Save the from tag. We'll need it when we send our BYE -->
       <action>
-          <ereg regexp=".*(;tag=.*)"
-              search_in="hdr"
-              header="From:"
-              check_it="true"
-              assign_to="1,remote_tag"/>
+          <ereg regexp=".*(;tag=.*)" search_in="hdr" header="From:" check_it="true" assign_to="1,remote_tag"/>
+     			<ereg regexp="one" search_in="hdr" occurrence="1" header="X-custom-numbered:" check_it="true" assign_to="NUM1"/>
+          <ereg regexp="two" search_in="hdr" occurrence="2" header="X-custom-numbered:" check_it="true" assign_to="NUM2"/>
+          <ereg regexp="three" search_in="hdr" occurrence="3" header="X-custom-numbered:" check_it="true" assign_to="NUM3"/>
+          <ereg regexp="tres" search_in="hdr" occurrence="3" header="X-custom-numbered:" check_it_inverse="true" assign_to="NUM-3"/>
+          <ereg regexp="four" search_in="hdr" occurrence="4" header="X-custom-numbered:" check_it="true" assign_to="NUM4"/>
       </action>
   </recv>
 
-  <Reference variables="1" />
+  <Reference variables="1","NUM1","NUM2","NUM3","NUM-3","NUM4" />
 
   <send>
     <![CDATA[
@@ -55,7 +57,7 @@
 
   <recv request="ACK" rtd="true" crlf="true" />
 
-  <pause milliseconds="1000"/>
+  <pause />
 
   <send retrans="500">
     <![CDATA[
