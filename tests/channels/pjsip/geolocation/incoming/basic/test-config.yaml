@@ -101,7 +101,7 @@ ami-config:
 #                   In the original request, the verticalAxis was 28.7.
 #                   The GEOLOC_PROFILE dialplan app should have changed
 #                   it to 99.99.
-                    LocInfo: "shape=Ellipsoid,crs=3d,orientation=90 radians,pos=42.5463 -73.2512 26.3,semiMajorAxis=7.7156,semiMinorAxis=3.31,verticalAxis=99.99"
+                    LocInfo: "shape=Ellipsoid,crs=3d,orientation=90 degrees,pos=42.5463 -73.2512 26.3,semiMajorAxis=7.7156,semiMinorAxis=3.31,verticalAxis=99.99"
             count: '1'
     -
         ami-events:
