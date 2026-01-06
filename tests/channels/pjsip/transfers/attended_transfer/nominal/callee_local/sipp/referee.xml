@@ -146,6 +146,9 @@
     ]]>
   </send>
 
+	<!-- wait a second for the uas to send it's final BYE -->\
+	<pause milliseconds="1000" />
+
   <!-- send an empty command to the referer signaling it to complete -->
   <sendCmd>
     <![CDATA[
