@@ -24,6 +24,12 @@ test-object-config:
                 - { 'key-args': {'scenario': 'outbound-headers.xml', '-i': '127.0.0.1', '-p': '5062'} }
                 # Outbound-recv-headers receives the call
                 - { 'key-args': {'scenario': 'outbound-recv-headers.xml', '-i': '127.0.0.1', '-p': '5063'} }
+        -
+            scenarios:
+                # Use pass function to add headers on the inbound channel that are passed to the outbound channel
+                - { 'key-args': {'scenario': 'pass-headers.xml', '-i': '127.0.0.1', '-p': '5064', '-s': 'inbound-pass'} }
+                # Outbound-recv-headers receives the call
+                - { 'key-args': {'scenario': 'pass-recv-headers.xml', '-i': '127.0.0.1', '-p': '5065', '-d': '3000'} }
 
 ami-config:
     -
