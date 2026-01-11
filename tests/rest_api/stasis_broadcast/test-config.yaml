@@ -1,0 +1,79 @@
+testinfo:
+    summary: 'Test Stasis broadcast and claim functionality'
+    description: |
+        Tests that channels can be broadcast to multiple ARI applications
+        and that first-claim-wins semantics work correctly. Verifies
+        CallBroadcast and CallClaimed events are generated.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: 'ari.AriTestObject'
+    modules:
+        -
+            config-section: ari-config
+            typename: 'ari.WebSocketEventModule'
+
+test-object-config:
+    apps: testsuite,testsuite-app1,testsuite-app2
+    stop-on-end: True
+    test-iterations:
+        -
+            channel: 'Local/s@default'
+            application: 'Echo'
+
+ari-config:
+    apps: testsuite,testsuite-app1,testsuite-app2
+    events:
+        -
+            conditions:
+                match:
+                    type: 'StasisStart'
+                    application: 'testsuite'
+                    args: []
+                    channel:
+                        name: 'Local/s@default.*'
+            count: 1
+            callback:
+                module: stasis_broadcast_test
+                method: on_trigger_start
+        -
+            conditions:
+                match:
+                    type: 'CallBroadcast'
+            count: 2
+            callback:
+                module: stasis_broadcast_test
+                method: on_broadcast
+        -
+            conditions:
+                match:
+                    type: 'CallClaimed'
+            count: 3
+            callback:
+                module: stasis_broadcast_test
+                method: on_claimed
+        -
+            conditions:
+                match:
+                    type: 'StasisStart'
+                    application: 'testsuite-app1'
+            count: 1
+            callback:
+                module: stasis_broadcast_test
+                method: on_start
+
+properties:
+    dependencies:
+        - python: 'autobahn.websocket'
+        - python: 'requests'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_ari_channels'
+        - asterisk: 'res_ari_events'
+        - asterisk: 'res_stasis_broadcast'
+        - asterisk: 'app_stasis_broadcast'
+    tags:
+        - ARI
+        - stasis
