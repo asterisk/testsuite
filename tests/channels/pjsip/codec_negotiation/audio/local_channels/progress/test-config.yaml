@@ -1,0 +1,53 @@
+---
+testinfo:
+    summary: |
+        'Test default codec negotiation configs in a call between two parties
+        using inband_progress and a local channel'
+    description: |
+        'Two PJSIP endpoints are configured to support many codecs. Alice calls
+        Bob and in Bob\'s SDP answer he only provides one codec in his 183 and
+        200 responses. The SDP from Asterisk to Alice may only contain this one
+        codec. Both PJSIP endpoints are configured to allow inband_progress.
+        Further, allow_sending_180_after_183 must be enabled, otherwise the 180
+        by Bob would result in Asterisk sending a 183 with SDP without knowing
+        Bob's SDP answer.'
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'app_dial'
+        - asterisk: 'res_pjsip'
+        - sipp:
+              version: 'v3.6.0'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: test-case-config
+        typename: 'sipp.SIPpTestCase'
+
+test-case-config:
+    memcheck-delay-stop: 7
+    # connect-ami: 'False'
+    fail-on-any: false
+    test-iterations:
+        # First iteration
+        -
+            scenarios:
+                # Bob receives call from Alice
+                - {'key-args':
+                       {'scenario': 'bob.xml', '-p': '5060', '-i': '127.0.0.3',
+                        '-s': 'alice', '-timeout': '20s', '-mi': '127.0.0.3'
+                       },
+                   'ordered-args':
+                       ['-timeout_error', '-key', 'custom_media_port', '6004']}
+                # Alice calls Bob
+                - {'key-args':
+                       {'scenario': 'alice.xml', '-p': '5060',
+                        '-i': '127.0.0.2', '-s': 'bob', '-timeout': '20s',
+                        '-mi': '127.0.0.2'},
+                   'ordered-args':
+                       ['-timeout_error', '-key', 'custom_media_port', '6004']}
