@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario name="Message No contact">
+  <send retrans="500">
+    <![CDATA[
+      MESSAGE sip:user1@127.0.0.1:5062 SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: user <sip:user@[local_ip]:[local_port]>;tag=[pid]bit[call_number]
+      To: user1 <sip:user1@127.0.0.1:5062>
+      Contact: <sip:user@[local_ip]:[local_port]>
+      Call-ID: [call_id]
+      CSeq: 1 MESSAGE
+      Max-Forwards: 70
+      Content-Type: text/plain
+      Content-Length: 11
+
+      Hello World
+    ]]>
+  </send>
+
+  <recv response="202" />
+</scenario>
