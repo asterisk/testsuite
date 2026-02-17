@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Check SDP lines">
+
+  <recv request="INVITE">
+<!--sdp session s= field cannot be empty-->
+    <ereg regexp="s=[^\r\n]+"
+          search_in="body"
+          check_it="true"
+          assign_to="1" />
+<!--sdp Owner  o=<username> <sess-id> <sess-version> <nettype> <addrtype> <address>-->
+    <ereg regexp="o=\S+ [0-9]+ [0-9]+ IN IP[46] \S+"
+          search_in="body"
+          check_it="true"
+          assign_to="2" />
+  </recv>
+
+  <send>
+    <![CDATA[
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=user1 12345678 1234567890 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[local_ip_type] [local_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+    ]]>
+  </send>
+
+  <recv request="ACK" crlf="true">
+  </recv>
+
+</scenario>
