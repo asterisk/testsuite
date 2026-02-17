@@ -1,0 +1,35 @@
+testinfo:
+    summary: 'Verify PJSIP SDP s= and o= lines are non-empty'
+    description: |
+        This test ensures that outbound SDP from Asterisk
+        comply with RFC 8866 by verifying that the Session Name (s=) and
+        Owner/Creator (o=) lines are present and contain valid data.'
+
+test-modules:
+    test-object:
+        config-section: test-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: orig-config
+            typename: 'pluggable_modules.Originator'
+
+test-config:
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'check_sdp_lines.xml', '-s': 'testuser', '-p': '5061'}, 'stop-relative': 'True' }
+
+orig-config:
+    channel: 'PJSIP/testuser'
+
+properties:
+    dependencies:
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.1'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+        - sdp
