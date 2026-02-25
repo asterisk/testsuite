@@ -1,0 +1,49 @@
+testinfo:
+    summary: 'StasisBroadcast sets STASISSTATUS=TIMEOUT when no app claims.'
+    description: |
+        Verifies that when no ARI application claims the channel within the
+        configured timeout period, StasisBroadcast returns control to the
+        dialplan with STASISSTATUS set to TIMEOUT.
+
+        The test confirms both that the CallBroadcast event was dispatched
+        (count: 1) and that the AMI UserEvent fired by the dialplan carries
+        Status=TIMEOUT.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            typename: claim_timeout.TimeoutTest
+
+test-object-config:
+    apps: testsuite
+    stop-on-end: False
+    reactor-timeout: 15
+
+ari-config:
+    events:
+        -
+            conditions:
+                match:
+                    type: CallBroadcast
+                    application: testsuite
+            count: 1
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_stasis_broadcast
+        - asterisk : app_stasis_broadcast
+        - asterisk : res_ari_events
+        - asterisk : app_echo
+    tags:
+        - ARI

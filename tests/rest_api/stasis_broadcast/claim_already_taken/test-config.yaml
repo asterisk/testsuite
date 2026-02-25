@@ -1,0 +1,69 @@
+testinfo:
+    summary: 'StasisBroadcast returns HTTP 409 when channel is already claimed.'
+    description: |
+        Verifies that when two ARI applications both receive a CallBroadcast
+        event and both attempt to claim the same channel, the first claim
+        succeeds (HTTP 204) and the second claim is rejected (HTTP 409 Conflict).
+
+        Two apps ('app-one' and 'app-two') are registered on the same
+        WebSocket.  Both receive CallBroadcast.  The first to be processed
+        claims the channel; the second receives a 409.  The winner app is
+        confirmed via StasisStart.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
+
+test-object-config:
+    apps: app-one,app-two
+    stop-on-end: False
+    reactor-timeout: 15
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+        stop_test:
+
+ari-config:
+    events:
+        -
+            conditions:
+                match:
+                    type: CallBroadcast
+            count: 2
+            callback:
+                module: claim_already_taken
+                method: on_broadcast
+        -
+            conditions:
+                match:
+                    type: StasisStart
+            count: 1
+            callback:
+                module: claim_already_taken
+                method: on_stasis_start
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_stasis_broadcast
+        - asterisk : app_stasis_broadcast
+        - asterisk : res_ari_events
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
