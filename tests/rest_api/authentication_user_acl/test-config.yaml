@@ -1,0 +1,18 @@
+testinfo:
+    summary: Test authentication for the RESTful API
+    description: |
+        This test attempts three sets of login attempts to the RESTful API via
+        each of its authentication mechanisms.
+        Tests include:
+        A blanket deny with a matching permit allows
+        A blanket deny with a non-matching permit denies
+        A blanket deny with no permit denies
+
+properties:
+    dependencies:
+        - python : twisted
+        - python : starpy
+        - python : requests
+        - asterisk : res_ari_channels
+    tags:
+        - ARI
