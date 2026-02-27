@@ -3,6 +3,7 @@ tests:
     - dir:  'websocket'
     - test: 'continue'
     - test: 'authentication'
+    - test: 'authentication_user_acl'
     - test: 'CORS'
     - dir:  'applications'
     - dir:  'asterisk'
