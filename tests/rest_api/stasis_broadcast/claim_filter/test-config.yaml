@@ -1,0 +1,73 @@
+testinfo:
+    summary: 'StasisBroadcast app_filter restricts which apps receive CallBroadcast.'
+    description: |
+        Verifies that the app_filter argument (a POSIX extended regex) limits
+        delivery of CallBroadcast events to matching ARI applications only.
+
+        Two apps are registered: 'ivr-main' (matches '^ivr-.*') and 'support'
+        (does not match).  Only 'ivr-main' should receive CallBroadcast.  The
+        count: 1 assertion on CallBroadcast acts as the filter correctness
+        check — if 'support' also received the event the count would be 2 and
+        the test would fail.
+
+        'ivr-main' then claims the channel and confirms via StasisStart.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
+
+test-object-config:
+    apps: ivr-main,support
+    stop-on-end: False
+    reactor-timeout: 15
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: ivr-main
+        stop_test:
+
+ari-config:
+    events:
+        -
+            conditions:
+                match:
+                    type: CallBroadcast
+            count: 1
+            callback:
+                module: claim_filter
+                method: on_broadcast
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: ivr-main
+            count: 1
+            callback:
+                module: claim_filter
+                method: on_stasis_start
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_stasis_broadcast
+        - asterisk : app_stasis_broadcast
+        - asterisk : res_ari_events
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI

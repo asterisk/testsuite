@@ -1,0 +1,5 @@
+tests:
+    - test: 'claim_success'
+    - test: 'claim_timeout'
+    - test: 'claim_already_taken'
+    - test: 'claim_filter'
