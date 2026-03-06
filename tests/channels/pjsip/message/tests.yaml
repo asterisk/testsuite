@@ -14,3 +14,4 @@ tests:
     - test: 'message_to_uri'
     - test: 'message_confbridge'
     - test: 'message_destination_parsing'
+    - test: 'message_out_dialog'
