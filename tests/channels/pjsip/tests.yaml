@@ -43,6 +43,7 @@ tests:
     - dir: 'session_timers'
     - dir: 'dtmf_sdp'
     - dir: 'oli'
+    - dir: 'rfc7329'
     - test: 'accountcode'
     - test: 'acl_call'
     - test: 'allow_overlap'
