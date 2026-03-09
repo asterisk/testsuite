@@ -1,0 +1,69 @@
+testinfo:
+    summary: 'StasisBroadcast nominal claim via ARI.'
+    description: |
+        Verifies that when a channel enters StasisBroadcast, a CallBroadcast
+        event is dispatched to all registered ARI applications, the claiming
+        application successfully claims the channel via POST /events/claim
+        (HTTP 204), and the channel subsequently receives a StasisStart event
+        in the claiming application.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: ari.AriTestObject
+    modules:
+        -
+            config-section: ari-config
+            typename: ari.WebSocketEventModule
+        -
+            config-section: ari-test-stopper
+            typename: pluggable_modules.EventActionModule
+
+test-object-config:
+    apps: testsuite
+    stop-on-end: False
+    reactor-timeout: 15
+
+ari-test-stopper:
+    -
+        ari-events:
+            match:
+                type: StasisEnd
+                application: testsuite
+        stop_test:
+
+ari-config:
+    events:
+        -
+            conditions:
+                match:
+                    type: CallBroadcast
+                    application: testsuite
+            count: 1
+            callback:
+                module: claim_success
+                method: on_broadcast
+        -
+            conditions:
+                match:
+                    type: StasisStart
+                    application: testsuite
+            count: 1
+            callback:
+                module: claim_success
+                method: on_stasis_start
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_stasis_broadcast
+        - asterisk : app_stasis_broadcast
+        - asterisk : res_ari_events
+        - asterisk : res_ari_channels
+        - asterisk : app_echo
+    tags:
+        - ARI
