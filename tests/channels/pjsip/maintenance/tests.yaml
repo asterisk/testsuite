@@ -1,0 +1,4 @@
+tests:
+    - test: 'inbound_rejection'
+    - test: 'ami_actions'
+    - test: 'outbound_blocking'
