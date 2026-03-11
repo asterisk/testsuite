@@ -1,0 +1,77 @@
+testinfo:
+    summary: 'Test res_pjsip_maintenance blocks outbound origination'
+    description: |
+        Places a PJSIP endpoint into maintenance mode via the AMI
+        PJSIPSetMaintenance action and verifies that an outbound origination
+        to that endpoint via AMI Originate is refused before any SIP session
+        is created.
+
+        Sequence:
+          1. On AMI connect, enable maintenance for endpoint "alice".
+          2. On PJSIPMaintenanceStatus (enabled), fire an async AMI Originate
+             to PJSIP/alice with a known ActionID.
+          3. The test passes when OriginateResponse arrives with
+             Response: Failure for that ActionID, confirming the channel was
+             never created.
+
+test-modules:
+    test-object:
+        config-section: object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+object-config:
+    reactor-timeout: 15
+    connect-ami: True
+
+ami-config:
+    # Step 1: enable maintenance for "alice" via AMI
+    -
+        ami-start:
+        ami-actions:
+            action:
+                Action: 'PJSIPSetMaintenance'
+                Endpoint: 'alice'
+                State: 'on'
+
+    # Step 2: once maintenance is confirmed, attempt an outbound origination
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'PJSIPMaintenanceStatus'
+                    Status: 'enabled'
+                    Endpoint: 'alice'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'Originate'
+                Channel: 'PJSIP/alice'
+                Context: 'default'
+                Exten: 's'
+                Priority: '1'
+                Async: 'yes'
+                ActionID: 'maint-outbound-01'
+
+    # Step 3: stop (pass) when the origination fails as expected
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'OriginateResponse'
+                    Response: 'Failure'
+            requirements:
+                match:
+                    ActionID: 'maint-outbound-01'
+            count: 1
+        stop_test:
+
+properties:
+    dependencies:
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_maintenance'
+    tags:
+        - pjsip

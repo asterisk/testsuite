@@ -13,6 +13,7 @@ tests:
     - dir: 'history_info'
     - dir: 'headers'
     - dir: 'identify'
+    - dir: 'maintenance'
     - dir: 'mediasec'
     - dir: 'message'
     - dir: 'nat'
