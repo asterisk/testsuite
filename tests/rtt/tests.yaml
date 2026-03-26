@@ -1,0 +1,10 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'rtt_red_t140'
+    - test: 'rtt_red_t140_audio'
+    - test: 'rtt_t140_red'
+    - test: 'rtt_t140_red_audio'
+    - test: 'rtt_red'
+    - test: 'rtt_red_audio'
+    - test: 'rtt_t140'
+    - test: 'rtt_t140_audio'

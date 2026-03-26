@@ -1,0 +1,8 @@
+# Enter tests here in the order they should be considered for execution:
+tests:
+    - test: 'srtp_red_t140'
+    - test: 'srtp_red_t140_audio'
+    - test: 'srtp_t140'
+    - test: 'srtp_t140_audio'
+    - test: 'srtp_t140_red'
+    - test: 'srtp_t140_red_audio'
