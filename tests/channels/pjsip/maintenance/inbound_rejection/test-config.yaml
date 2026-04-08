@@ -1,0 +1,39 @@
+testinfo:
+    summary: 'Test res_pjsip_maintenance rejects inbound INVITE with 503'
+    description: |
+        Places a PJSIP endpoint into maintenance mode via the AMI
+        PJSIPSetMaintenance action and verifies that a new inbound INVITE
+        from that endpoint is rejected with "503 Service Unavailable".
+        The SIPp scenario pauses briefly after startup to allow the AMI
+        action to complete before sending the INVITE.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpAMIActionTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    reactor-timeout: 30
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario': 'invite_expect_503.xml',
+                                  '-i': '127.0.0.1', '-p': '5061',
+                                  '-s': 'alice' } }
+    ami-action:
+        delay: 0
+        args:
+            Action: 'PJSIPSetMaintenance'
+            Endpoint: 'alice'
+            State: 'on'
+
+properties:
+    dependencies:
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_maintenance'
+    tags:
+        - pjsip
