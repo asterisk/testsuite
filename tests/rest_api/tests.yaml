@@ -20,4 +20,5 @@ tests:
     - dir:  'message'
     - dir:  'external_interaction'
     - test: 'move'
+    - dir:  'stasis_broadcast'
 
