@@ -42,7 +42,7 @@ class AMIExtensionStateList(object):
 
         self.received_events = []
         self.test_object = test_object
-        self.state_pos = 0
+        self.received_expected_states = []
         self.exten_state_changes = 0
         self.presence_state_changes = 0
 
@@ -150,19 +150,22 @@ class AMIExtensionStateList(object):
         self.test_object.remove_fail_token(self.list_complete_token)
         self.test_object.stop_reactor()
 
-    def check_parameter(self, event, parameter):
-        """Verify a parameter from a ExtensionStatus event
+    def find_matching_expected_state(self, event):
+        """Find an expected state that matches the current event
 
         Keyword Arguments:
-        event     The ExtensionStatus event
-        parameter The parameter in the event to verify
+        event The ExtensionStatus event
+
+        Returns:
+        The matching expected state dictionary, or None if no match found
         """
-        actual = event.get(parameter)
-        expected = EXPECTED_STATES[self.state_pos][parameter]
-        if actual != expected:
-            LOGGER.error("Unexpected {0} received. Expected {1} but got "
-                         "{2}".format(parameter, expected, actual))
-            self.test_object.set_passed(False)
+        for expected_state in EXPECTED_STATES:
+            if expected_state not in self.received_expected_states:
+                if (expected_state['exten'] == event.get('exten') and
+                    expected_state['status'] == event.get('status') and
+                    expected_state['statustext'] == event.get('statustext')):
+                    return expected_state
+        return None
 
     def handle_exten_status_event(self, event):
         if 'actionid' not in event:
@@ -173,15 +176,14 @@ class AMIExtensionStateList(object):
             # Ignore completion event
             return
 
-        self.check_parameter(event, 'exten')
-        self.check_parameter(event, 'status')
-        self.check_parameter(event, 'statustext')
-
-        self.state_pos += 1
-        if self.state_pos == len(EXPECTED_STATES):
-            self.test_object.set_passed(True)
-        elif self.state_pos > len(EXPECTED_STATES):
-            LOGGER.error("Oh snap, we got %d updates but expected %d" %
-                (self.state_pos, len(EXPECTED_STATES)))
+        matching_state = self.find_matching_expected_state(event)
+        if matching_state is None:
+            LOGGER.error("Received unexpected or duplicate event: %s" % str(event))
             self.test_object.set_passed(False)
+            return
+
+        self.received_expected_states.append(matching_state)
+
+        if len(self.received_expected_states) == len(EXPECTED_STATES):
+            self.test_object.set_passed(True)
 
