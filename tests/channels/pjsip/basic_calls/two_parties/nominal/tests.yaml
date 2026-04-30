@@ -1,5 +1,6 @@
 tests:
     - dir: 'alice_initiated'
+    - dir: 'direct_media'
     - test: 'two_servers'
     - test: 'add_remove_sources'
     - test: 'video_bidirectional_to_unidirectional'
