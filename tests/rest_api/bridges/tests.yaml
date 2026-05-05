@@ -8,6 +8,7 @@ tests:
     - test: 'add_recording_channel'
     - test: 'bridge_by_id'
     - test: 'bridge_record'
+    - dir: 'bridge_variables'
     - test: 'id_propagate'
     - test: 'no_id_propagate'
     - dir: 'playback'
