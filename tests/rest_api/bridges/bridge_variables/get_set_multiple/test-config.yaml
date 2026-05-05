@@ -1,8 +1,8 @@
 testinfo:
-    summary: 'Test getting/setting multiple channel variables simultaneously via ARI.'
+    summary: 'Test getting/setting multiple bridge variables simultaneously via ARI.'
     description: |
-        'Create a channel. Set some channel variables on the newly
-        created channel. Then, get those channel variables to ensure
+        'Create a bridge. Set some bridge variables on the newly
+        created bridge. Then, get those bridge variables to ensure
         everything worked as expected.'
 
 test-modules:
@@ -27,7 +27,10 @@ pluggable-config:
                     endpoint: 'Local/s@default'
                     app: 'testsuite'
                     channelId: 'channel1'
-                body: {'variables': {'CALLSTATE': {'value': 'created', 'report_events': True }}}
+                expect: 200
+            -   method: 'post'
+                uri: 'bridges/bridge1'
+                body: {'variables': {'BRIDGESTATE': {'value': 'created', 'report_events': True }, 'BRIDGENOREPORT1': {'value': 'donotreport', 'report_events': False }}}
                 expect: 200
 
     -   ari-events:
@@ -39,16 +42,35 @@ pluggable-config:
             count: 1
         ari-requests:
             -   method: 'post'
-                uri: 'channels/channel1/variables'
+                uri: 'bridges/bridge1/variables'
                 body: {'variables': {'TESTVAR1': 'test1', 'TESTVAR2 ': {'value': 'test2', 'report_events': True}, ' TESTVAR3': 'test3'}}
                 expect: 204
             -   method: 'get'
-                uri: 'channels/channel1/variables'
+                uri: 'bridges/bridge1/variables'
                 params:
-                    variables: ' TESTVAR1, TESTVAR2 ,TESTVAR3'
+                    variables: 'BRIDGESTATE, BRIDGENOREPORT1, TESTVAR1, TESTVAR2 ,TESTVAR3'
                 expect: 200
                 response_body:
-                    match: {'variables': {'TESTVAR1': 'test1', 'TESTVAR2': 'test2', 'TESTVAR3': 'test3'}}
+                    match: {'variables': {'BRIDGESTATE': 'created', 'BRIDGENOREPORT1': 'donotreport', 'TESTVAR1': 'test1', 'TESTVAR2': 'test2', 'TESTVAR3': 'test3'}}
+            -   method: 'post'
+                uri: 'bridges/bridge1/addChannel'
+                params:
+                    channel: 'channel1'
+                expect: 204
+
+    -   ari-events:
+            match:
+                type: 'ChannelEnteredBridge'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+                bridge:
+                    id: 'bridge1'
+                    bridgevars:
+                        BRIDGESTATE: 'created'
+                        TESTVAR2: 'test2'
+            count: 1
+        ari-requests:
             -   method: 'delete'
                 uri: 'channels/channel1'
                 expect: 204
@@ -59,9 +81,6 @@ pluggable-config:
                 application: 'testsuite'
                 channel:
                     id: 'channel1'
-                    channelvars:
-                        CALLSTATE: 'created'
-                        TESTVAR2: 'test2'
             count: 1
         stop_test:
 
