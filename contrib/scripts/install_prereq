@@ -19,7 +19,7 @@ PACKAGES_DEBIAN="$PACKAGES_DEBIAN python3 python3-pip python3-setuptools python3
 # Testsuite: basic requirements:
 PACKAGES_DEBIAN="$PACKAGES_DEBIAN liblua5.1-0-dev lua5.1 gdb"
 # Sipp requirements
-PACKAGES_DEBIAN="$PACKAGES_DEBIAN libpcap-dev libssl-dev libsctp-dev libncurses5-dev"
+PACKAGES_DEBIAN="$PACKAGES_DEBIAN libpcap-dev libssl-dev libsctp-dev libncurses5-dev libgsl-dev"
 
 # Basic build system:
 PACKAGES_RH="subversion git gcc gcc-c++ patch cmake"
@@ -28,7 +28,7 @@ PACKAGES_RH="$PACKAGES_RH python3 python3-pip python3-setuptools python3-devel p
 # Testsuite: basic requirements:
 PACKAGES_RH="$PACKAGES_RH lua-devel gdb"
 # Sipp requirements
-PACKAGES_RH="$PACKAGES_RH libpcap-devel openssl-devel lksctp-tools-devel"
+PACKAGES_RH="$PACKAGES_RH libpcap-devel openssl-devel lksctp-tools-devel gsl libgsl-devel"
 
 # Basic build system:
 PACKAGES_ARCH="git gcc cmake"
@@ -37,7 +37,7 @@ PACKAGES_ARCH="$PACKAGES_ARCH python python-pip python-setuptools"
 # Testsuite: basic requirements:
 PACKAGES_ARCH="$PACKAGES_ARCH lua51 gdb"
 # Sipp requirements
-PACKAGES_ARCH="$PACKAGES_ARCH libpcap openssl lksctp-tools"
+PACKAGES_ARCH="$PACKAGES_ARCH libpcap openssl lksctp-tools gsl"
 
 LIBDIR=/usr/lib$(getconf LONG_BIT | fgrep 64)
 [ ! -d $LIBDIR ] && LIBDIR=/usr/lib
@@ -187,40 +187,10 @@ install_sipp() {
 	$testcmd cd $PROJECT_DIR
 
 	# Checkout and build the current latest released version.
-	$testcmd git checkout v3.6.1
+	$testcmd git checkout v3.7.5 || { echo "Failed to checkout sipp v3.7.5. Aborting." ; exit 1; }
 
-	$testcmd ./build.sh --full
-	$testcmd make install
-
-	$testcmd cd $SAVE_DIR
-}
-
-# Build and then install ONLY pjsua from pjproject
-install_pjsua() {
-	SAVE_DIR=`pwd`
-	$testcmd cd /tmp
-
-	PROJECT_DIR=pjsua
-
-	$testcmd rm -rf pjsua
-	$testcmd git clone https://github.com/asterisk/pjproject $PROJECT_DIR
-	$testcmd cd $PROJECT_DIR
-
-	$testcmd ./configure CFLAGS="-fPIC -O2 -DNDEBUG"
-	#$testcmd ./configure --prefix=/usr --libdir=$LIBDIR --enable-shared --with-external-speex --with-external-srtp --with-external-gsm --disable-sound --disable-resample --disable-video --disable-opencore-amr CFLAGS='-O2 -DNDEBUG'
-
-	$testcmd cp pjlib/include/pj/config_site_sample.h pjlib/include/pj/config_site.h
-	if in_test_mode; then
-		$testcmd 'echo "#define PJ_HAS_IPV6 1" >> pjlib/include/pj/config_site.h'
-	else
-		echo "#define PJ_HAS_IPV6 1" >> pjlib/include/pj/config_site.h
-	fi
-
-	$testcmd make dep
-	$testcmd make
-
-	# The testsuite only cares about pjsua from what we have built.
-	$testcmd cp -v pjsip-apps/bin/pjsua-`uname -m`-*-linux-gnu $MY_BIN/pjsua
+	$testcmd ./build.sh --full || { echo "Failed to build sipp. Aborting." ; exit 1; }
+	$testcmd make install || { echo "Failed to install sipp. Aborting." ; exit 1; }
 
 	$testcmd cd $SAVE_DIR
 }
@@ -231,7 +201,6 @@ install_testsuite_dependencies()
 
 	which asttest > /dev/null || install_asttest
 	which sipp > /dev/null || install_sipp
-	which pjsua > /dev/null || install_pjsua
 }
 
 if in_test_mode; then
