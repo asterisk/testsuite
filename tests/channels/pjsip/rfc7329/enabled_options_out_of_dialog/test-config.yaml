@@ -1,0 +1,27 @@
+testinfo:
+    summary: 'RFC7329 enabled: out-of-dialog OPTIONS with Session-ID'
+    description: |
+        'For out-of-dialog OPTIONS with Session-ID present, Asterisk should
+         preserve and forward a valid Session-ID.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'options_with_sid.xml', '-i': '127.0.0.1', '-p': '5061'} }
+
+properties:
+    dependencies:
+        - app: 'sipp'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+        - asterisk: 'res_pjsip_rfc7329'
+    tags:
+        - pjsip
+        - rfc7329
