@@ -1,0 +1,95 @@
+testinfo:
+    summary: 'Test getting/setting multiple bridge variables simultaneously via ARI.'
+    description: |
+        'Create a bridge. Set some bridge variables on the newly
+        created bridge. Then, get those bridge variables to ensure
+        everything worked as expected.'
+
+test-modules:
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'ari.AriBaseTestObject'
+    modules:
+    -   config-section: 'pluggable-config'
+        typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    apps: 'testsuite'
+    reactor-timeout: 15
+    stop-on-end: False
+
+pluggable-config:
+    -   ari-start:
+        ari-requests:
+            -   method: 'post'
+                uri: 'channels/create'
+                params:
+                    endpoint: 'Local/s@default'
+                    app: 'testsuite'
+                    channelId: 'channel1'
+                expect: 200
+            -   method: 'post'
+                uri: 'bridges/bridge1'
+                body: {'variables': {'BRIDGESTATE': {'value': 'created', 'report_events': True }, 'BRIDGENOREPORT1': {'value': 'donotreport', 'report_events': False }}}
+                expect: 200
+
+    -   ari-events:
+            match:
+                type: 'StasisStart'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+            count: 1
+        ari-requests:
+            -   method: 'post'
+                uri: 'bridges/bridge1/variables'
+                body: {'variables': {'TESTVAR1': 'test1', 'TESTVAR2 ': {'value': 'test2', 'report_events': True}, ' TESTVAR3': 'test3'}}
+                expect: 204
+            -   method: 'get'
+                uri: 'bridges/bridge1/variables'
+                params:
+                    variables: 'BRIDGESTATE, BRIDGENOREPORT1, TESTVAR1, TESTVAR2 ,TESTVAR3'
+                expect: 200
+                response_body:
+                    match: {'variables': {'BRIDGESTATE': 'created', 'BRIDGENOREPORT1': 'donotreport', 'TESTVAR1': 'test1', 'TESTVAR2': 'test2', 'TESTVAR3': 'test3'}}
+            -   method: 'post'
+                uri: 'bridges/bridge1/addChannel'
+                params:
+                    channel: 'channel1'
+                expect: 204
+
+    -   ari-events:
+            match:
+                type: 'ChannelEnteredBridge'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+                bridge:
+                    id: 'bridge1'
+                    bridgevars:
+                        BRIDGESTATE: 'created'
+                        TESTVAR2: 'test2'
+            count: 1
+        ari-requests:
+            -   method: 'delete'
+                uri: 'channels/channel1'
+                expect: 204
+
+    -   ari-events:
+            match:
+                type: 'StasisEnd'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+            count: 1
+        stop_test:
+
+properties:
+    dependencies:
+    -   python: 'autobahn.websocket'
+    -   python: 'requests'
+    -   python: 'twisted'
+    -   python: 'starpy'
+    -   asterisk: 'res_ari_channels'
+    tags:
+    - ARI

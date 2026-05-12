@@ -18,3 +18,4 @@ tests:
     - test: 'create_duplicate_id'
     - dir: 'rtp_statistics'
     - dir: 'external_media'
+    - dir: 'channel_variables'

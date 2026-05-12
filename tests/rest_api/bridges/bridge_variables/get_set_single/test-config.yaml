@@ -1,0 +1,138 @@
+testinfo:
+    summary: 'Test getting/setting a bridge variable via ARI.'
+    description: |
+        'Create a bridge. Set some bridge variables one at a time on the newly
+        created bridge. Then, get those bridge variables one at a time to ensure
+        everything worked as expected.  Make sure that the variable set to
+        report events does so, and that the variable set to not report events does
+        not report events.'
+
+test-modules:
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'ari.AriBaseTestObject'
+    modules:
+    -   config-section: 'pluggable-config'
+        typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    apps: 'testsuite'
+    reactor-timeout: 15
+    stop-on-end: False
+
+pluggable-config:
+    -   ari-start:
+        ari-requests:
+            -   method: 'post'
+                uri: 'channels/create'
+                params:
+                    endpoint: 'Local/s@default'
+                    app: 'testsuite'
+                    channelId: 'channel1'
+                expect: 200
+            -   method: 'post'
+                uri: 'bridges/bridge1'
+                body: {'variables': {'BRIDGESTATE': {'value': 'created', 'report_events': True }}}
+                expect: 200
+
+    -   ari-events:
+            match:
+                type: 'StasisStart'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+            count: 1
+        ari-requests:
+            -   method: 'post'
+                uri: 'bridges/bridge1/variable'
+                params:
+                    bridgeId: 'bridge1'
+                    variable: 'TESTVAR1'
+                    value: 'test1'
+                    report_events: False
+                expect: 204
+            -   method: 'post'
+                uri: 'bridges/bridge1/variable'
+                params:
+                    bridgeId: 'bridge1'
+                    variable: 'TESTVAR2'
+                    value: 'test2'
+                    report_events: True
+                expect: 204
+            -   method: 'get'
+                uri: 'bridges/bridge1/variable'
+                params:
+                    bridgeId: 'bridge1'
+                    variable: 'BRIDGESTATE'
+                expect: 200
+                response_body:
+                    match: {'value': 'created'}
+            -   method: 'get'
+                uri: 'bridges/bridge1/variable'
+                params:
+                    bridgeId: 'bridge1'
+                    variable: 'TESTVAR1'
+                expect: 200
+                response_body:
+                    match: {'value': 'test1'}
+            -   method: 'get'
+                uri: 'bridges/bridge1/variable'
+                params:
+                    bridgeId: 'bridge1'
+                    variable: 'TESTVAR2'
+                expect: 200
+                response_body:
+                    match: {'value': 'test2'}
+            -   method: 'post'
+                uri: 'bridges/bridge1/addChannel'
+                params:
+                    channel: 'channel1'
+                expect: 204
+
+    -   ari-events:
+            match:
+                type: 'ChannelEnteredBridge'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+                bridge:
+                    id: 'bridge1'
+                    bridgevars:
+                        BRIDGESTATE: 'created'
+                        TESTVAR2: 'test2'
+            count: 1
+        ari-requests:
+            -   method: 'delete'
+                uri: 'channels/channel1'
+                expect: 204
+
+    -   ari-events:
+            match:
+                type: 'ChannelEnteredBridge'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+                bridge:
+                    id: 'bridge1'
+                    bridgevars:
+                        TESTVAR1: 'test1'
+            count: 0
+
+    -   ari-events:
+            match:
+                type: 'StasisEnd'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+            count: 1
+        stop_test:
+
+properties:
+    dependencies:
+    -   python: 'autobahn.websocket'
+    -   python: 'requests'
+    -   python: 'twisted'
+    -   python: 'starpy'
+    -   asterisk: 'res_ari_channels'
+    tags:
+    - ARI

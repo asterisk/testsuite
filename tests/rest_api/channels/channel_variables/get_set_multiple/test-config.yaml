@@ -1,0 +1,76 @@
+testinfo:
+    summary: 'Test getting/setting multiple channel variables simultaneously via ARI.'
+    description: |
+        'Create a channel. Set some channel variables on the newly
+        created channel. Then, get those channel variables to ensure
+        everything worked as expected.'
+
+test-modules:
+    test-object:
+        config-section: 'test-object-config'
+        typename: 'ari.AriBaseTestObject'
+    modules:
+    -   config-section: 'pluggable-config'
+        typename: 'pluggable_modules.EventActionModule'
+
+test-object-config:
+    apps: 'testsuite'
+    reactor-timeout: 15
+    stop-on-end: False
+
+pluggable-config:
+    -   ari-start:
+        ari-requests:
+            -   method: 'post'
+                uri: 'channels/create'
+                params:
+                    endpoint: 'Local/s@default'
+                    app: 'testsuite'
+                    channelId: 'channel1'
+                body: {'variables': {'CALLSTATE': {'value': 'created', 'report_events': True }}}
+                expect: 200
+
+    -   ari-events:
+            match:
+                type: 'StasisStart'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+            count: 1
+        ari-requests:
+            -   method: 'post'
+                uri: 'channels/channel1/variables'
+                body: {'variables': {'TESTVAR1': 'test1', 'TESTVAR2 ': {'value': 'test2', 'report_events': True}, ' TESTVAR3': 'test3'}}
+                expect: 204
+            -   method: 'get'
+                uri: 'channels/channel1/variables'
+                params:
+                    variables: ' TESTVAR1, TESTVAR2 ,TESTVAR3'
+                expect: 200
+                response_body:
+                    match: {'variables': {'TESTVAR1': 'test1', 'TESTVAR2': 'test2', 'TESTVAR3': 'test3'}}
+            -   method: 'delete'
+                uri: 'channels/channel1'
+                expect: 204
+
+    -   ari-events:
+            match:
+                type: 'StasisEnd'
+                application: 'testsuite'
+                channel:
+                    id: 'channel1'
+                    channelvars:
+                        CALLSTATE: 'created'
+                        TESTVAR2: 'test2'
+            count: 1
+        stop_test:
+
+properties:
+    dependencies:
+    -   python: 'autobahn.websocket'
+    -   python: 'requests'
+    -   python: 'twisted'
+    -   python: 'starpy'
+    -   asterisk: 'res_ari_channels'
+    tags:
+    - ARI
