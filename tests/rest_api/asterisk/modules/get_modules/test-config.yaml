@@ -235,6 +235,13 @@ ari-config:
                                 }
                             -
                                 {
+                                  "name": "res_curl.so",
+                                  "description": "cURL Resource Module",
+                                  "status": "Running",
+                                  "support_level": "core"
+                                }
+                            -
+                                {
                                   "name": "res_http_websocket.so",
                                   "description": "HTTP WebSocket Support",
                                   "status": "Running",
