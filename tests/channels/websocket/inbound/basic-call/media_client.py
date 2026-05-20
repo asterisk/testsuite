@@ -176,19 +176,8 @@ class ChanWebSocketTest(object):
         sent_length = len(sent_bytes)
         received_bytes = self.recvd_buffer.getvalue()
         received_length = len(received_bytes)
+        expected_length = sent_length
 
-        """
-        If the file we sent wasn't an even multiple of
-        optimal_frame_size, the channel driver will have padded it
-        with silence before sending it to the core.  This means
-        that the amount of data we get back will be greater
-        than what was sent by the amount needed to fill the
-        short frame.
-        """
-        if (sent_length % self.optimal_frame_size) != 0:
-            expected_length = sent_length + (self.optimal_frame_size - (sent_length % self.optimal_frame_size))
-        else:
-            expected_length = sent_length
         LOGGER.info(f"Bytes sent: {sent_length} Bytes expected: {expected_length} Bytes received: {received_length}")
         if received_length < expected_length:
             LOGGER.error("Bytes received < Bytes expected (failure)")
