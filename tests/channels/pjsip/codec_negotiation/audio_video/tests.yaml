@@ -1,0 +1,16 @@
+# Enter tests here in the order they should be considered for execution:
+---
+tests:
+    - test: 'common_codecs_default'
+    - test: 'common_codecs_union'
+    - test: 'late_offer_progress'
+    - test: 'late_offer_ringing'
+    - test: 'no_common_codecs'
+    - test: 'no_common_codecs_early'
+    - test: 'no_common_codecs_prevent'
+    - test: 'no_common_codecs_prevent_early'
+    - test: 'progress'
+    - test: 'progress_no_180'
+    - test: 'reverse_order'
+    - test: 'ringing'
+    - dir: 'local_channels'
