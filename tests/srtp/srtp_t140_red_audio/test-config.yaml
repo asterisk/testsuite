@@ -1,0 +1,17 @@
+testinfo:
+    summary: 'Bidirectional SRTP RTT Ping-Pong Test'
+    description: 'Verifies T.140 RTT media relay between 101 and 102 using SRTP.'
+test-modules:
+    test-object:
+        config-section: srtp-test
+        typename: run-test.SRTPTest
+srtp-test:
+    asterisk-instances: 1
+    timeout: 70
+properties:
+    dependencies:
+        - python : 'twisted'
+        - app : 'pjsua'
+        #- asterisk: 'res_pjsip'
+    tags:
+        - pjsip

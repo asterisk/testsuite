@@ -37,5 +37,7 @@ tests:
     - test: 'remote-test'
     - dir: 'codecs'
     - dir: 'rtp'
+    - dir: 'rtt'
     - dir: 'tenant_id'
     - dir: 'extra_gates'
+    - dir: 'srtp'
