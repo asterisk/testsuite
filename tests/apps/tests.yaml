@@ -12,6 +12,7 @@ tests:
     - dir: 'queues'
     - dir: 'directed_pickup'
     - test: 'mixmonitor'
+    - test: 'mixmonitor_duplex'
     - test: 'mixmonitor_rxtx'
     - test: 'mixmonitor_audiohook_inherit'
     - test: 'mixmonitor_func'
