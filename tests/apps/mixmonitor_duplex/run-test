@@ -1,0 +1,156 @@
+#!/usr/bin/env python
+'''
+Copyright (C) 2010-2015, Digium, Inc.
+David Vossel <dvossel@digium.com>
+Matt Jordan <mjordan@digium.com>
+Richard Mudgett <rmudgett@digium.com>
+
+This program is free software, distributed under the terms of
+the GNU General Public License Version 2.
+'''
+
+import sys
+import os
+import math
+import logging
+
+from twisted.internet import reactor
+
+from asterisk.test_case import TestCase
+
+testdir = "tests/apps/mixmonitor_duplex"
+
+LOGGER = logging.getLogger(__name__)
+
+
+class MixMonitorTest(TestCase):
+    def __init__(self):
+        super(MixMonitorTest, self).__init__()
+
+        # How many MixMonitor instances have ended, both must end before checking file sizes
+        self.mixmonitor_ended = 0
+
+        # Expect the file size of the output audio file that will come out to be ~41118
+        # (Duplex is 2x the size)
+        # This is regardless of the input audio format, as the output is the same
+        # linear16 2 channel 8kHz
+        self.expectedfilesize = 41118 * 2
+        self.filesizetolerance = 5000 * 2
+
+        self.audiofile1 = os.path.join(os.getcwd(), testdir + "/testaudio1")
+        self.audiofile2 = os.path.join(os.getcwd(), testdir + "/testaudio2")
+
+        # Remove any output files from a previous run
+        self.unlink_file(self.audiofile1 + ".raw")
+        self.unlink_file(self.audiofile2 + ".raw")
+
+        self.talkingaudio1 = os.path.join(os.getcwd(), testdir + "/sounds/talking-u")
+        self.talkingaudio2 = os.path.join(os.getcwd(), testdir + "/sounds/talking-g")
+
+        self.create_asterisk()
+
+    def unlink_file(self, filename):
+        if os.path.exists(filename):
+            os.unlink(filename)
+
+    def check_file(self, name, filename):
+        if not os.path.exists(filename):
+            LOGGER.error(name + " does not exist.")
+            self.passed = False
+            return
+
+        filesize = os.path.getsize(filename)
+        LOGGER.debug("%s size is %d." % (name, filesize))
+        if math.fabs(filesize - self.expectedfilesize) > self.filesizetolerance:
+            # Fail: MixMonitor is not creating the correct
+            # file size we expect.
+            LOGGER.error(name + " size is not within the size tolerance.")
+            self.passed = False
+
+    def state_mixmonitor_end(self, ami, event):
+        if event.get("state") != "MIXMONITOR_END":
+            return
+
+        self.mixmonitor_ended += 1
+
+        if self.mixmonitor_ended != 2:
+            LOGGER.info("All MixMonitor applications have not yet ended.")
+            return
+
+        self.passed = True
+        self.stop_reactor()
+        LOGGER.info("Checking MixMonitor recorded files...")
+
+        self.check_file("audiofile1", self.audiofile1 + ".raw")
+
+        self.check_file("audiofile2", self.audiofile2 + ".raw")
+
+        if self.passed:
+            LOGGER.info("Test Passed... All audio files are correct.")
+
+    def launch_test1(self):
+        LOGGER.info("Placing call to test1 exten")
+        self.ami.originate(channel="Local/s@listener",
+                           context="test1",
+                           exten="s",
+                           priority="1")
+
+    def launch_test2(self):
+        LOGGER.info("Placing call to test2 exten")
+        self.ami.originate(channel="Local/s@listener",
+                           context="test2",
+                           exten="s",
+                           priority="1")
+
+    def check_test1(self, ami, event):
+        LOGGER.info("Checking Userevent")
+        if event.get("userevent").lower() != "test1":
+            return
+        status = event.get("status")
+        LOGGER.debug("Status of test1 is %s" % (status))
+        if status != "SUCCESS":
+            self.stop_reactor()
+            return
+
+        self.ami.registerEvent("UserEvent", self.check_test2)
+        self.launch_test2()
+
+    def check_test2(self, ami, event):
+        LOGGER.info("Checking Userevent")
+        if event.get("userevent").lower() != "test2":
+            return
+        status = event.get("status")
+        LOGGER.debug("Status of test2 is %s" % (status))
+        if status != "SUCCESS":
+            self.stop_reactor()
+            return
+
+    def ami_connect(self, ami):
+        self.ami = ami
+        self.ami.registerEvent("UserEvent", self.check_test1)
+        self.ami.registerEvent("TestEvent", self.state_mixmonitor_end)
+
+        self.ami.setVar(channel="", variable="TESTAUDIO1", value=self.audiofile1)
+        self.ami.setVar(channel="", variable="TESTAUDIO2", value=self.audiofile2)
+        self.ami.setVar(channel="", variable="TALK_AUDIO_1", value=self.talkingaudio1)
+        self.ami.setVar(channel="", variable="TALK_AUDIO_2", value=self.talkingaudio2)
+
+        self.launch_test1()
+
+    def run(self):
+        self.create_ami_factory()
+
+
+def main():
+    test = MixMonitorTest()
+    reactor.run()
+    if test.passed:
+        return 0
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
+
+
+# vim:sw=4:ts=4:expandtab:textwidth=79
