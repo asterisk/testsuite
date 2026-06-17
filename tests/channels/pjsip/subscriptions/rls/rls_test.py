@@ -95,6 +95,7 @@ class RLSTest(VOIPProxy):
         self.list_name = module_config["list-name"]
         self.log_packets = module_config.get("log-packets", False)
         self.packets = module_config["packets"]
+        self.packet_matched = [False] * (len(self.packets))
 
         self.stop_test_after_notifys = \
             module_config.get("stop-test-after-notifys", True)
@@ -200,30 +201,54 @@ class RLSTest(VOIPProxy):
                                         len(self.packets))
             self.fail_test(message)
             return
-
+        
         rls_packet = RLSPacket(packet)
-        resources = self.packets[self.packets_idx]["resources"]
-        fullstate = self.packets[self.packets_idx]["full-state"]
 
-        info = ValidationInfo(resources=resources,
-                              version=self.packets_idx,
-                              fullstate=fullstate,
-                              rlmi=None,
-                              rlmi_name=self.list_name)
+        matched_idx = self.packets_idx
+        matched = False
+        idx = 0
+        
+        while idx < len(self.packets):
+            message = 'Testing packet {0} against expected packet {1}.'
+            LOGGER.debug(message.format(self.packets_idx, idx))
+            if self.packet_matched[idx] is True:
+                message = 'Expected packet {0} already matched.'
+                LOGGER.debug(message.format(idx))
+                idx += 1
+                continue
 
-        message = "Validating Resource ({0}) of ({1})..."
-        LOGGER.debug(message.format(self.packets_idx, len(self.packets) - 1))
+            resources = self.packets[idx]["resources"]
+            fullstate = self.packets[idx]["full-state"]
+    
+            info = ValidationInfo(resources=resources,
+                                  version=idx,
+                                  fullstate=fullstate,
+                                  rlmi=None,
+                                  rlmi_name=self.list_name)
+    
+            message = "Validating Resource ({0}) of ({1})..."
+            LOGGER.debug(message.format(self.packets_idx, len(self.packets) - 1))
+    
+            if not rls_packet.validate(info):
+                message = "Integrity Check for packet {0} failed for expected packet {1}."
+                LOGGER.debug(message.format(self.packets_idx, idx))
+                idx += 1
+                continue
+    
+            info_msg = "Resource ({0}) validated successfully against expected packet {1}."
+            LOGGER.info(info_msg.format(self.packets_idx, idx))
+            matched = True
+            self.packet_matched[idx] = True
+            matched_idx = idx
+            break
 
-        if not rls_packet.validate(info):
-            message = "Integrity Check Failed for Resource ({0})."
+        if not matched:
+            message = "Resource ({0}) failed to match any of the expected packets."
             self.fail_test(message.format(self.packets_idx))
             return
-
-        info_msg = "Resource ({0}) validated successfully."
-        LOGGER.info(info_msg.format(self.packets_idx))
-
+            
         try:
-            action = self.packets[self.packets_idx]["ami-action"]
+            action = self.packets[matched_idx]["ami-action"]
             debug_msg = "Sending AMI action: {0}"
             LOGGER.debug(debug_msg.format(action))
             self.ami.sendMessage(action)
