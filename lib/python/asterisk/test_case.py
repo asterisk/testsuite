@@ -23,6 +23,9 @@ from .asterisk import Asterisk
 from .test_config import TestConfig
 from .test_config import PCAP_AVAILABLE
 from .test_conditions import TestConditionController
+# This needs to be the PcapListener from the pcap_listener module
+# not the one from the .pcap module.  
+from pcap_listener import PcapListener
 
 LOGGER = None
 
