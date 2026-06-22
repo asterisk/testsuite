@@ -22,10 +22,14 @@ sipp-config:
     fail-on-any: True
     stop-after-scenarios: False
     test-iterations:
+#   Don't be tempted to run the sipp scenarios in parallel.  The test ends when the TestEvent
+#   for the "not allowed" scenario arrives so if Asterisk happens to send it before the
+#   TestEvent for the "allowed" scenario the test will end with an "Event occurred 0 times."
         -
             scenarios:
-#   Kick both sipp scenarios off at the same time since they're hitting different endpoints
                 - {'key-args': { 'scenario': 'allowed.xml', '-s': 'allowed', '-p': '5061' }}
+        -
+            scenarios:
                 - {'key-args': { 'scenario': 'not_allowed.xml', '-s': 'not_allowed', '-p': '5062' }}
 
 ami-action-config:
