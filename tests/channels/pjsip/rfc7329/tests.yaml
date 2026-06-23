@@ -1,0 +1,12 @@
+tests:
+    - test: 'enabled_options_out_of_dialog'
+    - test: 'disabled_no_session_id_registration'
+    - test: 'disabled_no_session_id_registration_unloaded'
+    - test: 'enabled_dialog_generation_registration'
+    - test: 'enabled_dialog_generation_registration_unloaded'
+    - test: 'disabled_no_session_id'
+    - test: 'enabled_dialog_generation'
+    - test: 'enabled_linkedid_immutable'
+    - test: 'enabled_refer_invite_from_channel_var'
+    - test: 'enabled_refer_refer_to_session_id'
+    - test: 'enabled_refer_store_refer_to_session_id'
