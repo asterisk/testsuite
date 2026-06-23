@@ -143,9 +143,9 @@ class SIPpTestCase(TestCase):
         """
         super(SIPpTestCase, self).run()
 
-        for a in range(1, self.asterisk_instances):
-            self.ast[a-1].cli_exec('sip set debug on')
-            self.ast[a-1].cli_exec('pjsip set logger on')
+        for a in range(0, self.asterisk_instances):
+            self.ast[a].cli_exec('sip set debug on')
+            self.ast[a].cli_exec('pjsip set logger on')
 
         LOGGER.info("creating ami factory")
         if not isinstance(self.connect_ami, dict):
@@ -556,6 +556,9 @@ class SIPpProtocol(protocol.ProcessProtocol):
         # SIPp will send some 'normal' messages to stderr. Buffer them so we
         # can output them later if we want
         self.stderr.append(data)
+        LOGGER.debug("Received from SIPp scenario %s:\n %s" % (self._name,
+                        data.decode('utf-8', 'ignore')))
+        self.output += data.decode('utf-8', 'ignore')
 
     def processEnded(self, reason):
         """Override of ProcessProtocol.processEnded"""
