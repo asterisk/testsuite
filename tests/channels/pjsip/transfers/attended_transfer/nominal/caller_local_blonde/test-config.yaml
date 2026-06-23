@@ -4,20 +4,43 @@ testinfo:
         "Originate two SIP calls through Asterisk to remote endpoints and then have
         one originating call transfer the other via REFER with Replaces header.
 
-        The four SIPp scenarios involved perform the following actions:
-        SIPp #1 (referer.xml) calls through Asterisk to SIPp #2 (uas.xml)
-        SIPp #1 kicks off SIPp #3 (referee.xml) which calls SIPp #4 (uas_hangup.xml).
-        SIPp #3 passes call information back to SIPp #1.
-        Before SIPp #4 answers SIPp #1 initiates an attended transfer via REFER with Replaces information from SIPp #3.
-        SIPp #3 is hung up.
-        SIPp #1 hangs up.
-        SIPp #4 continues to ring until it answers.
-        SIPp #2 receives a connected line update and the values are checked.
-        SIPp #4 answers.
-        SIPp #2 and SIPp #4 are bridged.
-        SIPp #4 receives a connected line update and the values are checked.
-        SIPp #4 hangs up.
-        SIPp #2 is hung up."
+        High-level scenario:
+        Alice calls Bob.  When he answers, Alice puts him on hold.
+        Alice calls Charlie.  Before he answers, Alice does a REFER Bob->Charlie.
+        When Charlie answers he and Bob are bridged and Alice goes away.
+
+        NOTE:  sipp doesn't allow more than one dialog in a scenario file so Alice
+        is actually implemented in two scenario files: alice_calls_bob and alice_calls_charlie.
+        The two coordinate using sipp's 3pcc capability.
+
+        Low-level flow:
+        alice_calls_bob starts by calling bob.
+        bob answers.
+        alice_calls_bob waits for a second then sends a reINVITE to put bob on hold.
+        alice_calls_bob does a sendCmd to start alice_calls_charlie then waits on a recvCmd from alice_calls_charlie.
+        charlie waits 5 seconds before answering.
+        alice_calls_charlie waits 1 second then does a sendCmd back to alice_calls_bob.
+        charlie is still waiting.
+        alice_calls_bob recvCmd returns.
+        alice_calls_bob does a REFER bob->charlie.
+        alice_calls_bob receives a 202 and 2 NOTIFYs.  The NOTIFYs are handled automatically by sipp.
+        alice_calls_bob waits again on a recvCmd from alice_calls_charlie.
+        alice_calls_charlie gets a 603 and sends an ACK.
+        alice_calls_charlie does a sendCmd to alice_calls_bob.
+        alice_calls_charlie.xml ENDS.
+        alice_calls_bob.xml recvCmd returns.
+        alice_calls_bob.xml sends a BYE.
+        alice_calls_bob.xml receives a 481.
+        alice_calls_bob.xml ENDS.
+        charlie finally answers.
+        charlie gets an ACK followed by a reINVITE with Bob's callerID.
+        charlie sends a 200 and gets an ACK.
+        bob gets a reINVITE with Charlie's callerID.
+        bob sends a 200 and gets an ACK.
+        bob waits on a BYE.
+        charlie sends a BYE.
+        bob gets the BYE and ENDS.
+        charlie ENDS.
 
 test-modules:
     add-test-to-search-path: True
@@ -34,10 +57,14 @@ test-object-config:
     test-iterations:
         -
             scenarios:
-                - { 'key-args': {'scenario':'uas.xml', '-p':'5067', '-m':'2', '-sleep': '2'} }
-                - { 'key-args': {'scenario':'uas_hangup.xml', '-p':'5068', '-m':'2', '-sleep': '2'} }
-                - { 'coordinated-sender': {'key-args': {'scenario':'referer.xml', '-p':'5066', '-sleep': '2'} },
-                    'coordinated-receiver': {'key-args': {'scenario':'referee.xml', '-p':'5065'} } }
+                - { 'coordinated-sender': {'key-args': {'scenario':'alice_calls_bob.xml', '-i':'127.0.0.2', '-p':'5060', '-sleep': '2'},
+                                           'ordered-args': [ '-aa', '-bind_local' ] },
+                    'coordinated-receiver': {'key-args': {'scenario':'alice_calls_charlie.xml', '-i':'127.0.0.3', '-p':'5060'},
+                                             'ordered-args': [ '-bind_local' ] } }
+                - { 'key-args': {'scenario':'bob.xml', '-i':'127.0.0.4', '-p':'5060', '-m':'2', '-sleep': '2'},
+                    'ordered-args': [ '-bind_local' ] }
+                - { 'key-args': {'scenario':'charlie.xml', '-i':'127.0.0.5', '-p':'5060', '-m':'2', '-sleep': '2'},
+                    'ordered-args': [ '-bind_local' ] }
 
 ami-config:
     -

@@ -32,13 +32,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INVITE sip:call_a@[remote_ip]:[remote_port] SIP/2.0
+      INVITE sip:charlie@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: <sip:bob@[local_ip]:[local_port]>;tag=[call_number]
-      To: <sip:transfer@[remote_ip]:[remote_port]>
+      From: <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
+      To: <sip:charlie@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: [cseq] INVITE
-      Contact: <sip:bob@[local_ip]:[local_port]>
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
       Max-Forwards: 70
       Content-Type: application/sdp
       Content-Length: [len]
@@ -80,7 +80,7 @@
       Call-ID: [$original_callid]
       Remote-To-Tag: [$to_tag]
       Remote-From-Tag: [$from_tag]
-      Remote-URI: sip:call_a@[remote_ip]:[remote_port]
+      Remote-URI: sip:charlie@[remote_ip]:[remote_port]
     ]]>
   </sendCmd>
 
@@ -89,13 +89,13 @@
   <send>
     <![CDATA[
 
-      ACK sip:call_a@[remote_ip]:[remote_port] SIP/2.0
+      ACK sip:charlie@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];rport;branch=[branch]
       [last_From:]
       [last_To]
       Call-ID: [call_id]
       CSeq: [cseq] ACK
-      Contact: sip:bob@[local_ip]:[local_port]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
       Max-Forwards: 70
       Content-Length: 0
 

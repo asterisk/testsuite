@@ -22,13 +22,13 @@
   <send retrans="500">
     <![CDATA[
 
-      INVITE sip:call_c@[remote_ip]:[remote_port] SIP/2.0
+      INVITE sip:bob@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
-      From: <sip:bob@[local_ip]:[local_port]>;tag=[call_number]
-      To: <sip:transfer@[remote_ip]:[remote_port]>
+      From: <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
+      To: <sip:bob@[remote_ip]:[remote_port]>
       Call-ID: [call_id]
       CSeq: [cseq] INVITE
-      Contact: <sip:bob@[local_ip]:[local_port]>
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
       Content-Type: application/sdp
       Max-Forwards: 70
       Content-Length: [len]
@@ -54,30 +54,31 @@
   <send>
     <![CDATA[
 
-      ACK sip:call_c@[remote_ip]:[remote_port] SIP/2.0
+      ACK sip:bob@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];rport;branch=[branch]
       [last_From]
       [last_To]
       Call-ID: [call_id]
       CSeq: [cseq] ACK
-      Contact: sip:bob@[local_ip]:[local_port]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
       Max-Forwards: 70
       Content-Length: 0
 
     ]]>
   </send>
 
+  <pause milliseconds="1000"/>
   <!-- Put this leg on hold -->
   <send retrans="500">
     <![CDATA[
 
-      INVITE sip:call_c@[remote_ip]:[remote_port] SIP/2.0
+      INVITE sip:bob@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       [last_From]
       [last_To]
       Call-ID: [call_id]
       CSeq: [cseq] INVITE
-      Contact: <sip:bob@[local_ip]:[local_port]>
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
       Content-Type: application/sdp
       Max-Forwards: 70
       Content-Length: [len]
@@ -103,13 +104,13 @@
   <send>
     <![CDATA[
 
-      ACK sip:call_c@[remote_ip]:[remote_port] SIP/2.0
+      ACK sip:bob@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];rport;branch=[branch]
       [last_From]
       [last_To]
       Call-ID: [call_id]
       CSeq: [cseq] ACK
-      Contact: sip:bob@[local_ip]:[local_port]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
       Max-Forwards: 70
       Content-Length: 0
 
@@ -152,54 +153,21 @@
   <send>
     <![CDATA[
 
-      REFER sip:call_c@[remote_ip]:[remote_port] SIP/2.0
+      REFER sip:bob@[remote_ip]:[remote_port] SIP/2.0
       Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
       [last_From:]
       [last_To]
       [last_Call-ID:]
       CSeq: [cseq] REFER
-      Contact: <sip:bob@[local_ip]:[local_port]>
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
       Max-Forwards: 70
       Refer-to: <[$remote_contact]?Replaces=REMOTE[$callid_chunk_1]%40[$callid_chunk_2]%3Bto-tag%3D[$remote_to_tag]%3Bfrom-tag%3D[$remote_from_tag]>
-      Referred-By: sip:bob@[local_ip]
+      Referred-By: sip:alice@[local_ip]
       Content-Length: 0
 
     ]]>
   </send>
   <recv response="202" rtd="true" crlf="true" />
-
-  <recv request="NOTIFY" />
-  <send>
-    <![CDATA[
-
-      SIP/2.0 200 OK
-      [last_Via:]
-      [last_From:]
-      [last_To]
-      [last_Call-ID:]
-      [last_CSeq:]
-      Contact: <sip:bob@[local_ip]:[local_port]>
-      Content-Length:0
-
-    ]]>
-  </send>
-
-  <recv request="NOTIFY" />
-
-  <send>
-    <![CDATA[
-
-      SIP/2.0 200 OK
-      [last_Via:]
-      [last_From:]
-      [last_To]
-      [last_Call-ID:]
-      [last_CSeq:]
-      Contact: <sip:bob@[local_ip]:[local_port]>
-      Content-Length:0
-
-    ]]>
-  </send>
 
   <!-- wait for referee scenario to finish then terminate this leg -->
   <recvCmd />
