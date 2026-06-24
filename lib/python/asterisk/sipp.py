@@ -10,6 +10,8 @@ the GNU General Public License Version 2.
 """
 
 import logging
+import subprocess
+import re
 from . import test_suite_utils
 
 from abc import ABCMeta, abstractmethod
@@ -22,6 +24,28 @@ from .pluggable_registry import PLUGGABLE_EVENT_REGISTRY,\
 
 
 LOGGER = logging.getLogger(__name__)
+
+IS_OLD_SIPP = False
+try:
+    _sipp_path = test_suite_utils.which("sipp")
+
+    if _sipp_path:
+        try:
+            _version_out = subprocess.check_output([_sipp_path, "-v"], stderr=subprocess.STDOUT).decode('utf-8')
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 99: # SIPp returns 99 for --version, but it is successful
+                _version_out = e.output.decode('utf-8')
+            else:
+                raise e
+
+        _match = re.search(r'v(\d+\.\d+\.\d+)', _version_out)
+        if _match:
+            current_version = tuple(map(int, _match.group(1).split('.')))
+            if current_version < (3, 7, 2):
+                IS_OLD_SIPP = True
+
+except Exception as _e:
+    LOGGER.warning("Global SIPp version check failed: %s." % str(_e))
 
 class ScenarioGenerator(object):
     """Scenario Generators provide a generator function for creating scenario
@@ -714,7 +738,14 @@ class SIPpScenario(object):
                 default_args[defarg] = ('%s/sipp/%s' % (
                     self.test_dir, default_args[defarg]))
 
-        if '-mp' not in default_args:
+        if '-mp' in default_args and not IS_OLD_SIPP:
+            legacy_port = default_args.pop('-mp')
+            default_args['-min_rtp_port'] = legacy_port
+            LOGGER.info("Translated legacy scenario flag '-mp %s' to '-min_rtp_port %s' for modern SIPp." % (legacy_port, legacy_port))
+
+        has_media_port_defined = ('-min_rtp_port' in default_args) or ('-mp' in default_args)
+
+        if not has_media_port_defined:
             # Current SIPp correctly chooses an available port for audio, but
             # unfortunately it then attempts to bind to the audio port + n for
             # things like rtcp and video without first checking if those other
@@ -724,8 +755,16 @@ class SIPpScenario(object):
             # ourselves, and make sure all associated ports are available.
             #
             # num = 4 = ports for audio rtp/rtcp and video rtp/rtcp
-            default_args['-mp'] = str(get_available_port(
-                default_args.get('-i'), num=4))
+            port = get_available_port(default_args.get('-i'), num=4)
+            if IS_OLD_SIPP:
+                default_args['-mp'] = str(port)
+            else:
+                default_args['-min_rtp_port'] = str(port)
+                default_args['-max_rtp_port'] = str(port + 3)
+        #Take care of max_rtp_port if -min_rtp_port values are passed (or otherewise we have them)  but max not specified
+        elif not IS_OLD_SIPP and '-min_rtp_port' in default_args and '-max_rtp_port' not in default_args:
+            tmpport = int(default_args['-min_rtp_port'])
+            default_args['-max_rtp_port'] = str(tmpport + 3)
 
         for (key, val) in default_args.items():
             sipp_args.extend([key, val])
