@@ -1,0 +1,124 @@
+testinfo:
+    summary: 'Qualify all A and AAAA targets using the configured transport'
+    description: |
+        This test verifies multi-address qualification without SRV records.
+        Three contacts use explicit ports so resolution is limited to A/AAAA:
+
+        * An IPv4 UDP contact has an unresponsive A address and a working A
+          address.
+        * An IPv6 UDP contact has an unresponsive AAAA address and a working
+          AAAA address.
+        * An IPv4 TCP contact has an unresponsive A address and a working A
+          address with TCP explicitly selected in the URI.
+        * Another IPv4 TCP contact omits both port and URI transport, requiring
+          the endpoint transport selector to constrain resolution to TCP.
+
+        All four contacts must become Reachable.  The TCP SIPp scenarios also
+        prove that endpoint transport selection was applied before DNS
+        resolution and preserved for each generated OPTIONS transaction.
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: dns-server-config
+            typename: 'dns_server.DNSServer'
+        -
+            config-section: test-control
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    reactor-timeout: 20
+    fail-on-any: True
+    stop-after-scenarios: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'options.xml',
+                                 '-i': '127.0.0.1', '-p': '5061'} }
+                - { 'target': '[::1]',
+                    'key-args': {'scenario': 'options.xml',
+                                 '-i': '[::1]', '-p': '5063'} }
+                - { 'key-args': {'scenario': 'options.xml',
+                                 '-i': '127.0.0.1', '-p': '5064',
+                                 '-t': 't1'} }
+                - { 'key-args': {'scenario': 'options.xml',
+                                 '-i': '127.0.0.1', '-p': '5060',
+                                 '-t': 't1'} }
+
+dns-server-config:
+    port: 10053
+    python-zones:
+        -
+            qualify-addresses.example.com
+
+test-control:
+    -
+        # Initiate all qualifications only after every answering target is
+        # listening.
+        sipp-start:
+            count: 4
+        ami-actions:
+            -
+                action:
+                    Action: 'PJSIPQualify'
+                    Endpoint: 'a-udp'
+            -
+                action:
+                    Action: 'PJSIPQualify'
+                    Endpoint: 'aaaa-udp'
+            -
+                action:
+                    Action: 'PJSIPQualify'
+                    Endpoint: 'a-tcp'
+            -
+                action:
+                    Action: 'PJSIPQualify'
+                    Endpoint: 'a-tcp-selected'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'ContactStatus'
+                    ContactStatus: 'Reachable'
+                    URI: 'sip:a-udp.qualify-addresses.example.com:5061'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'ContactStatus'
+                    ContactStatus: 'Reachable'
+                    URI: 'sip:aaaa-udp.qualify-addresses.example.com:5063'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'ContactStatus'
+                    ContactStatus: 'Reachable'
+                    URI: 'sip:a-tcp.qualify-addresses.example.com:5064;transport=tcp'
+            count: 1
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'ContactStatus'
+                    ContactStatus: 'Reachable'
+                    URI: 'sip:a-tcp-selected.qualify-addresses.example.com'
+            count: 1
+
+properties:
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.3'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_resolver_unbound'
+    tags:
+        - pjsip
+        - dns
+        - qualify

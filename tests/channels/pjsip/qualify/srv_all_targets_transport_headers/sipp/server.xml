@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Register flow or validate OPTIONS">
+  <!-- Each Call-ID creates a new server-side scenario instance.  REGISTER
+       jumps to its response; an OPTIONS skips this optional receive and is
+       handled by the next receive. -->
+  <recv request="REGISTER" optional="true" next="register"/>
+
+  <recv request="OPTIONS">
+    <action>
+      <ereg regexp="qualify-headers.example.com"
+          search_in="hdr" header="Route:" occurrence="1"
+          check_it="true" assign_to="dummy"/>
+      <ereg regexp="qualify-headers.example.com"
+          search_in="hdr" header="Route:" occurrence="2"
+          check_it_inverse="true" assign_to="dummy"/>
+      <ereg regexp="test@qualify-headers.example.com"
+          search_in="hdr" header="P-Preferred-Identity:" occurrence="1"
+          check_it="true" assign_to="dummy"/>
+      <ereg regexp="test@qualify-headers.example.com"
+          search_in="hdr" header="P-Preferred-Identity:" occurrence="2"
+          check_it_inverse="true" assign_to="dummy"/>
+    </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]options[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Content-Length: 0
+
+    ]]>
+  </send>
+  <nop next="done"/>
+
+  <label id="register"/>
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]register[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      [last_Contact:]
+      Service-Route: <sip:qualify-headers.example.com;lr>
+      P-Associated-URI: <sip:test@qualify-headers.example.com>
+      Expires: 300
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Keep the registered TCP flow open while the two OPTIONS call instances
+       run on the same SIPp server connection. -->
+  <pause milliseconds="5000"/>
+
+  <label id="done"/>
+</scenario>
