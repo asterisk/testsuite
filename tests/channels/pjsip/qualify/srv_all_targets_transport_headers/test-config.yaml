@@ -1,0 +1,71 @@
+testinfo:
+    summary: 'Apply transport-derived headers once to every qualify target'
+    description: |
+        An outbound registration stores a Service-Route and P-Associated-URI
+        on the transport.  Qualification then resolves two SRV targets.  Each
+        target transaction must carry exactly one Route and one
+        P-Preferred-Identity header over the established flow.
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: dns-server-config
+            typename: 'dns_server.DNSServer'
+        -
+            config-section: test-control
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    reactor-timeout: 15
+    fail-on-any: True
+    stop-after-scenarios: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'server.xml',
+                                 '-i': '127.0.0.1', '-p': '5070',
+                                 '-t': 't1', '-m': '3'} }
+
+dns-server-config:
+    port: 10053
+    python-zones:
+        -
+            qualify-headers.example.com
+
+test-control:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'Registry'
+                    Status: 'Registered'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'PJSIPQualify'
+                Endpoint: 'srv-trunk'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'ContactStatus'
+                    ContactStatus: 'Reachable'
+                    URI: 'sip:qualify-headers.example.com'
+            count: 1
+
+properties:
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.3'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_outbound_registration'
+        - asterisk: 'res_resolver_unbound'
+    tags:
+        - pjsip
+        - dns
+        - qualify
