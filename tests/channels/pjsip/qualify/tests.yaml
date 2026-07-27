@@ -1,6 +1,10 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - test: 'basic'
+    - test: 'srv_all_targets'
+    - test: 'srv_all_targets_5xx'
+    - test: 'srv_all_targets_transport_headers'
+    - test: 'all_targets_address_records'
     - test: 'auth'
     - test: 'max_initial_qualify_time'
     - test: 'qualify_timeout'
