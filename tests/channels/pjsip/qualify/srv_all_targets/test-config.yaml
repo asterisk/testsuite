@@ -1,0 +1,72 @@
+testinfo:
+    summary: 'Qualify every address returned by SIP SRV resolution'
+    description: |
+        This regression test covers Asterisk issue 1927.  An AOR contact is a
+        hostname with two SRV targets.  Nothing listens on the preferred
+        target, so it never responds.  The backup target returns 200 OK.
+
+        The ContactStatus event must report Reachable, proving that
+        qualification did not stop at the unresponsive first SRV target and
+        that one successful target is sufficient.
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: dns-server-config
+            typename: 'dns_server.DNSServer'
+        -
+            config-section: test-control
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    reactor-timeout: 15
+    fail-on-any: True
+    # The answering scenario pauses after its response so the silent target's
+    # transaction can time out cleanly before Asterisk is stopped.
+    stop-after-scenarios: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'options-200.xml',
+                                 '-i': '127.0.0.1', '-p': '5062'} }
+dns-server-config:
+    port: 10053
+    python-zones:
+        -
+            qualify.example.com
+
+test-control:
+    -
+        # Do not qualify until the answering SIPp socket is listening.
+        sipp-start:
+            count: 1
+        ami-actions:
+            action:
+                Action: 'PJSIPQualify'
+                Endpoint: 'srv-trunk'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'ContactStatus'
+                    ContactStatus: 'Reachable'
+            requirements:
+                match:
+                    URI: 'sip:qualify.example.com'
+            count: 1
+
+properties:
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.3'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_resolver_unbound'
+    tags:
+        - pjsip
+        - dns
+        - qualify
