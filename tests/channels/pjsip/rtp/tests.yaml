@@ -5,3 +5,5 @@ tests:
     - test: 'timeout_hold'
     - test: 'bind_rtp_to_media_address'
     - dir: 'asymmetric_rtp_codec'
+    - test: 'payload_merge_rollback'
+    - test: 'payload_merge_initial_failure'

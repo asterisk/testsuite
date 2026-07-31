@@ -1,0 +1,30 @@
+testinfo:
+    summary: 'Clean up provisional RTP state when an initial SDP offer fails'
+    description: |
+        Send an initial offer whose first audio stream provisionally merges a
+        dynamic payload and framing value. A later stream has an invalid
+        connection address, forcing the complete offer to fail. This exercises
+        the initial-INVITE failure path that resets the pending media state
+        before terminating the session.
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac.xml'} }
+
+properties:
+    dependencies:
+        - app: 'sipp'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+    tags:
+        - pjsip
+        - rtp

@@ -1,0 +1,32 @@
+testinfo:
+    summary: 'Roll back provisional RTP state after a later SDP stream fails'
+    description: |
+        Establish a PCMU call using dynamic payload 96 and 20 ms framing. A
+        re-INVITE then provisionally offers payload 97 and 30 ms framing in its
+        first audio stream, followed by a second audio stream with an invalid
+        connection address that causes the complete offer to be rejected after
+        the first stream has been processed. Asterisk subsequently originates
+        a re-INVITE, whose SDP must still advertise the original 20 ms framing.
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+
+sipp-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'uac.xml'} }
+
+properties:
+    dependencies:
+        - app: 'sipp'
+        - asterisk: 'app_echo'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+    tags:
+        - pjsip
+        - rtp

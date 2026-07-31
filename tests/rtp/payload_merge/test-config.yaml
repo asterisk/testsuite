@@ -1,0 +1,29 @@
+testinfo:
+    summary: 'Characterize RTP payload state retained across an uncommitted merge'
+    description: |
+        This test runs focused Asterisk unit tests for provisional RTP payload
+        merge transactions. It verifies rollback before negotiation commit,
+        verifies successful commit, and checks that offered framing is
+        available for SDP answer generation while active preferred media
+        format and DTMF metadata remain unchanged before commit. Pending-media
+        tests also verify shared transaction aggregation and commit isolation.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            typename: 'unit_test_runner.PayloadMergeUnitTestRunner'
+
+test-object-config:
+    reactor-timeout: 15
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - asterisk: 'test_res_rtp'
+        - asterisk: 'test_res_pjsip_session_caps'
+    tags:
+        - rtp
