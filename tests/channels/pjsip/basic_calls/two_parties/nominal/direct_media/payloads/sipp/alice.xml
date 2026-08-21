@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Direct media payload mapping caller">
+
+  <send retrans="500" start_txn="initial_invite">
+    <![CDATA[
+
+      INVITE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag[call_number]
+      To: <sip:[service]@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: [cseq] INVITE
+      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Max-Forwards: 70
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=alice 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [custom_media_port] RTP/AVP 99 0 101 108
+      a=rtpmap:99 opus/48000/2
+      a=fmtp:99 maxplaybackrate=16000;sprop-maxcapturerate=16000;maxaveragebitrate=64000;stereo=0;sprop-stereo=0;usedtx=0;useinbandfec=0
+      a=rtpmap:0 PCMU/8000
+      a=rtpmap:101 telephone-event/8000
+      a=fmtp:101 0-15
+      a=rtpmap:108 telephone-event/48000
+      a=fmtp:108 0-15
+      a=sendrecv
+
+    ]]>
+  </send>
+
+  <recv response="100" optional="true" response_txn="initial_invite"/>
+  <recv response="180" optional="true" response_txn="initial_invite"/>
+  <recv response="183" optional="true" response_txn="initial_invite"/>
+
+  <recv response="200" response_txn="initial_invite">
+    <action>
+      <ereg regexp="(;tag=.*)" header="To:" search_in="hdr"
+          check_it="true" assign_to="remote_tag"/>
+    </action>
+  </recv>
+
+  <send ack_txn="initial_invite">
+    <![CDATA[
+
+      ACK sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      Call-ID: [call_id]
+      CSeq: [cseq] ACK
+      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Max-Forwards: 70
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- Both direct-media legs must use the caller's canonical payload layout. -->
+  <recv request="INVITE" crlf="true">
+    <action>
+      <ereg regexp="m=audio [0-9]+ RTP/AVP 99 101 108" search_in="body" check_it="true" assign_to="1"/>
+      <ereg regexp="a=rtpmap:99 opus/48000/2" search_in="body" check_it="true" assign_to="2"/>
+      <ereg regexp="a=fmtp:99 maxplaybackrate=16000;sprop-maxcapturerate=16000;maxaveragebitrate=32000;sprop-stereo=1;cbr=1;usedtx=1" search_in="body" check_it="true" assign_to="3"/>
+      <ereg regexp="a=rtpmap:101 telephone-event/8000" search_in="body" check_it="true" assign_to="4"/>
+      <ereg regexp="a=fmtp:101 0-15" search_in="body" check_it="true" assign_to="5"/>
+      <ereg regexp="a=rtpmap:108 telephone-event/48000" search_in="body" check_it="true" assign_to="6"/>
+      <ereg regexp="a=fmtp:108 0-15" search_in="body" check_it="true" assign_to="7"/>
+      <ereg regexp="a=rtpmap:107 opus/48000/2" search_in="body" check_it_inverse="true" assign_to="8"/>
+      <ereg regexp="a=rtpmap:102 telephone-event/8000" search_in="body" check_it_inverse="true" assign_to="9"/>
+    </action>
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=alice 53655765 2353687638 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [custom_media_port] RTP/AVP 99 101 108
+      a=rtpmap:99 opus/48000/2
+      a=fmtp:99 maxplaybackrate=16000;sprop-maxcapturerate=16000;maxaveragebitrate=32000;sprop-stereo=1;cbr=1;usedtx=1
+      a=rtpmap:101 telephone-event/8000
+      a=fmtp:101 0-15
+      a=rtpmap:108 telephone-event/48000
+      a=fmtp:108 0-15
+      a=sendrecv
+
+    ]]>
+  </send>
+
+  <recv request="ACK" crlf="true"/>
+
+  <pause milliseconds="4000"/>
+
+  <send retrans="500">
+    <![CDATA[
+
+      BYE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      [last_Via:]
+      From: <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag[call_number]
+      To: <sip:[service]@[remote_ip]:[remote_port]>[$remote_tag]
+      Call-ID: [call_id]
+      CSeq: [cseq] BYE
+      Contact: <sip:alice@[local_ip]:[local_port]>
+      Max-Forwards: 70
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true"/>
+
+  <Reference variables="1,2,3,4,5,6,7,8,9"/>
+
+</scenario>

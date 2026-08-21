@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Direct media payload mapping callee">
+
+  <recv request="INVITE" crlf="true">
+    <action>
+      <ereg regexp="m=audio [0-9]+ RTP/AVP 107 0 101 102" search_in="body" check_it="true" assign_to="1"/>
+      <ereg regexp="a=rtpmap:107 opus/48000/2" search_in="body" check_it="true" assign_to="2"/>
+      <ereg regexp="a=rtpmap:0 PCMU/8000" search_in="body" check_it="true" assign_to="3"/>
+      <ereg regexp="a=rtpmap:101 telephone-event/48000" search_in="body" check_it="true" assign_to="4"/>
+      <ereg regexp="a=fmtp:101 0-16" search_in="body" check_it="true" assign_to="5"/>
+      <ereg regexp="a=rtpmap:102 telephone-event/8000" search_in="body" check_it="true" assign_to="6"/>
+      <ereg regexp="a=fmtp:102 0-16" search_in="body" check_it="true" assign_to="7"/>
+    </action>
+  </recv>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 180 Ringing
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:bob@[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:bob@[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=bob 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [custom_media_port] RTP/AVP 107 0 101 102
+      a=rtpmap:107 opus/48000/2
+      a=fmtp:107 maxplaybackrate=48000;sprop-maxcapturerate=48000;maxaveragebitrate=32000;stereo=1;sprop-stereo=1;cbr=1;usedtx=1;useinbandfec=1
+      a=rtpmap:0 PCMU/8000
+      a=rtpmap:101 telephone-event/48000
+      a=fmtp:101 0-16
+      a=rtpmap:102 telephone-event/8000
+      a=fmtp:102 0-16
+      a=sendrecv
+
+    ]]>
+  </send>
+
+  <recv request="ACK" crlf="true"/>
+
+  <!-- Verify the callee receives the same canonical SDP as the caller. -->
+  <recv request="INVITE" crlf="true">
+    <action>
+      <ereg regexp="m=audio [0-9]+ RTP/AVP 99 101 108" search_in="body" check_it="true" assign_to="8"/>
+      <ereg regexp="a=rtpmap:99 opus/48000/2" search_in="body" check_it="true" assign_to="9"/>
+      <ereg regexp="a=fmtp:99 maxplaybackrate=16000;sprop-maxcapturerate=16000;maxaveragebitrate=32000;sprop-stereo=1;cbr=1;usedtx=1" search_in="body" check_it="true" assign_to="10"/>
+      <ereg regexp="a=rtpmap:101 telephone-event/8000" search_in="body" check_it="true" assign_to="11"/>
+      <ereg regexp="a=fmtp:101 0-15" search_in="body" check_it="true" assign_to="12"/>
+      <ereg regexp="a=rtpmap:108 telephone-event/48000" search_in="body" check_it="true" assign_to="13"/>
+      <ereg regexp="a=fmtp:108 0-15" search_in="body" check_it="true" assign_to="14"/>
+      <ereg regexp="a=rtpmap:107 opus/48000/2" search_in="body" check_it_inverse="true" assign_to="15"/>
+      <ereg regexp="a=rtpmap:102 telephone-event/8000" search_in="body" check_it_inverse="true" assign_to="16"/>
+    </action>
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:bob@[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=bob 53655765 2353687638 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [custom_media_port] RTP/AVP 99 101 108
+      a=rtpmap:99 opus/48000/2
+      a=fmtp:99 maxplaybackrate=16000;sprop-maxcapturerate=16000;maxaveragebitrate=32000;sprop-stereo=1;cbr=1;usedtx=1
+      a=rtpmap:101 telephone-event/8000
+      a=fmtp:101 0-15
+      a=rtpmap:108 telephone-event/48000
+      a=fmtp:108 0-15
+      a=sendrecv
+
+    ]]>
+  </send>
+
+  <recv request="ACK" crlf="true"/>
+
+  <!-- Media returns to Asterisk when Alice hangs up. -->
+  <recv request="INVITE" crlf="true"/>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:bob@[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=bob 53655765 2353687639 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [custom_media_port] RTP/AVP 99 101 108
+      a=rtpmap:99 opus/48000/2
+      a=fmtp:99 maxplaybackrate=16000;sprop-maxcapturerate=16000;maxaveragebitrate=32000;sprop-stereo=1;cbr=1;usedtx=1
+      a=rtpmap:101 telephone-event/8000
+      a=fmtp:101 0-15
+      a=rtpmap:108 telephone-event/48000
+      a=fmtp:108 0-15
+      a=sendrecv
+
+    ]]>
+  </send>
+
+  <recv request="ACK" crlf="true"/>
+
+  <recv request="BYE"/>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:bob@[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <Reference variables="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16"/>
+
+</scenario>
