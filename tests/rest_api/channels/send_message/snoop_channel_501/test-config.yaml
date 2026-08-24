@@ -1,0 +1,55 @@
+testinfo:
+    summary: Verify sendMessage returns 422 when called with a Snoop channel ID
+    description: |
+        Create a live PJSIP channel in Stasis. Create a Snoop channel on it
+        via ARI. Attempt sendMessage using the Snoop channel ID and verify
+        HTTP 422 with no delivery event. Reproduces the bug where an ARI
+        application holds the Snoop channel ID instead of the PJSIP channel ID.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/channels/send_message'
+    test-object:
+        typename: ari.AriBaseTestObject
+        config-section: test-object-config
+    modules:
+        -
+            typename: send_message.SendMessageScenario
+            config-section: scenario-config
+
+test-object-config:
+    config-path: 'tests/rest_api/channels/send_message/configs'
+    stop-on-end: False
+
+scenario-config:
+    sipp:
+        - { 'scenario': 'answer_and_wait.xml', '-p': '5061', '-timeout': '30s' }
+    pre-send-action: create_snoop
+    requests:
+        -
+            request_id: 'snoop-channel-501'
+            params:
+                content_type: 'text/plain'
+                body: 'This should fail with 422'
+            expect: 422
+            event-count: 0
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - app : sipp
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_applications
+        - asterisk : res_ari_channels
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip
+        - asterisk : res_pjsip_messaging
+        - asterisk : res_stasis_snoop
+        - asterisk : app_stasis
+    tags:
+        - ARI
+        - pjsip

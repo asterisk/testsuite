@@ -1,0 +1,50 @@
+testinfo:
+    summary: Verify sendMessage returns 409 for channels outside Stasis
+    description: |
+        Originate a Local channel into a normal dialplan context, then
+        attempt channel sendMessage against that live non-Stasis channel and
+        verify a 409 response with no delivery event.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/channels/send_message'
+    test-object:
+        typename: ari.AriBaseTestObject
+        config-section: test-object-config
+    modules:
+        -
+            typename: send_message.SendMessageScenario
+            config-section: scenario-config
+
+test-object-config:
+    config-path: 'tests/rest_api/channels/send_message/configs'
+    stop-on-end: False
+
+scenario-config:
+    originate:
+        endpoint: 'Local/s@send-message-nonstasis'
+        context: 'send-message-nonstasis'
+        extension: 's'
+        priority: 1
+    wait-for-stasis: False
+    requests:
+        -
+            request_id: 'not-in-stasis'
+            params:
+                content_type: 'text/plain'
+                body: 'This should fail with 409'
+            expect: 409
+            event-count: 0
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_applications
+        - asterisk : res_ari_channels
+    tags:
+        - ARI
