@@ -35,6 +35,7 @@ tests:
     - dir: 'http_server'
     - dir: 'sorcery'
     - test: 'remote-test'
+    - test: 'channel_formats'
     - dir: 'codecs'
     - dir: 'rtp'
     - dir: 'tenant_id'
