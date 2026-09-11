@@ -1,3 +1,4 @@
 tests:
+    - test: 'payloads'
     - test: 'reinvite'
     - test: 'update'
