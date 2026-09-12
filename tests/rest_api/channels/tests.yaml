@@ -6,6 +6,7 @@ tests:
     - test: 'originate_then_continue'
     - test: 'originate_to_pjsip_endpoint'
     - test: 'snoop_whisper'
+    - test: 'snoop_whisper_no_normal_flowing_audio'
     - test: 'snoop_spy'
     - test: 'snoop_id'
     - dir: 'playback'
