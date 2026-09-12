@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="OPTIONS with Session-ID">
+  <send retrans="500">
+    <![CDATA[
+
+      OPTIONS sip:1234@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: sipp <sip:sipp@[local_ip]:[local_port]>;tag=[call_number]
+      To: Asterisk <sip:1234@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 OPTIONS
+      Session-ID: 00112233445566778899aabbccddeeff
+      Contact: sip:sipp@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Subject: Asterisk Testsuite
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+    <action>
+      <ereg regexp="00112233445566778899aabbccddeeff"
+            header="Session-ID:"
+            search_in="hdr"
+            check_it="true"
+            assign_to="1" />
+    </action>
+  </recv>
+
+  <Reference variables="1" />
+</scenario>

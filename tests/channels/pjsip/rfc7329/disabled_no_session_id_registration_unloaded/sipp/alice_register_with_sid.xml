@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="RFC7329 alice register">
+  <User variables="nosid_401,nosid_200" />
+
+  <send retrans="500">
+    <![CDATA[
+
+      REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: alice <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: alice <sip:alice@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 REGISTER
+      Session-ID: 13579bdf2468ace013579bdf2468ace0
+      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Max-Forwards: 70
+      Expires: 300
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="401" auth="true" crlf="true">
+    <action>
+      <ereg regexp="Session-ID: .*"
+            search_in="msg"
+            check_it_inverse="true"
+            assign_to="nosid_401" />
+    </action>
+  </recv>
+
+  <send retrans="500">
+    <![CDATA[
+
+      REGISTER sip:[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: alice <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: alice <sip:alice@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 2 REGISTER
+      Session-ID: 13579bdf2468ace013579bdf2468ace0
+      Contact: <sip:alice@[local_ip]:[local_port];transport=[transport]>
+      Max-Forwards: 70
+      Expires: 300
+      [authentication username=alice password=alicepass]
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+    <action>
+      <ereg regexp="Session-ID: .*"
+            search_in="msg"
+            check_it_inverse="true"
+            assign_to="nosid_200" />
+    </action>
+  </recv>
+
+  <Reference variables="nosid_401,nosid_200" />
+</scenario>
