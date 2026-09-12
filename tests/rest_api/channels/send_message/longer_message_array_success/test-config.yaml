@@ -1,0 +1,70 @@
+testinfo:
+    summary: Verify a longer messages array round trip
+    description: |
+        Start a live PJSIP dialog in Stasis, send a longer messages array
+        with ARI channel sendMessage, verify the remote SIP endpoint
+        receives the serialized JSON body, and verify one terminal
+        ChannelMessageDeliveryStatus event.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/channels/send_message'
+    test-object:
+        typename: ari.AriBaseTestObject
+        config-section: test-object-config
+    modules:
+        -
+            typename: send_message.SendMessageScenario
+            config-section: scenario-config
+
+test-object-config:
+    config-path: 'tests/rest_api/channels/send_message/configs'
+    stop-on-end: False
+
+scenario-config:
+    sipp:
+        - { 'scenario': 'long_array_accept.xml', '-p': '5061', '-timeout': '30s' }
+    requests:
+        -
+            request_id: 'long-array-success'
+            params:
+                content_type: 'application/json'
+            json-body:
+                -
+                    type: 'change-translation-language'
+                    version: 1
+                    language: 'en-US'
+                    opponent: true
+                -
+                    type: 'display-caption'
+                    version: 1
+                    text: 'Please hold while we connect you.'
+                -
+                    type: 'metadata'
+                    version: 2
+                    source: 'ari-testsuite'
+                    priority: 'normal'
+            expect: 202
+            event:
+                status: 'delivered'
+                sip_status_code: 200
+                reason: 'OK'
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - app : sipp
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_applications
+        - asterisk : res_ari_channels
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip
+        - asterisk : res_pjsip_messaging
+        - asterisk : app_stasis
+    tags:
+        - ARI
+        - pjsip

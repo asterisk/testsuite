@@ -19,3 +19,5 @@ tests:
     - dir: 'rtp_statistics'
     - dir: 'external_media'
     - dir: 'channel_variables'
+    - dir: 'send_message'
+    - test: 'recv_in_dialog_message'
