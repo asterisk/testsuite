@@ -1,0 +1,209 @@
+#!/usr/bin/env python3
+import sys
+import os
+import logging
+import time
+import re
+import signal
+import subprocess
+
+from asterisk.test_case import TestCase
+from asterisk.pcap import PcapListener
+from twisted.internet import reactor
+
+LOGGER = logging.getLogger(__name__)
+
+class RTTIdlePacketSniffer(PcapListener):
+    """Raw PCAP Listener that inspects UDP RTP."""
+
+    def __init__(self, module_config, test_object):
+        self.set_pcap_defaults(module_config)
+        super(RTTIdlePacketSniffer, self).__init__(module_config, test_object)
+        self.idle_packet_count = 0
+        self.capturing = True
+
+    def set_pcap_defaults(self, module_config):
+        """Set default PCAP configuration for monitoring media ports."""
+        pcap_defaults = {
+            'device': 'lo',
+            'snaplen': 2000,
+            'bpf-filter': 'udp portrange 30000-45000',
+            'debug-packets': False,
+            'buffer-size': 4194304,
+            'register-observer': True
+        }
+        for name, value in pcap_defaults.items():
+            module_config[name] = module_config.get(name, value)
+
+    def pcap_callback(self, packet):
+        """Method overridden from PcapListener to handle each captured packet."""
+        if not self.capturing:
+            return  # Ignore post-test  traffic
+        try:
+            payload = bytes(packet)
+
+            if len(payload) > 65:
+                return
+            # Ensure packet is NOT carrying active text characters
+            has_active_text = (b"Alpha" in payload) or (b"Beta" in payload) or (b"\xef\xbb\xbf" in payload)
+            if has_active_text:
+                return
+            #Because T.140 and RED are dynamic payload types it can pick an ID between 96 (0x60) and 127 (0x7F) 
+            # so far asterisk is 106 or 98.           
+            # 0x60 (96) to 0x7F (127) covers any dynamically negotiated T.140 payload type 
+            # Check if packet ends with a primary RED header byte in the dynamic range (96 to 127 -> 0x60 to 0x7F)
+            
+            last_byte = payload[-1]
+            is_pure_zero_payload = 0x60 <= last_byte <= 0x7F
+
+            if is_pure_zero_payload :
+                self.idle_packet_count += 1
+                hex_payload = payload.hex()
+                LOGGER.debug(
+                    f"Captured matching packet! (Total captured: {self.idle_packet_count}) | "
+                    f"Raw Bytes (hex): {hex_payload}"
+                )
+        except Exception as ex:
+            LOGGER.error(f"Error inspecting packet payload: {ex}")
+
+
+class RTTIdlePacketTest(TestCase):
+
+    def __init__(self):
+        super(RTTIdlePacketTest, self).__init__()
+        self.reactor_timeout = 60
+        self.create_asterisk(count=1)
+        self.ast[0].all_out = True
+        self.pjsua_rx = None
+        self.pjsua_tx = None
+
+        # Idle packet verification parameters
+        self.idle_wait_seconds = 15
+        self.min_expected_idle_packets = 2
+
+        # Instantiate raw PCAP Sniffer
+        sniffer_config = {
+            'device': 'lo',
+            'bpf-filter': 'udp portrange 30000-40000'
+        }
+        self.sniffer = RTTIdlePacketSniffer(sniffer_config, self)
+
+    def run(self):
+        super(RTTIdlePacketTest, self).run()
+        LOGGER.info("Starting Asterisk ...")
+        self.ast[0].cli_exec("rtp set debug on")
+        self.ast[0].cli_exec("pjsip set logger on")
+        reactor.callLater(3, self.start_pjsua)
+
+    def start_pjsua(self):
+        LOGGER.info("Starting pjsua instances...")
+        common_params = [
+            '--no-tcp', '--text', '--text-red=2', '--no-vad',
+            '--log-level=3', '--app-log-level=3',
+            '--dis-codec=speex', '--dis-codec=gsm', '--dis-codec=opus',
+            '--dis-codec=pcma', '--dis-codec=pcmu', '--dis-codec=ilbc',
+            '--dis-codec=g722', '--null-audio'
+        ]
+
+        # Receiver (102)
+        self.pjsua_rx = subprocess.Popen([
+            'pjsua',
+            '--id=sip:102@127.0.0.1',
+            '--ip-addr=127.0.0.1',
+            '--local-port=5066',
+            '--rtp-port=40000',
+            '--outbound=sip:127.0.0.1:5060',
+            '--auto-answer=200'
+        ] + common_params, stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT)
+
+        # Caller (101)
+        self.pjsua_tx = subprocess.Popen([
+            'pjsua',
+            '--id=sip:101@127.0.0.1',
+            '--ip-addr=127.0.0.1',
+            '--local-port=5065',
+            '--rtp-port=30000',
+            '--outbound=sip:127.0.0.1:5060'
+        ] + common_params, stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT)
+
+        reactor.callLater(3, self.make_call)
+
+    def make_call(self):
+        LOGGER.info("pjsua_tx: Dialing 102...")
+        self.pjsua_tx.stdin.write(b"\n")
+        self.pjsua_tx.stdin.write(b"m\n")
+        self.pjsua_tx.stdin.write(b"sip:102@127.0.0.1:5060\n")
+        self.pjsua_tx.stdin.flush()
+
+        reactor.callLater(3, self.trigger_initial_text)
+
+    def trigger_initial_text(self):
+        LOGGER.info("Sending initial character to kick off text stream...")
+        self.pjsua_tx.stdin.write(b"rt\n")
+        self.pjsua_tx.stdin.flush()
+        self.pjsua_tx.stdin.write(b"Alpha\n")
+        self.pjsua_tx.stdin.flush()
+
+        LOGGER.info(f"Going silent for {self.idle_wait_seconds}s to measure idle packets.[1]..")
+        reactor.callLater(self.idle_wait_seconds, self.trigger_response)
+
+    def trigger_response(self):
+        self.pjsua_rx.stdin.write(b"rt\n")
+        self.pjsua_rx.stdin.flush()
+        self.pjsua_rx.stdin.write(b"Beta\n")
+        self.pjsua_rx.stdin.flush()
+        LOGGER.info(f"Going silent for {self.idle_wait_seconds}s to measure idle packets.[2]..")
+        reactor.callLater(self.idle_wait_seconds, self.finish)
+
+    def finish(self):
+        self.sniffer.capturing = False
+        LOGGER.info("Finishing test and analyzing network & log results...")
+
+        # Gracefully quit pjsua instances
+        for p in [self.pjsua_tx, self.pjsua_rx]:
+            if p and p.stdin:
+                try:
+                    p.stdin.write(b"q\n")
+                    p.stdin.flush()
+                except (BrokenPipeError, OSError):
+                    pass
+
+        self.stop_reactor()
+
+        # Count matching packets caught by PCAP directly
+        pcap_idle_count = self.sniffer.idle_packet_count
+        
+        print("\n" + "=" * 50)
+        print("--- IDLE PACKET TEST RESULTS ---")
+        print(f"Captured via PCAP Sniffer : {pcap_idle_count}")
+        print("=" * 50 + "\n")
+
+        # Pass test if network sniffer captured expected amount
+        if pcap_idle_count >= self.min_expected_idle_packets:
+            LOGGER.info(f"SUCCESS: Threshold met! (PCAP: {pcap_idle_count})")
+            self.passed = True
+        else:
+            LOGGER.error(f"FAILURE: Insufficient idle packets! (PCAP: {pcap_idle_count})")
+            self.passed = False
+
+    def stop_reactor(self):
+        for p in [self.pjsua_rx, self.pjsua_tx]:
+            if p:
+                try:
+                    os.kill(p.pid, signal.SIGKILL)
+                except OSError:
+                    pass
+        super(RTTIdlePacketTest, self).stop_reactor()
+
+
+def main():
+    test = RTTIdlePacketTest()
+    reactor.run()
+    return 0 if test.passed else 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
