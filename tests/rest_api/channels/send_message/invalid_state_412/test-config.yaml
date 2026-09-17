@@ -1,0 +1,56 @@
+testinfo:
+    summary: Verify sendMessage returns 412 for a channel in invalid state
+    description: |
+        Create a PJSIP channel directly into Stasis via POST /channels/create
+        without dialing. The channel remains in AST_STATE_DOWN, which
+        channel_state_invalid() treats as an invalid state. sendMessage must
+        return HTTP 412 Precondition Failed and no ChannelMessageDeliveryStatus
+        event must be emitted because the request never reached the SIP
+        transport layer.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/channels/send_message'
+    test-object:
+        typename: ari.AriBaseTestObject
+        config-section: test-object-config
+    modules:
+        -
+            typename: send_message.SendMessageScenario
+            config-section: scenario-config
+
+test-object-config:
+    config-path: 'tests/rest_api/channels/send_message/configs'
+    stop-on-end: False
+
+scenario-config:
+    originate-path: 'channels/create'
+    originate:
+        endpoint: 'PJSIP/alice/sip:alice@127.0.0.1:5061'
+        app: 'testsuite'
+    requests:
+        -
+            request_id: 'state-412'
+            params:
+                content_type: 'text/plain'
+                body: 'Channel is in invalid state'
+            expect: 412
+            event-count: 0
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_applications
+        - asterisk : res_ari_channels
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip
+        - asterisk : res_pjsip_messaging
+        - asterisk : app_stasis
+    tags:
+        - ARI
+        - pjsip
