@@ -3,7 +3,9 @@ testinfo:
     description: |
         'This test makes sure that dial state changes
         do not affect the CDR when the ignoredialchanges
-        option is set to yes.'
+        option is set to yes. It also verifies that an
+        ANSWERED disposition is not overwritten by later
+        CANCEL events from other Queue members.'
 
 test-modules:
     test-object:
@@ -40,7 +42,7 @@ properties:
         - python: 'starpy'
         - asterisk: 'app_echo'
         - asterisk: 'app_dial'
+        - asterisk: 'app_queue'
         - asterisk: 'func_cdr'
     tags:
         - CDR
-
