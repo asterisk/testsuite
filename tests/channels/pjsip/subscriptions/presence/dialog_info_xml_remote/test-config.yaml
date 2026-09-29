@@ -1,0 +1,73 @@
+testinfo:
+    summary: 'Ensure dialog-info NOTIFY for a ringing extension contains the remote identity.'
+    description: |
+        'A SIPp scenario subscribes to a hint that maps to a PJSIP device. Once
+        the subscription is established a call is placed to that device so that
+        it is ringing. The NOTIFY received while the device is ringing must
+        contain a <remote> element with the connected line identity of the
+        channel causing the ringing, otherwise the test fails. The test terminates
+        when the subscription terminates by way of the originated channel being
+        hung up.'
+
+properties:
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - sipp :
+            version : 'v3.0'
+        - python: 'twisted'
+        - python: 'starpy'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_exten_state'
+        - asterisk: 'res_pjsip_dialog_info_body_generator'
+    tags:
+        - pjsip
+
+test-modules:
+    add-test-to-search-path: 'True'
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator-config
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: ami-config
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    reactor-timeout: 30
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'subscribe.xml', '-i': '127.0.0.1', '-p': '5061'} }
+                - { 'key-args': {'scenario': 'callee.xml', '-i': '127.0.0.1', '-p': '5062', '-s': 'bob'} }
+
+originator-config:
+    trigger: 'event'
+    event:
+        id: '0'
+        conditions:
+            match:
+                Event: 'TestEvent'
+                State: 'SUBSCRIPTION_ESTABLISHED'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'Local/watched@default'
+    application: 'Wait'
+    data: '20'
+    async: 'True'
+
+ami-config:
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SUBSCRIPTION_TERMINATED'
+            count: 1
+        ami-actions:
+            action:
+                Action: 'Hangup'
+                Channel: 'Local/watched@default-00000000;1'
