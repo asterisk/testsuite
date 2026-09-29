@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<scenario name="Subscribe to a ringing hint">
+  <send retrans="500">
+    <![CDATA[
+      SUBSCRIBE sip:watched@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:watched@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 SUBSCRIBE
+      Contact: "alice" <sip:alice@[local_ip]:[local_port]>
+      Expires: 3600
+      Max-Forwards: 70
+      Event: dialog
+      Accept: application/dialog-info+xml
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" rtd="true" />
+
+  <recv request="NOTIFY" crlf="true" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <!-- The call is now ringing, so the NOTIFY must describe the remote identity
+       of the channel causing the ringing. -->
+  <recv request="NOTIFY" crlf="true">
+    <action>
+      <ereg regexp="&lt;identity display=&quot;Test Caller&quot;&gt;sip:5551234@127.0.0.1&lt;/identity&gt;"
+          search_in="body"
+          check_it="true"
+          assign_to="remote_identity" />
+      <ereg regexp="&lt;target uri=&quot;sip:5551234@127.0.0.1&quot; ?/&gt;"
+          search_in="body"
+          check_it="true"
+          assign_to="remote_target" />
+      <ereg regexp="&lt;state&gt;early&lt;/state&gt;"
+          search_in="body"
+          check_it="true"
+          assign_to="early_state" />
+    </action>
+  </recv>
+
+  <Reference variables="remote_identity,remote_target,early_state" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <send retrans="500">
+    <![CDATA[
+
+      SUBSCRIBE sip:watched@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: "alice" <sip:alice@[local_ip]:[local_port]>;tag=[pid]SIPpTag00[call_number]
+      To: <sip:watched@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 2 SUBSCRIBE
+      Contact: "alice" <sip:alice@[local_ip]:[local_port]>
+      Expires: 0
+      Max-Forwards: 70
+      Event: dialog
+      Accept: application/dialog-info+xml
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" rtd="true" />
+
+  <recv request="NOTIFY" crlf="true" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+</scenario>
