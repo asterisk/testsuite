@@ -2,10 +2,14 @@ testinfo:
     summary: 'Ensure that repeated presence states with differing subvalues are sent properly.'
     description: |
         'A SIPp test expects to receive, after the initial subscription, two NOTIFYs corresponding
-        to presence subtype and message changes.'
+        to presence subtype and message changes. The initial presence state is set via AMI on
+        startup. Once the subscription has been established the subtype is changed, and once that
+        change has been observed the message is changed. Each presence state change results in a
+        NOTIFY being sent to the subscriber.'
 
 properties:
     dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
         - sipp :
             version : 'v3.0'
         - python: 'twisted'
@@ -17,18 +21,65 @@ properties:
         - refleaks
 
 test-modules:
-    add-test-to-search-path: 'True'
     test-object:
-        config-section: sipp-config
-        typename: 'sipp.SIPpTestCase'
+        config-section: object-config
+        typename: test_case.TestCaseModule
     modules:
         -
-            typename: 'repeat_presence_state.RepeatPresenceState'
+            config-section: event-action-config
+            typename: pluggable_modules.EventActionModule
 
-sipp-config:
+object-config:
     reactor-timeout: 30
-    fail-on-any: True
-    test-iterations:
-        -
+    connect-ami: True
+
+event-action-config:
+    -
+        # On startup set the initial presence state
+        ami-start:
+        ami-actions:
+            action:
+                Action: SetVar
+                Variable: PRESENCE_STATE(CustomPresence:Eggs)
+                Value: AWAY,scrambled,feeling a bit sick
+    -
+        # Once the initial state is set issue a subscribe from the endpoint
+        ami-events:
+            conditions:
+                match:
+                    Event: PresenceStatus
+                    Status: away
+                    Subtype: scrambled
+                    Message: feeling a bit sick
+            count: '1'
+        sipp:
             scenarios:
                 - { 'key-args': {'scenario': 'subscribe.xml', '-p': '5061'} }
+    -
+        # Once the subscription is established change the subtype
+        ami-events:
+            conditions:
+                match:
+                    Event: TestEvent
+                    State: SUBSCRIPTION_ESTABLISHED
+            count: '1'
+        ami-actions:
+            action:
+                Action: SetVar
+                Variable: PRESENCE_STATE(CustomPresence:Eggs)
+                Value: AWAY,poached,feeling a bit sick
+    -
+        # Once the subtype change is observed change the message
+        ami-events:
+            conditions:
+                match:
+                    Event: PresenceStatus
+                    Status: away
+                    Subtype: poached
+                    Message: feeling a bit sick
+            count: '1'
+        ami-actions:
+            action:
+                Action: SetVar
+                Variable: PRESENCE_STATE(CustomPresence:Eggs)
+                Value: AWAY,poached,the horses could not put me back together
