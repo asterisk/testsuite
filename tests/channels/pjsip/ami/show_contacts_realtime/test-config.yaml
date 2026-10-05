@@ -1,0 +1,71 @@
+testinfo:
+    summary: 'List permanent realtime contacts with unqualified fetch disabled'
+    description: |
+        Check that PJSIPShowContacts retrieves permanent contacts from
+        realtime AORs when allow_unqualified_fetch is disabled. Neither
+        AOR is referenced by an endpoint. An AOR without contacts must not
+        add an event. Verify the contact identities, count and ActionID.
+
+properties:
+    dependencies:
+        - python: 'sqlite3'
+        - asterisk: 'res_config_sqlite3'
+        - asterisk: 'res_sorcery_realtime'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+        - realtime
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        - typename: 'contacts.RealtimeContacts'
+        - config-section: ami-config
+          typename: 'pluggable_modules.EventActionModule'
+
+object-config:
+    reactor-timeout: 15
+    connect-ami: True
+
+ami-config:
+    - ami-start:
+      ami-actions:
+          action:
+              Action: 'PJSIPShowContacts'
+              ActionID: 'realtime'
+    - ami-events:
+          conditions:
+              match:
+                  Event: 'ContactList'
+                  ActionID: '^realtime$'
+                  Uri: '^sip:static1@127\.0\.0\.1:5062$'
+          requirements:
+              match:
+                  ObjectType: '^contact$'
+                  ObjectName: '^static1@@.+$'
+          count: 1
+    - ami-events:
+          conditions:
+              match:
+                  Event: 'ContactList'
+                  ActionID: '^realtime$'
+                  Uri: '^sip:static2@127\.0\.0\.1:5063$'
+          requirements:
+              match:
+                  ObjectType: '^contact$'
+                  ObjectName: '^static2@@.+$'
+          count: 1
+    - ami-events:
+          conditions:
+              match:
+                  Event: 'ContactListComplete'
+                  ActionID: '^realtime$'
+          requirements:
+              match:
+                  EventList: '^Complete$'
+                  ListItems: '^2$'
+          count: 1
+      stop_test:
