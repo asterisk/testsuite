@@ -1,0 +1,149 @@
+testinfo:
+    summary: 'List permanent and registered PJSIP contacts over AMI'
+    description: |
+        Check PJSIPShowContacts with permanent contacts only, then register
+        a dynamic contact and check the combined list. Each contact must be
+        listed exactly once, including contacts on a shared AOR and an AOR
+        without an endpoint. Check ActionID and ContactListComplete counts.
+
+properties:
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_registrar'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        - config-section: ami-config
+          typename: 'pluggable_modules.EventActionModule'
+
+object-config:
+    reactor-timeout: 15
+    connect-ami: True
+
+ami-config:
+    - ami-start:
+      ami-actions:
+          action:
+              Action: 'PJSIPShowContacts'
+              ActionID: 'static'
+    - ami-events:
+          conditions:
+              match:
+                  Event: 'ContactList'
+                  ActionID: 'static'
+                  Uri: 'sip:static1@127.0.0.1:5062'
+          requirements:
+              match:
+                  ObjectType: 'contact'
+                  ObjectName: 'user1(@@|;@).+'
+          count: 1
+    - ami-events:
+          conditions:
+              match:
+                  Event: 'ContactList'
+                  ActionID: 'static'
+                  Uri: 'sip:static2@127.0.0.1:5063'
+          requirements:
+              match:
+                  ObjectType: 'contact'
+                  ObjectName: 'user1(@@|;@).+'
+          count: 1
+    - ami-events:
+          conditions:
+              match:
+                  Event: 'ContactList'
+                  ActionID: 'static'
+                  Uri: 'sip:static3@127.0.0.1:5064'
+          requirements:
+              match:
+                  ObjectType: 'contact'
+                  ObjectName: 'unreferenced(@@|;@).+'
+          count: 1
+    - ami-events:
+          conditions:
+              match:
+                  Event: 'ContactListComplete'
+                  ActionID: 'static'
+          requirements:
+              match:
+                  EventList: 'Complete'
+                  ListItems: '3'
+          count: 1
+      sipp:
+          stop-after-scenarios: False
+          scenarios:
+              - key-args: {'scenario': 'register.xml', '-p': '5061'}
+    - ami-events:
+          conditions:
+              match:
+                  Event: 'TestEvent'
+                  State: 'AOR_CONTACT_ADDED'
+                  AOR: 'user1'
+          count: 1
+      ami-actions:
+          action:
+              Action: 'PJSIPShowContacts'
+              ActionID: 'mixed'
+    - ami-events:
+          conditions:
+              match:
+                  Event: 'ContactList'
+                  ActionID: 'mixed'
+                  Uri: 'sip:static1@127.0.0.1:5062'
+          requirements:
+              match:
+                  ObjectType: 'contact'
+                  ObjectName: 'user1(@@|;@).+'
+          count: 1
+    - ami-events:
+          conditions:
+              match:
+                  Event: 'ContactList'
+                  ActionID: 'mixed'
+                  Uri: 'sip:static2@127.0.0.1:5063'
+          requirements:
+              match:
+                  ObjectType: 'contact'
+                  ObjectName: 'user1(@@|;@).+'
+          count: 1
+    - ami-events:
+          conditions:
+              match:
+                  Event: 'ContactList'
+                  ActionID: 'mixed'
+                  Uri: 'sip:static3@127.0.0.1:5064'
+          requirements:
+              match:
+                  ObjectType: 'contact'
+                  ObjectName: 'unreferenced(@@|;@).+'
+          count: 1
+    - ami-events:
+          conditions:
+              match:
+                  Event: 'ContactList'
+                  ActionID: 'mixed'
+                  Uri: 'sip:user1@127.0.0.1:5061'
+          requirements:
+              match:
+                  ObjectType: 'contact'
+                  ObjectName: 'user1(@@|;@).+'
+          count: 1
+    - ami-events:
+          conditions:
+              match:
+                  Event: 'ContactListComplete'
+                  ActionID: 'mixed'
+          requirements:
+              match:
+                  EventList: 'Complete'
+                  ListItems: '4'
+          count: 1
+      stop_test:
