@@ -1,3 +1,4 @@
 tests:
     - test: 'ice_not_offered'
     - test: 'ice_offered'
+    - test: 'ice_lite'

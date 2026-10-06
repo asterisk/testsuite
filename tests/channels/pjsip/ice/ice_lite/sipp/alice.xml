@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+<scenario name="ICE_LITE">
+  <send retrans="500">
+    <![CDATA[
+
+      INVITE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: Alice <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
+      To: Asterisk <sip:[service]@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 INVITE
+      Contact: <sip:alice@[local_ip]:[local_port]>
+      Max-Forwards: 70
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=alice 53655765 2353687637 IN IP4 127.0.0.1
+      s=-
+      c=IN IP4 127.0.0.1
+      t=0 0
+      m=audio 9000 RTP/AVP 0
+      a=ice-ufrag:remote
+      a=ice-pwd:remote-password-with-sufficient-length
+      a=candidate:remote 1 UDP 2130706431 127.0.0.1 9000 typ host
+      a=rtpmap:0 PCMU/8000
+
+    ]]>
+  </send>
+
+  <recv response="100" optional="true"/>
+  <recv response="180" optional="true"/>
+
+  <recv response="200" rtd="true">
+    <action>
+      <ereg regexp="t=0 0[[:space:]]+a=ice-lite[[:space:]]+m=audio"
+            search_in="body" check_it="true" assign_to="session_lite"/>
+      <ereg regexp="a=candidate:[^[:space:]]+[[:space:]]+1[[:space:]]+UDP[[:space:]]+[0-9]+[[:space:]]+[^[:space:]]+[[:space:]]+[0-9]+[[:space:]]+typ[[:space:]]+host"
+            search_in="body" check_it="true" assign_to="host_candidate"/>
+      <ereg regexp="typ[[:space:]]+(srflx|prflx|relay)"
+            search_in="body" check_it_inverse="true" assign_to="non_host_candidate"/>
+    </action>
+  </recv>
+  <Reference variables="session_lite,host_candidate,non_host_candidate"/>
+
+  <send>
+    <![CDATA[
+
+      ACK sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: Alice <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
+      To: Asterisk <sip:[service]@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 1 ACK
+      Contact: <sip:alice@[local_ip]:[local_port]>
+      Max-Forwards: 70
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <pause milliseconds="1000"/>
+
+  <send retrans="500">
+    <![CDATA[
+
+      BYE sip:[service]@[remote_ip]:[remote_port] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: Alice <sip:alice@[local_ip]:[local_port]>;tag=[call_number]
+      To: Asterisk <sip:[service]@[remote_ip]:[remote_port]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 2 BYE
+      Contact: <sip:alice@[local_ip]:[local_port]>
+      Max-Forwards: 70
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200"/>
+</scenario>

@@ -1,0 +1,36 @@
+testinfo:
+    summary: 'Verify ICE-Lite SDP and connectivity-check behavior'
+    description: |
+        This test configures an ICE-Lite endpoint and verifies that Asterisk
+        advertises session-level ICE-Lite with host candidates. It also listens
+        on the offered remote candidate and fails if Asterisk originates a STUN
+        Binding request.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            typename: 'ice_lite.IceLiteCheck'
+            config-section: ice-lite-config
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'alice.xml', '-i': '127.0.0.1', '-p': '5061', '-s': '3200000000'} }
+
+ice-lite-config:
+
+properties:
+    dependencies:
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'res_pjsip'
+    tags:
+        - pjsip
+        - ice
