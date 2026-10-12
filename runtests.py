@@ -137,10 +137,12 @@ class TestRun:
                     except select.error as v:
                         if v[0] != errno.EINTR:
                             raise
-                    l = p.stdout.readline().decode('ascii', 'ignore').strip()
-                    if not l:
+                    raw = p.stdout.readline()
+                    if not raw:
                         break
-                    self.stdout_print(l)
+                    l = raw.decode('ascii', 'ignore').strip()
+                    if l:
+                        self.stdout_print(l)
             except UnicodeEncodeError:
                 self.stdout_print('Unicode error reading output from test!')
                 has_unicode_error = True
