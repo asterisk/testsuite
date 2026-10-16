@@ -1,0 +1,37 @@
+testinfo:
+    summary: 'Qualify a registered contact over its existing WebSocket'
+    description: |
+        Register a browser-style contact over WebSocket with rewrite_contact
+        enabled, answer OPTIONS on that same connection, and require a
+        Reachable ContactStatus event. Asterisk registers both WS and WSS
+        connections using a secure PJPROJECT transport type, so connection
+        reuse requires preserving the destination hostname when pre-resolving
+        qualify targets. Omitting it causes PJSIP_EUNSUPTRANSPORT because no
+        factory can create an outgoing WebSocket connection.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: object-config
+        typename: 'test_case.TestCaseModule'
+    modules:
+        -
+            typename: 'websocket_qualify.WebSocketQualify'
+
+object-config:
+    reactor-timeout: 15
+    connect-ami: True
+
+properties:
+    dependencies:
+        - python: 'autobahn.twisted.websocket'
+        - python: 'starpy'
+        - asterisk: 'res_http_websocket'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_transport_websocket'
+        - asterisk: 'res_pjsip_registrar'
+        - asterisk: 'res_pjsip_nat'
+    tags:
+        - pjsip
+        - qualify
+
