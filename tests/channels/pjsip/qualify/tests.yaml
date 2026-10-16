@@ -5,6 +5,7 @@ tests:
     - test: 'srv_all_targets_5xx'
     - test: 'srv_all_targets_transport_headers'
     - test: 'all_targets_address_records'
+    - test: 'websocket'
     - test: 'auth'
     - test: 'max_initial_qualify_time'
     - test: 'qualify_timeout'
