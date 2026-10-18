@@ -119,7 +119,7 @@ hep-node-config:
                     - 'a=rtpmap:101 telephone-event/8000'
                     - 'a=fmtp:101 0-16'
                     - 'a=ptime:20'
-                    - 'a=maxptime:150'
+                    - 'a=maxptime:140'
                     - 'a=sendrecv'
         -
             ip_family: 2
