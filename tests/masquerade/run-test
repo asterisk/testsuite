@@ -96,11 +96,13 @@ class MasqueradeTest(TestCase):
     def get_parkedcall(self):
         """Initiates a call to retrieve the parked call."""
         LOGGER.info("Fetching parked call at " + str(self.expected_space))
-        tech_prefix = "IAX2/ast1/"
+        channel = "IAX2/ast1/" + str(self.expected_space)
         if self.use_sip_calls:
-            tech_prefix = "PJSIP/ast1/"
+            # PJSIP takes the extension before the endpoint.  After the
+            # endpoint it expects a SIP URI.
+            channel = "PJSIP/" + str(self.expected_space) + "@ast1"
         self.ami[1].originate(
-            channel=tech_prefix + str(self.expected_space),
+            channel=channel,
             context="getit", exten="retrieve", priority=1,
             timeout=30, nowait=True
             ).addErrback(TestCase.handle_originate_failure)
