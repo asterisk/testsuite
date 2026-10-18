@@ -9,6 +9,7 @@ the GNU General Public License Version 2.
 
 import sys
 import logging
+import resource
 from twisted.internet import reactor
 
 sys.path.append("lib/python")
@@ -268,8 +269,21 @@ class MasqueradeTest(TestCase):
         TestCase.stop_reactor(self)
 
 
+def raise_file_limit():
+    """Raise the open file limit that the Asterisk instances inherit.
+
+    Each Local channel pair in the chain uses several file descriptors, so a
+    chain of 200 needs more than the common default soft limit of 1024.
+    """
+    soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    wanted = 8192 if hard == resource.RLIM_INFINITY else min(hard, 8192)
+    if soft != resource.RLIM_INFINITY and soft < wanted:
+        resource.setrlimit(resource.RLIMIT_NOFILE, (wanted, hard))
+
+
 def main():
     """Run Masquerade local channel chain Test"""
+    raise_file_limit()
     test = MasqueradeTest()
     reactor.run()
     if test.passed:
