@@ -1,7 +1,8 @@
 testinfo:
-    summary: 'Test the NoCDR application'
+    summary: 'Test disabling the CDR of a channel'
     description: |
-        'Answer a call and run NoCDR and ensure no CDR is produced'
+        'Answer a call, disable its CDR with CDR_PROP(disable) (which replaced
+         the NoCDR application), and ensure no CDR is produced for it'
 
 test-modules:
     test-object:
