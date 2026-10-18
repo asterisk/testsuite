@@ -9,5 +9,6 @@ properties:
         - python : 'twisted'
         - python : 'starpy'
         - app : 'rtpdump'
+        - custom : 'rawsocket'
     tags:
         - SIP

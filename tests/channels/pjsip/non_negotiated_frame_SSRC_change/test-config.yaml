@@ -28,5 +28,6 @@ properties:
         - sipp :
              version : 'v3.0'
         - asterisk : 'res_pjsip'
+        - custom : 'rawsocket'
     tags:
         - pjsip
