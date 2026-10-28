@@ -23,14 +23,8 @@ test-modules:
             config-section: admin-originator
             typename: 'pluggable_modules.Originator'
         -
-            config-section: kicker-originator
-            typename: 'pluggable_modules.Originator'
-        -
-            config-section: hangup-monitor
-            typename: 'pluggable_modules.HangupMonitor'
-        -
             config-section: ami-config
-            typename: 'ami.AMIEventModule'
+            typename: 'pluggable_modules.EventActionModule'
 
 test-object-config:
     connect-ami: True
@@ -55,35 +49,33 @@ admin-originator:
     application: 'Echo'
     trigger: 'ami_connect'
 
-kicker-originator:
-    channel: 'Local/kicker@default'
-    application: 'Echo'
-    trigger: 'ami_connect'
-
-hangup-monitor:
-    ids: '0'
-
 ami-config:
     -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'UserEvent'
-                UserEvent: 'ConfBridgeKick'
-        requirements:
-            match:
-                Result: 'Pass'
-        count: 4
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'ConfbridgeJoin'
+            count: 4
+            trigger-on-count: True
+        ami-actions:
+            action:
+                Action: 'Originate'
+                channel: 'Local/kicker@default'
+                application: 'Echo'
     -
-        type: 'headermatch'
-        conditions:
-            match:
-                Event: 'UserEvent'
-                UserEvent: 'ConfKickSuccess'
-        requirements:
-            match:
-                Result: 'Pass'
-        count: 4
+        ami-events:
+            type: 'headermatch'
+            conditions:
+                match:
+                    Event: 'UserEvent'
+                    UserEvent: 'ConfKickSuccess'
+            requirements:
+                match:
+                    Result: 'Pass'
+            count: 4
+            trigger-on-count: True
+        stop_test:
 
 properties:
     tags:
