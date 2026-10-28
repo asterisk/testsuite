@@ -14,9 +14,6 @@ test-modules:
             config-section: caller-originator
             typename: 'pluggable_modules.Originator'
         -
-            config-section: hangup-monitor
-            typename: 'pluggable_modules.HangupMonitor'
-        -
             config-section: ami-config
             typename: 'pluggable_modules.EventActionModule'
 
@@ -30,9 +27,6 @@ caller-originator:
     priority: '1'
     trigger: 'ami_connect'
 
-hangup-monitor:
-    ids: '0'
-
 ami-config:
     -
         ami-events:
@@ -44,6 +38,7 @@ ami-config:
                 match:
                     Result: 'Pass'
             count: 9
+            trigger-on-count: True
         stop_test:
 
 properties:
