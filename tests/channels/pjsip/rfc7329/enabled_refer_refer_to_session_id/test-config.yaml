@@ -1,0 +1,30 @@
+testinfo:
+    summary: 'RFC7329 enabled: outgoing REFER with with_sid dialog'
+    description: |
+        'When Transfer() emits an outbound REFER from a with_sid dialog,
+         the request must carry Session-ID derived from the inbound dialog.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': { 'scenario':'invite_with_sid.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'alice' } }
+
+properties:
+    dependencies:
+        - app: 'sipp'
+        - asterisk: 'app_transfer'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_refer'
+        - asterisk: 'res_pjsip_rfc7329'
+    tags:
+        - pjsip
+        - rfc7329
