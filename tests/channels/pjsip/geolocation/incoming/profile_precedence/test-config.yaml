@@ -49,12 +49,18 @@ test-object-config:
                 - { 'key-args': { 'scenario':'invite_ca.xml', '-i':'127.0.0.2',
                         '-p':'5060', '-t': 't1', '-s':'bob' },
                   'ordered-args': [ '-bind_local', '-key', 'dest', 'alice']}
+        -
+             scenarios:
                 - { 'key-args': { 'scenario':'invite_uri.xml', '-i':'127.0.0.3',
                         '-p':'5060', '-t': 't1', '-s':'charlie' },
                   'ordered-args': [ '-bind_local', '-key', 'dest', 'alice']}
+        -
+             scenarios:
                 - { 'key-args': { 'scenario':'invite_gml.xml', '-i':'127.0.0.4',
                         '-p':'5060', '-t': 't1', '-s':'david' },
                   'ordered-args': [ '-bind_local', '-key', 'dest', 'alice']}
+        -
+             scenarios:
                 - { 'key-args': { 'scenario':'invite.xml', '-i':'127.0.0.5',
                         '-p':'5060', '-t': 't1', '-s':'eddie' },
                   'ordered-args': [ '-bind_local', '-key', 'dest', 'alice']}
