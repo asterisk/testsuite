@@ -1,0 +1,249 @@
+#!/usr/bin/env python3
+import sys
+import os
+import logging
+import time
+
+from asterisk.test_case import TestCase
+LOGGER = logging.getLogger(__name__)
+
+import signal
+import subprocess
+from twisted.internet import reactor
+
+# pjsua don't support long texts currently
+en_txt = "Real-time text (RTT) transmitted"
+gr_txt = "πραγματικό κείμενο σε χρόνο"
+de_txt = "Echtzeittext übertragen"
+cn_txt = "已发送实时文本"
+am_txt = "Իրական ժամանակի տեքստ"
+hi_txt = "वास्तविक समय का पाठ"
+
+class RTTTest(TestCase):
+
+    def __init__(self):
+        super(RTTTest, self).__init__()
+        self.reactor_timeout = 90
+        self.create_asterisk(count=1)
+        self.ast[0].all_out = True
+        self.pjsua_rx = None
+        self.pjsua_tx = None
+
+    def run(self):
+        super(RTTTest, self).run()
+        LOGGER.info("Starting Asterisk...")
+        self.ast[0].cli_exec("rtp set debug on")
+        self.ast[0].cli_exec("pjsip set logger on")
+        reactor.callLater(3, self.start_pjsua)
+    def start_pjsua(self):
+        print("--- Starting ---")
+        LOGGER.info("Starting Receiver (102) and Caller (101)...")
+
+        common_params = [
+            '--no-tcp', '--text', '--text-red=0','--no-vad',
+            '--log-level=3', '--app-log-level=3',
+            '--dis-codec=speex', '--dis-codec=gsm', '--dis-codec=opus',
+            '--dis-codec=pcma', '--dis-codec=pcmu', '--dis-codec=ilbc',
+            '--dis-codec=g722', '--null-audio'
+        ]
+
+        # Receiver (102)
+        self.pjsua_rx = subprocess.Popen([
+            'pjsua',
+            '--id=sip:102@127.0.0.1',
+            '--ip-addr=127.0.0.1',
+            '--local-port=5066',
+            '--rtp-port=40000',
+            '--outbound=sip:127.0.0.1:5060',
+            '--auto-answer=200'
+        ] + common_params, stdin=subprocess.PIPE,
+         stdout=subprocess.PIPE,
+         stderr=subprocess.STDOUT)
+
+        # Caller (101)
+        self.pjsua_tx = subprocess.Popen([
+           'pjsua',
+            '--id=sip:101@127.0.0.1',
+            '--ip-addr=127.0.0.1',
+            '--local-port=5065',
+            '--rtp-port=30000',
+            '--outbound=sip:127.0.0.1:5060'
+        ] + common_params, stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
+
+        reactor.callLater(3, self.make_call)
+
+    def make_call(self):
+        LOGGER.info("pjsua_tx: Dialing 102...")
+        self.pjsua_tx.stdin.write(b"\n")
+        self.pjsua_tx.stdin.write(b"m\n")
+        self.pjsua_tx.stdin.write(b"sip:102@127.0.0.1:5060\n")
+        self.pjsua_tx.stdin.flush()
+        print("--- 102 calling ---")
+        reactor.callLater(2, self.send_en)
+
+    def send_en(self):
+        print("Starting Ping-Pong RTT test...")
+        LOGGER.info("Starting Ping-Pong RTT test...")
+        self.pjsua_tx.stdin.write(b"rt\n")
+        self.pjsua_tx.stdin.flush()
+        self.pjsua_tx.stdin.write(en_txt.encode('utf-8') + b"\n")
+        self.pjsua_tx.stdin.flush()
+        print("101 wrote 'English'...")
+        reactor.callLater(2, self.step_gr)
+
+    def step_gr(self):
+        self.pjsua_rx.stdin.write(b"rt\n")
+        self.pjsua_rx.stdin.flush()
+        self.pjsua_rx.stdin.write(gr_txt.encode('utf-8') + b"\n")
+        self.pjsua_rx.stdin.flush()
+        print("102 wrote 'Greek'...")
+        reactor.callLater(2, self.step_de)
+
+    def step_de(self):
+        # send Esc-cr-rt, as we probably have some console output
+        self.pjsua_tx.stdin.write(b"\x1b\nrt\n")
+        self.pjsua_tx.stdin.flush()
+        self.pjsua_tx.stdin.write(de_txt.encode('utf-8') + b"\n")
+        self.pjsua_tx.stdin.flush()
+        print(f"101 wrote 'German'...")
+        reactor.callLater(2, self.step_cn)
+
+    def step_cn(self):
+        self.pjsua_rx.stdin.write(b"\x1b\nrt\n")
+        self.pjsua_rx.stdin.flush()
+        self.pjsua_rx.stdin.write(cn_txt.encode('utf-8') + b"\n")
+        self.pjsua_rx.stdin.flush()
+        print(f"102 wrote 'Chinese'...")
+        reactor.callLater(2, self.step_am)
+
+    def step_am(self):
+        self.pjsua_tx.stdin.write(b"\x1b\nrt\n")
+        self.pjsua_tx.stdin.flush()
+        self.pjsua_tx.stdin.write(am_txt.encode('utf-8') + b"\n")
+        self.pjsua_tx.stdin.flush()
+        print(f"101 wrote 'Armenian'...")
+        reactor.callLater(2, self.step_hi)
+
+    def step_hi(self):
+        self.pjsua_rx.stdin.write(b"\x1b\nrt\n")
+        self.pjsua_rx.stdin.flush()
+        self.pjsua_rx.stdin.write(hi_txt.encode('utf-8') + b"\n")
+        self.pjsua_rx.stdin.flush()
+        print(f"102 wrote 'Hindi'...")
+        reactor.callLater(2, self.finish)
+
+    def finish(self):
+        LOGGER.info("Verifying message exchange...")
+        print("Verifying message exchange...")
+        try:
+            if self.pjsua_tx and self.pjsua_tx.stdin:
+                self.pjsua_tx.stdin.write(b"q\n")
+                self.pjsua_tx.stdin.flush()
+            if self.pjsua_rx and self.pjsua_rx.stdin:
+                self.pjsua_rx.stdin.write(b"q\n")
+                self.pjsua_rx.stdin.flush()
+        except (BrokenPipeError, OSError):
+            LOGGER.warning("Could not send 'q' to pjsua; process likely already dead.")
+
+        out_tx, err_tx = b"", b""
+        out_rx, err_rx = b"", b""
+
+        try:
+            if self.pjsua_tx:
+                out_tx, err_tx = self.pjsua_tx.communicate(timeout=3)
+
+            if self.pjsua_rx:
+                out_rx, err_rx = self.pjsua_rx.communicate(timeout=3)
+        except (subprocess.TimeoutExpired, ValueError, OSError):
+            self.pjsua_tx.kill()
+            self.pjsua_rx.kill()
+            out_tx, err_tx = self.pjsua_tx.communicate()
+            out_rx, err_rx = self.pjsua_rx.communicate()
+
+        # 1. Handle TX (101)
+        if out_tx is None:
+            print("out_tx is none...")
+            out_tx = ""
+        elif isinstance(out_tx, bytes):
+            out_tx = out_tx.decode('utf-8', errors='replace')
+            print(f"out_tx is==== {out_tx}===")
+
+        # 2. Handle RX (102)
+        if out_rx is None:
+            print("out_rx is none...")
+            out_rx = ""
+        elif isinstance(out_rx, bytes):
+            out_rx = out_rx.decode('utf-8', errors='replace')
+            print(f"out_rx is==== {out_rx}====")
+
+        text_tx = self.print_pjsua_logs("TX (101)", out_tx, err_tx)
+        text_rx = self.print_pjsua_logs("RX (102)", out_rx, err_rx)
+        self.stop_reactor()
+
+        rx_saw_english = "Incoming text" in text_rx and en_txt in text_rx
+        tx_saw_greek = "Incoming text" in text_tx and gr_txt in text_tx
+        rx_saw_german = "Incoming text" in text_rx and de_txt in text_rx
+        tx_saw_chinese = "Incoming text" in text_tx and cn_txt in text_tx
+        rx_saw_armenian = "Incoming text" in text_rx and am_txt in text_rx
+        tx_saw_hindi = "Incoming text" in text_tx and hi_txt in text_tx
+
+        if rx_saw_english and tx_saw_greek and rx_saw_german and tx_saw_chinese and rx_saw_armenian and tx_saw_hindi:
+           LOGGER.info("SUCCESS: RTT exchange confirmed!")
+           print("SUCCESS.")
+           self.passed = True
+        else:
+           if not rx_saw_english:
+              LOGGER.error("FAILURE: 102 (Receiver) never saw 'English'")
+           if not tx_saw_greek:
+              LOGGER.error("FAILURE: 101 (Caller) never saw 'Greek'")
+           if not rx_saw_german:
+              LOGGER.error("FAILURE: 102 (Receiver) never saw 'German'")
+           if not tx_saw_chinese:
+              LOGGER.error("FAILURE: 101 (Caller) never saw 'Chinese'")
+           if not rx_saw_armenian:
+              LOGGER.error("FAILURE: 102 (Receiver) never saw 'Armenian'")
+           if not tx_saw_hindi:
+              LOGGER.error("FAILURE: 101 (Caller) never saw 'Hindi'")
+           if "401" in text_rx or "401" in text_tx:
+              LOGGER.error("DEBUG: Found '401 Unauthorized' in logs")
+           self.passed = False
+
+    def print_pjsua_logs(self, label, output, error):
+        content = ""
+
+        if output is not None:
+           if isinstance(output, bytes):
+
+              content = output.decode('utf-8', 'ignore')
+           else:
+              content = str(output)
+
+        print(f"--- STARTING {label} LOG DUMP ---")
+        print(content)
+        print(f"--- END {label} LOG DUMP ---")
+
+        if error:
+          err_msg = error.decode('utf-8', 'ignore') if isinstance(error, bytes) else str(error)
+          print(f"{label} reported an error: {err_msg}")
+
+        return content
+
+    def stop_reactor(self):
+        for p in [self.pjsua_rx, self.pjsua_tx]:
+           if p:
+              try:
+                 os.kill(p.pid, signal.SIGKILL)
+              except OSError:
+                 pass
+        super(RTTTest, self).stop_reactor()
+
+
+def main():
+        test = RTTTest()
+        reactor.run()
+        return 0 if test.passed else 1
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)
