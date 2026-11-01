@@ -1,0 +1,31 @@
+testinfo:
+    summary: 'RFC7329 disabled: with_sid caller/callee only'
+    description: |
+        'With rfc7329_enable=no, both caller and callee send Session-ID,
+         but Asterisk must not inject Session-ID on forwarded in-dialog
+         requests and responses.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    test-iterations:
+        -
+            scenarios:
+                - { 'key-args': {'scenario': 'bob_with_sid.xml', '-i': '127.0.0.1', '-p': '5062'} }
+                - { 'key-args': {'scenario': 'alice_with_sid.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'bob'} }
+
+properties:
+    dependencies:
+        - app: 'sipp'
+        - asterisk: 'app_dial'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+        - asterisk: 'res_pjsip_rfc7329'
+    tags:
+        - pjsip
+        - rfc7329
