@@ -1,0 +1,159 @@
+testinfo:
+    summary: 'Test the short forms of the Queue() b option'
+    description: |
+        'The queue member runs in a different context from the caller. A
+        short b option location must be found in the caller's context, as
+        with Dial(). Fully qualified locations and the B option must work as
+        before. When a label exists in both contexts, the caller's must win.
+        Handler arguments must not be evaluated a second time.'
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'test_case.SimpleTestCase'
+    modules:
+        -
+            config-section: 'ami-config'
+            typename: 'ami.AMIEventModule'
+
+test-object-config:
+    expected_events: 0
+    spawn-after-hangup: True
+    end-test-delay: 2
+    test-iterations:
+        -
+            channel: 'Local/short@default'
+            application: 'Echo'
+            async: True
+        -
+            channel: 'Local/short_args@default'
+            application: 'Echo'
+            async: True
+        -
+            channel: 'Local/full@default'
+            application: 'Echo'
+            async: True
+        -
+            channel: 'Local/full_member@default'
+            application: 'Echo'
+            async: True
+        -
+            channel: 'Local/caller_b@default'
+            application: 'Echo'
+            async: True
+        -
+            channel: 'Local/shadow@default'
+            application: 'Echo'
+            async: True
+        -
+            channel: 'Local/noeval@default'
+            application: 'Echo'
+            async: True
+
+ami-config:
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'PredialHandler'
+                Form: 'short$'
+        requirements:
+            match:
+                Channel: 'Local/member@queue_members-.*;1'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'PredialHandler'
+                Form: 'short_args$'
+        requirements:
+            match:
+                Channel: 'Local/member@queue_members-.*;1'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'PredialHandler'
+                Form: 'full$'
+        requirements:
+            match:
+                Channel: 'Local/member@queue_members-.*;1'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'PredialHandler'
+                Form: 'full_member$'
+        requirements:
+            match:
+                Channel: 'Local/member@queue_members-.*;1'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'PredialHandler'
+                Form: 'caller_b$'
+        requirements:
+            match:
+                Channel: 'Local/caller_b@default-.*;2'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'PredialHandler'
+                Form: 'shadow_caller$'
+        requirements:
+            match:
+                Channel: 'Local/member@queue_members-.*;1'
+        count: '1'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'PredialHandler'
+                Form: 'shadow_member$'
+        requirements:
+            match:
+                Channel: 'Local/member@queue_members-.*;1'
+        count: '0'
+    -
+        type: 'headermatch'
+        conditions:
+            match:
+                Event: 'UserEvent'
+                UserEvent: 'PredialHandler'
+                Form: 'noeval$'
+        requirements:
+            match:
+                Channel: 'Local/member@queue_members-.*;1'
+                Arg: '^\$\{SECRET\}$'
+        count: '1'
+
+properties:
+    dependencies:
+        - python : 'twisted'
+        - python : 'starpy'
+        - asterisk : 'app_queue'
+        - asterisk : 'app_stack'
+        - asterisk : 'app_userevent'
+        - asterisk : 'app_echo'
+        - asterisk : 'func_base64'
+        - asterisk : 'func_logic'
+        - asterisk : 'func_strings'
+        - asterisk : 'pbx_config'
+    tags:
+        - queues
+        - gosub
+        - chan_local

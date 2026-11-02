@@ -1,3 +1,4 @@
 # Enter tests here in the order they should be considered for execution:
 tests:
     - dir: 'tenant_id'
+    - test: 'predial_callee_shorthand'
