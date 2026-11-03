@@ -4,6 +4,8 @@ tests:
     - dir: 'pjsip_notify'
     - test: 'show_endpoints'
     - test: 'show_endpoint'
+    - test: 'show_contacts'
+    - test: 'show_contacts_realtime'
     - test: 'show_registrations_inbound'
     - test: 'show_registration_inbound_contact_statuses'
     - test: 'show_registrations_outbound'
