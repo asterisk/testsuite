@@ -1,0 +1,50 @@
+testinfo:
+    summary: Verify sendMessage returns 404 after the channel is gone
+    description: |
+        Create a Local channel that answers and enters Stasis, destroy it,
+        then attempt channel sendMessage against the former channel id and
+        verify a 404 response with no delivery event.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/channels/send_message'
+    test-object:
+        typename: ari.AriBaseTestObject
+        config-section: test-object-config
+    modules:
+        -
+            typename: send_message.SendMessageScenario
+            config-section: scenario-config
+
+test-object-config:
+    config-path: 'tests/rest_api/channels/send_message/configs'
+    stop-on-end: False
+
+scenario-config:
+    originate:
+        endpoint: 'Local/s@send-message-local'
+        app: 'testsuite'
+    pre-send-action: 'delete_channel'
+    requests:
+        -
+            request_id: 'dead-channel'
+            params:
+                content_type: 'text/plain'
+                body: 'This should fail with 404'
+            expect: 404
+            event-count: 0
+    cleanup-channel: False
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_applications
+        - asterisk : res_ari_channels
+        - asterisk : app_stasis
+    tags:
+        - ARI

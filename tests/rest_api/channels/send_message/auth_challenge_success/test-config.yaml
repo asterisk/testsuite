@@ -1,0 +1,58 @@
+testinfo:
+    summary: Verify sendMessage succeeds after a SIP auth challenge
+    description: |
+        Start a live PJSIP dialog in Stasis, send ARI channel sendMessage,
+        have the remote SIP endpoint challenge with 401 Unauthorized, let
+        Asterisk retry with credentials, and verify one successful
+        ChannelMessageDeliveryStatus event with status=delivered.  This exercises
+        the find_oldest_pending_for_channel fallback in chan_pjsip.c, which
+        is needed because the auth retry carries a new CSeq.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/channels/send_message'
+    test-object:
+        typename: ari.AriBaseTestObject
+        config-section: test-object-config
+    modules:
+        -
+            typename: send_message.SendMessageScenario
+            config-section: scenario-config
+
+test-object-config:
+    config-path: 'tests/rest_api/channels/send_message/configs'
+    stop-on-end: False
+
+scenario-config:
+    sipp:
+        - { 'scenario': 'auth_challenge.xml', '-p': '5061', '-timeout': '30s' }
+    requests:
+        -
+            request_id: 'auth-challenge'
+            params:
+                content_type: 'text/plain'
+                body: 'Please challenge this MESSAGE'
+            expect: 202
+            event:
+                status: 'delivered'
+                sip_status_code: 200
+                reason: 'OK'
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - app : sipp
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_applications
+        - asterisk : res_ari_channels
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip
+        - asterisk : res_pjsip_messaging
+        - asterisk : app_stasis
+    tags:
+        - ARI
+        - pjsip

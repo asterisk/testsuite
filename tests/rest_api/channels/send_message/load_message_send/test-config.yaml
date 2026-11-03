@@ -1,0 +1,49 @@
+testinfo:
+    summary: Verify 20 sequential sendMessage requests on one live channel
+    description: |
+        Start a live PJSIP dialog in Stasis and send 20 ARI channel
+        sendMessage requests sequentially using the load-count shorthand.
+        Each request gets a unique request_id (load-msg-1 .. load-msg-20) and
+        must yield exactly one ChannelMessageDeliveryStatus event with
+        status=sent and sip_status_code=200.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/channels/send_message'
+    test-object:
+        typename: ari.AriBaseTestObject
+        config-section: test-object-config
+    modules:
+        -
+            typename: send_message.SendMessageScenario
+            config-section: scenario-config
+
+test-object-config:
+    config-path: 'tests/rest_api/channels/send_message/configs'
+    stop-on-end: False
+
+scenario-config:
+    sipp:
+        - { 'scenario': 'load_accept_twenty.xml', '-p': '5061', '-timeout': '120s' }
+    send-mode: 'sequential'
+    load-count: 20
+    quiet-time: 2.0
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - app : sipp
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_applications
+        - asterisk : res_ari_channels
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip
+        - asterisk : res_pjsip_messaging
+        - asterisk : app_stasis
+    tags:
+        - ARI
+        - pjsip

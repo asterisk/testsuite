@@ -1,0 +1,28 @@
+testinfo:
+    summary: 'SendText() sends in-dialog MESSAGE without res_pjsip_messaging loaded.'
+    description: |
+        Regression test for COR-3928: chan_pjsip must be able to send an
+        in-dialog SIP MESSAGE via SendText() without res_pjsip_messaging.so
+        loaded. Max refactoring accidentally made res_pjsip_messaging a hidden
+        dependency for the outbound in-dialog MESSAGE path in chan_pjsip.
+
+properties:
+    dependencies:
+        - app : 'sipp'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'chan_pjsip'
+    tags:
+        - pjsip
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    reactor-timeout: 20
+    test-iterations:
+        -
+             scenarios:
+                - { 'key-args': { 'scenario':'recv_message.xml', '-p':'5061', '-timeout':'15s' } }
