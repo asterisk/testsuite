@@ -168,7 +168,6 @@ class SIPpTestCase(TestCase):
         super(SIPpTestCase, self).run()
 
         for a in range(0, self.asterisk_instances):
-            self.ast[a].cli_exec('sip set debug on')
             self.ast[a].cli_exec('pjsip set logger on')
 
         LOGGER.info("creating ami factory")
@@ -200,7 +199,6 @@ class SIPpTestCase(TestCase):
         super(SIPpTestCase, self).ami_reconnect(ami)
 
         for a in range(1, self.asterisk_instances):
-            self.ast[a-1].cli_exec('sip set debug on')
             self.ast[a-1].cli_exec('pjsip set logger on')
 
     def register_scenario_started_observer(self, observer):

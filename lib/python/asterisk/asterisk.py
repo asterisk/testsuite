@@ -140,12 +140,30 @@ class AsteriskRemoteCliCommand(object):
             self.output = param.value.output
             self.err = self.output
             LOGGER.warning('Remote Asterisk process failed: {0}'.format(self.err))
-            return Failure(self)
+            return Failure(AsteriskCliCommandError(self))
 
         deferred = endpoint.connect(factory)
         deferred.addCallback(lambda proto: proto.finished)
         deferred.addCallbacks(_nominal, _error)
         return deferred
+
+
+class AsteriskCliCommandError(Exception):
+    """The failure value of a Deferred for an Asterisk CLI command that failed.
+
+    Twisted and the logging module can only format exceptions, so the command
+    object itself must not be used as a failure value. The command is available
+    as ``cli_command``; ``exitcode``, ``output`` and ``err`` are mirrored here.
+    """
+
+    def __init__(self, cli_command):
+        self.cli_command = cli_command
+        self.exitcode = cli_command.exitcode
+        self.output = cli_command.output
+        self.err = cli_command.err
+        command = getattr(cli_command, 'cli_cmd', None) or getattr(cli_command, 'cmd', '')
+        super(AsteriskCliCommandError, self).__init__(
+            "Asterisk CLI command %s exited %d" % (command, cli_command.exitcode))
 
 
 class AsteriskCliCommand(object):
@@ -186,7 +204,7 @@ class AsteriskCliCommand(object):
             if self.err:
                 LOGGER.debug(self.err)
             if self.exitcode:
-                self._deferred.errback(self)
+                self._deferred.errback(AsteriskCliCommandError(self))
             else:
                 self._deferred.callback(self)
 
@@ -197,7 +215,7 @@ class AsteriskCliCommand(object):
                            (self.host, self.exitcode, self.err))
             if self.err:
                 LOGGER.debug(self.err)
-            self._deferred.errback(self)
+            self._deferred.errback(AsteriskCliCommandError(self))
 
         self._deferred = defer.Deferred()
         deferred = utils.getProcessOutputAndValue(self._cmd[0],
