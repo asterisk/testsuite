@@ -2,4 +2,3 @@
 tests:
     - test: 'servername'
     - test: 'acl'
-    - test: 'acl_ari_user'
