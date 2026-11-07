@@ -50,7 +50,6 @@
     <action>
       <ereg regexp="m=video [0-9]{1,5} RTP/AVP 31 34 98 99 104 100+..*"
             search_in="body" check_it="true" assign_to="1"/>
-      <test assign_to="1" variable="1" compare="equal" value=""/>
     </action>
   </recv>
 
@@ -93,5 +92,6 @@
 
   <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
 
+  <Reference variables="1" />
 </scenario>
 
