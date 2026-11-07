@@ -8,7 +8,7 @@
       <ereg regexp=".*" search_in="hdr" header="X-Custom-Header:" check_it="true" assign_to="1" />
       <log message="Received MESSAGE X-Custom-Header header: [$1]." />
       <strcmp assign_to="result" variable="1" value=" Customized" />
-      <test assign_to="empty0" variable="result" compare="not_equal" value="" />
+      <test assign_to="empty0" variable="result" compare="not_equal" value="0" />
     </action>
   </recv>
 

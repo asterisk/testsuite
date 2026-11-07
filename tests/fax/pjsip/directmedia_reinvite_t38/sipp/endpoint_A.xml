@@ -67,7 +67,7 @@
 			<ereg regexp="c=IN IP4 127.0.0.3" search_in="body" check_it="true" assign_to="1" />
 			<log message="Side A - Contact SDP for directmedia reinvite matches expectations: [$1]." />
 			<strcmp assign_to="result" variable="1" value="c=IN IP4 127.0.0.3" />
-			<test assign_to="emptyinv1" variable="result" compare="not_equal" value="" />
+			<test assign_to="emptyinv1" variable="result" compare="not_equal" value="0" />
 		</action>
 	</recv>
 

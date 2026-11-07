@@ -12,7 +12,7 @@
       <ereg regexp="\s*(.*&gt;)" search_in="hdr" header="From:" assign_to="empty,from0" />
       <log message="Comparing from=[$from] with from0=[$from0]"/>
       <strcmp assign_to="result" variable="from" variable2="from0" />
-      <test assign_to="empty" variable="result" compare="not_equal" value="" />
+      <test assign_to="empty" variable="result" compare="not_equal" value="0" />
     </action>
   </recv>
 
