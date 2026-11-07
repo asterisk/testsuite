@@ -73,13 +73,13 @@
     <action>
       <ereg regexp="a=group:BUNDLE audio video"
             search_in="body" check_it="true" assign_to="1"/>
-      <test assign_to="1" variable="1" compare="equal" value=""/>
+      <assign assign_to="1" variable="1"/>
       <ereg regexp="a=mid:audio"
             search_in="body" check_it="true" assign_to="2"/>
-      <test assign_to="2" variable="2" compare="equal" value=""/>
+      <assign assign_to="2" variable="2"/>
       <ereg regexp="a=mid:video"
             search_in="body" check_it="true" assign_to="3"/>
-      <test assign_to="3" variable="3" compare="equal" value=""/>
+      <assign assign_to="3" variable="3"/>
     </action>
   </recv>
 

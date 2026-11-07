@@ -59,10 +59,10 @@
     <action>
       <ereg regexp="m=video [0-9]{1,5} RTP/AVP 34+..*"
             search_in="body" check_it="true" assign_to="1"/>
-      <test assign_to="1" variable="1" compare="equal" value=""/>
+      <assign assign_to="1" variable="1"/>
       <ereg regexp="m=video [0-9]{1,5} RTP/AVP 99+..*"
             search_in="body" check_it="true" assign_to="2"/>
-      <test assign_to="2" variable="2" compare="equal" value=""/>
+      <assign assign_to="2" variable="2"/>
     </action>
   </recv>
 
@@ -103,13 +103,13 @@
     <action>
       <ereg regexp="m=video [0-9]{1,5} RTP/AVP 34+..*"
             search_in="body" check_it="true" assign_to="1"/>
-      <test assign_to="1" variable="1" compare="equal" value=""/>
+      <assign assign_to="1" variable="1"/>
       <ereg regexp="m=video [0-9]{1,5} RTP/AVP 99+..*"
             search_in="body" check_it="true" assign_to="2"/>
-      <test assign_to="2" variable="2" compare="equal" value=""/>
+      <assign assign_to="2" variable="2"/>
       <ereg regexp="m=video [0-9]{1,5} RTP/AVP 31+..*"
             search_in="body" check_it="true" assign_to="3"/>
-      <test assign_to="3" variable="3" compare="equal" value=""/>
+      <assign assign_to="3" variable="3"/>
     </action>
   </recv>
 
@@ -152,13 +152,13 @@
     <action>
       <ereg regexp="m=video [0-9]{1,5} RTP/AVP 34+..*"
             search_in="body" check_it="true" assign_to="4"/>
-      <test assign_to="4" variable="4" compare="equal" value=""/>
+      <assign assign_to="4" variable="4"/>
       <ereg regexp="m=video [0-9]{1,5} RTP/AVP 99+..*"
             search_in="body" check_it="true" assign_to="5"/>
-      <test assign_to="5" variable="5" compare="equal" value=""/>
+      <assign assign_to="5" variable="5"/>
       <ereg regexp="m=video 0 RTP/AVP 31+..*"
             search_in="body" check_it="true" assign_to="6"/>
-      <test assign_to="6" variable="6" compare="equal" value=""/>
+      <assign assign_to="6" variable="6"/>
     </action>
   </recv>
 
@@ -200,13 +200,13 @@
     <action>
       <ereg regexp="m=video [0-9]{1,5} RTP/AVP 34+..*"
             search_in="body" check_it="true" assign_to="7"/>
-      <test assign_to="7" variable="7" compare="equal" value=""/>
+      <assign assign_to="7" variable="7"/>
       <ereg regexp="m=video 0 RTP/AVP 99+..*"
             search_in="body" check_it="true" assign_to="8"/>
-      <test assign_to="8" variable="8" compare="equal" value=""/>
+      <assign assign_to="8" variable="8"/>
       <ereg regexp="m=video 0 RTP/AVP 31+..*"
             search_in="body" check_it="true" assign_to="9"/>
-      <test assign_to="9" variable="9" compare="equal" value=""/>
+      <assign assign_to="9" variable="9"/>
     </action>
   </recv>
 

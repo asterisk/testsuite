@@ -37,7 +37,7 @@
     <action>
       <ereg regexp="Contact: &lt;sip:asterisk@127.0.0.1:5063&gt;"
             check_it="true" assign_to="1"/>
-      <test assign_to="1" variable="1" compare="equal" value=""/>
+      <assign assign_to="1" variable="1"/>
     </action>
   </recv>
 

@@ -75,7 +75,7 @@
     <action>
       <ereg regexp="m=audio [0-9]{1,5} RTP/AVP 4 0 8 3 111 112 5 10 7 18 110 117 97 9 102 115 116 101+..*"
             search_in="body" check_it="true" assign_to="1"/>
-      <test assign_to="1" variable="1" compare="equal" value=""/>
+      <assign assign_to="1" variable="1"/>
     </action>
   </recv>
 

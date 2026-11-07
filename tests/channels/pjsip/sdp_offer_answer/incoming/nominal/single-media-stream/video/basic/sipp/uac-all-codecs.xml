@@ -50,7 +50,7 @@
     <action>
       <ereg regexp="m=video [0-9]{1,5} RTP/AVP 31 34 98 99 104 100+..*"
             search_in="body" check_it="true" assign_to="1"/>
-      <test assign_to="1" variable="1" compare="equal" value=""/>
+      <assign assign_to="1" variable="1"/>
     </action>
   </recv>
 

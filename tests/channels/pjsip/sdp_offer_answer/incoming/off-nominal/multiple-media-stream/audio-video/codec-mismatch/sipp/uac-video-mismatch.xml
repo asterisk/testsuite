@@ -49,10 +49,10 @@
     <action>
       <ereg regexp="m=audio [0-9]{1,5} RTP/AVP 0 101+..*"
             search_in="body" check_it="true" assign_to="1"/>
-      <test assign_to="1" variable="1" compare="equal" value=""/>
+      <assign assign_to="1" variable="1"/>
       <ereg regexp="m=video 0 RTP/AVP 31 34 96+..*"
             search_in="body" check_it="true" assign_to="2"/>
-      <test assign_to="2" variable="2" compare="equal" value=""/>
+      <assign assign_to="2" variable="2"/>
     </action>
   </recv>
 

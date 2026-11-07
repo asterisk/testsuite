@@ -39,7 +39,7 @@
         rtd="true">
         <action>
           <ereg regexp="test[4-6]" search_in="hdr" header="From: " assign_to="4"/>
-          <test assign_to="4" variable="4" compare="equal" value=""/>
+          <assign assign_to="4" variable="4"/>
         </action>
   </recv>
 
@@ -47,7 +47,7 @@
       <action>
       <ereg regexp="m=audio 1000[0-4] RTP/AVP 0+..*"
             search_in="body" check_it="true" assign_to="5"/>
-      <test assign_to="5" variable="5" compare="equal" value=""/>
+      <assign assign_to="5" variable="5"/>
     </action>
   </recv>
 
