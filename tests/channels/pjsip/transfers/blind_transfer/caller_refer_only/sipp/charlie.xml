@@ -7,7 +7,6 @@
     <action>
 	    <ereg regexp=".*" search_in="hdr" header="From" assign_to="3"/>
 	    <ereg regexp="sip:(.*)>" search_in="hdr" header="Contact" assign_to="4,5"/>
-      <assign assign_to="4" variable="5" />
     </action>
   </recv>
 

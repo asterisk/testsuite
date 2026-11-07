@@ -37,7 +37,6 @@
     <action>
       <ereg regexp="Contact: &lt;sip:bob@127.0.0.1:5062&gt;"
             check_it="true" assign_to="1"/>
-      <test assign_to="1" variable="1" compare="equal" value=""/>
     </action>
   </recv>
 
@@ -64,5 +63,6 @@
   <!-- definition of the call length repartition table (unit is ms)     -->
   <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
 
+  <Reference variables="1" />
 </scenario>
 
