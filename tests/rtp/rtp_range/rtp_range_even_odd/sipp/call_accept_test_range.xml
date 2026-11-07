@@ -39,7 +39,6 @@
         rtd="true">
         <action>
           <ereg regexp="test[4-6]" search_in="hdr" header="From: " assign_to="4"/>
-          <test assign_to="4" variable="4" compare="equal" value=""/>
         </action>
   </recv>
 
@@ -47,7 +46,6 @@
       <action>
       <ereg regexp="m=audio 1000[0-4] RTP/AVP 0+..*"
             search_in="body" check_it="true" assign_to="5"/>
-      <test assign_to="5" variable="5" compare="equal" value=""/>
     </action>
   </recv>
 
@@ -113,5 +111,6 @@
   <!-- definition of the call length repartition table (unit is ms)     -->
   <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
 
+  <Reference variables="4,5" />
 </scenario>
 
