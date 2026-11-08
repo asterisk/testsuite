@@ -62,4 +62,10 @@ def var_replace(text, values):
             value = value[var]
         text = text.replace(match, value)
 
+    """ Non-replacements that have been explicitly escaped
+    need to be unescaped
+    """
+    for match in re.findall(r'(\\{([^}]*)\\})', text):
+        text = text.replace(match[0], '{' + match[1] + '}')
+
     return text
