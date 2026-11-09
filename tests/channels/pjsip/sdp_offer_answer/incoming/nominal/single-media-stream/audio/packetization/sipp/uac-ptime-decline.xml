@@ -49,10 +49,8 @@
     <action>
       <ereg regexp="m=audio [0-9]{1,5} RTP/AVP 9 0 8 101+..*"
             search_in="body" check_it="true" assign_to="1"/>
-      <test assign_to="1" variable="1" compare="equal" value=""/>
       <ereg regexp="a=ptime:30+..*"
             search_in="body" check_it_inverse="true" assign_to="2"/>
-      <test assign_to="2" variable="2" compare="equal" value=""/>
     </action>
   </recv>
 
@@ -95,5 +93,6 @@
 
   <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000"/>
 
+  <Reference variables="1,2" />
 </scenario>
 
