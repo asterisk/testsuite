@@ -918,7 +918,7 @@ def main(argv=None):
     parser.add_option("--pcap", action="store_true",
                       dest="pcap", default=False,
                       help="Capture packets. Output will be in "
-                      " the test's log directory as packet.pcap.")
+                      "the test's log directory as packet.pcap.")
     parser.add_option("--keep-full-logs", action="store_true",
                       dest="keep_full_logs", default=False,
                       help="Keep full logs even if test passes.")
