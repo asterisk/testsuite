@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<!-- Distributed under the GNU General Public License Version 2. -->
+<scenario name="ICE host candidate priority">
+  <send retrans="500">
+    <![CDATA[
+
+      INVITE sip:test@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: sipp <sip:test@[remote_ip]>;tag=[call_number]
+      To: sut <sip:test@[remote_ip]:[remote_port]>
+      Call-ID: [call_id]
+      CSeq: 1 INVITE
+      Contact: sip:sipp@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=user1 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[local_ip_type] [local_ip]
+      t=0 0
+      m=audio 9000 RTP/AVP 0
+      a=ice-ufrag:2c8cc7c729d0eaf44b6870147d7610de
+      a=ice-pwd:5ae44e9b6894542d4d851a065892f095
+      a=candidate:loopback 1 UDP 2130706431 127.0.0.1 9000 typ host
+      a=candidate:loopback 2 UDP 2130706430 127.0.0.1 9001 typ host
+      a=rtpmap:0 PCMU/8000
+
+    ]]>
+  </send>
+
+  <recv response="100" optional="true">
+  </recv>
+
+  <recv response="180" optional="true">
+  </recv>
+
+  <recv response="200" rtd="true" crlf="true">
+  <action>
+        <ereg regexp="a=ice-ufrag" search_in="body" check_it="true" assign_to="dummy" />
+  </action>
+  </recv>
+  <Reference variables="dummy" />
+
+  <send>
+    <![CDATA[
+
+      ACK sip:test@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: sipp <sip:test@[local_ip]:[local_port]>;tag=[call_number]
+      To: sut <sip:test@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 1 ACK
+      Contact: sip:sipp@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <pause milliseconds="1000"/>
+  <send retrans="500">
+    <![CDATA[
+
+      BYE sip:test@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: sipp <sip:test@[local_ip]:[local_port]>;tag=[call_number]
+      To: sut <sip:test@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 2 BYE
+      Contact: sip:sipp@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" crlf="true">
+  </recv>
+
+</scenario>
