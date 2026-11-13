@@ -1,0 +1,32 @@
+testinfo:
+    summary: 'Prefer local ICE host candidates over static NAT mappings'
+    description: |
+        Offer ICE and inspect the SDP answer with include_local_address enabled.
+        Both RTP and RTCP must advertise the local address and its static NAT
+        mapping, with unique priorities and the local address preferred.
+        Reload the RTP configuration and repeat with the local address denied,
+        identical local/mapped addresses, a replacement-only mapping, and no
+        mapping. Each sole host address must use local preference 65535.
+        No connectivity checks against the mapped address are required.
+
+test-modules:
+    add-test-to-search-path: True
+    test-object:
+        config-section: test-object-config
+        typename: 'candidate_priority.CandidatePriorityTest'
+
+test-object-config:
+    reactor-timeout: 30
+
+properties:
+    dependencies:
+        - sipp:
+            version: 'v3.0'
+        - python: 'netifaces'
+        - custom: 'ipv4addr'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_sdp_rtp'
+        - asterisk: 'res_rtp_asterisk'
+    tags:
+        - pjsip
+        - ICE
