@@ -5,6 +5,7 @@ tests:
     - dir: 'aoc'
     - dir: 'auth'
     - dir: 'basic_calls'
+    - dir: 'codec_negotiation'
     - dir: 'config_wizard'
     - dir: 'configuration'
     - dir: 'dialplan_functions'
