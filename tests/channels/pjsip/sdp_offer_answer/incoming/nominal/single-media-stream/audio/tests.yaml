@@ -3,3 +3,4 @@ tests:
     - test: 'avpf'
     - test: 'basic'
     - test: 'packetization'
+    - test: 'rtp_ipv6'
