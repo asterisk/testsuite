@@ -136,7 +136,6 @@ class SIPpIteratorTestCase(TestCase):
         super(SIPpIteratorTestCase, self).run()
 
         for a in range(1, self.asterisk_instances):
-                self.ast[a].cli_exec('sip set debug on')
                 self.ast[a].cli_exec('pjsip set logger on')
 
         LOGGER.info("creating ami factory")
@@ -165,7 +164,6 @@ class SIPpIteratorTestCase(TestCase):
         super(SIPpIteratorTestCase, self).ami_reconnect(ami)
 
         for a in range(1, self.asterisk_instances):
-                self.ast[a].cli_exec('sip set debug on')
                 self.ast[a].cli_exec('pjsip set logger on')
 
     def _execute_test(self):
