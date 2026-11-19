@@ -1,0 +1,97 @@
+testinfo:
+    summary: Verify five sequential sendMessage requests on one live channel
+    description: |
+        Start a live PJSIP dialog in Stasis and send five ARI channel
+        sendMessage requests sequentially, each with a distinct request_id.
+        Verify that each yields exactly one terminal ChannelMessageDeliveryStatus
+        event with status=sent and sip_status_code=200.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/channels/send_message'
+    test-object:
+        typename: ari.AriBaseTestObject
+        config-section: test-object-config
+    modules:
+        -
+            typename: send_message.SendMessageScenario
+            config-section: scenario-config
+
+test-object-config:
+    config-path: 'tests/rest_api/channels/send_message/configs'
+    stop-on-end: False
+
+scenario-config:
+    sipp:
+        - { 'scenario': 'sequential_accept_five.xml', '-p': '5061', '-timeout': '60s' }
+    send-mode: 'sequential'
+    requests:
+        -
+            request_id: 'seq5-one'
+            params:
+                content_type: 'text/plain'
+                body: 'Sequential five message one'
+            expect: 202
+            event:
+                status: 'delivered'
+                sip_status_code: 200
+                reason: 'OK'
+        -
+            request_id: 'seq5-two'
+            params:
+                content_type: 'text/plain'
+                body: 'Sequential five message two'
+            expect: 202
+            event:
+                status: 'delivered'
+                sip_status_code: 200
+                reason: 'OK'
+        -
+            request_id: 'seq5-three'
+            params:
+                content_type: 'text/plain'
+                body: 'Sequential five message three'
+            expect: 202
+            event:
+                status: 'delivered'
+                sip_status_code: 200
+                reason: 'OK'
+        -
+            request_id: 'seq5-four'
+            params:
+                content_type: 'text/plain'
+                body: 'Sequential five message four'
+            expect: 202
+            event:
+                status: 'delivered'
+                sip_status_code: 200
+                reason: 'OK'
+        -
+            request_id: 'seq5-five'
+            params:
+                content_type: 'text/plain'
+                body: 'Sequential five message five'
+            expect: 202
+            event:
+                status: 'delivered'
+                sip_status_code: 200
+                reason: 'OK'
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - app : sipp
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_applications
+        - asterisk : res_ari_channels
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip
+        - asterisk : res_pjsip_messaging
+        - asterisk : app_stasis
+    tags:
+        - ARI
+        - pjsip

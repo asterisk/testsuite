@@ -1,0 +1,62 @@
+testinfo:
+    summary: Reproduce intermittent 501 when Snoop StasisStart races with sendMessage
+    description: |
+        Simulates an ARI app that naively tracks the latest StasisStart channel ID
+        (track-all-stasis). Creates a PJSIP channel, immediately creates a Snoop on
+        it, then sends sendMessage with minimal delay. If the Snoop channel's
+        StasisStart overwrites the stored channel ID before sendMessage fires, the
+        request uses the Snoop channel ID and gets 501 instead of 202. Run
+        repeatedly to observe intermittent failure confirming the race condition.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/channels/send_message'
+    test-object:
+        typename: ari.AriBaseTestObject
+        config-section: test-object-config
+    modules:
+        -
+            typename: send_message.SendMessageScenario
+            config-section: scenario-config
+
+test-object-config:
+    config-path: 'tests/rest_api/channels/send_message/configs'
+    stop-on-end: False
+
+scenario-config:
+    sipp:
+        - { 'scenario': 'answer_and_wait.xml', '-p': '5061', '-timeout': '30s' }
+    track-all-stasis: true
+    pre-send-action: create_snoop_no_wait
+    send-delay: 0.01
+    requests:
+        -
+            request_id: 'snoop-race'
+            params:
+                content_type: 'text/plain'
+                body: 'Race condition test'
+            expect: 202
+            event:
+                status: 'delivered'
+                sip_status_code: 200
+                reason: 'OK'
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - app : sipp
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_applications
+        - asterisk : res_ari_channels
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip
+        - asterisk : res_pjsip_messaging
+        - asterisk : res_stasis_snoop
+        - asterisk : app_stasis
+    tags:
+        - ARI
+        - pjsip

@@ -1,0 +1,131 @@
+testinfo:
+    summary: Verify behavior when the same request_id is sent ten times concurrently
+    description: |
+        Issue ten sendMessage ARI requests on one live channel in immediate mode,
+        all with the identical request_id 'dup-id' and the same body.  This
+        documents the server's behavior: request_id is an opaque client
+        correlation tag with no uniqueness enforcement.  All ten calls are
+        accepted (202), all ten SIP MESSAGEs are delivered (each with a distinct
+        CSeq assigned by PJSIP), and ten ChannelMessageDeliveryStatus events are
+        emitted, all carrying request_id='dup-id'.
+
+        The CSeq values are not exposed in the delivery event; to observe them
+        inspect the Asterisk debug log (logger.conf: full => debug,verbose,notice).
+
+        Because _find_request matches on the first entry with a given request_id,
+        entries 2-10 use event-count: 0 so they do not block test completion.
+        All ten delivery events are attributed and validated against entry 1.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/channels/send_message'
+    test-object:
+        typename: ari.AriBaseTestObject
+        config-section: test-object-config
+    modules:
+        -
+            typename: send_message.SendMessageScenario
+            config-section: scenario-config
+
+test-object-config:
+    config-path: 'tests/rest_api/channels/send_message/configs'
+    stop-on-end: False
+
+scenario-config:
+    sipp:
+        - { 'scenario': 'accept_ten_same_body.xml', '-p': '5061', '-timeout': '60s' }
+    send-mode: 'immediate'
+    requests:
+        -
+            request_id: 'dup-id'
+            params:
+                content_type: 'text/plain'
+                body: 'Duplicate request_id test'
+            expect: 202
+            event-count: 10
+            event:
+                status: 'delivered'
+                sip_status_code: 200
+                reason: 'OK'
+        -
+            request_id: 'dup-id'
+            params:
+                content_type: 'text/plain'
+                body: 'Duplicate request_id test'
+            expect: 202
+            event-count: 0
+        -
+            request_id: 'dup-id'
+            params:
+                content_type: 'text/plain'
+                body: 'Duplicate request_id test'
+            expect: 202
+            event-count: 0
+        -
+            request_id: 'dup-id'
+            params:
+                content_type: 'text/plain'
+                body: 'Duplicate request_id test'
+            expect: 202
+            event-count: 0
+        -
+            request_id: 'dup-id'
+            params:
+                content_type: 'text/plain'
+                body: 'Duplicate request_id test'
+            expect: 202
+            event-count: 0
+        -
+            request_id: 'dup-id'
+            params:
+                content_type: 'text/plain'
+                body: 'Duplicate request_id test'
+            expect: 202
+            event-count: 0
+        -
+            request_id: 'dup-id'
+            params:
+                content_type: 'text/plain'
+                body: 'Duplicate request_id test'
+            expect: 202
+            event-count: 0
+        -
+            request_id: 'dup-id'
+            params:
+                content_type: 'text/plain'
+                body: 'Duplicate request_id test'
+            expect: 202
+            event-count: 0
+        -
+            request_id: 'dup-id'
+            params:
+                content_type: 'text/plain'
+                body: 'Duplicate request_id test'
+            expect: 202
+            event-count: 0
+        -
+            request_id: 'dup-id'
+            params:
+                content_type: 'text/plain'
+                body: 'Duplicate request_id test'
+            expect: 202
+            event-count: 0
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - app : sipp
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_applications
+        - asterisk : res_ari_channels
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip
+        - asterisk : res_pjsip_messaging
+        - asterisk : app_stasis
+    tags:
+        - ARI
+        - pjsip
