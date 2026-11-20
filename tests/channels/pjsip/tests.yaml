@@ -47,6 +47,7 @@ tests:
     - test: 'accountcode'
     - test: 'acl_call'
     - test: 'allow_overlap'
+    - test: 'bye_response_cleanup'
     - test: 'call_pickup'
     - test: 'dtmf_incompatible'
     - test: 'forward_loop'

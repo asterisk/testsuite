@@ -1,0 +1,93 @@
+testinfo:
+    summary: 'Release outgoing BYE sessions after final responses'
+    description: |
+        Originate one call per endpoint and hang it up in the dialplan.
+        SIPp answers the outgoing BYEs with 200, 408, and 481. Each session
+        must emit SESSION_DESTROYING while Asterisk is still running. Once
+        all three destruction events have arrived the test stops itself and
+        passes. If any destruction is missing the test keeps running until
+        the reactor timeout expires and fails.
+
+test-modules:
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: 'session-cleanup'
+            typename: 'pluggable_modules.EventActionModule'
+
+sipp-config:
+    connect-ami: True
+    reactor-timeout: 15
+    fail-on-any: True
+    stop-after-scenarios: False
+    test-iterations:
+        -
+            scenarios:
+                - key-args:
+                      scenario: 'bye-200.xml'
+                      '-p': '5061'
+                      '-s': 'bye-200'
+                - key-args:
+                      scenario: 'bye-408.xml'
+                      '-p': '5062'
+                      '-s': 'bye-408'
+                - key-args:
+                      scenario: 'bye-481.xml'
+                      '-p': '5063'
+                      '-s': 'bye-481'
+
+session-cleanup:
+    -
+        sipp-start:
+            count: 3
+        ami-actions:
+            -
+                action:
+                    Action: 'Originate'
+                    Channel: 'PJSIP/bye-200'
+                    Context: 'default'
+                    Exten: 'hangup'
+                    Priority: '1'
+                    Async: 'true'
+            -
+                action:
+                    Action: 'Originate'
+                    Channel: 'PJSIP/bye-408'
+                    Context: 'default'
+                    Exten: 'hangup'
+                    Priority: '1'
+                    Async: 'true'
+            -
+                action:
+                    Action: 'Originate'
+                    Channel: 'PJSIP/bye-481'
+                    Context: 'default'
+                    Exten: 'hangup'
+                    Priority: '1'
+                    Async: 'true'
+    -
+        ami-events:
+            conditions:
+                match:
+                    Event: 'TestEvent'
+                    State: 'SESSION_DESTROYING'
+                    Endpoint: 'bye-(200|408|481)'
+            count: 3
+            trigger-on-count: True
+        stop_test:
+
+properties:
+    dependencies:
+        - buildoption: 'TEST_FRAMEWORK'
+        - python: 'twisted'
+        - python: 'starpy'
+        - app: 'sipp'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip'
+        - asterisk: 'res_pjsip_session'
+        - asterisk: 'res_pjsip_sdp_rtp'
+        - asterisk: 'res_rtp_asterisk'
+    tags:
+        - pjsip
