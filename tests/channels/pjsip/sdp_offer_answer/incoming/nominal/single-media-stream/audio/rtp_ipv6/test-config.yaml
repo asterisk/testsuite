@@ -1,0 +1,93 @@
+testinfo:
+    summary:     'Test the address family of an SDP answer with rtp_ipv6'
+    description: |
+        This sends offers with a single audio stream to endpoints with
+        different rtp_ipv6 settings and checks the address family of the
+        connection address in the answer. A connection address that is the
+        host address is replaced with the address of the transport, so with
+        rtp_ipv6=no and rtp_ipv6=yes the answer has the address family of the
+        signaling transport. With rtp_ipv6=follow_offer the answer has the
+        address family of the offer for the stream.
+        1. An IPv4 offer over an IPv6 transport is answered in IPv4 with
+           follow_offer and in IPv6 with yes and no.
+        2. An IPv6 offer over an IPv6 transport is answered in IPv6 with
+           follow_offer.
+        3. An IPv6 offer over an IPv4 transport is answered in IPv6 with
+           follow_offer and in IPv4 with no. An IPv4 offer over an IPv4
+           transport is answered in IPv4 with yes.
+        4. The connection line of the stream takes precedence over the
+           session level one for follow_offer.
+        5. With follow_offer, an endpoint whose transport is bound to a
+           single IPv6 address has its RTP bound there too. It cannot
+           receive IPv4, so an IPv4 offer is answered in IPv6.
+        6. With follow_offer and media_address set, the answer uses
+           media_address as is.
+        7. The external_media_address of an IPv6 transport is used in an
+           IPv6 answer with yes, but not in an IPv4 answer with
+           follow_offer.
+        8. An INVITE without SDP gets an offer in the 200 OK. There is no
+           remote offer to follow, so with follow_offer it has the address
+           family of the signaling transport.
+        9. A session refresh sent by Asterisk after an IPv4 offer over an
+           IPv6 transport keeps IPv4 with follow_offer.
+
+test-modules:
+    test-object:
+        config-section: test-object-config
+        typename: 'sipp.SIPpTestCase'
+
+test-object-config:
+    memcheck-delay-stop: 7
+    reactor-timeout: 60
+    fail-on-any: False
+    test-iterations:
+        -
+            scenarios:
+                # 1. IPv4 offer over the IPv6 transport
+                - { 'target': '[::1]', 'key-args': {'scenario': 'answer-ip4.xml', '-i': '[::1]', '-p': '5061', '-s': 'follow-offer'},
+                    'ordered-args': ['-key', 'offer_type', '4', '-key', 'offer_addr', '127.0.0.1'] }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'answer-ip6.xml', '-i': '[::1]', '-p': '5062', '-s': 'rtp-ipv6-yes'},
+                    'ordered-args': ['-key', 'offer_type', '4', '-key', 'offer_addr', '127.0.0.1'] }
+                - { 'target': '[::1]', 'key-args': {'scenario': 'answer-ip6.xml', '-i': '[::1]', '-p': '5063', '-s': 'rtp-ipv6-no'},
+                    'ordered-args': ['-key', 'offer_type', '4', '-key', 'offer_addr', '127.0.0.1'] }
+                # 2. IPv6 offer over the IPv6 transport
+                - { 'target': '[::1]', 'key-args': {'scenario': 'answer-ip6.xml', '-i': '[::1]', '-p': '5064', '-s': 'follow-offer'},
+                    'ordered-args': ['-key', 'offer_type', '6', '-key', 'offer_addr', '::1'] }
+                # 3. IPv6 offer over the IPv4 transport
+                - { 'key-args': {'scenario': 'answer-ip6.xml', '-i': '127.0.0.1', '-p': '5065', '-s': 'follow-offer'},
+                    'ordered-args': ['-key', 'offer_type', '6', '-key', 'offer_addr', '::1'] }
+                - { 'key-args': {'scenario': 'answer-ip4.xml', '-i': '127.0.0.1', '-p': '5066', '-s': 'rtp-ipv6-no'},
+                    'ordered-args': ['-key', 'offer_type', '6', '-key', 'offer_addr', '::1'] }
+                - { 'key-args': {'scenario': 'answer-ip4.xml', '-i': '127.0.0.1', '-p': '5074', '-s': 'rtp-ipv6-yes'},
+                    'ordered-args': ['-key', 'offer_type', '4', '-key', 'offer_addr', '127.0.0.1'] }
+                # 4. Session level and stream connection lines of different address families
+                - { 'target': '[::1]', 'key-args': {'scenario': 'answer-stream-ip4.xml', '-i': '[::1]', '-p': '5067', '-s': 'follow-offer'} }
+                - { 'key-args': {'scenario': 'answer-stream-ip6.xml', '-i': '127.0.0.1', '-p': '5068', '-s': 'follow-offer'} }
+                # 5. RTP bound to a single IPv6 address does not receive IPv4
+                - { 'target': '[::1]', 'key-args': {'scenario': 'answer-ip6.xml', '-i': '[::1]', '-p': '5075', '-s': 'follow-offer-bound'},
+                    'ordered-args': ['-key', 'offer_type', '4', '-key', 'offer_addr', '127.0.0.1'] }
+                # 6. media_address
+                - { 'target': '[::1]', 'key-args': {'scenario': 'answer-media-address.xml', '-i': '[::1]', '-p': '5069', '-s': 'follow-offer-media-address'},
+                    'ordered-args': ['-key', 'offer_type', '4', '-key', 'offer_addr', '127.0.0.1'] }
+                # 7. external_media_address
+                - { 'target': '[::1]:5070', 'key-args': {'scenario': 'answer-ip4.xml', '-i': '[::1]', '-p': '5071', '-s': 'follow-offer-external'},
+                    'ordered-args': ['-key', 'offer_type', '4', '-key', 'offer_addr', '127.0.0.1'] }
+                - { 'target': '[::1]:5070', 'key-args': {'scenario': 'answer-external-media-address.xml', '-i': '[::1]', '-p': '5072', '-s': 'rtp-ipv6-yes-external'},
+                    'ordered-args': ['-key', 'offer_type', '4', '-key', 'offer_addr', '127.0.0.1'] }
+                # 8. Offer in the 200 OK to an INVITE without SDP
+                - { 'target': '[::1]', 'key-args': {'scenario': 'delayed-ip6.xml', '-i': '[::1]', '-p': '5076', '-s': 'follow-offer'} }
+                - { 'key-args': {'scenario': 'delayed-ip4.xml', '-i': '127.0.0.1', '-p': '5077', '-s': 'follow-offer'} }
+                # 9. Session refresh
+                - { 'target': '[::1]', 'key-args': {'scenario': 'refresh-ip4.xml', '-i': '[::1]', '-p': '5073', '-s': 'follow-offer'},
+                    'ordered-args': ['-key', 'offer_type', '4', '-key', 'offer_addr', '127.0.0.1'] }
+
+properties:
+    dependencies:
+        - sipp :
+            version : 'v3.0'
+        - asterisk : 'chan_pjsip'
+        - asterisk : 'res_pjsip'
+        - asterisk : 'res_pjsip_session'
+        - asterisk : 'res_pjsip_sdp_rtp'
+    tags:
+        - pjsip
