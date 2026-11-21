@@ -1,0 +1,130 @@
+testinfo:
+    summary:     'Tests that media leaves from the address advertised in SDP'
+    description: |
+        'The UDP and TCP transports are bound to 127.0.0.2 and no endpoint
+         sets an explicit transport, so the RTP and UDPTL sockets are bound to
+         the wildcard address while SDP advertises 127.0.0.2. The SIPp peers
+         are on 127.0.0.1 and 127.0.0.3, for which the kernel would choose
+         127.0.0.1 as the source address. SourceCheck listens on the media
+         ports the peers advertise and verifies that Asterisk sends from
+         127.0.0.2:
+         - alice calls in to ReceiveFAX: RTP (CED) on an incoming call, then
+           UDPTL after Asterisk re-INVITEs the call to T.38;
+         - Asterisk calls bob and plays a tone: RTP on an outgoing call, and
+           RTCP (rtp.conf shortens the report interval to fit the call);
+         - Asterisk calls carol, who challenges the INVITE, so it is sent
+           again with credentials;
+         - Asterisk calls dave, who answers only after the INVITE has been
+           retransmitted;
+         - erin calls frank with direct media allowed on both, and both
+           reject the direct media re-INVITEs, whose SDP gives the other
+           party's address: the media Asterisk keeps relaying, which must
+           also arrive after the re-INVITEs;
+         - gina calls in over TCP and Asterisk plays a tone.'
+
+test-modules:
+    add-test-to-search-path: True
+    add-relative-to-search-path: ['..']
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator-config
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: originator-carol-config
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: originator-dave-config
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: source-check-config
+            typename: 'source_check.SourceCheck'
+
+sipp-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'target': '127.0.0.2', 'key-args': {'scenario': 'alice.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'fax'} }
+                - { 'key-args': {'scenario': 'bob.xml', '-i': '127.0.0.1', '-p': '5062'} }
+                - { 'key-args': {'scenario': 'carol.xml', '-i': '127.0.0.1', '-p': '5063'} }
+                - { 'key-args': {'scenario': 'dave.xml', '-i': '127.0.0.1', '-p': '5064'} }
+                - { 'key-args': {'scenario': 'frank.xml', '-i': '127.0.0.3', '-p': '5066', '-mi': '127.0.0.3'} }
+                - { 'target': '127.0.0.2', 'key-args': {'scenario': 'erin.xml', '-i': '127.0.0.3', '-p': '5065', '-mi': '127.0.0.3', '-s': 'frank'} }
+                - { 'target': '127.0.0.2', 'key-args': {'scenario': 'gina.xml', '-i': '127.0.0.1', '-p': '5067', '-t': 't1', '-s': 'tone'} }
+
+originator-config:
+    trigger: 'scenario_start'
+    scenario-name: 'bob.xml'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/bob'
+    context: 'default'
+    exten: 'tone'
+    priority: '1'
+    async: 'True'
+
+originator-carol-config:
+    trigger: 'scenario_start'
+    scenario-name: 'carol.xml'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/carol'
+    context: 'default'
+    exten: 'tone'
+    priority: '1'
+    async: 'True'
+
+originator-dave-config:
+    trigger: 'scenario_start'
+    scenario-name: 'dave.xml'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/dave'
+    context: 'default'
+    exten: 'tone'
+    priority: '1'
+    async: 'True'
+
+# RTP ports are even and two apart, so RTCP (RTP port + 1) never reaches
+# another listener; only bob's is checked. The ports are below the range the
+# kernel picks ephemeral ports from and above Asterisk's RTP port range.
+source-check-config:
+    expected-address: '127.0.0.2'
+    # erin and frank send these when their direct media re-INVITE arrives
+    markers: { 'port': 31250 }
+    listeners:
+        - { 'name': 'alice RTP', 'port': 31226 }
+        - { 'name': 'alice UDPTL', 'port': 31228 }
+        - { 'name': 'bob RTP', 'port': 31230 }
+        - { 'name': 'bob RTCP', 'port': 31231 }
+        - { 'name': 'carol RTP', 'port': 31232 }
+        - { 'name': 'dave RTP', 'port': 31234 }
+        # SourceCheck provides erin's and frank's media: once Asterisk sends
+        # to a listener, it streams back, and Asterisk relays that to the
+        # other party.
+        - { 'name': 'erin RTP', 'port': 31236, 'address': '127.0.0.3', 'stream': True, 'after': 'erin-reinvite' }
+        - { 'name': 'frank RTP', 'port': 31238, 'address': '127.0.0.3', 'stream': True, 'after': 'frank-reinvite' }
+        - { 'name': 'gina RTP', 'port': 31240 }
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip_t38'
+        - asterisk: 'res_pjsip_outbound_authenticator_digest'
+        - asterisk: 'res_fax'
+        - asterisk: 'res_fax_spandsp'
+        - asterisk: 'app_milliwatt'
+        - asterisk: 'app_playtones'
+        - asterisk: 'app_dial'
+        - asterisk: 'func_timeout'
+    tags:
+        - pjsip
+        - fax

@@ -1,0 +1,72 @@
+testinfo:
+    summary:     'Tests that media source address pinning is off by default and can be turned off'
+    description: |
+        'As in the nominal test, the UDP and TCP transports are bound to
+         127.0.0.2, SDP advertises 127.0.0.2 and the SIPp peers are on
+         127.0.0.1, but the UDP transport leaves pin_media_source at its
+         default and the TCP transport sets pin_media_source=no. SourceCheck
+         verifies that Asterisk sends media from 127.0.0.1, the address the
+         kernel chooses:
+         - alice calls in to ReceiveFAX: RTP (CED) on an incoming call, then
+           UDPTL after Asterisk re-INVITEs the call to T.38;
+         - Asterisk calls bob and plays a tone: RTP on an outgoing call;
+         - gina calls in over TCP and Asterisk plays a tone.'
+
+test-modules:
+    add-test-to-search-path: True
+    add-relative-to-search-path: ['..']
+    test-object:
+        config-section: sipp-config
+        typename: 'sipp.SIPpTestCase'
+    modules:
+        -
+            config-section: originator-config
+            typename: 'pluggable_modules.Originator'
+        -
+            config-section: source-check-config
+            typename: 'source_check.SourceCheck'
+
+sipp-config:
+    memcheck-delay-stop: 7
+    fail-on-any: True
+    test-iterations:
+        -
+            scenarios:
+                - { 'target': '127.0.0.2', 'key-args': {'scenario': 'alice.xml', '-i': '127.0.0.1', '-p': '5061', '-s': 'fax'} }
+                - { 'key-args': {'scenario': 'bob.xml', '-i': '127.0.0.1', '-p': '5062'} }
+                - { 'target': '127.0.0.2', 'key-args': {'scenario': 'gina.xml', '-i': '127.0.0.1', '-p': '5067', '-t': 't1', '-s': 'tone'} }
+
+originator-config:
+    trigger: 'scenario_start'
+    scenario-name: 'bob.xml'
+    ignore-originate-failure: 'no'
+    id: '0'
+    channel: 'PJSIP/bob'
+    context: 'default'
+    exten: 'tone'
+    priority: '1'
+    async: 'True'
+
+source-check-config:
+    expected-address: '127.0.0.1'
+    listeners:
+        - { 'name': 'alice RTP', 'port': 31226 }
+        - { 'name': 'alice UDPTL', 'port': 31228 }
+        - { 'name': 'bob RTP', 'port': 31230 }
+        - { 'name': 'gina RTP', 'port': 31240 }
+
+properties:
+    dependencies:
+        - python: 'twisted'
+        - python: 'starpy'
+        - sipp:
+            version: 'v3.0'
+        - asterisk: 'chan_pjsip'
+        - asterisk: 'res_pjsip_t38'
+        - asterisk: 'res_fax'
+        - asterisk: 'res_fax_spandsp'
+        - asterisk: 'app_milliwatt'
+        - asterisk: 'func_timeout'
+    tags:
+        - pjsip
+        - fax

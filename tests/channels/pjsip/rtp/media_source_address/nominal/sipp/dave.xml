@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+
+<!-- Does not answer the call Asterisk originates until Asterisk retransmits
+     the INVITE (timer_t1 is 100 ms). Asterisk plays a tone, sent over RTP to
+     31234, and hangs up. -->
+<scenario name="Answer late and receive the tone">
+  <recv request="INVITE" crlf="true"/>
+
+  <!-- The retransmission, sent from the timer thread. SIPp only hands it to
+       this scenario because the testsuite runs SIPp with -nr (unless a
+       scenario asks for -enable-retrans). Besides turning off SIPp's own
+       retransmissions, -nr turns off its detection of retransmitted
+       requests; with that detection on, it would drop this byte-identical
+       copy. -->
+  <recv request="INVITE"/>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:];tag=[pid]SIPpTag01[call_number]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=user1 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio 31234 RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+
+    ]]>
+  </send>
+
+  <!-- Retransmitted again if the 200 OK is slow to arrive -->
+  <recv request="INVITE" optional="true"/>
+
+  <recv request="ACK"/>
+
+  <recv request="BYE"/>
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Length: 0
+
+    ]]>
+  </send>
+</scenario>
