@@ -1,0 +1,70 @@
+testinfo:
+    summary: Verify sequential sendMessage requests on one live channel
+    description: |
+        Start a live PJSIP dialog in Stasis, send one ARI channel
+        sendMessage request, wait for its terminal delivery event, then send a
+        second request and verify a second terminal delivery event.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/channels/send_message'
+    test-object:
+        typename: ari.AriBaseTestObject
+        config-section: test-object-config
+    modules:
+        -
+            typename: send_message.SendMessageScenario
+            config-section: scenario-config
+
+test-object-config:
+    config-path: 'tests/rest_api/channels/send_message/configs'
+    stop-on-end: False
+
+scenario-config:
+    sipp:
+        - { 'scenario': 'sequential_accept_twice.xml', '-p': '5061', '-timeout': '40s' }
+    send-mode: 'sequential'
+    requests:
+        -
+            request_id: 'sequential-one'
+            params:
+                content_type: 'text/plain'
+                body: 'First sequential MESSAGE'
+            expect: 202
+            event:
+                status: 'delivered'
+                sip_status_code: 200
+                reason: 'OK'
+        -
+            request_id: 'sequential-two'
+            params:
+                content_type: 'application/json'
+            json-body:
+                -
+                    type: 'follow-up'
+                    version: 1
+                    body: 'Second sequential MESSAGE'
+            expect: 202
+            event:
+                status: 'delivered'
+                sip_status_code: 200
+                reason: 'OK'
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - app : sipp
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_applications
+        - asterisk : res_ari_channels
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip
+        - asterisk : res_pjsip_messaging
+        - asterisk : app_stasis
+    tags:
+        - ARI
+        - pjsip

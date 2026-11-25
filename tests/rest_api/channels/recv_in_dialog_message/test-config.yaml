@@ -1,0 +1,47 @@
+testinfo:
+    summary: Verify ChannelMessageReceived fires when in-dialog SIP MESSAGE received on Stasis channel
+    description: |
+        Establish a PJSIP call into a Stasis application. While the channel
+        is active in Stasis, have the remote SIP endpoint send an in-dialog
+        SIP MESSAGE. Verify that Asterisk emits a ChannelMessageReceived ARI
+        event containing the message body and a reference to the active channel.
+
+test-modules:
+    add-to-search-path:
+        - 'tests/rest_api/channels/recv_in_dialog_message'
+    test-object:
+        typename: ari.AriBaseTestObject
+        config-section: test-object-config
+    modules:
+        -
+            typename: recv_in_dialog_message.RecvInDialogMessage
+            config-section: scenario-config
+
+test-object-config:
+    config-path: 'tests/rest_api/channels/recv_in_dialog_message/configs'
+    stop-on-end: False
+
+scenario-config:
+    sipp:
+        - { 'scenario': 'send_in_dialog_message.xml', '-p': '5061', '-timeout': '30s' }
+    expected:
+        body: "Watson, come here.\r\n"
+
+properties:
+    dependencies:
+        - python : autobahn.websocket
+        - python : requests
+        - python : twisted
+        - python : starpy
+        - app : sipp
+        - asterisk : res_http_websocket
+        - asterisk : res_ari_events
+        - asterisk : res_ari_applications
+        - asterisk : res_ari_channels
+        - asterisk : chan_pjsip
+        - asterisk : res_pjsip
+        - asterisk : res_pjsip_messaging
+        - asterisk : app_stasis
+    tags:
+        - ARI
+        - pjsip
