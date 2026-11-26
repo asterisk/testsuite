@@ -64,17 +64,23 @@
         crlf="true">
   </recv>
 
+  <!-- Depending on timing, Asterisk may send one or more connected line
+       re-INVITEs before the transfer (for example a "Bob" update that was
+       queued behind the 200 OK for the initial INVITE).  Answer every
+       re-INVITE until one carries Alice's identity.  A non-matching
+       ereg leaves its variable untouched, so the variables are only set
+       once the Alice update has arrived. -->
+  <label id="wait_colp" />
+
   <recv request="INVITE">
       <action>
           <ereg regexp="\"Alice\" &lt;sip:alice@127.0.0.1&gt;"
               header="P-Asserted-Identity"
               search_in="hdr"
-              check_it="true"
               assign_to="asserted_identity"/>
           <ereg regexp="\"Alice\" &lt;sip:alice@127.0.0.1&gt;"
               header="Remote-Party-ID"
               search_in="hdr"
-              check_it="true"
               assign_to="remote_party_id"/>
       </action>
   </recv>
@@ -106,10 +112,29 @@
   <recv request="ACK">
   </recv>
 
+  <nop test="asserted_identity" next="colp_received" />
+  <nop next="wait_colp" />
+
+  <label id="colp_received" />
+
+  <!-- PAI and RPID are sent in the same re-INVITE, so both must match. -->
+  <nop test="remote_party_id" next="wait_bye" />
+  <nop>
+    <action>
+      <exec int_cmd="stop_call" />
+    </action>
+  </nop>
+
+  <label id="wait_bye" />
+
+  <!-- Tolerate any further re-INVITEs before the BYE. -->
+  <recv request="INVITE" optional="true" next="extra_invite">
+  </recv>
+
   <recv request="BYE">
   </recv>
 
-  <send>
+  <send next="done">
     <![CDATA[
 
       SIP/2.0 200 OK
@@ -123,6 +148,37 @@
 
     ]]>
   </send>
+
+  <label id="extra_invite" />
+
+  <send>
+    <![CDATA[
+
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      Contact: <sip:[local_ip]:[local_port];transport=[transport]>
+      Content-Type: application/sdp
+      Content-Length: [len]
+
+      v=0
+      o=user1 53655765 2353687637 IN IP[local_ip_type] [local_ip]
+      s=-
+      c=IN IP[media_ip_type] [media_ip]
+      t=0 0
+      m=audio [media_port] RTP/AVP 0
+      a=rtpmap:0 PCMU/8000
+
+    ]]>
+  </send>
+
+  <recv request="ACK" next="wait_bye">
+  </recv>
+
+  <label id="done" />
 
   <Reference variables="asserted_identity" />
   <Reference variables="remote_party_id" />
