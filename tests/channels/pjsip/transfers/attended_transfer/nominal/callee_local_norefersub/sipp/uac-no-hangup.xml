@@ -62,17 +62,23 @@
     ]]>
   </send>
 
+  <!-- Depending on timing, Asterisk may send one or more connected line
+       re-INVITEs before the transfer (for example a "Bob" update that was
+       queued behind the 200 OK for the initial INVITE).  Answer every
+       re-INVITE until one carries Charlie's identity.  A non-matching
+       ereg leaves its variable untouched, so the variables are only set
+       once the Charlie update has arrived. -->
+  <label id="wait_colp" />
+
   <recv request="INVITE">
       <action>
           <ereg regexp="\"Charlie\" &lt;sip:charlie@127.0.0.1&gt;"
               header="P-Asserted-Identity"
               search_in="hdr"
-              check_it="true"
               assign_to="asserted_identity"/>
           <ereg regexp="\"Charlie\" &lt;sip:charlie@127.0.0.1&gt;"
               header="Remote-Party-ID"
               search_in="hdr"
-              check_it="true"
               assign_to="remote_party_id"/>
       </action>
   </recv>
@@ -104,10 +110,24 @@
   <recv request="ACK">
   </recv>
 
-  <recv request="INVITE" optional="true" next="second_invite">
-  </recv>
+  <nop test="asserted_identity" next="colp_received" />
+  <nop next="wait_colp" />
+
+  <label id="colp_received" />
+
+  <!-- PAI and RPID are sent in the same re-INVITE, so both must match. -->
+  <nop test="remote_party_id" next="wait_bye" />
+  <nop>
+    <action>
+      <exec int_cmd="stop_call" />
+    </action>
+  </nop>
 
   <label id="wait_bye" />
+
+  <!-- Tolerate any further re-INVITEs before the BYE. -->
+  <recv request="INVITE" optional="true" next="extra_invite">
+  </recv>
 
   <recv request="BYE">
   </recv>
@@ -127,9 +147,9 @@
     ]]>
   </send>
 
-  <label id="second_invite" />
+  <label id="extra_invite" />
 
-  <send next="wait_bye">
+  <send>
     <![CDATA[
 
       SIP/2.0 200 OK
@@ -152,6 +172,9 @@
 
     ]]>
   </send>
+
+  <recv request="ACK" next="wait_bye">
+  </recv>
 
   <label id="done"/>
 
